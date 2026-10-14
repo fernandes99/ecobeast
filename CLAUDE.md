@@ -47,7 +47,7 @@ Detalhes em `.specs/foundation/architecture.md`.
 
 ## Comandos
 
-O executável do Godot está em `C:\Users\ferna\Downloads\Godot_v4.7.2-stable_win64.exe\` (use a versão `_console` na linha de comando).
+O executável do Godot está em `C:\Godot\` (use a versão `_console` na linha de comando).
 
 ```bash
 # rodar o jogo sem janela por alguns frames (confere erros de script)

@@ -98,7 +98,7 @@ Só quando houver. Sem dúvidas, a seção não existe.
 
 ## Como rodar o validador
 
-O executável do Godot no Windows tem um nome como `Godot_v4.7.2-stable_win64.exe` (nesta máquina, em `C:\Users\ferna\Downloads\Godot_v4.7.2-stable_win64.exe\`; para o terminal, use a versão `_console`). Para os comandos das specs funcionarem como estão escritos, deixe-o acessível como `godot` (renomeie uma cópia ou crie um alias no terminal). Na raiz do projeto:
+O executável do Godot no Windows tem um nome como `Godot_v4.7.2-stable_win64.exe` (nesta máquina, em `C:\Godot\`; para o terminal, use a versão `_console`). Para os comandos das specs funcionarem como estão escritos, deixe-o acessível como `godot` (renomeie uma cópia ou crie um alias no terminal). Na raiz do projeto:
 
 ```bash
 godot --headless --path . --script res://tools/validate_data.gd

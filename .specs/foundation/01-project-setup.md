@@ -31,8 +31,8 @@ O `project.godot` atual só tem o nome, o renderer Mobile e o esticamento `canva
 
 ## Critérios de aceite
 
-- [ ] F5 no editor abre uma janela em pé (mais alta que larga) com "Ecobeast" no centro, sem erros no painel de Saída.
-- [ ] Redimensionar a janela para mais alta mantém o texto centralizado, sem barras pretas.
+- [x] F5 no editor abre uma janela em pé (mais alta que larga) com "Ecobeast" no centro, sem erros no painel de Saída.
+- [x] Redimensionar a janela para mais alta mantém o texto centralizado, sem barras pretas.
 - [x] Um script de teste com `var x = 1` (sem tipo) aparece com erro no editor; com `var x: int = 1`, não. (Apagar o script depois.)
 - [x] `CLAUDE.md` não contém "Unity", "C#", "ScriptableObject", "Addressables" nem "MonoBehaviour".
 - [x] `GDD.md` não contém "Unity" e a seção de arquitetura aponta para as specs.
