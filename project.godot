@@ -16,6 +16,10 @@ config/quit_on_go_back=false
 config/features=PackedStringArray("4.7", "Mobile")
 config/icon="res://icon.svg"
 
+[autoload]
+
+GameData="*res://core/autoload/game_data.gd"
+
 [debug]
 
 gdscript/warnings/untyped_declaration=2

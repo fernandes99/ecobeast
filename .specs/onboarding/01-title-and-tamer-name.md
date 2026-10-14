@@ -26,9 +26,9 @@ O jogo abre, valida o catálogo e mostra uma tela placeholder "Ecobeast". Ainda 
 
 - **RF-01:** `Result`, `GameService`, `PlayerRepository` e `Session` seguem [architecture.md](architecture.md) e [foundation/architecture.md](../foundation/architecture.md#serviços-e-result).
 - **RF-02:** `LocalGameService.create_player(name)` normaliza o nome (tira espaços das pontas e troca sequências de espaços por um só), valida com `^[\p{L}\p{N} ]{2,16}$`, recusa se já existe jogador, cria o `Player` (id `Uuid.v4()`, nível 1, 1000 moedas, `created_at` agora em UTC, equipe vazia), grava e devolve.
-- **RF-03:** `LocalGameService.get_player()` devolve o jogador do repositório (ou `null`). `reset_progress()` chama `clear()` do repositório.
+- **RF-03:** `LocalGameService.get_player()` devolve o jogador do repositório (ou `null`). `reset_progress()` chama `clear_player()` do repositório.
 - **RF-04:** `LocalGameService.choose_starter()` nesta fase devolve `Result.failure("Ainda não disponível.")`; a fase 02 implementa.
-- **RF-05:** `LocalPlayerRepository` lê e grava `user://save.json` no formato de [architecture.md](architecture.md#save-local), com gravação via arquivo temporário e o tratamento de arquivo ilegível descrito lá. `clear()` apaga `save.json` (sem erro se não existir).
+- **RF-05:** `LocalPlayerRepository` lê e grava `user://save.json` no formato de [architecture.md](architecture.md#save-local), com gravação via arquivo temporário e o tratamento de arquivo ilegível descrito lá. `clear_player()` apaga `save.json` (sem erro se não existir).
 - **RF-06:** `Player.to_dict()` seguido de `Player.from_dict()` devolve um jogador igual, incluindo a equipe (`CreatureInstance` e `SkillSlot` também fazem esse caminho de ida e volta; `stats` não entra no `to_dict` usado pelo save).
 
 **Boot**

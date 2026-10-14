@@ -17,7 +17,7 @@ telas ──> Session (autoload) ──> GameService ─────────
 - **`Session`** (autoload `res://core/autoload/session.gd`): no `_ready` cria `LocalPlayerRepository` e `LocalGameService` (com o repositório e `GameData.catalog`). Guarda o último `Player` recebido em `player: Player` (ou `null`) e emite `player_changed` quando ele muda. Métodos: `load_player()`, `create_player(name)`, `choose_starter(species_id)`, `reset_progress()` — cada um chama o método de mesmo nome do `GameService` com `await`, atualiza `player` quando dá certo e devolve o `Result`.
 - **`GameService`** (`@abstract`): os mesmos quatro métodos, todos devolvendo `Result`. É o contrato que a API vai cumprir.
 - **`LocalGameService`**: implementa as regras no cliente. Cada método começa com `await (Engine.get_main_loop() as SceneTree).process_frame`, para ser de fato assíncrono como uma chamada de rede (e o `await` das telas não ser redundante).
-- **`PlayerRepository`** (`@abstract`): `load() -> Result` (`data`: `Player` ou `null`), `save(player: Player) -> Result`, `clear() -> Result`.
+- **`PlayerRepository`** (`@abstract`): `load_player() -> Result` (`data`: `Player` ou `null`), `save_player(player: Player) -> Result`, `clear_player() -> Result`. (Não `load`/`save`: `load` é função global do GDScript.)
 
 ## Contrato do `GameService`
 

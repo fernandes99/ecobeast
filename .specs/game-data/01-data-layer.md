@@ -1,6 +1,6 @@
 # 01. Camada de dados
 
-- **Status:** rascunho
+- **Status:** concluída
 - **Depende de:** [foundation/01-project-setup](../foundation/01-project-setup.md)
 
 ## Contexto
@@ -29,7 +29,7 @@ O projeto está configurado, mas não há dados nem forma de lê-los. Esta fase 
 
 **Schema**
 
-- **RF-02:** `res://core/data/catalog_schema.gd` (`class_name CatalogSchema`) tem a constante `TABLES: Dictionary` com uma entrada por tabela: `key` (array de colunas da chave) e `columns`, em que cada coluna tem `type` (`"int"`, `"float"`, `"string"`, `"bool"`) e, quando se aplica, `nullable`, `unique`, `fk` (tabela), `fk_future` (tabela que ainda não existe), `min`, `max` e `values` (valores permitidos). Exemplo:
+- **RF-02:** `res://core/data/catalog_schema.gd` (`class_name CatalogSchema`) tem a constante `TABLES: Dictionary` com uma entrada por tabela: `key` (array de colunas da chave) e `columns`, em que cada coluna tem `type` (`"int"`, `"float"`, `"string"`, `"bool"`) e, quando se aplica, `nullable`, `unique`, `fk` (tabela), `fk_future` (tabela que ainda não existe), `min`, `max`, `values` (valores permitidos) e `pattern` (expressão regular, usada em `slug` e `color_hex`). O schema também tem `EFFECT_PARAMS`: as colunas obrigatórias e opcionais de `skill_effects` para cada tipo de efeito. Exemplo:
 
 ```gdscript
 "species": {
@@ -53,7 +53,7 @@ O projeto está configurado, mas não há dados nem forma de lê-los. Esta fase 
 
 **Validação** — `CatalogValidator.validate(tables: Dictionary) -> Array[String]`. Cada erro é uma linha `"<tabela>.json linha <n>: <motivo>"` (n começa em 1) ou `"<tabela>.json: <motivo>"`.
 
-- **RF-06:** Toda linha tem todas as colunas do schema e nenhuma a mais (coluna desconhecida acusa provável erro de digitação).
+- **RF-06:** Toda linha tem todas as colunas do schema e nenhuma a mais (coluna desconhecida acusa provável erro de digitação). Uma linha com erro de estrutura (RF-06 a RF-08) fica fora das checagens de FK e consistência, para não gerar erros em cascata; os erros dela aparecem depois que a estrutura for corrigida.
 - **RF-07:** Cada valor tem o tipo da coluna; `int` exige número inteiro; `null` só em coluna `nullable`.
 - **RF-08:** `min`, `max`, `values` e `unique` são respeitados.
 - **RF-09:** A chave (simples ou composta) não se repete.
@@ -72,14 +72,14 @@ O projeto está configurado, mas não há dados nem forma de lê-los. Esta fase 
 
 **Catálogo e modelos**
 
-- **RF-13:** `Catalog.load(source: DataSource) -> Array[String]` carrega todas as tabelas do schema, valida e, sem erros, converte os tipos e monta os índices. Com erros, devolve a lista e o catálogo fica vazio.
+- **RF-13:** `Catalog.load_from(source: DataSource) -> Array[String]` (não `load`, que é função global do GDScript) carrega todas as tabelas do schema, valida e, sem erros, converte os tipos e monta os índices. Com erros, devolve a lista e o catálogo fica vazio.
 - **RF-14:** Modelos em `res://domain/models/` (`RefCounted`, campos tipados, `static func from_row(row: Dictionary) -> <Classe>` quando vêm de uma linha):
   - `Element` (`id`, `slug`, `name`, `color: Color`, `is_rare`);
   - `StatBlock` (`hp`, `atk`, `def`, `sp_atk`, `sp_def`, `spd`; `get_value(slug)`, `set_value(slug, value)`, `total()`, `to_dict()`, `static from_dict()`);
   - `CreatureSpecies` (colunas de `species` + `element_ids: Array[int]` por `slot`, `base_stats: StatBlock`, `training_yield: StatBlock`);
-  - `Skill` (colunas de `skills` + `effects: Array[SkillEffect]` por `sort_order`); `SkillEffect` (colunas de `skill_effects`, com `null` virando `-1` em ids e `0` em números, mais `has_<coluna>()` quando o tipo do efeito usa a coluna);
-  - `CreatureTrait`, `Temperament`, `GrowthRate`;
-  - `LearnsetEntry` (`skill_id`, `level`, `method_slug`);
+  - `Skill` (colunas de `skills` + `effects: Array[SkillEffect]` por `sort_order`); `SkillEffect` (colunas de `skill_effects` + `effect_slug`, com `null` virando `-1` em ids e `0` em números, e `has_param(coluna)` para saber se a coluna veio preenchida). A lista das colunas de parâmetro fica em `SkillEffect.PARAM_COLUMNS` e o schema a reaproveita (o domínio não depende de `core/`);
+  - `CreatureTrait`, `GrowthRate`, `Temperament` (+ `increased_stat_slug`, `decreased_stat_slug` e `is_neutral()`, para as regras não precisarem consultar o catálogo);
+  - `LearnsetEntry` (`skill_id`, `level`, `method_slug`; criado por `LearnsetEntry.create()`);
   - `EvolutionRule` (colunas de `evolutions` + `trigger_slug`).
 - **RF-15:** Consultas do `Catalog` (e do `GameData`, que as repassa):
   - `get_element(id) -> Element`, `get_elements() -> Array[Element]` (por id);
@@ -95,6 +95,7 @@ O projeto está configurado, mas não há dados nem forma de lê-los. Esta fase 
   - `get_stat_id(slug) -> int`;
   - `get_row(table: String, id: int) -> Dictionary` para as tabelas de referência sem modelo próprio (`rarities`, `status_conditions`…).
   - Id inexistente devolve `null` (ou `{}` em `get_row`) e gera `push_error`.
+  - Só no `Catalog`: `table_count()` e `row_count()`, usados no resumo do validador.
 - **RF-16:** `GameData` (autoload `res://core/autoload/game_data.gd`, `extends Node`) tem `load_catalog() -> bool`, `errors: Array[String]` e as consultas do RF-15. Não carrega nada sozinho no `_ready`: quem chama é o boot da cena raiz.
 
 **Validador por linha de comando**
@@ -103,10 +104,10 @@ O projeto está configurado, mas não há dados nem forma de lê-los. Esta fase 
 
 ## Critérios de aceite
 
-- [ ] `godot --headless --path . --script res://tools/validate_data.gd` com as tabelas vazias lista só os dois erros esperados do RF-12 e sai com código 1.
-- [ ] Acrescentar em `species.json` uma linha com `"growth_rate_id": 99` mostra o erro de FK com a linha certa; acrescentar uma coluna `"nmae"` mostra coluna desconhecida. Desfazer.
-- [ ] Apagar `stats.json` mostra `"stats.json: arquivo não encontrado"`. Restaurar.
-- [ ] Nenhum arquivo em `res://domain/` usa `Node`, autoload, `FileAccess` ou `get_tree()`.
+- [x] `godot --headless --path . --script res://tools/validate_data.gd` com as tabelas vazias lista só os dois erros esperados do RF-12 e sai com código 1.
+- [x] Acrescentar em `species.json` uma linha com `"growth_rate_id": 99` mostra o erro de FK com a linha certa; acrescentar uma coluna `"nmae"` mostra coluna desconhecida. Desfazer.
+- [x] Apagar `stats.json` mostra `"stats.json: arquivo não encontrado"`. Restaurar.
+- [x] Nenhum arquivo em `res://domain/` usa `Node`, autoload, `FileAccess` ou `get_tree()`.
 
 ## Desenho técnico
 
@@ -141,12 +142,12 @@ No editor: percorrer os critérios de aceite.
 
 ## Tarefas
 
-- [ ] Arquivos vazios das tabelas.
-- [ ] `CatalogSchema` espelhando a architecture.
-- [ ] `DataSource` e `StaticJsonDataSource`.
-- [ ] `CatalogValidator` (RF-06 a RF-12).
-- [ ] Modelos e `Catalog`.
-- [ ] `GameData` e o autoload.
-- [ ] `tools/validate_data.gd`.
-- [ ] Atualizar o `CLAUDE.md`.
-- [ ] Marcar esta spec e as tabelas como `concluída`; commit `feat: camada de dados do catálogo`.
+- [x] Arquivos vazios das tabelas.
+- [x] `CatalogSchema` espelhando a architecture.
+- [x] `DataSource` e `StaticJsonDataSource`.
+- [x] `CatalogValidator` (RF-06 a RF-12).
+- [x] Modelos e `Catalog`.
+- [x] `GameData` e o autoload.
+- [x] `tools/validate_data.gd`.
+- [x] Atualizar o `CLAUDE.md`.
+- [x] Marcar esta spec e as tabelas como `concluída`; commit `feat: camada de dados do catálogo`.

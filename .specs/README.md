@@ -30,7 +30,7 @@ As fases dependem umas das outras nesta ordem:
 | #   | Fase                                                                       | Status   |
 | --- | -------------------------------------------------------------------------- | -------- |
 | 1   | [foundation/01-project-setup](foundation/01-project-setup.md)              | concluída |
-| 2   | [game-data/01-data-layer](game-data/01-data-layer.md)                      | rascunho |
+| 2   | [game-data/01-data-layer](game-data/01-data-layer.md)                      | concluída |
 | 3   | [game-data/02-core-tables](game-data/02-core-tables.md)                    | rascunho |
 | 4   | [game-data/03-starter-content](game-data/03-starter-content.md)            | rascunho |
 | 5   | [foundation/02-ui-shell](foundation/02-ui-shell.md)                        | rascunho |

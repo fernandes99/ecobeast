@@ -45,6 +45,13 @@ Detalhes em `.specs/foundation/architecture.md`.
 - Textos do jogador em pt-BR, direto nas cenas e scripts.
 - Versione os arquivos `.uid` que o Godot cria ao lado dos scripts; `.godot/` fica fora do git.
 
+## Editando dados do catálogo
+
+- Cada arquivo de `res://data/` é uma tabela: um array JSON de linhas, todas com exatamente as colunas da tabela (use `null`, nunca omita a coluna).
+- As colunas, tipos, chaves e FKs estão em `core/data/catalog_schema.gd` (espelho de `.specs/game-data/architecture.md`). Tabela ou coluna nova muda os dois no mesmo commit.
+- Ids são estáveis: nunca renumere nem reaproveite.
+- Rode o validador antes de commitar qualquer mudança em `res://data/`. Depois de criar uma classe nova (`class_name`), abra o projeto no editor uma vez (ou rode `godot --headless --path . --editor --quit`) para o cache de classes ser atualizado; o modo `--script` depende dele.
+
 ## Comandos
 
 O executável do Godot está em `C:\Godot\` (use a versão `_console` na linha de comando).
