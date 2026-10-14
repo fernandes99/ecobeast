@@ -1,4 +1,4 @@
-# GDD — Jogo de Criaturas Mobile (Unity)
+# GDD — Jogo de Criaturas Mobile (Godot)
 
 Oct 14, 2026 · @Roberto Fernandes
 
@@ -65,7 +65,7 @@ Crie um vocabulário próprio para tudo que o jogador vê. Isso é o que mais af
 
 ## Features do jogo
 
-O MVP é o Pokémon Simulator modernizado: menus, batalha 1x1 por turnos, captura, evolução e loja — offline, com save local. O resto entra depois do lançamento.
+O MVP é o Pokémon Simulator modernizado: menus, batalha 1x1 por turnos, captura, evolução e loja — online, com o estado do jogador no servidor. O resto entra depois do lançamento.
 
 **MVP (versão 1.0)**
 
@@ -82,7 +82,7 @@ O MVP é o Pokémon Simulator modernizado: menus, batalha 1x1 por turnos, captur
 - [ ] Santuário (armazenamento ilimitado, filtros por tipo/nível)
 - [ ] Bestiário (visto / capturado)
 - [ ] 8 Arenas + Liga final; desbloqueio secreto ao capturar o Ancestral
-- [ ] Save local (JSON criptografado) + backup na nuvem opcional
+- [ ] Jogo online; estado do jogador no servidor
 - [ ] 60 a 90 espécies no lançamento
 
 **Pós-lançamento**
@@ -129,7 +129,7 @@ Resistências (recebe 0,5x) saem da mesma tabela, lida pela coluna do defensor. 
 
 ## Atributos técnicos da criatura
 
-Separe em duas camadas: a **Espécie** (dados fixos, um ScriptableObject por espécie) e a **Instância** (cada criatura que o jogador tem, salva em JSON). Todas as Ecobeasts da mesma espécie compartilham a primeira; a segunda é única.
+Separe em duas camadas: a **Espécie** (dados fixos, uma linha do catálogo por espécie) e a **Instância** (cada criatura que o jogador tem, guardada no estado do jogador). Todas as Ecobeasts da mesma espécie compartilham a primeira; a segunda é única.
 
 **Espécie — `CreatureSpecies` (dados de design)**
 
@@ -154,7 +154,7 @@ Separe em duas camadas: a **Espécie** (dados fixos, um ScriptableObject por esp
 | heightM, weightKg | float | Para o Bestiário e técnicas baseadas em peso |
 | habitatZones | Zone[] | Onde aparece selvagem |
 | spawnWeight | int | Peso no sorteio de encontro |
-| sprite, backSprite, icon, cry | assets | Addressables |
+| sprite, backSprite, icon, cry | assets | Arquivo em `res://assets/` |
 
 **Instância — `CreatureInstance` (dados salvos)**
 
@@ -229,7 +229,7 @@ Chance de captura = min(a / 255, 1). Bônus de esfera: comum 1, grande 1,5, ultr
 
 ## Técnicas (Skills)
 
-Cada técnica é um ScriptableObject `SkillData` com dados e uma lista de efeitos reutilizáveis. Assim você cria centenas de técnicas combinando poucos efeitos, sem código novo.
+Cada técnica é uma linha do catálogo (`skills`) com dados e uma lista de efeitos reutilizáveis. Assim você cria centenas de técnicas combinando poucos efeitos, sem código novo.
 
 **Campos de `SkillData`**
 
@@ -375,49 +375,11 @@ Status voláteis (somem ao trocar): Confuso (33% de se atingir, 2–5 turnos), A
 | Evolução | Pedra da Maré, Pedra Solar, Cristal Lunar |
 | Treino | Doce Raro (+1 nível), Vitaminas (+Treino), Manual de Técnica |
 
-## Arquitetura no Unity
+## Arquitetura
 
-Dados de design em ScriptableObjects, estado do jogador em classes C# simples serializadas em JSON, e a batalha como uma máquina de estados pura (sem MonoBehaviour), para ser testável e reaproveitável no PvP.
+O jogo é feito em Godot 4.7 com GDScript. A arquitetura (pastas, camadas, navegação, serviços) está em `.specs/foundation/architecture.md`, e o modelo relacional dos dados de design (espécies, técnicas, elementos…), em `.specs/game-data/architecture.md`. As specs são a fonte da verdade da implementação; este documento guarda o design do jogo.
 
-1. **Data (ScriptableObjects):** CreatureSpecies, SkillData, TraitData, ItemData, ElementChart, ZoneData, TamerData
-2. **Model (runtime/save):** CreatureInstance, PlayerSave, Inventory, Storage
-3. **Battle Core:** BattleStateMachine (Início → Escolha → Ordenação → Execução → Fim de turno → Checagem de fim), DamageCalculator, CaptureCalculator, BattleAI
-4. **UI:** telas com UI Toolkit ou uGUI, ouvindo eventos da batalha (`OnDamage`, `OnStatusApplied`, `OnFaint`)
-5. **Serviços:** SaveService (JSON + AES), AdsService, IAPService, CloudSaveService
-
-```csharp
-[CreateAssetMenu(menuName = "Ecobeast/Species")]
-public class CreatureSpecies : ScriptableObject {
-    public int id;
-    public string speciesName;
-    public ElementType primary, secondary;
-    public StatBlock baseStats;          // HP, Atk, Def, SpAtk, SpDef, Spd
-    public GrowthRate growthRate;
-    public int baseXpYield, captureRate;
-    public StatBlock trainingYield;
-    public Rarity rarity;
-    public TraitData[] possibleTraits;
-    public List<LevelSkill> learnset;
-    public SkillData[] teachableSkills;
-    public List<EvolutionRule> evolutions;
-    public Sprite front, back, icon;
-}
-
-[System.Serializable]
-public class CreatureInstance {
-    public string uid;
-    public int speciesId, level, currentXp, currentHP, bond;
-    public string nickname;
-    public StatBlock genes, trainingPoints;
-    public Temperament temperament;
-    public int traitId, heldItemId;
-    public SkillSlot[] skills = new SkillSlot[4];
-    public StatusCondition status;
-    public bool isPrismatic;
-}
-```
-
-Dicas: use Addressables para sprites e sons; carregue os dados das espécies de uma planilha (CSV → ScriptableObject por script de editor) para balancear sem abrir o Unity; salve apenas IDs (nunca referências de asset) no JSON.
+A batalha continua planejada como uma máquina de estados pura (Início → Escolha → Ordenação → Execução → Fim de turno → Checagem de fim), com a tela apenas ouvindo eventos — agora rodando no servidor (iniciativa `battle-core` em `.specs/roadmap.md`).
 
 ## Cuidados para não esbarrar em Pokémon
 
@@ -433,11 +395,11 @@ O gênero "capturar e batalhar criaturas" é livre; o risco está em copiar nome
 ## Próximos passos
 
 - [ ] Escolher nome do app e da entidade e checar disponibilidade (INPI, lojas, domínio)
-- [ ] Fechar a tabela de 14 elementos e montar a matriz no Unity
+- [ ] Fechar a tabela de 14 elementos e montar a matriz no catálogo
 - [ ] Criar planilha com as 60–90 espécies (stats, elementos, evoluções)
 - [ ] Criar ~80 técnicas e ~20 traços
-- [ ] Prototipar o Battle Core em C# puro com testes
-- [ ] Tela de batalha + captura + save local
+- [ ] Prototipar o Battle Core em GDScript puro (`res://domain/`)
+- [ ] Tela de batalha + captura
 - [ ] Arte das 3 linhas iniciais para validar o estilo visual
 
 ## Fontes

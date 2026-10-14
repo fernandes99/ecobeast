@@ -1,6 +1,6 @@
 # 01. Configuração do projeto
 
-- **Status:** rascunho
+- **Status:** concluída
 - **Depende de:** Godot 4.7 instalado; repositório git criado (feito no commit das specs)
 
 ## Contexto
@@ -33,9 +33,9 @@ O `project.godot` atual só tem o nome, o renderer Mobile e o esticamento `canva
 
 - [ ] F5 no editor abre uma janela em pé (mais alta que larga) com "Ecobeast" no centro, sem erros no painel de Saída.
 - [ ] Redimensionar a janela para mais alta mantém o texto centralizado, sem barras pretas.
-- [ ] Um script de teste com `var x = 1` (sem tipo) aparece com erro no editor; com `var x: int = 1`, não. (Apagar o script depois.)
-- [ ] `CLAUDE.md` não contém "Unity", "C#", "ScriptableObject", "Addressables" nem "MonoBehaviour".
-- [ ] `GDD.md` não contém "Unity" e a seção de arquitetura aponta para as specs.
+- [x] Um script de teste com `var x = 1` (sem tipo) aparece com erro no editor; com `var x: int = 1`, não. (Apagar o script depois.)
+- [x] `CLAUDE.md` não contém "Unity", "C#", "ScriptableObject", "Addressables" nem "MonoBehaviour".
+- [x] `GDD.md` não contém "Unity" e a seção de arquitetura aponta para as specs.
 
 ## Desenho técnico
 
@@ -65,8 +65,8 @@ No editor: percorrer os critérios de aceite.
 
 ## Tarefas
 
-- [ ] Configurações de `project.godot` (RF-01 a RF-05).
-- [ ] `main.tscn` + `main.gd` e definir como cena principal.
-- [ ] Reescrever o `CLAUDE.md`.
-- [ ] Ajustar o `GDD.md`.
-- [ ] Marcar esta spec, a tabela da iniciativa e a do `.specs/README.md` como `concluída`; commit `feat: configuração inicial do projeto Godot`.
+- [x] Configurações de `project.godot` (RF-01 a RF-05).
+- [x] `main.tscn` + `main.gd` e definir como cena principal.
+- [x] Reescrever o `CLAUDE.md`.
+- [x] Ajustar o `GDD.md`.
+- [x] Marcar esta spec, a tabela da iniciativa e a do `.specs/README.md` como `concluída`; commit `feat: configuração inicial do projeto Godot`.

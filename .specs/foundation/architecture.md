@@ -143,6 +143,7 @@ A cena principal é `res://screens/main/main.tscn`: um `Control` de tela cheia c
 - Uma classe por arquivo, com `class_name` quando for usada fora dele.
 - Nós acessados com `%NomeUnico` (unique name) em vez de caminhos longos.
 - Textos do jogador em pt-BR, direto na cena ou no script, com o vocabulário do [glossário](../glossary.md).
+- Os arquivos `.uid` que o Godot cria ao lado dos scripts (ex.: `main.gd.uid`) vão para o git: o motor usa esses arquivos para manter as referências quando um arquivo muda de lugar.
 - Ordem dentro do script: `class_name`, `extends`, sinais, constantes, `@export`, variáveis, `_ready`/callbacks, métodos públicos, métodos privados (`_nome`).
 
 ## Tela e toque

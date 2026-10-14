@@ -53,7 +53,7 @@ Tomadas no planejamento (corrigíveis; ao mudar uma, atualize aqui e nas specs a
 
 | Fase                                      | Entrega                                                                  | Status   |
 | ----------------------------------------- | ------------------------------------------------------------------------ | -------- |
-| [01-project-setup](01-project-setup.md)   | Configurações do projeto, cena raiz vazia, `CLAUDE.md` e `GDD.md` para Godot | rascunho |
+| [01-project-setup](01-project-setup.md)   | Configurações do projeto, cena raiz vazia, `CLAUDE.md` e `GDD.md` para Godot | concluída |
 | [02-ui-shell](02-ui-shell.md)             | Tema, navegação em pilha, safe area, componentes base e tela placeholder | rascunho |
 
 A fase 02 vem depois de [game-data](../game-data/), porque os componentes leem nomes e cores do catálogo. A ordem completa está no [README das specs](../README.md#ordem-de-implementação-do-mvp).
