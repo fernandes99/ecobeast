@@ -1,1 +1,14 @@
-[]
+[
+	{ "species_id": 1, "slot": 1, "element_id": 1 },
+	{ "species_id": 2, "slot": 1, "element_id": 1 },
+	{ "species_id": 3, "slot": 1, "element_id": 1 },
+	{ "species_id": 3, "slot": 2, "element_id": 11 },
+	{ "species_id": 4, "slot": 1, "element_id": 2 },
+	{ "species_id": 5, "slot": 1, "element_id": 2 },
+	{ "species_id": 6, "slot": 1, "element_id": 2 },
+	{ "species_id": 6, "slot": 2, "element_id": 8 },
+	{ "species_id": 7, "slot": 1, "element_id": 3 },
+	{ "species_id": 8, "slot": 1, "element_id": 3 },
+	{ "species_id": 9, "slot": 1, "element_id": 3 },
+	{ "species_id": 9, "slot": 2, "element_id": 6 }
+]

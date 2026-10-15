@@ -1,6 +1,6 @@
 # 03. Conteúdo das linhas iniciais
 
-- **Status:** rascunho
+- **Status:** concluída
 - **Depende de:** [02-core-tables](02-core-tables.md)
 
 ## Contexto
@@ -153,10 +153,12 @@ Linhas sem indicação valem para as três formas. Total: 93 linhas (8 por forma
 
 ## Critérios de aceite
 
-- [ ] O validador termina com "Catálogo OK" e código 0.
-- [ ] Um script temporário confere: `GameData.get_starters()` devolve Fagulho, Gotículo e Brotelho, nessa ordem; `get_species(3).element_ids` = `[1, 11]`; `get_species(1).base_stats.total()` = 318; `get_learnset(2)` começa com Mordida Brasa (nível 0); `get_evolutions(1)` tem uma regra para a espécie 2 no nível 16. (Apagar depois.)
-- [ ] `get_skill(13).effects` tem um efeito `recoil` com `percent` 33; `get_skill(36).effects` tem dois `modify_stat` em Si mesmo.
-- [ ] Nenhum nome de espécie, técnica ou traço é igual ou parecido com nomes do Pokémon.
+- [x] O validador termina com "Catálogo OK" e código 0.
+- [x] Um script temporário confere: `GameData.get_starters()` devolve Fagulho, Gotículo e Brotelho, nessa ordem; `get_species(3).element_ids` = `[1, 11]`; `get_species(1).base_stats.total()` = 318; `get_learnset(2)` começa com Mordida Brasa (nível 0); `get_evolutions(1)` tem uma regra para a espécie 2 no nível 16. (Apagar depois.)
+- [x] `get_skill(13).effects` tem um efeito `recoil` com `percent` 33; `get_skill(36).effects` tem dois `modify_stat` em Si mesmo.
+- [x] Nenhum nome de espécie, técnica ou traço é igual ou parecido com nomes do Pokémon.
+
+O modo `--script` não carrega autoloads, então o script temporário usou um `Catalog` carregado pela mesma fonte (o `GameData` só repassa as consultas para ele). Ele também conferiu os totais de stats das 9 espécies e o tamanho dos learnsets (8, 11 e 12 por linha). Arranhão e Investida Veloz são palavras comuns em português e vêm do GDD; ficam na revisão do dono, junto com o resto.
 
 ## Desenho técnico
 
@@ -177,12 +179,12 @@ E os critérios de aceite.
 
 ## Tarefas
 
-- [ ] `traits` e `skills` (com descrições) e `skill_effects`.
-- [ ] `species`, `species_elements`, `species_stats`.
-- [ ] `species_traits`, `species_skills`.
-- [ ] `evolutions` e `starter_options`.
-- [ ] Rodar o validador até "Catálogo OK".
-- [ ] Marcar esta spec e as tabelas como `concluída`; commit `feat: linhas iniciais no catálogo`.
+- [x] `traits` e `skills` (com descrições) e `skill_effects`.
+- [x] `species`, `species_elements`, `species_stats`.
+- [x] `species_traits`, `species_skills`.
+- [x] `evolutions` e `starter_options`.
+- [x] Rodar o validador até "Catálogo OK".
+- [x] Marcar esta spec e as tabelas como `concluída`; commit `feat: linhas iniciais no catálogo`.
 
 ## Dúvidas em aberto
 

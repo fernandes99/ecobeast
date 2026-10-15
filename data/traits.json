@@ -1,1 +1,8 @@
-[]
+[
+	{ "id": 1, "slug": "blazing_fury", "name": "Fúria Ardente", "description": "Técnicas de Fogo causam 50% a mais com o HP em 1/3 ou menos." },
+	{ "id": 2, "slug": "instinct", "name": "Instinto", "description": "Ganha +1 de Velocidade ao derrotar um inimigo." },
+	{ "id": 3, "slug": "tidal_fury", "name": "Maré Furiosa", "description": "Técnicas de Água causam 50% a mais com o HP em 1/3 ou menos." },
+	{ "id": 4, "slug": "hard_shell", "name": "Casca Dura", "description": "Não recebe golpes críticos." },
+	{ "id": 5, "slug": "rooted_fury", "name": "Raiz Furiosa", "description": "Técnicas de Flora causam 50% a mais com o HP em 1/3 ou menos." },
+	{ "id": 6, "slug": "tailwind", "name": "Brisa Ligeira", "description": "Ganha +1 de Velocidade ao entrar em batalha." }
+]

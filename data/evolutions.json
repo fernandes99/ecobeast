@@ -1,1 +1,8 @@
-[]
+[
+	{ "id": 1, "species_id": 1, "evolved_species_id": 2, "evolution_trigger_id": 1, "min_level": 16, "item_id": null, "min_bond": null, "time_of_day": null, "zone_id": null },
+	{ "id": 2, "species_id": 2, "evolved_species_id": 3, "evolution_trigger_id": 1, "min_level": 36, "item_id": null, "min_bond": null, "time_of_day": null, "zone_id": null },
+	{ "id": 3, "species_id": 4, "evolved_species_id": 5, "evolution_trigger_id": 1, "min_level": 16, "item_id": null, "min_bond": null, "time_of_day": null, "zone_id": null },
+	{ "id": 4, "species_id": 5, "evolved_species_id": 6, "evolution_trigger_id": 1, "min_level": 36, "item_id": null, "min_bond": null, "time_of_day": null, "zone_id": null },
+	{ "id": 5, "species_id": 7, "evolved_species_id": 8, "evolution_trigger_id": 1, "min_level": 16, "item_id": null, "min_bond": null, "time_of_day": null, "zone_id": null },
+	{ "id": 6, "species_id": 8, "evolved_species_id": 9, "evolution_trigger_id": 1, "min_level": 36, "item_id": null, "min_bond": null, "time_of_day": null, "zone_id": null }
+]

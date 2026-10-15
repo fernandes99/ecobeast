@@ -32,7 +32,7 @@ As fases dependem umas das outras nesta ordem:
 | 1   | [foundation/01-project-setup](foundation/01-project-setup.md)              | concluída |
 | 2   | [game-data/01-data-layer](game-data/01-data-layer.md)                      | concluída |
 | 3   | [game-data/02-core-tables](game-data/02-core-tables.md)                    | concluída |
-| 4   | [game-data/03-starter-content](game-data/03-starter-content.md)            | rascunho |
+| 4   | [game-data/03-starter-content](game-data/03-starter-content.md)            | concluída |
 | 5   | [foundation/02-ui-shell](foundation/02-ui-shell.md)                        | rascunho |
 | 6   | [onboarding/01-title-and-tamer-name](onboarding/01-title-and-tamer-name.md) | rascunho |
 | 7   | [onboarding/02-starter-selection](onboarding/02-starter-selection.md)      | rascunho |

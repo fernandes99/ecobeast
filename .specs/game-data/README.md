@@ -59,6 +59,6 @@ Tomadas no planejamento (corrigíveis; ao mudar uma, atualize aqui e nas specs a
 | --------------------------------------------- | -------------------------------------------------------------------------- | -------- |
 | [01-data-layer](01-data-layer.md)             | Schema em código, leitura dos JSON, validador, `GameData` e modelos        | concluída |
 | [02-core-tables](02-core-tables.md)           | Tabelas de referência: elementos e efetividade, stats, temperamentos etc.  | concluída |
-| [03-starter-content](03-starter-content.md)   | As 3 linhas iniciais: espécies, traços, técnicas, learnsets e Ascensões    | rascunho |
+| [03-starter-content](03-starter-content.md)   | As 3 linhas iniciais: espécies, traços, técnicas, learnsets e Ascensões    | concluída |
 
 O schema completo está em [architecture.md](architecture.md).

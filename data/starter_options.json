@@ -1,1 +1,5 @@
-[]
+[
+	{ "species_id": 1, "sort_order": 1 },
+	{ "species_id": 4, "sort_order": 2 },
+	{ "species_id": 7, "sort_order": 3 }
+]

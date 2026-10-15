@@ -1,1 +1,20 @@
-[]
+[
+	{ "species_id": 1, "trait_id": 1, "slot": 1, "is_hidden": false },
+	{ "species_id": 1, "trait_id": 2, "slot": 3, "is_hidden": true },
+	{ "species_id": 2, "trait_id": 1, "slot": 1, "is_hidden": false },
+	{ "species_id": 2, "trait_id": 2, "slot": 3, "is_hidden": true },
+	{ "species_id": 3, "trait_id": 1, "slot": 1, "is_hidden": false },
+	{ "species_id": 3, "trait_id": 2, "slot": 3, "is_hidden": true },
+	{ "species_id": 4, "trait_id": 3, "slot": 1, "is_hidden": false },
+	{ "species_id": 4, "trait_id": 4, "slot": 3, "is_hidden": true },
+	{ "species_id": 5, "trait_id": 3, "slot": 1, "is_hidden": false },
+	{ "species_id": 5, "trait_id": 4, "slot": 3, "is_hidden": true },
+	{ "species_id": 6, "trait_id": 3, "slot": 1, "is_hidden": false },
+	{ "species_id": 6, "trait_id": 4, "slot": 3, "is_hidden": true },
+	{ "species_id": 7, "trait_id": 5, "slot": 1, "is_hidden": false },
+	{ "species_id": 7, "trait_id": 6, "slot": 3, "is_hidden": true },
+	{ "species_id": 8, "trait_id": 5, "slot": 1, "is_hidden": false },
+	{ "species_id": 8, "trait_id": 6, "slot": 3, "is_hidden": true },
+	{ "species_id": 9, "trait_id": 5, "slot": 1, "is_hidden": false },
+	{ "species_id": 9, "trait_id": 6, "slot": 3, "is_hidden": true }
+]
