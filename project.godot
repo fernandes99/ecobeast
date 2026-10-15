@@ -19,6 +19,7 @@ config/icon="res://icon.svg"
 [autoload]
 
 GameData="*res://core/autoload/game_data.gd"
+Router="*res://core/autoload/router.gd"
 
 [debug]
 
@@ -33,6 +34,10 @@ window/size/window_height_override=720
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 window/handheld/orientation=1
+
+[gui]
+
+theme/custom="res://ui/theme/main_theme.tres"
 
 [physics]
 

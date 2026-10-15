@@ -1,6 +1,6 @@
 # 02. Casca da interface
 
-- **Status:** rascunho
+- **Status:** concluída
 - **Depende de:** [01-project-setup](01-project-setup.md), [game-data/03-starter-content](../game-data/03-starter-content.md) (componentes leem nomes e cores do catálogo)
 
 ## Contexto
@@ -26,7 +26,7 @@ Depois da fase 01 o jogo abre uma cena vazia, e depois de [game-data](../game-da
 
 **Tema**
 
-- **RF-01:** `res://ui/theme/main_theme.tres` é o tema do projeto (`gui/theme/custom`). Fonte padrão Nunito (Regular para texto, Bold para títulos e botões), tamanho base 26 px.
+- **RF-01:** `res://ui/theme/main_theme.tres` é o tema do projeto (`gui/theme/custom`). Fonte padrão Nunito (Regular para texto, Bold para títulos e botões), tamanho base 26 px. Variações de tipo para as telas: `TitleLabel` (Bold, 40), `SecondaryLabel` (texto secundário) e `BoldLabel` (Bold).
 - **RF-02:** Cores da interface em `res://ui/theme/palette.gd` (`class_name UiPalette`, só constantes `Color`), _a revisar_: fundo `#FFF8EC`, superfície `#FFFFFF`, texto `#2D2A32`, texto secundário `#6E6873`, primária `#2BAE8E`, primária pressionada `#1F8A70`, perigo `#E5534B`, aviso `#F2B33D`, borda `#E9E1D3`.
 - **RF-03:** `Button`: fundo na cor primária, texto branco em Bold, cantos de 16 px, altura mínima 64 px; pressionado escurece; desabilitado com 40% de opacidade. `PanelContainer`: superfície branca, cantos de 20 px, borda de 2 px na cor de borda, sem sombra. `LineEdit`: superfície branca, borda de 2 px, cantos de 14 px, altura mínima 64 px; borda na cor primária quando em foco.
 - **RF-04:** O fundo de toda tela é a cor de fundo do RF-02 (um `ColorRect` ou `Panel` de fundo na cena raiz).
@@ -56,19 +56,21 @@ Depois da fase 01 o jogo abre uma cena vazia, e depois de [game-data](../game-da
 
 ## Critérios de aceite
 
-- [ ] F5 abre a tela "Ecobeast / Em construção", sem botão Voltar, no fundo creme e com a fonte Nunito.
-- [ ] Quebrar uma FK em qualquer `res://data/*.json` e dar F5 mostra "Erro nos dados do jogo" com o erro listado. Desfazer.
-- [ ] Uma cena de teste temporária mostra os três portraits iniciais (Fagulho, Gotículo, Brotelho) como círculos nas cores de Fogo, Água e Flora, e os 14 `ElementBadge` legíveis. (Apagar a cena depois.)
-- [ ] Na mesma cena, `HpBar` com 30/30, 12/30 e 5/30 aparece verde, amarela e vermelha.
-- [ ] Um `push` seguido de Esc volta para a tela anterior com o estado que ela tinha.
+- [x] F5 abre a tela "Ecobeast / Em construção", sem botão Voltar, no fundo creme e com a fonte Nunito.
+- [x] Quebrar uma FK em qualquer `res://data/*.json` e dar F5 mostra "Erro nos dados do jogo" com o erro listado. Desfazer.
+- [x] Uma cena de teste temporária mostra os três portraits iniciais (Fagulho, Gotículo, Brotelho) como círculos nas cores de Fogo, Água e Flora, e os 14 `ElementBadge` legíveis. (Apagar a cena depois.)
+- [x] Na mesma cena, `HpBar` com 30/30, 12/30 e 5/30 aparece verde, amarela e vermelha.
+- [x] Um `push` seguido de Esc volta para a tela anterior com o estado que ela tinha.
 - [ ] Com a janela no formato de um celular com notch (Projeto > Configurações > `display/window/size` ou o emulador de dispositivo do editor), o conteúdo não fica embaixo do recorte.
+
+Os cinco primeiros foram conferidos por uma cena temporária (já apagada). Ela abriu o jogo numa janela, fez push e Esc, montou a galeria de componentes e salvou capturas de tela; também conferiu que um id desconhecido no `Router` gera erro sem trocar a tela, e que botão e campo de texto têm 69 px de altura. O último fica para o dono, no aparelho: no Windows, `DisplayServer.get_display_safe_area()` devolve a tela inteira e o editor não simula notch, então o `SafeArea` só aplica a margem lateral mínima.
 
 ## Desenho técnico
 
 **Criar**
 
 - `res://ui/theme/main_theme.tres`, `res://ui/theme/palette.gd`.
-- `res://ui/theme/fonts/Nunito-Regular.ttf`, `Nunito-Bold.ttf` e `OFL.txt` (baixar de fonts.google.com/specimen/Nunito; guardar a licença junto).
+- `res://ui/theme/fonts/Nunito-Variable.ttf` e `OFL.txt` (do repositório google/fonts, `ofl/nunito`; a licença fica junto), mais `nunito_regular.tres` e `nunito_bold.tres` (`FontVariation` com peso 400 e 700). A Nunito só é distribuída como fonte variável (um arquivo com todos os pesos), por isso os dois pesos são `FontVariation` do mesmo arquivo, e não dois `.ttf`.
 - `res://core/autoload/router.gd` e registro do autoload `Router` (depois de `GameData`).
 - `res://ui/components/safe_area.tscn/.gd`, `element_badge.tscn/.gd`, `creature_portrait.tscn/.gd`, `hp_bar.tscn/.gd`.
 - `res://screens/placeholder/placeholder_screen.tscn/.gd`.
@@ -92,10 +94,10 @@ No editor: percorrer os critérios de aceite.
 
 ## Tarefas
 
-- [ ] Fonte, paleta e tema; definir como tema do projeto.
-- [ ] `Router` e `ScreenHost`; voltar do Android e Esc.
-- [ ] Boot provisório com a tela de erro de dados.
-- [ ] `PlaceholderScreen`.
-- [ ] `SafeArea`, `ElementBadge`, `CreaturePortrait`, `HpBar`.
-- [ ] Atualizar o `CLAUDE.md` se alguma regra nova surgir.
-- [ ] Marcar esta spec e as tabelas como `concluída`; commit `feat: tema, navegação e componentes base`.
+- [x] Fonte, paleta e tema; definir como tema do projeto.
+- [x] `Router` e `ScreenHost`; voltar do Android e Esc.
+- [x] Boot provisório com a tela de erro de dados.
+- [x] `PlaceholderScreen`.
+- [x] `SafeArea`, `ElementBadge`, `CreaturePortrait`, `HpBar`.
+- [x] Atualizar o `CLAUDE.md` se alguma regra nova surgir.
+- [x] Marcar esta spec e as tabelas como `concluída`; commit `feat: tema, navegação e componentes base`.

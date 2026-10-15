@@ -38,7 +38,7 @@ res://
     theme/
       main_theme.tres          tema global                                            (foundation/02)
       palette.gd               UiPalette: cores da interface                          (foundation/02)
-      fonts/Nunito-*.ttf       fonte + OFL.txt                                        (foundation/02)
+      fonts/                   Nunito-Variable.ttf, nunito_regular/bold.tres, OFL.txt (foundation/02)
     components/                peças reutilizáveis (cena .tscn + script .gd)
       safe_area  element_badge  creature_portrait  hp_bar                             (foundation/02)
       creature_slot                                                                   (hub/01)
