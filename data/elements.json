@@ -1,1 +1,16 @@
-[]
+[
+	{ "id": 1, "slug": "fire", "name": "Fogo", "color_hex": "#F2603C", "is_rare": false },
+	{ "id": 2, "slug": "water", "name": "Água", "color_hex": "#3A8FE0", "is_rare": false },
+	{ "id": 3, "slug": "flora", "name": "Flora", "color_hex": "#4CB050", "is_rare": false },
+	{ "id": 4, "slug": "volt", "name": "Volt", "color_hex": "#F5C518", "is_rare": false },
+	{ "id": 5, "slug": "earth", "name": "Terra", "color_hex": "#B07A43", "is_rare": false },
+	{ "id": 6, "slug": "wind", "name": "Vento", "color_hex": "#7CC9B8", "is_rare": false },
+	{ "id": 7, "slug": "ice", "name": "Gelo", "color_hex": "#6FCDEB", "is_rare": false },
+	{ "id": 8, "slug": "metal", "name": "Metal", "color_hex": "#8C99A6", "is_rare": false },
+	{ "id": 9, "slug": "toxin", "name": "Toxina", "color_hex": "#9B4FC9", "is_rare": false },
+	{ "id": 10, "slug": "mind", "name": "Mente", "color_hex": "#E86AA8", "is_rare": false },
+	{ "id": 11, "slug": "shadow", "name": "Sombra", "color_hex": "#4A3F6B", "is_rare": false },
+	{ "id": 12, "slug": "light", "name": "Luz", "color_hex": "#F7E7A6", "is_rare": false },
+	{ "id": 13, "slug": "beast", "name": "Fera", "color_hex": "#B08B6E", "is_rare": false },
+	{ "id": 14, "slug": "arcane", "name": "Arcano", "color_hex": "#6C5CE7", "is_rare": true }
+]

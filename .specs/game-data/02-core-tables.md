@@ -1,6 +1,6 @@
 # 02. Tabelas de referência
 
-- **Status:** rascunho
+- **Status:** concluída
 - **Depende de:** [01-data-layer](01-data-layer.md)
 
 ## Contexto
@@ -89,9 +89,11 @@ Slugs: o nome sem acento, em minúsculas (`sereno`, `impetuoso`, `sabio`, `sobri
 
 ## Critérios de aceite
 
-- [ ] O validador lista só o erro de `starter_options` vazio (esperado até a fase 03).
-- [ ] Uma cena ou script temporário imprime `GameData.get_efficacy(1, [3])` = 2, `get_efficacy(4, [5])` = 0, `get_efficacy(1, [2, 5])` = 0,25 e `get_efficacy(13, [1])` = 1. (Apagar depois.)
-- [ ] `GameData.get_temperaments()` devolve 25 itens e os 5 neutros têm os dois stats iguais.
+- [x] O validador lista só o erro de `starter_options` vazio (esperado até a fase 03).
+- [x] Um script temporário imprime `get_efficacy(1, [3])` = 2, `get_efficacy(4, [5])` = 0, `get_efficacy(1, [2, 5])` = 0,25 e `get_efficacy(13, [1])` = 1. (Apagar depois.)
+- [x] `get_temperaments()` devolve 25 itens e os 5 neutros têm os dois stats iguais.
+
+Como o `GameData` não carrega o catálogo enquanto o validador acusa `starter_options` vazio, o script temporário monta o `Catalog` direto das tabelas, sem a validação. Ele também conferiu que, lida pelo defensor, a tabela bate com a coluna "Fraco a" do GDD nos 14 elementos.
 
 ## Desenho técnico
 
@@ -111,8 +113,8 @@ E os critérios de aceite.
 
 ## Tarefas
 
-- [ ] `elements` e `element_efficacy` (conferir a contagem por atacante).
-- [ ] `stats`, `growth_rates`, `rarities`, `temperaments`.
-- [ ] `skill_categories`, `skill_targets`, `skill_learn_methods`.
-- [ ] `status_conditions`, `status_condition_immunities`, `effect_types`, `evolution_triggers`.
-- [ ] Marcar esta spec e as tabelas como `concluída`; commit `feat: tabelas de referência do catálogo`.
+- [x] `elements` e `element_efficacy` (conferir a contagem por atacante).
+- [x] `stats`, `growth_rates`, `rarities`, `temperaments`.
+- [x] `skill_categories`, `skill_targets`, `skill_learn_methods`.
+- [x] `status_conditions`, `status_condition_immunities`, `effect_types`, `evolution_triggers`.
+- [x] Marcar esta spec e as tabelas como `concluída`; commit `feat: tabelas de referência do catálogo`.

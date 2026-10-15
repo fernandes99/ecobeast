@@ -1,1 +1,10 @@
-[]
+[
+	{ "id": 1, "slug": "burn", "name": "Queimado", "is_volatile": false },
+	{ "id": 2, "slug": "poison", "name": "Envenenado", "is_volatile": false },
+	{ "id": 3, "slug": "paralysis", "name": "Paralisado", "is_volatile": false },
+	{ "id": 4, "slug": "sleep", "name": "Adormecido", "is_volatile": false },
+	{ "id": 5, "slug": "freeze", "name": "Congelado", "is_volatile": false },
+	{ "id": 6, "slug": "confusion", "name": "Confuso", "is_volatile": true },
+	{ "id": 7, "slug": "fear", "name": "Amedrontado", "is_volatile": true },
+	{ "id": 8, "slug": "trapped", "name": "Preso", "is_volatile": true }
+]

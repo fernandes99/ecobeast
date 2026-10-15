@@ -1,1 +1,10 @@
-[]
+[
+	{ "id": 1, "slug": "hp", "name": "HP", "short_name": "HP", "is_battle_only": false },
+	{ "id": 2, "slug": "atk", "name": "Ataque", "short_name": "Atq", "is_battle_only": false },
+	{ "id": 3, "slug": "def", "name": "Defesa", "short_name": "Def", "is_battle_only": false },
+	{ "id": 4, "slug": "sp_atk", "name": "Ataque Especial", "short_name": "Atq.E", "is_battle_only": false },
+	{ "id": 5, "slug": "sp_def", "name": "Defesa Especial", "short_name": "Def.E", "is_battle_only": false },
+	{ "id": 6, "slug": "spd", "name": "Velocidade", "short_name": "Vel", "is_battle_only": false },
+	{ "id": 7, "slug": "accuracy", "name": "Precisão", "short_name": "Prec", "is_battle_only": true },
+	{ "id": 8, "slug": "evasion", "name": "Evasão", "short_name": "Eva", "is_battle_only": true }
+]

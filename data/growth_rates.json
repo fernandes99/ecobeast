@@ -1,1 +1,5 @@
-[]
+[
+	{ "id": 1, "slug": "fast", "name": "Rápido", "xp_multiplier": 0.8 },
+	{ "id": 2, "slug": "medium", "name": "Médio", "xp_multiplier": 1.0 },
+	{ "id": 3, "slug": "slow", "name": "Lento", "xp_multiplier": 1.25 }
+]

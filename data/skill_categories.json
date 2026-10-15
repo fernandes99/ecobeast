@@ -1,1 +1,5 @@
-[]
+[
+	{ "id": 1, "slug": "physical", "name": "Física" },
+	{ "id": 2, "slug": "special", "name": "Especial" },
+	{ "id": 3, "slug": "support", "name": "Suporte" }
+]

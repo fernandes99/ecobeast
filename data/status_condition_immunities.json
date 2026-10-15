@@ -1,1 +1,7 @@
-[]
+[
+	{ "status_condition_id": 1, "element_id": 1 },
+	{ "status_condition_id": 2, "element_id": 9 },
+	{ "status_condition_id": 2, "element_id": 8 },
+	{ "status_condition_id": 3, "element_id": 4 },
+	{ "status_condition_id": 5, "element_id": 7 }
+]

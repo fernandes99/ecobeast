@@ -1,1 +1,13 @@
-[]
+[
+	{ "id": 1, "slug": "apply_status", "name": "Aplicar status" },
+	{ "id": 2, "slug": "modify_stat", "name": "Alterar atributo" },
+	{ "id": 3, "slug": "heal", "name": "Curar" },
+	{ "id": 4, "slug": "drain", "name": "Drenar" },
+	{ "id": 5, "slug": "recoil", "name": "Recuo" },
+	{ "id": 6, "slug": "flinch", "name": "Amedrontar" },
+	{ "id": 7, "slug": "multi_turn", "name": "Carregar" },
+	{ "id": 8, "slug": "fixed_damage", "name": "Dano fixo" },
+	{ "id": 9, "slug": "set_weather", "name": "Mudar clima" },
+	{ "id": 10, "slug": "protect", "name": "Proteger" },
+	{ "id": 11, "slug": "switch", "name": "Trocar" }
+]

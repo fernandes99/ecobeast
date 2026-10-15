@@ -1,1 +1,7 @@
-[]
+[
+	{ "id": 1, "slug": "common", "name": "Comum", "sort_order": 1 },
+	{ "id": 2, "slug": "uncommon", "name": "Incomum", "sort_order": 2 },
+	{ "id": 3, "slug": "rare", "name": "Raro", "sort_order": 3 },
+	{ "id": 4, "slug": "epic", "name": "Épico", "sort_order": 4 },
+	{ "id": 5, "slug": "ancestral", "name": "Ancestral", "sort_order": 5 }
+]

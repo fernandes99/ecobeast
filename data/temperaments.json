@@ -1,1 +1,27 @@
-[]
+[
+	{ "id": 1, "slug": "sereno", "name": "Sereno", "increased_stat_id": 2, "decreased_stat_id": 2 },
+	{ "id": 2, "slug": "impetuoso", "name": "Impetuoso", "increased_stat_id": 2, "decreased_stat_id": 3 },
+	{ "id": 3, "slug": "ousado", "name": "Ousado", "increased_stat_id": 2, "decreased_stat_id": 4 },
+	{ "id": 4, "slug": "feroz", "name": "Feroz", "increased_stat_id": 2, "decreased_stat_id": 5 },
+	{ "id": 5, "slug": "robusto", "name": "Robusto", "increased_stat_id": 2, "decreased_stat_id": 6 },
+	{ "id": 6, "slug": "paciente", "name": "Paciente", "increased_stat_id": 3, "decreased_stat_id": 2 },
+	{ "id": 7, "slug": "equilibrado", "name": "Equilibrado", "increased_stat_id": 3, "decreased_stat_id": 3 },
+	{ "id": 8, "slug": "teimoso", "name": "Teimoso", "increased_stat_id": 3, "decreased_stat_id": 4 },
+	{ "id": 9, "slug": "rigido", "name": "Rígido", "increased_stat_id": 3, "decreased_stat_id": 5 },
+	{ "id": 10, "slug": "firme", "name": "Firme", "increased_stat_id": 3, "decreased_stat_id": 6 },
+	{ "id": 11, "slug": "sabio", "name": "Sábio", "increased_stat_id": 4, "decreased_stat_id": 2 },
+	{ "id": 12, "slug": "sonhador", "name": "Sonhador", "increased_stat_id": 4, "decreased_stat_id": 3 },
+	{ "id": 13, "slug": "tranquilo", "name": "Tranquilo", "increased_stat_id": 4, "decreased_stat_id": 4 },
+	{ "id": 14, "slug": "intenso", "name": "Intenso", "increased_stat_id": 4, "decreased_stat_id": 5 },
+	{ "id": 15, "slug": "contemplativo", "name": "Contemplativo", "increased_stat_id": 4, "decreased_stat_id": 6 },
+	{ "id": 16, "slug": "calmo", "name": "Calmo", "increased_stat_id": 5, "decreased_stat_id": 2 },
+	{ "id": 17, "slug": "bondoso", "name": "Bondoso", "increased_stat_id": 5, "decreased_stat_id": 3 },
+	{ "id": 18, "slug": "reservado", "name": "Reservado", "increased_stat_id": 5, "decreased_stat_id": 4 },
+	{ "id": 19, "slug": "sobrio", "name": "Sóbrio", "increased_stat_id": 5, "decreased_stat_id": 5 },
+	{ "id": 20, "slug": "prudente", "name": "Prudente", "increased_stat_id": 5, "decreased_stat_id": 6 },
+	{ "id": 21, "slug": "arisco", "name": "Arisco", "increased_stat_id": 6, "decreased_stat_id": 2 },
+	{ "id": 22, "slug": "agil", "name": "Ágil", "increased_stat_id": 6, "decreased_stat_id": 3 },
+	{ "id": 23, "slug": "inquieto", "name": "Inquieto", "increased_stat_id": 6, "decreased_stat_id": 4 },
+	{ "id": 24, "slug": "afoito", "name": "Afoito", "increased_stat_id": 6, "decreased_stat_id": 5 },
+	{ "id": 25, "slug": "constante", "name": "Constante", "increased_stat_id": 6, "decreased_stat_id": 6 }
+]

@@ -1,1 +1,9 @@
-[]
+[
+	{ "id": 1, "slug": "level", "name": "Nível" },
+	{ "id": 2, "slug": "item", "name": "Item" },
+	{ "id": 3, "slug": "bond", "name": "Vínculo" },
+	{ "id": 4, "slug": "time_of_day", "name": "Horário" },
+	{ "id": 5, "slug": "zone", "name": "Zona" },
+	{ "id": 6, "slug": "trade", "name": "Troca" },
+	{ "id": 7, "slug": "temperament", "name": "Temperamento" }
+]

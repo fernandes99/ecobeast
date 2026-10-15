@@ -1,1 +1,91 @@
-[]
+[
+	{ "attacker_element_id": 1, "defender_element_id": 3, "multiplier": 2.0 },
+	{ "attacker_element_id": 1, "defender_element_id": 7, "multiplier": 2.0 },
+	{ "attacker_element_id": 1, "defender_element_id": 8, "multiplier": 2.0 },
+	{ "attacker_element_id": 1, "defender_element_id": 1, "multiplier": 0.5 },
+	{ "attacker_element_id": 1, "defender_element_id": 2, "multiplier": 0.5 },
+	{ "attacker_element_id": 1, "defender_element_id": 5, "multiplier": 0.5 },
+	{ "attacker_element_id": 1, "defender_element_id": 14, "multiplier": 0.5 },
+
+	{ "attacker_element_id": 2, "defender_element_id": 1, "multiplier": 2.0 },
+	{ "attacker_element_id": 2, "defender_element_id": 5, "multiplier": 2.0 },
+	{ "attacker_element_id": 2, "defender_element_id": 2, "multiplier": 0.5 },
+	{ "attacker_element_id": 2, "defender_element_id": 3, "multiplier": 0.5 },
+	{ "attacker_element_id": 2, "defender_element_id": 14, "multiplier": 0.5 },
+
+	{ "attacker_element_id": 3, "defender_element_id": 2, "multiplier": 2.0 },
+	{ "attacker_element_id": 3, "defender_element_id": 5, "multiplier": 2.0 },
+	{ "attacker_element_id": 3, "defender_element_id": 1, "multiplier": 0.5 },
+	{ "attacker_element_id": 3, "defender_element_id": 3, "multiplier": 0.5 },
+	{ "attacker_element_id": 3, "defender_element_id": 6, "multiplier": 0.5 },
+	{ "attacker_element_id": 3, "defender_element_id": 9, "multiplier": 0.5 },
+	{ "attacker_element_id": 3, "defender_element_id": 8, "multiplier": 0.5 },
+	{ "attacker_element_id": 3, "defender_element_id": 14, "multiplier": 0.5 },
+
+	{ "attacker_element_id": 4, "defender_element_id": 2, "multiplier": 2.0 },
+	{ "attacker_element_id": 4, "defender_element_id": 6, "multiplier": 2.0 },
+	{ "attacker_element_id": 4, "defender_element_id": 4, "multiplier": 0.5 },
+	{ "attacker_element_id": 4, "defender_element_id": 3, "multiplier": 0.5 },
+	{ "attacker_element_id": 4, "defender_element_id": 14, "multiplier": 0.5 },
+	{ "attacker_element_id": 4, "defender_element_id": 5, "multiplier": 0.0 },
+
+	{ "attacker_element_id": 5, "defender_element_id": 1, "multiplier": 2.0 },
+	{ "attacker_element_id": 5, "defender_element_id": 4, "multiplier": 2.0 },
+	{ "attacker_element_id": 5, "defender_element_id": 9, "multiplier": 2.0 },
+	{ "attacker_element_id": 5, "defender_element_id": 8, "multiplier": 2.0 },
+	{ "attacker_element_id": 5, "defender_element_id": 3, "multiplier": 0.5 },
+	{ "attacker_element_id": 5, "defender_element_id": 6, "multiplier": 0.0 },
+
+	{ "attacker_element_id": 6, "defender_element_id": 3, "multiplier": 2.0 },
+	{ "attacker_element_id": 6, "defender_element_id": 9, "multiplier": 2.0 },
+	{ "attacker_element_id": 6, "defender_element_id": 4, "multiplier": 0.5 },
+	{ "attacker_element_id": 6, "defender_element_id": 8, "multiplier": 0.5 },
+	{ "attacker_element_id": 6, "defender_element_id": 5, "multiplier": 0.5 },
+
+	{ "attacker_element_id": 7, "defender_element_id": 3, "multiplier": 2.0 },
+	{ "attacker_element_id": 7, "defender_element_id": 5, "multiplier": 2.0 },
+	{ "attacker_element_id": 7, "defender_element_id": 6, "multiplier": 2.0 },
+	{ "attacker_element_id": 7, "defender_element_id": 14, "multiplier": 2.0 },
+	{ "attacker_element_id": 7, "defender_element_id": 1, "multiplier": 0.5 },
+	{ "attacker_element_id": 7, "defender_element_id": 2, "multiplier": 0.5 },
+	{ "attacker_element_id": 7, "defender_element_id": 7, "multiplier": 0.5 },
+	{ "attacker_element_id": 7, "defender_element_id": 8, "multiplier": 0.5 },
+
+	{ "attacker_element_id": 8, "defender_element_id": 7, "multiplier": 2.0 },
+	{ "attacker_element_id": 8, "defender_element_id": 13, "multiplier": 2.0 },
+	{ "attacker_element_id": 8, "defender_element_id": 1, "multiplier": 0.5 },
+	{ "attacker_element_id": 8, "defender_element_id": 2, "multiplier": 0.5 },
+	{ "attacker_element_id": 8, "defender_element_id": 4, "multiplier": 0.5 },
+	{ "attacker_element_id": 8, "defender_element_id": 8, "multiplier": 0.5 },
+
+	{ "attacker_element_id": 9, "defender_element_id": 3, "multiplier": 2.0 },
+	{ "attacker_element_id": 9, "defender_element_id": 12, "multiplier": 2.0 },
+	{ "attacker_element_id": 9, "defender_element_id": 9, "multiplier": 0.5 },
+	{ "attacker_element_id": 9, "defender_element_id": 5, "multiplier": 0.5 },
+	{ "attacker_element_id": 9, "defender_element_id": 11, "multiplier": 0.5 },
+	{ "attacker_element_id": 9, "defender_element_id": 8, "multiplier": 0.0 },
+
+	{ "attacker_element_id": 10, "defender_element_id": 13, "multiplier": 2.0 },
+	{ "attacker_element_id": 10, "defender_element_id": 9, "multiplier": 2.0 },
+	{ "attacker_element_id": 10, "defender_element_id": 10, "multiplier": 0.5 },
+	{ "attacker_element_id": 10, "defender_element_id": 8, "multiplier": 0.5 },
+	{ "attacker_element_id": 10, "defender_element_id": 11, "multiplier": 0.0 },
+
+	{ "attacker_element_id": 11, "defender_element_id": 10, "multiplier": 2.0 },
+	{ "attacker_element_id": 11, "defender_element_id": 12, "multiplier": 2.0 },
+	{ "attacker_element_id": 11, "defender_element_id": 11, "multiplier": 0.5 },
+	{ "attacker_element_id": 11, "defender_element_id": 14, "multiplier": 0.5 },
+
+	{ "attacker_element_id": 12, "defender_element_id": 11, "multiplier": 2.0 },
+	{ "attacker_element_id": 12, "defender_element_id": 14, "multiplier": 2.0 },
+	{ "attacker_element_id": 12, "defender_element_id": 12, "multiplier": 0.5 },
+	{ "attacker_element_id": 12, "defender_element_id": 1, "multiplier": 0.5 },
+	{ "attacker_element_id": 12, "defender_element_id": 8, "multiplier": 0.5 },
+
+	{ "attacker_element_id": 13, "defender_element_id": 8, "multiplier": 0.5 },
+	{ "attacker_element_id": 13, "defender_element_id": 5, "multiplier": 0.5 },
+
+	{ "attacker_element_id": 14, "defender_element_id": 14, "multiplier": 2.0 },
+	{ "attacker_element_id": 14, "defender_element_id": 8, "multiplier": 0.5 },
+	{ "attacker_element_id": 14, "defender_element_id": 12, "multiplier": 0.5 }
+]

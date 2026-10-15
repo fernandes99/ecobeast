@@ -1,1 +1,5 @@
-[]
+[
+	{ "id": 1, "slug": "level_up", "name": "Por nível" },
+	{ "id": 2, "slug": "evolution", "name": "Ao ascender" },
+	{ "id": 3, "slug": "teachable", "name": "Ensinável" }
+]
