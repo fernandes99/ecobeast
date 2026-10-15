@@ -15,6 +15,7 @@ corner_radius_bottom_right = 999
 corner_radius_bottom_left = 999
 
 [node name="ElementBadge" type="PanelContainer"]
+mouse_filter = 2
 theme_override_styles/panel = SubResource("pill")
 script = ExtResource("1_script")
 

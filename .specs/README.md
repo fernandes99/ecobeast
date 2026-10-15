@@ -35,7 +35,7 @@ As fases dependem umas das outras nesta ordem:
 | 4   | [game-data/03-starter-content](game-data/03-starter-content.md)            | concluída |
 | 5   | [foundation/02-ui-shell](foundation/02-ui-shell.md)                        | concluída |
 | 6   | [onboarding/01-title-and-tamer-name](onboarding/01-title-and-tamer-name.md) | concluída |
-| 7   | [onboarding/02-starter-selection](onboarding/02-starter-selection.md)      | rascunho |
+| 7   | [onboarding/02-starter-selection](onboarding/02-starter-selection.md)      | concluída |
 | 8   | [hub/01-hub-screen](hub/01-hub-screen.md)                                  | rascunho |
 
 ## Modelo de spec

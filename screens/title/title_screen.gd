@@ -38,7 +38,7 @@ func _submit() -> void:
 	_set_busy(true)
 	var result: Result = await Session.create_player(_name_edit.text)
 	if result.ok:
-		Router.go_to(&"placeholder", {"title": "Escolha do inicial"})
+		Router.go_to(&"starter_select")
 		return
 	_set_busy(false)
 	_show_hint(result.error, true)

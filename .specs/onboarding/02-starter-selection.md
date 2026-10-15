@@ -1,6 +1,6 @@
 # 02. Escolha do inicial
 
-- **Status:** rascunho
+- **Status:** concluída
 - **Depende de:** [01-title-and-tamer-name](01-title-and-tamer-name.md)
 
 ## Contexto
@@ -36,13 +36,28 @@ Depois da fase 01, o jogador cria o Domador e cai no placeholder "Escolha do ini
 
 ## Critérios de aceite
 
-- [ ] Com um Domador sem equipe, F5 abre a escolha com Fagulho, Gotículo e Brotelho, nessa ordem, com cores de Fogo, Água e Flora.
-- [ ] Tocar em Gotículo e depois em "Voltar" fecha o painel e nada é gravado.
-- [ ] Confirmar Brotelho abre o placeholder "Hub"; `save.json` tem uma criatura `species_id` 7, nível 5, `current_xp` 125, 2 técnicas (Patada com 35 PP e Olhar Manhoso com 30 PP), `trait_id` 5, `bond` 70 e `is_prismatic` false.
-- [ ] O `current_hp` gravado é igual ao HP calculado à mão com a fórmula de [architecture.md](architecture.md) para os Genes gravados.
-- [ ] Apagar o save e repetir 3 vezes gera Genes e Temperamentos diferentes.
-- [ ] Fechar e reabrir abre direto o placeholder "Hub".
-- [ ] Um script temporário confirma o exemplo do `StatCalculator` em [architecture.md](architecture.md) (Fagulho, nível 5, Genes 0, neutro: 19/10/9/11/9/11). (Apagar depois.)
+- [x] Com um Domador sem equipe, F5 abre a escolha com Fagulho, Gotículo e Brotelho, nessa ordem, com cores de Fogo, Água e Flora.
+- [x] Tocar em Gotículo e depois em "Voltar" fecha o painel e nada é gravado.
+- [x] Confirmar Brotelho abre o placeholder "Hub"; `save.json` tem uma criatura `species_id` 7, nível 5, `current_xp` 125, 2 técnicas (Patada com 35 PP e Olhar Manhoso com 30 PP), `trait_id` 5, `bond` 70 e `is_prismatic` false.
+- [x] O `current_hp` gravado é igual ao HP calculado à mão com a fórmula de [architecture.md](architecture.md) para os Genes gravados.
+- [x] Apagar o save e repetir 3 vezes gera Genes e Temperamentos diferentes.
+- [x] Fechar e reabrir abre direto o placeholder "Hub".
+- [x] Um script temporário confirma o exemplo do `StatCalculator` em [architecture.md](architecture.md) (Fagulho, nível 5, Genes 0, neutro: 19/10/9/11/9/11). (Apagar depois.)
+
+Conferidos por uma cena temporária (já apagada). Ela abriu o jogo numa janela, tocou nos cartões e nos botões do painel, simulou a reabertura chamando o boot de novo e salvou capturas de tela. Também conferiu:
+
+- o Esc e o toque no fundo escurecido fechando o painel;
+- o "Escolhendo…" com os botões desabilitados;
+- as recusas "Você já escolheu seu Ecobeast." e "Esse Ecobeast não pode ser escolhido." (espécie 2).
+
+O voltar do Android usa o mesmo caminho do Esc (`Router.back()`) e fica para conferir no aparelho.
+
+**Decisões da implementação**
+
+- **Voltar com painel aberto:** o `Router.back()` primeiro pergunta à tela do topo, por `handle_back() -> bool`, se ela trata o voltar sozinha. A escolha usa isso para fechar o painel sem sair da tela. Registrado em [foundation/architecture.md](../foundation/architecture.md#navegação).
+- **`class_name`:** cartão e painel têm `StarterCard` e `StarterConfirmPanel`, para a tela chamar os métodos com tipo.
+- **Toque no cartão:** o cartão é um `PanelContainer` que trata o toque em `_gui_input`. Conta como toque só se o dedo andar até 24 px entre tocar e soltar, para rolar a tela não escolher sem querer. A borda tem 3 px, mais grossa que a de 2 px do tema, para a cor do Elemento aparecer.
+- **`ElementBadge`:** passou a ignorar o mouse (`mouse_filter` = Ignorar), para não roubar o toque do cartão.
 
 ## Desenho técnico
 
@@ -75,9 +90,9 @@ No editor: percorrer os critérios de aceite.
 
 ## Tarefas
 
-- [ ] `XpCurve` e `StatCalculator`; conferir o exemplo.
-- [ ] `CreatureFactory`.
-- [ ] `choose_starter` e `stats` no `LocalGameService`.
-- [ ] Cartão, painel de confirmação e tela de escolha.
-- [ ] Boot apontando para `starter_select`.
-- [ ] Marcar esta spec e as tabelas como `concluída`; commit `feat: escolha do Ecobeast inicial`.
+- [x] `XpCurve` e `StatCalculator`; conferir o exemplo.
+- [x] `CreatureFactory`.
+- [x] `choose_starter` e `stats` no `LocalGameService`.
+- [x] Cartão, painel de confirmação e tela de escolha.
+- [x] Boot apontando para `starter_select`.
+- [x] Marcar esta spec e as tabelas como `concluída`; commit `feat: escolha do Ecobeast inicial`.

@@ -67,6 +67,6 @@ Tomadas no planejamento (corrigíveis; ao mudar uma, atualize aqui e nas specs a
 | Fase                                                  | Entrega                                                                  | Status   |
 | ----------------------------------------------------- | ------------------------------------------------------------------------ | -------- |
 | [01-title-and-tamer-name](01-title-and-tamer-name.md) | Estado do jogador, serviços, boot e tela de entrada com o nome           | concluída |
-| [02-starter-selection](02-starter-selection.md)       | Regras de criatura (stats, XP, geração) e tela de escolha do inicial     | rascunho |
+| [02-starter-selection](02-starter-selection.md)       | Regras de criatura (stats, XP, geração) e tela de escolha do inicial     | concluída |
 
 O desenho compartilhado está em [architecture.md](architecture.md).

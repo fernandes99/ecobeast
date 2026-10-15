@@ -86,6 +86,54 @@ corner_radius_top_right = 20
 corner_radius_bottom_right = 20
 corner_radius_bottom_left = 20
 
+[sub_resource type="StyleBoxFlat" id="outline_normal"]
+content_margin_left = 24.0
+content_margin_top = 16.0
+content_margin_right = 24.0
+content_margin_bottom = 16.0
+draw_center = false
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.168627, 0.682353, 0.556863, 1)
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
+
+[sub_resource type="StyleBoxFlat" id="outline_pressed"]
+content_margin_left = 24.0
+content_margin_top = 16.0
+content_margin_right = 24.0
+content_margin_bottom = 16.0
+bg_color = Color(0.168627, 0.682353, 0.556863, 0.12)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.121569, 0.541176, 0.439216, 1)
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
+
+[sub_resource type="StyleBoxFlat" id="outline_disabled"]
+content_margin_left = 24.0
+content_margin_top = 16.0
+content_margin_right = 24.0
+content_margin_bottom = 16.0
+draw_center = false
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.168627, 0.682353, 0.556863, 0.4)
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
+
 [resource]
 default_font = ExtResource("1_regular")
 default_font_size = 26
@@ -112,6 +160,18 @@ LineEdit/colors/selection_color = Color(0.168627, 0.682353, 0.556863, 0.35)
 LineEdit/styles/focus = SubResource("line_edit_focus")
 LineEdit/styles/normal = SubResource("line_edit_normal")
 LineEdit/styles/read_only = SubResource("line_edit_normal")
+OutlineButton/base_type = &"Button"
+OutlineButton/colors/font_color = Color(0.168627, 0.682353, 0.556863, 1)
+OutlineButton/colors/font_disabled_color = Color(0.168627, 0.682353, 0.556863, 0.4)
+OutlineButton/colors/font_focus_color = Color(0.168627, 0.682353, 0.556863, 1)
+OutlineButton/colors/font_hover_color = Color(0.168627, 0.682353, 0.556863, 1)
+OutlineButton/colors/font_hover_pressed_color = Color(0.121569, 0.541176, 0.439216, 1)
+OutlineButton/colors/font_pressed_color = Color(0.121569, 0.541176, 0.439216, 1)
+OutlineButton/styles/disabled = SubResource("outline_disabled")
+OutlineButton/styles/hover = SubResource("outline_normal")
+OutlineButton/styles/hover_pressed = SubResource("outline_pressed")
+OutlineButton/styles/normal = SubResource("outline_normal")
+OutlineButton/styles/pressed = SubResource("outline_pressed")
 PanelContainer/styles/panel = SubResource("panel")
 SecondaryLabel/base_type = &"Label"
 SecondaryLabel/colors/font_color = Color(0.431373, 0.407843, 0.45098, 1)

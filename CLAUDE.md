@@ -43,7 +43,7 @@ Detalhes em `.specs/foundation/architecture.md`.
 - **Dados de design** são tabelas relacionais em `res://data/<tabela>.json` (ids estáveis, FKs `<singular>_id`), descritas em `.specs/game-data/architecture.md` e espelhadas em `core/data/catalog_schema.gd`. Salve só ids no estado do jogador.
 - **GDScript tipado:** declaração sem tipo é erro de script no projeto. Arquivos em `snake_case`, classes em `PascalCase`, nós acessados por `%NomeUnico`.
 - Textos do jogador em pt-BR, direto nas cenas e scripts.
-- **Telas novas:** registrar o id em `Router.SCREENS` (`core/autoload/router.gd`); parâmetros chegam em `setup(params)` antes do `_ready`; o conteúdo fica dentro de um `SafeArea`. Componentes com `set_*()` aceitam ser chamados antes de entrar na árvore.
+- **Telas novas:** registrar o id em `Router.SCREENS` (`core/autoload/router.gd`); parâmetros chegam em `setup(params)` antes do `_ready`; o conteúdo fica dentro de um `SafeArea`; painel aberto por cima da tela se fecha no voltar via `handle_back() -> bool`. Componentes com `set_*()` aceitam ser chamados antes de entrar na árvore.
 - **Visual:** fontes e estilos vêm do tema (`ui/theme/main_theme.tres`, variações `TitleLabel`, `SecondaryLabel`, `BoldLabel`); cores da interface de `UiPalette`, cores de Elemento do catálogo. As cores do tema repetem as de `UiPalette`: mude as duas juntas.
 - Versione os arquivos `.uid` que o Godot cria ao lado dos scripts; `.godot/` fica fora do git.
 

@@ -119,7 +119,7 @@ A cena principal é `res://screens/main/main.tscn`: um `Control` de tela cheia c
 - **Registro de telas:** dicionário no `Router` de id (`StringName`) para caminho da cena. Ids do MVP: `&"title"`, `&"starter_select"`, `&"hub"`, `&"placeholder"`.
 - **`go_to(id, params := {})`:** limpa a pilha e abre a tela. Usado quando não deve haver volta (ex.: depois de escolher o inicial).
 - **`push(id, params := {})`:** esconde a tela atual (sem destruir) e abre a nova por cima.
-- **`back()`:** destrói a tela do topo e mostra a anterior. Na última tela da pilha, não faz nada.
+- **`back()`:** destrói a tela do topo e mostra a anterior. Na última tela da pilha, não faz nada. Antes, se a tela do topo tiver `func handle_back() -> bool` e ele devolver `true`, a tela tratou o voltar sozinha (ex.: fechou um painel) e continua aberta.
 - **Parâmetros:** se a tela tiver `func setup(params: Dictionary) -> void`, o `Router` chama antes de adicioná-la à árvore.
 - **Voltar do Android:** `application/config/quit_on_go_back = false`; a cena raiz recebe `NOTIFICATION_WM_GO_BACK_REQUEST` e chama `Router.back()`.
 

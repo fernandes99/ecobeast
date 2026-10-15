@@ -1,0 +1,57 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://screens/starter_select/starter_select_screen.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://ui/components/safe_area.tscn" id="2_safe_area"]
+[ext_resource type="PackedScene" path="res://screens/starter_select/confirm_panel.tscn" id="3_confirm"]
+
+[node name="StarterSelectScreen" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="SafeArea" parent="." instance=ExtResource("2_safe_area")]
+layout_mode = 1
+
+[node name="Scroll" type="ScrollContainer" parent="SafeArea"]
+layout_mode = 2
+horizontal_scroll_mode = 0
+
+[node name="Content" type="VBoxContainer" parent="SafeArea/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 16
+alignment = 1
+
+[node name="Title" type="Label" parent="SafeArea/Scroll/Content"]
+layout_mode = 2
+theme_type_variation = &"TitleLabel"
+text = "Escolha seu primeiro Ecobeast"
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="Subtitle" type="Label" parent="SafeArea/Scroll/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"SecondaryLabel"
+text = "Ele vai te acompanhar desde o começo."
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="Gap" type="Control" parent="SafeArea/Scroll/Content"]
+custom_minimum_size = Vector2(0, 16)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Cards" type="VBoxContainer" parent="SafeArea/Scroll/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="ConfirmPanel" parent="." instance=ExtResource("3_confirm")]
+unique_name_in_owner = true
+layout_mode = 1

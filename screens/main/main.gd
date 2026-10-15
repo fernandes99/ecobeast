@@ -36,12 +36,12 @@ func _load_player() -> void:
 
 
 ## Sem jogador: entrada. Sem inicial: escolha. Com equipe: Hub.
-## Escolha e Hub abrem o placeholder até existirem (onboarding/02 e hub/01).
+## O Hub abre o placeholder até existir (hub/01).
 func _open_first_screen(player: Player) -> void:
 	if player == null:
 		Router.go_to(&"title")
 	elif not player.has_starter():
-		Router.go_to(&"placeholder", {"title": "Escolha do inicial"})
+		Router.go_to(&"starter_select")
 	else:
 		Router.go_to(&"placeholder", {"title": "Hub"})
 

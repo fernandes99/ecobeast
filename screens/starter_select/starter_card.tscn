@@ -1,0 +1,45 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://screens/starter_select/starter_card.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://ui/components/creature_portrait.tscn" id="2_portrait"]
+[ext_resource type="PackedScene" path="res://ui/components/element_badge.tscn" id="3_badge"]
+
+[node name="StarterCard" type="PanelContainer"]
+mouse_default_cursor_shape = 2
+script = ExtResource("1_script")
+
+[node name="Row" type="HBoxContainer" parent="."]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 20
+
+[node name="Portrait" parent="Row" instance=ExtResource("2_portrait")]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
+portrait_size = 140
+
+[node name="Info" type="VBoxContainer" parent="Row"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+mouse_filter = 2
+theme_override_constants/separation = 8
+
+[node name="NameLabel" type="Label" parent="Row/Info"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"BoldLabel"
+theme_override_font_sizes/font_size = 32
+
+[node name="Badge" parent="Row/Info" instance=ExtResource("3_badge")]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 0
+
+[node name="Description" type="Label" parent="Row/Info"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"SecondaryLabel"
+theme_override_font_sizes/font_size = 20
+autowrap_mode = 3

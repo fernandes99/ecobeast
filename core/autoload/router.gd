@@ -7,6 +7,7 @@ extends Node
 ## Telas registradas: id -> cena. Cada fase acrescenta a sua.
 const SCREENS: Dictionary[StringName, String] = {
 	&"placeholder": "res://screens/placeholder/placeholder_screen.tscn",
+	&"starter_select": "res://screens/starter_select/starter_select_screen.tscn",
 	&"title": "res://screens/title/title_screen.tscn",
 }
 
@@ -42,7 +43,13 @@ func push(id: StringName, params: Dictionary = {}) -> void:
 
 
 ## Fecha a tela do topo e mostra a anterior. Na última tela, não faz nada.
+## Se a tela do topo tiver handle_back() -> bool e ele devolver true, ela
+## tratou o voltar sozinha (ex.: fechou um painel) e continua aberta.
 func back() -> void:
+	if not _stack.is_empty():
+		var current := _stack.back() as Control
+		if current.has_method(&"handle_back") and current.call(&"handle_back"):
+			return
 	if not can_go_back():
 		return
 	var top: Control = _stack.pop_back()
