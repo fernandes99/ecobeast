@@ -39,7 +39,7 @@ Detalhes em `.specs/foundation/architecture.md`.
 - **Nunca** usar nomes, termos ou visuais do Pokémon no jogo. Use o vocabulário de `.specs/glossary.md`: Ecobeast, Domador, Esfera de Vínculo, Bestiário, Elemento, Técnica, Traço, Temperamento, Genes, Treino, Santuário, Arena, Prismático, Ancestral, Ascensão, Refúgio.
 - **Camadas:** `domain/` não usa Node, autoload, arquivo nem `get_tree()` — recebe tudo por parâmetro, porque será reescrito no servidor. Telas leem o catálogo pelo `GameData` e o estado do jogador pelo `Session`; nunca abrem JSON nem `user://`.
 - **Telas não calculam regras.** HP máximo, técnicas, recompensas vêm prontos dos serviços.
-- **Serviços** são chamados com `await` e devolvem `Result` (`ok`, `data`, `error`).
+- **Serviços** são chamados com `await` e devolvem `Result` (`ok`, `data`, `error`). Telas só falam com o `Session`, nunca com `GameService` ou `PlayerRepository`; com `ok` falso, mostram `error` e deixam o jogador onde está.
 - **Dados de design** são tabelas relacionais em `res://data/<tabela>.json` (ids estáveis, FKs `<singular>_id`), descritas em `.specs/game-data/architecture.md` e espelhadas em `core/data/catalog_schema.gd`. Salve só ids no estado do jogador.
 - **GDScript tipado:** declaração sem tipo é erro de script no projeto. Arquivos em `snake_case`, classes em `PascalCase`, nós acessados por `%NomeUnico`.
 - Textos do jogador em pt-BR, direto nas cenas e scripts.

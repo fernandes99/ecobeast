@@ -9,9 +9,9 @@ var level: int
 var method_slug: String
 
 
-static func create(skill_id: int, level: int, method_slug: String) -> LearnsetEntry:
+static func create(skill: int, learn_level: int, method: String) -> LearnsetEntry:
 	var entry := LearnsetEntry.new()
-	entry.skill_id = skill_id
-	entry.level = level
-	entry.method_slug = method_slug
+	entry.skill_id = skill
+	entry.level = learn_level
+	entry.method_slug = method
 	return entry

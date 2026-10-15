@@ -1,6 +1,6 @@
 # 01. Entrada e nome do Domador
 
-- **Status:** rascunho
+- **Status:** concluída
 - **Depende de:** [foundation/02-ui-shell](../foundation/02-ui-shell.md), [game-data/03-starter-content](../game-data/03-starter-content.md)
 
 ## Contexto
@@ -46,13 +46,23 @@ O jogo abre, valida o catálogo e mostra uma tela placeholder "Ecobeast". Ainda 
 
 ## Critérios de aceite
 
-- [ ] Apagar `%APPDATA%\Godot\app_userdata\Ecobeast\save.json` (se existir) e dar F5 abre a tela de entrada.
-- [ ] "Começar" desabilitado com campo vazio, com "A", com "  " e com "@@"; habilitado com "Ana", "Jo 2" e "Ágatha".
-- [ ] "  Ana   Maria  " vira "Ana Maria" no save.
-- [ ] Depois de "Começar", aparece o placeholder "Escolha do inicial", e `save.json` tem o jogador com nível 1, 1000 moedas e `party` vazio.
-- [ ] Fechar e dar F5 de novo abre direto o placeholder "Escolha do inicial".
-- [ ] Trocar o conteúdo de `save.json` por `abc` e dar F5: abre a tela de entrada e existe `save.corrupted.json`.
-- [ ] Esc na tela de entrada não faz nada (não há tela anterior).
+- [x] Apagar `%APPDATA%\Godot\app_userdata\Ecobeast\save.json` (se existir) e dar F5 abre a tela de entrada.
+- [x] "Começar" desabilitado com campo vazio, com "A", com "  " e com "@@"; habilitado com "Ana", "Jo 2" e "Ágatha".
+- [x] "  Ana   Maria  " vira "Ana Maria" no save.
+- [x] Depois de "Começar", aparece o placeholder "Escolha do inicial", e `save.json` tem o jogador com nível 1, 1000 moedas e `party` vazio.
+- [x] Fechar e dar F5 de novo abre direto o placeholder "Escolha do inicial".
+- [x] Trocar o conteúdo de `save.json` por `abc` e dar F5: abre a tela de entrada e existe `save.corrupted.json`.
+- [x] Esc na tela de entrada não faz nada (não há tela anterior).
+
+Conferidos por uma cena temporária (já apagada). Ela abriu o jogo numa janela, digitou os nomes, apertou os botões, simulou a reabertura chamando o boot de novo, gravou `abc` no save e salvou capturas de tela. Também conferiu a ida e volta de `Player.to_dict`/`from_dict` com uma criatura na equipe (RF-06) e o formato do UUID. O RF-13 fica para o dono, no aparelho: no PC não há teclado virtual. A tela já deixa o conteúdo na parte de cima, e um espaço do tamanho do teclado no fim da coluna sobe o conteúdo quando o teclado abre. O "Tentar de novo" do boot (RF-08) não foi exercitado, porque falhar a leitura do save exige um erro de disco.
+
+**Decisões da implementação**
+
+- A regra do nome (normalizar e validar) fica em `Player.normalize_name()` e `Player.is_valid_name()`. O `LocalGameService` valida com ela, e a tela de entrada usa a mesma regra só para habilitar o botão, sem duplicar a expressão regular.
+- O `Session.load_player()` chama `GameService.get_player()`: é o nome da tabela do contrato.
+- `DictFields` (`res://domain/models/dict_fields.gd`) lê campos de JSON com padrão para ausente ou `null`, e é usado pelos `from_dict`.
+- Os `await` do `Session` têm `@warning_ignore("redundant_await")`: os métodos do `GameService` são `@abstract`, e o Godot não sabe que as implementações são assíncronas.
+- Os avisos de script foram conferidos pelo servidor de linguagem do editor. A conferência achou parâmetros com o mesmo nome do campo em `LearnsetEntry.create` (da [game-data/01](../game-data/01-data-layer.md)), que foram renomeados.
 
 ## Desenho técnico
 
@@ -60,7 +70,7 @@ O jogo abre, valida o catálogo e mostra uma tela placeholder "Ecobeast". Ainda 
 
 - `res://core/services/result.gd`, `game_service.gd`, `local_game_service.gd`, `player_repository.gd`, `local_player_repository.gd`.
 - `res://core/util/uuid.gd`.
-- `res://domain/models/player.gd`, `creature_instance.gd`, `skill_slot.gd`.
+- `res://domain/models/player.gd`, `creature_instance.gd`, `skill_slot.gd`, `dict_fields.gd`.
 - `res://core/autoload/session.gd` e o autoload `Session` (depois de `Router`).
 - `res://screens/title/title_screen.tscn` e `title_screen.gd`.
 
@@ -86,11 +96,11 @@ No editor: percorrer os critérios de aceite. No celular: fica para quando houve
 
 ## Tarefas
 
-- [ ] Modelos `Player`, `CreatureInstance`, `SkillSlot` com `to_dict`/`from_dict`.
-- [ ] `Result`, `Uuid`, `PlayerRepository` e `LocalPlayerRepository`.
-- [ ] `GameService` e `LocalGameService` (sem `choose_starter`).
-- [ ] `Session` e o autoload.
-- [ ] Boot em `main.gd`.
-- [ ] Tela de entrada.
-- [ ] Atualizar o `CLAUDE.md`.
-- [ ] Marcar esta spec e as tabelas como `concluída`; commit `feat: tela de entrada e estado do jogador`.
+- [x] Modelos `Player`, `CreatureInstance`, `SkillSlot` com `to_dict`/`from_dict`.
+- [x] `Result`, `Uuid`, `PlayerRepository` e `LocalPlayerRepository`.
+- [x] `GameService` e `LocalGameService` (sem `choose_starter`).
+- [x] `Session` e o autoload.
+- [x] Boot em `main.gd`.
+- [x] Tela de entrada.
+- [x] Atualizar o `CLAUDE.md`.
+- [x] Marcar esta spec e as tabelas como `concluída`; commit `feat: tela de entrada e estado do jogador`.

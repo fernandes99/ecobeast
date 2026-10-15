@@ -31,7 +31,7 @@ res://
       element.gd  creature_species.gd  skill.gd  skill_effect.gd  creature_trait.gd
       temperament.gd  growth_rate.gd  learnset_entry.gd  evolution_rule.gd
       stat_block.gd                                                                    (game-data/01)
-      creature_instance.gd  skill_slot.gd  player.gd                                   (onboarding/01)
+      creature_instance.gd  skill_slot.gd  player.gd  dict_fields.gd                   (onboarding/01)
     rules/                     regras puras: recebem dados, devolvem resultado
       stat_calculator.gd  xp_curve.gd  creature_factory.gd                             (onboarding/02)
   ui/

@@ -7,6 +7,7 @@ extends Node
 ## Telas registradas: id -> cena. Cada fase acrescenta a sua.
 const SCREENS: Dictionary[StringName, String] = {
 	&"placeholder": "res://screens/placeholder/placeholder_screen.tscn",
+	&"title": "res://screens/title/title_screen.tscn",
 }
 
 var _host: Control
