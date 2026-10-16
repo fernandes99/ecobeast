@@ -1,6 +1,6 @@
 # 01. Tela do Hub
 
-- **Status:** rascunho
+- **Status:** concluída
 - **Depende de:** [onboarding/02-starter-selection](../onboarding/02-starter-selection.md)
 
 ## Contexto
@@ -53,13 +53,32 @@ O jogador termina o onboarding num placeholder "Hub", e o boot também abre esse
 
 ## Critérios de aceite
 
-- [ ] Depois de escolher o inicial, o Hub mostra o nome digitado, "Domador · Nível 1", "1.000" e o inicial no primeiro slot com nível 5 e HP cheio; os outros 5 slots dizem "Vazio".
-- [ ] Cada um dos 8 botões de ação e das 4 abas (fora Home) abre um placeholder com o título certo, e "Voltar" e Esc retornam ao Hub.
-- [ ] Tocar no slot do inicial abre "Detalhes de <nome>"; tocar num slot vazio não faz nada.
-- [ ] Com a janela de 405×720, tudo cabe ou rola sem cortar botões; a barra inferior fica sempre visível.
-- [ ] Um nome de 16 caracteres largos ("MMMMMMMMMMMMMMMM") não empurra as moedas para fora da tela.
-- [ ] Perfil > "Apagar progresso" com dois toques volta à tela de entrada, e o `save.json` não existe mais; com um toque só, depois de 3 s o botão volta ao normal.
-- [ ] Fechar e reabrir com equipe abre direto no Hub.
+- [x] Depois de escolher o inicial, o Hub mostra o nome digitado, "Domador · Nível 1", "1.000" e o inicial no primeiro slot com nível 5 e HP cheio; os outros 5 slots dizem "Vazio".
+- [x] Cada um dos 8 botões de ação e das 4 abas (fora Home) abre um placeholder com o título certo, e "Voltar" e Esc retornam ao Hub.
+- [x] Tocar no slot do inicial abre "Detalhes de <nome>"; tocar num slot vazio não faz nada.
+- [x] Com a janela de 405×720, tudo cabe ou rola sem cortar botões; a barra inferior fica sempre visível.
+- [x] Um nome de 16 caracteres largos ("MMMMMMMMMMMMMMMM") não empurra as moedas para fora da tela.
+- [x] Perfil > "Apagar progresso" com dois toques volta à tela de entrada, e o `save.json` não existe mais; com um toque só, depois de 3 s o botão volta ao normal.
+- [x] Fechar e reabrir com equipe abre direto no Hub.
+
+Conferidos por uma cena temporária (já apagada). Ela abriu o jogo numa janela de 405×720 e fez o caminho completo com o save apagado: entrada, escolha com toque de verdade no cartão, Hub, cada ação e aba, Perfil, apagar e entrada. Depois simulou a reabertura com equipe. Também conferiu:
+
+- a rolagem do Hub igual depois de voltar de um placeholder;
+- o Esc no Hub sem efeito;
+- o clique de verdade num botão de ação e nos slots;
+- os slots vazios com o mesmo tamanho do ocupado (a terceira coluna fica 1 px mais estreita, arredondamento da grade);
+- um toque só em "Apagar progresso" sem apagar o save.
+
+Ficam para conferir no aparelho a rolagem com o dedo por cima dos botões e dos slots e o voltar do Android, que usa o mesmo caminho do Esc.
+
+**Decisões da implementação**
+
+- **`TapPanel`** (`res://ui/components/tap_panel.gd`): o toque com folga de 24 px que o `StarterCard` tinha virou um componente, estendido pelo cartão e pelo `CreatureSlot`. Ele não consome o evento (`mouse_filter` = Passar), para o arraste chegar ao `ScrollContainer` e a tela rolar por cima do painel. Os botões de ação também usam Passar, pelo mesmo motivo.
+- **Variações de tema a mais:** `CurrentTabButton` (a aba atual, com base em `TabButton`) e `DangerButton` (o "Apagar progresso"), além das `ActionButton` e `TabButton` da spec. A cor do botão de perigo pressionado entrou na `UiPalette` como `DANGER_PRESSED`. As abas que não são a atual usam o texto secundário.
+- **Slot vazio do mesmo tamanho:** o conteúdo continua no layout, transparente, e o "Vazio" fica por cima. A borda do slot ocupado tem 3 px, como a do cartão da escolha.
+- **`HpBar`** passou a ignorar o mouse, para não roubar o toque do slot.
+- **Barra inferior:** um painel com a borda do tema, dentro da margem do `SafeArea`.
+- **Confirmação de "Apagar progresso":** um nó `Timer` de 3 s, que roda uma vez só. O segundo toque só apaga com o timer ainda correndo.
 
 ## Desenho técnico
 
@@ -68,13 +87,16 @@ O jogador termina o onboarding num placeholder "Hub", e o boot também abre esse
 - `res://screens/hub/hub_screen.tscn` e `.gd`.
 - `res://screens/hub/profile_debug_panel.tscn` e `.gd`.
 - `res://ui/components/creature_slot.tscn` e `.gd`.
+- `res://ui/components/tap_panel.gd` (toque em painel, ver as decisões).
 
 **Alterar**
 
 - `res://core/autoload/router.gd`: registrar `&"hub"`.
 - `res://screens/main/main.gd`: a linha "com equipe" do boot passa a abrir `hub`.
 - `res://screens/starter_select/starter_select_screen.gd`: terminar em `&"hub"`.
-- `res://ui/theme/main_theme.tres`: variações `ActionButton` e `TabButton`.
+- `res://ui/theme/main_theme.tres`: variações `ActionButton`, `TabButton`, `CurrentTabButton` e `DangerButton`; `palette.gd`: `DANGER_PRESSED`.
+- `res://screens/starter_select/starter_card.gd`: estender `TapPanel`.
+- `res://ui/components/hp_bar.tscn`: ignorar o mouse.
 - `.specs/README.md`: MVP de estrutura concluído (todas as fases da tabela).
 
 **Reaproveitar**
@@ -91,10 +113,10 @@ No editor: percorrer os critérios de aceite e, no fim, o caminho completo com o
 
 ## Tarefas
 
-- [ ] `CreatureSlot`.
-- [ ] Variações de tema `ActionButton` e `TabButton`.
-- [ ] Layout do Hub (topo, equipe, ações, barra inferior).
-- [ ] Tabela de navegação e placeholders.
-- [ ] Painel de debug do Perfil.
-- [ ] Ligar boot e escolha do inicial ao `hub`.
-- [ ] Marcar esta spec e as tabelas como `concluída`; commit `feat: tela do Hub`.
+- [x] `CreatureSlot`.
+- [x] Variações de tema `ActionButton` e `TabButton`.
+- [x] Layout do Hub (topo, equipe, ações, barra inferior).
+- [x] Tabela de navegação e placeholders.
+- [x] Painel de debug do Perfil.
+- [x] Ligar boot e escolha do inicial ao `hub`.
+- [x] Marcar esta spec e as tabelas como `concluída`; commit `feat: tela do Hub`.

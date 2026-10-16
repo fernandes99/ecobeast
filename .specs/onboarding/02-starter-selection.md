@@ -56,7 +56,7 @@ O voltar do Android usa o mesmo caminho do Esc (`Router.back()`) e fica para con
 
 - **Voltar com painel aberto:** o `Router.back()` primeiro pergunta à tela do topo, por `handle_back() -> bool`, se ela trata o voltar sozinha. A escolha usa isso para fechar o painel sem sair da tela. Registrado em [foundation/architecture.md](../foundation/architecture.md#navegação).
 - **`class_name`:** cartão e painel têm `StarterCard` e `StarterConfirmPanel`, para a tela chamar os métodos com tipo.
-- **Toque no cartão:** o cartão é um `PanelContainer` que trata o toque em `_gui_input`. Conta como toque só se o dedo andar até 24 px entre tocar e soltar, para rolar a tela não escolher sem querer. A borda tem 3 px, mais grossa que a de 2 px do tema, para a cor do Elemento aparecer.
+- **Toque no cartão:** o cartão é um `PanelContainer` que trata o toque em `_gui_input`. Conta como toque só se o dedo andar até 24 px entre tocar e soltar, para rolar a tela não escolher sem querer. A borda tem 3 px, mais grossa que a de 2 px do tema, para a cor do Elemento aparecer. Em [hub/01](../hub/01-hub-screen.md), esse toque passou para o componente `TapPanel`, que o cartão estende.
 - **`ElementBadge`:** passou a ignorar o mouse (`mouse_filter` = Ignorar), para não roubar o toque do cartão.
 
 ## Desenho técnico

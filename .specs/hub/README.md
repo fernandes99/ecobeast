@@ -49,4 +49,4 @@ Tomadas no planejamento (corrigíveis; ao mudar uma, atualize aqui e nas specs a
 
 | Fase                              | Entrega                                                       | Status   |
 | --------------------------------- | ------------------------------------------------------------- | -------- |
-| [01-hub-screen](01-hub-screen.md) | Hub com Domador, equipe, ações, barra inferior e placeholders | rascunho |
+| [01-hub-screen](01-hub-screen.md) | Hub com Domador, equipe, ações, barra inferior e placeholders | concluída |

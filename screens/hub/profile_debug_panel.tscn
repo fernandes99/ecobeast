@@ -1,0 +1,35 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://screens/hub/profile_debug_panel.gd" id="1_script"]
+
+[node name="ProfileDebugPanel" type="VBoxContainer"]
+theme_override_constants/separation = 16
+script = ExtResource("1_script")
+
+[node name="NameLabel" type="Label" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Domador:"
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="ResetButton" type="Button" parent="."]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(360, 64)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_type_variation = &"DangerButton"
+text = "Apagar progresso"
+
+[node name="ErrorLabel" type="Label" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.898039, 0.32549, 0.294118, 1)
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="ConfirmTimer" type="Timer" parent="."]
+unique_name_in_owner = true
+wait_time = 3.0
+one_shot = true

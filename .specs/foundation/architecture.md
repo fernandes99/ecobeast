@@ -41,7 +41,7 @@ res://
       fonts/                   Nunito-Variable.ttf, nunito_regular/bold.tres, OFL.txt (foundation/02)
     components/                peças reutilizáveis (cena .tscn + script .gd)
       safe_area  element_badge  creature_portrait  hp_bar                             (foundation/02)
-      creature_slot                                                                   (hub/01)
+      creature_slot  tap_panel                                                        (hub/01)
   screens/                     uma pasta por tela (cena .tscn + script .gd)
     main/                      cena raiz, boot e ScreenHost                           (foundation/01, 02)
     placeholder/                                                                      (foundation/02)

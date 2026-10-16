@@ -32,7 +32,7 @@ func _choose(species_id: int) -> void:
 	_confirm_panel.set_busy(true)
 	var result: Result = await Session.choose_starter(species_id)
 	if result.ok:
-		Router.go_to(&"placeholder", {"title": "Hub"})
+		Router.go_to(&"hub")
 		return
 	_confirm_panel.set_busy(false)
 	_confirm_panel.show_error(result.error)

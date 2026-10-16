@@ -36,14 +36,13 @@ func _load_player() -> void:
 
 
 ## Sem jogador: entrada. Sem inicial: escolha. Com equipe: Hub.
-## O Hub abre o placeholder até existir (hub/01).
 func _open_first_screen(player: Player) -> void:
 	if player == null:
 		Router.go_to(&"title")
 	elif not player.has_starter():
 		Router.go_to(&"starter_select")
 	else:
-		Router.go_to(&"placeholder", {"title": "Hub"})
+		Router.go_to(&"hub")
 
 
 ## Erro nos dados é de quem editou o catálogo, não do jogador: a lista aparece

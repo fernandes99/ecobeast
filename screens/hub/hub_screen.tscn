@@ -1,0 +1,162 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://screens/hub/hub_screen.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://ui/components/safe_area.tscn" id="2_safe_area"]
+
+[sub_resource type="StyleBoxFlat" id="avatar"]
+bg_color = Color(0.168627, 0.682353, 0.556863, 1)
+corner_radius_top_left = 36
+corner_radius_top_right = 36
+corner_radius_bottom_right = 36
+corner_radius_bottom_left = 36
+
+[sub_resource type="StyleBoxFlat" id="coin"]
+bg_color = Color(0.94902, 0.701961, 0.239216, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
+[sub_resource type="StyleBoxFlat" id="tab_bar"]
+content_margin_left = 16.0
+content_margin_right = 16.0
+bg_color = Color(1, 1, 1, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.913725, 0.882353, 0.827451, 1)
+corner_radius_top_left = 20
+corner_radius_top_right = 20
+corner_radius_bottom_right = 20
+corner_radius_bottom_left = 20
+
+[node name="HubScreen" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="SafeArea" parent="." instance=ExtResource("2_safe_area")]
+layout_mode = 1
+
+[node name="Padding" type="MarginContainer" parent="SafeArea"]
+layout_mode = 2
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="Column" type="VBoxContainer" parent="SafeArea/Padding"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="TopBar" type="PanelContainer" parent="SafeArea/Padding/Column"]
+layout_mode = 2
+
+[node name="Row" type="HBoxContainer" parent="SafeArea/Padding/Column/TopBar"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Avatar" type="PanelContainer" parent="SafeArea/Padding/Column/TopBar/Row"]
+custom_minimum_size = Vector2(72, 72)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+theme_override_styles/panel = SubResource("avatar")
+
+[node name="AvatarInitial" type="Label" parent="SafeArea/Padding/Column/TopBar/Row/Avatar"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"BoldLabel"
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 32
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Info" type="VBoxContainer" parent="SafeArea/Padding/Column/TopBar/Row"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/separation = 0
+
+[node name="NameLabel" type="Label" parent="SafeArea/Padding/Column/TopBar/Row/Info"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"BoldLabel"
+theme_override_font_sizes/font_size = 28
+text_overrun_behavior = 3
+
+[node name="LevelLabel" type="Label" parent="SafeArea/Padding/Column/TopBar/Row/Info"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"SecondaryLabel"
+theme_override_font_sizes/font_size = 20
+
+[node name="Coins" type="HBoxContainer" parent="SafeArea/Padding/Column/TopBar/Row"]
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_constants/separation = 8
+
+[node name="Coin" type="Panel" parent="SafeArea/Padding/Column/TopBar/Row/Coins"]
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+theme_override_styles/panel = SubResource("coin")
+
+[node name="CoinsLabel" type="Label" parent="SafeArea/Padding/Column/TopBar/Row/Coins"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"BoldLabel"
+
+[node name="Scroll" type="ScrollContainer" parent="SafeArea/Padding/Column"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Content" type="VBoxContainer" parent="SafeArea/Padding/Column/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 16
+
+[node name="PartyTitle" type="Label" parent="SafeArea/Padding/Column/Scroll/Content"]
+layout_mode = 2
+theme_type_variation = &"BoldLabel"
+theme_override_font_sizes/font_size = 28
+text = "Sua equipe"
+
+[node name="PartyGrid" type="GridContainer" parent="SafeArea/Padding/Column/Scroll/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/h_separation = 16
+theme_override_constants/v_separation = 16
+columns = 3
+
+[node name="Gap" type="Control" parent="SafeArea/Padding/Column/Scroll/Content"]
+custom_minimum_size = Vector2(0, 8)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="ActionsTitle" type="Label" parent="SafeArea/Padding/Column/Scroll/Content"]
+layout_mode = 2
+theme_type_variation = &"BoldLabel"
+theme_override_font_sizes/font_size = 28
+text = "Ações"
+
+[node name="ActionsGrid" type="GridContainer" parent="SafeArea/Padding/Column/Scroll/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/h_separation = 16
+theme_override_constants/v_separation = 16
+columns = 2
+
+[node name="TabBar" type="PanelContainer" parent="SafeArea/Padding/Column"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("tab_bar")
+
+[node name="Tabs" type="HBoxContainer" parent="SafeArea/Padding/Column/TabBar"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 0

@@ -12,6 +12,7 @@ const TEXT_SECONDARY := Color("#6E6873")
 const PRIMARY := Color("#2BAE8E")
 const PRIMARY_PRESSED := Color("#1F8A70")
 const DANGER := Color("#E5534B")
+const DANGER_PRESSED := Color("#C0433C")
 const WARNING := Color("#F2B33D")
 const BORDER := Color("#E9E1D3")
 

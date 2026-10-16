@@ -5,6 +5,7 @@
 [ext_resource type="PackedScene" path="res://ui/components/element_badge.tscn" id="3_badge"]
 
 [node name="StarterCard" type="PanelContainer"]
+mouse_filter = 1
 mouse_default_cursor_shape = 2
 script = ExtResource("1_script")
 
