@@ -6,7 +6,7 @@ const envSchema = z.object({
   DATABASE_URL: z.string().min(1),
   /** Conexão direta: usada pelas migrations. */
   DIRECT_URL: z.string().min(1),
-  PORT: z.coerce.number().int().positive().default(3000),
+  PORT: z.coerce.number().int().positive().default(3100),
   /** Chamadas por IP a cada 60 s (backend-api/04). */
   THROTTLE_LIMIT: z.coerce.number().int().positive().default(100),
 });

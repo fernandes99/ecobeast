@@ -6,7 +6,7 @@ O que vem depois do MVP de estrutura (entrada, escolha do inicial e Hub). Cada l
 
 | #   | Iniciativa          | Entrega                                                                                                   | Depende de                 | Status    |
 | --- | ------------------- | --------------------------------------------------------------------------------------------------------- | -------------------------- | --------- |
-| 1   | [`backend-api`](backend-api/) | Banco no Supabase (todas as tabelas num `schema.prisma`), API NestJS de leitura do catálogo com docs Scalar; o jogo passa a ler o catálogo da API | MVP                        | rascunho  |
+| 1   | [`backend-api`](backend-api/) | Banco no Supabase (todas as tabelas num `schema.prisma`), API NestJS de leitura do catálogo com docs Scalar; o jogo passa a ler o catálogo da API | MVP                        | concluída |
 | 2   | `auth-google`       | Login com Google pelo Supabase Auth no lugar do nome digitado (no iOS, também "Sign in with Apple", que a Apple exige junto do Google); rotas do jogador (criar Domador, escolher inicial); o jogador passa a viver no servidor | backend-api                | planejada |
 | 3   | `battle-core`       | Máquina de estados da batalha, dano, ordem do turno, status, IA simples — autoridade no servidor          | backend-api                | planejada |
 | 4   | `battle-screen`     | Tela de batalha (TELAS.md #5) ouvindo os eventos do battle-core                                           | battle-core                | planejada |
@@ -46,7 +46,7 @@ Evoluções por item, vínculo, horário, zona e troca; criação (breeding) e h
 
 ## Dúvidas globais em aberto
 
-- **Backend, o que falta decidir:** a stack está nas decisões acima. Ficam para o planejamento do `backend-api`: hospedagem do NestJS (candidato: Render, na mesma região do Supabase), quem é o dono do catálogo (hoje `client/data/`; o servidor precisa dele para o banco e as regras, e o cliente passaria a baixá-lo pela API com a `HttpDataSource`), o plano do Supabase para produção (o grátis pausa o projeto depois de uma semana sem uso) e o destino das regras de `res://domain/rules/` no cliente quando o servidor passar a decidir.
+- **Backend, o que falta decidir:** a stack está nas decisões acima. Ficam para o planejamento do `backend-api`: hospedagem do NestJS (candidato: Render, na mesma região do Supabase), quem é o dono do catálogo (decidido: o banco; o cliente baixa pela API com a `HttpDataSource`), o plano do Supabase para produção (o grátis pausa o projeto depois de uma semana sem uso) e o destino das regras de `res://domain/rules/` no cliente quando o servidor passar a decidir.
 - **Nível do Domador:** o Hub mostra o nível, mas o GDD não diz como ele sobe. No MVP fica fixo em 1.
 - **Curva Erratic:** citada no GDD sem fórmula. Fora do catálogo até ser definida.
 - **Estilo de arte:** as telas usam placeholders (forma na cor do elemento) até existir arte das 3 linhas iniciais.

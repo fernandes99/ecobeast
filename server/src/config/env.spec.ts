@@ -20,7 +20,7 @@ describe('validateEnv', () => {
 
   it('usa os padrões de PORT e THROTTLE_LIMIT', () => {
     const env = validateEnv({ ...urls });
-    expect(env.PORT).toBe(3000);
+    expect(env.PORT).toBe(3100);
     expect(env.THROTTLE_LIMIT).toBe(100);
   });
 

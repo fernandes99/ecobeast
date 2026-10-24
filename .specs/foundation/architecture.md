@@ -29,7 +29,7 @@ res://
       session.gd               Session: jogador atual e serviços                       (onboarding/01)
     data/
       data_source.gd           DataSource (@abstract): de onde vêm as tabelas          (game-data/01)
-      static_json_data_source.gd  lê res://data/*.json                                 (game-data/01)
+      http_data_source.gd      baixa o catálogo da API, com cópia para o 304          (backend-api/07)
       catalog_schema.gd        tabelas, chaves, FKs e colunas obrigatórias             (game-data/01)
       catalog_validator.gd     confere o catálogo contra o schema                      (game-data/01)
       catalog.gd               índices e consultas sobre as tabelas                    (game-data/01)
@@ -63,11 +63,8 @@ res://
     title/                                                                            (onboarding/01)
     starter_select/            tela, starter_card, confirm_panel                      (onboarding/02)
     hub/                       tela, profile_debug_panel                              (hub/01)
-  data/                        catálogo: um arquivo JSON por tabela                   (game-data)
   assets/
     creatures/<slug>/front.png sprites (quando houver arte)
-  tools/
-    validate_data.gd           validador por linha de comando                         (game-data/01)
 ```
 
 Pastas são criadas quando recebem o primeiro arquivo (o git não guarda pasta vazia).
@@ -115,7 +112,7 @@ static func failure(message: String) -> Result
 
 A tela confere `result.ok`; se falso, mostra `result.error` e mantém o jogador onde está.
 
-Classes "interface" usam `@abstract` (GDScript 4.5+): `DataSource`, `GameService` e `PlayerRepository` declaram os métodos, e as implementações locais (`StaticJsonDataSource`, `LocalGameService`, `LocalPlayerRepository`) os preenchem. Quando houver backend, entram `HttpDataSource`, `ApiGameService` e `ApiPlayerRepository`, e só o ponto onde as instâncias são criadas muda.
+Classes "interface" usam `@abstract` (GDScript 4.5+): `DataSource`, `GameService` e `PlayerRepository` declaram os métodos, e as implementações os preenchem. O catálogo já vem da API pela `HttpDataSource` ([backend-api/07](../backend-api/07-client-remote-catalog.md)). `LocalGameService` e `LocalPlayerRepository` dão lugar a `ApiGameService` e `ApiPlayerRepository` quando o jogador for para o servidor, e só o ponto onde as instâncias são criadas muda.
 
 ## Autoloads
 
@@ -142,7 +139,7 @@ A cena principal é `res://screens/main/main.tscn`: um `Control` de tela cheia c
 
 `main.gd`, ao iniciar:
 
-1. `GameData.load_catalog()`. Se falhar, mostra a lista de erros na própria cena raiz e para (é erro de quem editou os dados, não do jogador).
+1. `await GameData.load_catalog()`, com "Conectando ao servidor…" na tela ([backend-api/07](../backend-api/07-client-remote-catalog.md)). Sem resposta do servidor, mostra "Não foi possível conectar ao servidor…" com "Tentar de novo". Com erro nos dados, mostra a lista na própria cena raiz e para (é erro de quem editou os dados, não do jogador).
 2. (a partir de [onboarding/01](../onboarding/01-title-and-tamer-name.md)) `await Session.load_player()` e decide a primeira tela:
 
 | Situação                              | Primeira tela      |

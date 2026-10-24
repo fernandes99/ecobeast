@@ -76,7 +76,7 @@ Da pasta `server/`:
 ```bash
 npm test
 npm run test:e2e
-npm run start:dev   # e testar as rotas pela Scalar em http://localhost:3000/docs
+npm run start:dev   # e testar as rotas pela Scalar em http://localhost:3100/docs
 ```
 
 ## Tarefas

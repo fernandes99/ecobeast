@@ -15,7 +15,8 @@ server/
   prisma/
     schema.prisma               o único arquivo que descreve o banco
     migrations/                 geradas pelo Prisma a partir do schema.prisma
-    seed.ts                     carga inicial do catálogo a partir de ../client/data/*.json
+    seed.ts                     carga inicial do catálogo a partir de seed-data/*.json
+    seed-data/                  os JSON da carga inicial, um por tabela (vieram de client/data/ na fase 07)
   src/
     main.ts                     inicia o Nest, prefixo /v1, documentação em /docs
     app.module.ts
@@ -58,10 +59,10 @@ O Prisma não descreve `CHECK` no `schema.prisma`, então essa é a única exce�
 
 ## Carga inicial (seed)
 
-- `prisma/seed.ts` lê `../client/data/<tabela>.json` e insere as linhas em ordem de dependência (referências antes de espécies, espécies antes de Técnicas aprendidas…), numa transação.
+- `prisma/seed.ts` lê `prisma/seed-data/<tabela>.json` (até a fase 07, `../client/data/`) e insere as linhas em ordem de dependência (referências antes de espécies, espécies antes de Técnicas aprendidas…), numa transação.
 - Só roda se o banco estiver vazio: se `species` tiver qualquer linha, avisa e não faz nada. Nunca sobrescreve uma mudança feita à mão.
 - No fim, ajusta as sequências dos ids e confere a contagem: 23 tabelas, 436 linhas, os mesmos números do validador do cliente.
-- Até a fase 07, ninguém edita `client/data/`. Depois da carga, mudança de valor é feita no banco.
+- Ninguém edita os JSON da carga (`client/data/` até a fase 07, `prisma/seed-data/` depois). Depois da carga, mudança de valor é feita no banco.
 - Na fase 07, os arquivos saem do cliente e vão para `server/prisma/seed-data/` (com `git mv`), e o seed passa a ler de lá. Eles ficam como a foto inicial do catálogo, para montar um banco do zero. Um banco novo com os valores atuais (o de produção, por exemplo) é copiado do banco de desenvolvimento, e não desses arquivos.
 
 ## API
@@ -83,7 +84,7 @@ O Prisma não descreve `CHECK` no `schema.prisma`, então essa é a única exce�
 
 ### Catálogo inteiro (`GET /v1/catalog`)
 
-- Devolve `{ "version": "<texto>", "tables": { "<tabela>": [ linhas ] } }`. As linhas têm exatamente as colunas e os nomes de `client/data/<tabela>.json`. Assim o Godot recebe o mesmo formato que já sabe ler.
+- Devolve `{ "version": "<texto>", "tables": { "<tabela>": [ linhas ] } }`. As linhas têm exatamente as colunas e os nomes dos JSON da carga (`prisma/seed-data/<tabela>.json`, antes `client/data/`). Assim o Godot recebe o mesmo formato que já sabe ler.
 - `version` é um resumo (hash SHA-256) do conteúdo, montado sempre na mesma ordem (tabelas por nome, linhas pela chave). Muda sempre que qualquer valor muda e só nesse caso. Vai também no cabeçalho `ETag`. Com `If-None-Match` igual à versão atual, a resposta é `304`, sem corpo.
 - Para não montar o catálogo a cada chamada, o servidor guarda a resposta em memória por até 60 segundos. Uma mudança feita no banco aparece em no máximo 1 minuto.
 
@@ -103,4 +104,4 @@ O Prisma não descreve `CHECK` no `schema.prisma`, então essa é a única exce�
 - A `HttpDataSource` (prevista em [game-data/architecture.md](../game-data/architecture.md#como-o-jogo-lê-o-catálogo)) faz `GET /v1/catalog` e devolve as tabelas no mesmo formato da `StaticJsonDataSource`. O `Catalog` e o `CatalogValidator` continuam iguais.
 - O endereço da API fica numa configuração do projeto Godot, com `http://localhost:3100` como padrão de desenvolvimento (a porta padrão do servidor).
 - O último catálogo baixado fica em cache no aparelho, junto com a versão. Na abertura, o jogo pede o catálogo com `If-None-Match` e usa o cache quando a resposta é `304`. O jogo é só online: se a API não responder, ele não entra, mesmo com cache, e mostra o erro com "Tentar de novo".
-- `client/data/` e `client/tools/validate_data.gd` saem do cliente. O validador continua rodando sobre as tabelas baixadas.
+- `client/data/` vai para `server/prisma/seed-data/`, e `client/tools/validate_data.gd` sai do cliente. O `CatalogValidator` continua rodando sobre as tabelas baixadas.

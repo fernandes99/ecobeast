@@ -3,14 +3,16 @@ extends Control
 ## dentro de %ScreenHost e trata o voltar (Android e Esc).
 ## (.specs/foundation/architecture.md e .specs/onboarding/architecture.md, "Boot")
 
+const OFFLINE_MESSAGE := "Não foi possível conectar ao servidor. Confira sua internet e tente de novo."
+
+## O "Tentar de novo" refaz só a etapa que falhou.
+var _catalog_loaded := false
+
 
 func _ready() -> void:
 	Router.set_host(%ScreenHost)
-	%RetryButton.pressed.connect(_load_player)
-	if not GameData.load_catalog():
-		_show_data_errors(GameData.errors)
-		return
-	_load_player()
+	%RetryButton.pressed.connect(_boot)
+	_boot()
 
 
 func _notification(what: int) -> void:
@@ -25,14 +27,31 @@ func _unhandled_input(event: InputEvent) -> void:
 		Router.back()
 
 
-func _load_player() -> void:
+## Catálogo (do servidor) e depois o jogador; a etapa que falha mostra o erro.
+func _boot() -> void:
 	%LoadErrorView.visible = false
+	if not _catalog_loaded:
+		%LoadingLabel.visible = true
+		var status: int = await GameData.load_catalog()
+		%LoadingLabel.visible = false
+		if status == GameData.LOAD_INVALID:
+			_show_data_errors(GameData.errors)
+			return
+		if status == GameData.LOAD_OFFLINE:
+			_show_load_error(OFFLINE_MESSAGE)
+			return
+		_catalog_loaded = true
+
 	var result: Result = await Session.load_player()
 	if not result.ok:
-		%LoadErrorMessage.text = result.error
-		%LoadErrorView.visible = true
+		_show_load_error(result.error)
 		return
 	_open_first_screen(Session.player)
+
+
+func _show_load_error(message: String) -> void:
+	%LoadErrorMessage.text = message
+	%LoadErrorView.visible = true
 
 
 ## Sem jogador: entrada. Sem inicial: escolha. Com equipe: Hub.

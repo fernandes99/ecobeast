@@ -59,7 +59,10 @@ export const CATALOG_TABLES: readonly CatalogTable[] = [
   table('starter_options', 'starterOption', ['species_id']),
 ];
 
-/** Os JSON do catálogo que alimentam o seed (até a backend-api/07: client/data/). */
+/**
+ * Os JSON da carga inicial do catálogo: a foto do catálogo antes do banco
+ * (backend-api/07). Depois da carga, o catálogo se edita no banco, não aqui.
+ */
 export const SEED_DATA_DIR = fileURLToPath(
-  new URL('../../../client/data/', import.meta.url),
+  new URL('../../prisma/seed-data/', import.meta.url),
 );

@@ -22,7 +22,7 @@ As duas ficam no painel do Supabase, em **Connect > ORMs > Prisma**. O `.env` nu
 ## Rodar
 
 ```bash
-npm run start:dev      # http://localhost:3000
+npm run start:dev      # http://localhost:3100
 ```
 
 - `GET /health`: confere o servidor e o banco.

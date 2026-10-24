@@ -56,7 +56,7 @@ Da pasta `server/`:
 ```bash
 npm test
 npm run test:e2e
-curl -i http://localhost:3000/v1/catalog | head -20
+curl -i http://localhost:3100/v1/catalog | head -20
 ```
 
 ## Tarefas

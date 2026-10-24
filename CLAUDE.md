@@ -1,6 +1,6 @@
 # Ecobeast — contexto do projeto
 
-Jogo mobile (Android/iOS, retrato) inspirado no Pokémon Simulator 4.5 (Birdiesoft, 2004): capturar, treinar e batalhar criaturas por menus e batalhas por turnos, sem mundo aberto. O jogo será **só online**, com o servidor decidindo as regras; no MVP ainda não há servidor, e tudo roda no cliente atrás de serviços.
+Jogo mobile (Android/iOS, retrato) inspirado no Pokémon Simulator 4.5 (Birdiesoft, 2004): capturar, treinar e batalhar criaturas por menus e batalhas por turnos, sem mundo aberto. O jogo é **só online**, com o servidor decidindo as regras. O catálogo já vem do servidor (`GET /v1/catalog`); o jogador e as regras ainda rodam no cliente, atrás de serviços, até as próximas iniciativas.
 
 ## Monorepo
 
@@ -30,11 +30,11 @@ A spec é a fonte da verdade. Se a implementação precisar divergir, atualize a
 
 - **Nunca** usar nomes, termos ou visuais do Pokémon no jogo. Use o vocabulário de `.specs/glossary.md`: Ecobeast, Domador, Esfera de Vínculo, Bestiário, Elemento, Técnica, Traço, Temperamento, Genes, Treino, Santuário, Arena, Prismático, Ancestral, Ascensão, Refúgio.
 - **O servidor é a autoridade:** regras de jogo (stats, dano, captura, recompensas) são decididas pelo servidor quando ele existir; o cliente só exibe.
-- **Dados de design** são tabelas relacionais (ids estáveis, FKs `<singular>_id`), descritas em `.specs/game-data/architecture.md`. O estado do jogador guarda só ids do catálogo.
+- **Dados de design** são tabelas relacionais (ids estáveis, FKs `<singular>_id`), descritas em `.specs/game-data/architecture.md`. Moram no banco (schema `ecobeasts`) e se editam pelo painel do Supabase. O estado do jogador guarda só ids do catálogo.
 - Textos do jogador em pt-BR.
 - Sem segredos no repositório (chaves do Supabase, senhas, tokens).
 - Um commit por fase; commits só de spec usam `chore`, os de implementação `feat` ou `fix`.
 
 ## Escopo atual (MVP de estrutura, concluído)
 
-Tela de entrada com o nome do Domador, escolha de 1 entre 3 Ecobeasts iniciais (Fogo, Água, Flora) e Hub com todas as features abrindo telas placeholder. O resto está em `.specs/roadmap.md`.
+Tela de entrada com o nome do Domador, escolha de 1 entre 3 Ecobeasts iniciais (Fogo, Água, Flora) e Hub com todas as features abrindo telas placeholder. Depois dele, a iniciativa `backend-api` (concluída): banco no Supabase, API de leitura do catálogo com docs em `/docs` e o jogo baixando o catálogo da API. O resto está em `.specs/roadmap.md`.

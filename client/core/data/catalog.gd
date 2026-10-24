@@ -1,8 +1,7 @@
 class_name Catalog
 extends RefCounted
 ## O catálogo carregado: converte as tabelas em modelos tipados, monta os
-## índices e responde às consultas. Usado pelo autoload GameData e pelo
-## validador de linha de comando.
+## índices e responde às consultas. Usado pelo autoload GameData.
 
 var _tables: Dictionary = {}          # tabela -> Array[Dictionary] (normalizadas)
 var _rows_by_id: Dictionary = {}      # tabela -> {id: linha}

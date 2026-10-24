@@ -4,7 +4,7 @@ O modelo relacional do catálogo, o formato dos arquivos e como o jogo os lê.
 
 ## Convenções
 
-- **Arquivo = tabela.** `res://data/<tabela>.json` contém um array JSON; cada elemento é uma linha (objeto) com exatamente as colunas da tabela.
+- **Tabela = array de linhas.** Cada tabela é um array JSON; cada elemento é uma linha (objeto) com exatamente as colunas da tabela. É o formato de cada tabela em `GET /v1/catalog` e dos arquivos da carga inicial (`server/prisma/seed-data/<tabela>.json`, antes `res://data/`).
 - **Nomes** de tabelas e colunas em inglês, `snake_case`, tabelas no plural.
 - **Chave primária:** `id` inteiro, começando em 1, estável (nunca renumerar nem reaproveitar). Tabelas de junção usam chave composta, indicada abaixo.
 - **Chave estrangeira:** `<tabela_no_singular>_id` (`element_id`, `species_id`). Quando a mesma tabela aparece duas vezes, o nome diz o papel (`attacker_element_id`, `evolved_species_id`).
@@ -241,16 +241,16 @@ O cliente nunca lê essas tabelas: recebe o jogador pronto, no formato do contra
 ## Como o jogo lê o catálogo
 
 ```
-res://data/*.json ──> StaticJsonDataSource ──> Catalog ──> GameData (autoload) ──> telas e serviços
-                         (DataSource)          ▲
-                                      CatalogValidator + CatalogSchema
+GET /v1/catalog ──> HttpDataSource ──> Catalog ──> GameData (autoload) ──> telas e serviços
+                    (DataSource)      ▲
+             user://catalog_cache.json  CatalogValidator + CatalogSchema
 ```
 
-- **`DataSource`** (`@abstract`): `load_tables(names: PackedStringArray) -> Dictionary` (nome da tabela → `Array[Dictionary]`) e `get_errors() -> Array[String]`. `StaticJsonDataSource` lê `res://data/<nome>.json`. No futuro, `HttpDataSource` baixa as mesmas tabelas da API, com uma versão do catálogo para guardar em cache.
+- **`DataSource`** (`@abstract`): `load_tables(names: PackedStringArray) -> Dictionary` (nome da tabela → `Array[Dictionary]`) e `get_errors() -> Array[String]`. `HttpDataSource` baixa as tabelas da API com `await fetch(host)` e guarda a última cópia em `user://catalog_cache.json`, com a versão, para o servidor responder `304` quando nada mudou ([backend-api/07](../backend-api/07-client-remote-catalog.md)). Até essa fase, `StaticJsonDataSource` lia `res://data/<nome>.json`.
 - **`CatalogSchema`**: constante com cada tabela, sua chave, colunas, tipos, nulidade, FKs, FKs futuras, valores permitidos e faixas. É o espelho em código das tabelas acima; quando um muda, o outro muda no mesmo commit.
 - **`CatalogValidator`**: confere as tabelas carregadas contra o schema e as regras de consistência ([01-data-layer](01-data-layer.md)) e devolve a lista de erros.
 - **`Catalog`** (`RefCounted`): converte tipos, monta os índices e os modelos tipados de `res://domain/models/` e responde às consultas.
-- **`GameData`** (autoload): cria `StaticJsonDataSource` + `Catalog` no `load_catalog()` e expõe as consultas do `Catalog` para o resto do jogo.
+- **`GameData`** (autoload): cria `HttpDataSource` + `Catalog` no `load_catalog()`, assíncrono, que devolve `LOAD_OK`, `LOAD_OFFLINE` ou `LOAD_INVALID`, e expõe as consultas do `Catalog` para o resto do jogo.
 
 A matriz de efetividade é montada uma vez como `PackedFloat32Array` de 14 × 14 (índice `(atacante − 1) · 14 + (defensor − 1)`), com padrão 1,0, e `get_efficacy(atacante, defensores)` multiplica os valores dos elementos defensores.
 

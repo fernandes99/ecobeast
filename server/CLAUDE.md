@@ -37,7 +37,7 @@ server/
 Da pasta `server/`:
 
 ```bash
-npm run start:dev      # API em http://localhost:3000, docs em /docs
+npm run start:dev      # API em http://localhost:3100, docs em /docs
 npm run db:migrate     # nova migration a partir do schema.prisma (e regenera src/generated/)
 npm run db:generate    # regenera src/generated/
 npm run db:seed        # carga inicial do catálogo

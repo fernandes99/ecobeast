@@ -48,7 +48,7 @@ Tomadas no planejamento (corrigíveis; ao mudar uma, atualize aqui e nas specs a
 
 ## Pré-requisitos
 
-- Godot 4.7 instalado no Windows e acessível como `godot` no terminal (ver [README das specs](../README.md#como-rodar-o-validador)).
+- Godot 4.7 instalado no Windows e acessível como `godot` no terminal (ver [README das specs](../README.md#como-rodar-o-jogo-e-os-testes)).
 
 ## Fases
 

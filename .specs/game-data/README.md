@@ -1,6 +1,6 @@
 # Game data
 
-O catálogo do jogo — elementos, espécies, técnicas, traços, temperamentos e tudo que é igual para todos os jogadores — modelado como **tabelas relacionais**, guardado por enquanto em **JSON estático** (um arquivo por tabela em `res://data/`) e lido pelo jogo através de uma camada de dados que depois vai buscar as mesmas tabelas na API.
+O catálogo do jogo — elementos, espécies, técnicas, traços, temperamentos e tudo que é igual para todos os jogadores — modelado como **tabelas relacionais**, guardado no **banco do servidor** e baixado pelo jogo da API ([backend-api](../backend-api/)). A primeira casa do catálogo foram arquivos JSON estáticos (um por tabela em `res://data/`), que viraram a carga inicial do banco.
 
 ## Contexto
 
@@ -9,7 +9,7 @@ O GDD descreve os dados como ScriptableObjects do Unity. Com a mudança para God
 ## Quem usa
 
 - As telas e serviços do jogo, pelo autoload `GameData`.
-- Quem edita os dados (o dono, a IA), direto nos arquivos `res://data/*.json`, conferindo com o validador.
+- Quem edita os dados (o dono, a IA), pelo painel do Supabase. Até a [backend-api/07](../backend-api/07-client-remote-catalog.md), era direto nos arquivos `res://data/*.json`, conferindo com o validador.
 - No futuro, o backend: as tabelas daqui viram as tabelas do banco.
 
 ## Objetivos

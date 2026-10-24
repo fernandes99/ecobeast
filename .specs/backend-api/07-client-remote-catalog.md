@@ -1,6 +1,6 @@
 # 07. Jogo lendo o catálogo da API
 
-- **Status:** rascunho
+- **Status:** concluída
 - **Depende de:** [06-catalog-bundle](06-catalog-bundle.md)
 
 ## Contexto
@@ -66,14 +66,14 @@ Godot: o download usa o nó `HTTPRequest`, que faz a requisição em segundo pla
 
 ## Critérios de aceite
 
-- [ ] Com o servidor rodando (`npm run start:dev`) e o cache apagado, F5 no Godot abre o jogo normalmente: entrada, escolha com Fagulho, Gotículo e Brotelho, e Hub. O arquivo `catalog_cache.json` aparece em `%APPDATA%\Godot\app_userdata\Ecobeast\`.
-- [ ] Reabrir o jogo sem mudança no catálogo usa a cópia guardada: o servidor responde `304`.
+- [x] Com o servidor rodando (`npm run start:dev`) e o cache apagado, F5 no Godot abre o jogo normalmente: entrada, escolha com Fagulho, Gotículo e Brotelho, e Hub. O arquivo `catalog_cache.json` aparece em `%APPDATA%\Godot\app_userdata\Ecobeast\`.
+- [x] Reabrir o jogo sem mudança no catálogo usa a cópia guardada: o servidor responde `304`.
 - [ ] Mudar no painel o `name` de Gotículo para "Gotículo Teste", esperar 1 minuto e reabrir o jogo mostra o nome novo na escolha do inicial. (Passo do dono; desfazer depois.)
-- [ ] Com o servidor parado, com ou sem cache, aparece "Não foi possível conectar ao servidor…". Depois de subir o servidor, "Tentar de novo" abre o jogo.
-- [ ] Uma cópia guardada com a versão certa e as tabelas estragadas não trava o jogo: ele baixa tudo de novo e abre normalmente.
-- [ ] `client/data/` não existe mais. `server/prisma/seed-data/` tem os 23 arquivos com o histórico preservado (`git log --follow`).
-- [ ] No servidor, `npm run db:seed` imprime "Banco já tem catálogo; nada foi feito.", e `npm run lint`, `npm run typecheck`, `npm test` e `npm run test:e2e` passam.
-- [ ] O jogo roda sem erros de script (`godot --headless --path client --quit-after 30`, com o servidor no ar), e o editor não mostra avisos.
+- [ ] Com o servidor parado, com ou sem cache, aparece "Não foi possível conectar ao servidor…". Depois de subir o servidor, "Tentar de novo" abre o jogo. (O `LOAD_OFFLINE` com e sem cache foi conferido pelo script; a tela e o botão ficam para o F5 do dono.)
+- [x] Uma cópia guardada com a versão certa e as tabelas estragadas não trava o jogo: ele baixa tudo de novo e abre normalmente.
+- [x] `client/data/` não existe mais. `server/prisma/seed-data/` tem os 23 arquivos com o histórico preservado (`git log --follow`).
+- [x] No servidor, `npm run db:seed` imprime "Banco já tem catálogo; nada foi feito.", e `npm run lint`, `npm run typecheck`, `npm test` e `npm run test:e2e` passam.
+- [x] O jogo roda sem erros de script (`godot --headless --path client --quit-after 30`, com o servidor no ar), e o editor não mostra avisos.
 
 ## Desenho técnico
 
@@ -111,12 +111,27 @@ E no editor (F5), os cenários dos critérios: com servidor, reaberto sem mudan�
 
 ## Tarefas
 
-- [ ] Porta 3100 no servidor e nos documentos (RF-02).
-- [ ] `ecobeast/api/base_url` no `project.godot` (RF-01).
-- [ ] `HttpDataSource` (RF-03, RF-04).
-- [ ] `GameData.load_catalog()` assíncrono (RF-05) e o boot (RF-06).
-- [ ] Conferir os cenários dos critérios com um script temporário (como nas fases do MVP) e no F5; apagar o script depois.
-- [ ] `git mv client/data server/prisma/seed-data`; `SEED_DATA_DIR`; rodar o seed e os testes do servidor (RF-07).
-- [ ] Remover `static_json_data_source.gd` e `validate_data.gd` (RF-08); conferir os avisos pelo editor.
-- [ ] Documentos (RF-09).
-- [ ] Marcar esta spec, a tabela do README e o `backend-api` no roadmap como `concluída`; commit `feat: jogo lê o catálogo da API`.
+- [x] Porta 3100 no servidor e nos documentos (RF-02).
+- [x] `ecobeast/api/base_url` no `project.godot` (RF-01).
+- [x] `HttpDataSource` (RF-03, RF-04).
+- [x] `GameData.load_catalog()` assíncrono (RF-05) e o boot (RF-06).
+- [x] Conferir os cenários dos critérios com um script temporário (como nas fases do MVP) e no F5; apagar o script depois.
+- [x] `git mv client/data server/prisma/seed-data`; `SEED_DATA_DIR`; rodar o seed e os testes do servidor (RF-07).
+- [x] Remover `static_json_data_source.gd` e `validate_data.gd` (RF-08); conferir os avisos pelo editor.
+- [x] Documentos (RF-09).
+- [x] Marcar esta spec, a tabela do README e o `backend-api` no roadmap como `concluída`; commit `feat: jogo lê o catálogo da API`.
+
+## Decisões da implementação
+
+- **"Conectando ao servidor…"**: um `LoadingLabel` em `main.tscn` aparece enquanto o catálogo carrega. Sem ele, a tela ficaria vazia até o limite de 10 segundos.
+- **Servidor parado no PC:** com o servidor fora do ar em `localhost`, o Windows não recusa a conexão na hora, e o pedido termina pelo limite de 10 segundos (resultado `RESULT_TIMEOUT`). Num celular sem rede, o endereço nem é encontrado, e a falha é rápida.
+- **A cópia guardada é o texto da resposta**, gravado como chegou, sem passar de novo pelo `JSON.stringify` do Godot.
+- **Avisos para quem desenvolve:** uma falha do download faz `push_warning` com o endereço, o resultado do `HTTPRequest` e o código HTTP. Uma cópia estragada também avisa antes de ser baixada de novo.
+- **Conferência:** um script temporário (`tmp_check/check_catalog.gd`, apagado depois) passou por 21 verificações contra o servidor real na porta 3100:
+  - sem cache, com cache (`304`) e com cache ilegível;
+  - servidor parado, com e sem cache;
+  - `clear_cache`, a barra no fim do endereço e a remoção do `HTTPRequest`;
+  - o `GameData` com servidor, com a cópia estragada e sem servidor.
+
+  O boot headless rodou sem erros de script com o servidor no ar e fora dele, e o editor não mostra avisos nos 46 scripts.
+- **A `.env` de cada máquina** precisa ter `PORT=3100`, ou nenhuma linha `PORT`, para o jogo achar o servidor. O `.env.example` já traz o valor novo.

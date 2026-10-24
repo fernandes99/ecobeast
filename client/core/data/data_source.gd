@@ -1,8 +1,8 @@
 @abstract
 class_name DataSource
 extends RefCounted
-## De onde vêm as tabelas do catálogo. Hoje: StaticJsonDataSource (res://data/).
-## No futuro: uma fonte que baixa as mesmas tabelas da API.
+## De onde vêm as tabelas do catálogo. Hoje: HttpDataSource, que baixa as
+## tabelas da API.
 
 
 ## Devolve um Dictionary de nome da tabela para Array de linhas (Dictionary).

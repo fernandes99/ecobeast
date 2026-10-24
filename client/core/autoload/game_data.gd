@@ -3,14 +3,39 @@ extends Node
 ## Telas e serviços leem o catálogo só por aqui. Quem chama load_catalog()
 ## é o boot da cena raiz.
 
+## Resultados de load_catalog().
+const LOAD_OK := 0
+## O servidor não respondeu (o jogo é só online).
+const LOAD_OFFLINE := 1
+## O catálogo chegou com erros; a lista fica em errors.
+const LOAD_INVALID := 2
+
+const BASE_URL_SETTING := "ecobeast/api/base_url"
+
 var catalog := Catalog.new()
 var errors: Array[String] = []
 
 
-## Carrega e valida o catálogo. Em caso de falha, os motivos ficam em errors.
-func load_catalog() -> bool:
-	errors = catalog.load_from(StaticJsonDataSource.new())
-	return errors.is_empty()
+## Baixa, valida e monta o catálogo (.specs/backend-api/07-client-remote-catalog.md).
+## Assíncrono: chame com await. Devolve LOAD_OK, LOAD_OFFLINE ou LOAD_INVALID.
+func load_catalog() -> int:
+	var source := HttpDataSource.new(ProjectSettings.get_setting(BASE_URL_SETTING))
+	var status: int = await _load_from(source)
+	if status == LOAD_INVALID and source.used_cache:
+		# A cópia guardada está estragada, e o servidor responderia 304 para ela
+		# de novo. Apaga e baixa tudo, uma vez só.
+		push_warning("Catálogo guardado com erros; baixando de novo.")
+		source.clear_cache()
+		status = await _load_from(source)
+	return status
+
+
+func _load_from(source: HttpDataSource) -> int:
+	if not await source.fetch(self):
+		errors = source.get_errors()
+		return LOAD_OFFLINE
+	errors = catalog.load_from(source)
+	return LOAD_OK if errors.is_empty() else LOAD_INVALID
 
 
 func get_element(id: int) -> Element:

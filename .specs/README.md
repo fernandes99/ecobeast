@@ -93,18 +93,20 @@ Só quando houver. Sem dúvidas, a seção não existe.
 - **Nada implícito.** O que não foi decidido vai em "Dúvidas em aberto" e é resolvido com o dono do projeto antes de virar código. Não invente requisito para fechar lacuna.
 - **Propostas a revisar.** Conteúdo criado no planejamento sem aprovação do dono (nomes, números, cores) fica marcado como _a revisar_. Pode ser implementado, mas muda sem cerimônia se o dono pedir.
 - **Requisitos numerados e critérios verificáveis.** "A tela abre rápido" não serve; "o botão Começar fica desabilitado com menos de 2 caracteres" serve.
-- **Uma fase por vez.** Implemente e valide: o projeto abre no editor sem erros nem avisos de script, `tools/validate_data.gd` passa (a partir de [game-data/01](game-data/01-data-layer.md)) e os passos manuais da spec foram feitos. Marque as tarefas e mude o status da spec e das tabelas (iniciativa e esta) para `concluída` no mesmo commit.
-- **O cliente Godot não tem framework de testes** (decisão do dono; o servidor terá, ver [roadmap.md](roadmap.md#decisões-globais-já-tomadas)). A verificação de cada fase é feita pelo validador de dados e por passos manuais no editor (F5) e, quando fizer sentido, no aparelho; quem implementa diz quais passos fez e quais ficaram para o dono.
+- **Uma fase por vez.** Implemente e valide: o projeto abre no editor sem erros nem avisos de script, o jogo abre com o servidor no ar (o `CatalogValidator` confere o catálogo baixado), os testes do servidor passam (a partir de [backend-api/01](backend-api/01-server-setup.md)) e os passos manuais da spec foram feitos. Marque as tarefas e mude o status da spec e das tabelas (iniciativa e esta) para `concluída` no mesmo commit.
+- **O cliente Godot não tem framework de testes** (decisão do dono; o servidor terá, ver [roadmap.md](roadmap.md#decisões-globais-já-tomadas)). A verificação de cada fase é feita pelos testes do servidor e por passos manuais no editor (F5) e, quando fizer sentido, no aparelho; quem implementa diz quais passos fez e quais ficaram para o dono.
 - **Nunca usar nomes, termos ou visuais do Pokémon no jogo.** Use o vocabulário do [glossary.md](glossary.md). Nas specs, o nome original só aparece na coluna "Referência" do glossário, nas próprias regras de não usá-lo e na citação da PokeAPI como referência técnica de modelo de dados; nunca em conteúdo do jogo (espécies, técnicas, textos, telas).
 - **Sem segredos.** Nada de chaves, senhas ou dados reais de jogadores nas specs.
 - Specs são escritas em português. Commits que só mexem em specs usam o prefixo `chore`; os de implementação, `feat` ou `fix`.
 
-## Como rodar o validador
+## Como rodar o jogo e os testes
 
 O executável do Godot no Windows tem um nome como `Godot_v4.7.2-stable_win64.exe` (nesta máquina, em `C:\Godot\`; para o terminal, use a versão `_console`). Para os comandos das specs funcionarem como estão escritos, deixe-o acessível como `godot` (renomeie uma cópia ou crie um alias no terminal). Na raiz do repositório (o projeto Godot fica em `client/`):
 
 ```bash
-godot --headless --path client --script res://tools/validate_data.gd
+cd server && npm run start:dev                    # a API, em http://localhost:3100
+godot --headless --path client --quit-after 30    # o jogo sem janela: erros de script no console
+cd server && npm test && npm run test:e2e         # os testes do servidor
 ```
 
-Saída `0` quando o catálogo está íntegro; diferente de `0`, com a lista de erros, quando não está.
+O jogo baixa o catálogo da API ao abrir, e o `CatalogValidator` confere tudo o que chega. Um erro nos dados aparece na tela "Erro nos dados do jogo" (F5 no editor) e no console. Até a [backend-api/07](backend-api/07-client-remote-catalog.md), o catálogo era conferido pelo `tools/validate_data.gd`, citado nas specs dessa época.

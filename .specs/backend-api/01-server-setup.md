@@ -25,7 +25,7 @@
 ## Requisitos
 
 - **RF-01:** `server/` é um projeto NestJS (versão estável atual) criado com npm e sem repositório git próprio (o git é o do monorepo). Scripts do `package.json`: `start:dev`, `build`, `start:prod`, `lint`, `typecheck` (`tsc --noEmit`), `test`, `test:e2e`, `postinstall` e `db:generate` (`prisma generate`, porque o cliente gerado fica fora do git), `db:migrate` (`prisma migrate dev`) e `db:seed` (a carga inicial, que nasce em [03](03-catalog-seed.md)). O `package.json` declara `"engines": { "node": ">=24" }`.
-- **RF-02:** A configuração vem do `.env` pelo `@nestjs/config`, validada na partida. As variáveis são `DATABASE_URL` (obrigatória), `DIRECT_URL` (obrigatória), `PORT` (padrão `3000`) e `THROTTLE_LIMIT` (padrão `100`, usada em [04](04-species-api.md)). Faltando uma obrigatória, o servidor não sobe e a mensagem diz o nome da variável.
+- **RF-02:** A configuração vem do `.env` pelo `@nestjs/config`, validada na partida. As variáveis são `DATABASE_URL` (obrigatória), `DIRECT_URL` (obrigatória), `PORT` (padrão `3100`, desde a [07](07-client-remote-catalog.md); antes `3000`) e `THROTTLE_LIMIT` (padrão `100`, usada em [04](04-species-api.md)). Faltando uma obrigatória, o servidor não sobe e a mensagem diz o nome da variável.
 - **RF-03:** `server/.env.example` (versionado) tem as quatro variáveis com valores de exemplo, sem nada real, e um comentário dizendo onde achar cada URL no painel do Supabase (Connect > ORMs > Prisma). `server/.gitignore` ignora `node_modules/`, `dist/`, `.env` e o cliente gerado do Prisma.
 - **RF-04:** `server/prisma/schema.prisma` tem a fonte de dados (`postgresql`, schema `ecobeasts`) e o gerador do cliente, sem modelos. Se a versão do Prisma pedir as URLs no `prisma.config.ts`, elas ficam lá: `DATABASE_URL` para o servidor e `DIRECT_URL` para as migrations.
 - **RF-05:** `PrismaService` (`src/prisma/prisma.service.ts`) estende o cliente do Prisma, conecta na partida e desconecta no encerramento. Ele vem de um `PrismaModule` global (`src/prisma/prisma.module.ts`).
@@ -44,10 +44,10 @@
 
 ## Critérios de aceite
 
-- [x] Com o `.env` preenchido, `npm run start:dev` sobe na porta 3000, e `GET http://localhost:3000/health` devolve `200 {"status":"ok","database":"ok"}`.
+- [x] Com o `.env` preenchido, `npm run start:dev` sobe na porta 3100, e `GET http://localhost:3100/health` devolve `200 {"status":"ok","database":"ok"}`.
 - [x] Com uma senha errada na `DATABASE_URL`, `GET /health` devolve `503 {"status":"error","database":"error"}`, e o servidor continua no ar.
 - [x] Sem `DATABASE_URL` no `.env`, `npm run start:dev` falha com uma mensagem que cita `DATABASE_URL`.
-- [x] `http://localhost:3000/docs` abre a Scalar com o título "Ecobeast API", e `/docs/openapi.json` devolve o documento.
+- [x] `http://localhost:3100/docs` abre a Scalar com o título "Ecobeast API", e `/docs/openapi.json` devolve o documento.
 - [x] `npm run lint`, `npm run typecheck`, `npm test` e `npm run test:e2e` passam.
 - [x] `git status` não mostra `.env`, `node_modules/` nem `dist/`.
 - [x] No painel do Supabase, em Settings > API > Exposed schemas, não aparece `ecobeasts`. (Conferido pelo dono: só `public` e `graphql_public`.)
@@ -79,7 +79,7 @@ npm run db:generate
 npm run lint
 npm test
 npm run test:e2e
-npm run start:dev   # e abrir http://localhost:3000/docs e /health
+npm run start:dev   # e abrir http://localhost:3100/docs e /health
 ```
 
 ## Tarefas
