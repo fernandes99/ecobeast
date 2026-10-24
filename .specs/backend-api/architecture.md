@@ -46,12 +46,12 @@ server/
 
 ### Restrições de valor
 
-As faixas que o validador do cliente confere (precisão de 1 a 100, `stages` de −6 a +6, Genes de 0 a 31, Treino de 0 a 252…) viram restrições `CHECK` no banco. Assim um valor fora da faixa é recusado mesmo quando editado à mão no painel.
+As faixas que o validador do cliente confere (precisão de 0 a 100, `stages` de −6 a +6, Genes de 0 a 31, Treino de 0 a 252…) viram restrições `CHECK` no banco. Assim um valor fora da faixa é recusado mesmo quando editado à mão no painel.
 
 O Prisma não descreve `CHECK` no `schema.prisma`, então essa é a única exceção à regra do arquivo único:
 
 - a migration é criada com `prisma migrate dev --create-only`, os `CHECK` são acrescentados à mão no SQL dela, e só então ela é aplicada;
-- no `schema.prisma`, cada campo com faixa ganha um comentário de documentação dizendo a faixa e a migration que a criou (`/// CHECK 1–100 (migration 20261101_catalog_checks)`);
+- no `schema.prisma`, cada campo com faixa ganha um comentário de documentação dizendo a faixa e a migration que a criou (`/// CHECK 0–100 (migration init)`);
 - tabelas, colunas, chaves, índices e relações continuam só no `schema.prisma`. Só as faixas moram no SQL;
 - as faixas são as mesmas de `client/core/data/catalog_schema.gd` e das tabelas em [game-data/architecture.md](../game-data/architecture.md).
 

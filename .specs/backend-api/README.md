@@ -68,16 +68,16 @@ Tomadas no planejamento (corrigíveis; ao mudar uma, atualize aqui e nas specs a
 
 ## Fases
 
-As specs das fases são escritas depois que este desenho for aprovado.
+Cada fase tem a sua spec, com requisitos, critérios de aceite e tarefas.
 
 | Fase                          | Entrega                                                                                       | Status   |
 | ----------------------------- | --------------------------------------------------------------------------------------------- | -------- |
-| 01-server-setup               | Projeto NestJS em `server/`, `.env`, Prisma ligado ao Supabase, `/health`, Scalar em `/docs`, testes rodando | rascunho |
-| 02-database-schema            | `schema.prisma` com todas as tabelas (catálogo e jogador), restrições e a primeira migration   | rascunho |
-| 03-catalog-seed               | Carga inicial do catálogo a partir de `client/data/*.json`                                     | rascunho |
-| 04-species-api                | O padrão dos recursos (lista, detalhe, referências, erros) e as rotas de espécies              | rascunho |
-| 05-catalog-api                | As rotas dos demais recursos do catálogo e dos iniciais                                         | rascunho |
-| 06-catalog-bundle             | `GET /v1/catalog`: o catálogo inteiro com versão, para o jogo                                  | rascunho |
-| 07-client-remote-catalog      | O Godot baixa o catálogo da API; `client/data/` vai para `server/prisma/seed-data/`            | rascunho |
+| [01-server-setup](01-server-setup.md)               | Projeto NestJS em `server/`, `.env`, Prisma ligado ao Supabase, `/health`, Scalar em `/docs`, testes rodando | rascunho |
+| [02-database-schema](02-database-schema.md)            | `schema.prisma` com todas as tabelas (catálogo e jogador), restrições e a primeira migration   | rascunho |
+| [03-catalog-seed](03-catalog-seed.md)               | Carga inicial do catálogo a partir de `client/data/*.json`                                     | rascunho |
+| [04-species-api](04-species-api.md)                | O padrão dos recursos (lista, detalhe, referências, erros) e as rotas de espécies              | rascunho |
+| [05-catalog-api](05-catalog-api.md)                | As rotas dos demais recursos do catálogo e dos iniciais                                         | rascunho |
+| [06-catalog-bundle](06-catalog-bundle.md)             | `GET /v1/catalog`: o catálogo inteiro com versão, para o jogo                                  | rascunho |
+| [07-client-remote-catalog](07-client-remote-catalog.md)      | O Godot baixa o catálogo da API; `client/data/` vai para `server/prisma/seed-data/`            | rascunho |
 
 O desenho compartilhado está em [architecture.md](architecture.md).
