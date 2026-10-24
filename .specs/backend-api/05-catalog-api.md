@@ -1,6 +1,6 @@
 # 05. Rotas do catálogo
 
-- **Status:** rascunho
+- **Status:** concluída
 - **Depende de:** [04-species-api](04-species-api.md)
 
 ## Contexto
@@ -36,14 +36,14 @@ As peças comuns (paginação, referência, id ou slug, erros, limite de chamada
 
 ## Critérios de aceite
 
-- [ ] Para cada um dos 13 recursos, `GET /v1/<recurso>` devolve `count` igual ao número de linhas da tabela, e o detalhe do primeiro `id` devolve `200` por id e por slug.
-- [ ] `GET /v1/elements/fire` tem `efficacy.attacking` com `flora` e `multiplier` 2. (Linha da tabela de efetividade do GDD.)
-- [ ] `GET /v1/skills/1` tem `element`, `category` e `target` como referências, e `effects` como lista, possivelmente vazia.
-- [ ] Uma Técnica com efeito `modify_stat` mostra `stat` e `stages` preenchidos e `status_condition` igual a `null`.
-- [ ] `GET /v1/starters` devolve as espécies 1, 4 e 7, nessa ordem.
-- [ ] `GET /v1/skills/9999` devolve `404` "Técnica não encontrada: 9999".
-- [ ] Todas as rotas aparecem na Scalar, cada recurso na sua tag.
-- [ ] `npm run lint`, `npm run typecheck`, `npm test` e `npm run test:e2e` passam.
+- [x] Para cada um dos 13 recursos, `GET /v1/<recurso>` devolve `count` igual ao número de linhas da tabela, e o detalhe do primeiro `id` devolve `200` por id e por slug.
+- [x] `GET /v1/elements/fire` tem `efficacy.attacking` com `flora` e `multiplier` 2. (Linha da tabela de efetividade do GDD.)
+- [x] `GET /v1/skills/1` tem `element`, `category` e `target` como referências, e `effects` como lista, possivelmente vazia.
+- [x] Uma Técnica com efeito `modify_stat` mostra `stat` e `stages` preenchidos e `status_condition` igual a `null`.
+- [x] `GET /v1/starters` devolve as espécies 1, 4 e 7, nessa ordem.
+- [x] `GET /v1/skills/9999` devolve `404` "Técnica não encontrada: 9999".
+- [x] Todas as rotas aparecem na Scalar, cada recurso na sua tag.
+- [x] `npm run lint`, `npm run typecheck`, `npm test` e `npm run test:e2e` passam.
 
 ## Desenho técnico
 
@@ -72,11 +72,18 @@ npm run start:dev   # e navegar pelas tags na Scalar
 
 ## Tarefas
 
-- [ ] e2e comum, um laço sobre os 13 recursos: a lista tem `count` igual ao `count()` do Prisma; o detalhe por id e por slug é `200`; o id 9999 dá `404`. Rodar e ver falhar.
-- [ ] Recursos simples compartilhados (RF-05).
-- [ ] `skills` com efeitos; e2e dos critérios de Técnicas.
-- [ ] `elements` com efetividade e imunidades; e2e de `fire` contra `flora`.
-- [ ] `traits`, `temperaments`, `stats`, `growth-rates`, `rarities`, `status-conditions`.
-- [ ] `starters`; e2e da ordem 1, 4, 7.
-- [ ] Documentação (RF-05).
-- [ ] Marcar esta spec e a tabela do README como `concluída`; commit `feat: rotas do catálogo`.
+- [x] e2e comum, um laço sobre os 13 recursos: a lista tem `count` igual ao `count()` do Prisma; o detalhe por id e por slug é `200`; o id 9999 dá `404`. Rodar e ver falhar.
+- [x] Recursos simples compartilhados (RF-05).
+- [x] `skills` com efeitos; e2e dos critérios de Técnicas.
+- [x] `elements` com efetividade e imunidades; e2e de `fire` contra `flora`.
+- [x] `traits`, `temperaments`, `stats`, `growth-rates`, `rarities`, `status-conditions`.
+- [x] `starters`; e2e da ordem 1, 4, 7.
+- [x] Documentação (RF-05).
+- [x] Marcar esta spec e a tabela do README como `concluída`; commit `feat: rotas do catálogo`.
+
+## Decisões da implementação
+
+- **`resourceController(def)`** (`src/catalog/resource-controller.ts`): uma função monta o controller de cada recurso (lista e detalhe), a partir do caminho, do delegate do Prisma, da tag, da mensagem de 404, do `include` e da função que monta a resposta. Os 13 recursos usam essa função; só `/v1/starters` tem controller próprio, porque não tem paginação nem detalhe.
+- **Arquivos:** `skills/`, `elements/` e `traits/` têm um `*.resource.ts` cada (DTOs e definição). Os oito recursos de referência menores (temperamentos, stats, curvas, raridades, status e os cinco só com nome) ficam juntos em `reference/reference.resources.ts`. `CatalogModule` registra tudo, inclusive o `SpeciesModule`.
+- **Tags da Scalar:** Técnicas, Elementos, Traços, Temperamentos, Stats, Curvas de XP, Raridades, Status, Categorias de Técnica, Alvos de Técnica, Métodos de aprendizado, Tipos de efeito, Gatilhos de Ascensão e Iniciais.
+- **Exemplos da documentação** usam dados reais do catálogo (Arranhão, Fúria Ardente, curva Médio), conferidos com o servidor rodando.

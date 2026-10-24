@@ -79,7 +79,7 @@ export class SpeciesDetailDto {
     example: {
       id: 2,
       slug: 'medium',
-      name: 'Média',
+      name: 'Médio',
       url: '/v1/growth-rates/2',
     },
   })
