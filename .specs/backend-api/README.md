@@ -77,7 +77,7 @@ Cada fase tem a sua spec, com requisitos, critérios de aceite e tarefas.
 | [03-catalog-seed](03-catalog-seed.md)               | Carga inicial do catálogo a partir de `client/data/*.json`                                     | concluída |
 | [04-species-api](04-species-api.md)                | O padrão dos recursos (lista, detalhe, referências, erros) e as rotas de espécies              | concluída |
 | [05-catalog-api](05-catalog-api.md)                | As rotas dos demais recursos do catálogo e dos iniciais                                         | concluída |
-| [06-catalog-bundle](06-catalog-bundle.md)             | `GET /v1/catalog`: o catálogo inteiro com versão, para o jogo                                  | rascunho |
+| [06-catalog-bundle](06-catalog-bundle.md)             | `GET /v1/catalog`: o catálogo inteiro com versão, para o jogo                                  | concluída |
 | [07-client-remote-catalog](07-client-remote-catalog.md)      | O Godot baixa o catálogo da API; `client/data/` vai para `server/prisma/seed-data/`            | rascunho |
 
 O desenho compartilhado está em [architecture.md](architecture.md).

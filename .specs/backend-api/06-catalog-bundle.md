@@ -1,6 +1,6 @@
 # 06. Catálogo inteiro
 
-- **Status:** rascunho
+- **Status:** concluída
 - **Depende de:** [05-catalog-api](05-catalog-api.md)
 
 ## Contexto
@@ -27,12 +27,12 @@ As rotas por recurso servem para explorar o catálogo, mas o jogo precisa de tud
 
 ## Critérios de aceite
 
-- [ ] `GET /v1/catalog` devolve `200` com 23 tabelas, e a contagem total de linhas é igual à soma do `count()` das 23 tabelas.
-- [ ] Para cada tabela, toda linha tem exatamente o mesmo conjunto de colunas que as linhas do arquivo correspondente em `client/data/`.
-- [ ] O cabeçalho `ETag` é igual a `"` + `version` + `"`.
-- [ ] Repetir a chamada com `If-None-Match` igual ao `ETag` devolve `304`, sem corpo.
-- [ ] Mudar o `name` de uma espécie no painel, esperar 1 minuto e chamar de novo devolve outra `version`, com o nome novo. (Passo do dono; desfazer depois.)
-- [ ] `npm run lint`, `npm run typecheck`, `npm test` e `npm run test:e2e` passam.
+- [x] `GET /v1/catalog` devolve `200` com 23 tabelas, e a contagem total de linhas é igual à soma do `count()` das 23 tabelas.
+- [x] Para cada tabela, toda linha tem exatamente o mesmo conjunto de colunas que as linhas do arquivo correspondente em `client/data/`.
+- [x] O cabeçalho `ETag` é igual a `"` + `version` + `"`.
+- [x] Repetir a chamada com `If-None-Match` igual ao `ETag` devolve `304`, sem corpo.
+- [ ] Mudar o `name` de uma espécie no painel, esperar 1 minuto e chamar de novo devolve outra `version`, com o nome novo. (Passo do dono; desfazer depois. O teste de unidade do cache cobre a releitura depois de 60 s.)
+- [x] `npm run lint`, `npm run typecheck`, `npm test` e `npm run test:e2e` passam.
 
 ## Desenho técnico
 
@@ -61,13 +61,21 @@ curl -i http://localhost:3000/v1/catalog | head -20
 
 ## Tarefas
 
-- [ ] `catalogVersion` com testes:
+- [x] `catalogVersion` com testes:
   - a mesma entrada dá a mesma versão;
   - trocar um valor muda a versão;
   - as mesmas tabelas em outra ordem de chaves no objeto dão a mesma versão;
   - o resultado é uma string hex de 64 caracteres.
-- [ ] e2e dos critérios (formato, contagem, colunas iguais às dos JSON, `ETag`, `304`); rodar e ver falhar.
-- [ ] `BundleService` (RF-01, RF-02, RF-05) e `BundleController` (RF-04); os e2e passam.
-- [ ] Teste de unidade do cache: duas chamadas em menos de 60 s leem o banco uma vez só (com o Prisma substituído por um dublê que conta as leituras e um relógio controlado).
-- [ ] Documentação (RF-06).
-- [ ] Marcar esta spec e a tabela do README como `concluída`; commit `feat: catálogo inteiro na API`.
+- [x] e2e dos critérios (formato, contagem, colunas iguais às dos JSON, `ETag`, `304`); rodar e ver falhar.
+- [x] `BundleService` (RF-01, RF-02, RF-05) e `BundleController` (RF-04); os e2e passam.
+- [x] Teste de unidade do cache: duas chamadas em menos de 60 s leem o banco uma vez só (com o Prisma substituído por um dublê que conta as leituras e um relógio controlado).
+- [x] Documentação (RF-06).
+- [x] Marcar esta spec e a tabela do README como `concluída`; commit `feat: catálogo inteiro na API`.
+
+## Decisões da implementação
+
+- **O cache guarda a leitura em andamento**, não só o resultado. Chamadas que chegam ao mesmo tempo, com o cache vazio, esperam a mesma leitura do banco em vez de fazer uma cada. Se a leitura falhar, ela sai do cache e a chamada seguinte tenta de novo. Os dois casos têm teste de unidade. O relógio do teste é o `Date` falso do Vitest (`vi.useFakeTimers`), sem relógio injetado no serviço.
+- **`304` pelo `req.fresh` do Express**, que compara o `If-None-Match` com o `ETag` da resposta. Além do valor exato (RF-04), ele aceita uma lista de valores e o prefixo `W/`, que um proxy pode acrescentar. O controller usa `@Res()` para escrever o cabeçalho e o `304` diretamente.
+- **As 23 tabelas são lidas em paralelo**, sem uma transação em volta. Uma edição feita no painel bem no meio da leitura pode sair pela metade numa versão; a leitura seguinte, em até 60 s, corrige.
+- **Ordem das colunas:** o e2e confere, além do conjunto, a mesma ordem dos JSON, que é a ordem dos campos no `schema.prisma`.
+- **Tamanho:** com o catálogo atual (436 linhas), a resposta tem cerca de 44 KB.
