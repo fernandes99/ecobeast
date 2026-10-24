@@ -1,6 +1,6 @@
 # Ecobeast — contexto do projeto
 
-Jogo mobile (Android/iOS, retrato) feito em **Godot 4.7 com GDScript**, inspirado no Pokémon Simulator 4.5 (Birdiesoft, 2004): capturar, treinar e batalhar criaturas por menus e batalhas por turnos, sem mundo aberto. O jogo será **só online**, com o servidor decidindo as regras; no MVP ainda não há servidor, e tudo roda no cliente atrás de serviços.
+Jogo mobile (Android/iOS, retrato) feito em **Godot 4.7 com GDScript**, inspirado no Pokémon Simulator 4.5 (Birdiesoft, 2004): capturar, treinar e batalhar criaturas por menus e batalhas por turnos, sem mundo aberto. O jogo será **só online**, com o servidor decidindo as regras; no MVP ainda não há servidor, e tudo roda no cliente atrás de serviços. O servidor será NestJS + Prisma com Supabase (Postgres, Auth, Storage), e o Godot falará só com o NestJS (decisões em `.specs/roadmap.md`).
 
 O dono do projeto é iniciante em Godot: explique conceitos do motor (cenas, nós, autoloads, `class_name`, sinais) quando aparecerem pela primeira vez.
 

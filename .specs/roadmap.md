@@ -6,8 +6,8 @@ O que vem depois do MVP de estrutura (entrada, escolha do inicial e Hub). Cada l
 
 | #   | Iniciativa          | Entrega                                                                                                   | Depende de                 | Status    |
 | --- | ------------------- | --------------------------------------------------------------------------------------------------------- | -------------------------- | --------- |
-| 1   | `backend-api`       | Banco relacional com as tabelas de [game-data](game-data/architecture.md), API do catálogo e do jogador   | MVP                        | planejada |
-| 2   | `auth-google`       | Login com Google no lugar do nome digitado; o jogador passa a viver no servidor                           | backend-api                | planejada |
+| 1   | `backend-api`       | NestJS + Prisma sobre o Postgres do Supabase com as tabelas de [game-data](game-data/architecture.md), API do catálogo e do jogador | MVP                        | planejada |
+| 2   | `auth-google`       | Login com Google pelo Supabase Auth no lugar do nome digitado (no iOS, também "Sign in with Apple", que a Apple exige junto do Google); o jogador passa a viver no servidor | backend-api                | planejada |
 | 3   | `battle-core`       | Máquina de estados da batalha, dano, ordem do turno, status, IA simples — autoridade no servidor          | backend-api                | planejada |
 | 4   | `battle-screen`     | Tela de batalha (TELAS.md #5) ouvindo os eventos do battle-core                                           | battle-core                | planejada |
 | 5   | `wild-battle`       | Zonas, seleção de zona (TELAS.md #4) e encontros selvagens; tabelas `zones` e `zone_encounters`           | battle-screen              | planejada |
@@ -36,10 +36,16 @@ Evoluções por item, vínculo, horário, zona e troca; criação (breeding) e h
 | O servidor é a autoridade das regras (stats, dano, captura, recompensas) | Evita trapaça e é pré-requisito de PvP e trocas                         |
 | No MVP as regras rodam no cliente, atrás de serviços com `await`        | As telas não mudam quando os serviços passarem a chamar a API           |
 | O catálogo é modelado como tabelas relacionais desde o JSON estático   | O banco do backend nasce quase igual aos arquivos de `res://data/`      |
+| Backend em **NestJS** (TypeScript), com **Prisma** como ORM              | Estrutura em módulos e DTOs validados; Prisma é o ORM mais simples de começar |
+| **Supabase** só como infraestrutura: Postgres, Auth e Storage           | Postgres gerenciado; Auth já faz Google e Apple; Storage serve sprites e catálogo |
+| O Godot conversa **só com o NestJS**; nunca com o banco nem com a API automática do Supabase | Com o servidor como autoridade, o cliente não pode gravar estado; o Supabase publica o schema `public` na API automática, então as tabelas ficam com RLS ligado e sem regras (ou num schema não publicado) |
+| O login é feito no Supabase Auth; o NestJS confere o token (JWT pelas chaves públicas do Supabase) | O token prova quem é o jogador sem o NestJS depender do SDK do Supabase nas regras |
+| As regras de jogo do servidor ficam num pacote TypeScript puro (sem Nest, sem banco), com testes | Espelha `res://domain/`; fórmula errada no servidor vira bug para todos, então ali há testes |
+| O contrato entre cliente e servidor é a API (OpenAPI gerado pelo Nest)  | O Godot não lê tipos TypeScript; o `HttpGameService` substitui o `LocalGameService` sem mudar as telas |
 
 ## Dúvidas globais em aberto
 
-- **Stack do backend:** linguagem, framework, banco (PostgreSQL é o candidato natural para as tabelas) e hospedagem. Como o servidor terá a autoridade, as fórmulas de `res://domain/rules/` serão reescritas nessa linguagem; vale escolher uma em que isso seja simples.
+- **Backend, o que falta decidir:** a stack está nas decisões acima. Ficam para o planejamento do `backend-api`: hospedagem do NestJS (candidato: Render, na mesma região do Supabase), onde mora o código do servidor (pasta neste repositório ou repositório próprio), o plano do Supabase para produção (o grátis pausa o projeto depois de uma semana sem uso) e o destino das regras de `res://domain/rules/` no cliente quando o servidor passar a decidir.
 - **Nível do Domador:** o Hub mostra o nível, mas o GDD não diz como ele sobe. No MVP fica fixo em 1.
 - **Curva Erratic:** citada no GDD sem fórmula. Fora do catálogo até ser definida.
 - **Estilo de arte:** as telas usam placeholders (forma na cor do elemento) até existir arte das 3 linhas iniciais.
