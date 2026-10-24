@@ -73,7 +73,7 @@ Cada fase tem a sua spec, com requisitos, critérios de aceite e tarefas.
 | Fase                          | Entrega                                                                                       | Status   |
 | ----------------------------- | --------------------------------------------------------------------------------------------- | -------- |
 | [01-server-setup](01-server-setup.md)               | Projeto NestJS em `server/`, `.env`, Prisma ligado ao Supabase, `/health`, Scalar em `/docs`, testes rodando | concluída |
-| [02-database-schema](02-database-schema.md)            | `schema.prisma` com todas as tabelas (catálogo e jogador), restrições e a primeira migration   | rascunho |
+| [02-database-schema](02-database-schema.md)            | `schema.prisma` com todas as tabelas (catálogo e jogador), restrições e a primeira migration   | concluída |
 | [03-catalog-seed](03-catalog-seed.md)               | Carga inicial do catálogo a partir de `client/data/*.json`                                     | rascunho |
 | [04-species-api](04-species-api.md)                | O padrão dos recursos (lista, detalhe, referências, erros) e as rotas de espécies              | rascunho |
 | [05-catalog-api](05-catalog-api.md)                | As rotas dos demais recursos do catálogo e dos iniciais                                         | rascunho |

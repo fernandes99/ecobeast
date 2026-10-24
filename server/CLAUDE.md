@@ -23,7 +23,7 @@ server/
 ## Regras
 
 - **Banco:** `prisma/schema.prisma` é o único lugar onde tabelas, colunas, chaves, índices e relações nascem e mudam (`npm run db:migrate`). A única exceção são as restrições `CHECK`, escritas à mão no SQL da migration (criada com `--create-only`) e comentadas no campo com `/// CHECK <faixa> (migration <nome>)`. Nunca altere tabela pelo painel do Supabase.
-- **Schema `ecobeasts`:** todo modelo tem `@@schema("ecobeasts")`. Nada no `public`. A API automática do Supabase não pode enxergar as tabelas.
+- **Schema `ecobeasts`:** todo modelo tem `@@schema("ecobeasts")`. Nada no `public`, nem o histórico de migrations (o `prisma.config.ts` força `schema=ecobeasts` na URL da CLI). A API automática do Supabase não pode enxergar as tabelas.
 - **Nomes:** no banco, tabelas no plural e colunas em `snake_case` (iguais às de `.specs/game-data/architecture.md`). No Prisma, modelo em `PascalCase` singular e campo em `camelCase`, com `@@map` e `@map`. A conversão de nome é sempre mecânica.
 - **Respostas** em `snake_case`, com `name` e `description` em pt-BR. Mensagens de erro em pt-BR.
 - **Rotas** sob `/v1` (menos `/health` e `/docs`). Toda rota documentada no OpenAPI, com descrição em pt-BR.
@@ -38,7 +38,7 @@ Da pasta `server/`:
 
 ```bash
 npm run start:dev      # API em http://localhost:3000, docs em /docs
-npm run db:migrate     # nova migration a partir do schema.prisma
+npm run db:migrate     # nova migration a partir do schema.prisma (e regenera src/generated/)
 npm run db:generate    # regenera src/generated/
 npm run db:seed        # carga inicial do catálogo
 npm run lint && npm run typecheck && npm test && npm run test:e2e

@@ -1,6 +1,6 @@
 # 02. Schema do banco
 
-- **Status:** rascunho
+- **Status:** concluída
 - **Depende de:** [01-server-setup](01-server-setup.md)
 
 ## Contexto
@@ -67,15 +67,15 @@ O servidor conecta no Supabase, mas o banco está vazio. Esta fase escreve no `s
 | `creature_instance_skills` | `slot` 1–4; `current_pp ≥ 0` |
 | `inventory_items` | `quantity ≥ 1` |
 
-- **RF-08:** A migration aplicada cria o schema `ecobeasts` com as 28 tabelas, e o `public` continua sem tabelas do jogo.
+- **RF-08:** A migration aplicada cria o schema `ecobeasts` com as 28 tabelas, e o `public` continua sem tabelas do jogo. Isso inclui o histórico de migrations do Prisma (`_prisma_migrations`), que também fica em `ecobeasts`.
 
 ## Critérios de aceite
 
-- [ ] `npx prisma validate` passa, e `npx prisma migrate status` diz que o banco está em dia com a migration `init`.
-- [ ] No painel do Supabase (Table Editor, schema `ecobeasts`), as 28 tabelas aparecem com os nomes do RF-01.
-- [ ] `npx prisma migrate dev` logo depois não gera migration nova, porque o schema e o banco estão iguais, e não tenta apagar os `CHECK`.
-- [ ] Pelo painel, mudar a `accuracy` de uma Técnica de teste para 150 é recusado pelo banco. (Feito no teste automático do RF-07; o dono pode repetir à mão depois da [03](03-catalog-seed.md).)
-- [ ] `npm run lint`, `npm run typecheck`, `npm test` e `npm run test:e2e` passam.
+- [x] `npx prisma validate` passa, e `npx prisma migrate status` diz que o banco está em dia com a migration `init`.
+- [x] No painel do Supabase (Table Editor, schema `ecobeasts`), as 28 tabelas aparecem com os nomes do RF-01.
+- [x] `npx prisma migrate dev` logo depois não gera migration nova, porque o schema e o banco estão iguais, e não tenta apagar os `CHECK`.
+- [x] Pelo painel, mudar a `accuracy` de uma Técnica de teste para 150 é recusado pelo banco. (Feito no teste automático do RF-07; o dono pode repetir à mão depois da [03](03-catalog-seed.md).)
+- [x] `npm run lint`, `npm run typecheck`, `npm test` e `npm run test:e2e` passam.
 
 ## Desenho técnico
 
@@ -100,11 +100,11 @@ npm run test:e2e
 
 ## Tarefas
 
-- [ ] Modelos do bloco Referência (RF-01 a RF-04, RF-06).
-- [ ] Modelos dos blocos Espécies e Técnicas.
-- [ ] Modelos do bloco Jogador e enums (RF-05).
-- [ ] `prisma migrate dev --create-only --name init`; acrescentar os `CHECK` do RF-07 ao SQL; comentários `/// CHECK` no schema; aplicar com `prisma migrate dev`.
-- [ ] Testes e2e de recusa, um por grupo:
+- [x] Modelos do bloco Referência (RF-01 a RF-04, RF-06).
+- [x] Modelos dos blocos Espécies e Técnicas.
+- [x] Modelos do bloco Jogador e enums (RF-05).
+- [x] `prisma migrate dev --create-only --name init`; acrescentar os `CHECK` do RF-07 ao SQL; comentários `/// CHECK` no schema; aplicar com `prisma migrate dev`.
+- [x] Testes e2e de recusa, um por grupo:
   - `skills.accuracy = 150`;
   - `elements.color_hex = 'red'`;
   - `element_efficacy.multiplier = 1.5`;
@@ -114,5 +114,13 @@ npm run test:e2e
   - `creature_instances` com `location = 'party'` e `party_slot = NULL`.
   
   Mais um caso válido que é aceito: uma Técnica com `accuracy = 100`.
-- [ ] Teste e2e: apagar uma `species` usada por `species_elements` falha (`Restrict`); apagar um `player` com criatura apaga a criatura (`Cascade`).
-- [ ] Marcar esta spec e a tabela do README como `concluída`; commit `feat: schema do banco`.
+- [x] Teste e2e: apagar uma `species` usada por `species_elements` falha (`Restrict`); apagar um `player` com criatura apaga a criatura (`Cascade`).
+- [x] Marcar esta spec e a tabela do README como `concluída`; commit `feat: schema do banco`.
+
+## Decisões da implementação
+
+- **Histórico de migrations em `ecobeasts`:** a CLI do Prisma criou `_prisma_migrations` no `public`, que é o schema que a API automática do Supabase publica. O `prisma.config.ts` agora acrescenta `schema=ecobeasts` à `DIRECT_URL`, sem mudar o `.env`, e a tabela foi movida (`ALTER TABLE … SET SCHEMA`). Um teste e2e confere que o `public` fica vazio e que o `ecobeasts` tem as 28 tabelas mais o histórico.
+- **`@@unique([skillId, sortOrder])` em `skill_effects`:** é a regra "`sort_order` não se repete na mesma Técnica" do validador do cliente. Como o Prisma descreve essa regra direto, ela fica no `schema.prisma`, e não num `CHECK`.
+- **`db:migrate` também gera o cliente:** no Prisma 7, `migrate dev` não roda mais o `generate`. O script passou a ser `prisma migrate dev && prisma generate`.
+- **61 `CHECK`** na migration `20261024164323_init`: 14 de slug e 47 de faixas e regras de uma linha. Um `migrate dev --create-only` logo depois gera uma migration vazia, sinal de que o Prisma não tenta apagar os `CHECK`.
+- **Testes:** `test/support/db.ts` (`attempt`: roda numa transação sempre desfeita e devolve `'accepted'` ou o erro) e `test/support/fixtures.ts` (linhas mínimas válidas). Os testes de recusa conferem o nome da restrição na mensagem do erro.

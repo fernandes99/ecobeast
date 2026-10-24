@@ -2,15 +2,612 @@
 // (.specs/backend-api/architecture.md, "Banco"). Toda mudança começa aqui e
 // vira uma migration (npm run db:migrate). Nada de criar ou alterar tabela
 // pelo painel do Supabase.
+//
+// Convenções:
+// - Tudo no schema Postgres "ecobeasts" (a API automática do Supabase só
+//   publica o "public").
+// - No banco, os nomes de .specs/game-data/architecture.md: tabelas no plural
+//   e colunas em snake_case. Aqui, modelo em PascalCase e campo em camelCase;
+//   a conversão de nome é sempre mecânica (growth_rate_id → growthRateId).
+// - Campos escalares na mesma ordem das colunas dos JSON do catálogo.
+// - Faixas de valor são CHECK escritos à mão no SQL da migration (o Prisma não
+//   os descreve); cada campo com faixa tem o comentário "CHECK".
 
 generator client {
-  provider               = "prisma-client"
-  output                 = "../src/generated/prisma"
-  moduleFormat           = "esm"
-  importFileExtension    = "js"
+  provider            = "prisma-client"
+  output              = "../src/generated/prisma"
+  moduleFormat        = "esm"
+  importFileExtension = "js"
 }
 
 datasource db {
   provider = "postgresql"
   schemas  = ["ecobeasts"]
+}
+
+// ─── Referência ──────────────────────────────────────────────────────────────
+
+/// Os Elementos (Fogo, Água…) e a cor de cada um na interface.
+model Element {
+  id       Int     @id @default(autoincrement())
+  /// CHECK ^[a-z0-9_]+$ (migration init)
+  slug     String  @unique
+  name     String
+  /// CHECK ^#[0-9A-Fa-f]{6}$ (migration init)
+  colorHex String  @map("color_hex")
+  isRare   Boolean @map("is_rare")
+
+  attacking        ElementEfficacy[]         @relation("EfficacyAttacker")
+  defending        ElementEfficacy[]         @relation("EfficacyDefender")
+  statusImmunities StatusConditionImmunity[]
+  species          SpeciesElement[]
+  skills           Skill[]
+
+  @@map("elements")
+  @@schema("ecobeasts")
+}
+
+/// Multiplicador de dano de um Elemento atacante contra um defensor; só os diferentes de 1.
+model ElementEfficacy {
+  attackerElementId Int   @map("attacker_element_id")
+  defenderElementId Int   @map("defender_element_id")
+  /// CHECK IN (0, 0.5, 2) (migration init)
+  multiplier        Float
+
+  attacker Element @relation("EfficacyAttacker", fields: [attackerElementId], references: [id], onDelete: Restrict)
+  defender Element @relation("EfficacyDefender", fields: [defenderElementId], references: [id], onDelete: Restrict)
+
+  @@id([attackerElementId, defenderElementId])
+  @@index([defenderElementId])
+  @@map("element_efficacy")
+  @@schema("ecobeasts")
+}
+
+/// Os stats (HP, Ataque… e os exclusivos de batalha, como precisão).
+model Stat {
+  id           Int     @id @default(autoincrement())
+  /// CHECK ^[a-z0-9_]+$ (migration init)
+  slug         String  @unique
+  name         String
+  shortName    String  @map("short_name")
+  isBattleOnly Boolean @map("is_battle_only")
+
+  temperamentsIncreased Temperament[]          @relation("TemperamentIncreased")
+  temperamentsDecreased Temperament[]          @relation("TemperamentDecreased")
+  species               SpeciesStat[]
+  skillEffects          SkillEffect[]
+  creatureStats         CreatureInstanceStat[]
+
+  @@map("stats")
+  @@schema("ecobeasts")
+}
+
+/// Curvas de XP: o multiplicador de nível³ que dá o XP total de cada nível.
+model GrowthRate {
+  id           Int    @id @default(autoincrement())
+  /// CHECK ^[a-z0-9_]+$ (migration init)
+  slug         String @unique
+  name         String
+  /// CHECK 0.1–10 (migration init)
+  xpMultiplier Float  @map("xp_multiplier")
+
+  species Species[]
+
+  @@map("growth_rates")
+  @@schema("ecobeasts")
+}
+
+/// Raridades das espécies (comum… Ancestral), em ordem.
+model Rarity {
+  id        Int    @id @default(autoincrement())
+  /// CHECK ^[a-z0-9_]+$ (migration init)
+  slug      String @unique
+  name      String
+  sortOrder Int    @unique @map("sort_order")
+
+  species Species[]
+
+  @@map("rarities")
+  @@schema("ecobeasts")
+}
+
+/// Os 25 Temperamentos: um stat aumentado e um diminuído.
+model Temperament {
+  id              Int    @id @default(autoincrement())
+  /// CHECK ^[a-z0-9_]+$ (migration init)
+  slug            String @unique
+  name            String
+  increasedStatId Int    @map("increased_stat_id")
+  decreasedStatId Int    @map("decreased_stat_id")
+
+  increasedStat Stat               @relation("TemperamentIncreased", fields: [increasedStatId], references: [id], onDelete: Restrict)
+  decreasedStat Stat               @relation("TemperamentDecreased", fields: [decreasedStatId], references: [id], onDelete: Restrict)
+  creatures     CreatureInstance[]
+
+  @@index([increasedStatId])
+  @@index([decreasedStatId])
+  @@map("temperaments")
+  @@schema("ecobeasts")
+}
+
+/// Categorias de Técnica: física, especial, status.
+model SkillCategory {
+  id   Int    @id @default(autoincrement())
+  /// CHECK ^[a-z0-9_]+$ (migration init)
+  slug String @unique
+  name String
+
+  skills Skill[]
+
+  @@map("skill_categories")
+  @@schema("ecobeasts")
+}
+
+/// Alvos de Técnica e de efeito: um oponente, si mesmo, todos…
+model SkillTarget {
+  id   Int    @id @default(autoincrement())
+  /// CHECK ^[a-z0-9_]+$ (migration init)
+  slug String @unique
+  name String
+
+  skills       Skill[]
+  skillEffects SkillEffect[]
+
+  @@map("skill_targets")
+  @@schema("ecobeasts")
+}
+
+/// Como uma espécie aprende uma Técnica: por nível, ao ascender, ensinável.
+model SkillLearnMethod {
+  id   Int    @id @default(autoincrement())
+  /// CHECK ^[a-z0-9_]+$ (migration init)
+  slug String @unique
+  name String
+
+  speciesSkills SpeciesSkill[]
+
+  @@map("skill_learn_methods")
+  @@schema("ecobeasts")
+}
+
+/// Status (queimado, envenenado…); os voláteis acabam ao sair da batalha.
+model StatusCondition {
+  id         Int     @id @default(autoincrement())
+  /// CHECK ^[a-z0-9_]+$ (migration init)
+  slug       String  @unique
+  name       String
+  isVolatile Boolean @map("is_volatile")
+
+  immunities   StatusConditionImmunity[]
+  skillEffects SkillEffect[]
+  creatures    CreatureInstance[]
+
+  @@map("status_conditions")
+  @@schema("ecobeasts")
+}
+
+/// Elementos imunes a um status (ex.: Fogo não fica queimado).
+model StatusConditionImmunity {
+  statusConditionId Int @map("status_condition_id")
+  elementId         Int @map("element_id")
+
+  statusCondition StatusCondition @relation(fields: [statusConditionId], references: [id], onDelete: Restrict)
+  element         Element         @relation(fields: [elementId], references: [id], onDelete: Restrict)
+
+  @@id([statusConditionId, elementId])
+  @@index([elementId])
+  @@map("status_condition_immunities")
+  @@schema("ecobeasts")
+}
+
+/// Tipos de efeito de Técnica; cada um usa certas colunas de skill_effects.
+model EffectType {
+  id   Int    @id @default(autoincrement())
+  /// CHECK ^[a-z0-9_]+$ (migration init)
+  slug String @unique
+  name String
+
+  skillEffects SkillEffect[]
+
+  @@map("effect_types")
+  @@schema("ecobeasts")
+}
+
+/// Gatilhos de Ascensão: nível, item, Vínculo, horário, zona…
+model EvolutionTrigger {
+  id   Int    @id @default(autoincrement())
+  /// CHECK ^[a-z0-9_]+$ (migration init)
+  slug String @unique
+  name String
+
+  evolutions Evolution[]
+
+  @@map("evolution_triggers")
+  @@schema("ecobeasts")
+}
+
+// ─── Espécies ────────────────────────────────────────────────────────────────
+
+/// As espécies do Bestiário; o id é o número no Bestiário.
+model Species {
+  id                   Int    @id @default(autoincrement())
+  /// CHECK ^[a-z0-9_]+$ (migration init)
+  slug                 String @unique
+  name                 String
+  description          String
+  growthRateId         Int    @map("growth_rate_id")
+  rarityId             Int    @map("rarity_id")
+  /// CHECK ≥ 1 (migration init)
+  baseXpYield          Int    @map("base_xp_yield")
+  /// CHECK 3–255 (migration init)
+  captureRate          Int    @map("capture_rate")
+  /// CHECK −1–1; −1 = sem gênero (migration init)
+  genderRatio          Float  @map("gender_ratio")
+  /// CHECK ≥ 0 (migration init)
+  heightM              Float  @map("height_m")
+  /// CHECK ≥ 0 (migration init)
+  weightKg             Float  @map("weight_kg")
+  evolvesFromSpeciesId Int?   @map("evolves_from_species_id")
+
+  growthRate     GrowthRate         @relation(fields: [growthRateId], references: [id], onDelete: Restrict)
+  rarity         Rarity             @relation(fields: [rarityId], references: [id], onDelete: Restrict)
+  evolvesFrom    Species?           @relation("SpeciesEvolvesFrom", fields: [evolvesFromSpeciesId], references: [id], onDelete: Restrict)
+  evolvesTo      Species[]          @relation("SpeciesEvolvesFrom")
+  elements       SpeciesElement[]
+  stats          SpeciesStat[]
+  traits         SpeciesTrait[]
+  skills         SpeciesSkill[]
+  evolutionsFrom Evolution[]        @relation("EvolutionFrom")
+  evolutionsTo   Evolution[]        @relation("EvolutionTo")
+  starterOption  StarterOption?
+  creatures      CreatureInstance[]
+
+  @@index([growthRateId])
+  @@index([rarityId])
+  @@index([evolvesFromSpeciesId])
+  @@map("species")
+  @@schema("ecobeasts")
+}
+
+/// Elementos de cada espécie: slot 1 e, se houver, slot 2.
+model SpeciesElement {
+  speciesId Int @map("species_id")
+  /// CHECK IN (1, 2) (migration init)
+  slot      Int
+  elementId Int @map("element_id")
+
+  species Species @relation(fields: [speciesId], references: [id], onDelete: Restrict)
+  element Element @relation(fields: [elementId], references: [id], onDelete: Restrict)
+
+  @@id([speciesId, slot])
+  @@index([elementId])
+  @@map("species_elements")
+  @@schema("ecobeasts")
+}
+
+/// Stats base de cada espécie e o Treino que ela dá ao ser derrotada.
+model SpeciesStat {
+  speciesId     Int @map("species_id")
+  statId        Int @map("stat_id")
+  /// CHECK 1–255 (migration init)
+  baseValue     Int @map("base_value")
+  /// CHECK 0–3 (migration init)
+  trainingYield Int @map("training_yield")
+
+  species Species @relation(fields: [speciesId], references: [id], onDelete: Restrict)
+  stat    Stat    @relation(fields: [statId], references: [id], onDelete: Restrict)
+
+  @@id([speciesId, statId])
+  @@index([statId])
+  @@map("species_stats")
+  @@schema("ecobeasts")
+}
+
+/// Traços (habilidades passivas).
+model Trait {
+  id          Int    @id @default(autoincrement())
+  /// CHECK ^[a-z0-9_]+$ (migration init)
+  slug        String @unique
+  name        String
+  description String
+
+  species   SpeciesTrait[]
+  creatures CreatureInstance[]
+
+  @@map("traits")
+  @@schema("ecobeasts")
+}
+
+/// Traços possíveis de cada espécie; o slot 3 é o oculto.
+model SpeciesTrait {
+  speciesId Int     @map("species_id")
+  traitId   Int     @map("trait_id")
+  /// CHECK IN (1, 2, 3) (migration init)
+  slot      Int
+  isHidden  Boolean @map("is_hidden")
+
+  species Species @relation(fields: [speciesId], references: [id], onDelete: Restrict)
+  trait   Trait   @relation(fields: [traitId], references: [id], onDelete: Restrict)
+
+  @@id([speciesId, slot])
+  @@index([traitId])
+  @@map("species_traits")
+  @@schema("ecobeasts")
+}
+
+/// Regras de Ascensão: de uma espécie para outra, com o gatilho e as condições.
+model Evolution {
+  id                 Int     @id @default(autoincrement())
+  speciesId          Int     @map("species_id")
+  evolvedSpeciesId   Int     @map("evolved_species_id")
+  evolutionTriggerId Int     @map("evolution_trigger_id")
+  /// CHECK 1–100 (migration init)
+  minLevel           Int?    @map("min_level")
+  /// FK futura: items. CHECK IS NULL até a tabela existir (migration init)
+  itemId             Int?    @map("item_id")
+  /// CHECK 0–255 (migration init)
+  minBond            Int?    @map("min_bond")
+  /// CHECK IN ('day', 'night') (migration init)
+  timeOfDay          String? @map("time_of_day")
+  /// FK futura: zones. CHECK IS NULL até a tabela existir (migration init)
+  zoneId             Int?    @map("zone_id")
+
+  species          Species          @relation("EvolutionFrom", fields: [speciesId], references: [id], onDelete: Restrict)
+  evolvedSpecies   Species          @relation("EvolutionTo", fields: [evolvedSpeciesId], references: [id], onDelete: Restrict)
+  evolutionTrigger EvolutionTrigger @relation(fields: [evolutionTriggerId], references: [id], onDelete: Restrict)
+
+  @@index([speciesId])
+  @@index([evolvedSpeciesId])
+  @@index([evolutionTriggerId])
+  @@map("evolutions")
+  @@schema("ecobeasts")
+}
+
+/// As espécies que o jogador pode escolher como inicial, em ordem.
+model StarterOption {
+  speciesId Int @id @map("species_id")
+  sortOrder Int @unique @map("sort_order")
+
+  species Species @relation(fields: [speciesId], references: [id], onDelete: Restrict)
+
+  @@map("starter_options")
+  @@schema("ecobeasts")
+}
+
+// ─── Técnicas ────────────────────────────────────────────────────────────────
+
+/// As Técnicas (ataques e movimentos de status).
+model Skill {
+  id              Int     @id @default(autoincrement())
+  /// CHECK ^[a-z0-9_]+$ (migration init)
+  slug            String  @unique
+  name            String
+  description     String
+  elementId       Int     @map("element_id")
+  skillCategoryId Int     @map("skill_category_id")
+  /// CHECK 0–250 (migration init)
+  power           Int
+  /// CHECK 0–100 (migration init)
+  accuracy        Int
+  /// CHECK 5–40 (migration init)
+  maxPp           Int     @map("max_pp")
+  /// CHECK −7–5 (migration init)
+  priority        Int
+  /// CHECK 0–3 (migration init)
+  critStage       Int     @map("crit_stage")
+  skillTargetId   Int     @map("skill_target_id")
+  makesContact    Boolean @map("makes_contact")
+  /// CHECK 1–10 (migration init)
+  minHits         Int     @map("min_hits")
+  /// CHECK 1–10 (migration init)
+  maxHits         Int     @map("max_hits")
+
+  element        Element                 @relation(fields: [elementId], references: [id], onDelete: Restrict)
+  skillCategory  SkillCategory           @relation(fields: [skillCategoryId], references: [id], onDelete: Restrict)
+  skillTarget    SkillTarget             @relation(fields: [skillTargetId], references: [id], onDelete: Restrict)
+  effects        SkillEffect[]
+  learnedBy      SpeciesSkill[]
+  creatureSkills CreatureInstanceSkill[]
+
+  @@index([elementId])
+  @@index([skillCategoryId])
+  @@index([skillTargetId])
+  @@map("skills")
+  @@schema("ecobeasts")
+}
+
+/// Efeitos de uma Técnica, em ordem; as colunas usadas dependem do tipo de efeito.
+model SkillEffect {
+  id                Int  @id @default(autoincrement())
+  skillId           Int  @map("skill_id")
+  effectTypeId      Int  @map("effect_type_id")
+  /// CHECK ≥ 1 (migration init)
+  sortOrder         Int  @map("sort_order")
+  /// CHECK 1–100 (migration init)
+  chance            Int
+  skillTargetId     Int? @map("skill_target_id")
+  statusConditionId Int? @map("status_condition_id")
+  statId            Int? @map("stat_id")
+  /// CHECK −6–6 (migration init)
+  stages            Int?
+  /// CHECK 1–100 (migration init)
+  percent           Int?
+  /// CHECK ≥ 1 (migration init)
+  value             Int?
+  /// FK futura: weathers. CHECK IS NULL até a tabela existir (migration init)
+  weatherId         Int? @map("weather_id")
+  /// CHECK ≥ 1 (migration init)
+  minTurns          Int? @map("min_turns")
+
+  skill           Skill            @relation(fields: [skillId], references: [id], onDelete: Restrict)
+  effectType      EffectType       @relation(fields: [effectTypeId], references: [id], onDelete: Restrict)
+  skillTarget     SkillTarget?     @relation(fields: [skillTargetId], references: [id], onDelete: Restrict)
+  statusCondition StatusCondition? @relation(fields: [statusConditionId], references: [id], onDelete: Restrict)
+  stat            Stat?            @relation(fields: [statId], references: [id], onDelete: Restrict)
+
+  @@unique([skillId, sortOrder])
+  @@index([effectTypeId])
+  @@index([skillTargetId])
+  @@index([statusConditionId])
+  @@index([statId])
+  @@map("skill_effects")
+  @@schema("ecobeasts")
+}
+
+/// O que cada espécie aprende: Técnica, método e nível (nulo para ensináveis).
+model SpeciesSkill {
+  speciesId          Int  @map("species_id")
+  skillId            Int  @map("skill_id")
+  skillLearnMethodId Int  @map("skill_learn_method_id")
+  /// CHECK 0–100 (migration init)
+  level              Int?
+
+  species          Species          @relation(fields: [speciesId], references: [id], onDelete: Restrict)
+  skill            Skill            @relation(fields: [skillId], references: [id], onDelete: Restrict)
+  skillLearnMethod SkillLearnMethod @relation(fields: [skillLearnMethodId], references: [id], onDelete: Restrict)
+
+  @@id([speciesId, skillId, skillLearnMethodId])
+  @@index([skillId])
+  @@index([skillLearnMethodId])
+  @@map("species_skills")
+  @@schema("ecobeasts")
+}
+
+// ─── Jogador ─────────────────────────────────────────────────────────────────
+// O cliente nunca lê estas tabelas: recebe o jogador pronto, no formato do
+// contrato em .specs/onboarding/architecture.md.
+
+/// Gênero de uma criatura.
+enum Gender {
+  male
+  female
+  none
+
+  @@map("gender")
+  @@schema("ecobeasts")
+}
+
+/// Onde uma criatura está: na equipe ou no Santuário.
+enum CreatureLocation {
+  party
+  storage
+
+  @@map("creature_location")
+  @@schema("ecobeasts")
+}
+
+/// O Domador.
+model Player {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String
+  /// CHECK 1–100 (migration init)
+  level     Int      @default(1)
+  /// CHECK ≥ 0 (migration init)
+  coins     Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  creatures CreatureInstance[]
+  inventory InventoryItem[]
+
+  @@map("players")
+  @@schema("ecobeasts")
+}
+
+/// Um Ecobeast de um Domador.
+model CreatureInstance {
+  uid               String           @id @default(uuid()) @db.Uuid
+  playerId          String           @map("player_id") @db.Uuid
+  speciesId         Int              @map("species_id")
+  nickname          String?
+  /// CHECK 1–100 (migration init)
+  level             Int
+  /// CHECK ≥ 0 (migration init)
+  currentXp         Int              @map("current_xp")
+  /// CHECK ≥ 0 (migration init)
+  currentHp         Int              @map("current_hp")
+  temperamentId     Int              @map("temperament_id")
+  traitId           Int              @map("trait_id")
+  gender            Gender
+  isPrismatic       Boolean          @default(false) @map("is_prismatic")
+  /// CHECK 0–255 (migration init)
+  bond              Int
+  /// FK futura: items. CHECK IS NULL até a tabela existir (migration init)
+  heldItemId        Int?             @map("held_item_id")
+  statusConditionId Int?             @map("status_condition_id")
+  /// CHECK party ⇔ party_slot preenchido (migration init)
+  location          CreatureLocation
+  /// CHECK 1–6 (migration init)
+  partySlot         Int?             @map("party_slot")
+  /// Domador original; sem relação, porque ele pode não existir mais.
+  originalPlayerId  String           @map("original_player_id") @db.Uuid
+  caughtAt          DateTime         @map("caught_at") @db.Timestamptz(3)
+  /// FK futura: zones. CHECK IS NULL até a tabela existir (migration init)
+  caughtZoneId      Int?             @map("caught_zone_id")
+
+  player          Player                  @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  species         Species                 @relation(fields: [speciesId], references: [id], onDelete: Restrict)
+  temperament     Temperament             @relation(fields: [temperamentId], references: [id], onDelete: Restrict)
+  trait           Trait                   @relation(fields: [traitId], references: [id], onDelete: Restrict)
+  statusCondition StatusCondition?        @relation(fields: [statusConditionId], references: [id], onDelete: Restrict)
+  stats           CreatureInstanceStat[]
+  skills          CreatureInstanceSkill[]
+
+  @@unique([playerId, partySlot])
+  @@index([speciesId])
+  @@index([temperamentId])
+  @@index([traitId])
+  @@index([statusConditionId])
+  @@map("creature_instances")
+  @@schema("ecobeasts")
+}
+
+/// Genes e Treino de uma criatura em cada stat.
+model CreatureInstanceStat {
+  creatureUid    String @map("creature_uid") @db.Uuid
+  statId         Int    @map("stat_id")
+  /// CHECK 0–31 (migration init)
+  genes          Int
+  /// CHECK 0–252 (migration init)
+  trainingPoints Int    @map("training_points")
+
+  creature CreatureInstance @relation(fields: [creatureUid], references: [uid], onDelete: Cascade)
+  stat     Stat             @relation(fields: [statId], references: [id], onDelete: Restrict)
+
+  @@id([creatureUid, statId])
+  @@index([statId])
+  @@map("creature_instance_stats")
+  @@schema("ecobeasts")
+}
+
+/// As até 4 Técnicas de uma criatura e o PP atual de cada uma.
+model CreatureInstanceSkill {
+  creatureUid String @map("creature_uid") @db.Uuid
+  /// CHECK 1–4 (migration init)
+  slot        Int
+  skillId     Int    @map("skill_id")
+  /// CHECK ≥ 0 (migration init)
+  currentPp   Int    @map("current_pp")
+
+  creature CreatureInstance @relation(fields: [creatureUid], references: [uid], onDelete: Cascade)
+  skill    Skill            @relation(fields: [skillId], references: [id], onDelete: Restrict)
+
+  @@id([creatureUid, slot])
+  @@index([skillId])
+  @@map("creature_instance_skills")
+  @@schema("ecobeasts")
+}
+
+/// Itens da Mochila. Fica vazia até existir a tabela items.
+model InventoryItem {
+  playerId String @map("player_id") @db.Uuid
+  /// FK futura: items
+  itemId   Int    @map("item_id")
+  /// CHECK ≥ 1 (migration init)
+  quantity Int
+
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@id([playerId, itemId])
+  @@map("inventory_items")
+  @@schema("ecobeasts")
 }

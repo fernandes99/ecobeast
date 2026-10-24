@@ -50,7 +50,7 @@
 - [x] `http://localhost:3000/docs` abre a Scalar com o título "Ecobeast API", e `/docs/openapi.json` devolve o documento.
 - [x] `npm run lint`, `npm run typecheck`, `npm test` e `npm run test:e2e` passam.
 - [x] `git status` não mostra `.env`, `node_modules/` nem `dist/`.
-- [ ] No painel do Supabase, em Settings > API > Exposed schemas, não aparece `ecobeasts`. (Passo do dono, ainda não confirmado.)
+- [x] No painel do Supabase, em Settings > API > Exposed schemas, não aparece `ecobeasts`. (Conferido pelo dono: só `public` e `graphql_public`.)
 
 ## Desenho técnico
 

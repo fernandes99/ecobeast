@@ -34,7 +34,7 @@ npm run start:dev      # http://localhost:3000
 Todas as tabelas ficam em `prisma/schema.prisma`, no schema Postgres `ecobeasts`. Toda mudança de tabela começa nesse arquivo:
 
 ```bash
-npm run db:migrate     # cria e aplica uma migration a partir do schema.prisma
+npm run db:migrate     # cria e aplica uma migration a partir do schema.prisma e regenera o cliente
 npm run db:generate    # regenera o cliente do Prisma (src/generated/)
 npm run db:seed        # carga inicial do catálogo (só em banco vazio)
 ```
