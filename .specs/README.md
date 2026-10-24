@@ -2,7 +2,7 @@
 
 Entregas grandes começam por uma spec escrita aqui, antes do código. A spec é o que a pessoa (ou a IA) que vai implementar lê para saber o que fazer, onde e como conferir que ficou pronto.
 
-O Ecobeast é um jogo mobile (Android/iOS, retrato) feito em **Godot 4.7 com GDScript**. O design do jogo está em `GDD.md` e a lista de telas em `TELAS.md`, na raiz do projeto. As specs transformam esses documentos em entregas implementáveis; quando uma spec e o GDD divergem, vale a spec (e o GDD é atualizado).
+O Ecobeast é um jogo mobile (Android/iOS, retrato): o cliente em **Godot 4.7 com GDScript** (`client/`) e a API em NestJS (`server/`), no mesmo repositório. O design do jogo está em `GDD.md` e a lista de telas em `TELAS.md`, na raiz do repositório. As specs transformam esses documentos em entregas implementáveis; quando uma spec e o GDD divergem, vale a spec (e o GDD é atualizado).
 
 ## Organização
 
