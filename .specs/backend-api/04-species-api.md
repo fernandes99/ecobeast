@@ -1,6 +1,6 @@
 # 04. Rotas de espécies
 
-- **Status:** rascunho
+- **Status:** concluída
 - **Depende de:** [03-catalog-seed](03-catalog-seed.md)
 
 ## Contexto
@@ -45,16 +45,16 @@ O banco tem o catálogo. Esta fase cria as peças que todo recurso da API usa (p
 
 ## Critérios de aceite
 
-- [ ] `GET /v1/species` devolve `count` igual ao número de linhas de `species`, `results` com os ids em ordem crescente e `previous` igual a `null`.
-- [ ] `GET /v1/species?limit=2&offset=2` devolve 2 resultados, `next` igual a `/v1/species?limit=2&offset=4` e `previous` igual a `/v1/species?limit=2&offset=0`.
-- [ ] `limit=0`, `limit=101`, `limit=abc` e `offset=-1` devolvem `400` com a mensagem em pt-BR.
-- [ ] `GET /v1/species/1`, `/v1/species/fagulho` e `/v1/species/FAGULHO` devolvem o mesmo corpo.
-- [ ] `GET /v1/species/9999` e `/v1/species/xyz` devolvem `404`, com "Espécie não encontrada: …".
-- [ ] `GET /v1/species/3` tem `elements` com `fire` no `slot` 1 e `shadow` no `slot` 2, e `evolves_from.id` igual a 2.
-- [ ] `GET /v1/species/1/skills` tem pelo menos uma entrada com `learn_method.slug` igual a `level_up` e `level` igual a 1.
-- [ ] `GET /v1/species/2/evolutions` tem `chain.species.id` igual a 1, `chain.evolves_to[0].node.species.id` igual a 2 e o nó seguinte com id 3, e `trigger.slug` igual a `level`.
-- [ ] As quatro rotas aparecem na Scalar em `/docs`, na tag "Espécies", e dá para testar `GET /v1/species/1` por lá.
-- [ ] `npm run lint`, `npm run typecheck`, `npm test` e `npm run test:e2e` passam.
+- [x] `GET /v1/species` devolve `count` igual ao número de linhas de `species`, `results` com os ids em ordem crescente e `previous` igual a `null`.
+- [x] `GET /v1/species?limit=2&offset=2` devolve 2 resultados, `next` igual a `/v1/species?limit=2&offset=4` e `previous` igual a `/v1/species?limit=2&offset=0`.
+- [x] `limit=0`, `limit=101`, `limit=abc` e `offset=-1` devolvem `400` com a mensagem em pt-BR.
+- [x] `GET /v1/species/1`, `/v1/species/fagulho` e `/v1/species/FAGULHO` devolvem o mesmo corpo.
+- [x] `GET /v1/species/9999` e `/v1/species/xyz` devolvem `404`, com "Espécie não encontrada: …".
+- [x] `GET /v1/species/3` tem `elements` com `fire` no `slot` 1 e `shadow` no `slot` 2, e `evolves_from.id` igual a 2.
+- [x] `GET /v1/species/1/skills` tem pelo menos uma entrada com `learn_method.slug` igual a `level_up` e `level` igual a 1.
+- [x] `GET /v1/species/2/evolutions` tem `chain.species.id` igual a 1, `chain.evolves_to[0].node.species.id` igual a 2 e o nó seguinte com id 3, e `trigger.slug` igual a `level`.
+- [x] As quatro rotas aparecem na Scalar em `/docs`, na tag "Espécies", e dá para testar `GET /v1/species/1` por lá.
+- [x] `npm run lint`, `npm run typecheck`, `npm test` e `npm run test:e2e` passam.
 
 ## Desenho técnico
 
@@ -81,11 +81,19 @@ npm run start:dev   # e testar as rotas pela Scalar em http://localhost:3000/doc
 
 ## Tarefas
 
-- [ ] `page` com testes: total 9, limit 2, offset 2 → next `offset=4`, previous `offset=0`; offset 8 → next `null`; offset 20 → `results: []`, previous `offset=18`.
-- [ ] `parseIdOrSlug` com testes: `"1"` → `{ id: 1 }`; `"fagulho"` → slug; `"FAGULHO"` → slug `fagulho`; `"1a"` → slug.
-- [ ] `ref` e `PaginationQueryDto` (com as mensagens do RF-01).
-- [ ] e2e das rotas de espécies (critérios acima); rodar e ver falhar.
-- [ ] `SpeciesService` e `SpeciesController` (RF-06 a RF-09); os e2e passam.
-- [ ] Throttler (RF-05) com e2e: num app de teste com `THROTTLE_LIMIT=3`, a 4ª chamada seguida devolve `429`.
-- [ ] Documentação das rotas (RF-10).
-- [ ] Marcar esta spec e a tabela do README como `concluída`; commit `feat: rotas de espécies`.
+- [x] `page` com testes: total 9, limit 2, offset 2 → next `offset=4`, previous `offset=0`; offset 8 → next `null`; offset 20 → `results: []`, previous `offset=18`.
+- [x] `parseIdOrSlug` com testes: `"1"` → `{ id: 1 }`; `"fagulho"` → slug; `"FAGULHO"` → slug `fagulho`; `"1a"` → slug.
+- [x] `ref` e `PaginationQueryDto` (com as mensagens do RF-01).
+- [x] e2e das rotas de espécies (critérios acima); rodar e ver falhar.
+- [x] `SpeciesService` e `SpeciesController` (RF-06 a RF-09); os e2e passam.
+- [x] Throttler (RF-05) com e2e: num app de teste com `THROTTLE_LIMIT=3`, a 4ª chamada seguida devolve `429`.
+- [x] Documentação das rotas (RF-10).
+- [x] Marcar esta spec e a tabela do README como `concluída`; commit `feat: rotas de espécies`.
+
+## Decisões da implementação
+
+- **Id grande demais vira slug:** `parseIdOrSlug` só trata como id um número que cabe num inteiro do Postgres. `/v1/species/99999999999` dá `404`, e não um erro `500` do banco.
+- **`400` com um texto só:** o `ValidationPipe` global junta as mensagens dos DTOs numa string, em vez da lista padrão do Nest (`configureApp`).
+- **Decorators de documentação compartilhados:** `ApiListRoute` e `ApiDetailRoute` (`src/common/api-docs.ts`) documentam as respostas `200`, `400`, `404` e `429` e o parâmetro `idOrSlug`. A [05](05-catalog-api.md) reaproveita.
+- **`test/support/app.ts`:** `createTestApp({ prisma?, env? })` sobe a aplicação como o `main.ts`. Com `env`, troca o `ConfigService` (o teste do limite usa `THROTTLE_LIMIT: 3`). O `vitest.config.e2e.ts` define `THROTTLE_LIMIT=10000` para os demais e um tempo limite de 30 s, porque os e2e falam com o Supabase pela rede.
+- **DTOs recursivos:** `EvolutionNodeDto` é declarado antes de `EvolutionStepDto`, porque o metadado de tipo do campo `node` exige a classe já definida.

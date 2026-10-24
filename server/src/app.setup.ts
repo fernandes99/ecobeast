@@ -1,4 +1,8 @@
-import { INestApplication } from '@nestjs/common';
+import {
+  BadRequestException,
+  INestApplication,
+  ValidationPipe,
+} from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { apiReference } from '@scalar/nestjs-api-reference';
 import type { Request, Response } from 'express';
@@ -7,12 +11,24 @@ export const API_PREFIX = 'v1';
 export const OPENAPI_PATH = '/docs/openapi.json';
 
 /**
- * O que main.ts e os testes e2e montam igual: prefixo /v1 (menos /health) e a
- * documentação — OpenAPI em /docs/openapi.json e a Scalar em /docs.
+ * O que main.ts e os testes e2e montam igual: prefixo /v1 (menos /health),
+ * validação dos parâmetros (400 com a mensagem em pt-BR) e a documentação — OpenAPI em /docs/openapi.json e a Scalar em /docs.
  * Chamar antes de app.init() / app.listen().
  */
 export function configureApp(app: INestApplication): void {
   app.setGlobalPrefix(API_PREFIX, { exclude: ['health'] });
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+      // Um texto só, com as mensagens dos DTOs (já em pt-BR).
+      exceptionFactory: (errors) =>
+        new BadRequestException(
+          errors
+            .flatMap((error) => Object.values(error.constraints ?? {}))
+            .join('; '),
+        ),
+    }),
+  );
 
   const config = new DocumentBuilder()
     .setTitle('Ecobeast API')
