@@ -89,7 +89,7 @@ Conferidos por uma cena temporária (já apagada). Ela abriu o jogo numa janela,
 ## Verificação
 
 ```bash
-godot --headless --path . --script res://tools/validate_data.gd
+godot --headless --path client --script res://tools/validate_data.gd
 ```
 
 No editor: percorrer os critérios de aceite. No celular: fica para quando houver export (`release-pipeline`); RF-13 é conferido com a janela do editor no formato de celular e, se possível, no aparelho.

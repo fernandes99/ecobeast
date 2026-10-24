@@ -87,7 +87,7 @@ Os cinco primeiros foram conferidos por uma cena temporária (já apagada). Ela 
 ## Verificação
 
 ```bash
-godot --headless --path . --script res://tools/validate_data.gd
+godot --headless --path client --script res://tools/validate_data.gd
 ```
 
 No editor: percorrer os critérios de aceite.

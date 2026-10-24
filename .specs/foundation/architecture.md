@@ -2,7 +2,22 @@
 
 O desenho do projeto inteiro. As outras iniciativas acrescentam arquivos nesta árvore e seguem estas regras.
 
-## Pastas
+## Repositório
+
+Um monorepo com o cliente e o servidor:
+
+```
+.specs/        specs de todo o projeto (cliente e servidor)
+GDD.md         regras, fórmulas e conteúdo
+TELAS.md       as 16 telas do protótipo
+CLAUDE.md      regras gerais; cada pasta abaixo tem o seu CLAUDE.md
+client/        o jogo: projeto Godot (res:// é esta pasta)
+server/        a API: NestJS + Prisma sobre o Supabase (iniciativa backend-api)
+```
+
+Comandos do Godot rodam da raiz com `--path client`. O `.gitattributes` e o `.editorconfig` ficam na raiz e valem para as duas pastas. Os `.gitignore` ficam dentro de cada uma.
+
+## Pastas do cliente
 
 ```
 res://

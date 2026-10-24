@@ -83,7 +83,7 @@ O voltar do Android usa o mesmo caminho do Esc (`Router.back()`) e fica para con
 ## Verificação
 
 ```bash
-godot --headless --path . --script res://tools/validate_data.gd
+godot --headless --path client --script res://tools/validate_data.gd
 ```
 
 No editor: percorrer os critérios de aceite.

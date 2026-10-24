@@ -106,7 +106,7 @@ Ficam para conferir no aparelho a rolagem com o dedo por cima dos botões e dos 
 ## Verificação
 
 ```bash
-godot --headless --path . --script res://tools/validate_data.gd
+godot --headless --path client --script res://tools/validate_data.gd
 ```
 
 No editor: percorrer os critérios de aceite e, no fim, o caminho completo com o save apagado: entrada → nome → escolha → Hub → Perfil → apagar → entrada.

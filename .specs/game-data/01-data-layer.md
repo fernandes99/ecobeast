@@ -104,7 +104,7 @@ O projeto está configurado, mas não há dados nem forma de lê-los. Esta fase 
 
 ## Critérios de aceite
 
-- [x] `godot --headless --path . --script res://tools/validate_data.gd` com as tabelas vazias lista só os dois erros esperados do RF-12 e sai com código 1.
+- [x] `godot --headless --path client --script res://tools/validate_data.gd` com as tabelas vazias lista só os dois erros esperados do RF-12 e sai com código 1.
 - [x] Acrescentar em `species.json` uma linha com `"growth_rate_id": 99` mostra o erro de FK com a linha certa; acrescentar uma coluna `"nmae"` mostra coluna desconhecida. Desfazer.
 - [x] Apagar `stats.json` mostra `"stats.json: arquivo não encontrado"`. Restaurar.
 - [x] Nenhum arquivo em `res://domain/` usa `Node`, autoload, `FileAccess` ou `get_tree()`.
@@ -135,7 +135,7 @@ O projeto está configurado, mas não há dados nem forma de lê-los. Esta fase 
 ## Verificação
 
 ```bash
-godot --headless --path . --script res://tools/validate_data.gd ; echo "saída: $?"
+godot --headless --path client --script res://tools/validate_data.gd ; echo "saída: $?"
 ```
 
 No editor: percorrer os critérios de aceite.

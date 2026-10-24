@@ -22,6 +22,7 @@ Tomadas com o dono do projeto:
 | Godot 4.7 com GDScript e tipagem estática                   | Melhor material para quem está começando; export mobile simples; sem build .NET       |
 | O jogo será só online; o servidor decide as regras          | Anti-trapaça, PvP e trocas. No MVP as regras rodam no cliente atrás de serviços      |
 | Repositório git com um commit por fase                      | Cada fase é validada e registrada sozinha                                            |
+| Monorepo: o jogo em `client/` e a API em `server/`          | Quem trabalha sozinho muda o contrato da API e o cliente no mesmo commit; as specs ficam num lugar só |
 | Tema visual próprio e cores dos 14 elementos já no MVP       | O jogo já nasce com a sua cara; sprites ficam como placeholder até ter arte          |
 | Sem framework de testes e sem sistema de tradução no MVP    | Escopo menor; validação por ferramenta de dados e passos manuais; textos em pt-BR     |
 

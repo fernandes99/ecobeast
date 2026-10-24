@@ -172,7 +172,7 @@ Nenhum código novo, como na fase 02.
 ## Verificação
 
 ```bash
-godot --headless --path . --script res://tools/validate_data.gd ; echo "saída: $?"
+godot --headless --path client --script res://tools/validate_data.gd ; echo "saída: $?"
 ```
 
 E os critérios de aceite.

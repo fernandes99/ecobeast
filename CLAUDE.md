@@ -1,6 +1,18 @@
 # Ecobeast — contexto do projeto
 
-Jogo mobile (Android/iOS, retrato) feito em **Godot 4.7 com GDScript**, inspirado no Pokémon Simulator 4.5 (Birdiesoft, 2004): capturar, treinar e batalhar criaturas por menus e batalhas por turnos, sem mundo aberto. O jogo será **só online**, com o servidor decidindo as regras; no MVP ainda não há servidor, e tudo roda no cliente atrás de serviços. O servidor será NestJS + Prisma com Supabase (Postgres, Auth, Storage), e o Godot falará só com o NestJS (decisões em `.specs/roadmap.md`).
+Jogo mobile (Android/iOS, retrato) inspirado no Pokémon Simulator 4.5 (Birdiesoft, 2004): capturar, treinar e batalhar criaturas por menus e batalhas por turnos, sem mundo aberto. O jogo será **só online**, com o servidor decidindo as regras; no MVP ainda não há servidor, e tudo roda no cliente atrás de serviços.
+
+## Monorepo
+
+```
+.specs/     specs de todo o projeto (cliente e servidor)
+GDD.md      regras, fórmulas e conteúdo
+TELAS.md    as 16 telas do protótipo
+client/     o jogo: Godot 4.7 com GDScript (regras em client/CLAUDE.md)
+server/     a API: NestJS + Prisma sobre o Supabase (Postgres, Auth, Storage); ainda não existe
+```
+
+O Godot fala **só com o NestJS**, nunca com o banco nem com a API automática do Supabase. Decisões da stack em `.specs/roadmap.md`; layout do repositório em `.specs/foundation/architecture.md`.
 
 O dono do projeto é iniciante em Godot: explique conceitos do motor (cenas, nós, autoloads, `class_name`, sinais) quando aparecerem pela primeira vez.
 
@@ -14,58 +26,15 @@ Toda entrega nasce de uma spec em `.specs/`. Antes de implementar, leia:
 
 A spec é a fonte da verdade. Se a implementação precisar divergir, atualize a spec no mesmo commit e diga o motivo. Documentos de design: `GDD.md` (regras, fórmulas, conteúdo) e `TELAS.md` (as 16 telas do protótipo).
 
-## Estrutura
-
-```
-res://
-  core/autoload/   GameData (catálogo), Router (telas), Session (jogador)
-  core/data/       leitura e validação do catálogo
-  core/services/   Result, GameService, PlayerRepository e as implementações locais
-  core/util/       utilitários que usam a API do motor (ex.: Uuid)
-  domain/models/   classes de dados (RefCounted, sem Node)
-  domain/rules/    regras puras: stats, XP, criação de criatura
-  ui/theme/        tema, paleta e fontes
-  ui/components/   componentes reutilizáveis (.tscn + .gd)
-  screens/         uma pasta por tela; main/ é a cena raiz
-  data/            catálogo: um arquivo JSON por tabela
-  assets/          sprites e sons (creatures/<slug>/front.png)
-  tools/           validate_data.gd
-```
-
-Detalhes em `.specs/foundation/architecture.md`.
-
-## Regras do projeto
+## Regras de todo o projeto
 
 - **Nunca** usar nomes, termos ou visuais do Pokémon no jogo. Use o vocabulário de `.specs/glossary.md`: Ecobeast, Domador, Esfera de Vínculo, Bestiário, Elemento, Técnica, Traço, Temperamento, Genes, Treino, Santuário, Arena, Prismático, Ancestral, Ascensão, Refúgio.
-- **Camadas:** `domain/` não usa Node, autoload, arquivo nem `get_tree()` — recebe tudo por parâmetro, porque será reescrito no servidor. Telas leem o catálogo pelo `GameData` e o estado do jogador pelo `Session`; nunca abrem JSON nem `user://`.
-- **Telas não calculam regras.** HP máximo, técnicas, recompensas vêm prontos dos serviços.
-- **Serviços** são chamados com `await` e devolvem `Result` (`ok`, `data`, `error`). Telas só falam com o `Session`, nunca com `GameService` ou `PlayerRepository`; com `ok` falso, mostram `error` e deixam o jogador onde está.
-- **Dados de design** são tabelas relacionais em `res://data/<tabela>.json` (ids estáveis, FKs `<singular>_id`), descritas em `.specs/game-data/architecture.md` e espelhadas em `core/data/catalog_schema.gd`. Salve só ids no estado do jogador.
-- **GDScript tipado:** declaração sem tipo é erro de script no projeto. Arquivos em `snake_case`, classes em `PascalCase`, nós acessados por `%NomeUnico`.
-- Textos do jogador em pt-BR, direto nas cenas e scripts.
-- **Telas novas:** registrar o id em `Router.SCREENS` (`core/autoload/router.gd`); parâmetros chegam em `setup(params)` antes do `_ready`; o conteúdo fica dentro de um `SafeArea`; painel aberto por cima da tela se fecha no voltar via `handle_back() -> bool`. Componentes com `set_*()` aceitam ser chamados antes de entrar na árvore.
-- **Visual:** fontes e estilos vêm do tema (`ui/theme/main_theme.tres`, variações `TitleLabel`, `SecondaryLabel`, `BoldLabel` e os botões `OutlineButton`, `DangerButton`, `ActionButton`, `TabButton`, `CurrentTabButton`); um painel inteiro tocável estende `TapPanel`; cores da interface de `UiPalette`, cores de Elemento do catálogo. As cores do tema repetem as de `UiPalette`: mude as duas juntas.
-- Versione os arquivos `.uid` que o Godot cria ao lado dos scripts; `.godot/` fica fora do git.
+- **O servidor é a autoridade:** regras de jogo (stats, dano, captura, recompensas) são decididas pelo servidor quando ele existir; o cliente só exibe.
+- **Dados de design** são tabelas relacionais (ids estáveis, FKs `<singular>_id`), descritas em `.specs/game-data/architecture.md`. O estado do jogador guarda só ids do catálogo.
+- Textos do jogador em pt-BR.
+- Sem segredos no repositório (chaves do Supabase, senhas, tokens).
+- Um commit por fase; commits só de spec usam `chore`, os de implementação `feat` ou `fix`.
 
-## Editando dados do catálogo
-
-- Cada arquivo de `res://data/` é uma tabela: um array JSON de linhas, todas com exatamente as colunas da tabela (use `null`, nunca omita a coluna).
-- As colunas, tipos, chaves e FKs estão em `core/data/catalog_schema.gd` (espelho de `.specs/game-data/architecture.md`). Tabela ou coluna nova muda os dois no mesmo commit.
-- Ids são estáveis: nunca renumere nem reaproveite.
-- Rode o validador antes de commitar qualquer mudança em `res://data/`. Depois de criar uma classe nova (`class_name`), abra o projeto no editor uma vez (ou rode `godot --headless --path . --editor --quit`) para o cache de classes ser atualizado; o modo `--script` depende dele.
-
-## Comandos
-
-O executável do Godot está em `C:\Godot\` (use a versão `_console` na linha de comando).
-
-```bash
-# rodar o jogo sem janela por alguns frames (confere erros de script)
-godot --headless --path . --quit-after 30
-
-# validar o catálogo (a partir da fase game-data/01)
-godot --headless --path . --script res://tools/validate_data.gd
-```
-
-## Escopo atual (MVP de estrutura)
+## Escopo atual (MVP de estrutura, concluído)
 
 Tela de entrada com o nome do Domador, escolha de 1 entre 3 Ecobeasts iniciais (Fogo, Água, Flora) e Hub com todas as features abrindo telas placeholder. O resto está em `.specs/roadmap.md`.

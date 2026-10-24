@@ -93,17 +93,17 @@ Só quando houver. Sem dúvidas, a seção não existe.
 - **Propostas a revisar.** Conteúdo criado no planejamento sem aprovação do dono (nomes, números, cores) fica marcado como _a revisar_. Pode ser implementado, mas muda sem cerimônia se o dono pedir.
 - **Requisitos numerados e critérios verificáveis.** "A tela abre rápido" não serve; "o botão Começar fica desabilitado com menos de 2 caracteres" serve.
 - **Uma fase por vez.** Implemente e valide: o projeto abre no editor sem erros nem avisos de script, `tools/validate_data.gd` passa (a partir de [game-data/01](game-data/01-data-layer.md)) e os passos manuais da spec foram feitos. Marque as tarefas e mude o status da spec e das tabelas (iniciativa e esta) para `concluída` no mesmo commit.
-- **O projeto não tem framework de testes** (decisão do dono). A verificação de cada fase é feita pelo validador de dados e por passos manuais no editor (F5) e, quando fizer sentido, no aparelho; quem implementa diz quais passos fez e quais ficaram para o dono.
+- **O cliente Godot não tem framework de testes** (decisão do dono; o servidor terá, ver [roadmap.md](roadmap.md#decisões-globais-já-tomadas)). A verificação de cada fase é feita pelo validador de dados e por passos manuais no editor (F5) e, quando fizer sentido, no aparelho; quem implementa diz quais passos fez e quais ficaram para o dono.
 - **Nunca usar nomes, termos ou visuais do Pokémon no jogo.** Use o vocabulário do [glossary.md](glossary.md). Nas specs, o nome original só aparece na coluna "Referência" do glossário, nas próprias regras de não usá-lo e na citação da PokeAPI como referência técnica de modelo de dados; nunca em conteúdo do jogo (espécies, técnicas, textos, telas).
 - **Sem segredos.** Nada de chaves, senhas ou dados reais de jogadores nas specs.
 - Specs são escritas em português. Commits que só mexem em specs usam o prefixo `chore`; os de implementação, `feat` ou `fix`.
 
 ## Como rodar o validador
 
-O executável do Godot no Windows tem um nome como `Godot_v4.7.2-stable_win64.exe` (nesta máquina, em `C:\Godot\`; para o terminal, use a versão `_console`). Para os comandos das specs funcionarem como estão escritos, deixe-o acessível como `godot` (renomeie uma cópia ou crie um alias no terminal). Na raiz do projeto:
+O executável do Godot no Windows tem um nome como `Godot_v4.7.2-stable_win64.exe` (nesta máquina, em `C:\Godot\`; para o terminal, use a versão `_console`). Para os comandos das specs funcionarem como estão escritos, deixe-o acessível como `godot` (renomeie uma cópia ou crie um alias no terminal). Na raiz do repositório (o projeto Godot fica em `client/`):
 
 ```bash
-godot --headless --path . --script res://tools/validate_data.gd
+godot --headless --path client --script res://tools/validate_data.gd
 ```
 
 Saída `0` quando o catálogo está íntegro; diferente de `0`, com a lista de erros, quando não está.

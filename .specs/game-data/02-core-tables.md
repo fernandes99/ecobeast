@@ -106,7 +106,7 @@ Nenhum código novo: se faltar algo no `Catalog` para os critérios de aceite, �
 ## Verificação
 
 ```bash
-godot --headless --path . --script res://tools/validate_data.gd
+godot --headless --path client --script res://tools/validate_data.gd
 ```
 
 E os critérios de aceite.

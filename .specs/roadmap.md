@@ -36,6 +36,7 @@ Evoluções por item, vínculo, horário, zona e troca; criação (breeding) e h
 | O servidor é a autoridade das regras (stats, dano, captura, recompensas) | Evita trapaça e é pré-requisito de PvP e trocas                         |
 | No MVP as regras rodam no cliente, atrás de serviços com `await`        | As telas não mudam quando os serviços passarem a chamar a API           |
 | O catálogo é modelado como tabelas relacionais desde o JSON estático   | O banco do backend nasce quase igual aos arquivos de `res://data/`      |
+| Monorepo: o jogo em `client/` e o servidor em `server/`                | Contrato da API e cliente mudam no mesmo commit; as specs ficam num lugar só. O Render publica só a pasta `server/` |
 | Backend em **NestJS** (TypeScript), com **Prisma** como ORM              | Estrutura em módulos e DTOs validados; Prisma é o ORM mais simples de começar |
 | **Supabase** só como infraestrutura: Postgres, Auth e Storage           | Postgres gerenciado; Auth já faz Google e Apple; Storage serve sprites e catálogo |
 | O Godot conversa **só com o NestJS**; nunca com o banco nem com a API automática do Supabase | Com o servidor como autoridade, o cliente não pode gravar estado; o Supabase publica o schema `public` na API automática, então as tabelas ficam com RLS ligado e sem regras (ou num schema não publicado) |
@@ -45,7 +46,7 @@ Evoluções por item, vínculo, horário, zona e troca; criação (breeding) e h
 
 ## Dúvidas globais em aberto
 
-- **Backend, o que falta decidir:** a stack está nas decisões acima. Ficam para o planejamento do `backend-api`: hospedagem do NestJS (candidato: Render, na mesma região do Supabase), onde mora o código do servidor (pasta neste repositório ou repositório próprio), o plano do Supabase para produção (o grátis pausa o projeto depois de uma semana sem uso) e o destino das regras de `res://domain/rules/` no cliente quando o servidor passar a decidir.
+- **Backend, o que falta decidir:** a stack está nas decisões acima. Ficam para o planejamento do `backend-api`: hospedagem do NestJS (candidato: Render, na mesma região do Supabase), quem é o dono do catálogo (hoje `client/data/`; o servidor precisa dele para o banco e as regras, e o cliente passaria a baixá-lo pela API com a `HttpDataSource`), o plano do Supabase para produção (o grátis pausa o projeto depois de uma semana sem uso) e o destino das regras de `res://domain/rules/` no cliente quando o servidor passar a decidir.
 - **Nível do Domador:** o Hub mostra o nível, mas o GDD não diz como ele sobe. No MVP fica fixo em 1.
 - **Curva Erratic:** citada no GDD sem fórmula. Fora do catálogo até ser definida.
 - **Estilo de arte:** as telas usam placeholders (forma na cor do elemento) até existir arte das 3 linhas iniciais.
