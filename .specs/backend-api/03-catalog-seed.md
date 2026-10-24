@@ -1,6 +1,6 @@
 # 03. Carga inicial do catálogo
 
-- **Status:** rascunho
+- **Status:** concluída
 - **Depende de:** [02-database-schema](02-database-schema.md)
 
 ## Contexto
@@ -35,11 +35,11 @@ As 28 tabelas existem no Supabase, mas estão vazias. O catálogo de hoje (23 ta
 
 ## Critérios de aceite
 
-- [ ] Com o banco vazio, `npm run db:seed` imprime `Catálogo carregado: 23 tabelas, 436 linhas`.
-- [ ] Rodar `npm run db:seed` de novo imprime `Banco já tem catálogo; nada foi feito.`, e nada muda no banco.
-- [ ] No painel do Supabase, `species` tem as 9 espécies com os mesmos ids e nomes dos JSON. Brasalobo (`id` 2) tem `evolves_from_species_id` 1.
-- [ ] Criar uma `growth_rates` nova pelo painel, sem informar o `id`, gera o id seguinte ao maior existente. (Passo do dono; apagar a linha depois.)
-- [ ] `npm run lint`, `npm run typecheck`, `npm test` e `npm run test:e2e` passam.
+- [x] Com o banco vazio, `npm run db:seed` imprime `Catálogo carregado: 23 tabelas, 436 linhas`.
+- [x] Rodar `npm run db:seed` de novo imprime `Banco já tem catálogo; nada foi feito.`, e nada muda no banco.
+- [x] No painel do Supabase, `species` tem as 9 espécies com os mesmos ids e nomes dos JSON. Brasalobo (`id` 2) tem `evolves_from_species_id` 1.
+- [x] Criar uma `growth_rates` nova pelo painel, sem informar o `id`, gera o id seguinte ao maior existente. (Conferido por um teste e2e numa transação desfeita; o dono pode repetir pelo painel.)
+- [x] `npm run lint`, `npm run typecheck`, `npm test` e `npm run test:e2e` passam.
 
 ## Desenho técnico
 
@@ -70,9 +70,17 @@ npm run test:e2e
 
 ## Tarefas
 
-- [ ] `case.ts` com testes: `{ growth_rate_id: 2, slug: 'a' }` ↔ `{ growthRateId: 2, slug: 'a' }`; a ordem das chaves é mantida.
-- [ ] `catalog-tables.ts` (RF-01); teste de unidade: 23 nomes, sem repetição, iguais aos nomes dos arquivos `.json` de `SEED_DATA_DIR`. A ordem de dependência é provada pelo próprio seed, que falharia numa FK.
-- [ ] `seedPlan` com testes: tudo 0 → `load`; tudo > 0 → `skip`; misto → `incomplete` com os nomes das tabelas não vazias.
-- [ ] `seed.ts` (RF-04 a RF-07); rodar no banco de desenvolvimento.
-- [ ] `seed.e2e-spec.ts`.
-- [ ] Marcar esta spec e a tabela do README como `concluída`; commit `feat: carga inicial do catálogo`.
+- [x] `case.ts` com testes: `{ growth_rate_id: 2, slug: 'a' }` ↔ `{ growthRateId: 2, slug: 'a' }`; a ordem das chaves é mantida.
+- [x] `catalog-tables.ts` (RF-01); teste de unidade: 23 nomes, sem repetição, iguais aos nomes dos arquivos `.json` de `SEED_DATA_DIR`. A ordem de dependência é provada pelo próprio seed, que falharia numa FK.
+- [x] `seedPlan` com testes: tudo 0 → `load`; tudo > 0 → `skip`; misto → `incomplete` com os nomes das tabelas não vazias.
+- [x] `seed.ts` (RF-04 a RF-07); rodar no banco de desenvolvimento.
+- [x] `seed.e2e-spec.ts`.
+- [x] Marcar esta spec e a tabela do README como `concluída`; commit `feat: carga inicial do catálogo`.
+
+## Decisões da implementação
+
+- **`model` explícito em `CATALOG_TABLES`:** o delegate do Prisma é o nome do modelo, no singular (`elements` → `element`), e não o da tabela. Um teste confere que cada `model` existe no cliente gerado.
+- **`seedPlan` em `prisma/seed-plan.ts`:** fica num arquivo separado do `seed.ts`, que executa ao ser importado, para o teste de unidade importar a função sem rodar o seed.
+- **O seed conecta pela `DIRECT_URL`,** como a CLI, e roda pelo `tsx` (comando `seed` do `prisma.config.ts`). A transação tem um limite de 120 s, porque o padrão de 5 s do Prisma é curto para 436 linhas pela rede.
+- **Sequências:** um teste e2e cria uma curva de XP sem id numa transação desfeita e confere que ela recebe um id maior que o maior existente.
+- **Testes de unidade** passam a incluir `prisma/**/*.spec.ts` (`vitest.config.ts`).
