@@ -1,0 +1,17 @@
+# dependências e build
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+
+# cliente gerado pelo Prisma (npm run db:generate)
+src/generated/
+
+# segredos: só o .env.example vai para o git
+.env
+.env.*
+!.env.example
+
+# editor e sistema
+*.log
+.DS_Store

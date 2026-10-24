@@ -43,7 +43,7 @@ As peças comuns (paginação, referência, id ou slug, erros, limite de chamada
 - [ ] `GET /v1/starters` devolve as espécies 1, 4 e 7, nessa ordem.
 - [ ] `GET /v1/skills/9999` devolve `404` "Técnica não encontrada: 9999".
 - [ ] Todas as rotas aparecem na Scalar, cada recurso na sua tag.
-- [ ] `npm run lint`, `npm test` e `npm run test:e2e` passam.
+- [ ] `npm run lint`, `npm run typecheck`, `npm test` e `npm run test:e2e` passam.
 
 ## Desenho técnico
 

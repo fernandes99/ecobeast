@@ -32,7 +32,7 @@ As rotas por recurso servem para explorar o catálogo, mas o jogo precisa de tud
 - [ ] O cabeçalho `ETag` é igual a `"` + `version` + `"`.
 - [ ] Repetir a chamada com `If-None-Match` igual ao `ETag` devolve `304`, sem corpo.
 - [ ] Mudar o `name` de uma espécie no painel, esperar 1 minuto e chamar de novo devolve outra `version`, com o nome novo. (Passo do dono; desfazer depois.)
-- [ ] `npm run lint`, `npm test` e `npm run test:e2e` passam.
+- [ ] `npm run lint`, `npm run typecheck`, `npm test` e `npm run test:e2e` passam.
 
 ## Desenho técnico
 

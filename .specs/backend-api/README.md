@@ -48,7 +48,7 @@ Tomadas no planejamento (corrigíveis; ao mudar uma, atualize aqui e nas specs a
 | Rotas em inglês com o nome das tabelas (`/v1/species`, `/v1/skills`)                       | Casa com o banco e o código, como o resto dos nomes técnicos                                     |
 | `GET /v1/catalog` devolve o catálogo inteiro com uma versão                               | O jogo baixa tudo numa chamada ao abrir e só baixa de novo quando a versão muda                  |
 | A carga inicial só roda em banco vazio e nunca sobrescreve                                 | Mudanças feitas à mão no banco não se perdem                                                     |
-| Testes automáticos no servidor (Jest + supertest)                                          | Fórmula ou formato errado no servidor vira bug para todos ([roadmap](../roadmap.md#decisões-globais-já-tomadas)) |
+| Testes automáticos no servidor (Vitest + supertest)                                        | Fórmula ou formato errado no servidor vira bug para todos ([roadmap](../roadmap.md#decisões-globais-já-tomadas)) |
 | Gerenciador de pacotes npm, Node 24                                                        | Já instalados na máquina                                                                         |
 
 ## Fora do escopo
@@ -72,7 +72,7 @@ Cada fase tem a sua spec, com requisitos, critérios de aceite e tarefas.
 
 | Fase                          | Entrega                                                                                       | Status   |
 | ----------------------------- | --------------------------------------------------------------------------------------------- | -------- |
-| [01-server-setup](01-server-setup.md)               | Projeto NestJS em `server/`, `.env`, Prisma ligado ao Supabase, `/health`, Scalar em `/docs`, testes rodando | rascunho |
+| [01-server-setup](01-server-setup.md)               | Projeto NestJS em `server/`, `.env`, Prisma ligado ao Supabase, `/health`, Scalar em `/docs`, testes rodando | concluída |
 | [02-database-schema](02-database-schema.md)            | `schema.prisma` com todas as tabelas (catálogo e jogador), restrições e a primeira migration   | rascunho |
 | [03-catalog-seed](03-catalog-seed.md)               | Carga inicial do catálogo a partir de `client/data/*.json`                                     | rascunho |
 | [04-species-api](04-species-api.md)                | O padrão dos recursos (lista, detalhe, referências, erros) e as rotas de espécies              | rascunho |

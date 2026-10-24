@@ -1,6 +1,6 @@
 # 01. Projeto do servidor
 
-- **Status:** rascunho
+- **Status:** concluída
 - **Depende de:** MVP de estrutura concluído; projeto Supabase do dono; Node 24 e npm
 
 ## Contexto
@@ -9,7 +9,7 @@
 
 ## Escopo
 
-- Projeto NestJS em `server/` com TypeScript, ESLint, Prettier e Jest.
+- Projeto NestJS em `server/` com TypeScript (ESM), oxlint, Prettier e Vitest (o que o Nest 12 gera).
 - Configuração pelo `.env`, validada na partida.
 - Prisma instalado, com `schema.prisma` só com a fonte de dados e o gerador, e o `PrismaService`.
 - `GET /health` conferindo o banco.
@@ -24,7 +24,7 @@
 
 ## Requisitos
 
-- **RF-01:** `server/` é um projeto NestJS (versão estável atual) criado com npm e sem repositório git próprio (o git é o do monorepo). Scripts do `package.json`: `start:dev`, `build`, `start:prod`, `lint`, `test`, `test:e2e`, `db:migrate` (`prisma migrate dev`), `db:generate` (`prisma generate`) e `db:seed` (a carga inicial, que nasce em [03](03-catalog-seed.md)). O `package.json` declara `"engines": { "node": ">=24" }`.
+- **RF-01:** `server/` é um projeto NestJS (versão estável atual) criado com npm e sem repositório git próprio (o git é o do monorepo). Scripts do `package.json`: `start:dev`, `build`, `start:prod`, `lint`, `typecheck` (`tsc --noEmit`), `test`, `test:e2e`, `postinstall` e `db:generate` (`prisma generate`, porque o cliente gerado fica fora do git), `db:migrate` (`prisma migrate dev`) e `db:seed` (a carga inicial, que nasce em [03](03-catalog-seed.md)). O `package.json` declara `"engines": { "node": ">=24" }`.
 - **RF-02:** A configuração vem do `.env` pelo `@nestjs/config`, validada na partida. As variáveis são `DATABASE_URL` (obrigatória), `DIRECT_URL` (obrigatória), `PORT` (padrão `3000`) e `THROTTLE_LIMIT` (padrão `100`, usada em [04](04-species-api.md)). Faltando uma obrigatória, o servidor não sobe e a mensagem diz o nome da variável.
 - **RF-03:** `server/.env.example` (versionado) tem as quatro variáveis com valores de exemplo, sem nada real, e um comentário dizendo onde achar cada URL no painel do Supabase (Connect > ORMs > Prisma). `server/.gitignore` ignora `node_modules/`, `dist/`, `.env` e o cliente gerado do Prisma.
 - **RF-04:** `server/prisma/schema.prisma` tem a fonte de dados (`postgresql`, schema `ecobeasts`) e o gerador do cliente, sem modelos. Se a versão do Prisma pedir as URLs no `prisma.config.ts`, elas ficam lá: `DATABASE_URL` para o servidor e `DIRECT_URL` para as migrations.
@@ -44,13 +44,13 @@
 
 ## Critérios de aceite
 
-- [ ] Com o `.env` preenchido, `npm run start:dev` sobe na porta 3000, e `GET http://localhost:3000/health` devolve `200 {"status":"ok","database":"ok"}`.
-- [ ] Com uma senha errada na `DATABASE_URL`, `GET /health` devolve `503 {"status":"error","database":"error"}`, e o servidor continua no ar.
-- [ ] Sem `DATABASE_URL` no `.env`, `npm run start:dev` falha com uma mensagem que cita `DATABASE_URL`.
-- [ ] `http://localhost:3000/docs` abre a Scalar com o título "Ecobeast API", e `/docs/openapi.json` devolve o documento.
-- [ ] `npm run lint`, `npm test` e `npm run test:e2e` passam.
-- [ ] `git status` não mostra `.env`, `node_modules/` nem `dist/`.
-- [ ] No painel do Supabase, em Settings > API > Exposed schemas, não aparece `ecobeasts`. (Passo do dono.)
+- [x] Com o `.env` preenchido, `npm run start:dev` sobe na porta 3000, e `GET http://localhost:3000/health` devolve `200 {"status":"ok","database":"ok"}`.
+- [x] Com uma senha errada na `DATABASE_URL`, `GET /health` devolve `503 {"status":"error","database":"error"}`, e o servidor continua no ar.
+- [x] Sem `DATABASE_URL` no `.env`, `npm run start:dev` falha com uma mensagem que cita `DATABASE_URL`.
+- [x] `http://localhost:3000/docs` abre a Scalar com o título "Ecobeast API", e `/docs/openapi.json` devolve o documento.
+- [x] `npm run lint`, `npm run typecheck`, `npm test` e `npm run test:e2e` passam.
+- [x] `git status` não mostra `.env`, `node_modules/` nem `dist/`.
+- [ ] No painel do Supabase, em Settings > API > Exposed schemas, não aparece `ecobeasts`. (Passo do dono, ainda não confirmado.)
 
 ## Desenho técnico
 
@@ -84,11 +84,18 @@ npm run start:dev   # e abrir http://localhost:3000/docs e /health
 
 ## Tarefas
 
-- [ ] Apagar o `server/README.md` de marcador (o Nest CLI quer a pasta vazia); criar o projeto Nest e limpar o exemplo; scripts e `engines` do RF-01.
-- [ ] Teste e2e de `/health` (`200` com banco ok) e de `/docs/openapi.json` (`info.title` igual a `Ecobeast API`); rodar e ver falhar.
-- [ ] Config validado (RF-02), `.env.example` e `.gitignore` (RF-03).
-- [ ] Prisma: `schema.prisma` (RF-04), `PrismaModule` e `PrismaService` (RF-05).
-- [ ] `HealthController` (RF-07), prefixo (RF-06), Swagger e Scalar (RF-08); os testes passam.
-- [ ] Teste de unidade da validação do config: sem `DATABASE_URL`, lança erro que cita a variável.
-- [ ] `server/CLAUDE.md`, `server/README.md` e `CLAUDE.md` da raiz (RF-09 a RF-11).
-- [ ] Marcar esta spec e a tabela do README como `concluída`; commit `feat: projeto do servidor`.
+- [x] Apagar o `server/README.md` de marcador (o Nest CLI quer a pasta vazia); criar o projeto Nest e limpar o exemplo; scripts e `engines` do RF-01.
+- [x] Teste e2e de `/health` (`200` com banco ok) e de `/docs/openapi.json` (`info.title` igual a `Ecobeast API`); rodar e ver falhar.
+- [x] Config validado (RF-02), `.env.example` e `.gitignore` (RF-03).
+- [x] Prisma: `schema.prisma` (RF-04), `PrismaModule` e `PrismaService` (RF-05).
+- [x] `HealthController` (RF-07), prefixo (RF-06), Swagger e Scalar (RF-08); os testes passam.
+- [x] Teste de unidade da validação do config: sem `DATABASE_URL`, lança erro que cita a variável.
+- [x] `server/CLAUDE.md`, `server/README.md` e `CLAUDE.md` da raiz (RF-09 a RF-11).
+- [x] Marcar esta spec e a tabela do README como `concluída`; commit `feat: projeto do servidor`.
+
+## Decisões da implementação
+
+- **Vitest e oxlint em vez de Jest e ESLint:** o Nest 12 gera o projeto em ESM com Vitest, supertest, oxlint e Prettier. A spec previa Jest e ESLint, mas trocar o padrão do gerador não traria ganho. Os comandos `npm test` e `npm run test:e2e` são os mesmos.
+- **Prisma 7.10.1, fixo:** a tag `latest` do npm aponta para uma versão candidata da 8.0. A 7.10.1 é a última estável. No Prisma 7, as URLs saem do `schema.prisma` e vão para o `prisma.config.ts` (`DIRECT_URL`, para a CLI e as migrations), e o servidor conecta com o adaptador `@prisma/adapter-pg` (`DATABASE_URL`). O cliente é gerado em `src/generated/prisma` (ESM) e fica fora do git; o `postinstall` gera de novo.
+- **`configureApp`** (`src/app.setup.ts`): o prefixo e a documentação são montados numa função usada pelo `main.ts` e pelos testes e2e, para os testes verem as mesmas rotas.
+- **Banco fora do ar na partida:** o `PrismaService` só avisa no log e o servidor sobe. O `/health` mostra o problema (`503`).

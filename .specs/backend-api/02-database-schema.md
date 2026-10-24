@@ -75,7 +75,7 @@ O servidor conecta no Supabase, mas o banco está vazio. Esta fase escreve no `s
 - [ ] No painel do Supabase (Table Editor, schema `ecobeasts`), as 28 tabelas aparecem com os nomes do RF-01.
 - [ ] `npx prisma migrate dev` logo depois não gera migration nova, porque o schema e o banco estão iguais, e não tenta apagar os `CHECK`.
 - [ ] Pelo painel, mudar a `accuracy` de uma Técnica de teste para 150 é recusado pelo banco. (Feito no teste automático do RF-07; o dono pode repetir à mão depois da [03](03-catalog-seed.md).)
-- [ ] `npm run lint`, `npm test` e `npm run test:e2e` passam.
+- [ ] `npm run lint`, `npm run typecheck`, `npm test` e `npm run test:e2e` passam.
 
 ## Desenho técnico
 

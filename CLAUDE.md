@@ -9,7 +9,7 @@ Jogo mobile (Android/iOS, retrato) inspirado no Pokémon Simulator 4.5 (Birdieso
 GDD.md      regras, fórmulas e conteúdo
 TELAS.md    as 16 telas do protótipo
 client/     o jogo: Godot 4.7 com GDScript (regras em client/CLAUDE.md)
-server/     a API: NestJS + Prisma sobre o Supabase (Postgres, Auth, Storage); ainda não existe
+server/     a API: NestJS + Prisma sobre o Supabase (Postgres, Auth, Storage) (regras em server/CLAUDE.md)
 ```
 
 O Godot fala **só com o NestJS**, nunca com o banco nem com a API automática do Supabase. Decisões da stack em `.specs/roadmap.md`; layout do repositório em `.specs/foundation/architecture.md`.

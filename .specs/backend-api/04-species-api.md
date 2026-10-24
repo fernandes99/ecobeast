@@ -54,7 +54,7 @@ O banco tem o catálogo. Esta fase cria as peças que todo recurso da API usa (p
 - [ ] `GET /v1/species/1/skills` tem pelo menos uma entrada com `learn_method.slug` igual a `level_up` e `level` igual a 1.
 - [ ] `GET /v1/species/2/evolutions` tem `chain.species.id` igual a 1, `chain.evolves_to[0].node.species.id` igual a 2 e o nó seguinte com id 3, e `trigger.slug` igual a `level`.
 - [ ] As quatro rotas aparecem na Scalar em `/docs`, na tag "Espécies", e dá para testar `GET /v1/species/1` por lá.
-- [ ] `npm run lint`, `npm test` e `npm run test:e2e` passam.
+- [ ] `npm run lint`, `npm run typecheck`, `npm test` e `npm run test:e2e` passam.
 
 ## Desenho técnico
 

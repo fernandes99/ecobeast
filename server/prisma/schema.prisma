@@ -1,0 +1,16 @@
+// Banco do Ecobeast: o único arquivo que descreve as tabelas
+// (.specs/backend-api/architecture.md, "Banco"). Toda mudança começa aqui e
+// vira uma migration (npm run db:migrate). Nada de criar ou alterar tabela
+// pelo painel do Supabase.
+
+generator client {
+  provider               = "prisma-client"
+  output                 = "../src/generated/prisma"
+  moduleFormat           = "esm"
+  importFileExtension    = "js"
+}
+
+datasource db {
+  provider = "postgresql"
+  schemas  = ["ecobeasts"]
+}

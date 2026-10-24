@@ -93,7 +93,7 @@ O Prisma não descreve `CHECK` no `schema.prisma`, então essa é a única exce�
 
 ## Testes
 
-- Jest + supertest. Os testes e2e sobem a aplicação e chamam as rotas contra o banco de desenvolvimento já semeado, só lendo dados. Eles conferem formato, paginação, 404 e a existência dos iniciais (ids 1, 4 e 7). Não conferem valores de balanceamento (poder, stats), que o dono pode mudar no banco a qualquer hora.
+- Vitest + supertest (o padrão do Nest 12). Os testes e2e sobem a aplicação e chamam as rotas contra o banco de desenvolvimento já semeado, só lendo dados. Eles conferem formato, paginação, 404 e a existência dos iniciais (ids 1, 4 e 7). Não conferem valores de balanceamento (poder, stats), que o dono pode mudar no banco a qualquer hora.
 - Os testes de unidade cobrem o que tiver lógica (paginação, cálculo da versão do catálogo).
 - `npm test` e `npm run test:e2e` precisam passar antes de cada commit de fase.
 
