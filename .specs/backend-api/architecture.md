@@ -101,6 +101,6 @@ O Prisma não descreve `CHECK` no `schema.prisma`, então essa é a única exce�
 ## Cliente (fase 07)
 
 - A `HttpDataSource` (prevista em [game-data/architecture.md](../game-data/architecture.md#como-o-jogo-lê-o-catálogo)) faz `GET /v1/catalog` e devolve as tabelas no mesmo formato da `StaticJsonDataSource`. O `Catalog` e o `CatalogValidator` continuam iguais.
-- O endereço da API fica numa configuração do projeto Godot, com `http://localhost:3000` como padrão de desenvolvimento.
-- O último catálogo baixado fica em cache no aparelho, junto com a versão. Na abertura, o jogo pede o catálogo com `If-None-Match`. Se a API não responder e houver cache, usa o cache. Sem cache, mostra o erro com "Tentar de novo".
+- O endereço da API fica numa configuração do projeto Godot, com `http://localhost:3100` como padrão de desenvolvimento (a porta padrão do servidor).
+- O último catálogo baixado fica em cache no aparelho, junto com a versão. Na abertura, o jogo pede o catálogo com `If-None-Match` e usa o cache quando a resposta é `304`. O jogo é só online: se a API não responder, ele não entra, mesmo com cache, e mostra o erro com "Tentar de novo".
 - `client/data/` e `client/tools/validate_data.gd` saem do cliente. O validador continua rodando sobre as tabelas baixadas.
