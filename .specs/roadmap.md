@@ -7,6 +7,7 @@ O que vem depois do MVP de estrutura (entrada, escolha do inicial e Hub). Cada l
 | #   | Iniciativa          | Entrega                                                                                                   | Depende de                 | Status    |
 | --- | ------------------- | --------------------------------------------------------------------------------------------------------- | -------------------------- | --------- |
 | 1   | [`backend-api`](backend-api/) | Banco no Supabase (todas as tabelas num `schema.prisma`), API NestJS de leitura do catálogo com docs Scalar; o jogo passa a ler o catálogo da API | MVP                        | concluída |
+| 1b  | [`visual-theme`](visual-theme/) | Paleta escura em todo o jogo e o Hub no layout do protótipo do dono, com espaços para as ilustrações | MVP                        | rascunho  |
 | 2   | `auth-google`       | Login com Google pelo Supabase Auth no lugar do nome digitado (no iOS, também "Sign in with Apple", que a Apple exige junto do Google); rotas do jogador (criar Domador, escolher inicial); o jogador passa a viver no servidor | backend-api                | planejada |
 | 3   | `battle-core`       | Máquina de estados da batalha, dano, ordem do turno, status, IA simples — autoridade no servidor          | backend-api                | planejada |
 | 4   | `battle-screen`     | Tela de batalha (TELAS.md #5) ouvindo os eventos do battle-core                                           | battle-core                | planejada |
