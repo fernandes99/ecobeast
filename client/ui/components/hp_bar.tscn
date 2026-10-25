@@ -2,21 +2,6 @@
 
 [ext_resource type="Script" path="res://ui/components/hp_bar.gd" id="1_script"]
 
-[sub_resource type="StyleBoxFlat" id="background"]
-bg_color = Color(0.913725, 0.882353, 0.827451, 1)
-corner_radius_top_left = 999
-corner_radius_top_right = 999
-corner_radius_bottom_right = 999
-corner_radius_bottom_left = 999
-
-[sub_resource type="StyleBoxFlat" id="fill"]
-resource_local_to_scene = true
-bg_color = Color(0.298039, 0.690196, 0.313725, 1)
-corner_radius_top_left = 999
-corner_radius_top_right = 999
-corner_radius_bottom_right = 999
-corner_radius_bottom_left = 999
-
 [node name="HpBar" type="HBoxContainer"]
 mouse_filter = 2
 theme_override_constants/separation = 12
@@ -29,8 +14,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
 mouse_filter = 2
-theme_override_styles/background = SubResource("background")
-theme_override_styles/fill = SubResource("fill")
+theme_type_variation = &"HpBar"
 max_value = 1.0
 step = 0.0
 show_percentage = false

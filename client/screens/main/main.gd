@@ -10,9 +10,22 @@ var _catalog_loaded := false
 
 
 func _ready() -> void:
+	%Background.texture = _background_gradient()
 	Router.set_host(%ScreenHost)
 	%RetryButton.pressed.connect(_boot)
 	_boot()
+
+
+## Gradiente vertical do fundo: BACKGROUND em cima, BACKGROUND_DEEP embaixo.
+func _background_gradient() -> GradientTexture2D:
+	var gradient := Gradient.new()
+	gradient.set_color(0, UiPalette.BACKGROUND)
+	gradient.set_color(1, UiPalette.BACKGROUND_DEEP)
+	var texture := GradientTexture2D.new()
+	texture.gradient = gradient
+	texture.fill_from = Vector2(0.5, 0.0)
+	texture.fill_to = Vector2(0.5, 1.0)
+	return texture
 
 
 func _notification(what: int) -> void:

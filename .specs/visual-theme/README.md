@@ -61,6 +61,7 @@ Tomadas no planejamento (corrigíveis; ao mudar uma, atualize aqui e nas specs a
 | `DANGER_PRESSED`  | `#C0433C`   | Botão de perigo pressionado                                |
 | `HP_HIGH`         | `#68C661`   | HP acima de 50%                                            |
 | `OVERLAY`         | `#000000` a 60% | Escurece a tela atrás de um painel de confirmação      |
+| `PRESSED_TINT`    | `modulate` 1,25 | Clareia um painel tocável enquanto o dedo está nele    |
 
 Contraste mínimo de 4,5 : 1 para texto que carrega informação: `TEXT` e `TEXT_SECONDARY` passam sobre `BACKGROUND`, `SURFACE` e `SURFACE_RAISED`; `TEXT_MUTED` não, e por isso só aparece em texto dispensável.
 
@@ -69,7 +70,7 @@ Contraste mínimo de 4,5 : 1 para texto que carrega informação: `TEXT` e `TEXT
 | Arquivo                                   | Onde aparece                         | Tamanho sugerido para gerar |
 | ----------------------------------------- | ------------------------------------ | --------------------------- |
 | `res://assets/creatures/<slug>/front.png` | Retratos (já existe)                 | 512 × 512, fundo transparente |
-| `res://assets/backgrounds/hub.png`        | Cenário do topo do Hub               | 1440 × 900, sem transparência |
+| `res://assets/backgrounds/hub.png`        | Cenário atrás do Hub inteiro         | Vertical 9 : 16 (1080 × 1920), sem transparência |
 | `res://assets/ui/actions/<ação>.png`      | Topo de cada card de ação do Hub     | 512 × 320, fundo transparente |
 
 Os ids das ações estão em [02-hub-layout](02-hub-layout.md).
@@ -88,5 +89,5 @@ Os ids das ações estão em [02-hub-layout](02-hub-layout.md).
 
 | Fase                                | Entrega                                                                       | Status   |
 | ----------------------------------- | ----------------------------------------------------------------------------- | -------- |
-| [01-dark-theme](01-dark-theme.md)   | Paleta, fonte e tema escuros aplicados a todas as telas existentes           | rascunho |
+| [01-dark-theme](01-dark-theme.md)   | Paleta, fonte e tema escuros aplicados a todas as telas existentes           | concluída |
 | [02-hub-layout](02-hub-layout.md)   | Hub no layout do protótipo: topo, equipe em linha, cards de ação e barra com ícones | rascunho |

@@ -9,7 +9,6 @@ signal pressed
 ## Quanto o dedo pode andar entre tocar e soltar para ainda contar como toque
 ## (mais que isso é o jogador rolando a tela).
 const TAP_SLOP := 24.0
-const PRESSED_TINT := Color(0.94, 0.94, 0.94)
 
 var _press_position := Vector2.ZERO
 var _is_pressing: bool = false
@@ -22,7 +21,7 @@ func _gui_input(event: InputEvent) -> void:
 	if button.pressed:
 		_is_pressing = true
 		_press_position = button.position
-		self_modulate = PRESSED_TINT
+		self_modulate = UiPalette.PRESSED_TINT
 	elif _is_pressing:
 		_cancel_press()
 		var is_tap := button.position.distance_to(_press_position) <= TAP_SLOP

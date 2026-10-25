@@ -3,34 +3,6 @@
 [ext_resource type="Script" path="res://screens/hub/hub_screen.gd" id="1_script"]
 [ext_resource type="PackedScene" path="res://ui/components/safe_area.tscn" id="2_safe_area"]
 
-[sub_resource type="StyleBoxFlat" id="avatar"]
-bg_color = Color(0.168627, 0.682353, 0.556863, 1)
-corner_radius_top_left = 36
-corner_radius_top_right = 36
-corner_radius_bottom_right = 36
-corner_radius_bottom_left = 36
-
-[sub_resource type="StyleBoxFlat" id="coin"]
-bg_color = Color(0.94902, 0.701961, 0.239216, 1)
-corner_radius_top_left = 12
-corner_radius_top_right = 12
-corner_radius_bottom_right = 12
-corner_radius_bottom_left = 12
-
-[sub_resource type="StyleBoxFlat" id="tab_bar"]
-content_margin_left = 16.0
-content_margin_right = 16.0
-bg_color = Color(1, 1, 1, 1)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.913725, 0.882353, 0.827451, 1)
-corner_radius_top_left = 20
-corner_radius_top_right = 20
-corner_radius_bottom_right = 20
-corner_radius_bottom_left = 20
-
 [node name="HubScreen" type="Control"]
 layout_mode = 3
 anchors_preset = 15
@@ -64,13 +36,12 @@ custom_minimum_size = Vector2(72, 72)
 layout_mode = 2
 size_flags_vertical = 4
 mouse_filter = 2
-theme_override_styles/panel = SubResource("avatar")
+theme_type_variation = &"AvatarPanel"
 
 [node name="AvatarInitial" type="Label" parent="SafeArea/Padding/Column/TopBar/Row/Avatar"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"BoldLabel"
-theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 32
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -104,7 +75,7 @@ custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
 size_flags_vertical = 4
 mouse_filter = 2
-theme_override_styles/panel = SubResource("coin")
+theme_type_variation = &"CoinDot"
 
 [node name="CoinsLabel" type="Label" parent="SafeArea/Padding/Column/TopBar/Row/Coins"]
 unique_name_in_owner = true
@@ -154,7 +125,7 @@ columns = 2
 
 [node name="TabBar" type="PanelContainer" parent="SafeArea/Padding/Column"]
 layout_mode = 2
-theme_override_styles/panel = SubResource("tab_bar")
+theme_type_variation = &"TabBarPanel"
 
 [node name="Tabs" type="HBoxContainer" parent="SafeArea/Padding/Column/TabBar"]
 unique_name_in_owner = true

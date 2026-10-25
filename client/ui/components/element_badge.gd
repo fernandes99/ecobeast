@@ -6,11 +6,15 @@ extends PanelContainer
 const LIGHT_LUMINANCE := 0.6
 
 var _element_id: int = -1
+## Cópia do estilo do tema, só deste selo (o fundo é a cor do Elemento).
+var _style: StyleBoxFlat
 
 @onready var _name_label: Label = %NameLabel
 
 
 func _ready() -> void:
+	_style = (get_theme_stylebox(&"panel") as StyleBoxFlat).duplicate()
+	add_theme_stylebox_override(&"panel", _style)
 	_refresh()
 
 
@@ -27,8 +31,7 @@ func _refresh() -> void:
 	var element := GameData.get_element(_element_id)
 	if element == null:
 		return
-	var style := get_theme_stylebox(&"panel") as StyleBoxFlat
-	style.bg_color = element.color
+	_style.bg_color = element.color
 	_name_label.text = element.name
 	var is_light := element.color.get_luminance() > LIGHT_LUMINANCE
-	_name_label.add_theme_color_override(&"font_color", UiPalette.TEXT if is_light else Color.WHITE)
+	_name_label.add_theme_color_override(&"font_color", UiPalette.BACKGROUND if is_light else UiPalette.TEXT)

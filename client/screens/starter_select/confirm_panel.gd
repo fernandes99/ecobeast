@@ -20,6 +20,7 @@ var _busy: bool = false
 
 func _ready() -> void:
 	hide()
+	_dim.color = UiPalette.OVERLAY
 	_dim.gui_input.connect(_on_dim_input)
 	_choose_button.pressed.connect(func() -> void: choose_pressed.emit(_species_id))
 	_back_button.pressed.connect(close)

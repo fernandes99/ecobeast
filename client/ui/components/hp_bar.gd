@@ -11,12 +11,16 @@ const LOW_RATIO := 0.2
 
 var _current: int = 0
 var _maximum: int = 0
+## Cópia do preenchimento do tema, só desta barra (a cor muda com a faixa).
+var _fill: StyleBoxFlat
 
 @onready var _bar: ProgressBar = %Bar
 @onready var _numbers: Label = %Numbers
 
 
 func _ready() -> void:
+	_fill = (_bar.get_theme_stylebox(&"fill") as StyleBoxFlat).duplicate()
+	_bar.add_theme_stylebox_override(&"fill", _fill)
 	_refresh()
 
 
@@ -33,12 +37,11 @@ func _refresh() -> void:
 	if _maximum > 0:
 		ratio = float(_current) / _maximum
 	_bar.value = ratio
-	var fill := _bar.get_theme_stylebox(&"fill") as StyleBoxFlat
 	if ratio > MID_RATIO:
-		fill.bg_color = UiPalette.HP_HIGH
+		_fill.bg_color = UiPalette.HP_HIGH
 	elif ratio > LOW_RATIO:
-		fill.bg_color = UiPalette.HP_MID
+		_fill.bg_color = UiPalette.HP_MID
 	else:
-		fill.bg_color = UiPalette.HP_LOW
+		_fill.bg_color = UiPalette.HP_LOW
 	_numbers.visible = show_numbers
 	_numbers.text = "%d/%d" % [_current, _maximum]

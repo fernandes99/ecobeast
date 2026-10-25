@@ -31,9 +31,9 @@ Depois da [01](01-dark-theme.md), o Hub já está na paleta escura, mas ainda no
 
 **Estrutura** — dentro do `SafeArea`, de cima para baixo:
 
-- **RF-02:** Cenário: um `TextureRect` atrás de tudo, colado no topo, com 38% da altura da tela. Mostra `res://assets/backgrounds/hub.png` se existir (cortado para cobrir, `STRETCH_KEEP_ASPECT_COVERED`); senão, um gradiente vertical de `#52C4F5` a `BACKGROUND`. Um gradiente de `BACKGROUND` transparente a opaco cobre a parte de baixo dele, para o conteúdo não ficar sobre uma borda dura.
+- **RF-02:** Cenário: um `TextureRect` atrás de tudo, cobrindo a tela inteira, como no protótipo (o caminho e o gramado aparecem entre os cards). Mostra `res://assets/backgrounds/hub.png` se existir (cortado para cobrir, `STRETCH_KEEP_ASPECT_COVERED`, alinhado pelo topo); senão, um gradiente vertical de `#52C4F5` a `BACKGROUND`. Por cima dele, um gradiente de `BACKGROUND` transparente (até 30% da altura) a `BACKGROUND` a 55% (embaixo), para os painéis e textos continuarem legíveis.
 - **RF-03:** Topo fixo, por cima do cenário: o painel do Domador à esquerda e o chip de moedas à direita.
-- **RF-04:** Conteúdo rolável (`ScrollContainer` vertical): um espaço vazio que deixa o cenário aparecer (até o fim dos 38%), o painel da equipe e a grade de ações.
+- **RF-04:** Conteúdo rolável (`ScrollContainer` vertical): um espaço vazio que deixa o castelo aparecer (até 30% da altura da tela), o painel da equipe e a grade de ações. O cenário fica parado enquanto o conteúdo rola.
 - **RF-05:** Barra inferior fixa.
 
 **Topo**

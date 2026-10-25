@@ -1,6 +1,6 @@
 # 01. Tema escuro
 
-- **Status:** rascunho
+- **Status:** concluída
 - **Depende de:** [hub/01-hub-screen](../hub/01-hub-screen.md)
 
 ## Contexto
@@ -36,7 +36,7 @@ Godot: um **tema** (`Theme`) é um recurso com os estilos de cada tipo de contro
 - **RF-06:** `OutlineButton`: sem fundo, borda de 2 px `ACCENT`, texto `ACCENT`; pressionado com fundo `SURFACE_RAISED`. `DangerButton`: fundo `DANGER`, pressionado `DANGER_PRESSED`, texto `TEXT`.
 - **RF-07:** `ActionButton`, `TabButton` e `CurrentTabButton` (do Hub atual): `ActionButton` com fundo `SURFACE`, borda `BORDER`, texto `TEXT`; `TabButton` com texto `TEXT_SECONDARY`; `CurrentTabButton` com texto `TEXT` e a linha de cima em `ACCENT`.
 - **RF-08:** `LineEdit`: fundo `SURFACE_RAISED`, borda de 2 px `BORDER`, cantos 14, texto `TEXT`, placeholder `TEXT_SECONDARY`, cursor `ACCENT`; com foco, borda `ACCENT`.
-- **RF-09:** Barras de rolagem: trilho transparente, alça de 6 px em `SURFACE_RAISED`, `BORDER` ao arrastar.
+- **RF-09:** Barras de rolagem: trilho transparente, alça de 6 px em `TEXT_MUTED`, `TEXT_SECONDARY` ao arrastar.
 
 **Telas e componentes**
 
@@ -47,15 +47,15 @@ Godot: um **tema** (`Theme`) é um recurso com os estilos de cada tipo de contro
 - **RF-14:** `CreatureSlot` vazio: borda `BORDER`; com criatura, borda na cor do primeiro Elemento, como hoje, e fundo `SURFACE`.
 - **RF-15:** `ElementBadge`: continua na cor do Elemento, com texto escuro (`BACKGROUND`) quando a cor é clara e branco quando é escura.
 - **RF-16:** O painel de confirmação da escolha do inicial escurece a tela com `OVERLAY`. O texto de perigo do painel e do Perfil (debug) usa `DANGER`.
-- **RF-17:** `TapPanel` dá retorno de toque visível no fundo escuro: pressionado, o painel clareia (`modulate` de `Color(1.25, 1.25, 1.25)`) em vez de escurecer.
+- **RF-17:** `TapPanel` dá retorno de toque visível no fundo escuro: pressionado, o painel clareia (`UiPalette.PRESSED_TINT`, `modulate` de 1,25) em vez de escurecer.
 
 ## Critérios de aceite
 
-- [ ] Capturas de tela (Movie Maker, janela 405 × 720) da entrada, da escolha do inicial, do painel de confirmação, do Hub, de um placeholder, da tela "sem conexão" e da tela "Erro nos dados do jogo" mostram fundo escuro, painéis `SURFACE` com borda e texto branco ou `TEXT_SECONDARY`, sem nenhuma cor creme, branca de fundo ou verde do tema antigo.
-- [ ] As artes de Fogo e Água aparecem na escolha do inicial e no Hub sem halo claro em volta.
-- [ ] `grep` por `Color(` e `#` de cor em `client/**/*.tscn` e `client/**/*.gd` só encontra `palette.gd`, `main_theme.tres` e as exceções do RF-11.
-- [ ] Os fluxos continuam iguais: nome, escolha, confirmação, Hub, placeholders, voltar, "Tentar de novo".
-- [ ] O jogo roda sem erros de script e o editor não mostra avisos.
+- [x] Capturas de tela (Movie Maker, janela 405 × 720) da entrada, da escolha do inicial, do painel de confirmação, do Hub, de um placeholder, da tela "sem conexão" e da tela "Erro nos dados do jogo" mostram fundo escuro, painéis `SURFACE` com borda e texto branco ou `TEXT_SECONDARY`, sem nenhuma cor creme, branca de fundo ou verde do tema antigo.
+- [x] As artes de Fogo e Água aparecem na escolha do inicial e no Hub sem halo claro em volta.
+- [x] `grep` por `Color(` e `#` de cor em `client/**/*.tscn` e `client/**/*.gd` só encontra `palette.gd`, `main_theme.tres` e as exceções do RF-11.
+- [ ] Os fluxos continuam iguais: nome, escolha, confirmação, Hub, placeholders, voltar, "Tentar de novo". (O layout e os scripts das telas não mudaram; o F5 é passo do dono.)
+- [x] O jogo roda sem erros de script e o editor não mostra avisos.
 
 ## Desenho técnico
 
@@ -87,10 +87,20 @@ As telas sem jogador salvo (entrada, escolha, confirmação) e as de erro são c
 
 ## Tarefas
 
-- [ ] `UiPalette` e `nunito_black.tres` (RF-01, RF-02).
-- [ ] `main_theme.tres` (RF-03 a RF-09).
-- [ ] Fundo em gradiente (RF-10).
-- [ ] Cores fixas das cenas e componentes (RF-11 a RF-17).
-- [ ] Capturas de todas as telas e conferência dos critérios.
-- [ ] `client/CLAUDE.md`.
-- [ ] Marcar esta spec e a tabela do README como `concluída`; commit `feat: tema escuro`.
+- [x] `UiPalette` e `nunito_black.tres` (RF-01, RF-02).
+- [x] `main_theme.tres` (RF-03 a RF-09).
+- [x] Fundo em gradiente (RF-10).
+- [x] Cores fixas das cenas e componentes (RF-11 a RF-17).
+- [x] Capturas de todas as telas e conferência dos critérios.
+- [x] `client/CLAUDE.md`.
+- [x] Marcar esta spec e a tabela do README como `concluída`; commit `feat: tema escuro`.
+
+## Decisões da implementação
+
+- **Cores fixas das cenas viraram variações de tema**: `LogoLabel` (título da entrada), `DangerLabel` (mensagens de erro), `AvatarPanel`, `CoinDot` e `TabBarPanel` (Hub atual), `HpBar` (barra de HP) e `ElementPill` (selo de Elemento). A `HpBar` e o `ElementBadge` copiam o estilo do tema ao abrir (`duplicate`) e pintam só a própria cópia, para uma barra não mudar a cor das outras.
+- **Fundo e escurecimento pelo código:** o gradiente do fundo é montado no `main.gd` e o `OVERLAY` da confirmação no `confirm_panel.gd`, com as cores da `UiPalette`. Assim nenhuma cena guarda cor.
+- **`PRESSED_TINT` entrou na paleta**, porque o RF-11 não deixa cor fixa em script.
+- **Barra de rolagem** em `TEXT_MUTED`: `SURFACE_RAISED`, previsto antes, quase não aparecia sobre o fundo.
+- **O texto branco sobre a cor do Elemento** (inicial do retrato, selo) vem da cor padrão do `Label`, que agora é `TEXT` (branco). Não sobrou nenhuma cor fixa nas cenas, nem as exceções do RF-11.
+- **O tema foi gerado por um script** a partir da tabela da paleta, para os valores saírem exatos. Daqui em diante ele se edita normalmente pelo editor do Godot.
+- **Conferência:** capturas do Movie Maker das sete telas (entrada, escolha, confirmação, Hub, placeholder, sem conexão, erro nos dados), por uma cena temporária apagada no fim; boot headless sem erros e 0 avisos do editor em 46 scripts.
