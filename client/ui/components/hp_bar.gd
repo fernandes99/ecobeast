@@ -8,6 +8,8 @@ const LOW_RATIO := 0.2
 
 ## Mostra "atual/máximo" ao lado da barra.
 @export var show_numbers: bool = false
+## Altura da barra, em px.
+@export var bar_height: int = 16
 
 var _current: int = 0
 var _maximum: int = 0
@@ -19,6 +21,7 @@ var _fill: StyleBoxFlat
 
 
 func _ready() -> void:
+	_bar.custom_minimum_size.y = bar_height
 	_fill = (_bar.get_theme_stylebox(&"fill") as StyleBoxFlat).duplicate()
 	_bar.add_theme_stylebox_override(&"fill", _fill)
 	_refresh()

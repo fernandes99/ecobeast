@@ -14,6 +14,7 @@ res://
   domain/rules/    regras puras: stats, XP, criação de criatura
   ui/theme/        tema, paleta e fontes
   ui/components/   componentes reutilizáveis (.tscn + .gd)
+  ui/icons/        ícones SVG da interface, brancos (a moeda é colorida), tingidos pelo tema ou por modulate
   screens/         uma pasta por tela; main/ é a cena raiz
   assets/          sprites e sons (creatures/<slug>/front.png)
 ```
@@ -29,7 +30,7 @@ Detalhes em `.specs/foundation/architecture.md`.
 - **GDScript tipado:** declaração sem tipo é erro de script no projeto. Arquivos em `snake_case`, classes em `PascalCase`, nós acessados por `%NomeUnico`.
 - Textos do jogador direto nas cenas e scripts (sem `tr`).
 - **Telas novas:** registrar o id em `Router.SCREENS` (`core/autoload/router.gd`); parâmetros chegam em `setup(params)` antes do `_ready`; o conteúdo fica dentro de um `SafeArea`; painel aberto por cima da tela se fecha no voltar via `handle_back() -> bool`. Componentes com `set_*()` aceitam ser chamados antes de entrar na árvore.
-- **Visual:** paleta escura de `.specs/visual-theme/README.md`. Fontes e estilos vêm do tema (`ui/theme/main_theme.tres`): variações de texto `TitleLabel` (Nunito Black), `LogoLabel`, `SecondaryLabel`, `BoldLabel` e `DangerLabel`; botões `OutlineButton`, `DangerButton`, `ActionButton`, `TabButton` e `CurrentTabButton`; painéis `AvatarPanel`, `CoinDot`, `TabBarPanel` e `ElementPill`; barra `HpBar`. Um painel inteiro tocável estende `TapPanel`. Nenhuma cena ou script tem cor fixa: as da interface vêm de `UiPalette`, as de Elemento do catálogo, e um estilo que precisa mudar de cor por instância é copiado do tema (`duplicate`) antes de pintar. As cores do tema repetem as de `UiPalette`: mude as duas juntas.
+- **Visual:** paleta escura de `.specs/visual-theme/README.md`. Fontes e estilos vêm do tema (`ui/theme/main_theme.tres`): variações de texto `TitleLabel` (Nunito Black), `LogoLabel`, `SecondaryLabel`, `BoldLabel` e `DangerLabel`; botões `OutlineButton`, `DangerButton`, `TabButton` e `CurrentTabButton` (abas com ícone em cima); botão `IconButton`; painéis `AvatarPanel`, `PlayerPanel`, `CoinChip`, `SectionPanel`, `TabBarPanel` e `ElementPill`; barras `HpBar` e `XpBar`. Um painel inteiro tocável estende `TapPanel`. Ilustrações entram por arquivo, sem código: `assets/creatures/<slug>/front.png`, `assets/backgrounds/hub.png` e `assets/ui/actions/<ação>.png` (tamanhos em `.specs/visual-theme/README.md`). Nenhuma cena ou script tem cor fixa: as da interface vêm de `UiPalette`, as de Elemento do catálogo, e um estilo que precisa mudar de cor por instância é copiado do tema (`duplicate`) antes de pintar. As cores do tema repetem as de `UiPalette`: mude as duas juntas.
 - Versione os arquivos `.uid` que o Godot cria ao lado dos scripts; `.godot/` fica fora do git.
 
 ## Editando dados do catálogo

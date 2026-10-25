@@ -1,27 +1,42 @@
 class_name CreatureSlot
 extends TapPanel
-## Um lugar da equipe no Hub (hub/01, RF-06 e RF-07): retrato, nome, nível e
-## HP da criatura, com a borda na cor do primeiro Elemento; ou "Vazio", que não
-## reage a toque.
+## Um lugar da equipe no Hub (visual-theme/02, RF-10 e RF-11): card vertical
+## com a arte sobre a cor do primeiro Elemento e, numa faixa escura embaixo,
+## nome, nível e HP; ou "Vazio", que não reage a toque.
 
-const BORDER_WIDTH := 3
-const EMPTY_BORDER_WIDTH := 2
-const CONTENT_MARGIN := 16
+const BORDER_WIDTH := 2
+const CORNER_RADIUS := 12
+## Quanto a cor do Elemento escurece no fundo do card.
+const ELEMENT_DARKEN := 0.45
+## Opacidade da faixa escura das informações.
+const INFO_ALPHA := 0.85
+## Opacidade do fundo do slot vazio.
+const EMPTY_ALPHA := 0.5
 
 var _creature: CreatureInstance = null
-## O estilo do tema, antes do override; base dos dois estados.
-var _base_style: StyleBoxFlat
 
 @onready var _content: VBoxContainer = %Content
 @onready var _portrait: CreaturePortrait = %Portrait
+@onready var _info: PanelContainer = %Info
 @onready var _name_label: Label = %NameLabel
+@onready var _element_dot: Panel = %ElementDot
 @onready var _level_label: Label = %LevelLabel
+@onready var _hp_label: Label = %HpLabel
 @onready var _hp_bar: HpBar = %HpBar
 @onready var _empty_label: Label = %EmptyLabel
 
 
 func _ready() -> void:
-	_base_style = get_theme_stylebox(&"panel") as StyleBoxFlat
+	_empty_label.add_theme_color_override(&"font_color", UiPalette.TEXT_MUTED)
+	var info_style := StyleBoxFlat.new()
+	info_style.bg_color = _with_alpha(UiPalette.SURFACE, INFO_ALPHA)
+	info_style.corner_radius_bottom_left = CORNER_RADIUS - BORDER_WIDTH
+	info_style.corner_radius_bottom_right = CORNER_RADIUS - BORDER_WIDTH
+	info_style.content_margin_left = 6
+	info_style.content_margin_right = 6
+	info_style.content_margin_top = 4
+	info_style.content_margin_bottom = 6
+	_info.add_theme_stylebox_override(&"panel", info_style)
 	_refresh()
 
 
@@ -38,8 +53,8 @@ func set_empty() -> void:
 
 
 func _refresh() -> void:
-	var style := _base_style.duplicate() as StyleBoxFlat
-	style.set_content_margin_all(CONTENT_MARGIN)
+	var style := StyleBoxFlat.new()
+	style.set_corner_radius_all(CORNER_RADIUS)
 	var is_empty := _creature == null
 	# Vazio, o conteúdo continua no layout (transparente) para o slot ter o
 	# mesmo tamanho dos ocupados.
@@ -48,15 +63,27 @@ func _refresh() -> void:
 	mouse_filter = MOUSE_FILTER_IGNORE if is_empty else MOUSE_FILTER_PASS
 	mouse_default_cursor_shape = CURSOR_ARROW if is_empty else CURSOR_POINTING_HAND
 	if is_empty:
-		style.draw_center = false
-		style.set_border_width_all(EMPTY_BORDER_WIDTH)
-		style.border_color = UiPalette.BORDER
+		style.bg_color = _with_alpha(UiPalette.SURFACE_RAISED, EMPTY_ALPHA)
 	else:
 		var species := GameData.get_species(_creature.species_id)
+		var element_color := GameData.get_element(species.element_ids[0]).color
+		style.bg_color = element_color.darkened(ELEMENT_DARKEN)
 		style.set_border_width_all(BORDER_WIDTH)
-		style.border_color = GameData.get_element(species.element_ids[0]).color
+		style.border_color = element_color
+		style.set_content_margin_all(BORDER_WIDTH)
+		var dot := StyleBoxFlat.new()
+		dot.bg_color = element_color
+		dot.set_corner_radius_all(7)
+		_element_dot.add_theme_stylebox_override(&"panel", dot)
 		_portrait.set_species(species.id)
 		_name_label.text = _creature.display_name(species)
 		_level_label.text = "Nv. %d" % _creature.level
+		_hp_label.text = "HP %d/%d" % [_creature.current_hp, _creature.stats.hp]
 		_hp_bar.set_hp(_creature.current_hp, _creature.stats.hp)
 	add_theme_stylebox_override(&"panel", style)
+
+
+static func _with_alpha(color: Color, alpha: float) -> Color:
+	var result := color
+	result.a = alpha
+	return result

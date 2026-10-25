@@ -30,8 +30,8 @@ Tomadas no planejamento (corrigíveis; ao mudar uma, atualize aqui e nas specs a
 | Decisão                                                                        | Motivo                                                                             |
 | ------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------- |
 | As ações e abas ficam numa tabela de dados no script do Hub (rótulo → tela)    | Ligar uma feature nova é trocar o id de tela na tabela                             |
-| Equipe em grade de 3 × 2, slots vazios visíveis                                | Mostra que cabem 6 e convida a capturar mais                                       |
-| Botões só com texto (sem ícones) no MVP                                         | Não há arte ainda; ícones entram com a direção de arte                            |
+| Equipe em grade de 3 × 2, slots vazios visíveis (substituída: equipe numa linha de 6 cards, [visual-theme/02](../visual-theme/02-hub-layout.md)) | Mostra que cabem 6 e convida a capturar mais                                       |
+| Botões só com texto (sem ícones) no MVP (substituída: cards e abas com ícones, [visual-theme/02](../visual-theme/02-hub-layout.md)) | Não há arte ainda; ícones entram com a direção de arte                            |
 | "Apagar progresso" no placeholder do Perfil, só em build de debug               | Permite refazer o onboarding durante o desenvolvimento sem mexer em arquivos        |
 | O nível do Domador aparece fixo em 1                                            | O GDD não define como ele sobe ([roadmap](../roadmap.md#dúvidas-globais-em-aberto)) |
 

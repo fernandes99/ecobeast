@@ -1,0 +1,70 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://ui/components/action_tile.gd" id="1_script"]
+
+[node name="ActionTile" type="PanelContainer"]
+size_flags_horizontal = 3
+size_flags_vertical = 3
+mouse_filter = 1
+mouse_default_cursor_shape = 2
+script = ExtResource("1_script")
+
+[node name="Column" type="VBoxContainer" parent="."]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="Art" type="PanelContainer" parent="Column"]
+unique_name_in_owner = true
+clip_children = 2
+custom_minimum_size = Vector2(0, 96)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="ArtFill" type="TextureRect" parent="Column/Art"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 6
+
+[node name="Icon" type="TextureRect" parent="Column/Art"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(48, 48)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="TextMargin" type="MarginContainer" parent="Column"]
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+theme_override_constants/margin_left = 6
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 6
+theme_override_constants/margin_bottom = 10
+
+[node name="Texts" type="VBoxContainer" parent="Column/TextMargin"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="Title" type="Label" parent="Column/TextMargin/Texts"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"TitleLabel"
+theme_override_font_sizes/font_size = 20
+horizontal_alignment = 1
+autowrap_mode = 3
+max_lines_visible = 2
+
+[node name="Subtitle" type="Label" parent="Column/TextMargin/Texts"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+horizontal_alignment = 1
+autowrap_mode = 3
+max_lines_visible = 3

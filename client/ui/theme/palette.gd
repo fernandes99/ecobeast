@@ -23,6 +23,21 @@ const DANGER_PRESSED := Color("#C0433C")
 const HP_HIGH := Color("#68C661")
 const OVERLAY := Color(0.0, 0.0, 0.0, 0.6)
 
+## Céu do cenário do Hub quando não há res://assets/backgrounds/hub.png.
+const SKY := Color("#52C4F5")
+
+## Cards de ação do Hub (visual-theme/02, RF-12): id -> [cor da arte, cor do corpo].
+const ACTION_COLORS: Dictionary[StringName, Array] = {
+	&"explore": [Color("#3E9B4F"), Color("#0B4436")],
+	&"challenge": [Color("#B9473F"), Color("#3A2433")],
+	&"arenas": [Color("#4A52C8"), Color("#1D335F")],
+	&"shop": [Color("#D08A22"), Color("#4D3C28")],
+	&"heal": [Color("#159080"), Color("#044247")],
+	&"storage": [Color("#6A44C2"), Color("#2A2360")],
+	&"codex": [Color("#1E7FD0"), Color("#0E3C61")],
+	&"bag": [Color("#9C6E43"), Color("#3E362F")],
+}
+
 ## Faixas da barra de HP.
 const HP_MID := WARNING
 const HP_LOW := DANGER

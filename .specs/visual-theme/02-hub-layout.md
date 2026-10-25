@@ -1,6 +1,6 @@
 # 02. Hub no layout do protótipo
 
-- **Status:** rascunho
+- **Status:** concluída
 - **Depende de:** [01-dark-theme](01-dark-theme.md)
 
 ## Contexto
@@ -31,21 +31,21 @@ Depois da [01](01-dark-theme.md), o Hub já está na paleta escura, mas ainda no
 
 **Estrutura** — dentro do `SafeArea`, de cima para baixo:
 
-- **RF-02:** Cenário: um `TextureRect` atrás de tudo, cobrindo a tela inteira, como no protótipo (o caminho e o gramado aparecem entre os cards). Mostra `res://assets/backgrounds/hub.png` se existir (cortado para cobrir, `STRETCH_KEEP_ASPECT_COVERED`, alinhado pelo topo); senão, um gradiente vertical de `#52C4F5` a `BACKGROUND`. Por cima dele, um gradiente de `BACKGROUND` transparente (até 30% da altura) a `BACKGROUND` a 55% (embaixo), para os painéis e textos continuarem legíveis.
+- **RF-02:** Cenário: um `TextureRect` atrás de tudo, cobrindo a tela inteira, como no protótipo (o caminho e o gramado aparecem entre os cards). Mostra `res://assets/backgrounds/hub.png` se existir (na largura da tela, com a parte de cima cortada em `SCENE_TOP_CROP`, hoje 22%, para o castelo da imagem atual cair acima da equipe; 0 para uma imagem já composta com o castelo no terço de cima); senão, um gradiente vertical de `#52C4F5` a `BACKGROUND`. Por cima dele, um gradiente de `BACKGROUND` transparente (até 30% da altura) a `BACKGROUND` a 55% (embaixo), para os painéis e textos continuarem legíveis.
 - **RF-03:** Topo fixo, por cima do cenário: o painel do Domador à esquerda e o chip de moedas à direita.
 - **RF-04:** Conteúdo rolável (`ScrollContainer` vertical): um espaço vazio que deixa o castelo aparecer (até 30% da altura da tela), o painel da equipe e a grade de ações. O cenário fica parado enquanto o conteúdo rola.
 - **RF-05:** Barra inferior fixa.
 
 **Topo**
 
-- **RF-06:** Painel do Domador: pílula com cantos 24, gradiente horizontal de `#10304C` a `#134162`, borda de 2 px `BORDER`. À esquerda, o avatar: círculo de 88 px em `PRIMARY` com anel de 3 px `ACCENT` e a inicial do nome em branco (Black, 40), sobressaindo do painel. Ao lado, o nome (Black, 28, cortado com "…") e, embaixo, "Nv. <nível>" (Bold, 20, `TEXT_SECONDARY`) seguido de uma barra de XP de 140 × 12 (trilho `TRACK`, preenchimento `ACCENT`, cantos 6) com valor 0.
-- **RF-07:** Chip de moedas: cantos 24, fundo `SURFACE`, borda `BORDER`, ícone `coin` de 36 px e o número (Bold, 24, `TEXT`) com separador de milhar em ponto.
+- **RF-06:** Painel do Domador: pílula com cantos 24, fundo `SURFACE` a 92%, borda de 2 px `BORDER`. À esquerda, o avatar: círculo de 88 px em `PRIMARY` com anel de 3 px `ACCENT` e a inicial do nome em branco (Black, 40), sobressaindo do painel. Ao lado, o nome (Black, 28, cortado com "…") e, embaixo, "Nv. <nível>" (Bold, 20, `TEXT_SECONDARY`) seguido de uma barra de XP de 140 × 12 (trilho `TRACK`, preenchimento `ACCENT`, cantos 6) com valor 0.
+- **RF-07:** Chip de moedas: cantos 24, fundo `SURFACE` a 92%, borda `BORDER`, ícone `coin` de 36 px e o número (Bold, 24, `TEXT`) com separador de milhar em ponto.
 
 **Equipe**
 
 - **RF-08:** Painel com cantos 20, fundo `SURFACE` e borda `BORDER`. Cabeçalho: ícone `team` (28 px, `TEXT`), "Minha equipe" (Black, 24) e, à direita, um botão redondo de 48 px (`SURFACE_RAISED`, ícone `pencil`) que abre o destino "Equipe".
-- **RF-09:** Uma linha com os 6 `CreatureSlot`, mesma largura, espaço de 8 px entre eles, altura de 1,5 × a largura.
-- **RF-10:** `CreatureSlot` com criatura: cantos 12, borda de 2 px na cor do primeiro Elemento, fundo em gradiente vertical da cor do Elemento escurecida 45% (em cima) a `SURFACE` (embaixo). De cima para baixo: o `CreaturePortrait` ocupando a largura; o nome de exibição (Bold, 16, branco, cortado com "…"); uma linha com um círculo de 14 px na cor do Elemento e "Nv. <nível>" (Bold, 14, `TEXT_SECONDARY`); "HP <atual>/<máximo>" (Bold, 13) e a `HpBar` com 8 px de altura, sem os números.
+- **RF-09:** Uma linha com os 6 `CreatureSlot`, mesma largura, espaço de 8 px entre eles; a altura vem do conteúdo (cerca de 1,5 × a largura).
+- **RF-10:** `CreatureSlot` com criatura: cantos 12, borda de 2 px na cor do primeiro Elemento, fundo na cor do Elemento escurecida 45%. Em cima, o `CreaturePortrait` de 84 px; embaixo, numa faixa `SURFACE` a 85% com os cantos de baixo arredondados: o nome de exibição (Bold, 16, branco, cortado com "…"); uma linha com um círculo de 14 px na cor do Elemento e "Nv. <nível>" (14, `TEXT_SECONDARY`); "HP <atual>/<máximo>" (Bold, 13) e a `HpBar` com 8 px de altura, sem os números.
 - **RF-11:** `CreatureSlot` vazio: cantos 12, fundo `SURFACE_RAISED` a 50%, sem borda, "Vazio" (14, `TEXT_MUTED`) no centro; não reage a toque.
 
 **Ações**
@@ -77,13 +77,13 @@ Depois da [01](01-dark-theme.md), o Hub já está na paleta escura, mas ainda no
 
 ## Critérios de aceite
 
-- [ ] A captura do Hub (Movie Maker, 405 × 720) lado a lado com o protótipo mostra a mesma organização: cenário no topo, Domador e moedas por cima, painel "Minha equipe" com 6 cards em linha, 8 cards de ação em 4 colunas e barra com ícones e Home destacada.
-- [ ] O inicial aparece no primeiro card com a arte, o nome, o nível, o círculo do Elemento e o HP; os outros 5 dizem "Vazio".
-- [ ] Sem `hub.png` nem imagens de ações, o cenário é o gradiente de céu e cada card mostra o seu ícone. Colocando um PNG qualquer em `res://assets/ui/actions/shop.png`, a Loja passa a mostrá-lo sem mudar código. (Conferir e remover o arquivo de teste.)
-- [ ] Cada card de ação, o lápis da equipe e as 4 abas (fora Home) abrem o placeholder certo; o voltar retorna ao Hub com a rolagem onde estava.
-- [ ] Um nome de 16 caracteres largos ("MMMMMMMMMMMMMMMM") e "Marisgarra" num card não saem dos seus espaços.
-- [ ] Numa tela mais baixa (janela 405 × 640), o conteúdo rola e a barra inferior continua visível.
-- [ ] O jogo roda sem erros de script e o editor não mostra avisos.
+- [x] A captura do Hub (Movie Maker, 405 × 720) lado a lado com o protótipo mostra a mesma organização: cenário no topo, Domador e moedas por cima, painel "Minha equipe" com 6 cards em linha, 8 cards de ação em 4 colunas e barra com ícones e Home destacada.
+- [x] O inicial aparece no primeiro card com a arte, o nome, o nível, o círculo do Elemento e o HP; os outros 5 dizem "Vazio".
+- [x] Sem `hub.png` nem imagens de ações, o cenário é o gradiente de céu e cada card mostra o seu ícone. Colocando um PNG qualquer em `res://assets/ui/actions/shop.png`, a Loja passa a mostrá-lo sem mudar código. (Conferir e remover o arquivo de teste.)
+- [x] Cada card de ação, o lápis da equipe e as 4 abas (fora Home) abrem o placeholder certo; o voltar retorna ao Hub com a rolagem onde estava. (Toques simulados pela cena temporária; o toque de verdade no celular é passo do dono.)
+- [x] Um nome de 16 caracteres largos ("MMMMMMMMMMMMMMMM") e "Marisgarra" num card não saem dos seus espaços.
+- [x] Numa tela mais baixa (janela 405 × 640), o conteúdo se ajusta (o espaço do céu diminui) e a barra inferior continua visível; o que não couber rola.
+- [x] O jogo roda sem erros de script e o editor não mostra avisos.
 
 ## Desenho técnico
 
@@ -118,10 +118,28 @@ Comparar a última captura com `hub-prototype.png`. Passo do dono: F5 no editor 
 
 ## Tarefas
 
-- [ ] Ícones SVG (RF-01).
-- [ ] Estrutura do Hub, cenário e topo (RF-02 a RF-07).
-- [ ] Painel da equipe e `CreatureSlot` novo (RF-08 a RF-11).
-- [ ] `ActionTile` e a grade (RF-12 a RF-14).
-- [ ] Barra inferior (RF-15, RF-16).
-- [ ] Capturas e conferência dos critérios.
-- [ ] Documentos; marcar esta spec e a tabela do README como `concluída`; commit `feat: hub no layout do protótipo`.
+- [x] Ícones SVG (RF-01).
+- [x] Estrutura do Hub, cenário e topo (RF-02 a RF-07).
+- [x] Painel da equipe e `CreatureSlot` novo (RF-08 a RF-11).
+- [x] `ActionTile` e a grade (RF-12 a RF-14).
+- [x] Barra inferior (RF-15, RF-16).
+- [x] Capturas e conferência dos critérios.
+- [x] Documentos; marcar esta spec e a tabela do README como `concluída`; commit `feat: hub no layout do protótipo`.
+
+## Decisões da implementação
+
+- **Cenário com a imagem atual (plano B):** a imagem do dono tem o castelo no meio, e não no terço de cima. `SCENE_TOP_CROP` (22%, em `hub_screen.gd`) corta o céu vazio do topo para o castelo aparecer entre o topo e a equipe. Abaixo do fim da imagem, o escurecimento termina na cor exata do fundo da tela naquela altura, sem emenda. Uma imagem nova, já composta com o castelo no terço de cima e em 1080 × 1920, usa `SCENE_TOP_CROP = 0`.
+- **Painéis em cor lisa** (`SURFACE` a 92%) em vez do gradiente do painel do Domador. O `StyleBoxFlat` não faz gradiente, e a diferença no protótipo é pequena.
+- **Card da criatura em dois tons:** a cor do Elemento escurecida em cima, atrás da arte, e uma faixa escura embaixo com os textos. Fica parecido com o protótipo sem precisar de gradiente com cantos arredondados.
+- **Arte dos cards de ação** recortada pelo formato do painel (`clip_children`), então a imagem ou o gradiente respeitam os cantos arredondados.
+- **Abas são `Button`s com ícone em cima** (`vertical_icon_alignment`), e as cores do ícone e do texto vêm do tema (`TabButton`, `CurrentTabButton`).
+- **Ícones e cenário** importados com mipmaps. Os SVG usam escala 2,0, e o Hub desenha com filtro linear com mipmaps (`texture_filter` na raiz da tela).
+- **Cores novas na `UiPalette`:** `SKY` (céu reserva) e `ACTION_COLORS` (arte e corpo de cada card), porque nenhuma cena ou script pode ter cor fixa ([01](01-dark-theme.md), RF-11).
+- **Tema:** saíram `ActionButton` e `CoinDot`, que ficaram sem uso. Entraram `PlayerPanel`, `CoinChip`, `SectionPanel`, `IconButton` e `XpBar`; o `AvatarPanel` passou a ter cantos 44 (círculo de 88 px).
+- **Conferência** pela cena temporária (apagada no fim):
+  - capturas do Hub com e sem PNG de ação;
+  - modo "estresse": nome de 16 "M", seis espécies com "Marisgarra" e HP médio e baixo;
+  - janela de 405 × 640;
+  - os 14 toques de navegação.
+
+  O boot headless rodou sem erros, e o editor não mostra avisos nos 47 scripts. O F5 e o teste no celular são do dono.

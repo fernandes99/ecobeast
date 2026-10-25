@@ -90,4 +90,4 @@ Os ids das ações estão em [02-hub-layout](02-hub-layout.md).
 | Fase                                | Entrega                                                                       | Status   |
 | ----------------------------------- | ----------------------------------------------------------------------------- | -------- |
 | [01-dark-theme](01-dark-theme.md)   | Paleta, fonte e tema escuros aplicados a todas as telas existentes           | concluída |
-| [02-hub-layout](02-hub-layout.md)   | Hub no layout do protótipo: topo, equipe em linha, cards de ação e barra com ícones | rascunho |
+| [02-hub-layout](02-hub-layout.md)   | Hub no layout do protótipo: topo, equipe em linha, cards de ação e barra com ícones | concluída |
