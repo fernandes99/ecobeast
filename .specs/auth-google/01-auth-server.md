@@ -1,6 +1,6 @@
 # 01. Login no servidor
 
-- **Status:** rascunho
+- **Status:** concluída
 - **Depende de:** [backend-api](../backend-api/)
 
 ## Contexto
@@ -69,13 +69,13 @@ O servidor só tem rotas abertas de leitura do catálogo. Esta fase cria o login
 
 ## Critérios de aceite
 
-- [ ] Sem `SUPABASE_URL` no `.env`, o servidor não sobe e a mensagem cita a variável.
-- [ ] `start` → `go` (302 para o Supabase com `code_challenge`) → `callback` (página "Pronto!") → `poll` (200 com os tokens) → `poll` de novo (404), com o Supabase substituído por um dublê nos testes.
-- [ ] `poll` antes do retorno dá 202; com o segredo errado, 404; depois de 10 minutos, 410; `go` aberto duas vezes, na segunda, página de erro.
-- [ ] `refresh` repassa ao Supabase e devolve o par novo; refresh recusado dá 401.
-- [ ] O `AuthGuard` aceita um token assinado pela chave do JWKS e recusa um vencido, um de outro emissor, um de outra audiência e um assinado por outra chave.
+- [x] Sem `SUPABASE_URL` no `.env`, o servidor não sobe e a mensagem cita a variável.
+- [x] `start` → `go` (302 para o Supabase com `code_challenge`) → `callback` (página "Pronto!") → `poll` (200 com os tokens) → `poll` de novo (404), com o Supabase substituído por um dublê nos testes.
+- [x] `poll` antes do retorno dá 202; com o segredo errado, 404; depois de 10 minutos, 410; `go` aberto duas vezes, na segunda, página de erro.
+- [x] `refresh` repassa ao Supabase e devolve o par novo; refresh recusado dá 401.
+- [x] O `AuthGuard` aceita um token assinado pela chave do JWKS e recusa um vencido, um de outro emissor, um de outra audiência e um assinado por outra chave.
 - [ ] Passo do dono: com o `.env` e o Supabase configurados, `curl -X POST http://localhost:3100/v1/auth/google/start`, abrir a `url` no navegador, entrar com o Google e ver "Pronto!"; o `poll` seguinte devolve os tokens, e um `POST /v1/auth/logout` com o access token dá 204.
-- [ ] `npm run lint`, `npm run typecheck`, `npm test` e `npm run test:e2e` passam.
+- [x] `npm run lint`, `npm run typecheck`, `npm test` e `npm run test:e2e` passam.
 
 ## Desenho técnico
 
@@ -103,10 +103,25 @@ npm run start:dev   # e o passo do dono com o Google de verdade
 
 ## Tarefas
 
-- [ ] Variáveis no `env.ts` e `.env.example` (RF-01), com teste.
-- [ ] `schema.prisma` e migration (RF-02).
-- [ ] `SupabaseAuthClient` com testes (RF-03, RF-04).
-- [ ] `LoginSessionsService` com testes (RF-05 a RF-08).
-- [ ] e2e das rotas e páginas; rodar e ver falhar. Controllers (RF-09 a RF-14).
-- [ ] `TokenVerifier` e `AuthGuard` com testes (RF-15, RF-16).
-- [ ] Documentos; marcar esta spec e a tabela do README como `concluída`; commit `feat: login com Google no servidor`.
+- [x] Variáveis no `env.ts` e `.env.example` (RF-01), com teste.
+- [x] `schema.prisma` e migration (RF-02).
+- [x] `SupabaseAuthClient` com testes (RF-03, RF-04).
+- [x] `LoginSessionsService` com testes (RF-05 a RF-08).
+- [x] e2e das rotas e páginas; rodar e ver falhar. Controllers (RF-09 a RF-14).
+- [x] `TokenVerifier` e `AuthGuard` com testes (RF-15, RF-16).
+- [x] Documentos; marcar esta spec e a tabela do README como `concluída`; commit `feat: login com Google no servidor`.
+
+## Decisões da implementação
+
+- **Páginas de erro com `400`:** a página "Não foi possível entrar" (ida indisponível, retorno sem código, jogador recusou, troca falhou) responde `400`; a de sucesso, `200`. As duas vão com `Cache-Control: no-store`.
+- **`LoginSessionsService.fail(loginId)`:** método a mais, usado pelo retorno quando vem `error` ou falta o `code`, para o `poll` seguinte dar `410` em vez de esperar os 10 minutos.
+- **Ida uma vez só, mesmo em paralelo:** a ida marca `opened` numa atualização condicional (`updateMany` com `opened = false`), e a entrega da sessão só acontece para quem apagar a linha (`deleteMany` com `status = complete`). Dois pedidos ao mesmo tempo não ganham os dois.
+- **Ids que não são UUID** (na ida, no retorno e no `poll`) contam como login indisponível ou inexistente, sem chegar ao banco. No `poll`, o corpo já é validado pelo DTO (`400`).
+- **Endereços sem barra no fim:** `SUPABASE_URL` e `PUBLIC_BASE_URL` perdem a `/` final na validação do `.env`, e só aceitam `http` ou `https`.
+- **`refresh` com o Supabase fora do ar:** só uma recusa (código abaixo de 500) vira `401`; erro do Supabase ou de rede sobe como `500`, para o jogo não apagar a sessão por um problema passageiro.
+- **`logout`** ignora só as recusas do Supabase (`SupabaseAuthError`); uma falha de rede sobe como `500`.
+- **`TokenVerifier`** aceita só `ES256` e `RS256`, os algoritmos das chaves assimétricas do Supabase, e exige `sub`.
+- **DTOs** ficam no próprio `auth.controller.ts`, como no `bundle.controller.ts`.
+- **`jose` 6.2.12**, versão fixa. A 6.2.13 tinha 8 dias e ficou de fora.
+- **e2e:** o `vitest.config.e2e.ts` põe um `SUPABASE_URL` falso, então os e2e nunca falam com o Supabase Auth de verdade, mesmo com o `.env` preenchido. O `SupabaseAuthClient` real monta a URL de autorização, e as chamadas de rede são dublês. Os tokens vêm de `test/support/tokens.ts`, que a [03](03-player-api.md) também usa. O e2e do banco passou a contar 29 tabelas mais o histórico de migrations.
+- **Conferência:** `npm run lint` e `npm run typecheck` sem avisos; `npm test` com 88 testes; `npm run test:e2e` com 178, dos quais 16 do login. O passo do dono com o Google de verdade fica aberto até a configuração do Google Cloud e do Supabase.

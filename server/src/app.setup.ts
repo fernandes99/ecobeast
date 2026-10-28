@@ -11,12 +11,15 @@ export const API_PREFIX = 'v1';
 export const OPENAPI_PATH = '/docs/openapi.json';
 
 /**
- * O que main.ts e os testes e2e montam igual: prefixo /v1 (menos /health),
+ * O que main.ts e os testes e2e montam igual: prefixo /v1 (menos /health e as
+ * páginas do login no navegador, /auth/google/*),
  * validação dos parâmetros (400 com a mensagem em pt-BR) e a documentação — OpenAPI em /docs/openapi.json e a Scalar em /docs.
  * Chamar antes de app.init() / app.listen().
  */
 export function configureApp(app: INestApplication): void {
-  app.setGlobalPrefix(API_PREFIX, { exclude: ['health'] });
+  app.setGlobalPrefix(API_PREFIX, {
+    exclude: ['health', 'auth/google/go', 'auth/google/callback'],
+  });
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
@@ -34,8 +37,10 @@ export function configureApp(app: INestApplication): void {
     .setTitle('Ecobeast API')
     .setVersion('1')
     .setDescription(
-      'API do catálogo do Ecobeast. Usada pelo jogo; leitura aberta, sem login.',
+      'API do Ecobeast, usada pelo jogo. O catálogo é aberto; as rotas com ' +
+        'cadeado exigem a sessão do login com Google (`Authorization: Bearer`).',
     )
+    .addBearerAuth()
     .build();
   const document = SwaggerModule.createDocument(app, config);
 

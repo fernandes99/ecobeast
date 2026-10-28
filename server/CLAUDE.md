@@ -13,6 +13,7 @@ server/
   src/config/            leitura e validação do .env
   src/prisma/            PrismaService (global)
   src/health/            GET /health
+  src/auth/              login com Google (Supabase Auth), AuthGuard e @CurrentUser()
   src/common/            peças compartilhadas pelas rotas
   src/catalog/           um módulo por recurso do catálogo
   src/domain/            regras puras de jogo (sem Nest nem Prisma)
@@ -26,9 +27,10 @@ server/
 - **Schema `ecobeasts`:** todo modelo tem `@@schema("ecobeasts")`. Nada no `public`, nem o histórico de migrations (o `prisma.config.ts` força `schema=ecobeasts` na URL da CLI). A API automática do Supabase não pode enxergar as tabelas.
 - **Nomes:** no banco, tabelas no plural e colunas em `snake_case` (iguais às de `.specs/game-data/architecture.md`). No Prisma, modelo em `PascalCase` singular e campo em `camelCase`, com `@@map` e `@map`. A conversão de nome é sempre mecânica.
 - **Respostas** em `snake_case`, com `name` e `description` em pt-BR. Mensagens de erro em pt-BR.
-- **Rotas** sob `/v1` (menos `/health` e `/docs`). Toda rota documentada no OpenAPI, com descrição em pt-BR.
+- **Rotas** sob `/v1` (menos `/health`, `/docs` e as páginas do navegador `/auth/google/go` e `/auth/google/callback`). Toda rota documentada no OpenAPI, com descrição em pt-BR.
 - **Regras de jogo** ficam em `src/domain/`, como funções puras sem Nest, Prisma nem I/O, porque são a autoridade do jogo e precisam de testes de unidade.
-- **Testes:** Vitest + supertest. Os e2e rodam contra o banco do `.env` e só leem dados, ou desfazem o que escrevem. Eles não conferem valores de balanceamento, que o dono muda no painel. `npm run lint`, `npm run typecheck`, `npm test` e `npm run test:e2e` passam antes de cada commit.
+- **Sessão:** rotas do jogador usam `@UseGuards(AuthGuard)`, `@ApiBearerAuth()` e `@CurrentUser()` (o `sub` do token do Supabase). O servidor fala com o Supabase Auth só pela API REST (`SupabaseAuthClient`); a chave secreta do Supabase não é usada.
+- **Testes:** Vitest + supertest. Os e2e rodam contra o banco do `.env` e só leem dados, ou desfazem o que escrevem. O Supabase Auth dos e2e é sempre um dublê (`SUPABASE_URL` falso no `vitest.config.e2e.ts`), e os tokens são assinados por `test/support/tokens.ts`. Eles não conferem valores de balanceamento, que o dono muda no painel. `npm run lint`, `npm run typecheck`, `npm test` e `npm run test:e2e` passam antes de cada commit.
 - **Segredos** só no `.env` (fora do git). O `.env.example` tem só nomes e valores de exemplo.
 - Imports relativos com extensão `.js` (ESM com `nodenext`).
 

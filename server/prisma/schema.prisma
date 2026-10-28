@@ -611,3 +611,35 @@ model InventoryItem {
   @@map("inventory_items")
   @@schema("ecobeasts")
 }
+
+/// Andamento de um login pelo navegador (.specs/auth-google/architecture.md).
+enum LoginStatus {
+  pending
+  complete
+  failed
+
+  @@map("login_status")
+  @@schema("ecobeasts")
+}
+
+/// Um login com Google em andamento. Vale 10 minutos; a linha é apagada quando
+/// o jogo busca a sessão.
+model AuthLoginSession {
+  id             String      @id @default(uuid()) @db.Uuid
+  /// SHA-256 (base64url) do segredo que o jogo usa para perguntar.
+  pollSecretHash String      @map("poll_secret_hash")
+  /// Verificador do PKCE; o desafio (SHA-256 dele) vai para o Supabase.
+  codeVerifier   String      @map("code_verifier")
+  status         LoginStatus @default(pending)
+  /// A ida (GET /auth/google/go) já foi usada.
+  opened         Boolean     @default(false)
+  accessToken    String?     @map("access_token")
+  refreshToken   String?     @map("refresh_token")
+  expiresIn      Int?        @map("expires_in")
+  expiresAt      DateTime    @map("expires_at") @db.Timestamptz(3)
+  createdAt      DateTime    @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([expiresAt])
+  @@map("auth_login_sessions")
+  @@schema("ecobeasts")
+}

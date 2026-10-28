@@ -65,7 +65,7 @@ Tomadas no planejamento (corrigíveis; ao mudar uma, atualize aqui e nas specs a
 
 | Fase                                        | Entrega                                                                                        | Status   |
 | ------------------------------------------- | ---------------------------------------------------------------------------------------------- | -------- |
-| [01-auth-server](01-auth-server.md)         | Login pelo navegador no NestJS (começar, retorno, perguntar, renovar, sair) e a guarda das rotas | rascunho |
+| [01-auth-server](01-auth-server.md)         | Login pelo navegador no NestJS (começar, retorno, perguntar, renovar, sair) e a guarda das rotas | concluída |
 | [02-player-rules](02-player-rules.md)       | Regras de criação do inicial em TypeScript (stats, XP, Genes, Temperamento, Técnicas)           | rascunho |
 | [03-player-api](03-player-api.md)           | Rotas do jogador: ler, criar o Domador, escolher o inicial, apagar o progresso                 | rascunho |
 | [04-client-login](04-client-login.md)       | Tela de login no jogo, a sessão guardada e o boot com login                                    | rascunho |
