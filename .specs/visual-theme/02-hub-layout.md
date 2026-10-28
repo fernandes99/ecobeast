@@ -63,7 +63,7 @@ Depois da [01](01-dark-theme.md), o Hub já está na paleta escura, mas ainda no
 | `codex`     | Bestiário          | Veja todas as espécies.                     | `#1E7FD0`   | `#0E3C61`    |
 | `bag`       | Mochila            | Organize seus itens.                        | `#9C6E43`   | `#3E362F`    |
 
-- **RF-13:** `ActionTile`: cantos 16, borda de 2 px na cor do corpo clareada 25%. Em cima, a área da arte (altura 96 px): `res://assets/ui/actions/<id>.png` se existir (`STRETCH_KEEP_ASPECT_COVERED`); senão, um gradiente vertical da cor da arte a ela escurecida 30%, com o ícone da ação (48 px, branco) no centro. Embaixo, no fundo da cor do corpo: o título (Black, 20, branco, centralizado, até 2 linhas) e o subtítulo (14, branco a 75%, centralizado, até 3 linhas). Os cards de uma linha têm a mesma altura.
+- **RF-13:** `ActionTile`: cantos 16, borda de 2 px na cor do corpo clareada 25%. Em cima, a área da arte, com altura de 80% da largura do card: `res://assets/ui/actions/<id>.webp` se existir (`STRETCH_KEEP_ASPECT_COVERED`, filtro linear com mipmaps), com uma faixa de 28 px na base que vai da cor do corpo transparente à cor do corpo; senão, um gradiente vertical da cor da arte a ela escurecida 30%, com o ícone da ação (48 px, branco) no centro. Embaixo, no fundo da cor do corpo: o título (Black, 20, branco, centralizado, até 2 linhas) e o subtítulo (14, branco a 75%, centralizado, até 3 linhas). Os cards de uma linha têm a mesma altura.
 - **RF-14:** `ActionTile` estende `TapPanel`: retorno de toque, arraste de rolagem passando para o `ScrollContainer`, e o toque emite `pressed`. O Hub liga cada card ao destino com o mesmo rótulo de hoje (`DESTINATIONS`).
 
 **Barra inferior**
@@ -79,7 +79,7 @@ Depois da [01](01-dark-theme.md), o Hub já está na paleta escura, mas ainda no
 
 - [x] A captura do Hub (Movie Maker, 405 × 720) lado a lado com o protótipo mostra a mesma organização: cenário no topo, Domador e moedas por cima, painel "Minha equipe" com 6 cards em linha, 8 cards de ação em 4 colunas e barra com ícones e Home destacada.
 - [x] O inicial aparece no primeiro card com a arte, o nome, o nível, o círculo do Elemento e o HP; os outros 5 dizem "Vazio".
-- [x] Sem `hub.png` nem imagens de ações, o cenário é o gradiente de céu e cada card mostra o seu ícone. Colocando um PNG qualquer em `res://assets/ui/actions/shop.png`, a Loja passa a mostrá-lo sem mudar código. (Conferir e remover o arquivo de teste.)
+- [x] Sem `hub.png` nem imagens de ações, o cenário é o gradiente de céu e cada card mostra o seu ícone. Colocando uma imagem qualquer em `res://assets/ui/actions/shop.webp`, a Loja passa a mostrá-lo sem mudar código. (Conferir e remover o arquivo de teste.)
 - [x] Cada card de ação, o lápis da equipe e as 4 abas (fora Home) abrem o placeholder certo; o voltar retorna ao Hub com a rolagem onde estava. (Toques simulados pela cena temporária; o toque de verdade no celular é passo do dono.)
 - [x] Um nome de 16 caracteres largos ("MMMMMMMMMMMMMMMM") e "Marisgarra" num card não saem dos seus espaços.
 - [x] Numa tela mais baixa (janela 405 × 640), o conteúdo se ajusta (o espaço do céu diminui) e a barra inferior continua visível; o que não couber rola.

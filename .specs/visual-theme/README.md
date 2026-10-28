@@ -71,9 +71,9 @@ Contraste mínimo de 4,5 : 1 para texto que carrega informação: `TEXT` e `TEXT
 | ----------------------------------------- | ------------------------------------ | --------------------------- |
 | `res://assets/creatures/<slug>/front.png` | Retratos (já existe)                 | 512 × 512, fundo transparente |
 | `res://assets/backgrounds/hub.png`        | Cenário atrás do Hub inteiro         | Vertical 9 : 16 (1080 × 1920), sem transparência |
-| `res://assets/ui/actions/<ação>.png`      | Topo de cada card de ação do Hub     | 512 × 320, fundo transparente |
+| `res://assets/ui/actions/<ação>.webp`     | Topo de cada card de ação do Hub     | Quadrada, sem transparência, com o desenho no centro (as atuais: 276 × 276, WebP com perda a 90%) |
 
-Os ids das ações estão em [02-hub-layout](02-hub-layout.md).
+Os ids das ações estão em [02-hub-layout](02-hub-layout.md). As artes das ações saíram de uma grade 4 × 4 do dono: as 8 de cima, na ordem das ações, recortadas sem a borda branca nem os cantos arredondados.
 
 ## Fora do escopo
 
