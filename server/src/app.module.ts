@@ -7,6 +7,7 @@ import { BundleModule } from './catalog/bundle/bundle.module.js';
 import { CatalogModule } from './catalog/catalog.module.js';
 import { Env, validateEnv } from './config/env.js';
 import { HealthModule } from './health/health.module.js';
+import { PlayerModule } from './player/player.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 
 @Module({
@@ -26,6 +27,7 @@ import { PrismaModule } from './prisma/prisma.module.js';
     CatalogModule,
     BundleModule,
     AuthModule,
+    PlayerModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

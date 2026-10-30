@@ -1,6 +1,6 @@
 # 03. Rotas do jogador
 
-- **Status:** rascunho
+- **Status:** concluída
 - **Depende de:** [01-auth-server](01-auth-server.md), [02-player-rules](02-player-rules.md)
 
 ## Contexto
@@ -30,14 +30,14 @@ Com a sessão conferida pelo `AuthGuard` ([01](01-auth-server.md)) e as regras d
 
 ## Critérios de aceite
 
-- [ ] Sem token, cada rota dá `401`.
-- [ ] Um usuário novo: `GET /v1/me` dá `player: null`; `POST /v1/me` com `"  Ana   Maria "` cria "Ana Maria" com 1000 moedas; um segundo `POST` dá `409`.
-- [ ] `POST /v1/me/starter` antes do Domador dá `409`; com `species_id` 2 (não inicial), `400`; com 1, `200` com Fagulho no nível 5, 4 ou menos Técnicas, HP cheio e `stats` coerentes com Genes e Temperamento; um segundo, `409`.
-- [ ] O `GET /v1/me` seguinte devolve o mesmo jogador, e o banco tem 1 criatura, 6 linhas de stats e as Técnicas.
-- [ ] Dois `POST /v1/me/starter` ao mesmo tempo terminam com uma criatura só (um `200` e um `409`).
-- [ ] `DELETE /v1/me` dá `204`, e o `GET /v1/me` seguinte, `player: null`.
-- [ ] Os e2e apagam os Domadores que criaram.
-- [ ] `npm run lint`, `npm run typecheck`, `npm test` e `npm run test:e2e` passam.
+- [x] Sem token, cada rota dá `401`.
+- [x] Um usuário novo: `GET /v1/me` dá `player: null`; `POST /v1/me` com `"  Ana   Maria "` cria "Ana Maria" com 1000 moedas; um segundo `POST` dá `409`.
+- [x] `POST /v1/me/starter` antes do Domador dá `409`; com `species_id` 2 (não inicial), `400`; com 1, `200` com Fagulho no nível 5, 4 ou menos Técnicas, HP cheio e `stats` coerentes com Genes e Temperamento; um segundo, `409`.
+- [x] O `GET /v1/me` seguinte devolve o mesmo jogador, e o banco tem 1 criatura, 6 linhas de stats e as Técnicas.
+- [x] Dois `POST /v1/me/starter` ao mesmo tempo terminam com uma criatura só (um `200` e um `409`).
+- [x] `DELETE /v1/me` dá `204`, e o `GET /v1/me` seguinte, `player: null`.
+- [x] Os e2e apagam os Domadores que criaram.
+- [x] `npm run lint`, `npm run typecheck`, `npm test` e `npm run test:e2e` passam.
 
 ## Desenho técnico
 
@@ -62,8 +62,21 @@ cd server && npm test && npm run test:e2e
 
 ## Tarefas
 
-- [ ] e2e dos critérios; rodar e ver falhar.
-- [ ] `player.mapper` com teste (RF-07).
-- [ ] `PlayerService` e `PlayerController` (RF-01 a RF-06, RF-08); os e2e passam.
-- [ ] Documentação na Scalar.
-- [ ] Marcar esta spec e a tabela do README como `concluída`; commit `feat: rotas do jogador`.
+- [x] e2e dos critérios; rodar e ver falhar.
+- [x] `player.mapper` com teste (RF-07).
+- [x] `PlayerService` e `PlayerController` (RF-01 a RF-06, RF-08); os e2e passam.
+- [x] Documentação na Scalar.
+- [x] Marcar esta spec e a tabela do README como `concluída`; commit `feat: rotas do jogador`.
+
+## Decisões da implementação
+
+- **Transação:** a criatura, os stats e as Técnicas são gravados por uma escrita aninhada do Prisma, que já é uma transação só.
+- **Corridas:** as conferências de "já existe" dão a mensagem no caso comum; quem decide em dois pedidos simultâneos é o banco (chave primária de `players`; chave única `player_id + party_slot`). O erro `P2002` vira o mesmo `409`.
+- **Ordem das conferências do inicial:** sem Domador, já tem criatura, espécie fora dos iniciais. Um segundo inicial com uma espécie inválida dá `409`, não `400`.
+- **Ordem do learnset:** por nível e, no empate, por `skill_id`, a mesma ordem do catálogo que o cliente lê (`GET /v1/catalog`). `species_skills` não tem coluna de ordem.
+- **Normalização do nome:** qualquer sequência de espaço em branco (`\s+`) vira um espaço, como no cliente. Corpo sem `name`, ou com `name` que não é texto, dá a mesma mensagem de nome inválido.
+- **`created_at` e `caught_at`** saem de `toISOString()`, com milissegundos (`2026-10-30T12:00:00.000Z`). O cliente só guarda o texto.
+- **Sorteio:** `crypto.randomInt` aceita no máximo 2⁴⁸ − 1, e esse é o intervalo usado em `secureRandom`.
+- **Falta de um dos 6 stats** (na criatura ou na espécie) lança erro em vez de responder um número errado.
+- **`players.id`** recebe o `sub` do token. O `@default(uuid())` do schema continua lá; não precisou de migration.
+- **Conferência:** `npm run lint`, `npm run typecheck` e Prettier sem avisos; `npm test` com 118 testes; `npm run test:e2e` com 201, dos quais 23 desta fase. Depois dos e2e, `players`, `creature_instances`, `creature_instance_stats` e `creature_instance_skills` ficaram com 0 linhas.

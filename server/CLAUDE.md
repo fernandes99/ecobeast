@@ -14,6 +14,7 @@ server/
   src/prisma/            PrismaService (global)
   src/health/            GET /health
   src/auth/              login com Google (Supabase Auth), AuthGuard e @CurrentUser()
+  src/player/            o Domador do usuário logado (/v1/me)
   src/common/            peças compartilhadas pelas rotas
   src/catalog/           um módulo por recurso do catálogo
   src/domain/            regras puras de jogo (sem Nest nem Prisma)

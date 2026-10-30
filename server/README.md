@@ -35,6 +35,7 @@ npm run start:dev      # http://localhost:3100
 - `GET /health`: confere o servidor e o banco.
 - `GET /docs`: documentação da API (Scalar), onde dá para testar as rotas.
 - `GET /docs/openapi.json`: o documento OpenAPI.
+- `GET /v1/me`, `POST /v1/me`, `POST /v1/me/starter` e `DELETE /v1/me`: o Domador do usuário logado (exigem `Authorization: Bearer`).
 - `POST /v1/auth/google/start`: começa um login com Google; abra a `url` da resposta no navegador e pergunte em `POST /v1/auth/google/poll`.
 
 ## Banco
