@@ -24,7 +24,7 @@ var _errors: Array[String] = []
 func _init(base_url: String, cache_path: String = DEFAULT_CACHE_PATH) -> void:
 	_base_url = base_url.trim_suffix("/")
 	_cache_path = cache_path
-	# Grava aqui e renomeia, como o save: um fechamento no meio não corrompe a cópia.
+	# Grava aqui e renomeia: um fechamento no meio não corrompe a cópia.
 	_temp_path = cache_path.get_basename() + ".tmp.json"
 
 

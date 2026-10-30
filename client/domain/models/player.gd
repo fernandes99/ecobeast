@@ -1,7 +1,7 @@
 class_name Player
 extends RefCounted
 ## O Domador (.specs/onboarding/architecture.md, "Modelos").
-## to_dict/from_dict é o formato do save e da API.
+## from_dict lê o JSON da API.
 
 ## Nome já normalizado: 2 a 16 letras, números ou espaços.
 const NAME_PATTERN := "^[\\p{L}\\p{N} ]{2,16}$"
@@ -29,20 +29,6 @@ static func normalize_name(raw_name: String) -> String:
 ## Recebe o nome já normalizado.
 static func is_valid_name(normalized_name: String) -> bool:
 	return RegEx.create_from_string(NAME_PATTERN).search(normalized_name) != null
-
-
-func to_dict() -> Dictionary:
-	var party_dicts: Array[Dictionary] = []
-	for creature: CreatureInstance in party:
-		party_dicts.append(creature.to_dict())
-	return {
-		"id": id,
-		"name": name,
-		"level": level,
-		"coins": coins,
-		"created_at": created_at,
-		"party": party_dicts,
-	}
 
 
 static func from_dict(d: Dictionary) -> Player:

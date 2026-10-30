@@ -13,9 +13,5 @@ static func create(skill: int, pp: int) -> SkillSlot:
 	return slot
 
 
-func to_dict() -> Dictionary:
-	return {"skill_id": skill_id, "current_pp": current_pp}
-
-
 static func from_dict(d: Dictionary) -> SkillSlot:
 	return create(DictFields.get_int(d, "skill_id"), DictFields.get_int(d, "current_pp"))

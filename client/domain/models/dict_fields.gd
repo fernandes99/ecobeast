@@ -1,8 +1,8 @@
 class_name DictFields
 extends RefCounted
-## Leitura de campos de um Dictionary vindo de JSON (save local ou, no futuro,
-## resposta da API). O JSON do Godot lê todo número como float, e um campo pode
-## estar ausente ou null: nesses casos vale o padrão.
+## Leitura de campos de um Dictionary vindo do JSON da API. O JSON do Godot lê
+## todo número como float, e um campo pode estar ausente ou null: nesses casos
+## vale o padrão.
 
 
 static func get_int(d: Dictionary, key: String, default: int = 0) -> int:
@@ -33,10 +33,3 @@ static func get_dict(d: Dictionary, key: String) -> Dictionary:
 static func get_array(d: Dictionary, key: String) -> Array:
 	var value: Variant = d.get(key)
 	return value if value is Array else []
-
-
-## Para gravar ids opcionais: -1 vira null.
-static func id_or_null(id: int) -> Variant:
-	if id < 0:
-		return null
-	return id

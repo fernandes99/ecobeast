@@ -55,7 +55,7 @@ Godot: `OS.shell_open(url)` abre o navegador padrão do aparelho com o endereço
 ## Critérios de aceite
 
 - [x] Sem sessão, o jogo abre na tela de login; com sessão, abre como antes (nome, escolha ou Hub).
-- [ ] Passo do dono: no PC, "Entrar com Google" abre o navegador; depois de entrar, a página diz "Pronto!", e o jogo segue sozinho em até 2 s. Fechar e abrir o jogo de novo não pede login.
+- [x] Passo do dono: no PC, "Entrar com Google" abre o navegador; depois de entrar, a página diz "Pronto!", e o jogo segue sozinho em até 2 s. Fechar e abrir o jogo de novo não pede login.
 - [x] "Cancelar" durante a espera volta ao estado inicial, e o jogo para de perguntar ao servidor.
 - [x] Com o servidor parado, o toque em "Entrar com Google" mostra "Não foi possível conectar ao servidor." e "Tentar de novo".
 - [x] Com o `access_token` vencido e o `refresh_token` válido, o jogo renova sozinho; com os dois inválidos, volta à tela de login. (Conferido com um dublê do servidor; no jogo, as rotas com sessão só entram no boot na [05](05-client-player.md).)

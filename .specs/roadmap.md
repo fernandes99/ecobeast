@@ -8,7 +8,7 @@ O que vem depois do MVP de estrutura (entrada, escolha do inicial e Hub). Cada l
 | --- | ------------------- | --------------------------------------------------------------------------------------------------------- | -------------------------- | --------- |
 | 1   | [`backend-api`](backend-api/) | Banco no Supabase (todas as tabelas num `schema.prisma`), API NestJS de leitura do catálogo com docs Scalar; o jogo passa a ler o catálogo da API | MVP                        | concluída |
 | 1b  | [`visual-theme`](visual-theme/) | Paleta escura em todo o jogo e o Hub no layout do protótipo do dono, com espaços para as ilustrações | MVP                        | concluída |
-| 2   | [`auth-google`](auth-google/) | Login com Google pelo navegador (Supabase Auth via NestJS); o jogador passa a viver no servidor: criar Domador, escolher inicial e apagar progresso viram rotas do NestJS. Login nativo e "Entrar com a Apple" ficam para depois | backend-api                | em andamento |
+| 2   | [`auth-google`](auth-google/) | Login com Google pelo navegador (Supabase Auth via NestJS); o jogador passa a viver no servidor: criar Domador, escolher inicial e apagar progresso viram rotas do NestJS. Login nativo e "Entrar com a Apple" ficam para depois | backend-api                | concluída    |
 | 3   | `battle-core`       | Máquina de estados da batalha, dano, ordem do turno, status, IA simples — autoridade no servidor          | backend-api                | planejada |
 | 4   | `battle-screen`     | Tela de batalha (TELAS.md #5) ouvindo os eventos do battle-core                                           | battle-core                | planejada |
 | 5   | `wild-battle`       | Zonas, seleção de zona (TELAS.md #4) e encontros selvagens; tabelas `zones` e `zone_encounters`           | battle-screen              | planejada |
@@ -35,7 +35,7 @@ Evoluções por item, vínculo, horário, zona e troca; criação (breeding) e h
 | ----------------------------------------------------------------------- | ----------------------------------------------------------------------- |
 | O jogo é só online; não há modo offline                                 | Decisão do dono. Substitui o "save local criptografado" do GDD          |
 | O servidor é a autoridade das regras (stats, dano, captura, recompensas) | Evita trapaça e é pré-requisito de PvP e trocas                         |
-| No MVP as regras rodam no cliente, atrás de serviços com `await`        | As telas não mudam quando os serviços passarem a chamar a API           |
+| As telas chamam serviços com `await`, que falam com a API               | As telas não mudam quando uma regra muda no servidor                    |
 | O catálogo é modelado como tabelas relacionais desde o JSON estático   | O banco do backend nasce quase igual aos arquivos de `res://data/`      |
 | Monorepo: o jogo em `client/` e o servidor em `server/`                | Contrato da API e cliente mudam no mesmo commit; as specs ficam num lugar só. O Render publica só a pasta `server/` |
 | Backend em **NestJS** (TypeScript), com **Prisma** como ORM              | Estrutura em módulos e DTOs validados; Prisma é o ORM mais simples de começar |
@@ -43,11 +43,11 @@ Evoluções por item, vínculo, horário, zona e troca; criação (breeding) e h
 | O Godot conversa **só com o NestJS**; nunca com o banco nem com a API automática do Supabase | Com o servidor como autoridade, o cliente não pode gravar estado; o Supabase publica o schema `public` na API automática, então as tabelas ficam com RLS ligado e sem regras (ou num schema não publicado) |
 | O login é feito no Supabase Auth; o NestJS confere o token (JWT pelas chaves públicas do Supabase) | O token prova quem é o jogador sem o NestJS depender do SDK do Supabase nas regras |
 | As regras de jogo do servidor ficam num pacote TypeScript puro (sem Nest, sem banco), com testes | Espelha `res://domain/`; fórmula errada no servidor vira bug para todos, então ali há testes |
-| O contrato entre cliente e servidor é a API (OpenAPI gerado pelo Nest)  | O Godot não lê tipos TypeScript; o `HttpGameService` substitui o `LocalGameService` sem mudar as telas |
+| O contrato entre cliente e servidor é a API (OpenAPI gerado pelo Nest)  | O Godot não lê tipos TypeScript; o `ApiGameService` a chama sem que as telas saibam |
 
 ## Dúvidas globais em aberto
 
-- **Backend, o que falta decidir:** a stack está nas decisões acima. Ficam para o planejamento do `backend-api`: hospedagem do NestJS (candidato: Render, na mesma região do Supabase), quem é o dono do catálogo (decidido: o banco; o cliente baixa pela API com a `HttpDataSource`), o plano do Supabase para produção (o grátis pausa o projeto depois de uma semana sem uso) e o destino das regras de `res://domain/rules/` no cliente quando o servidor passar a decidir.
+- **Backend, o que falta decidir:** a stack está nas decisões acima. Ficam para o planejamento do `backend-api`: hospedagem do NestJS (candidato: Render, na mesma região do Supabase), quem é o dono do catálogo (decidido: o banco; o cliente baixa pela API com a `HttpDataSource`) e o plano do Supabase para produção (o grátis pausa o projeto depois de uma semana sem uso).
 - **Nível do Domador:** o Hub mostra o nível, mas o GDD não diz como ele sobe. No MVP fica fixo em 1.
 - **Curva Erratic:** citada no GDD sem fórmula. Fora do catálogo até ser definida.
 - **Estilo de arte:** as telas usam placeholders (forma na cor do elemento) até existir arte das 3 linhas iniciais.

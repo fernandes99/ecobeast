@@ -42,19 +42,13 @@ res://
     services/
       result.gd                Result: ok, data, error                                 (onboarding/01)
       game_service.gd          GameService (@abstract): ações do jogador               (onboarding/01)
-      local_game_service.gd    implementação local do MVP                              (onboarding/01)
-      player_repository.gd     PlayerRepository (@abstract): guardar o jogador         (onboarding/01)
-      local_player_repository.gd  user://save.json                                     (onboarding/01)
-    util/
-      uuid.gd                  Uuid.v4()                                               (onboarding/01)
+      api_game_service.gd      as ações pelas rotas do jogador                         (auth-google/05)
   domain/
     models/                    classes de dados (RefCounted, sem Node)
       element.gd  creature_species.gd  skill.gd  skill_effect.gd  creature_trait.gd
       temperament.gd  growth_rate.gd  learnset_entry.gd  evolution_rule.gd
       stat_block.gd                                                                    (game-data/01)
       creature_instance.gd  skill_slot.gd  player.gd  dict_fields.gd                   (onboarding/01)
-    rules/                     regras puras: recebem dados, devolvem resultado
-      stat_calculator.gd  xp_curve.gd  creature_factory.gd                             (onboarding/02)
   ui/
     theme/
       main_theme.tres          tema global                                            (foundation/02)
@@ -88,21 +82,21 @@ core/autoload/         GameData (catálogo, leitura) · Session/GameService (est
 core/data, auth, net, services    de onde vêm os dados e como o estado é guardado
    │  usam
    ▼
-domain/                modelos e regras puras
+domain/                modelos
 ```
 
 Regras:
 
-- **`domain/` não conhece Node, cena, autoload nem arquivo.** Cada regra recebe por parâmetro tudo de que precisa (espécie, learnset, `RandomNumberGenerator`…) e devolve o resultado. É o código que será reescrito no servidor, então precisa ser lido sozinho.
+- **`domain/` não conhece Node, cena, autoload nem arquivo.** São só as classes de dados; as regras de jogo moram no servidor (`server/src/domain/`).
 - **Catálogo se lê pelo `GameData`; estado do jogador só pelo `Session` / `GameService`.** Nenhuma tela abre JSON, `user://` ou `FileAccess`.
 - **Telas não calculam regras.** HP máximo, técnicas iniciais, recompensas: tudo vem pronto dos serviços.
 - **Salvar só ids**, nunca objetos do catálogo. `CreatureInstance` guarda `species_id`, não a espécie.
 
 ## Serviços e `Result`
 
-Todo método de serviço que no futuro será uma chamada à API:
+Todo método de serviço é uma chamada à API:
 
-- é chamado com `await`, mesmo que a implementação local seja imediata;
+- é chamado com `await`;
 - devolve um `Result` (`res://core/services/result.gd`):
 
 ```gdscript
@@ -119,7 +113,7 @@ static func failure(message: String) -> Result
 
 A tela confere `result.ok`; se falso, mostra `result.error` e mantém o jogador onde está.
 
-Classes "interface" usam `@abstract` (GDScript 4.5+): `DataSource`, `GameService` e `PlayerRepository` declaram os métodos, e as implementações os preenchem. O catálogo já vem da API pela `HttpDataSource` ([backend-api/07](../backend-api/07-client-remote-catalog.md)). `LocalGameService` e `LocalPlayerRepository` dão lugar a `ApiGameService` e `ApiPlayerRepository` quando o jogador for para o servidor, e só o ponto onde as instâncias são criadas muda.
+Classes "interface" usam `@abstract` (GDScript 4.5+): `DataSource` e `GameService` declaram os métodos, e as implementações os preenchem. O catálogo vem da API pela `HttpDataSource` ([backend-api/07](../backend-api/07-client-remote-catalog.md)), e o jogador, pelo `ApiGameService` ([auth-google/05](../auth-google/05-client-player.md)).
 
 ## Autoloads
 
@@ -145,7 +139,7 @@ A cena principal é `res://screens/main/main.tscn`: um `Control` de tela cheia c
 
 ## Boot
 
-`main.gd`, ao iniciar:
+`main.gd`, ao iniciar (antes, apaga os arquivos do save local antigo, [auth-google/05](../auth-google/05-client-player.md), RF-06):
 
 1. `await GameData.load_catalog()`, com "Conectando ao servidor…" na tela ([backend-api/07](../backend-api/07-client-remote-catalog.md)). Sem resposta do servidor, mostra "Não foi possível conectar ao servidor…" com "Tentar de novo". Com erro nos dados, mostra a lista na própria cena raiz e para (é erro de quem editou os dados, não do jogador).
 2. Sem sessão guardada (`Session.has_auth_session()` falso), abre `login` e para; o passo seguinte roda quando o `Session.logged_in` avisa que o login terminou ([auth-google/04](../auth-google/04-client-login.md)). `Api.session_lost` volta a `login` de qualquer tela.
@@ -153,7 +147,7 @@ A cena principal é `res://screens/main/main.tscn`: um `Control` de tela cheia c
 
 | Situação                              | Primeira tela      |
 | ------------------------------------- | ------------------ |
-| Não há jogador salvo                  | `title`            |
+| Não há jogador                        | `title`            |
 | Há jogador, sem criatura na equipe    | `starter_select`   |
 | Há jogador com equipe                 | `hub`              |
 

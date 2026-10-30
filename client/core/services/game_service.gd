@@ -2,9 +2,8 @@
 class_name GameService
 extends RefCounted
 ## As ações do jogador (.specs/onboarding/architecture.md, "Contrato do
-## GameService"). É o contrato que a API vai cumprir: chame sempre com await;
-## cada método devolve um Result com a mensagem de erro pronta para a tela.
-## Hoje: LocalGameService.
+## GameService"). Chame sempre com await; cada método devolve um Result com a
+## mensagem de erro pronta para a tela. Hoje: ApiGameService.
 
 
 ## data: o Player, ou null se ainda não existe.

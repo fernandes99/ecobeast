@@ -1,7 +1,7 @@
 class_name CreatureInstance
 extends RefCounted
 ## Um Ecobeast de um Domador (.specs/onboarding/architecture.md, "Modelos").
-## Guarda só ids do catálogo; to_dict/from_dict é o formato do save e da API.
+## Guarda só ids do catálogo; from_dict lê o JSON da API.
 
 var uid: String
 var species_id: int
@@ -11,7 +11,7 @@ var level: int = 1
 ## XP total acumulado.
 var current_xp: int = 0
 var current_hp: int = 0
-## Calculado pelo serviço (no futuro, pelo servidor); não entra no save.
+## Calculado pelo servidor a cada resposta.
 var stats := StatBlock.new()
 var genes := StatBlock.new()
 var training_points := StatBlock.new()
@@ -38,35 +38,6 @@ func display_name(species: CreatureSpecies) -> String:
 	return nickname if not nickname.is_empty() else species.name
 
 
-## Formato do save: tudo menos stats, que é recalculado ao carregar.
-func to_dict() -> Dictionary:
-	var skill_dicts: Array[Dictionary] = []
-	for slot: SkillSlot in skills:
-		skill_dicts.append(slot.to_dict())
-	return {
-		"uid": uid,
-		"species_id": species_id,
-		"nickname": nickname,
-		"level": level,
-		"current_xp": current_xp,
-		"current_hp": current_hp,
-		"genes": genes.to_dict(),
-		"training_points": training_points.to_dict(),
-		"temperament_id": temperament_id,
-		"trait_id": trait_id,
-		"gender": gender,
-		"is_prismatic": is_prismatic,
-		"bond": bond,
-		"skills": skill_dicts,
-		"status_condition_id": DictFields.id_or_null(status_condition_id),
-		"held_item_id": DictFields.id_or_null(held_item_id),
-		"original_player_id": original_player_id,
-		"caught_at": caught_at,
-		"caught_zone_id": DictFields.id_or_null(caught_zone_id),
-	}
-
-
-## Lê também "stats", quando vier (a API manda pronto).
 static func from_dict(d: Dictionary) -> CreatureInstance:
 	var creature := CreatureInstance.new()
 	creature.uid = DictFields.get_string(d, "uid")

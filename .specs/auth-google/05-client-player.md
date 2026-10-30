@@ -1,6 +1,6 @@
 # 05. Jogador pelo servidor
 
-- **Status:** rascunho
+- **Status:** concluída
 - **Depende de:** [03-player-api](03-player-api.md), [04-client-login](04-client-login.md)
 
 ## Contexto
@@ -44,12 +44,12 @@ O jogo já entra com a conta Google ([04](04-client-login.md)), e o servidor já
 
 - [ ] Passo do dono, com uma conta Google nova: login → nome → escolha do inicial → Hub com o inicial; fechar e abrir o jogo leva direto ao Hub com o mesmo inicial.
 - [ ] Passo do dono: a mesma conta em outro aparelho (ou depois de apagar `user://session.json` e entrar de novo) encontra o mesmo Domador e a mesma equipe.
-- [ ] No painel do Supabase, `players`, `creature_instances`, `creature_instance_stats` e `creature_instance_skills` têm as linhas do Domador criado.
-- [ ] Um nome repetido (segundo `POST`) e um inicial escolhido duas vezes mostram as mensagens do servidor nas telas.
-- [ ] "Apagar progresso" (debug) leva à tela do nome sem pedir login, e o banco não tem mais o Domador.
-- [ ] Um `user://save.json` antigo é apagado na abertura.
-- [ ] `grep` no cliente não encontra `LocalGameService`, `LocalPlayerRepository`, `CreatureFactory`, `StatCalculator`, `XpCurve` nem `save.json` fora do RF-06.
-- [ ] O jogo roda sem erros de script e o editor não mostra avisos.
+- [x] No banco, `players`, `creature_instances`, `creature_instance_stats` e `creature_instance_skills` têm as linhas do Domador criado. (Conferido por consulta do servidor de teste, não pelo painel.)
+- [x] Um nome repetido (segundo `POST`) e um inicial escolhido duas vezes mostram as mensagens do servidor nas telas.
+- [x] "Apagar progresso" (debug) leva à tela do nome sem pedir login, e o banco não tem mais o Domador.
+- [x] Um `user://save.json` antigo é apagado na abertura.
+- [x] `grep` no cliente não encontra `LocalGameService`, `LocalPlayerRepository`, `CreatureFactory`, `StatCalculator`, `XpCurve` nem `save.json` fora do RF-06.
+- [x] O jogo roda sem erros de script e sem avisos (conferido com `-d`, que mostra os avisos fora do editor).
 
 ## Desenho técnico
 
@@ -78,7 +78,16 @@ Para conferir o fluxo sem o Google, um script temporário (fora do repositório)
 
 ## Tarefas
 
-- [ ] `ApiGameService` e `Session` (RF-01, RF-02).
-- [ ] Remover o save local e as regras (RF-05, RF-06); "Apagar progresso" (RF-07); conferir `grep` e avisos.
-- [ ] Conferência com o servidor de teste e a cena temporária; apagar os dois.
-- [ ] Documentos (RF-08); marcar esta spec, a tabela do README e o roadmap como `concluída`; commit `feat: jogador pelo servidor`.
+- [x] `ApiGameService` e `Session` (RF-01, RF-02).
+- [x] Remover o save local e as regras (RF-05, RF-06); "Apagar progresso" (RF-07); conferir `grep` e avisos.
+- [x] Conferência com o servidor de teste e a cena temporária; apagar os dois.
+- [x] Documentos (RF-08); marcar esta spec, a tabela do README e o roadmap como `concluída`; commit `feat: jogador pelo servidor`.
+
+## Decisões da implementação
+
+- **`to_dict` saiu dos modelos**, com `DictFields.id_or_null`: só o save local os usava. O RF-05 não os listava, mas ficariam sem uso.
+- **`profile_debug_panel.gd` não mudou:** ele já chamava `Session.reset_progress()` e ia para `title`; trocar o serviço bastou para o RF-07.
+- **Resposta `200` sem o campo `player`** vira `Result.failure` com a mensagem de erro do servidor, em vez de parecer uma conta sem Domador e abrir a tela do nome.
+- **Mensagens do `GameService`:** "Não foi possível carregar seu progresso." e "Não foi possível apagar o progresso." eram do save local. Agora vale a mensagem do `ApiResponse`.
+- **Conferência:** 34 verificações numa cena temporária, contra a API real na porta 3198 com o `TokenVerifier` de `test/support/tokens.ts` e o banco de verdade, sem Google. Cobriu boot com os três arquivos antigos, nome, escolha, as mensagens do servidor nas telas, reabertura, falta de rede, "Apagar progresso" e as linhas do banco em cada passo; o servidor apagou o Domador de teste no fim. A cena rodou com um `client/override.cfg` temporário (pasta `user://` e `ecobeast/api/base_url` próprias), para não tocar na sessão nem no save do dono. Tudo foi apagado.
+- **Token real:** uma segunda cena temporária usou a sessão do dono no servidor de desenvolvimento: `GET /v1/me` deu `200` com o token do Supabase, e, com o vencimento forçado, a renovação trocou o token, regravou `session.json` e o `GET` seguinte deu `200`.

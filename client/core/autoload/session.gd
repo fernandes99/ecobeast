@@ -14,12 +14,8 @@ signal logged_in
 ## O último Player recebido do serviço, ou null se ainda não existe.
 var player: Player = null
 
-var _service: GameService
+var _service: GameService = ApiGameService.new()
 var _auth := AuthService.new()
-
-
-func _ready() -> void:
-	_service = LocalGameService.new(LocalPlayerRepository.new(), GameData.catalog)
 
 
 func has_auth_session() -> bool:

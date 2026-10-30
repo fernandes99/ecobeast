@@ -4,6 +4,8 @@ extends Control
 ## e Esc). (.specs/foundation/architecture.md, "Boot")
 
 const OFFLINE_MESSAGE := "Não foi possível conectar ao servidor. Confira sua internet e tente de novo."
+## O save de quando o jogador morava no aparelho (auth-google/05, RF-06).
+const OLD_SAVE_FILES: Array[String] = ["user://save.json", "user://save.tmp.json", "user://save.corrupted.json"]
 
 ## O "Tentar de novo" refaz só a etapa que falhou.
 var _catalog_loaded := false
@@ -15,7 +17,14 @@ func _ready() -> void:
 	%RetryButton.pressed.connect(_boot)
 	Session.logged_in.connect(_load_player)
 	Api.session_lost.connect(_open_login)
+	_delete_old_saves()
 	_boot()
+
+
+func _delete_old_saves() -> void:
+	for path: String in OLD_SAVE_FILES:
+		if FileAccess.file_exists(path):
+			DirAccess.remove_absolute(path)
 
 
 ## Gradiente vertical do fundo: BACKGROUND em cima, BACKGROUND_DEEP embaixo.

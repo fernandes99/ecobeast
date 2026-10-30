@@ -27,13 +27,6 @@ func total() -> int:
 	return hp + atk + def + sp_atk + sp_def + spd
 
 
-func to_dict() -> Dictionary:
-	var result: Dictionary = {}
-	for slug: String in SLUGS:
-		result[slug] = get_value(slug)
-	return result
-
-
 static func from_dict(values: Dictionary) -> StatBlock:
 	var block := StatBlock.new()
 	for slug: String in SLUGS:

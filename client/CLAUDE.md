@@ -10,10 +10,8 @@ res://
   core/auth/       AuthSession (a sessão no aparelho) e AuthService (login pelo navegador)
   core/data/       leitura do catálogo (da API) e validação
   core/net/        ApiResponse
-  core/services/   Result, GameService, PlayerRepository e as implementações locais
-  core/util/       utilitários que usam a API do motor (ex.: Uuid)
+  core/services/   Result, GameService e ApiGameService (as rotas do jogador)
   domain/models/   classes de dados (RefCounted, sem Node)
-  domain/rules/    regras puras: stats, XP, criação de criatura
   ui/theme/        tema, paleta e fontes
   ui/components/   componentes reutilizáveis (.tscn + .gd)
   ui/icons/        ícones SVG da interface, brancos (a moeda é colorida), tingidos pelo tema ou por modulate
@@ -25,9 +23,9 @@ Detalhes em `.specs/foundation/architecture.md`.
 
 ## Regras do cliente
 
-- **Camadas:** `domain/` não usa Node, autoload, arquivo nem `get_tree()` — recebe tudo por parâmetro, porque será reescrito no servidor. Telas leem o catálogo pelo `GameData` e o estado do jogador pelo `Session`; nunca abrem JSON nem `user://`.
+- **Camadas:** `domain/` não usa Node, autoload, arquivo nem `get_tree()` — são só classes de dados; as regras moram no servidor. Telas leem o catálogo pelo `GameData` e o estado do jogador pelo `Session`; nunca abrem JSON nem `user://`.
 - **Telas não calculam regras.** HP máximo, técnicas, recompensas vêm prontos dos serviços.
-- **Serviços** são chamados com `await` e devolvem `Result` (`ok`, `data`, `error`). Telas só falam com o `Session`, nunca com `GameService` ou `PlayerRepository`; com `ok` falso, mostram `error` e deixam o jogador onde está.
+- **Serviços** são chamados com `await` e devolvem `Result` (`ok`, `data`, `error`). Telas só falam com o `Session`, nunca com `GameService`; com `ok` falso, mostram `error` e deixam o jogador onde está.
 - **Rede e sessão:** chamadas ao servidor passam pelo `Api.request` (só a `HttpDataSource` tem o seu próprio `HTTPRequest`), com `authenticated = true` nas rotas do jogador. O `Api` guarda a sessão em `user://session.json`, renova sozinho e emite `session_lost` quando o servidor a recusa. O login acontece só no navegador: nenhuma chave do Supabase entra no cliente.
 - **Dados de design** (o catálogo) moram no banco do servidor. O jogo baixa tudo no boot por `GET /v1/catalog` (`HttpDataSource`), e as tabelas estão espelhadas em `core/data/catalog_schema.gd`. O jogo é só online: sem resposta do servidor, ele não entra.
 - **GDScript tipado:** declaração sem tipo é erro de script no projeto. Arquivos em `snake_case`, classes em `PascalCase`, nós acessados por `%NomeUnico`.
