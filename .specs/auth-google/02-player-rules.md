@@ -1,6 +1,6 @@
 # 02. Regras do inicial no servidor
 
-- **Status:** rascunho
+- **Status:** concluída
 - **Depende de:** [backend-api](../backend-api/)
 
 ## Contexto
@@ -19,11 +19,11 @@ Hoje o inicial é gerado no Godot (`res://domain/rules/`: `CreatureFactory`, `St
 ## Requisitos
 
 - **RF-01:** `xp-curve.ts`: `totalXpForLevel(xpMultiplier: number, level: number): number` = `floor(xpMultiplier · level³)`.
-- **RF-02:** `stat-calculator.ts`: `calculateStats(base, genes, training, level, temperament): StatBlock`, com `StatBlock = Record<StatSlug, number>`, `StatSlug` = `hp | attack | defense | sp_attack | sp_defense | speed` (os slugs da tabela `stats`) e `temperament = { increasedStat: StatSlug | null, decreasedStat: StatSlug | null }`:
+- **RF-02:** `stat-calculator.ts`: `calculateStats(base, genes, training, level, temperament): StatBlock`, com `StatBlock = Record<StatSlug, number>`, `StatSlug` = `hp | atk | def | sp_atk | sp_def | spd` (os slugs da tabela `stats`) e `temperament = { increasedStat: StatSlug | null, decreasedStat: StatSlug | null }`:
   - HP = `floor((2·base + genes + floor(treino/4)) · nível / 100) + nível + 10`;
   - outros = `floor((floor((2·base + genes + floor(treino/4)) · nível / 100) + 5) · T)`, com T = 1,1 no stat aumentado, 0,9 no diminuído e 1,0 nos demais (temperamento neutro: aumentado igual ao diminuído, ou ambos nulos).
   - A multiplicação por T usa inteiros (`floor(x · 11 / 10)` e `floor(x · 9 / 10)`), para não depender de arredondamento de ponto flutuante.
-- **RF-03:** `creature-factory.ts`: `createCreature(params, random): NewCreature`, onde `random: () => number` devolve um número em [0, 1) (em produção, `crypto.randomInt` adaptado; nos testes, uma sequência fixa). `params`: espécie (`id`, `genderRatio`, `baseStats`), `level`, o learnset (`skillId`, método `level_up` ou outro, `level`, na ordem por nível e depois pela ordem da tabela), o PP máximo de cada Técnica, os ids dos Traços **normais** da espécie, os Temperamentos (`id`, aumentado, diminuído) e o `xpMultiplier` da curva. `NewCreature`:
+- **RF-03:** `creature-factory.ts`: `createCreature(params, random): NewCreature`, onde `random: () => number` devolve um número em [0, 1) (em produção, `crypto.randomInt` adaptado; nos testes, uma sequência fixa). `params`: espécie (`id`, `genderRatio`, `baseStats`), `level`, o learnset (`skillId`, método `level_up` ou outro, `level`, que pode ser nulo, na ordem por nível e depois pela ordem da tabela), o PP máximo de cada Técnica, os ids dos Traços **normais** da espécie, os Temperamentos (`id`, aumentado, diminuído) e o `xpMultiplier` da curva. `NewCreature`:
   - `genes`: 0–31 sorteados por stat, na ordem dos slugs;
   - `temperamentId`: sorteado entre todos; `traitId`: sorteado entre os normais;
   - `gender`: `none` se `genderRatio < 0`; senão `male` com probabilidade `genderRatio`, `female` no resto;
@@ -34,11 +34,11 @@ Hoje o inicial é gerado no Godot (`res://domain/rules/`: `CreatureFactory`, `St
 
 ## Critérios de aceite
 
-- [ ] `totalXpForLevel(1.0, 5) = 125`, `(0.8, 5) = 100`, `(1.25, 5) = 156`.
-- [ ] Stats: base 39 de HP, Genes 31, Treino 0, nível 5 → 20; base 52 de ataque, Genes 0, nível 5 → 10 (neutro), 11 (aumentado), 9 (diminuído); Treino 252 soma `floor(252/4) = 63` antes da fórmula.
-- [ ] Com uma sequência fixa de `random`, `createCreature` dá sempre a mesma criatura, e cada campo bate com o esperado na mão.
-- [ ] Um learnset com 6 Técnicas até o nível 5 dá as 4 últimas; um com Técnica de método diferente de `level_up` não a inclui; `genderRatio = -1` dá `none`; Traço oculto nunca sai.
-- [ ] `npm run lint`, `npm run typecheck` e `npm test` passam.
+- [x] `totalXpForLevel(1.0, 5) = 125`, `(0.8, 5) = 100`, `(1.25, 5) = 156`.
+- [x] Stats: base 39 de HP, Genes 31, Treino 0, nível 5 → 20; base 52 de ataque, Genes 0, nível 5 → 10 (neutro), 11 (aumentado), 9 (diminuído); Treino 252 soma `floor(252/4) = 63` antes da fórmula.
+- [x] Com uma sequência fixa de `random`, `createCreature` dá sempre a mesma criatura, e cada campo bate com o esperado na mão.
+- [x] Um learnset com 6 Técnicas até o nível 5 dá as 4 últimas; um com Técnica de método diferente de `level_up` não a inclui; `genderRatio = -1` dá `none`; Traço oculto nunca sai.
+- [x] `npm run lint`, `npm run typecheck` e `npm test` passam.
 
 ## Desenho técnico
 
@@ -58,6 +58,16 @@ cd server && npm test
 
 ## Tarefas
 
-- [ ] Testes de `xp-curve` e `stat-calculator` com os valores dos critérios; rodar e ver falhar; implementar (RF-01, RF-02).
-- [ ] Testes de `creature-factory` com `random` fixo; rodar e ver falhar; implementar (RF-03, RF-04).
-- [ ] Marcar esta spec e a tabela do README como `concluída`; commit `feat: regras do inicial no servidor`.
+- [x] Testes de `xp-curve` e `stat-calculator` com os valores dos critérios; rodar e ver falhar; implementar (RF-01, RF-02).
+- [x] Testes de `creature-factory` com `random` fixo; rodar e ver falhar; implementar (RF-03, RF-04).
+- [x] Marcar esta spec e a tabela do README como `concluída`; commit `feat: regras do inicial no servidor`.
+
+## Decisões da implementação
+
+- **Slugs dos stats:** a primeira versão desta spec citava `attack`, `defense` etc. Os slugs da tabela `stats` e do JSON do cliente são `atk`, `def`, `sp_atk`, `sp_def` e `spd`, e foi o que ficou.
+- **`level` nulo:** a coluna `species_skills.level` aceita nulo (Técnicas ensináveis). Entrada sem nível nunca entra na criatura, mesmo com método `level_up`.
+- **Ordem dos sorteios:** Genes (na ordem de `STAT_SLUGS`), Temperamento, Traço e gênero. Espécie sem gênero não sorteia o gênero. É a mesma ordem do `CreatureFactory` do cliente.
+- **`maxPpBySkill`** é um `Map` (id da Técnica → PP máximo). O learnset não é reordenado aqui: a [03](03-player-api.md) o lê do banco na ordem certa.
+- **Catálogo incompleto:** lista de Temperamentos vazia, espécie sem Traço normal ou Técnica sem PP conhecido lançam erro com mensagem clara, em vez de gravar uma criatura pela metade.
+- **Mesma Técnica duas vezes:** não acontece por nível, porque a chave de `species_skills` é espécie + Técnica + método.
+- **Conferência:** além dos testes, um script temporário, apagado no fim, comparou `calculateStats` com o `StatCalculator` do cliente em 6.000 casos sorteados (36.000 stats, com Temperamentos neutros e não neutros): nenhuma diferença. `npm run lint` e `npm run typecheck` sem avisos; `npm test` com 113 testes; `npm run test:e2e` com 178.
