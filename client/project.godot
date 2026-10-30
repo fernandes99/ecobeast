@@ -20,6 +20,7 @@ config/icon="res://icon.svg"
 
 GameData="*res://core/autoload/game_data.gd"
 Router="*res://core/autoload/router.gd"
+Api="*res://core/autoload/api.gd"
 Session="*res://core/autoload/session.gd"
 
 [debug]

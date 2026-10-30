@@ -8,15 +8,39 @@ extends Node
 ## implementações são assíncronas; daí o @warning_ignore("redundant_await").
 
 signal player_changed
+## O login terminou: a cena raiz carrega o jogador e abre a primeira tela.
+signal logged_in
 
 ## O último Player recebido do serviço, ou null se ainda não existe.
 var player: Player = null
 
 var _service: GameService
+var _auth := AuthService.new()
 
 
 func _ready() -> void:
 	_service = LocalGameService.new(LocalPlayerRepository.new(), GameData.catalog)
+
+
+func has_auth_session() -> bool:
+	return Api.session != null
+
+
+func login() -> Result:
+	var result: Result = await _auth.login()
+	if result.ok:
+		logged_in.emit()
+	return result
+
+
+func cancel_login() -> void:
+	_auth.cancel()
+
+
+func logout() -> Result:
+	var result: Result = await _auth.logout()
+	_set_player(null)
+	return result
 
 
 func load_player() -> Result:

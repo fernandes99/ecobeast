@@ -1,7 +1,7 @@
 extends Control
-## Cena raiz do jogo: carrega o catálogo e o jogador, abre a primeira tela
-## dentro de %ScreenHost e trata o voltar (Android e Esc).
-## (.specs/foundation/architecture.md e .specs/onboarding/architecture.md, "Boot")
+## Cena raiz do jogo: carrega o catálogo, passa pelo login se preciso, carrega o
+## jogador, abre a primeira tela dentro de %ScreenHost e trata o voltar (Android
+## e Esc). (.specs/foundation/architecture.md, "Boot")
 
 const OFFLINE_MESSAGE := "Não foi possível conectar ao servidor. Confira sua internet e tente de novo."
 
@@ -13,6 +13,8 @@ func _ready() -> void:
 	%Background.texture = _background_gradient()
 	Router.set_host(%ScreenHost)
 	%RetryButton.pressed.connect(_boot)
+	Session.logged_in.connect(_load_player)
+	Api.session_lost.connect(_open_login)
 	_boot()
 
 
@@ -40,9 +42,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		Router.back()
 
 
-## Catálogo (do servidor) e depois o jogador; a etapa que falha mostra o erro.
+## Catálogo (do servidor), login e jogador; a etapa que falha mostra o erro.
 func _boot() -> void:
-	%LoadErrorView.visible = false
+	_hide_load_error()
 	if not _catalog_loaded:
 		%LoadingLabel.visible = true
 		var status: int = await GameData.load_catalog()
@@ -55,16 +57,37 @@ func _boot() -> void:
 			return
 		_catalog_loaded = true
 
+	if Session.has_auth_session():
+		_load_player()
+	else:
+		_open_login()
+
+
+## O fim do boot, também chamado quando o login termina.
+func _load_player() -> void:
 	var result: Result = await Session.load_player()
-	if not result.ok:
+	if result.ok:
+		_open_first_screen(Session.player)
+	elif Session.has_auth_session():
 		_show_load_error(result.error)
-		return
-	_open_first_screen(Session.player)
+	# Sem sessão, o Api.session_lost já levou à tela de login.
 
 
+func _open_login() -> void:
+	_hide_load_error()
+	Router.go_to(&"login")
+
+
+## O erro tampa o %ScreenHost, que pode ter a tela de login aberta.
 func _show_load_error(message: String) -> void:
 	%LoadErrorMessage.text = message
 	%LoadErrorView.visible = true
+	%ScreenHost.visible = false
+
+
+func _hide_load_error() -> void:
+	%LoadErrorView.visible = false
+	%ScreenHost.visible = true
 
 
 ## Sem jogador: entrada. Sem inicial: escolha. Com equipe: Hub.

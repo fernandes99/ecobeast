@@ -1,6 +1,6 @@
 # 04. Login no jogo
 
-- **Status:** rascunho
+- **Status:** concluída
 - **Depende de:** [01-auth-server](01-auth-server.md)
 
 ## Contexto
@@ -37,7 +37,7 @@ Godot: `OS.shell_open(url)` abre o navegador padrão do aparelho com o endereço
 - **RF-04:** `login() -> Result`, assíncrono: `POST /v1/auth/google/start`; abre a `url` com `OS.shell_open`; pergunta `POST /v1/auth/google/poll` a cada 2 s (`POLL_INTERVAL_S = 2.0`) até `200` (grava a sessão e devolve sucesso), `404`/`410` ("Não foi possível entrar. Tente de novo."), falha de rede repetida 3 vezes seguidas ("Não foi possível conectar ao servidor.") ou 5 minutos sem resposta (`LOGIN_TIMEOUT_S = 300`, "O login demorou demais. Tente de novo.").
 - **RF-05:** `cancel()`: o `login()` em andamento para de perguntar e devolve uma falha com `error` vazio (a tela volta ao estado inicial, sem mensagem).
 - **RF-06:** `logout() -> Result`: `POST /v1/auth/logout` (ignora falha de rede) e apaga a sessão.
-- **RF-07:** O `Session` expõe `has_auth_session() -> bool`, `login() -> Result`, `cancel_login()` e `logout() -> Result`; as telas continuam falando só com o `Session`.
+- **RF-07:** O `Session` expõe `has_auth_session() -> bool`, `login() -> Result`, `cancel_login()` e `logout() -> Result`, e o sinal `logged_in`, emitido quando o login termina; as telas continuam falando só com o `Session`.
 
 **Tela** — `res://screens/login/login_screen.tscn`/`.gd`, registrada como `&"login"`, dentro de um `SafeArea`, no tema escuro:
 
@@ -48,20 +48,20 @@ Godot: `OS.shell_open(url)` abre o navegador padrão do aparelho com o endereço
 **Boot e saída**
 
 - **RF-11:** `main.gd`: depois do catálogo, sem sessão (`Session.has_auth_session()` falso) abre `login`; com sessão, segue como hoje (carrega o jogador e abre `title`, `starter_select` ou `hub`).
-- **RF-12:** A tela de login, ao entrar, chama a mesma etapa do boot que carrega o jogador e abre a primeira tela.
+- **RF-12:** Quando o login termina, a cena raiz (ligada ao `Session.logged_in`) roda a mesma etapa do boot que carrega o jogador e abre a primeira tela.
 - **RF-13:** `Api.session_lost` leva o jogo para `login` (`Router.go_to`), de qualquer tela.
 - **RF-14:** O painel do Perfil (`profile_debug_panel`) ganha o botão "Sair da conta" (`OutlineButton`), em todo build, acima de "Apagar progresso": chama `Session.logout()` e vai para `login`.
 
 ## Critérios de aceite
 
-- [ ] Sem sessão, o jogo abre na tela de login; com sessão, abre como antes (nome, escolha ou Hub).
+- [x] Sem sessão, o jogo abre na tela de login; com sessão, abre como antes (nome, escolha ou Hub).
 - [ ] Passo do dono: no PC, "Entrar com Google" abre o navegador; depois de entrar, a página diz "Pronto!", e o jogo segue sozinho em até 2 s. Fechar e abrir o jogo de novo não pede login.
-- [ ] "Cancelar" durante a espera volta ao estado inicial, e o jogo para de perguntar ao servidor.
-- [ ] Com o servidor parado, o toque em "Entrar com Google" mostra "Não foi possível conectar ao servidor." e "Tentar de novo".
-- [ ] Com o `access_token` vencido e o `refresh_token` válido, o jogo renova sozinho; com os dois inválidos, volta à tela de login.
-- [ ] "Sair da conta" no Perfil volta à tela de login, e a próxima abertura pede login.
-- [ ] `user://session.json` não é legível como texto.
-- [ ] O jogo roda sem erros de script e o editor não mostra avisos.
+- [x] "Cancelar" durante a espera volta ao estado inicial, e o jogo para de perguntar ao servidor.
+- [x] Com o servidor parado, o toque em "Entrar com Google" mostra "Não foi possível conectar ao servidor." e "Tentar de novo".
+- [x] Com o `access_token` vencido e o `refresh_token` válido, o jogo renova sozinho; com os dois inválidos, volta à tela de login. (Conferido com um dublê do servidor; no jogo, as rotas com sessão só entram no boot na [05](05-client-player.md).)
+- [x] "Sair da conta" no Perfil volta à tela de login, e a próxima abertura pede login.
+- [x] `user://session.json` não é legível como texto.
+- [x] O jogo roda sem erros de script e o editor não mostra avisos.
 
 ## Desenho técnico
 
@@ -91,9 +91,22 @@ Uma cena temporária confere, contra o servidor real, o `start`, o `poll` penden
 
 ## Tarefas
 
-- [ ] `Api` e `ApiResponse` (RF-01, RF-02).
-- [ ] `AuthSession` (RF-03) e `AuthService` (RF-04 a RF-06); `Session` (RF-07).
-- [ ] Tela de login (RF-08 a RF-10).
-- [ ] Boot, `session_lost` e "Sair da conta" (RF-11 a RF-14).
-- [ ] Cena temporária e conferência; apagar a cena.
-- [ ] Documentos; marcar esta spec e a tabela do README como `concluída`; commit `feat: login no jogo`.
+- [x] `Api` e `ApiResponse` (RF-01, RF-02).
+- [x] `AuthSession` (RF-03) e `AuthService` (RF-04 a RF-06); `Session` (RF-07).
+- [x] Tela de login (RF-08 a RF-10).
+- [x] Boot, `session_lost` e "Sair da conta" (RF-11 a RF-14).
+- [x] Cena temporária e conferência; apagar a cena.
+- [x] Documentos; marcar esta spec e a tabela do README como `concluída`; commit `feat: login no jogo`.
+
+## Decisões da implementação
+
+- **`Session.logged_in`:** a spec dizia que a tela de login chamaria a etapa do boot. Essa etapa está na cena raiz, que uma tela não enxerga; por isso a tela só chama `Session.login()`, e a cena raiz escuta o sinal.
+- **Cancelar responde na hora:** `AuthService.login()` espera o sinal interno `_login_finished`, e o trabalho roda à parte, em `_run`. Sem isso, o "Cancelar" só valeria na próxima pergunta, até 2 s depois (ou 10 s com a rede lenta). Cada `login()` e `cancel()` muda um número de tentativa; um login antigo que acorda vê que não é mais o atual e para.
+- **Uma renovação por vez:** o `refresh_token` vale uma vez só, então duas chamadas simultâneas não podem renovar cada uma por si. Quem chega durante uma renovação espera o resultado dela.
+- **`401` depois de renovar:** se a chamada repetida com o token novo ainda voltar `401`, a sessão é dada como perdida (o RF-02 só falava da renovação recusada). Do contrário, o jogador ficaria preso numa tela de erro.
+- **Renovação com erro que não é `401`** (rede ou 5xx): a sessão fica, e a chamada devolve o erro. Queda de internet não desloga ninguém.
+- **Perguntas com outros erros** (5xx, `429`): contam como falha repetida, como a falha de rede; três seguidas encerram com a mensagem da última. Um `202` zera a conta.
+- **Navegador que não abre:** `OS.shell_open` com erro encerra na hora com "Não foi possível abrir o navegador.", em vez de esperar 5 minutos.
+- **Erro depois do login:** a tela de erro da cena raiz esconde o `%ScreenHost`, que pode estar com a tela de login aberta embaixo.
+- **Sem arquivo temporário:** ao contrário do catálogo, `session.json` é gravado direto. Um arquivo estragado no meio da escrita só pede login de novo.
+- **Conferência:** 64 verificações numa cena temporária, contra o servidor real (`start`, `poll` pendente, "Cancelar", limite de tempo) e contra um dublê em Node (renovação, sessão perdida, falhas de rede, sucesso). Os dois foram apagados. Para ver os avisos de script fora do editor: `godot --headless -d --path client --quit-after 60`.

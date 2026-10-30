@@ -99,7 +99,8 @@ Nos testes, o `SupabaseAuthClient` e o `TokenVerifier` são trocados por dublês
 ## Cliente: o que muda
 
 ```
-res://core/net/api_client.gd        HTTPRequest com JSON, Bearer, renovação e erros em pt-BR
+res://core/autoload/api.gd          autoload Api: HTTPRequest com JSON, Bearer e renovação
+res://core/net/api_response.gd      a resposta, com os erros em pt-BR
 res://core/auth/auth_session.gd     a sessão em user://session.json (ler, gravar, apagar)
 res://core/auth/auth_service.gd     começar o login, abrir o navegador, perguntar, sair
 res://core/services/api_game_service.gd   GameService pelas rotas do jogador
@@ -108,6 +109,6 @@ res://screens/login/                tela "Entrar com Google"
 
 - **Saem:** `LocalGameService`, `LocalPlayerRepository`, `PlayerRepository`, `res://domain/rules/` (`CreatureFactory`, `StatCalculator`, `XpCurve`), `res://core/util/uuid.gd` e o `user://save.json` (apagado na primeira abertura, se existir).
 - **Boot:** catálogo → sessão guardada? Não: tela de login. Sim: `GET /v1/me`; `401` sem conseguir renovar volta ao login; sem Domador: tela do nome; sem inicial: escolha; com equipe: Hub.
-- **Tela de login** (`login`): o logo, "Capture, treine e batalhe." e o botão "Entrar com Google". Depois do toque: "Continue no navegador…", um indicador de espera e "Cancelar". Falha ou 5 minutos sem resposta: a mensagem e "Tentar de novo".
+- **Tela de login** (`login`): o logo, "Capture, treine e batalhe." e o botão "Entrar com Google". Depois do toque: "Continue no navegador…", "Depois de entrar, volte para cá." e "Cancelar". Falha ou 5 minutos sem resposta: a mensagem e "Tentar de novo".
 - **Perfil** (placeholder): "Sair da conta" em todo build; "Apagar progresso" continua só no debug, agora pelo servidor.
 - O `Session` continua sendo a porta das telas: os métodos não mudam, só o serviço por trás (`ApiGameService`).

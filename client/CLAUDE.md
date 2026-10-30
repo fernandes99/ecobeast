@@ -6,8 +6,10 @@ O jogo, em **Godot 4.7 com GDScript**. Esta pasta é o projeto Godot: `res://` a
 
 ```
 res://
-  core/autoload/   GameData (catálogo), Router (telas), Session (jogador)
+  core/autoload/   GameData (catálogo), Router (telas), Api (HTTP e sessão), Session (jogador e login)
+  core/auth/       AuthSession (a sessão no aparelho) e AuthService (login pelo navegador)
   core/data/       leitura do catálogo (da API) e validação
+  core/net/        ApiResponse
   core/services/   Result, GameService, PlayerRepository e as implementações locais
   core/util/       utilitários que usam a API do motor (ex.: Uuid)
   domain/models/   classes de dados (RefCounted, sem Node)
@@ -26,6 +28,7 @@ Detalhes em `.specs/foundation/architecture.md`.
 - **Camadas:** `domain/` não usa Node, autoload, arquivo nem `get_tree()` — recebe tudo por parâmetro, porque será reescrito no servidor. Telas leem o catálogo pelo `GameData` e o estado do jogador pelo `Session`; nunca abrem JSON nem `user://`.
 - **Telas não calculam regras.** HP máximo, técnicas, recompensas vêm prontos dos serviços.
 - **Serviços** são chamados com `await` e devolvem `Result` (`ok`, `data`, `error`). Telas só falam com o `Session`, nunca com `GameService` ou `PlayerRepository`; com `ok` falso, mostram `error` e deixam o jogador onde está.
+- **Rede e sessão:** chamadas ao servidor passam pelo `Api.request` (só a `HttpDataSource` tem o seu próprio `HTTPRequest`), com `authenticated = true` nas rotas do jogador. O `Api` guarda a sessão em `user://session.json`, renova sozinho e emite `session_lost` quando o servidor a recusa. O login acontece só no navegador: nenhuma chave do Supabase entra no cliente.
 - **Dados de design** (o catálogo) moram no banco do servidor. O jogo baixa tudo no boot por `GET /v1/catalog` (`HttpDataSource`), e as tabelas estão espelhadas em `core/data/catalog_schema.gd`. O jogo é só online: sem resposta do servidor, ele não entra.
 - **GDScript tipado:** declaração sem tipo é erro de script no projeto. Arquivos em `snake_case`, classes em `PascalCase`, nós acessados por `%NomeUnico`.
 - Textos do jogador direto nas cenas e scripts (sem `tr`).
@@ -52,6 +55,9 @@ cd server && npm run start:dev
 
 # rodar o jogo sem janela por alguns frames (confere erros de script)
 godot --headless --path client --quit-after 30
+
+# o mesmo, mostrando também os avisos de script (-d liga o depurador)
+godot --headless -d --path client --quit-after 60
 ```
 
 O endereço da API é a configuração `ecobeast/api/base_url` do `project.godot` (padrão `http://localhost:3100`). No editor do Godot, abra (ou importe) o arquivo `client/project.godot`.

@@ -26,7 +26,13 @@ res://
     autoload/
       game_data.gd             GameData: catálogo carregado, consultas tipadas         (game-data/01)
       router.gd                Router: navegação em pilha                              (foundation/02)
-      session.gd               Session: jogador atual e serviços                       (onboarding/01)
+      api.gd                   Api: chamadas HTTP, sessão e renovação                  (auth-google/04)
+      session.gd               Session: jogador atual, serviços e login                (onboarding/01)
+    auth/
+      auth_session.gd          AuthSession: a sessão em user://session.json            (auth-google/04)
+      auth_service.gd          AuthService: login pelo navegador, cancelar e sair      (auth-google/04)
+    net/
+      api_response.gd          ApiResponse: code, data, ok, error                      (auth-google/04)
     data/
       data_source.gd           DataSource (@abstract): de onde vêm as tabelas          (game-data/01)
       http_data_source.gd      baixa o catálogo da API, com cópia para o 304          (backend-api/07)
@@ -59,6 +65,7 @@ res://
       creature_slot  tap_panel                                                        (hub/01)
   screens/                     uma pasta por tela (cena .tscn + script .gd)
     main/                      cena raiz, boot e ScreenHost                           (foundation/01, 02)
+    login/                                                                            (auth-google/04)
     placeholder/                                                                      (foundation/02)
     title/                                                                            (onboarding/01)
     starter_select/            tela, starter_card, confirm_panel                      (onboarding/02)
@@ -78,7 +85,7 @@ screens/, ui/          telas e componentes: só exibem e repassam toques
 core/autoload/         GameData (catálogo, leitura) · Session/GameService (estado do jogador) · Router
    │  usam
    ▼
-core/data, services    de onde vêm os dados e como o estado é guardado
+core/data, auth, net, services    de onde vêm os dados e como o estado é guardado
    │  usam
    ▼
 domain/                modelos e regras puras
@@ -122,13 +129,14 @@ Registrados em `project.godot`, nesta ordem (cada um entra na fase que o cria):
 | ---------- | ------------------------------- | --------------------------------------------------------------------- |
 | `GameData` | `res://core/autoload/game_data.gd` | Carrega e valida o catálogo; consultas como `get_species(id)`       |
 | `Router`   | `res://core/autoload/router.gd`    | Troca de telas em pilha                                             |
-| `Session`  | `res://core/autoload/session.gd`   | Guarda o `GameService` e o `Player` atual                           |
+| `Api`      | `res://core/autoload/api.gd`       | Chamadas HTTP com JSON; guarda a sessão e a renova                  |
+| `Session`  | `res://core/autoload/session.gd`   | Guarda o `GameService` e o `Player` atual; porta do login           |
 
 ## Navegação
 
 A cena principal é `res://screens/main/main.tscn`: um `Control` de tela cheia com um nó filho `ScreenHost`. O `Router` coloca as telas dentro do `ScreenHost`.
 
-- **Registro de telas:** dicionário no `Router` de id (`StringName`) para caminho da cena. Ids do MVP: `&"title"`, `&"starter_select"`, `&"hub"`, `&"placeholder"`.
+- **Registro de telas:** dicionário no `Router` de id (`StringName`) para caminho da cena. Ids: `&"login"`, `&"title"`, `&"starter_select"`, `&"hub"`, `&"placeholder"`.
 - **`go_to(id, params := {})`:** limpa a pilha e abre a tela. Usado quando não deve haver volta (ex.: depois de escolher o inicial).
 - **`push(id, params := {})`:** esconde a tela atual (sem destruir) e abre a nova por cima.
 - **`back()`:** destrói a tela do topo e mostra a anterior. Na última tela da pilha, não faz nada. Antes, se a tela do topo tiver `func handle_back() -> bool` e ele devolver `true`, a tela tratou o voltar sozinha (ex.: fechou um painel) e continua aberta.
@@ -140,7 +148,8 @@ A cena principal é `res://screens/main/main.tscn`: um `Control` de tela cheia c
 `main.gd`, ao iniciar:
 
 1. `await GameData.load_catalog()`, com "Conectando ao servidor…" na tela ([backend-api/07](../backend-api/07-client-remote-catalog.md)). Sem resposta do servidor, mostra "Não foi possível conectar ao servidor…" com "Tentar de novo". Com erro nos dados, mostra a lista na própria cena raiz e para (é erro de quem editou os dados, não do jogador).
-2. (a partir de [onboarding/01](../onboarding/01-title-and-tamer-name.md)) `await Session.load_player()` e decide a primeira tela:
+2. Sem sessão guardada (`Session.has_auth_session()` falso), abre `login` e para; o passo seguinte roda quando o `Session.logged_in` avisa que o login terminou ([auth-google/04](../auth-google/04-client-login.md)). `Api.session_lost` volta a `login` de qualquer tela.
+3. `await Session.load_player()` e decide a primeira tela:
 
 | Situação                              | Primeira tela      |
 | ------------------------------------- | ------------------ |
