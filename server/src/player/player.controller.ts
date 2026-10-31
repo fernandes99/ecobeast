@@ -107,6 +107,23 @@ export class PlayerController {
     };
   }
 
+  @Post('heal')
+  @HttpCode(200)
+  @ApiOperation({
+    summary: 'Curar a equipe',
+    description:
+      'O Refúgio: devolve HP e PP ao máximo e tira os status de toda a equipe, ' +
+      'de graça. Descarta a batalha aberta, sem gravar nada dela. Com a equipe ' +
+      'já curada, responde sem mudar nada.',
+  })
+  @ApiOkResponse({ type: PlayerResponseDto })
+  @ApiConflictResponse({
+    description: 'Sem Domador ou sem equipe: "Crie seu Domador primeiro."',
+  })
+  async heal(@CurrentUser() userId: string): Promise<PlayerResponseDto> {
+    return { player: await this.players.heal(userId) };
+  }
+
   @Patch('creatures/:uid')
   @ApiOperation({
     summary: 'Dar apelido a um Ecobeast',

@@ -1,6 +1,6 @@
 # 01. Rota de cura
 
-- **Status:** rascunho
+- **Status:** concluída
 - **Depende de:** [battle-screen/01-wild-encounter](../battle-screen/01-wild-encounter.md)
 
 ## Contexto
@@ -32,17 +32,17 @@ O fim de uma luta grava HP, PP e status em `creature_instances` e `creature_inst
 
 ## Critérios de aceite
 
-- [ ] Sem token, a rota dá `401`.
-- [ ] Sem Domador, `409` "Crie seu Domador primeiro."
-- [ ] Com duas criaturas feridas, com status e sem PP, as duas voltam com HP e PP máximos e sem status, e a resposta já mostra isso.
-- [ ] Uma criatura no Santuário continua com o HP, o PP e o status de antes.
-- [ ] As moedas continuam iguais.
-- [ ] Repetir a rota com a equipe curada responde `200` e não muda nada.
-- [ ] Com a equipe toda a 0 HP, `POST /v1/me/battle/wild` dá `409`; depois de curar, dá `201`.
-- [ ] Com uma luta aberta, curar faz `POST /v1/me/battle/action` responder `404`, e o HP continua o da cura.
-- [ ] Com uma falha no meio da gravação, nenhuma criatura muda.
-- [ ] A rota aparece em `/docs/openapi.json`, com o cadeado.
-- [ ] `npm run lint`, `npm run typecheck`, `npm test` e `npm run test:e2e` passam.
+- [x] Sem token, a rota dá `401`.
+- [x] Sem Domador, `409` "Crie seu Domador primeiro."
+- [x] Com duas criaturas feridas, com status e sem PP, as duas voltam com HP e PP máximos e sem status, e a resposta já mostra isso.
+- [x] Uma criatura no Santuário continua com o HP, o PP e o status de antes.
+- [x] As moedas continuam iguais.
+- [x] Repetir a rota com a equipe curada responde `200` e não muda nada.
+- [x] Com a equipe toda a 0 HP, `POST /v1/me/battle/wild` dá `409`; depois de curar, dá `201`.
+- [x] Com uma luta aberta, curar faz `POST /v1/me/battle/action` responder `404`, e o HP continua o da cura.
+- [x] Com uma falha no meio da gravação, nenhuma criatura muda.
+- [x] A rota aparece em `/docs/openapi.json`, com o cadeado.
+- [x] `npm run lint`, `npm run typecheck`, `npm test` e `npm run test:e2e` passam.
 
 ## Desenho técnico
 
@@ -72,5 +72,12 @@ cd server && npm run lint && npm run typecheck && npm test && npm run test:e2e
 
 ## Tarefas
 
-- [ ] Testes e2e da rota; ver falhar; serviço, controller e módulos (RF-01 a RF-09).
-- [ ] Marcar esta spec e a tabela do README como `concluída`; commit `feat: rota de cura do Refúgio`.
+- [x] Testes e2e da rota; ver falhar; serviço, controller e módulos (RF-01 a RF-09).
+- [x] Marcar esta spec e a tabela do README como `concluída`; commit `feat: rota de cura do Refúgio`.
+
+## Decisões da implementação
+
+- **Técnicas por `slot`:** a chave de `creature_instance_skills` é criatura + slot, então a cura grava por ela.
+- **A batalha sai depois da leitura e antes da escrita:** uma falha ao ler não perde a luta, e nenhuma ação chega entre o descarte e a gravação. Se a gravação falhar, a luta já foi descartada; isso não prejudica o jogador, porque a tela de batalha não deixa chegar ao Refúgio com uma luta na tela.
+- **O teste da falha substitui o `$transaction`:** ele mostra que nada é gravado fora da transação. A garantia de desfazer uma transação pela metade é do banco e não foi testada aqui.
+- **Conferência:** 12 testes novos falharam antes da rota e passaram depois. `npm run lint` e `npm run typecheck` sem avisos; `npm test` com 359 testes; `npm run test:e2e` com 266.

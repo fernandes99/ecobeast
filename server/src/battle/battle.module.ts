@@ -12,5 +12,6 @@ import { BattleStore } from './battle.store.js';
     BattleService,
     { provide: BattleStore, useFactory: () => new BattleStore() },
   ],
+  exports: [BattleStore],
 })
 export class BattleModule {}

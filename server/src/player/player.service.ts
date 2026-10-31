@@ -4,6 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { BattleStore } from '../battle/battle.store.js';
 import { secureRandom } from '../common/secure-random.js';
 import { createCreature } from '../domain/rules/creature-factory.js';
 import { STAT_SLUGS } from '../domain/rules/types.js';
@@ -11,7 +12,7 @@ import { Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { loadCreatureBlueprint } from './creature-params.js';
 import { INVALID_NAME, PlayerDto } from './player.dto.js';
-import { PLAYER_INCLUDE, toPlayerDto } from './player.mapper.js';
+import { creatureStats, PLAYER_INCLUDE, toPlayerDto } from './player.mapper.js';
 
 const NAME_PATTERN = /^[\p{L}\p{N} ]{2,16}$/u;
 const START_COINS = 1000;
@@ -22,6 +23,17 @@ const NO_PLAYER = 'Crie seu Domador primeiro.';
 const STARTER_TAKEN = 'Você já escolheu seu Ecobeast.';
 const NOT_A_STARTER = 'Esse Ecobeast não pode ser escolhido.';
 export const CREATURE_NOT_FOUND = 'Ecobeast não encontrado.';
+
+/** A equipe, com o que a cura precisa para achar os máximos. */
+const HEAL_INCLUDE = {
+  creatures: {
+    ...PLAYER_INCLUDE.creatures,
+    include: {
+      ...PLAYER_INCLUDE.creatures.include,
+      skills: { include: { skill: { select: { maxPp: true } } } },
+    },
+  },
+} satisfies Prisma.PlayerInclude;
 
 /** Pontas sem espaço e sequências de espaço viram uma. */
 function normalizeName(raw: string): string {
@@ -38,7 +50,10 @@ function isUniqueViolation(error: unknown): boolean {
 /** O jogador no banco (.specs/auth-google/03-player-api.md). */
 @Injectable()
 export class PlayerService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly battles: BattleStore,
+  ) {}
 
   async get(userId: string): Promise<PlayerDto | null> {
     const player = await this.prisma.player.findUnique({
@@ -135,6 +150,40 @@ export class PlayerService {
       data: { nickname: nickname || null },
     });
     if (count === 0) throw new NotFoundException(CREATURE_NOT_FOUND);
+    return (await this.get(userId))!;
+  }
+
+  /**
+   * Devolve HP e PP ao máximo e tira os status da equipe. A batalha aberta sai
+   * antes da escrita: se terminasse depois, gravaria o HP antigo por cima.
+   */
+  async heal(userId: string): Promise<PlayerDto> {
+    const player = await this.prisma.player.findUnique({
+      where: { id: userId },
+      include: HEAL_INCLUDE,
+    });
+    if (!player || player.creatures.length === 0) {
+      throw new ConflictException(NO_PLAYER);
+    }
+
+    this.battles.delete(userId);
+    await this.prisma.$transaction(
+      player.creatures.flatMap((creature) => [
+        this.prisma.creatureInstance.updateMany({
+          where: { uid: creature.uid },
+          data: {
+            currentHp: creatureStats(creature).hp,
+            statusConditionId: null,
+          },
+        }),
+        ...creature.skills.map(({ slot, skill }) =>
+          this.prisma.creatureInstanceSkill.updateMany({
+            where: { creatureUid: creature.uid, slot },
+            data: { currentPp: skill.maxPp },
+          }),
+        ),
+      ]),
+    );
     return (await this.get(userId))!;
   }
 
