@@ -78,7 +78,7 @@ O MVP é o Pokémon Simulator modernizado: menus, batalha 1x1 por turnos, captur
 - [ ] Captura com 3 esferas e chance baseada em HP/status
 - [ ] XP, level up, aprender técnica nova (escolher qual esquecer)
 - [ ] Evolução por nível
-- [ ] Loja (esferas, poções, curas de status) e Refúgio (cura grátis)
+- [ ] Loja (esferas, poções, curas de status) e Refúgio (cura grátis por enquanto; depois custará moedas)
 - [ ] Santuário (armazenamento ilimitado, filtros por tipo/nível)
 - [ ] Bestiário (visto / capturado)
 - [ ] 8 Arenas + Liga final; desbloqueio secreto ao capturar o Ancestral

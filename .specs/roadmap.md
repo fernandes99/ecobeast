@@ -11,7 +11,7 @@ O que vem depois do MVP de estrutura (entrada, escolha do inicial e Hub). Cada l
 | 2   | [`auth-google`](auth-google/) | Login com Google pelo navegador (Supabase Auth via NestJS); o jogador passa a viver no servidor: criar Domador, escolher inicial e apagar progresso viram rotas do NestJS. Login nativo e "Entrar com a Apple" ficam para depois | backend-api                | concluída    |
 | 3   | [`battle-core`](battle-core/) | Máquina de estados da batalha, dano, ordem do turno, status, IA simples — autoridade no servidor | auth-google                | concluída |
 | 4   | [`battle-screen`](battle-screen/) | Tela de batalha (TELAS.md #5) ouvindo os eventos do battle-core, com encontro sorteado pelo servidor | battle-core                | concluída |
-| 4b  | `heal-station`      | Refúgio: curar HP, PP e status da equipe (TELAS.md #14); vem logo depois da tela de batalha, porque a luta mantém HP e PP e uma derrota total impede lutar de novo | battle-core                | planejada |
+| 4b  | [`heal-station`](heal-station/) | Refúgio: curar HP, PP e status da equipe (TELAS.md #14); vem logo depois da tela de batalha, porque a luta mantém HP e PP e uma derrota total impede lutar de novo | battle-core                | planejada |
 | 5   | `wild-battle`       | Zonas, seleção de zona (TELAS.md #4) e encontros selvagens; tabelas `zones` e `zone_encounters`           | battle-screen, heal-station | planejada |
 | 6   | `capture`           | Esferas de Vínculo, fórmula de captura e animação das 3 tremidas (TELAS.md #6)                            | wild-battle, inventory-shop | planejada |
 | 7   | `progression`       | XP, level up, aprender/esquecer técnica, Ascensão por nível (TELAS.md #7)                                 | battle-core                | planejada |
@@ -24,6 +24,7 @@ O que vem depois do MVP de estrutura (entrada, escolha do inicial e Hub). Cada l
 | 15  | `profile-settings`  | Perfil com estatísticas e configurações (TELAS.md #16)                                                    | auth-google                | planejada |
 | 16  | `content`           | 60–90 espécies, ~80 técnicas, ~20 traços, balanceamento                                                   | progression                | planejada |
 | 17  | `release-pipeline`  | Export Android/iOS, ícones, assinatura, envio às lojas                                                    | —                          | planejada |
+| 18  | `audio`             | Introdução dos sons do jogo, com o som de cura do Refúgio entre os primeiros                              | heal-station               | planejada |
 
 ## Pós-lançamento (do GDD)
 
@@ -50,6 +51,7 @@ Evoluções por item, vínculo, horário, zona e troca; criação (breeding) e h
 - **Backend, o que falta decidir:** a stack está nas decisões acima. Ficam para o planejamento do `backend-api`: hospedagem do NestJS (candidato: Render, na mesma região do Supabase), quem é o dono do catálogo (decidido: o banco; o cliente baixa pela API com a `HttpDataSource`) e o plano do Supabase para produção (o grátis pausa o projeto depois de uma semana sem uso).
 - **Fuga:** a chance fixa de 20% de falhar é provisória. Rever, talvez com um cálculo a partir do inimigo ([battle-core](battle-core/README.md)).
 - **Abandonar batalha:** fechar o app no meio da luta escapa de uma derrota. Aceito por enquanto; rever quando a batalha for guardada no banco.
+- **Preço do Refúgio:** a cura é de graça por enquanto, e o dono quer cobrar moedas depois. Falta definir o valor e o que acontece com quem não tem moedas, para não prender o jogador depois de uma derrota.
 - **Nível do Domador:** o Hub mostra o nível, mas o GDD não diz como ele sobe. No MVP fica fixo em 1.
 - **Curva Erratic:** citada no GDD sem fórmula. Fora do catálogo até ser definida.
 - **Estilo de arte:** as telas usam placeholders (forma na cor do elemento) até existir arte das 3 linhas iniciais.
