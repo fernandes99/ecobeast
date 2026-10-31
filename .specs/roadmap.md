@@ -9,16 +9,16 @@ O que vem depois do MVP de estrutura (entrada, escolha do inicial e Hub). Cada l
 | 1   | [`backend-api`](backend-api/) | Banco no Supabase (todas as tabelas num `schema.prisma`), API NestJS de leitura do catálogo com docs Scalar; o jogo passa a ler o catálogo da API | MVP                        | concluída |
 | 1b  | [`visual-theme`](visual-theme/) | Paleta escura em todo o jogo e o Hub no layout do protótipo do dono, com espaços para as ilustrações | MVP                        | concluída |
 | 2   | [`auth-google`](auth-google/) | Login com Google pelo navegador (Supabase Auth via NestJS); o jogador passa a viver no servidor: criar Domador, escolher inicial e apagar progresso viram rotas do NestJS. Login nativo e "Entrar com a Apple" ficam para depois | backend-api                | concluída    |
-| 3   | `battle-core`       | Máquina de estados da batalha, dano, ordem do turno, status, IA simples — autoridade no servidor          | backend-api                | planejada |
+| 3   | [`battle-core`](battle-core/) | Máquina de estados da batalha, dano, ordem do turno, status, IA simples — autoridade no servidor | auth-google                | em andamento |
 | 4   | `battle-screen`     | Tela de batalha (TELAS.md #5) ouvindo os eventos do battle-core                                           | battle-core                | planejada |
-| 5   | `wild-battle`       | Zonas, seleção de zona (TELAS.md #4) e encontros selvagens; tabelas `zones` e `zone_encounters`           | battle-screen              | planejada |
+| 4b  | `heal-station`      | Refúgio: curar HP, PP e status da equipe (TELAS.md #14); vem antes das zonas, porque a batalha mantém HP e PP | battle-core                | planejada |
+| 5   | `wild-battle`       | Zonas, seleção de zona (TELAS.md #4) e encontros selvagens; tabelas `zones` e `zone_encounters`           | battle-screen, heal-station | planejada |
 | 6   | `capture`           | Esferas de Vínculo, fórmula de captura e animação das 3 tremidas (TELAS.md #6)                            | wild-battle, inventory-shop | planejada |
 | 7   | `progression`       | XP, level up, aprender/esquecer técnica, Ascensão por nível (TELAS.md #7)                                 | battle-core                | planejada |
 | 8   | `npc-tamers`        | Domadores NPC com equipe fixa e recompensa em moedas; tabela `npc_tamers`                                 | battle-screen              | planejada |
 | 9   | `team-and-storage`  | Equipe com 6 slots reorganizáveis e Santuário com filtros e busca (TELAS.md #9 e #10)                     | capture                    | planejada |
 | 10  | [`creature-details`](creature-details/) | Tela de detalhes da criatura (TELAS.md #8); vem antes do `battle-core`, por decisão do dono | auth-google                | concluída |
 | 11  | `inventory-shop`    | Mochila e Loja (TELAS.md #12 e #13); tabelas `items`, `item_categories`, `inventory_items`                | backend-api                | planejada |
-| 12  | `heal-station`      | Refúgio: curar a equipe (TELAS.md #14)                                                                    | backend-api                | planejada |
 | 13  | `codex`             | Bestiário com visto/capturado, detalhe e linha evolutiva (TELAS.md #11)                                   | wild-battle                | planejada |
 | 14  | `arenas-league`     | 8 Arenas, emblemas, Liga final e desbloqueio secreto do Ancestral (TELAS.md #15)                          | npc-tamers                 | planejada |
 | 15  | `profile-settings`  | Perfil com estatísticas e configurações (TELAS.md #16)                                                    | auth-google                | planejada |
@@ -48,6 +48,8 @@ Evoluções por item, vínculo, horário, zona e troca; criação (breeding) e h
 ## Dúvidas globais em aberto
 
 - **Backend, o que falta decidir:** a stack está nas decisões acima. Ficam para o planejamento do `backend-api`: hospedagem do NestJS (candidato: Render, na mesma região do Supabase), quem é o dono do catálogo (decidido: o banco; o cliente baixa pela API com a `HttpDataSource`) e o plano do Supabase para produção (o grátis pausa o projeto depois de uma semana sem uso).
+- **Fuga:** a chance fixa de 20% de falhar é provisória. Rever, talvez com um cálculo a partir do inimigo ([battle-core](battle-core/README.md)).
+- **Abandonar batalha:** fechar o app no meio da luta escapa de uma derrota. Aceito por enquanto; rever quando a batalha for guardada no banco.
 - **Nível do Domador:** o Hub mostra o nível, mas o GDD não diz como ele sobe. No MVP fica fixo em 1.
 - **Curva Erratic:** citada no GDD sem fórmula. Fora do catálogo até ser definida.
 - **Estilo de arte:** as telas usam placeholders (forma na cor do elemento) até existir arte das 3 linhas iniciais.
