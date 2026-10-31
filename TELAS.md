@@ -6,7 +6,7 @@ Celular, orientação retrato. Estilo fantasia leve, colorido e amigável. 14 el
 2. **Escolha do inicial** — 3 criaturas (Fogo, Água, Flora) com nome, elemento e botão "Escolher".
 3. **Home** — topo: avatar, nível do domador, moedas. Centro: equipe de 6 (sprite, nome, nível, barra de HP). Ações: Explorar zona, Desafiar domador, Arenas, Loja, Refúgio, Santuário, Bestiário, Mochila. Barra inferior: Home, Equipe, Bestiário, Loja, Perfil.
 4. **Seleção de zona** — zonas com nível recomendado e cadeado nas bloqueadas.
-5. **Batalha** — inimigo em cima (nome, nível, elemento, HP, status); sua criatura embaixo (nome, nível, HP numérico, XP); log do turno; botões Lutar, Equipe, Mochila, Fugir; em Lutar, 4 técnicas com elemento (cor) e PP.
+5. **Batalha** — inimigo em cima (nome, nível, elemento, HP, status); sua criatura embaixo (nome, nível, HP numérico, XP); log do turno; botões Atacar, Itens, Equipe, Correr; em Atacar, 4 técnicas com elemento (cor) e PP.
 6. **Captura** — esfera tremendo 3 vezes, depois "Capturado!" ou "Escapou".
 7. **Fim de batalha** — XP, level up, moedas; pop-up de nova técnica (escolher qual esquecer); tela de evolução com botão cancelar.
 8. **Detalhes da criatura** — sprite grande, nome/apelido, nível, elementos, temperamento, traço, item; gráfico de atributos (HP, Atk, Def, SpAtk, SpDef, Spd); 4 técnicas.

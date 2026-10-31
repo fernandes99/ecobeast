@@ -1,6 +1,6 @@
 # 03. Tela de batalha
 
-- **Status:** aprovada
+- **Status:** concluída
 - **Depende de:** [02-battle-client](02-battle-client.md), [visual-theme](../visual-theme/README.md)
 
 ## Contexto
@@ -70,22 +70,23 @@ Os itens de "Fora do escopo" do [README](README.md).
 
 ## Critérios de aceite
 
-- [ ] Tocar em Explorar zona abre a batalha, e o Hub volta com a rolagem onde estava.
-- [ ] Os cartões, o histórico e os botões cabem em 720×1280 e em um aparelho com recorte, sem rolagem na tela.
-- [ ] Atacar abre as Técnicas com o PP certo, e Voltar não chama o servidor.
-- [ ] Uma Técnica mostra as linhas uma a uma, com o HP caindo junto, e os botões voltam no fim.
-- [ ] Depois do turno, os cartões batem com o JSON da resposta.
-- [ ] Um estágio alterado aparece como selo, e um status também.
-- [ ] Itens e Equipe não respondem ao toque.
-- [ ] Correr termina em "Você fugiu."; uma falha mostra "Não conseguiu fugir!", e o inimigo age.
-- [ ] Vencer mostra "Você venceu!", e o Hub volta com o HP e o PP gravados.
-- [ ] Com duas criaturas, um desmaio abre o painel, quem caiu fica desativado, e a escolhida entra sem o inimigo agir.
-- [ ] Perder mostra "Você perdeu.", e Explorar zona passa a mostrar "Cure sua equipe no Refúgio." com a saída para o Hub.
-- [ ] Sem PP, Atacar oferece só o Golpe de Esforço.
-- [ ] Com o servidor fora do ar no meio da luta, o erro aparece no histórico, e a luta continua quando ele volta.
-- [ ] Reiniciar o servidor no meio da luta mostra "Essa batalha não existe mais." e a saída.
-- [ ] Durante a luta, o voltar do Android não sai da tela.
-- [ ] O projeto abre sem erros nem avisos de script.
+- [x] Tocar em Explorar zona abre a batalha, e o Hub volta com a rolagem onde estava.
+- [x] Os cartões, o histórico e os botões cabem em 720×1280, sem rolagem na tela.
+- [ ] O mesmo vale em um aparelho com recorte (passo do dono).
+- [x] Atacar abre as Técnicas com o PP certo, e Voltar não chama o servidor.
+- [x] Uma Técnica mostra as linhas uma a uma, com o HP caindo junto, e os botões voltam no fim.
+- [x] Depois do turno, os cartões batem com o JSON da resposta.
+- [x] Um estágio alterado aparece como selo, e um status também.
+- [x] Itens e Equipe não respondem ao toque.
+- [x] Correr termina em "Você fugiu."; uma falha mostra "Não conseguiu fugir!", e o inimigo age.
+- [x] Vencer mostra "Você venceu!", e o Hub volta com o HP e o PP gravados.
+- [x] Com duas criaturas, um desmaio abre o painel, quem caiu fica desativado, e a escolhida entra sem o inimigo agir.
+- [x] Perder mostra "Você perdeu.", e Explorar zona passa a mostrar "Cure sua equipe no Refúgio." com a saída para o Hub.
+- [x] Sem PP, Atacar oferece só o Golpe de Esforço.
+- [x] Com o servidor fora do ar no meio da luta, o erro aparece no histórico, e a luta continua quando ele volta.
+- [x] Reiniciar o servidor no meio da luta mostra "Essa batalha não existe mais." e a saída.
+- [x] Durante a luta, o voltar do Android não sai da tela.
+- [x] O projeto abre sem erros nem avisos de script.
 
 ## Desenho técnico
 
@@ -95,6 +96,7 @@ Os itens de "Fora do escopo" do [README](README.md).
 - `battle_side_card.tscn` e `.gd`: um cartão. `set_creature(creature: BattleCreature, display_name: String)`.
 - `battle_skill_button.tscn` e `.gd`: uma Técnica ou "Vazio".
 - `next_creature_panel.tscn` e `.gd`: o painel do próximo.
+- `next_creature_row.tscn` e `.gd`: uma criatura desse painel.
 
 **Alterar**
 
@@ -125,9 +127,19 @@ godot --headless -d --path client --quit-after 60
 
 ## Tarefas
 
-- [ ] Registrar a tela e ligar o Hub (RF-01 a RF-03).
-- [ ] `flipped`, cartões e selos (RF-04 a RF-07).
-- [ ] Histórico e sequência do turno (RF-08 a RF-10, RF-17 a RF-20).
-- [ ] Botões, Técnicas e golpe de emergência (RF-11 a RF-16).
-- [ ] Voltar, próximo Ecobeast e fim (RF-21 a RF-27).
-- [ ] Remover os arquivos temporários; atualizar `TELAS.md`; marcar esta spec, a tabela do README e o roadmap como `concluída`; commit `feat: tela de batalha`.
+- [x] Registrar a tela e ligar o Hub (RF-01 a RF-03).
+- [x] `flipped`, cartões e selos (RF-04 a RF-07).
+- [x] Histórico e sequência do turno (RF-08 a RF-10, RF-17 a RF-20).
+- [x] Botões, Técnicas e golpe de emergência (RF-11 a RF-16).
+- [x] Voltar, próximo Ecobeast e fim (RF-21 a RF-27).
+- [x] Remover os arquivos temporários; atualizar `TELAS.md`; marcar esta spec, a tabela do README e o roadmap como `concluída`; commit `feat: tela de batalha`.
+
+## Decisões da implementação
+
+- **`next_creature_row` é um arquivo próprio:** cada linha do painel tem retrato, nome, nível e HP, e a spec não previa uma cena para ela.
+- **O erro de abertura não relê o jogador:** "Voltar ao Hub" só chama `load_player` depois que a luta existiu. Sem isso, sem rede, o jogador ficaria preso na tela da falha.
+- **`Router.back` depois de "Voltar ao Hub":** como o voltar não sai da luta, a tela guarda que já pode fechar, senão o próprio `handle_back` a seguraria.
+- **Itens e Equipe usam `OutlineButton`:** o estilo desativado do tema já mostra que não respondem, e "Em breve" fica na segunda linha do texto do botão.
+- **Um espaço no topo e na base da coluna:** sem recorte, o `SafeArea` não dá margem vertical, e o selo de turno e os botões encostavam nas bordas.
+- **Conferência:** uma cena temporária jogou lutas pelo Hub contra um servidor de teste, com 89 de 89 verificações, depois de falhar pela falta da tela: abertura, Técnicas, turno, selos, voltar, queda de rede, batalha perdida no servidor, fuga, próximo Ecobeast, sem PP, vitória, derrota e equipe sem HP. As 12 capturas em 405×720 foram revisadas. O jogo abriu sem erros nem avisos de script, e os arquivos temporários foram removidos.
+- **Falta do dono:** jogar no editor e no celular, conferir o ritmo das linhas e o recorte do aparelho.

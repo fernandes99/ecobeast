@@ -51,7 +51,7 @@ const TABS: Array[Dictionary] = [
 ## Rótulo da ação ou aba -> tela que ele abre. Rótulo fora daqui (Home) não
 ## abre nada; a ação e a aba com o mesmo rótulo abrem a mesma tela.
 const DESTINATIONS: Dictionary[String, Dictionary] = {
-	"Explorar zona": {"id": &"placeholder", "params": {"title": "Explorar zona"}},
+	"Explorar zona": {"id": &"battle", "params": {}},
 	"Desafiar Domador": {"id": &"placeholder", "params": {"title": "Desafiar Domador"}},
 	"Arenas": {"id": &"placeholder", "params": {"title": "Arenas"}},
 	"Loja": {"id": &"placeholder", "params": {"title": "Loja"}},

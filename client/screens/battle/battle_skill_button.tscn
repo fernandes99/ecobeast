@@ -1,0 +1,61 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://screens/battle/battle_skill_button.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://ui/components/element_badge.tscn" id="2_badge"]
+
+[node name="BattleSkillButton" type="Button"]
+custom_minimum_size = Vector2(0, 104)
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_type_variation = &"OutlineButton"
+script = ExtResource("1_script")
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_right = 16
+
+[node name="Details" type="VBoxContainer" parent="Margin"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+theme_override_constants/separation = 6
+
+[node name="NameLabel" type="Label" parent="Margin/Details"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"BoldLabel"
+theme_override_font_sizes/font_size = 24
+clip_text = true
+
+[node name="Info" type="HBoxContainer" parent="Margin/Details"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 10
+
+[node name="Badge" parent="Margin/Details/Info" instance=ExtResource("2_badge")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="PpLabel" type="Label" parent="Margin/Details/Info"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"SecondaryLabel"
+theme_override_font_sizes/font_size = 20
+horizontal_alignment = 2
+
+[node name="EmptyLabel" type="Label" parent="Margin"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "Vazio"
+horizontal_alignment = 1

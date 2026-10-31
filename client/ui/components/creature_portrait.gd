@@ -12,6 +12,12 @@ const INITIAL_SCALE := 0.45
 const SINGLE_ELEMENT_BORDER_DARKEN := 0.25
 
 @export var portrait_size: int = 160
+## Espelha o sprite. As artes olham para a direita; o placeholder não muda.
+@export var flipped: bool = false:
+	set(value):
+		flipped = value
+		if is_node_ready():
+			_sprite.flip_h = value
 
 var _species_id: int = -1
 var _fill_color := Color.TRANSPARENT
@@ -23,6 +29,7 @@ var _border_color := Color.TRANSPARENT
 
 func _ready() -> void:
 	custom_minimum_size = Vector2(portrait_size, portrait_size)
+	_sprite.flip_h = flipped
 	_initial.add_theme_font_size_override(&"font_size", roundi(portrait_size * INITIAL_SCALE))
 	_refresh()
 
