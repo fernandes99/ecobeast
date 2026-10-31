@@ -1,22 +1,17 @@
+import { applyAction, type BattleOutcome } from './engine.js';
+import { noStages } from './stages.js';
 import type {
+  BattleAction,
   BattleCatalog,
+  BattleEvent,
   BattleSkill,
+  BattleSkillEffect,
+  BattleState,
   Combatant,
   Random,
-  StageSlug,
 } from './types.js';
 
 /** Ajudantes dos testes da batalha; o código do jogo não usa este arquivo. */
-
-const NO_STAGES: Record<StageSlug, number> = {
-  atk: 0,
-  def: 0,
-  sp_atk: 0,
-  sp_def: 0,
-  spd: 0,
-  accuracy: 0,
-  evasion: 0,
-};
 
 /** Um Fagulho nível 5, sem Genes nem Temperamento, com HP cheio. */
 export function makeCombatant(overrides: Partial<Combatant> = {}): Combatant {
@@ -34,7 +29,7 @@ export function makeCombatant(overrides: Partial<Combatant> = {}): Combatant {
     isFeared: false,
     isTrapped: false,
     isProtected: false,
-    stages: { ...NO_STAGES },
+    stages: noStages(),
     skills: [],
     ...overrides,
   };
@@ -63,6 +58,21 @@ export function makeSkill(overrides: Partial<BattleSkill> = {}): BattleSkill {
   };
 }
 
+export function makeEffect(
+  overrides: Partial<BattleSkillEffect> = {},
+): BattleSkillEffect {
+  return {
+    effectSlug: 'heal',
+    chance: 100,
+    targetSlug: null,
+    statusSlug: null,
+    statSlug: null,
+    stages: null,
+    percent: null,
+    ...overrides,
+  };
+}
+
 /** `multipliers`: "atacante:defensor" → multiplicador. */
 export function makeCatalog(
   multipliers: Record<string, number> = {},
@@ -82,5 +92,49 @@ export function sequence(...values: number[]): Random {
     const value = queue.shift();
     if (value === undefined) throw new Error('Faltou um valor de sorteio.');
     return value;
+  };
+}
+
+/** Sempre o mesmo valor: com 0 toda chance vale, e com 0,9 quase nenhuma. */
+export function always(value: number): Random {
+  return () => value;
+}
+
+/** `applyAction` que falha o teste se a ação for recusada. */
+export function play(
+  state: BattleState,
+  action: BattleAction,
+  catalog: BattleCatalog,
+  random: Random = always(0.5),
+): BattleOutcome {
+  const outcome = applyAction(state, action, catalog, random);
+  if ('error' in outcome) throw new Error(outcome.error);
+  return outcome;
+}
+
+export function eventsOf<Type extends BattleEvent['type']>(
+  events: BattleEvent[],
+  type: Type,
+): Extract<BattleEvent, { type: Type }>[] {
+  return events.filter(
+    (event): event is Extract<BattleEvent, { type: Type }> =>
+      event.type === type,
+  );
+}
+
+/** Uma batalha em andamento, com a primeira criatura de cada lado em campo. */
+export function makeState(
+  player: Combatant | Combatant[],
+  enemy: Combatant | Combatant[],
+  overrides: Partial<BattleState> = {},
+): BattleState {
+  return {
+    phase: 'choose_action',
+    result: null,
+    turn: 1,
+    canFlee: true,
+    player: { team: [player].flat(), activeIndex: 0 },
+    enemy: { team: [enemy].flat(), activeIndex: 0 },
+    ...overrides,
   };
 }

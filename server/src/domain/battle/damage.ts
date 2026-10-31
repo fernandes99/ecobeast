@@ -4,12 +4,14 @@ import type {
   BattleSkill,
   BattleStatSlug,
   Combatant,
+  Random,
 } from './types.js';
 
 const STAB = 1.5;
 const CRITICAL = 1.5;
 const BURN_PHYSICAL = 0.5;
 const FURY = 1.5;
+const MIN_RANDOM_FACTOR = 0.85;
 
 /** Traços que aumentam um Elemento com o HP em 1/3 ou menos. */
 const FURY_ELEMENTS: Record<string, string> = {
@@ -17,6 +19,11 @@ const FURY_ELEMENTS: Record<string, string> = {
   tidal_fury: 'water',
   rooted_fury: 'flora',
 };
+
+/** O Aleatório da fórmula: de 0,85 a 1. */
+export function rollDamageFactor(random: Random): number {
+  return MIN_RANDOM_FACTOR + random() * (1 - MIN_RANDOM_FACTOR);
+}
 
 export interface DamageInput {
   attacker: Combatant;

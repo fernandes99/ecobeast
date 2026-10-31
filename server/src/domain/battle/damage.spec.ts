@@ -1,5 +1,6 @@
-import { calculateDamage, typeMultiplier } from './damage.js';
+import { calculateDamage, rollDamageFactor, typeMultiplier } from './damage.js';
 import {
+  always,
   BEAST,
   FIRE,
   FLORA,
@@ -32,6 +33,14 @@ function damage(
     randomFactor: options.randomFactor ?? 1,
   });
 }
+
+describe('rollDamageFactor', () => {
+  it('fica entre 0,85 e 1', () => {
+    expect(rollDamageFactor(always(0))).toBe(0.85);
+    expect(rollDamageFactor(always(0.5))).toBeCloseTo(0.925);
+    expect(rollDamageFactor(always(0.999999))).toBeLessThan(1);
+  });
+});
 
 describe('typeMultiplier', () => {
   const catalog = makeCatalog({ '1:3': 2, '1:2': 0.5, '4:5': 0 });

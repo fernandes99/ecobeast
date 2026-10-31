@@ -73,7 +73,7 @@ interface BattleState {
 2. **Fugir:** com sucesso (80%), a batalha termina com `fled`. Com falha, o inimigo age sozinho, e o turno segue para o passo 6.
 3. **Escolher** a ação do inimigo (IA).
 4. **Ordenar:** maior `priority`; depois, maior Velocidade efetiva; depois, sorteio. O golpe de emergência tem prioridade 0.
-5. **Executar** cada ação, na ordem, se o autor seguir de pé:
+5. **Executar** cada ação, na ordem, se o autor seguir de pé e, numa Técnica mirada no adversário, se ele também seguir:
    1. Verificar se pode agir: Amedrontado, depois Congelado, Adormecido, Paralisado e Confuso.
    2. Gastar 1 PP. Quem não pôde agir não gasta.
    3. Técnica de autoproteção marca `isProtected`, e a ação termina.
@@ -86,15 +86,16 @@ interface BattleState {
 7. **Conferir o fim:**
    - sem criaturas de pé no inimigo: `victory`, mesmo que o jogador também tenha caído;
    - sem criaturas de pé no jogador: `defeat`;
+   - a batalha segue: `turn + 1`;
    - ativa do inimigo caída: entra a próxima de pé, e o Traço de entrada vale;
    - ativa do jogador caída: fase `choose_next`;
-   - senão, `choose_action` e `turn + 1`.
+   - senão, `choose_action`.
 
 Na fase `choose_next`, a ação `switch` põe a criatura em campo, e o Traço de entrada vale, sem gastar turno nem dar ação ao inimigo. No começo da luta, o Traço de entrada dos dois vale antes do turno 1, primeiro o do jogador.
 
 ## Eventos
 
-A resposta traz a lista, na ordem em que aconteceu. Cada evento tem `type` e `side` (`player` ou `enemy`), quando se aplica.
+A resposta traz a lista, na ordem em que aconteceu. Cada evento tem `type` e `side` (`player` ou `enemy`), quando se aplica: é quem sofre o evento e, em `missed`, quem errou.
 
 | `type`            | Campos                                    |
 | ----------------- | ----------------------------------------- |

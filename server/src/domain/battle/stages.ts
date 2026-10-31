@@ -1,8 +1,20 @@
-import type { BattleStatSlug, Combatant } from './types.js';
+import type { BattleStatSlug, Combatant, StageSlug } from './types.js';
 
 const MIN_STAGE = -6;
 const MAX_STAGE = 6;
 const PARALYSIS_SPEED = 0.5;
+
+export function noStages(): Record<StageSlug, number> {
+  return {
+    atk: 0,
+    def: 0,
+    sp_atk: 0,
+    sp_def: 0,
+    spd: 0,
+    accuracy: 0,
+    evasion: 0,
+  };
+}
 
 export function clampStage(stage: number): number {
   return Math.min(MAX_STAGE, Math.max(MIN_STAGE, stage));

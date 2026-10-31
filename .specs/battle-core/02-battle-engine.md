@@ -1,6 +1,6 @@
 # 02. Motor do turno
 
-- **Status:** aprovada
+- **Status:** concluída
 - **Depende de:** [01-battle-rules](01-battle-rules.md)
 
 ## Contexto
@@ -71,29 +71,29 @@ Com as contas prontas, falta a máquina que roda um turno: recebe o estado e a a
 
 ## Critérios de aceite
 
-- [ ] Uma batalha com fonte de sorteio fixa termina sempre igual, com a mesma lista de eventos.
-- [ ] O estado recebido por `applyAction` não muda.
-- [ ] Atacar até vencer dá `victory`, com `battle_ended` como último evento.
-- [ ] Quem tem mais Velocidade age primeiro; Técnica de prioridade passa na frente.
-- [ ] Cada ação inválida do RF-03 devolve a sua mensagem, e o estado não muda.
-- [ ] Gastar PP: errar gasta; não poder agir não gasta.
-- [ ] Sem PP, `skill` é recusada, e `emergency` funciona e tira 1/8 do HP do autor; com PP, `emergency` é recusada.
-- [ ] Queimado e Envenenado perdem o valor certo no fim do turno; Fogo não queima, e uma criatura com status não recebe outro.
-- [ ] Adormecido não age nos turnos sorteados e age no turno em que acorda.
-- [ ] Congelado descongela com o sorteio abaixo de 20%.
-- [ ] Paralisado perde a vez com o sorteio abaixo de 25%.
-- [ ] Ciclone com o sorteio abaixo de 20% faz o alvo perder a vez, se ele ainda não agiu.
-- [ ] Casca Fechada bloqueia o golpe do turno e não bloqueia o do seguinte.
-- [ ] Rugido Feroz baixa o Atq do inimigo e, depois de 6 usos, dá `effect_failed`.
-- [ ] Seiva Vital cura metade do dano; Erupção Solar tira 33% do dano do autor.
-- [ ] Efeito de chance 10% vale com o sorteio abaixo de 0,1, e não acima.
-- [ ] Instinto e Brisa Ligeira dão +1 de Velocidade na hora certa.
-- [ ] Fugir com sucesso dá `fled`; com falha, o inimigo age, e o turno avança. Com `canFlee` falso ou Preso, é recusado.
-- [ ] Com duas criaturas, a primeira desmaia, a fase vira `choose_next`, o inimigo não age, e a segunda entra.
-- [ ] Todos caídos dão `defeat`; recuo que derruba os dois dá `victory`.
-- [ ] Com equipe de inimigos, o próximo entra sozinho.
-- [ ] A IA escolhe mais a Técnica de maior dano, em 10.000 sorteios, e nunca escolhe uma sem PP.
-- [ ] `npm run lint`, `npm run typecheck` e `npm test` passam.
+- [x] Uma batalha com fonte de sorteio fixa termina sempre igual, com a mesma lista de eventos.
+- [x] O estado recebido por `applyAction` não muda.
+- [x] Atacar até vencer dá `victory`, com `battle_ended` como último evento.
+- [x] Quem tem mais Velocidade age primeiro; Técnica de prioridade passa na frente.
+- [x] Cada ação inválida do RF-03 devolve a sua mensagem, e o estado não muda.
+- [x] Gastar PP: errar gasta; não poder agir não gasta.
+- [x] Sem PP, `skill` é recusada, e `emergency` funciona e tira 1/8 do HP do autor; com PP, `emergency` é recusada.
+- [x] Queimado e Envenenado perdem o valor certo no fim do turno; Fogo não queima, e uma criatura com status não recebe outro.
+- [x] Adormecido não age nos turnos sorteados e age no turno em que acorda.
+- [x] Congelado descongela com o sorteio abaixo de 20%.
+- [x] Paralisado perde a vez com o sorteio abaixo de 25%.
+- [x] Ciclone com o sorteio abaixo de 20% faz o alvo perder a vez, se ele ainda não agiu.
+- [x] Casca Fechada bloqueia o golpe do turno e não bloqueia o do seguinte.
+- [x] Rugido Feroz baixa o Atq do inimigo e, depois de 6 usos, dá `effect_failed`.
+- [x] Seiva Vital cura metade do dano; Erupção Solar tira 33% do dano do autor.
+- [x] Efeito de chance 10% vale com o sorteio abaixo de 0,1, e não acima.
+- [x] Instinto e Brisa Ligeira dão +1 de Velocidade na hora certa.
+- [x] Fugir com sucesso dá `fled`; com falha, o inimigo age, e o turno avança. Com `canFlee` falso ou Preso, é recusado.
+- [x] Com duas criaturas, a primeira desmaia, a fase vira `choose_next`, o inimigo não age, e a segunda entra.
+- [x] Todos caídos dão `defeat`; recuo que derruba os dois dá `victory`.
+- [x] Com equipe de inimigos, o próximo entra sozinho.
+- [x] A IA escolhe mais a Técnica de maior dano, em 10.000 sorteios, e nunca escolhe uma sem PP.
+- [x] `npm run lint`, `npm run typecheck` e `npm test` passam.
 
 ## Desenho técnico
 
@@ -104,6 +104,7 @@ Com as contas prontas, falta a máquina que roda um turno: recebe o estado e a a
 - `status.ts`, `effects.ts` e `traits.ts`.
 - `emergency.ts`: o golpe de emergência.
 - `ai.ts`: `chooseEnemyAction`.
+- `field.ts`: quem está em campo, quem é o adversário e o sorteio de uma chance.
 - `testing.ts`, só para os testes: combatente, catálogo mínimo e uma fonte de sorteio com a sequência dada.
 
 **Reaproveitar**
@@ -118,9 +119,25 @@ cd server && npm run lint && npm run typecheck && npm test
 
 ## Tarefas
 
-- [ ] `testing.ts`; testes de `startBattle` e de um turno simples; ver falhar; implementar.
-- [ ] Status principais e voláteis (RF-04 a RF-12).
-- [ ] Efeitos e Traços (RF-13 a RF-21).
-- [ ] Fuga, golpe de emergência e desmaio (RF-22 a RF-25).
-- [ ] IA (RF-26 a RF-28).
-- [ ] Marcar esta spec e a tabela do README como `concluída`; commit `feat: motor do turno da batalha`.
+- [x] `testing.ts`; testes de `startBattle` e de um turno simples; ver falhar; implementar.
+- [x] Status principais e voláteis (RF-04 a RF-12).
+- [x] Efeitos e Traços (RF-13 a RF-21).
+- [x] Fuga, golpe de emergência e desmaio (RF-22 a RF-25).
+- [x] IA (RF-26 a RF-28).
+- [x] Marcar esta spec e a tabela do README como `concluída`; commit `feat: motor do turno da batalha`.
+
+## Decisões da implementação
+
+- **Sem alvo de pé, a ação não acontece:** se o adversário caiu com o próprio recuo antes de quem age depois, a Técnica mirada nele não sai nem gasta PP. Técnica em si mesmo sai normalmente. A spec não previa o caso.
+- **`turn` avança ao fechar o turno, também em `choose_next`:** assim cada turno tem um número só, e `switch` não mexe nele. Mudou o passo 7 de [architecture.md](architecture.md#ordem-de-um-turno).
+- **`side` é quem sofre o evento:** em `blocked`, quem se protegeu; em `no_effect` e `effect_failed`, o alvo; em `missed`, quem errou.
+- **Amedrontar não gera `status_applied`:** o jogador só fica sabendo por `cannot_act`, porque em quem já agiu o efeito não muda nada.
+- **Drenar com HP cheio não gera evento:** o golpe funcionou, então `effect_failed` seria enganoso.
+- **`switch` fora de `choose_next` devolve "Esse Ecobeast não pode lutar.":** a troca voluntária não existe, e a tela não a oferece.
+- **Confuso dura N tentativas de agir:** cada uma sorteia o golpe em si mesmo, e `status_ended` vem depois da última.
+- **O golpe de emergência é uma `BattleSkill`:** passa pelo mesmo caminho das Técnicas, com o efeito interno `self_damage`. Por isso o Instinto vale ao derrotar com ele, e um golpe bloqueado não tira HP do autor.
+- **Chance certa não gasta sorteio:** `rollChance` só chama `random` quando a chance fica entre 0 e 1.
+- **Ações e eventos têm o formato da API:** `team_index` e `species_id` passam direto, sem tradução na [03](03-battle-api.md).
+- **Uma ação recusada volta como `{ error }`:** é um resultado esperado, não uma exceção.
+- **`field.ts` é novo:** os ajudantes de campo são usados por quase todos os arquivos, e ficar em `status.ts` criaria dependência circular.
+- **Conferência:** `npm run lint` e `npm run typecheck` sem avisos; `npm test` com 324 testes; `npm run test:e2e` com 213. Nenhum e2e toca no motor ainda: a [03](03-battle-api.md) o liga à API.

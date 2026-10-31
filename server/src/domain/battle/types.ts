@@ -72,3 +72,88 @@ export interface BattleCatalog {
   /** Slug do status → ids dos Elementos imunes. */
   statusImmunities: Map<string, number[]>;
 }
+
+export type BattlePhase = 'choose_action' | 'choose_next' | 'ended';
+export type BattleResult = 'victory' | 'defeat' | 'fled';
+export type SideSlug = 'player' | 'enemy';
+
+export interface BattleSide {
+  team: Combatant[];
+  activeIndex: number;
+}
+
+export interface BattleState {
+  phase: BattlePhase;
+  result: BattleResult | null;
+  turn: number;
+  /** Falso contra Domadores. */
+  canFlee: boolean;
+  player: BattleSide;
+  enemy: BattleSide;
+}
+
+/** Ações e eventos já têm o formato da API: passam sem tradução. */
+export type BattleAction =
+  | { type: 'skill'; slot: number }
+  | { type: 'emergency' }
+  | { type: 'flee' }
+  | { type: 'switch'; team_index: number };
+
+export type CannotActReason = 'fear' | 'freeze' | 'sleep' | 'paralysis';
+
+/** `side` é sempre quem sofre o evento; em `missed`, quem errou. */
+export type BattleEvent =
+  | { type: 'battle_started' }
+  | {
+      type: 'creature_entered';
+      side: SideSlug;
+      species_id: number;
+      level: number;
+      max_hp: number;
+    }
+  | { type: 'skill_used'; side: SideSlug; skill_id: number | null }
+  | { type: 'cannot_act'; side: SideSlug; reason: CannotActReason }
+  | { type: 'woke_up'; side: SideSlug }
+  | { type: 'thawed'; side: SideSlug }
+  | { type: 'confused_hit'; side: SideSlug; damage: number; hp: number }
+  | { type: 'missed'; side: SideSlug }
+  | { type: 'blocked'; side: SideSlug }
+  | { type: 'no_effect'; side: SideSlug }
+  | { type: 'effect_failed'; side: SideSlug }
+  | {
+      type: 'damage';
+      side: SideSlug;
+      damage: number;
+      hp: number;
+      multiplier: number;
+      is_critical: boolean;
+    }
+  | { type: 'recoil'; side: SideSlug; damage: number; hp: number }
+  | { type: 'healed'; side: SideSlug; amount: number; hp: number }
+  | { type: 'status_applied'; side: SideSlug; status: string }
+  | {
+      type: 'status_damage';
+      side: SideSlug;
+      status: string;
+      damage: number;
+      hp: number;
+    }
+  | { type: 'status_ended'; side: SideSlug; status: string }
+  | {
+      type: 'stat_changed';
+      side: SideSlug;
+      stat: StageSlug;
+      stages: number;
+      value: number;
+    }
+  | { type: 'fainted'; side: SideSlug }
+  | { type: 'flee_failed' }
+  | { type: 'battle_ended'; result: BattleResult };
+
+/** O que cada passo do turno recebe; `state` já é uma cópia. */
+export interface TurnContext {
+  state: BattleState;
+  catalog: BattleCatalog;
+  random: Random;
+  events: BattleEvent[];
+}
