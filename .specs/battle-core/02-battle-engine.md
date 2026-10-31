@@ -61,7 +61,7 @@ Com as contas prontas, falta a máquina que roda um turno: recebe o estado e a a
 - **RF-22:** Fugir: 20% de chance de falhar, numa constante `FLEE_FAIL_CHANCE`, com comentário de que a regra será revista. A falha gera `flee_failed`, e o inimigo age.
 - **RF-23:** Golpe de emergência: só com todas as Técnicas sem PP, com os valores de [architecture.md](architecture.md#valores-a-revisar), em `emergency.ts`. O dano em si mesmo vem depois do golpe, e ele pode desmaiar quem o usa.
 - **RF-24:** Quando a criatura ativa do jogador desmaia e sobra alguma, a fase passa a `choose_next`; `switch` põe a escolhida em campo com estágios zerados, sem gastar turno.
-- **RF-25:** Todas as criaturas do jogador caídas dão `defeat`, mesmo que o inimigo tenha caído no mesmo turno.
+- **RF-25:** Todas as criaturas do jogador caídas dão `defeat`. Se o inimigo também ficar sem criaturas no mesmo turno, o resultado é `victory`.
 
 **IA**
 
@@ -90,7 +90,7 @@ Com as contas prontas, falta a máquina que roda um turno: recebe o estado e a a
 - [ ] Instinto e Brisa Ligeira dão +1 de Velocidade na hora certa.
 - [ ] Fugir com sucesso dá `fled`; com falha, o inimigo age, e o turno avança. Com `canFlee` falso ou Preso, é recusado.
 - [ ] Com duas criaturas, a primeira desmaia, a fase vira `choose_next`, o inimigo não age, e a segunda entra.
-- [ ] Todos caídos dão `defeat`; recuo que derruba os dois dá `defeat`.
+- [ ] Todos caídos dão `defeat`; recuo que derruba os dois dá `victory`.
 - [ ] Com equipe de inimigos, o próximo entra sozinho.
 - [ ] A IA escolhe mais a Técnica de maior dano, em 10.000 sorteios, e nunca escolhe uma sem PP.
 - [ ] `npm run lint`, `npm run typecheck` e `npm test` passam.

@@ -31,6 +31,7 @@ Tomadas com o dono do projeto:
 | Fechar o app no meio da luta abandona a batalha, sem gravar nada                                | Aceito por enquanto, mesmo permitindo escapar de uma derrota            |
 | Fugir tem 20% de chance fixa de falhar, _a revisar_                                             | Regra provisória; talvez vire um cálculo com base no inimigo            |
 | A fuga que falha gasta o turno, e o inimigo age                                                 | Fugir precisa ter risco                                                |
+| Se os dois lados ficarem sem criaturas no mesmo turno, a vitória é do jogador                   | Decisão do dono                                                        |
 | Sem PP em todas as Técnicas, o Ecobeast usa um golpe fraco de emergência, com dano a si mesmo   | Sem isso, a luta poderia travar                                        |
 | Selvagem escolhe ao acaso entre as Técnicas com PP, com mais chance para as que causam mais dano | Imprevisível, mas não bobo; NPC e Mestres ganham IA própria depois      |
 

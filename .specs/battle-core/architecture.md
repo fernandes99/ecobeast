@@ -84,8 +84,8 @@ interface BattleState {
    8. Quem chegar a 0 HP desmaia. Um desmaio limpa todo o status.
 6. **Fim do turno:** Queimado e Envenenado perdem HP, na ordem em que as criaturas agiram; somem `isFeared` e `isProtected`.
 7. **Conferir o fim:**
-   - sem criaturas de pé no jogador: `defeat`, mesmo que o inimigo também tenha caído;
-   - sem criaturas de pé no inimigo: `victory`;
+   - sem criaturas de pé no inimigo: `victory`, mesmo que o jogador também tenha caído;
+   - sem criaturas de pé no jogador: `defeat`;
    - ativa do inimigo caída: entra a próxima de pé, e o Traço de entrada vale;
    - ativa do jogador caída: fase `choose_next`;
    - senão, `choose_action` e `turn + 1`.
