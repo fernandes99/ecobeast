@@ -10,6 +10,7 @@ import { createTestTokens, TestTokens } from './support/tokens.js';
 const FAGULHO = 1;
 const BRASALOBO = 2;
 const INVALID_NAME = 'Use de 2 a 16 letras, números ou espaços.';
+const CREATURE_NOT_FOUND = 'Ecobeast não encontrado.';
 const STAT_KEYS = ['atk', 'def', 'hp', 'sp_atk', 'sp_def', 'spd'];
 
 interface Creature {
@@ -18,6 +19,8 @@ interface Creature {
   nickname: string;
   level: number;
   current_xp: number;
+  level_xp: number;
+  next_level_xp: number | null;
   current_hp: number;
   stats: Record<string, number>;
   genes: Record<string, number>;
@@ -66,7 +69,17 @@ describe('Rotas do jogador (e2e)', () => {
       starter: (body: object) =>
         server().post('/v1/me/starter').set(auth).send(body),
       remove: () => server().delete('/v1/me').set(auth),
+      nickname: (uid: string, body: object) =>
+        server().patch(`/v1/me/creatures/${uid}`).set(auth).send(body),
     };
+  }
+
+  /** Um usuário novo com Domador e inicial; devolve o `uid` da criatura. */
+  async function userWithStarter() {
+    const user = await newUser();
+    await user.create({ name: 'Ana' }).expect(201);
+    const res = await user.starter({ species_id: FAGULHO }).expect(200);
+    return { user, uid: (res.body.player.party[0] as Creature).uid };
   }
 
   it('sem token, cada rota dá 401', async () => {
@@ -76,6 +89,7 @@ describe('Rotas do jogador (e2e)', () => {
       server().post('/v1/me').send({ name: 'Ana' }),
       server().post('/v1/me/starter').send({ species_id: FAGULHO }),
       server().delete('/v1/me'),
+      server().patch(`/v1/me/creatures/${randomUUID()}`).send({ nickname: '' }),
     ]);
     for (const res of responses) {
       expect(res.status).toBe(401);
@@ -272,6 +286,84 @@ describe('Rotas do jogador (e2e)', () => {
     expect(count).toBe(1);
   });
 
+  it('o inicial nasce no começo do nível e traz o XP do próximo', async () => {
+    const user = await newUser();
+    await user.create({ name: 'Ana' }).expect(201);
+    const res = await user.starter({ species_id: FAGULHO }).expect(200);
+    const creature = res.body.player.party[0] as Creature;
+
+    expect(creature.level_xp).toBe(creature.current_xp);
+    expect(creature.next_level_xp).toBeGreaterThan(creature.level_xp);
+  });
+
+  it('grava o apelido normalizado e devolve o jogador', async () => {
+    const { user, uid } = await userWithStarter();
+
+    const res = await user
+      .nickname(uid, { nickname: '  Chama   Viva ' })
+      .expect(200);
+    expect(res.body.player.party[0].nickname).toBe('Chama Viva');
+
+    const read = await user.read().expect(200);
+    expect(read.body.player).toEqual(res.body.player);
+  });
+
+  it.each([
+    ['vazio', ''],
+    ['só de espaços', '   '],
+  ])('apelido %s remove o apelido', async (_case, nickname) => {
+    const { user, uid } = await userWithStarter();
+    await user.nickname(uid, { nickname: 'Brasa' }).expect(200);
+
+    const res = await user.nickname(uid, { nickname }).expect(200);
+
+    expect(res.body.player.party[0].nickname).toBe('');
+    const row = await prisma.creatureInstance.findUniqueOrThrow({
+      where: { uid },
+    });
+    expect(row.nickname).toBeNull();
+  });
+
+  it.each([
+    ['curto demais', 'A'],
+    ['longo demais', 'A'.repeat(17)],
+    ['com símbolo', 'Fogo!'],
+  ])('recusa apelido %s', async (_case, nickname) => {
+    const { user, uid } = await userWithStarter();
+    const res = await user.nickname(uid, { nickname }).expect(400);
+    expect(res.body.message).toBe(INVALID_NAME);
+  });
+
+  it('recusa corpo sem apelido ou com apelido que não é texto', async () => {
+    const { user, uid } = await userWithStarter();
+    const empty = await user.nickname(uid, {}).expect(400);
+    expect(empty.body.message).toBe(INVALID_NAME);
+    const number = await user.nickname(uid, { nickname: 5 }).expect(400);
+    expect(number.body.message).toBe(INVALID_NAME);
+  });
+
+  it('a criatura de outro Domador dá 404 e não muda', async () => {
+    const { uid } = await userWithStarter();
+    const { user: other } = await userWithStarter();
+
+    const res = await other.nickname(uid, { nickname: 'Roubado' }).expect(404);
+
+    expect(res.body.message).toBe(CREATURE_NOT_FOUND);
+    const row = await prisma.creatureInstance.findUniqueOrThrow({
+      where: { uid },
+    });
+    expect(row.nickname).toBeNull();
+  });
+
+  it.each([
+    ['que não existe', randomUUID()],
+    ['malformado', 'abc'],
+  ])('uid %s dá 404', async (_case, uid) => {
+    const { user } = await userWithStarter();
+    const res = await user.nickname(uid, { nickname: 'Brasa' }).expect(404);
+    expect(res.body.message).toBe(CREATURE_NOT_FOUND);
+  });
+
   it('um Domador não enxerga o outro', async () => {
     const ana = await newUser();
     const bia = await newUser();
@@ -312,5 +404,11 @@ describe('Rotas do jogador (e2e)', () => {
     expect(doc.body.paths['/v1/me/starter'].post.security).toEqual([
       { bearer: [] },
     ]);
+    const nickname = doc.body.paths['/v1/me/creatures/{uid}'].patch;
+    expect(nickname.tags).toEqual(['Jogador']);
+    expect(nickname.security).toEqual([{ bearer: [] }]);
+    const creature = doc.body.components.schemas.CreatureDto.properties;
+    expect(creature.level_xp.description).toBeTruthy();
+    expect(creature.next_level_xp.nullable).toBe(true);
   });
 });

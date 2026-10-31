@@ -38,6 +38,7 @@ function creature(overrides: Partial<CreatureRow> = {}): CreatureRow {
       { creatureUid: 'c1', slot: 2, skillId: 9, currentPp: 20 },
     ],
     species: {
+      growthRate: { xpMultiplier: 1 },
       stats: SLUGS.map((slug) => ({
         baseValue: slug === 'hp' ? 39 : 52,
         stat: { slug },
@@ -83,6 +84,8 @@ describe('toPlayerDto', () => {
       nickname: '',
       level: 5,
       current_xp: 125,
+      level_xp: 125,
+      next_level_xp: 216,
       current_hp: 12,
       stats: { hp: 20, atk: 11, def: 9, sp_atk: 10, sp_def: 10, spd: 10 },
       genes: { hp: 31, atk: 0, def: 0, sp_atk: 0, sp_def: 0, spd: 0 },
@@ -124,6 +127,25 @@ describe('toPlayerDto', () => {
     const [dto] = toPlayerDto(player([row])).party;
     // floor(200 · 5 / 100) + 5 = 15; aumentado: 16.
     expect(dto!.stats.atk).toBe(16);
+  });
+
+  it('calcula o XP do nível com a curva da espécie', () => {
+    const row = creature();
+    row.species.growthRate.xpMultiplier = 1.25;
+    const [dto] = toPlayerDto(player([row])).party;
+    expect(dto!.level_xp).toBe(156);
+    expect(dto!.next_level_xp).toBe(270);
+  });
+
+  it('no nível 99, o próximo nível ainda existe', () => {
+    const [dto] = toPlayerDto(player([creature({ level: 99 })])).party;
+    expect(dto!.next_level_xp).toBe(1_000_000);
+  });
+
+  it('no nível máximo, não há próximo nível', () => {
+    const [dto] = toPlayerDto(player([creature({ level: 100 })])).party;
+    expect(dto!.level_xp).toBe(1_000_000);
+    expect(dto!.next_level_xp).toBeNull();
   });
 
   it('avisa se faltar um stat da criatura', () => {

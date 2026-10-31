@@ -4,6 +4,10 @@ import {
   Delete,
   Get,
   HttpCode,
+  NotFoundException,
+  Param,
+  ParseUUIDPipe,
+  Patch,
   Post,
   UseGuards,
 } from '@nestjs/common';
@@ -13,6 +17,7 @@ import {
   ApiConflictResponse,
   ApiCreatedResponse,
   ApiNoContentResponse,
+  ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
   ApiTags,
@@ -26,8 +31,9 @@ import {
   CreatePlayerBodyDto,
   MaybePlayerResponseDto,
   PlayerResponseDto,
+  SetNicknameBodyDto,
 } from './player.dto.js';
-import { PlayerService } from './player.service.js';
+import { CREATURE_NOT_FOUND, PlayerService } from './player.service.js';
 
 /** O Domador do usuário logado (.specs/auth-google/03-player-api.md). */
 @ApiTags('Jogador')
@@ -98,6 +104,37 @@ export class PlayerController {
   ): Promise<PlayerResponseDto> {
     return {
       player: await this.players.chooseStarter(userId, body.species_id),
+    };
+  }
+
+  @Patch('creatures/:uid')
+  @ApiOperation({
+    summary: 'Dar apelido a um Ecobeast',
+    description:
+      'Grava o apelido de uma criatura deste Domador, da equipe ou do Santuário. Vazio remove o apelido.',
+  })
+  @ApiOkResponse({ type: PlayerResponseDto })
+  @ApiBadRequestResponse({
+    description:
+      'Apelido inválido: "Use de 2 a 16 letras, números ou espaços."',
+  })
+  @ApiNotFoundResponse({
+    description: `Criatura inexistente ou de outro Domador: "${CREATURE_NOT_FOUND}"`,
+  })
+  async setNickname(
+    @CurrentUser() userId: string,
+    // Um uid malformado é só uma criatura que não existe; sem o pipe, viraria erro do banco.
+    @Param(
+      'uid',
+      new ParseUUIDPipe({
+        exceptionFactory: () => new NotFoundException(CREATURE_NOT_FOUND),
+      }),
+    )
+    uid: string,
+    @Body() body: SetNicknameBodyDto,
+  ): Promise<PlayerResponseDto> {
+    return {
+      player: await this.players.setNickname(userId, uid, body.nickname),
     };
   }
 

@@ -70,6 +70,7 @@ Todas exigem a sessão. O JSON segue o contrato de [onboarding/architecture.md](
 | `GET /v1/me`             | —                      | `200 { "player": Player \| null }`         | `401`                                                                                                                                           |
 | `POST /v1/me`            | `{ "name": "…" }`      | `201 { "player": Player }`, sem equipe     | `400` "Use de 2 a 16 letras, números ou espaços." · `409` "Você já tem um Domador."                                                             |
 | `POST /v1/me/starter`    | `{ "species_id": 1 }`  | `200 { "player": Player }`, inicial no slot 1 | `409` "Crie seu Domador primeiro." · `409` "Você já escolheu seu Ecobeast." · `400` "Esse Ecobeast não pode ser escolhido."                    |
+| `PATCH /v1/me/creatures/:uid` | `{ "nickname": "…" }` | `200 { "player": Player }`; vazio remove o apelido ([creature-details/01](../creature-details/01-server-contract.md)) | `400` "Use de 2 a 16 letras, números ou espaços." · `404` "Ecobeast não encontrado." |
 | `DELETE /v1/me`          | —                      | `204`                                      | —                                                                                                                                               |
 
 - O nome é normalizado como no cliente (pontas sem espaço, espaços repetidos viram um) e conferido com a mesma regra (`^[\p{L}\p{N} ]{2,16}$`).

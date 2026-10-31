@@ -1,6 +1,6 @@
 # 01. XP do nível e rota do apelido
 
-- **Status:** aprovada
+- **Status:** concluída
 - **Depende de:** [auth-google/03-player-api](../auth-google/03-player-api.md)
 
 ## Contexto
@@ -33,14 +33,14 @@ A tela de detalhes ([02](02-details-screen.md)) mostra quanto falta para o próx
 
 ## Critérios de aceite
 
-- [ ] Sem token, `PATCH /v1/me/creatures/<uid>` dá `401`.
-- [ ] Com o inicial recém-criado, `current_xp` é igual a `level_xp`, e `next_level_xp` é maior que `level_xp`.
-- [ ] Num teste de unidade do mapper com multiplicador 1, o nível 5 dá `level_xp` 125 e `next_level_xp` 216, e o nível 100 dá `next_level_xp` `null`.
-- [ ] `"  Chama   Viva "` grava "Chama Viva"; o `GET /v1/me` seguinte devolve o apelido.
-- [ ] `""` e `"   "` removem o apelido; `"A"`, `"Fogo!"` e 17 caracteres dão `400` com a mensagem; `{}` e `{"nickname": 5}` também.
-- [ ] A criatura de outro jogador, um `uid` que não existe e `abc` dão `404` com a mensagem, e o apelido da outra criatura não muda.
-- [ ] `/docs` mostra a rota e os campos.
-- [ ] `npm run lint`, `npm run typecheck`, `npm test` e `npm run test:e2e` passam.
+- [x] Sem token, `PATCH /v1/me/creatures/<uid>` dá `401`.
+- [x] Com o inicial recém-criado, `current_xp` é igual a `level_xp`, e `next_level_xp` é maior que `level_xp`.
+- [x] Num teste de unidade do mapper com multiplicador 1, o nível 5 dá `level_xp` 125 e `next_level_xp` 216, e o nível 100 dá `next_level_xp` `null`.
+- [x] `"  Chama   Viva "` grava "Chama Viva"; o `GET /v1/me` seguinte devolve o apelido.
+- [x] `""` e `"   "` removem o apelido; `"A"`, `"Fogo!"` e 17 caracteres dão `400` com a mensagem; `{}` e `{"nickname": 5}` também.
+- [x] A criatura de outro jogador, um `uid` que não existe e `abc` dão `404` com a mensagem, e o apelido da outra criatura não muda.
+- [x] O OpenAPI de `/docs` tem a rota e os campos.
+- [x] `npm run lint`, `npm run typecheck`, `npm test` e `npm run test:e2e` passam.
 
 ## Desenho técnico
 
@@ -64,7 +64,13 @@ Os e2e criam Domadores com `sub` novo e os apagam no fim. Conferir `/docs` com o
 
 ## Tarefas
 
-- [ ] Testes do mapper e `MAX_LEVEL`; ver falhar; `level_xp` e `next_level_xp` (RF-01, RF-02).
-- [ ] Testes e2e da rota; ver falhar; serviço, DTO e controller (RF-03 a RF-08).
-- [ ] Documentação da rota (RF-09) e dos documentos citados.
-- [ ] Marcar esta spec e a tabela do README como `concluída`; commit `feat: XP do nível e apelido no servidor`.
+- [x] Testes do mapper e `MAX_LEVEL`; ver falhar; `level_xp` e `next_level_xp` (RF-01, RF-02).
+- [x] Testes e2e da rota; ver falhar; serviço, DTO e controller (RF-03 a RF-08).
+- [x] Documentação da rota (RF-09) e dos documentos citados.
+- [x] Marcar esta spec e a tabela do README como `concluída`; commit `feat: XP do nível e apelido no servidor`.
+
+## Decisões da implementação
+
+- **`CREATURE_NOT_FOUND` mora no `player.service.ts`** e é exportada para o controller, porque o `404` nasce nos dois lugares: no serviço (nenhuma linha alterada) e no `ParseUUIDPipe` (`uid` malformado).
+- **`normalizeName` virou uma função** do arquivo do serviço, usada pelo nome e pelo apelido.
+- **Conferência:** o teste de documentação dos e2e confere a rota e os campos no OpenAPI; a página `/docs` em si não foi aberta. `npm run lint` e `npm run typecheck` sem avisos; `npm test` com 122 testes; `npm run test:e2e` com 212.

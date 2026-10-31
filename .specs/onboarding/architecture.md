@@ -53,6 +53,8 @@ Formato JSON de cada modelo = o formato que a API devolve. Cada modelo tem `stat
 | nickname            | String             | `""` = sem apelido                                               |
 | level               | int                | 1–100                                                            |
 | current_xp          | int                | XP total acumulado                                               |
+| level_xp            | int                | XP total para chegar ao nível atual                              |
+| next_level_xp       | int                | XP total para chegar ao próximo nível; `null` no nível 100       |
 | current_hp          | int                |                                                                  |
 | stats               | StatBlock          | **Calculado** pelo servidor a cada resposta                       |
 | genes               | StatBlock          | 0–31 cada                                                        |

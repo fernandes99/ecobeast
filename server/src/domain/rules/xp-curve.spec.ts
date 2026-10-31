@@ -1,4 +1,10 @@
-import { totalXpForLevel } from './xp-curve.js';
+import { MAX_LEVEL, totalXpForLevel } from './xp-curve.js';
+
+describe('MAX_LEVEL', () => {
+  it('é 100', () => {
+    expect(MAX_LEVEL).toBe(100);
+  });
+});
 
 describe('totalXpForLevel', () => {
   it('é floor(multiplicador · nível³)', () => {

@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
+  NotFoundException,
 } from '@nestjs/common';
 import { randomInt } from 'node:crypto';
 import {
@@ -22,6 +23,7 @@ const PLAYER_EXISTS = 'Você já tem um Domador.';
 const NO_PLAYER = 'Crie seu Domador primeiro.';
 const STARTER_TAKEN = 'Você já escolheu seu Ecobeast.';
 const NOT_A_STARTER = 'Esse Ecobeast não pode ser escolhido.';
+export const CREATURE_NOT_FOUND = 'Ecobeast não encontrado.';
 
 /** O maior intervalo aceito pelo `crypto.randomInt`. */
 const RANDOM_RANGE = 2 ** 48 - 1;
@@ -29,6 +31,11 @@ const RANDOM_RANGE = 2 ** 48 - 1;
 /** Número em [0, 1) de uma fonte segura, para os sorteios das regras. */
 function secureRandom(): number {
   return randomInt(RANDOM_RANGE) / RANDOM_RANGE;
+}
+
+/** Pontas sem espaço e sequências de espaço viram uma. */
+function normalizeName(raw: string): string {
+  return raw.trim().replace(/\s+/g, ' ');
 }
 
 function isUniqueViolation(error: unknown): boolean {
@@ -52,7 +59,7 @@ export class PlayerService {
   }
 
   async create(userId: string, rawName: string): Promise<PlayerDto> {
-    const name = rawName.trim().replace(/\s+/g, ' ');
+    const name = normalizeName(rawName);
     if (!NAME_PATTERN.test(name)) throw new BadRequestException(INVALID_NAME);
     try {
       const player = await this.prisma.player.create({
@@ -115,6 +122,24 @@ export class PlayerService {
       if (isUniqueViolation(error)) throw new ConflictException(STARTER_TAKEN);
       throw error;
     }
+    return (await this.get(userId))!;
+  }
+
+  async setNickname(
+    userId: string,
+    uid: string,
+    rawNickname: string,
+  ): Promise<PlayerDto> {
+    const nickname = normalizeName(rawNickname);
+    if (nickname && !NAME_PATTERN.test(nickname)) {
+      throw new BadRequestException(INVALID_NAME);
+    }
+    // Filtrar pelo dono faz a criatura de outro Domador parecer inexistente.
+    const { count } = await this.prisma.creatureInstance.updateMany({
+      where: { uid, playerId: userId },
+      data: { nickname: nickname || null },
+    });
+    if (count === 0) throw new NotFoundException(CREATURE_NOT_FOUND);
     return (await this.get(userId))!;
   }
 

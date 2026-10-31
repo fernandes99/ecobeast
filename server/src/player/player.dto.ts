@@ -20,6 +20,16 @@ export class ChooseStarterBodyDto {
   species_id: number;
 }
 
+export class SetNicknameBodyDto {
+  @ApiProperty({
+    description:
+      'Apelido do Ecobeast, com as regras do nome do Domador. Vazio remove o apelido.',
+    example: 'Chama Viva',
+  })
+  @IsString({ message: INVALID_NAME })
+  nickname: string;
+}
+
 /** Os 6 stats, para a documentação dos campos `stats`, `genes` e `training_points`. */
 const STAT_BLOCK = {
   type: 'object',
@@ -56,6 +66,20 @@ export class CreatureDto {
 
   @ApiProperty({ description: 'XP total acumulado.', example: 125 })
   current_xp: number;
+
+  @ApiProperty({
+    description: 'XP total para chegar ao nível atual.',
+    example: 125,
+  })
+  level_xp: number;
+
+  @ApiProperty({
+    description: 'XP total para chegar ao próximo nível. Nulo no nível máximo.',
+    type: 'integer',
+    nullable: true,
+    example: 216,
+  })
+  next_level_xp: number | null;
 
   @ApiProperty({ example: 19 })
   current_hp: number;

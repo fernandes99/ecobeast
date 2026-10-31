@@ -1,5 +1,6 @@
 import { calculateStats } from '../domain/rules/stat-calculator.js';
 import { STAT_SLUGS, StatBlock, StatSlug } from '../domain/rules/types.js';
+import { MAX_LEVEL, totalXpForLevel } from '../domain/rules/xp-curve.js';
 import { Prisma } from '../generated/prisma/client.js';
 import { CreatureDto, PlayerDto } from './player.dto.js';
 
@@ -13,6 +14,7 @@ export const PLAYER_INCLUDE = {
       skills: { orderBy: { slot: 'asc' } },
       species: {
         select: {
+          growthRate: { select: { xpMultiplier: true } },
           stats: {
             select: { baseValue: true, stat: { select: { slug: true } } },
           },
@@ -63,12 +65,18 @@ export function toPlayerDto(row: PlayerRow): PlayerDto {
 function toCreatureDto(row: CreatureRow): CreatureDto {
   const genes = toStatBlock(row.stats, (stat) => stat.genes);
   const trainingPoints = toStatBlock(row.stats, (stat) => stat.trainingPoints);
+  const { xpMultiplier } = row.species.growthRate;
   return {
     uid: row.uid,
     species_id: row.speciesId,
     nickname: row.nickname ?? '',
     level: row.level,
     current_xp: row.currentXp,
+    level_xp: totalXpForLevel(xpMultiplier, row.level),
+    next_level_xp:
+      row.level < MAX_LEVEL
+        ? totalXpForLevel(xpMultiplier, row.level + 1)
+        : null,
     current_hp: row.currentHp,
     // Recalculado a cada resposta: um ajuste de balanceamento vale para todos.
     stats: calculateStats(

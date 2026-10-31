@@ -55,5 +55,5 @@ Tomadas no planejamento (corrigíveis; ao mudar uma, atualize aqui e nas specs a
 
 | Fase                                      | Entrega                                                       | Status   |
 | ----------------------------------------- | ------------------------------------------------------------- | -------- |
-| [01-server-contract](01-server-contract.md) | XP do nível em cada criatura e a rota do apelido              | aprovada |
+| [01-server-contract](01-server-contract.md) | XP do nível em cada criatura e a rota do apelido              | concluída |
 | [02-details-screen](02-details-screen.md) | A tela em abas, o painel de apelido e a ligação com o Hub     | aprovada |
