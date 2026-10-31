@@ -55,4 +55,4 @@ Tomadas no planejamento e apresentadas ao dono (corrigíveis; ao mudar uma, atua
 | Fase                              | Entrega                                                       | Status   |
 | --------------------------------- | ------------------------------------------------------------- | -------- |
 | [01-heal-api](01-heal-api.md)     | Rota que cura a equipe e descarta a batalha aberta            | concluída |
-| [02-heal-screen](02-heal-screen.md) | A tela do Refúgio, a ligação com o Hub e a rota no `Session` | rascunho |
+| [02-heal-screen](02-heal-screen.md) | A tela do Refúgio, a ligação com o Hub e a rota no `Session` | concluída |

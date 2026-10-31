@@ -15,6 +15,6 @@ Celular, orientação retrato. Estilo fantasia leve, colorido e amigável. 14 el
 11. **Bestiário** — grade numerada (visto, capturado, silhueta); detalhe com descrição, elementos, habitat e linha evolutiva.
 12. **Loja** — abas Esferas, Cura, Itens de batalha, Evolução; cards com preço e comprar.
 13. **Mochila** — itens por categoria com quantidade; escolher alvo ao usar.
-14. **Refúgio** — botão "Curar equipe".
+14. **Refúgio** — a equipe, com HP, PP e status, e o botão "Curar todos".
 15. **Arenas** — 8 emblemas (obtidos/bloqueados), mestre de cada Arena e "Desafiar"; Liga final.
 16. **Perfil / Configurações** — nome, estatísticas, conquistas, som, idioma, nuvem, remover anúncios.

@@ -1,6 +1,6 @@
 # 02. Tela do Refúgio
 
-- **Status:** rascunho
+- **Status:** concluída
 - **Depende de:** [01-heal-api](01-heal-api.md)
 
 ## Contexto
@@ -44,18 +44,18 @@ Com a rota da [01](01-heal-api.md), falta o jogador alcançá-la. O card "Refúg
 
 ## Critérios de aceite
 
-- [ ] Tocar em Refúgio no Hub abre a tela com a equipe do jogador.
-- [ ] Com a equipe ferida, cada linha mostra HP, PP e status de verdade.
-- [ ] Curar enche as barras, zera os status e mostra "Equipe curada!".
-- [ ] Depois de curar, o botão fica desativado com "Equipe já curada".
-- [ ] Abrir a tela com a equipe bem mostra o botão desativado, sem mensagem.
-- [ ] Com o servidor fora do ar, o erro aparece, a equipe não muda, e o botão volta a funcionar.
-- [ ] Enquanto cura, nem Voltar nem o voltar do Android saem da tela.
-- [ ] Depois de uma derrota total, curar no Refúgio faz Explorar zona abrir uma luta.
-- [ ] O Hub mostra o HP curado.
-- [ ] A tela cabe em 405×720 com 6 criaturas.
+- [x] Tocar em Refúgio no Hub abre a tela com a equipe do jogador.
+- [x] Com a equipe ferida, cada linha mostra HP, PP e status de verdade.
+- [x] Curar enche as barras, zera os status e mostra "Equipe curada!".
+- [x] Depois de curar, o botão fica desativado com "Equipe já curada".
+- [x] Abrir a tela com a equipe bem mostra o botão desativado, sem mensagem.
+- [x] Com o servidor fora do ar, o erro aparece, a equipe não muda, e o botão volta a funcionar.
+- [x] Enquanto cura, nem Voltar nem o voltar do Android saem da tela.
+- [x] Depois de uma derrota total, curar no Refúgio faz Explorar zona abrir uma luta.
+- [x] O Hub mostra o HP curado.
+- [x] A tela cabe em 405×720 com 6 criaturas.
 - [ ] O mesmo vale em um aparelho com recorte (passo do dono).
-- [ ] O projeto abre sem erros nem avisos de script.
+- [x] O projeto abre sem erros nem avisos de script.
 
 ## Desenho técnico
 
@@ -99,7 +99,15 @@ godot --headless -d --path client --quit-after 60
 
 ## Tarefas
 
-- [ ] Registrar a tela, ligar o Hub e criar `heal_team()` (RF-01, RF-12).
-- [ ] Tela e linha da equipe (RF-02 a RF-05).
-- [ ] Curar, estados do botão e voltar (RF-06 a RF-11).
-- [ ] Remover os arquivos temporários; atualizar `TELAS.md`, o roadmap e o `CLAUDE.md`; marcar esta spec e a tabela do README como `concluída`; commit `feat: tela do Refúgio`.
+- [x] Registrar a tela, ligar o Hub e criar `heal_team()` (RF-01, RF-12).
+- [x] Tela e linha da equipe (RF-02 a RF-05).
+- [x] Curar, estados do botão e voltar (RF-06 a RF-11).
+- [x] Remover os arquivos temporários; atualizar `TELAS.md`, o roadmap e o `CLAUDE.md`; marcar esta spec e a tabela do README como `concluída`; commit `feat: tela do Refúgio`.
+
+## Decisões da implementação
+
+- **A lista é refeita a cada atualização:** a equipe não muda enquanto a tela está aberta, e recriar as linhas é mais simples do que atualizar cada uma.
+- **A linha deixa o toque passar:** ela só mostra dados, e assim um arrasto sobre ela chega à rolagem. Isso não foi testado: com 6 criaturas, a lista coube em 405×720 sem precisar rolar.
+- **Tela sem jogador:** `_refresh` não faz nada se `Session.player` for nulo, o que só acontece com o progresso apagado em outro aparelho.
+- **Conferência:** uma cena temporária abriu a tela pelo Hub contra um servidor de teste, com 52 de 52 verificações, depois de falhar porque o card ainda abria o placeholder. As 7 capturas em 405×720 foram abertas e revisadas: equipe bem, ferida, curando, erro, curada, seis criaturas e depois da derrota. A falta de rede foi simulada trocando o endereço do servidor, e o servidor não chegou a ser desligado. O servidor não mudou nesta fase, por isso os testes dele não foram repetidos.
+- **Falta do dono:** jogar no editor e no celular, e conferir o recorte do aparelho.

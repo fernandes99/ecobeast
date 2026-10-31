@@ -22,6 +22,10 @@ extends RefCounted
 @abstract func set_nickname(uid: String, raw_nickname: String) -> Result
 
 
+## data: o Player com a equipe curada.
+@abstract func heal_team() -> Result
+
+
 ## data: null.
 @abstract func reset_progress() -> Result
 

@@ -55,7 +55,7 @@ const DESTINATIONS: Dictionary[String, Dictionary] = {
 	"Desafiar Domador": {"id": &"placeholder", "params": {"title": "Desafiar Domador"}},
 	"Arenas": {"id": &"placeholder", "params": {"title": "Arenas"}},
 	"Loja": {"id": &"placeholder", "params": {"title": "Loja"}},
-	"Refúgio": {"id": &"placeholder", "params": {"title": "Refúgio"}},
+	"Refúgio": {"id": &"heal_station", "params": {}},
 	"Santuário": {"id": &"placeholder", "params": {"title": "Santuário"}},
 	"Bestiário": {"id": &"placeholder", "params": {"title": "Bestiário"}},
 	"Mochila": {"id": &"placeholder", "params": {"title": "Mochila"}},

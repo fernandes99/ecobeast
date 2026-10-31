@@ -6,6 +6,7 @@ extends GameService
 const ME_PATH := "/v1/me"
 const STARTER_PATH := "/v1/me/starter"
 const CREATURE_PATH := "/v1/me/creatures/%s"
+const HEAL_PATH := "/v1/me/heal"
 const WILD_BATTLE_PATH := "/v1/me/battle/wild"
 const BATTLE_ACTION_PATH := "/v1/me/battle/action"
 
@@ -24,6 +25,10 @@ func choose_starter(species_id: int) -> Result:
 
 func set_nickname(uid: String, raw_nickname: String) -> Result:
 	return _player_result(await Api.request(HTTPClient.METHOD_PATCH, CREATURE_PATH % uid, {"nickname": raw_nickname}, true))
+
+
+func heal_team() -> Result:
+	return _player_result(await Api.request(HTTPClient.METHOD_POST, HEAL_PATH, null, true))
 
 
 func reset_progress() -> Result:

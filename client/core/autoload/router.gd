@@ -8,6 +8,7 @@ extends Node
 const SCREENS: Dictionary[StringName, String] = {
 	&"battle": "res://screens/battle/battle_screen.tscn",
 	&"creature_details": "res://screens/creature_details/creature_details_screen.tscn",
+	&"heal_station": "res://screens/heal_station/heal_station_screen.tscn",
 	&"hub": "res://screens/hub/hub_screen.tscn",
 	&"login": "res://screens/login/login_screen.tscn",
 	&"placeholder": "res://screens/placeholder/placeholder_screen.tscn",

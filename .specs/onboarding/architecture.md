@@ -26,7 +26,7 @@ telas ──> Session (autoload) ──> GameService
 
 Quem escreve as mensagens acima é o servidor. Em qualquer método, sem resposta do servidor ou com erro 5xx, `error` traz a mensagem do `ApiResponse` ("Não foi possível conectar ao servidor." ou "O servidor teve um problema. Tente de novo."), e o estado anterior continua valendo.
 
-Rotas: `get_player` = `GET /v1/me`, `create_player` = `POST /v1/me`, `choose_starter` = `POST /v1/me/starter`, `set_nickname` = `PATCH /v1/me/creatures/:uid`, `reset_progress` = `DELETE /v1/me`.
+Rotas: `get_player` = `GET /v1/me`, `create_player` = `POST /v1/me`, `choose_starter` = `POST /v1/me/starter`, `set_nickname` = `PATCH /v1/me/creatures/:uid`, `heal_team` = `POST /v1/me/heal`, `reset_progress` = `DELETE /v1/me`.
 
 ## Modelos (`res://domain/models/`)
 
