@@ -15,6 +15,7 @@ server/
   src/health/            GET /health
   src/auth/              login com Google (Supabase Auth), AuthGuard e @CurrentUser()
   src/player/            o Domador do usuário logado (/v1/me)
+  src/battle/            a batalha do usuário logado (/v1/me/battle), guardada na memória
   src/common/            peças compartilhadas pelas rotas
   src/catalog/           um módulo por recurso do catálogo
   src/domain/            regras puras de jogo (sem Nest nem Prisma)

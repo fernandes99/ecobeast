@@ -75,3 +75,25 @@ describe('validateEnv', () => {
     ).toThrow(/PUBLIC_BASE_URL/);
   });
 });
+
+describe('ENABLE_TEST_BATTLE', () => {
+  it('é falsa por padrão', () => {
+    expect(validateEnv({ ...urls }).ENABLE_TEST_BATTLE).toBe(false);
+  });
+
+  it('liga com "true"', () => {
+    const env = validateEnv({ ...urls, ENABLE_TEST_BATTLE: 'true' });
+    expect(env.ENABLE_TEST_BATTLE).toBe(true);
+  });
+
+  it('"false" desliga', () => {
+    const env = validateEnv({ ...urls, ENABLE_TEST_BATTLE: 'false' });
+    expect(env.ENABLE_TEST_BATTLE).toBe(false);
+  });
+
+  it('recusa outro valor citando a variável', () => {
+    expect(() =>
+      validateEnv({ ...urls, ENABLE_TEST_BATTLE: 'talvez' }),
+    ).toThrow(/ENABLE_TEST_BATTLE/);
+  });
+});

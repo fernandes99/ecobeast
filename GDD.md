@@ -351,7 +351,9 @@ Ao evoluir: mantém nível, XP, Genes, Treino, Temperamento, técnicas e víncul
 | Sono | Não age por 1–3 turnos | — |
 | Congelado | Não age; 20% de descongelar por turno | Gelo |
 
-Status voláteis (somem ao trocar): Confuso (33% de se atingir, 2–5 turnos), Amedrontado (perde 1 turno), Preso (não pode trocar).
+Status voláteis (somem ao sair de campo): Confuso (33% de se atingir, 2–5 turnos), Amedrontado (perde 1 turno), Preso (não pode fugir).
+
+**Fuga e falta de PP.** Fugir tem chance fixa de 20% de falhar, a revisar, e a falha gasta o turno. Sem PP em nenhuma Técnica, o Ecobeast usa o Golpe de Esforço: físico, Poder 30, sem Elemento, nunca erra e tira 1/8 do HP máximo de quem o usa (valores a revisar).
 
 **Traços (passivas) — exemplos**
 

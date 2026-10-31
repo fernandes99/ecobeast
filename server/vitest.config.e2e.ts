@@ -14,6 +14,7 @@ export default defineConfig({
       SUPABASE_URL: 'https://ecobeast-teste.supabase.co',
       SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_teste',
       PUBLIC_BASE_URL: 'http://localhost:3100',
+      ENABLE_TEST_BATTLE: 'true',
     },
     // Os e2e falam com o Supabase pela rede.
     testTimeout: 30_000,

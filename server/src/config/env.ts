@@ -23,6 +23,8 @@ const envSchema = z.object({
   SUPABASE_PUBLISHABLE_KEY: z.string().min(1),
   /** O endereço deste servidor visto pelo navegador; padrão http://localhost:<PORT>. */
   PUBLIC_BASE_URL: httpUrl.optional(),
+  /** Libera POST /v1/me/battle até existirem as zonas (battle-core/03). */
+  ENABLE_TEST_BATTLE: z.stringbool().default(false),
 });
 
 export type Env = Omit<z.infer<typeof envSchema>, 'PUBLIC_BASE_URL'> & {

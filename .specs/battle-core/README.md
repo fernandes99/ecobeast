@@ -69,4 +69,4 @@ Tomadas no planejamento (corrigíveis; ao mudar uma, atualize aqui e nas specs a
 | --------------------------------------- | -------------------------------------------------------------------------- | -------- |
 | [01-battle-rules](01-battle-rules.md)   | Regras puras: estágios, Precisão, crítico, dano e ordem do turno           | concluída |
 | [02-battle-engine](02-battle-engine.md) | O motor do turno: ações, status, efeitos, Traços, fuga, desmaio e IA       | concluída |
-| [03-battle-api](03-battle-api.md)       | Batalha na memória, rotas e gravação de HP, PP e status no fim             | aprovada |
+| [03-battle-api](03-battle-api.md)       | Batalha na memória, rotas e gravação de HP, PP e status no fim             | concluída |

@@ -51,6 +51,22 @@ export function toStatBlock<Row extends { stat: { slug: string } }>(
   return block;
 }
 
+/** Recalculados a cada leitura: um ajuste de balanceamento vale para todos. */
+export function creatureStats(
+  row: Pick<CreatureRow, 'stats' | 'level' | 'species' | 'temperament'>,
+): StatBlock {
+  return calculateStats(
+    toStatBlock(row.species.stats, (stat) => stat.baseValue),
+    toStatBlock(row.stats, (stat) => stat.genes),
+    toStatBlock(row.stats, (stat) => stat.trainingPoints),
+    row.level,
+    {
+      increasedStat: row.temperament.increasedStat.slug as StatSlug,
+      decreasedStat: row.temperament.decreasedStat.slug as StatSlug,
+    },
+  );
+}
+
 /** O JSON do jogador (.specs/auth-google/03-player-api.md, RF-07). */
 export function toPlayerDto(row: PlayerRow): PlayerDto {
   return {
@@ -80,17 +96,7 @@ function toCreatureDto(row: CreatureRow): CreatureDto {
         ? totalXpForLevel(xpMultiplier, row.level + 1)
         : null,
     current_hp: row.currentHp,
-    // Recalculado a cada resposta: um ajuste de balanceamento vale para todos.
-    stats: calculateStats(
-      toStatBlock(row.species.stats, (stat) => stat.baseValue),
-      genes,
-      trainingPoints,
-      row.level,
-      {
-        increasedStat: row.temperament.increasedStat.slug as StatSlug,
-        decreasedStat: row.temperament.decreasedStat.slug as StatSlug,
-      },
-    ),
+    stats: creatureStats(row),
     genes,
     genes_total: genesScore,
     genes_rank: geneRank(genesScore),

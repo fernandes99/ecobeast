@@ -4,16 +4,14 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { randomInt } from 'node:crypto';
-import {
-  createCreature,
-  CreateCreatureParams,
-} from '../domain/rules/creature-factory.js';
-import { STAT_SLUGS, StatSlug } from '../domain/rules/types.js';
+import { secureRandom } from '../common/secure-random.js';
+import { createCreature } from '../domain/rules/creature-factory.js';
+import { STAT_SLUGS } from '../domain/rules/types.js';
 import { Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { loadCreatureBlueprint } from './creature-params.js';
 import { INVALID_NAME, PlayerDto } from './player.dto.js';
-import { PLAYER_INCLUDE, toPlayerDto, toStatBlock } from './player.mapper.js';
+import { PLAYER_INCLUDE, toPlayerDto } from './player.mapper.js';
 
 const NAME_PATTERN = /^[\p{L}\p{N} ]{2,16}$/u;
 const START_COINS = 1000;
@@ -24,14 +22,6 @@ const NO_PLAYER = 'Crie seu Domador primeiro.';
 const STARTER_TAKEN = 'Você já escolheu seu Ecobeast.';
 const NOT_A_STARTER = 'Esse Ecobeast não pode ser escolhido.';
 export const CREATURE_NOT_FOUND = 'Ecobeast não encontrado.';
-
-/** O maior intervalo aceito pelo `crypto.randomInt`. */
-const RANDOM_RANGE = 2 ** 48 - 1;
-
-/** Número em [0, 1) de uma fonte segura, para os sorteios das regras. */
-function secureRandom(): number {
-  return randomInt(RANDOM_RANGE) / RANDOM_RANGE;
-}
 
 /** Pontas sem espaço e sequências de espaço viram uma. */
 function normalizeName(raw: string): string {
@@ -87,7 +77,12 @@ export class PlayerService {
     });
     if (!option) throw new BadRequestException(NOT_A_STARTER);
 
-    const { params, statIds } = await this.creatureParams(speciesId);
+    // starter_options tem FK para species: a espécie existe.
+    const { params, statIds } = (await loadCreatureBlueprint(
+      this.prisma,
+      speciesId,
+      STARTER_LEVEL,
+    ))!;
     const creature = createCreature(params, secureRandom);
     try {
       // A escrita aninhada é uma transação só; a chave única de
@@ -146,57 +141,5 @@ export class PlayerService {
   async remove(userId: string): Promise<void> {
     // deleteMany não reclama de Domador inexistente; a cascata leva o resto.
     await this.prisma.player.deleteMany({ where: { id: userId } });
-  }
-
-  /** O que as regras precisam do catálogo para criar uma criatura. */
-  private async creatureParams(speciesId: number): Promise<{
-    params: CreateCreatureParams;
-    statIds: Record<StatSlug, number>;
-  }> {
-    const [species, temperaments] = await Promise.all([
-      this.prisma.species.findUniqueOrThrow({
-        where: { id: speciesId },
-        include: {
-          growthRate: true,
-          stats: { include: { stat: true } },
-          traits: { where: { isHidden: false }, orderBy: { slot: 'asc' } },
-          skills: {
-            // Mesma ordem do catálogo que o cliente lê.
-            orderBy: [{ level: 'asc' }, { skillId: 'asc' }],
-            include: { skill: true, skillLearnMethod: true },
-          },
-        },
-      }),
-      this.prisma.temperament.findMany({
-        orderBy: { id: 'asc' },
-        include: { increasedStat: true, decreasedStat: true },
-      }),
-    ]);
-    return {
-      statIds: toStatBlock(species.stats, (row) => row.statId),
-      params: {
-        species: {
-          id: species.id,
-          genderRatio: species.genderRatio,
-          baseStats: toStatBlock(species.stats, (row) => row.baseValue),
-        },
-        level: STARTER_LEVEL,
-        learnset: species.skills.map((row) => ({
-          skillId: row.skillId,
-          method: row.skillLearnMethod.slug,
-          level: row.level,
-        })),
-        maxPpBySkill: new Map(
-          species.skills.map((row) => [row.skillId, row.skill.maxPp]),
-        ),
-        traitIds: species.traits.map((row) => row.traitId),
-        temperaments: temperaments.map((row) => ({
-          id: row.id,
-          increasedStat: row.increasedStat.slug as StatSlug,
-          decreasedStat: row.decreasedStat.slug as StatSlug,
-        })),
-        xpMultiplier: species.growthRate.xpMultiplier,
-      },
-    };
   }
 }

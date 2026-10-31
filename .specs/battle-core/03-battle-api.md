@@ -1,6 +1,6 @@
 # 03. Batalha pela API
 
-- **Status:** aprovada
+- **Status:** concluída
 - **Depende de:** [02-battle-engine](02-battle-engine.md), [auth-google/03-player-api](../auth-google/03-player-api.md)
 
 ## Contexto
@@ -61,22 +61,22 @@ O motor funciona, mas ninguém o alcança. Esta fase o expõe: o NestJS monta os
 
 ## Critérios de aceite
 
-- [ ] Sem token, as duas rotas dão `401`.
-- [ ] Com a variável desligada, começar dá `404`.
-- [ ] Sem Domador, `409`; com a equipe toda a 0 HP, `409` "Cure sua equipe no Refúgio."; com espécie 999 ou nível 101, `400`.
-- [ ] Uma batalha começa com o Fagulho, e o JSON não mostra as Técnicas do inimigo.
-- [ ] Usar Técnicas até vencer dá `victory`, e o banco fica com o `current_hp` e o PP da resposta.
-- [ ] Uma derrota grava 0 HP, e a batalha seguinte dá `409`.
-- [ ] Fugir com sucesso grava o HP e o PP daquele momento.
-- [ ] Um status principal no fim fica em `status_condition_id`; um Confuso, não.
-- [ ] Sem batalha, agir dá `404`; uma segunda ação depois do fim, também.
-- [ ] Começar outra batalha no meio da primeira não muda o banco.
-- [ ] Um jogador não age na batalha do outro.
-- [ ] O relógio do `BattleStore`, adiantado 30 minutos em teste, faz a batalha sumir sem gravar.
-- [ ] Apagar o Domador no meio da luta não dá erro no fim: a gravação não encontra nada, e a batalha some.
-- [ ] As rotas aparecem em `/docs/openapi.json`, com o cadeado.
-- [ ] Os e2e apagam os Domadores que criaram.
-- [ ] `npm run lint`, `npm run typecheck`, `npm test` e `npm run test:e2e` passam.
+- [x] Sem token, as duas rotas dão `401`.
+- [x] Com a variável desligada, começar dá `404`.
+- [x] Sem Domador, `409`; com a equipe toda a 0 HP, `409` "Cure sua equipe no Refúgio."; com espécie 999 ou nível 101, `400`.
+- [x] Uma batalha começa com o Fagulho, e o JSON não mostra as Técnicas do inimigo.
+- [x] Usar Técnicas até vencer dá `victory`, e o banco fica com o `current_hp` e o PP da resposta.
+- [x] Uma derrota grava 0 HP, e a batalha seguinte dá `409`.
+- [x] Fugir com sucesso grava o HP e o PP daquele momento.
+- [x] Um status principal no fim fica em `status_condition_id`; um Confuso, não.
+- [x] Sem batalha, agir dá `404`; uma segunda ação depois do fim, também.
+- [x] Começar outra batalha no meio da primeira não muda o banco.
+- [x] Um jogador não age na batalha do outro.
+- [x] O relógio do `BattleStore`, adiantado 30 minutos em teste, faz a batalha sumir sem gravar.
+- [x] Apagar o Domador no meio da luta não dá erro no fim: a gravação não encontra nada, e a batalha some.
+- [x] As rotas aparecem em `/docs/openapi.json`, com o cadeado.
+- [x] Os e2e apagam os Domadores que criaram.
+- [x] `npm run lint`, `npm run typecheck`, `npm test` e `npm run test:e2e` passam.
 
 ## Desenho técnico
 
@@ -88,6 +88,7 @@ O motor funciona, mas ninguém o alcança. Esta fase o expõe: o NestJS monta os
 - `battle.mapper.ts`, com `battle.mapper.spec.ts`: criatura → `Combatant`, estado → JSON sem o que é escondido do jogador.
 - `server/test/battle.e2e-spec.ts`.
 - `server/src/common/secure-random.ts`.
+- `server/src/player/creature-params.ts`: o que `createCreature` precisa do catálogo, usado pelo jogador e pela batalha.
 
 **Alterar**
 
@@ -107,10 +108,25 @@ Os e2e usam tokens de `test/support/tokens.ts` e o catálogo real, mas não conf
 
 ## Tarefas
 
-- [ ] `ENABLE_TEST_BATTLE` e `secure-random` (RF-20, RF-22).
-- [ ] `BattleStore`, com testes; ver falhar; implementar (RF-13 a RF-15).
-- [ ] Mapper e catálogo, com testes (RF-05, RF-06, RF-12).
-- [ ] Testes e2e de começar e agir; ver falhar; serviço e controller (RF-01 a RF-11).
-- [ ] Testes e2e do fim; ver falhar; gravação (RF-16 a RF-19).
-- [ ] Documentação (RF-21), `GDD.md` e `server/CLAUDE.md`.
-- [ ] Marcar esta spec, a tabela do README e o roadmap como `concluída`; commit `feat: batalha pela API`.
+- [x] `ENABLE_TEST_BATTLE` e `secure-random` (RF-20, RF-22).
+- [x] `BattleStore`, com testes; ver falhar; implementar (RF-13 a RF-15).
+- [x] Mapper e catálogo, com testes (RF-05, RF-06, RF-12).
+- [x] Testes e2e de começar e agir; ver falhar; serviço e controller (RF-01 a RF-11).
+- [x] Testes e2e do fim; ver falhar; gravação (RF-16 a RF-19).
+- [x] Documentação (RF-21), `GDD.md` e `server/CLAUDE.md`.
+- [x] Marcar esta spec, a tabela do README e o roadmap como `concluída`; commit `feat: batalha pela API`.
+
+## Decisões da implementação
+
+- **`creature-params.ts` saiu do `PlayerService`:** o inimigo precisa da mesma leitura, em qualquer nível. Ela também traz os Elementos da espécie e o slug dos Traços, que o `Combatant` usa.
+- **`creatureStats` foi para `player.mapper.ts`:** a batalha e a resposta do jogador precisam calcular os stats do mesmo jeito.
+- **O catálogo fica guardado com a batalha:** uma edição no painel não muda uma luta em andamento, e agir não lê o banco.
+- **`act` não tem `await` entre ler e escrever no `BattleStore`:** dois pedidos ao mesmo tempo não jogam o mesmo turno. No fim, a batalha sai da memória antes de gravar, então o segundo pedido recebe `404`.
+- **A faixa do nível é conferida no serviço:** a validação junta as mensagens de cada regra, e o erro viraria a mesma frase repetida. Pelo mesmo motivo, `level` só é validado com `species_id` válido.
+- **Com `ENABLE_TEST_BATTLE` desligada, a sessão é conferida antes:** sem token, a rota dá `401`; com token, `404` "Rota não encontrada."
+- **O PP é gravado por `skillId`:** o `Combatant` não guarda o slot, e um slot vago não pode desalinhar a escrita.
+- **Uma ação recusada não renova os 30 minutos:** só uma ação aceita conta.
+- **`BattleStore` não usa injeção:** nasce numa fábrica no módulo, para o relógio continuar um parâmetro simples.
+- **Status no e2e:** o teste muda o estado direto no `BattleStore`, porque nenhuma Técnica aplica Confuso e o sorteio não é controlável pela API.
+- **Conferência extra:** um teste temporário jogou 3.000 lutas com o catálogo real, Técnicas e Elementos sorteados, conferindo HP, estágios, PP e que toda luta termina. Foi removido depois.
+- **Conferência:** `npm run lint` e `npm run typecheck` sem avisos; `npm test` com 348 testes; `npm run test:e2e` com 245.
