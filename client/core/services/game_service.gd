@@ -18,5 +18,9 @@ extends RefCounted
 @abstract func choose_starter(species_id: int) -> Result
 
 
+## data: o Player com o apelido novo; vazio remove o apelido.
+@abstract func set_nickname(uid: String, raw_nickname: String) -> Result
+
+
 ## data: null.
 @abstract func reset_progress() -> Result

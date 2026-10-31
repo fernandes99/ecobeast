@@ -63,6 +63,14 @@ func choose_starter(species_id: int) -> Result:
 	return result
 
 
+func set_nickname(uid: String, raw_nickname: String) -> Result:
+	@warning_ignore("redundant_await")
+	var result: Result = await _service.set_nickname(uid, raw_nickname)
+	if result.ok:
+		_set_player(result.data)
+	return result
+
+
 func reset_progress() -> Result:
 	@warning_ignore("redundant_await")
 	var result: Result = await _service.reset_progress()

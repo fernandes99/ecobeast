@@ -57,6 +57,7 @@ res://
     components/                peças reutilizáveis (cena .tscn + script .gd)
       safe_area  element_badge  creature_portrait  hp_bar                             (foundation/02)
       creature_slot  tap_panel                                                        (hub/01)
+      stat_radar               StatRadar: hexágono dos 6 stats                         (creature-details/02)
   screens/                     uma pasta por tela (cena .tscn + script .gd)
     main/                      cena raiz, boot e ScreenHost                           (foundation/01, 02)
     login/                                                                            (auth-google/04)
@@ -64,6 +65,7 @@ res://
     title/                                                                            (onboarding/01)
     starter_select/            tela, starter_card, confirm_panel                      (onboarding/02)
     hub/                       tela, profile_debug_panel                              (hub/01)
+    creature_details/          tela, skill_row, nickname_panel                        (creature-details/02)
   assets/
     creatures/<slug>/front.png sprites (quando houver arte)
 ```
@@ -130,7 +132,7 @@ Registrados em `project.godot`, nesta ordem (cada um entra na fase que o cria):
 
 A cena principal é `res://screens/main/main.tscn`: um `Control` de tela cheia com um nó filho `ScreenHost`. O `Router` coloca as telas dentro do `ScreenHost`.
 
-- **Registro de telas:** dicionário no `Router` de id (`StringName`) para caminho da cena. Ids: `&"login"`, `&"title"`, `&"starter_select"`, `&"hub"`, `&"placeholder"`.
+- **Registro de telas:** dicionário no `Router` de id (`StringName`) para caminho da cena. Ids: `&"login"`, `&"title"`, `&"starter_select"`, `&"hub"`, `&"creature_details"`, `&"placeholder"`.
 - **`go_to(id, params := {})`:** limpa a pilha e abre a tela. Usado quando não deve haver volta (ex.: depois de escolher o inicial).
 - **`push(id, params := {})`:** esconde a tela atual (sem destruir) e abre a nova por cima.
 - **`back()`:** destrói a tela do topo e mostra a anterior. Na última tela da pilha, não faz nada. Antes, se a tela do topo tiver `func handle_back() -> bool` e ele devolver `true`, a tela tratou o voltar sozinha (ex.: fechou um painel) e continua aberta.

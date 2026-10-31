@@ -39,7 +39,7 @@ O jogador termina o onboarding num placeholder "Hub", e o boot também abre esse
 **Navegação** — tabela no `hub_screen.gd` de rótulo para `{id, params}`; nesta fase todos apontam para `&"placeholder"` com o título igual ao rótulo, abertos com `Router.push`.
 
 - **RF-08:** Cada ação do RF-03 e as abas Equipe, Bestiário, Loja e Perfil abrem o placeholder com o próprio nome como título ("Bestiário" pela ação ou pela aba abre a mesma tela). A aba Home não faz nada.
-- **RF-09:** Tocar num slot com criatura abre o placeholder com o título "Detalhes de <nome de exibição>".
+- **RF-09:** Tocar num slot com criatura abre o placeholder com o título "Detalhes de <nome de exibição>". (Desde a [creature-details/02](../creature-details/02-details-screen.md), abre a tela de detalhes.)
 - **RF-10:** O voltar do Android (Esc no editor) no Hub não faz nada; num placeholder aberto pelo Hub, volta ao Hub com a rolagem onde estava.
 
 **Perfil (debug)**

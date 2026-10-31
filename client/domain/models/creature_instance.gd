@@ -10,6 +10,10 @@ var nickname: String = ""
 var level: int = 1
 ## XP total acumulado.
 var current_xp: int = 0
+## XP total para chegar ao nível atual.
+var level_xp: int = 0
+## XP total para chegar ao próximo nível; -1 no nível máximo.
+var next_level_xp: int = -1
 var current_hp: int = 0
 ## Calculado pelo servidor a cada resposta.
 var stats := StatBlock.new()
@@ -45,6 +49,8 @@ static func from_dict(d: Dictionary) -> CreatureInstance:
 	creature.nickname = DictFields.get_string(d, "nickname")
 	creature.level = DictFields.get_int(d, "level", 1)
 	creature.current_xp = DictFields.get_int(d, "current_xp")
+	creature.level_xp = DictFields.get_int(d, "level_xp")
+	creature.next_level_xp = DictFields.get_id(d, "next_level_xp")
 	creature.current_hp = DictFields.get_int(d, "current_hp")
 	creature.stats = StatBlock.from_dict(DictFields.get_dict(d, "stats"))
 	creature.genes = StatBlock.from_dict(DictFields.get_dict(d, "genes"))

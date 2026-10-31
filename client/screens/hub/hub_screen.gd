@@ -196,9 +196,7 @@ func _open_details(index: int) -> void:
 	var party := Session.player.party
 	if index >= party.size():
 		return
-	var creature := party[index]
-	var species := GameData.get_species(creature.species_id)
-	Router.push(&"placeholder", {"title": "Detalhes de %s" % creature.display_name(species)})
+	Router.push(&"creature_details", {"uid": party[index].uid})
 
 
 ## 1000 -> "1.000".

@@ -1,0 +1,338 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://screens/creature_details/creature_details_screen.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://ui/components/safe_area.tscn" id="2_safe_area"]
+[ext_resource type="PackedScene" path="res://ui/components/creature_portrait.tscn" id="3_portrait"]
+[ext_resource type="PackedScene" path="res://ui/components/hp_bar.tscn" id="4_hp_bar"]
+[ext_resource type="Texture2D" path="res://ui/icons/back.svg" id="5_back"]
+[ext_resource type="Texture2D" path="res://ui/icons/pencil.svg" id="6_pencil"]
+[ext_resource type="Script" path="res://ui/components/stat_radar.gd" id="7_radar"]
+[ext_resource type="PackedScene" path="res://screens/creature_details/nickname_panel.tscn" id="8_nickname"]
+
+[node name="CreatureDetailsScreen" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="Glow" type="TextureRect" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -300.0
+offset_top = -40.0
+offset_right = 300.0
+offset_bottom = 480.0
+grow_horizontal = 2
+mouse_filter = 2
+expand_mode = 1
+
+[node name="SafeArea" parent="." instance=ExtResource("2_safe_area")]
+layout_mode = 1
+
+[node name="Column" type="VBoxContainer" parent="SafeArea"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Hero" type="Control" parent="SafeArea/Column"]
+custom_minimum_size = Vector2(0, 390)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="PortraitCenter" type="CenterContainer" parent="SafeArea/Column/Hero"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Portrait" parent="SafeArea/Column/Hero/PortraitCenter" instance=ExtResource("3_portrait")]
+unique_name_in_owner = true
+layout_mode = 2
+portrait_size = 360
+
+[node name="BackButton" type="Button" parent="SafeArea/Column/Hero"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_top = 16.0
+offset_right = 72.0
+offset_bottom = 88.0
+theme_type_variation = &"IconButton"
+icon = ExtResource("5_back")
+icon_alignment = 1
+
+[node name="IdentityPanel" type="PanelContainer" parent="SafeArea/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"SectionPanel"
+
+[node name="Identity" type="VBoxContainer" parent="SafeArea/Column/IdentityPanel"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="NameRow" type="HBoxContainer" parent="SafeArea/Column/IdentityPanel/Identity"]
+layout_mode = 2
+
+[node name="NameLabel" type="Label" parent="SafeArea/Column/IdentityPanel/Identity/NameRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"TitleLabel"
+clip_text = true
+text_overrun_behavior = 3
+
+[node name="RenameButton" type="Button" parent="SafeArea/Column/IdentityPanel/Identity/NameRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(64, 64)
+layout_mode = 2
+size_flags_vertical = 4
+theme_type_variation = &"IconButton"
+icon = ExtResource("6_pencil")
+icon_alignment = 1
+
+[node name="LevelLabel" type="Label" parent="SafeArea/Column/IdentityPanel/Identity/NameRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"BoldLabel"
+theme_override_font_sizes/font_size = 28
+
+[node name="TagRow" type="HBoxContainer" parent="SafeArea/Column/IdentityPanel/Identity"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Badges" type="HBoxContainer" parent="SafeArea/Column/IdentityPanel/Identity/TagRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="SpeciesLabel" type="Label" parent="SafeArea/Column/IdentityPanel/Identity/TagRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"SecondaryLabel"
+theme_override_font_sizes/font_size = 20
+
+[node name="HpRow" type="HBoxContainer" parent="SafeArea/Column/IdentityPanel/Identity"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="HpTitle" type="Label" parent="SafeArea/Column/IdentityPanel/Identity/HpRow"]
+custom_minimum_size = Vector2(44, 0)
+layout_mode = 2
+theme_type_variation = &"SecondaryLabel"
+theme_override_font_sizes/font_size = 20
+text = "HP"
+
+[node name="HpBar" parent="SafeArea/Column/IdentityPanel/Identity/HpRow" instance=ExtResource("4_hp_bar")]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+show_numbers = true
+
+[node name="XpRow" type="HBoxContainer" parent="SafeArea/Column/IdentityPanel/Identity"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="XpTitle" type="Label" parent="SafeArea/Column/IdentityPanel/Identity/XpRow"]
+custom_minimum_size = Vector2(44, 0)
+layout_mode = 2
+theme_type_variation = &"SecondaryLabel"
+theme_override_font_sizes/font_size = 20
+text = "XP"
+
+[node name="XpBar" type="ProgressBar" parent="SafeArea/Column/IdentityPanel/Identity/XpRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 16)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+mouse_filter = 2
+theme_type_variation = &"XpBar"
+max_value = 1.0
+step = 0.0
+show_percentage = false
+
+[node name="XpLabel" type="Label" parent="SafeArea/Column/IdentityPanel/Identity/XpRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"SecondaryLabel"
+theme_override_font_sizes/font_size = 20
+
+[node name="TabRow" type="HBoxContainer" parent="SafeArea/Column"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="ResumoTab" type="Button" parent="SafeArea/Column/TabRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 64)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Resumo"
+
+[node name="AtributosTab" type="Button" parent="SafeArea/Column/TabRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 64)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Atributos"
+
+[node name="TecnicasTab" type="Button" parent="SafeArea/Column/TabRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 64)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Técnicas"
+
+[node name="Pages" type="VBoxContainer" parent="SafeArea/Column"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ResumoPage" type="PanelContainer" parent="SafeArea/Column/Pages"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+theme_type_variation = &"SectionPanel"
+
+[node name="Summary" type="VBoxContainer" parent="SafeArea/Column/Pages/ResumoPage"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="DescriptionLabel" type="Label" parent="SafeArea/Column/Pages/ResumoPage/Summary"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"SecondaryLabel"
+theme_override_font_sizes/font_size = 22
+autowrap_mode = 3
+
+[node name="Separator" type="HSeparator" parent="SafeArea/Column/Pages/ResumoPage/Summary"]
+layout_mode = 2
+
+[node name="TemperamentRow" type="HBoxContainer" parent="SafeArea/Column/Pages/ResumoPage/Summary"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="SafeArea/Column/Pages/ResumoPage/Summary/TemperamentRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"SecondaryLabel"
+theme_override_font_sizes/font_size = 24
+text = "Temperamento"
+
+[node name="TemperamentLabel" type="Label" parent="SafeArea/Column/Pages/ResumoPage/Summary/TemperamentRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"BoldLabel"
+theme_override_font_sizes/font_size = 24
+
+[node name="TraitRow" type="HBoxContainer" parent="SafeArea/Column/Pages/ResumoPage/Summary"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="SafeArea/Column/Pages/ResumoPage/Summary/TraitRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"SecondaryLabel"
+theme_override_font_sizes/font_size = 24
+text = "Traço"
+
+[node name="TraitNameLabel" type="Label" parent="SafeArea/Column/Pages/ResumoPage/Summary/TraitRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"BoldLabel"
+theme_override_font_sizes/font_size = 24
+
+[node name="TraitDescriptionLabel" type="Label" parent="SafeArea/Column/Pages/ResumoPage/Summary"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"SecondaryLabel"
+theme_override_font_sizes/font_size = 20
+autowrap_mode = 3
+
+[node name="ItemRow" type="HBoxContainer" parent="SafeArea/Column/Pages/ResumoPage/Summary"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="SafeArea/Column/Pages/ResumoPage/Summary/ItemRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"SecondaryLabel"
+theme_override_font_sizes/font_size = 24
+text = "Item"
+
+[node name="ItemLabel" type="Label" parent="SafeArea/Column/Pages/ResumoPage/Summary/ItemRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"BoldLabel"
+theme_override_font_sizes/font_size = 24
+
+[node name="GenderRow" type="HBoxContainer" parent="SafeArea/Column/Pages/ResumoPage/Summary"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="SafeArea/Column/Pages/ResumoPage/Summary/GenderRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"SecondaryLabel"
+theme_override_font_sizes/font_size = 24
+text = "Gênero"
+
+[node name="GenderLabel" type="Label" parent="SafeArea/Column/Pages/ResumoPage/Summary/GenderRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"BoldLabel"
+theme_override_font_sizes/font_size = 24
+
+[node name="AtributosPage" type="PanelContainer" parent="SafeArea/Column/Pages"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+theme_type_variation = &"SectionPanel"
+
+[node name="Attributes" type="VBoxContainer" parent="SafeArea/Column/Pages/AtributosPage"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Radar" type="Control" parent="SafeArea/Column/Pages/AtributosPage/Attributes"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 400)
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+script = ExtResource("7_radar")
+
+[node name="TemperamentNote" type="Label" parent="SafeArea/Column/Pages/AtributosPage/Attributes"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"SecondaryLabel"
+theme_override_font_sizes/font_size = 22
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="TecnicasPage" type="Control" parent="SafeArea/Column/Pages"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="SkillRows" type="VBoxContainer" parent="SafeArea/Column/Pages/TecnicasPage"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 8
+
+[node name="BottomSpace" type="Control" parent="SafeArea/Column"]
+custom_minimum_size = Vector2(0, 8)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="NicknamePanel" parent="." instance=ExtResource("8_nickname")]
+unique_name_in_owner = true
+layout_mode = 1

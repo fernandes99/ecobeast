@@ -1,6 +1,6 @@
 # 02. Tela de detalhes
 
-- **Status:** aprovada
+- **Status:** concluída
 - **Depende de:** [01-server-contract](01-server-contract.md), [visual-theme](../visual-theme/README.md)
 
 ## Contexto
@@ -59,18 +59,18 @@ Os itens de "Fora do escopo" do [README](README.md).
 
 ## Critérios de aceite
 
-- [ ] Tocar no inicial no Hub abre a tela com o sprite, o nome e o nível dele; voltar e Esc retornam ao Hub.
-- [ ] Um inicial nível 5 recém-criado mostra a barra de XP vazia e "faltam 91 XP" (Fagulho, curva média).
-- [ ] As três abas trocam o conteúdo sem rolagem em 720×1280, e nada corta na janela 405×720.
-- [ ] Resumo mostra a descrição, o Temperamento, o Traço com o efeito, "Nenhum" no item e o gênero.
-- [ ] Os números do hexágono são iguais aos `stats` do servidor; o aumentado e o diminuído têm as marcas, e o texto de baixo nomeia os dois.
-- [ ] Um Temperamento neutro não mostra marcas e diz "sem efeito nos stats".
-- [ ] Técnicas mostra as 2 Técnicas do inicial com PP cheio e 2 linhas "Vazio".
-- [ ] Salvar "Chama Viva" muda o nome na tela e no Hub, e a espécie aparece em texto secundário; depois de fechar e abrir o jogo, o apelido continua lá.
-- [ ] Salvar vazio volta ao nome da espécie, e o texto secundário some.
-- [ ] Com "A" ou "Fogo!", "Salvar" fica desabilitado; com o servidor parado, a mensagem de rede aparece, e o painel continua aberto.
-- [ ] Uma criatura de dois Elementos e um apelido de 16 letras não quebram o painel de identidade.
-- [ ] O jogo roda sem erros de script nem avisos (`godot --headless -d --path client --quit-after 60`).
+- [x] Tocar no inicial no Hub abre a tela com o sprite, o nome e o nível dele; voltar e Esc retornam ao Hub.
+- [x] Um inicial nível 5 recém-criado mostra a barra de XP vazia e "faltam 91 XP" (Fagulho, curva média).
+- [x] As três abas trocam o conteúdo sem rolagem em 720×1280, e nada corta na janela 405×720.
+- [x] Resumo mostra a descrição, o Temperamento, o Traço com o efeito, "Nenhum" no item e o gênero.
+- [x] Os números do hexágono são iguais aos `stats` do servidor; o aumentado e o diminuído têm as marcas, e o texto de baixo nomeia os dois.
+- [x] Um Temperamento neutro não mostra marcas e diz "sem efeito nos stats".
+- [x] Técnicas mostra as 2 Técnicas do inicial com PP cheio e 2 linhas "Vazio".
+- [x] Salvar "Chama Viva" muda o nome na tela e no Hub, e a espécie aparece em texto secundário; depois de fechar e abrir o jogo, o apelido continua lá. (A volta do apelido foi conferida relendo o jogador do servidor, sem reabrir o jogo.)
+- [x] Salvar vazio volta ao nome da espécie, e o texto secundário some.
+- [x] Com "A" ou "Fogo!", "Salvar" fica desabilitado; com o servidor parado, a mensagem de rede aparece, e o painel continua aberto.
+- [x] Uma criatura de dois Elementos e um apelido de 16 letras não quebram o painel de identidade.
+- [x] O jogo roda sem erros de script nem avisos (`godot --headless -d --path client --quit-after 60`).
 
 ## Desenho técnico
 
@@ -107,10 +107,19 @@ Uma cena temporária, nos moldes da [auth-google/05](../auth-google/05-client-pl
 
 ## Tarefas
 
-- [ ] Cena temporária com os critérios; ver falhar.
-- [ ] `CreatureInstance`, `set_nickname` no serviço e no `Session` (RF-17, RF-18).
-- [ ] `StatRadar` (RF-11, RF-12).
-- [ ] Tela: topo e abas (RF-01 a RF-10), com registro no `Router` e ligação no Hub.
-- [ ] `NicknamePanel` (RF-13 a RF-16).
-- [ ] Capturas, conferência e limpeza dos arquivos temporários.
-- [ ] Documentos; marcar esta spec, as tabelas e o roadmap como `concluída`; commit `feat: tela de detalhes do Ecobeast`.
+- [x] Cena temporária com os critérios; ver falhar.
+- [x] `CreatureInstance`, `set_nickname` no serviço e no `Session` (RF-17, RF-18).
+- [x] `StatRadar` (RF-11, RF-12).
+- [x] Tela: topo e abas (RF-01 a RF-10), com registro no `Router` e ligação no Hub.
+- [x] `NicknamePanel` (RF-13 a RF-16).
+- [x] Capturas, conferência e limpeza dos arquivos temporários.
+- [x] Documentos; marcar esta spec, as tabelas e o roadmap como `concluída`; commit `feat: tela de detalhes do Ecobeast`.
+
+## Decisões da implementação
+
+- **`SkillRow`:** a spec não listava esta cena. As quatro linhas de Técnica ficaram em `res://screens/creature_details/skill_row.tscn` e `.gd`, como os cards da escolha do inicial.
+- **Linha "Vazio":** usa o `SectionPanel`, sem a borda tracejada da prancha, porque o `StyleBoxFlat` do Godot não desenha traço.
+- **Nome longo:** o nome de exibição corta com reticências, para o lápis e o nível continuarem à vista.
+- **Espaço livre no Resumo:** com o conteúdo de hoje, sobra cerca de 200 px embaixo da aba. Fica para os próximos dados.
+- **Conferência:** 65 verificações numa cena temporária contra a API e o banco reais, sem Google, numa janela de 405×720: abrir pelo Hub, as três abas, os dois tipos de Temperamento, nível máximo, dois Elementos com apelido de 16 letras, gravar e remover o apelido, falha de rede e voltar. As capturas das telas foram conferidas uma a uma. Tudo foi apagado no fim, com o Domador de teste.
+- **Para o dono:** o toque de verdade na tela, o teclado no celular e a aparência no aparelho.
