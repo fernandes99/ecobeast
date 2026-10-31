@@ -13,7 +13,7 @@ Todo jogador com equipe. A mesma tela será aberta depois pelo Santuário e pela
 ## Objetivos
 
 1. Tocar em um Ecobeast do Hub abre os detalhes dele, e o voltar retorna ao Hub.
-2. Sprite, nome, Elemento, nível, HP e XP ficam sempre à vista; o resto se divide em três abas, sem rolagem.
+2. Sprite, nome, Elemento, nível, HP e XP ficam sempre à vista; o resto se divide em quatro abas, sem rolagem.
 3. O jogador dá, troca e remove o apelido, e isso vale em todo aparelho.
 
 ## Decisões
@@ -22,10 +22,11 @@ Tomadas com o dono do projeto:
 
 | Decisão                                                                 | Motivo                                                                    |
 | ----------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| Topo fixo e três abas (Resumo, Atributos, Técnicas), sem rolagem        | Dá para usar com uma mão, e o Ecobeast fica sempre à vista                 |
+| Topo fixo e abas (Resumo, Atributos, Genes, Técnicas), sem rolagem      | Dá para usar com uma mão, e o Ecobeast fica sempre à vista                 |
 | Atributos em gráfico de hexágono                                        | Mostra de relance no que a criatura é forte                                |
 | O apelido entra agora                                                   | O onboarding o deixou para esta tela                                       |
-| Genes e Treino ficam de fora                                            | O jogador ainda não pode fazer nada com eles                               |
+| Treino fica de fora                                                     | O jogador ainda não pode ganhá-lo                                          |
+| Genes entram numa aba própria, com pontuação e raridade ([03](03-genes-tab.md)) | O dono quer saber se um Ecobeast tem Genes raros. Reverte a decisão inicial de deixá-los de fora |
 | Depois desta iniciativa vem o `battle-core`                             | Decisão de ordem do dono                                                   |
 
 Tomadas no planejamento (corrigíveis; ao mudar uma, atualize aqui e nas specs afetadas):
@@ -40,7 +41,7 @@ Tomadas no planejamento (corrigíveis; ao mudar uma, atualize aqui e nas specs a
 
 ## Fora do escopo
 
-- Genes e Treino na tela.
+- Treino na tela.
 - Descrição de cada Técnica, esquecer ou reordenar Técnicas.
 - Trocar o item equipado (entra na `inventory-shop`); sem item, a tela diz "Nenhum".
 - Linha evolutiva (entra no `codex`).
@@ -57,3 +58,4 @@ Tomadas no planejamento (corrigíveis; ao mudar uma, atualize aqui e nas specs a
 | ----------------------------------------- | ------------------------------------------------------------- | -------- |
 | [01-server-contract](01-server-contract.md) | XP do nível em cada criatura e a rota do apelido              | concluída |
 | [02-details-screen](02-details-screen.md) | A tela em abas, o painel de apelido e a ligação com o Hub     | concluída |
+| [03-genes-tab](03-genes-tab.md)           | Aba Genes, com a pontuação e a raridade calculadas pelo servidor | aprovada |
