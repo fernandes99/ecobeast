@@ -128,6 +128,7 @@ Todas exigem a sessão. Erros em pt-BR.
 | Rota                              | Corpo                                  | Sucesso                     | Falhas                                                                                                                                  |
 | --------------------------------- | -------------------------------------- | --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
 | `POST /v1/me/battle`              | `{ "species_id": 1, "level": 5 }`      | `201 { "battle", "events" }` | `404` com `ENABLE_TEST_BATTLE` desligado · `400` "Esse inimigo não existe." · `409` "Crie seu Domador primeiro." · `409` "Cure sua equipe no Refúgio." |
+| `POST /v1/me/battle/wild`         | —                                      | `201 { "battle", "events" }` | `409` "Crie seu Domador primeiro." · `409` "Cure sua equipe no Refúgio." ([battle-screen/01](../battle-screen/01-wild-encounter.md)) |
 | `POST /v1/me/battle/action`       | uma ação da tabela acima               | `200 { "battle", "events" }` | `404` "Nenhuma batalha em andamento." · `400` com o motivo                                                                                |
 
 `battle` é o que o jogador vê:

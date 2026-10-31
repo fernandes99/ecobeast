@@ -357,6 +357,16 @@ describe('heal', () => {
       { type: 'effect_failed', side: 'player' },
     ]);
   });
+
+  it('com o HP acima do máximo, não tira HP', () => {
+    const { state, events } = play(
+      makeState(knowing([RESTORE], { currentHp: 25 }), idleEnemy()),
+      USE_FIRST,
+      catalog,
+    );
+    expect(state.player.team[0]!.currentHp).toBe(25);
+    expect(eventsOf(events, 'effect_failed')).toHaveLength(1);
+  });
 });
 
 describe('drain', () => {

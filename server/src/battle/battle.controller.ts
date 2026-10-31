@@ -23,6 +23,10 @@ import {
 import { toBattleAction } from './battle.mapper.js';
 import { BattleService, NO_BATTLE } from './battle.service.js';
 
+const NO_TEAM_RESPONSES =
+  'Sem Domador ou sem equipe: "Crie seu Domador primeiro." ' +
+  'Sem nenhum Ecobeast com HP: "Cure sua equipe no Refúgio."';
+
 /** A batalha do jogador (.specs/battle-core/03-battle-api.md). */
 @ApiTags('Batalha')
 @ApiBearerAuth()
@@ -50,16 +54,26 @@ export class BattleController {
     description: `Espécie ou nível inválido: "${INVALID_ENEMY}"`,
   })
   @ApiNotFoundResponse({ description: '`ENABLE_TEST_BATTLE` desligada.' })
-  @ApiConflictResponse({
-    description:
-      'Sem Domador ou sem equipe: "Crie seu Domador primeiro." ' +
-      'Sem nenhum Ecobeast com HP: "Cure sua equipe no Refúgio."',
-  })
+  @ApiConflictResponse({ description: NO_TEAM_RESPONSES })
   start(
     @CurrentUser() userId: string,
     @Body() body: StartBattleBodyDto,
   ): Promise<BattleResponseDto> {
     return this.battles.start(userId, body.species_id, body.level);
+  }
+
+  @Post('wild')
+  @ApiOperation({
+    summary: 'Começar um encontro selvagem',
+    description:
+      'Começa uma batalha contra um Ecobeast sorteado pelo servidor, com nível ' +
+      'perto do Ecobeast que entra em campo. Uma batalha em andamento é ' +
+      'descartada, sem gravar nada.',
+  })
+  @ApiCreatedResponse({ type: BattleResponseDto })
+  @ApiConflictResponse({ description: NO_TEAM_RESPONSES })
+  startWild(@CurrentUser() userId: string): Promise<BattleResponseDto> {
+    return this.battles.startWild(userId);
   }
 
   @Post('action')

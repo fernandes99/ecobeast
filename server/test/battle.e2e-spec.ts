@@ -84,6 +84,7 @@ describe('Rotas da batalha (e2e)', () => {
       remove: () => http().delete('/v1/me').set(auth),
       start: (body: object) =>
         http().post('/v1/me/battle').set(auth).send(body),
+      wild: () => http().post('/v1/me/battle/wild').set(auth),
       act: (body: object) =>
         http().post('/v1/me/battle/action').set(auth).send(body),
     };
@@ -117,6 +118,49 @@ describe('Rotas da batalha (e2e)', () => {
       include: {
         skills: { orderBy: { slot: 'asc' } },
         statusCondition: true,
+      },
+    });
+  }
+
+  /** Uma cópia do inicial no slot 2, com os campos pedidos. */
+  async function addSecondCreature(
+    user: User,
+    data: Pick<Prisma.CreatureInstanceUncheckedCreateInput, 'currentHp'> &
+      Partial<Pick<Prisma.CreatureInstanceUncheckedCreateInput, 'level'>>,
+  ) {
+    const row = await prisma.creatureInstance.findFirstOrThrow({
+      where: { playerId: user.id },
+      include: { stats: true, skills: true },
+    });
+    return prisma.creatureInstance.create({
+      data: {
+        playerId: user.id,
+        speciesId: row.speciesId,
+        level: row.level,
+        currentXp: row.currentXp,
+        temperamentId: row.temperamentId,
+        traitId: row.traitId,
+        gender: row.gender,
+        bond: row.bond,
+        location: 'party',
+        partySlot: 2,
+        originalPlayerId: user.id,
+        caughtAt: row.caughtAt,
+        stats: {
+          create: row.stats.map(({ statId, genes, trainingPoints }) => ({
+            statId,
+            genes,
+            trainingPoints,
+          })),
+        },
+        skills: {
+          create: row.skills.map(({ slot, skillId, currentPp }) => ({
+            slot,
+            skillId,
+            currentPp,
+          })),
+        },
+        ...data,
       },
     });
   }
@@ -326,41 +370,7 @@ describe('Rotas da batalha (e2e)', () => {
 
     it('quem desmaia dá lugar ao próximo, escolhido pelo jogador', async () => {
       const user = await weakUser();
-      const [row] = await prisma.creatureInstance.findMany({
-        where: { playerId: user.id },
-        include: { stats: true, skills: true },
-      });
-      const second = await prisma.creatureInstance.create({
-        data: {
-          playerId: user.id,
-          speciesId: row!.speciesId,
-          level: row!.level,
-          currentXp: row!.currentXp,
-          currentHp: 5,
-          temperamentId: row!.temperamentId,
-          traitId: row!.traitId,
-          gender: row!.gender,
-          bond: row!.bond,
-          location: 'party',
-          partySlot: 2,
-          originalPlayerId: user.id,
-          caughtAt: row!.caughtAt,
-          stats: {
-            create: row!.stats.map(({ statId, genes, trainingPoints }) => ({
-              statId,
-              genes,
-              trainingPoints,
-            })),
-          },
-          skills: {
-            create: row!.skills.map(({ slot, skillId, currentPp }) => ({
-              slot,
-              skillId,
-              currentPp,
-            })),
-          },
-        },
-      });
+      const second = await addSecondCreature(user, { currentHp: 5 });
 
       const opening = await start(user, STRONG_ENEMY);
       const fainted = await fight(user, opening);
@@ -483,11 +493,105 @@ describe('Rotas da batalha (e2e)', () => {
     });
   });
 
+  describe('encontro selvagem', () => {
+    async function wild(user: User): Promise<BattleBody> {
+      return (await user.wild().expect(201)).body as BattleBody;
+    }
+
+    it('sem token, dá 401', async () => {
+      await request(app.getHttpServer()).post('/v1/me/battle/wild').expect(401);
+    });
+
+    it('sem Domador, dá 409', async () => {
+      const user = await newUser();
+      const res = await user.wild().expect(409);
+      expect(res.body.message).toBe(NO_PLAYER);
+    });
+
+    it('sem criaturas, dá 409', async () => {
+      const user = await newUser();
+      await user.create().expect(201);
+      const res = await user.wild().expect(409);
+      expect(res.body.message).toBe(NO_PLAYER);
+    });
+
+    it('com a equipe toda a 0 HP, dá 409', async () => {
+      const user = await userWithStarter({ currentHp: 0 });
+      const res = await user.wild().expect(409);
+      expect(res.body.message).toBe(NO_HEALTHY);
+    });
+
+    it('funciona com a variável de teste desligada', async () => {
+      const closed = await createTestApp({
+        tokenVerifier: tokens.verifier,
+        env: { ENABLE_TEST_BATTLE: false },
+      });
+      const user = await userWithStarter({}, closed);
+      await user.wild().expect(201);
+      await user.start(WEAK_ENEMY).expect(404);
+      await closed.close();
+    });
+
+    it('o inimigo existe e tem nível perto do Ecobeast de frente', async () => {
+      const user = await userWithStarter({ level: 20 });
+      for (let round = 0; round < 6; round += 1) {
+        const { battle } = await wild(user);
+        const species = await prisma.species.count({
+          where: { id: battle.enemy.active['species_id'] as number },
+        });
+        expect(species).toBe(1);
+        const level = battle.enemy.active['level'] as number;
+        expect(level).toBeGreaterThanOrEqual(18);
+        expect(level).toBeLessThanOrEqual(21);
+      }
+    });
+
+    it('com o primeiro caído, o nível vem do segundo', async () => {
+      const user = await userWithStarter({ level: 50, currentHp: 0 });
+      await addSecondCreature(user, { level: 30, currentHp: 5 });
+      for (let round = 0; round < 6; round += 1) {
+        const { battle } = await wild(user);
+        expect(battle.player.active_index).toBe(1);
+        const level = battle.enemy.active['level'] as number;
+        expect(level).toBeGreaterThanOrEqual(28);
+        expect(level).toBeLessThanOrEqual(31);
+      }
+    });
+
+    it('uma nova batalha descarta a anterior, sem gravar', async () => {
+      const user = await userWithStarter();
+      const before = await team(user);
+      const first = await wild(user);
+      // O sorteio não importa aqui: ninguém cai, e a luta não termina.
+      const { state } = app.get(BattleStore).get(user.id)!;
+      state.player.team[0]!.currentHp = 100_000;
+      state.enemy.team[0]!.currentHp = 100_000;
+      await user.act(nextAttack(first.battle)).expect(200);
+
+      const second = await wild(user);
+
+      expect(second.battle.turn).toBe(1);
+      expect(await team(user)).toEqual(before);
+    });
+
+    it('a luta vai até o fim e grava HP e PP', async () => {
+      const user = await userWithStarter();
+      const { battle } = await fight(user, await wild(user));
+
+      expect(battle.phase).toBe('ended');
+      await expectTeamSaved(user, battle);
+    });
+  });
+
   it('as rotas aparecem no OpenAPI, com o cadeado', async () => {
     const { body } = await request(app.getHttpServer())
       .get('/docs/openapi.json')
       .expect(200);
-    for (const path of ['/v1/me/battle', '/v1/me/battle/action']) {
+    for (const path of [
+      '/v1/me/battle',
+      '/v1/me/battle/wild',
+      '/v1/me/battle/action',
+    ]) {
       const operation = body.paths[path].post;
       expect(operation.tags).toEqual(['Batalha']);
       expect(operation.security).toEqual([{ bearer: [] }]);

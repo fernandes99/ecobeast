@@ -109,7 +109,8 @@ function restoreHp(
 ): boolean {
   const creature = activeOf(context.state, side);
   const healed = Math.min(amount, creature.stats.hp - creature.currentHp);
-  if (healed === 0) return false;
+  // Um ajuste no painel pode deixar o HP atual acima do novo máximo.
+  if (healed <= 0) return false;
   creature.currentHp += healed;
   context.events.push({
     type: 'healed',

@@ -7,6 +7,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { secureRandom } from '../common/secure-random.js';
 import { Env } from '../config/env.js';
+import { rollEncounter } from '../domain/battle/encounter.js';
 import { applyAction, startBattle } from '../domain/battle/engine.js';
 import type {
   BattleAction,
@@ -55,20 +56,22 @@ export class BattleService {
       throw new NotFoundException('Rota não encontrada.');
     }
     const team = await this.loadTeam(userId);
-    const [enemy, catalog] = await Promise.all([
-      this.createEnemy(speciesId, level),
-      loadBattleCatalog(this.prisma),
-    ]);
-    const { state, events } = startBattle(
-      team,
-      [enemy],
-      CAN_FLEE_WILD,
-      catalog,
+    return this.begin(userId, team, await this.createEnemy(speciesId, level));
+  }
+
+  /** O inimigo é sorteado aqui, perto do nível de quem entra em campo. */
+  async startWild(userId: string): Promise<BattleResponseDto> {
+    const team = await this.loadTeam(userId);
+    const species = await this.prisma.species.findMany({
+      select: { id: true },
+      orderBy: { id: 'asc' },
+    });
+    const { speciesId, level } = rollEncounter(
+      species.map(({ id }) => id),
+      team.find((creature) => creature.currentHp > 0)!.level,
       secureRandom,
     );
-    // Substitui a batalha anterior, se houver, sem gravar nada dela.
-    this.store.set(userId, { state, catalog });
-    return toResponse(state, events);
+    return this.begin(userId, team, await this.createEnemy(speciesId, level));
   }
 
   /**
@@ -94,6 +97,24 @@ export class BattleService {
       this.store.set(userId, { ...battle, state: outcome.state });
     }
     return toResponse(outcome.state, outcome.events);
+  }
+
+  private async begin(
+    userId: string,
+    team: Combatant[],
+    enemy: Combatant,
+  ): Promise<BattleResponseDto> {
+    const catalog = await loadBattleCatalog(this.prisma);
+    const { state, events } = startBattle(
+      team,
+      [enemy],
+      CAN_FLEE_WILD,
+      catalog,
+      secureRandom,
+    );
+    // Substitui a batalha anterior, se houver, sem gravar nada dela.
+    this.store.set(userId, { state, catalog });
+    return toResponse(state, events);
   }
 
   private async loadTeam(userId: string): Promise<Combatant[]> {

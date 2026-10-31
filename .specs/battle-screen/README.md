@@ -60,6 +60,6 @@ Tomadas no planejamento (corrigíveis; ao mudar uma, atualize aqui e nas specs a
 
 | Fase                                        | Entrega                                                                        | Status   |
 | ------------------------------------------- | ------------------------------------------------------------------------------ | -------- |
-| [01-wild-encounter](01-wild-encounter.md)   | Rota que começa uma luta contra um Ecobeast sorteado pelo servidor             | aprovada |
+| [01-wild-encounter](01-wild-encounter.md)   | Rota que começa uma luta contra um Ecobeast sorteado pelo servidor             | concluída |
 | [02-battle-client](02-battle-client.md)     | Modelos da batalha, rotas no `Session` e os textos de cada evento              | aprovada |
 | [03-battle-screen](03-battle-screen.md)     | A tela, o ritmo do turno, a escolha do próximo, o fim e a ligação com o Hub    | aprovada |
