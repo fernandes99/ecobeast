@@ -1,14 +1,19 @@
 class_name ElementBadge
 extends PanelContainer
-## Pílula com o nome do Elemento na cor dele (foundation/02, RF-11).
+## Pílula com o nome do Elemento na cor dele (foundation/02, RF-11). Com
+## show_icon, mostra também res://assets/ui/elements/<slug>/icon.png, se existir.
 
 ## Acima desta luminância, a cor do Elemento é clara demais para texto branco.
 const LIGHT_LUMINANCE := 0.6
+const ICON_PATH := "res://assets/ui/elements/%s/icon.png"
+
+@export var show_icon: bool = false
 
 var _element_id: int = -1
 ## Cópia do estilo do tema, só deste selo (o fundo é a cor do Elemento).
 var _style: StyleBoxFlat
 
+@onready var _icon: TextureRect = %Icon
 @onready var _name_label: Label = %NameLabel
 
 
@@ -35,3 +40,7 @@ func _refresh() -> void:
 	_name_label.text = element.name
 	var is_light := element.color.get_luminance() > LIGHT_LUMINANCE
 	_name_label.add_theme_color_override(&"font_color", UiPalette.BACKGROUND if is_light else UiPalette.TEXT)
+	var icon_path := ICON_PATH % element.slug
+	_icon.visible = show_icon and ResourceLoader.exists(icon_path)
+	if _icon.visible:
+		_icon.texture = load(icon_path) as Texture2D

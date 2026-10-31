@@ -28,8 +28,8 @@ Depois da fase 01, o jogador cria o Domador e cai no placeholder "Escolha do ini
 
 **Tela** — `res://screens/starter_select/starter_select_screen.tscn`, registrada como `&"starter_select"`.
 
-- **RF-04:** Título "Escolha seu primeiro Ecobeast" (Bold, tamanho 40) e o texto "Ele vai te acompanhar desde o começo, <nome do Domador>." (texto secundário).
-- **RF-05:** Abaixo, um cartão (`PanelContainer`) por espécie de `GameData.get_starters()`, na ordem: `CreaturePortrait` de 140 px à esquerda; à direita o nome (Bold, tamanho 32), o `ElementBadge` do elemento e a descrição do Bestiário (tamanho 20, texto secundário, quebrando linha). O cartão inteiro é tocável, e sua borda fica na cor do elemento.
+- **RF-04:** Título e texto de apoio. Os textos atuais estão em [visual-theme/03](../visual-theme/03-starter-select-art.md), RF-02.
+- **RF-05:** Abaixo, um cartão por espécie de `GameData.get_starters()`, na ordem, com a arte, o nome, o Elemento e a descrição do Bestiário. O cartão inteiro é tocável. O layout atual está em [visual-theme/03](../visual-theme/03-starter-select-art.md), RF-03 a RF-09.
 - **RF-06:** Tocar num cartão abre, por cima da tela, um painel de confirmação: fundo escurecido (preto, 50%), `CreaturePortrait` de 200 px, "Escolher <nome>?", o `ElementBadge`, o texto "Essa escolha não pode ser desfeita." e os botões "Escolher" (primário) e "Voltar" (contorno, sem fundo). Tocar no fundo escurecido, em "Voltar" ou o voltar do Android fecha o painel sem escolher.
 - **RF-07:** "Escolher" desabilita os dois botões, troca o texto para "Escolhendo…" e chama `Session.choose_starter(id)`. Sucesso: abre o Hub (nesta fase, `Router.go_to(&"placeholder", {"title": "Hub"})`; [hub/01](../hub/01-hub-screen.md) troca por `&"hub"`). Falha: a mensagem do `Result` aparece no painel, na cor de perigo, e os botões voltam a funcionar.
 - **RF-08:** A tela não tem botão de voltar: o Domador já foi criado.

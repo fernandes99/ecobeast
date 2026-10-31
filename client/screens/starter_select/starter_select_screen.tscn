@@ -3,8 +3,11 @@
 [ext_resource type="Script" path="res://screens/starter_select/starter_select_screen.gd" id="1_script"]
 [ext_resource type="PackedScene" path="res://ui/components/safe_area.tscn" id="2_safe_area"]
 [ext_resource type="PackedScene" path="res://screens/starter_select/confirm_panel.tscn" id="3_confirm"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/starter_select.webp" id="4_background"]
+[ext_resource type="Texture2D" path="res://assets/ui/logo.png" id="5_logo"]
 
 [node name="StarterSelectScreen" type="Control"]
+texture_filter = 4
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -13,44 +16,94 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_script")
 
-[node name="SafeArea" parent="." instance=ExtResource("2_safe_area")]
+[node name="Background" type="TextureRect" parent="."]
 layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("4_background")
+expand_mode = 1
+stretch_mode = 6
 
-[node name="Scroll" type="ScrollContainer" parent="SafeArea"]
-layout_mode = 2
+[node name="Scroll" type="ScrollContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 horizontal_scroll_mode = 0
 
-[node name="Content" type="VBoxContainer" parent="SafeArea/Scroll"]
+[node name="SafeArea" parent="Scroll" instance=ExtResource("2_safe_area")]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-theme_override_constants/separation = 16
-alignment = 1
 
-[node name="Title" type="Label" parent="SafeArea/Scroll/Content"]
+[node name="Content" type="VBoxContainer" parent="Scroll/SafeArea"]
 layout_mode = 2
-theme_type_variation = &"TitleLabel"
-text = "Escolha seu primeiro Ecobeast"
-horizontal_alignment = 1
-autowrap_mode = 3
+theme_override_constants/separation = 0
 
-[node name="Subtitle" type="Label" parent="SafeArea/Scroll/Content"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_type_variation = &"SecondaryLabel"
-text = "Ele vai te acompanhar desde o começo."
-horizontal_alignment = 1
-autowrap_mode = 3
-
-[node name="Gap" type="Control" parent="SafeArea/Scroll/Content"]
+[node name="TopSpace" type="Control" parent="Scroll/SafeArea/Content"]
 custom_minimum_size = Vector2(0, 16)
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+
+[node name="Logo" type="TextureRect" parent="Scroll/SafeArea/Content"]
+custom_minimum_size = Vector2(0, 124)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("5_logo")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="LogoGap" type="Control" parent="Scroll/SafeArea/Content"]
+custom_minimum_size = Vector2(0, 14)
 layout_mode = 2
 mouse_filter = 2
 
-[node name="Cards" type="VBoxContainer" parent="SafeArea/Scroll/Content"]
+[node name="Banner" type="PanelContainer" parent="Scroll/SafeArea/Content"]
+layout_mode = 2
+theme_type_variation = &"BannerPanel"
+
+[node name="Texts" type="VBoxContainer" parent="Scroll/SafeArea/Content/Banner"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Title" type="Label" parent="Scroll/SafeArea/Content/Banner/Texts"]
+layout_mode = 2
+theme_type_variation = &"TitleLabel"
+theme_override_font_sizes/font_size = 34
+text = "Escolha seu Ecobeast inicial"
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="Subtitle" type="Label" parent="Scroll/SafeArea/Content/Banner/Texts"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Cada um tem um Elemento único. Escolha aquele que combina com o seu estilo de batalha!"
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="CoinGap" type="Control" parent="Scroll/SafeArea/Content"]
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Cards" type="HBoxContainer" parent="Scroll/SafeArea/Content"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_constants/separation = 16
+theme_override_constants/separation = 12
+
+[node name="BottomSpace" type="Control" parent="Scroll/SafeArea/Content"]
+custom_minimum_size = Vector2(0, 24)
+layout_mode = 2
+size_flags_vertical = 3
+size_flags_stretch_ratio = 2.5
+mouse_filter = 2
 
 [node name="ConfirmPanel" parent="." instance=ExtResource("3_confirm")]
 unique_name_in_owner = true

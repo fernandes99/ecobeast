@@ -72,6 +72,9 @@ Contraste mínimo de 4,5 : 1 para texto que carrega informação: `TEXT` e `TEXT
 | `res://assets/creatures/<slug>/front.png` | Retratos (já existe)                 | 512 × 512, fundo transparente |
 | `res://assets/backgrounds/hub.png`        | Cenário atrás do Hub inteiro         | Vertical 9 : 16 (1080 × 1920), sem transparência |
 | `res://assets/ui/actions/<ação>.webp`     | Topo de cada card de ação do Hub     | Quadrada, sem transparência, com o desenho no centro (as atuais: 276 × 276, WebP com perda a 90%) |
+| `res://assets/backgrounds/starter_select.webp` | Cenário da escolha do inicial   | Vertical 9 : 16 (1080 × 1920), sem transparência |
+| `res://assets/ui/logo.png`                | Logo na escolha do inicial           | Fundo transparente; é a única imagem com texto, por ser uma marca fixa |
+| `res://assets/ui/elements/<slug>/`        | Peças do cartão do inicial por Elemento | Ver [03-starter-select-art](03-starter-select-art.md) |
 
 Os ids das ações estão em [02-hub-layout](02-hub-layout.md). As artes das ações saíram de uma grade 4 × 4 do dono: as 8 de cima, na ordem das ações, recortadas sem a borda branca nem os cantos arredondados.
 
@@ -91,3 +94,4 @@ Os ids das ações estão em [02-hub-layout](02-hub-layout.md). As artes das aç
 | ----------------------------------- | ----------------------------------------------------------------------------- | -------- |
 | [01-dark-theme](01-dark-theme.md)   | Paleta, fonte e tema escuros aplicados a todas as telas existentes           | concluída |
 | [02-hub-layout](02-hub-layout.md)   | Hub no layout do protótipo: topo, equipe em linha, cards de ação e barra com ícones | concluída |
+| [03-starter-select-art](03-starter-select-art.md) | Escolha do inicial no layout do protótipo, com as peças por Elemento | concluída |

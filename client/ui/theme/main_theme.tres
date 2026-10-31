@@ -324,6 +324,27 @@ corner_radius_top_right = 999
 corner_radius_bottom_right = 999
 corner_radius_bottom_left = 999
 
+[sub_resource type="StyleBoxFlat" id="banner_panel"]
+content_margin_left = 8.0
+content_margin_top = 14.0
+content_margin_right = 8.0
+content_margin_bottom = 16.0
+bg_color = Color(0.0588235, 0.137255, 0.215686, 0.6)
+expand_margin_left = 24.0
+expand_margin_right = 24.0
+
+[sub_resource type="StyleBoxFlat" id="name_plate"]
+content_margin_left = 14.0
+content_margin_top = 2.0
+content_margin_right = 14.0
+content_margin_bottom = 4.0
+bg_color = Color(0.0392157, 0.101961, 0.168627, 0.92)
+corner_radius_top_left = 24
+corner_radius_top_right = 24
+corner_radius_bottom_right = 24
+corner_radius_bottom_left = 24
+corner_detail = 1
+
 [sub_resource type="StyleBoxFlat" id="hp_background"]
 bg_color = Color(0.0627451, 0.211765, 0.329412, 1)
 corner_radius_top_left = 999
@@ -387,6 +408,8 @@ AvatarPanel/base_type = &"PanelContainer"
 AvatarPanel/styles/panel = SubResource("avatar")
 BoldLabel/base_type = &"Label"
 BoldLabel/fonts/font = ExtResource("2_bold")
+BannerPanel/base_type = &"PanelContainer"
+BannerPanel/styles/panel = SubResource("banner_panel")
 Button/colors/font_color = Color(1, 1, 1, 1)
 Button/colors/font_disabled_color = Color(1, 1, 1, 0.4)
 Button/colors/font_focus_color = Color(1, 1, 1, 1)
@@ -469,6 +492,8 @@ OutlineButton/styles/hover = SubResource("outline_normal")
 OutlineButton/styles/hover_pressed = SubResource("outline_pressed")
 OutlineButton/styles/normal = SubResource("outline_normal")
 OutlineButton/styles/pressed = SubResource("outline_pressed")
+NamePlatePanel/base_type = &"PanelContainer"
+NamePlatePanel/styles/panel = SubResource("name_plate")
 Panel/styles/panel = SubResource("panel")
 PanelContainer/styles/panel = SubResource("panel")
 PlayerPanel/base_type = &"PanelContainer"

@@ -1,17 +1,14 @@
 extends Control
-## Escolha do Ecobeast inicial (onboarding/02, TELAS.md #2). Sem botão de
-## voltar: o Domador já foi criado.
+## Escolha do Ecobeast inicial (onboarding/02, visual-theme/03, TELAS.md #2). Sem
+## botão de voltar: o Domador já foi criado.
 
 const StarterCardScene := preload("res://screens/starter_select/starter_card.tscn")
 
-@onready var _subtitle: Label = %Subtitle
-@onready var _cards: VBoxContainer = %Cards
+@onready var _cards: HBoxContainer = %Cards
 @onready var _confirm_panel: StarterConfirmPanel = %ConfirmPanel
 
 
 func _ready() -> void:
-	if Session.player != null:
-		_subtitle.text = "Ele vai te acompanhar desde o começo, %s." % Session.player.name
 	for species: CreatureSpecies in GameData.get_starters():
 		var card: StarterCard = StarterCardScene.instantiate()
 		card.setup(species)
