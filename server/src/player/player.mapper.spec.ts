@@ -89,6 +89,8 @@ describe('toPlayerDto', () => {
       current_hp: 12,
       stats: { hp: 20, atk: 11, def: 9, sp_atk: 10, sp_def: 10, spd: 10 },
       genes: { hp: 31, atk: 0, def: 0, sp_atk: 0, sp_def: 0, spd: 0 },
+      genes_total: 31,
+      genes_rank: { slug: 'common', name: 'Comum' },
       training_points: { hp: 0, atk: 0, def: 0, sp_atk: 0, sp_def: 0, spd: 0 },
       temperament_id: 3,
       trait_id: 4,
@@ -146,6 +148,14 @@ describe('toPlayerDto', () => {
     const [dto] = toPlayerDto(player([creature({ level: 100 })])).party;
     expect(dto!.level_xp).toBe(1_000_000);
     expect(dto!.next_level_xp).toBeNull();
+  });
+
+  it('calcula a pontuação e a raridade a partir dos Genes da criatura', () => {
+    const row = creature();
+    row.stats = row.stats.map((stat) => ({ ...stat, genes: 25 }));
+    const [dto] = toPlayerDto(player([row])).party;
+    expect(dto!.genes_total).toBe(150);
+    expect(dto!.genes_rank).toEqual({ slug: 'epic', name: 'Épico' });
   });
 
   it('avisa se faltar um stat da criatura', () => {

@@ -43,6 +43,17 @@ const STAT_BLOCK = {
   },
 } as const;
 
+export class GeneRankDto {
+  @ApiProperty({
+    enum: ['common', 'uncommon', 'rare', 'epic', 'exceptional'],
+    example: 'rare',
+  })
+  slug: string;
+
+  @ApiProperty({ example: 'Raro' })
+  name: string;
+}
+
 export class SkillSlotDto {
   @ApiProperty({ example: 1 })
   skill_id: number;
@@ -97,6 +108,18 @@ export class CreatureDto {
     example: { hp: 12, atk: 30, def: 4, sp_atk: 19, sp_def: 27, spd: 8 },
   })
   genes: StatBlock;
+
+  @ApiProperty({
+    description: 'A pontuação dos Genes: a soma dos 6, de 0 a 186.',
+    example: 133,
+  })
+  genes_total: number;
+
+  @ApiProperty({
+    description: 'A raridade da pontuação dos Genes.',
+    type: () => GeneRankDto,
+  })
+  genes_rank: GeneRankDto;
 
   @ApiProperty({
     ...STAT_BLOCK,

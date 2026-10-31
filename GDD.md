@@ -196,6 +196,8 @@ Stat = \left( \left\lfloor \frac{(2 \cdot Base + Genes + \lfloor Treino/4 \rfloo
 
 Temperamento = 1,1, 0,9 ou 1,0. Modificador de estágio em batalha: +n → (2+n)/2; −n → 2/(2+n).
 
+A soma dos 6 Genes é a pontuação da criatura, de 0 a 186, e define a raridade dos Genes: Comum (0–109), Incomum (110–129), Raro (130–144), Épico (145–159) e Excepcional (160–186).
+
 **Dano**
 
 ```latex

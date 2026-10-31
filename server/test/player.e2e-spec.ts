@@ -2,6 +2,7 @@ import { INestApplication } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import request from 'supertest';
 import type { App } from 'supertest/types.js';
+import { geneRank } from '../src/domain/rules/genes.js';
 import { PrismaClient } from '../src/generated/prisma/client.js';
 import { createTestApp } from './support/app.js';
 import { createTestPrisma } from './support/db.js';
@@ -24,6 +25,8 @@ interface Creature {
   current_hp: number;
   stats: Record<string, number>;
   genes: Record<string, number>;
+  genes_total: number;
+  genes_rank: { slug: string; name: string };
   training_points: Record<string, number>;
   temperament_id: number;
   trait_id: number;
@@ -296,6 +299,16 @@ describe('Rotas do jogador (e2e)', () => {
     expect(creature.next_level_xp).toBeGreaterThan(creature.level_xp);
   });
 
+  it('o inicial traz a pontuação e a raridade dos Genes', async () => {
+    const { user } = await userWithStarter();
+    const res = await user.read().expect(200);
+    const creature = res.body.player.party[0] as Creature;
+
+    const sum = Object.values(creature.genes).reduce((a, b) => a + b, 0);
+    expect(creature.genes_total).toBe(sum);
+    expect(creature.genes_rank).toEqual(geneRank(sum));
+  });
+
   it('grava o apelido normalizado e devolve o jogador', async () => {
     const { user, uid } = await userWithStarter();
 
@@ -410,5 +423,7 @@ describe('Rotas do jogador (e2e)', () => {
     const creature = doc.body.components.schemas.CreatureDto.properties;
     expect(creature.level_xp.description).toBeTruthy();
     expect(creature.next_level_xp.nullable).toBe(true);
+    expect(creature.genes_total.description).toBeTruthy();
+    expect(creature.genes_rank).toBeDefined();
   });
 });

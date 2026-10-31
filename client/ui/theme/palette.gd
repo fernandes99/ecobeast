@@ -38,6 +38,15 @@ const ACTION_COLORS: Dictionary[StringName, Array] = {
 	&"bag": [Color("#9C6E43"), Color("#3E362F")],
 }
 
+## Selo da raridade dos Genes (creature-details/03, RF-06): slug -> cor.
+const GENE_RANK_COLORS: Dictionary[String, Color] = {
+	"common": SURFACE_RAISED,
+	"uncommon": HP_HIGH,
+	"rare": WARNING,
+	"epic": Color("#A56BE8"),
+	"exceptional": Color("#E86AA8"),
+}
+
 ## Faixas da barra de HP.
 const HP_MID := WARNING
 const HP_LOW := DANGER

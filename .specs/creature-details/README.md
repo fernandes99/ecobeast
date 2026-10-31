@@ -58,4 +58,4 @@ Tomadas no planejamento (corrigíveis; ao mudar uma, atualize aqui e nas specs a
 | ----------------------------------------- | ------------------------------------------------------------- | -------- |
 | [01-server-contract](01-server-contract.md) | XP do nível em cada criatura e a rota do apelido              | concluída |
 | [02-details-screen](02-details-screen.md) | A tela em abas, o painel de apelido e a ligação com o Hub     | concluída |
-| [03-genes-tab](03-genes-tab.md)           | Aba Genes, com a pontuação e a raridade calculadas pelo servidor | aprovada |
+| [03-genes-tab](03-genes-tab.md)           | Aba Genes, com a pontuação e a raridade calculadas pelo servidor | concluída |

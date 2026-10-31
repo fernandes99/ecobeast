@@ -183,6 +183,13 @@ layout_mode = 2
 size_flags_horizontal = 3
 text = "Atributos"
 
+[node name="GenesTab" type="Button" parent="SafeArea/Column/TabRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 64)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Genes"
+
 [node name="TecnicasTab" type="Button" parent="SafeArea/Column/TabRow"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 64)
@@ -311,6 +318,70 @@ theme_type_variation = &"SecondaryLabel"
 theme_override_font_sizes/font_size = 22
 horizontal_alignment = 1
 autowrap_mode = 3
+
+[node name="GenesPage" type="PanelContainer" parent="SafeArea/Column/Pages"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+theme_type_variation = &"SectionPanel"
+
+[node name="Genes" type="VBoxContainer" parent="SafeArea/Column/Pages/GenesPage"]
+layout_mode = 2
+theme_override_constants/separation = 16
+alignment = 1
+
+[node name="Header" type="HBoxContainer" parent="SafeArea/Column/Pages/GenesPage/Genes"]
+layout_mode = 2
+
+[node name="Score" type="VBoxContainer" parent="SafeArea/Column/Pages/GenesPage/Genes/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 0
+
+[node name="Title" type="Label" parent="SafeArea/Column/Pages/GenesPage/Genes/Header/Score"]
+layout_mode = 2
+theme_type_variation = &"SecondaryLabel"
+theme_override_font_sizes/font_size = 22
+text = "Pontuação"
+
+[node name="Total" type="HBoxContainer" parent="SafeArea/Column/Pages/GenesPage/Genes/Header/Score"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="GenesTotalLabel" type="Label" parent="SafeArea/Column/Pages/GenesPage/Genes/Header/Score/Total"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"TitleLabel"
+theme_override_font_sizes/font_size = 52
+
+[node name="MaxLabel" type="Label" parent="SafeArea/Column/Pages/GenesPage/Genes/Header/Score/Total"]
+layout_mode = 2
+size_flags_vertical = 8
+theme_type_variation = &"SecondaryLabel"
+theme_override_font_sizes/font_size = 26
+text = "/ 186"
+
+[node name="RankBadge" type="PanelContainer" parent="SafeArea/Column/Pages/GenesPage/Genes/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
+theme_type_variation = &"ElementPill"
+
+[node name="RankLabel" type="Label" parent="SafeArea/Column/Pages/GenesPage/Genes/Header/RankBadge"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"BoldLabel"
+theme_override_font_sizes/font_size = 26
+horizontal_alignment = 1
+
+[node name="Separator" type="HSeparator" parent="SafeArea/Column/Pages/GenesPage/Genes"]
+layout_mode = 2
+
+[node name="GeneRows" type="VBoxContainer" parent="SafeArea/Column/Pages/GenesPage/Genes"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 16
 
 [node name="TecnicasPage" type="Control" parent="SafeArea/Column/Pages"]
 unique_name_in_owner = true

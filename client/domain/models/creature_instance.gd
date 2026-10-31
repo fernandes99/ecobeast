@@ -18,6 +18,11 @@ var current_hp: int = 0
 ## Calculado pelo servidor a cada resposta.
 var stats := StatBlock.new()
 var genes := StatBlock.new()
+## A soma dos 6 Genes, calculada pelo servidor.
+var genes_total: int = 0
+## A raridade dessa soma, decidida pelo servidor.
+var genes_rank_slug: String = ""
+var genes_rank_name: String = ""
 var training_points := StatBlock.new()
 var temperament_id: int
 var trait_id: int
@@ -54,6 +59,10 @@ static func from_dict(d: Dictionary) -> CreatureInstance:
 	creature.current_hp = DictFields.get_int(d, "current_hp")
 	creature.stats = StatBlock.from_dict(DictFields.get_dict(d, "stats"))
 	creature.genes = StatBlock.from_dict(DictFields.get_dict(d, "genes"))
+	creature.genes_total = DictFields.get_int(d, "genes_total")
+	var genes_rank := DictFields.get_dict(d, "genes_rank")
+	creature.genes_rank_slug = DictFields.get_string(genes_rank, "slug")
+	creature.genes_rank_name = DictFields.get_string(genes_rank, "name")
 	creature.training_points = StatBlock.from_dict(DictFields.get_dict(d, "training_points"))
 	creature.temperament_id = DictFields.get_int(d, "temperament_id")
 	creature.trait_id = DictFields.get_int(d, "trait_id")

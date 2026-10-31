@@ -1,3 +1,4 @@
+import { geneRank, genesTotal } from '../domain/rules/genes.js';
 import { calculateStats } from '../domain/rules/stat-calculator.js';
 import { STAT_SLUGS, StatBlock, StatSlug } from '../domain/rules/types.js';
 import { MAX_LEVEL, totalXpForLevel } from '../domain/rules/xp-curve.js';
@@ -66,6 +67,7 @@ function toCreatureDto(row: CreatureRow): CreatureDto {
   const genes = toStatBlock(row.stats, (stat) => stat.genes);
   const trainingPoints = toStatBlock(row.stats, (stat) => stat.trainingPoints);
   const { xpMultiplier } = row.species.growthRate;
+  const genesScore = genesTotal(genes);
   return {
     uid: row.uid,
     species_id: row.speciesId,
@@ -90,6 +92,8 @@ function toCreatureDto(row: CreatureRow): CreatureDto {
       },
     ),
     genes,
+    genes_total: genesScore,
+    genes_rank: geneRank(genesScore),
     training_points: trainingPoints,
     temperament_id: row.temperamentId,
     trait_id: row.traitId,

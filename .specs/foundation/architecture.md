@@ -65,7 +65,7 @@ res://
     title/                                                                            (onboarding/01)
     starter_select/            tela, starter_card, confirm_panel                      (onboarding/02)
     hub/                       tela, profile_debug_panel                              (hub/01)
-    creature_details/          tela, skill_row, nickname_panel                        (creature-details/02)
+    creature_details/          tela, skill_row, gene_row, nickname_panel              (creature-details/02, 03)
   assets/
     creatures/<slug>/front.png sprites (quando houver arte)
 ```

@@ -1,19 +1,24 @@
 extends Control
 ## Detalhes de um Ecobeast (creature-details/02, TELAS.md #8): topo fixo com o
-## retrato, a identidade, o HP e o XP, e três abas sem rolagem. Parâmetro:
+## retrato, a identidade, o HP e o XP, e quatro abas sem rolagem. Parâmetro:
 ## {"uid": String}. Tudo vem do Session e do GameData; a tela só faz a conta da
 ## barra de XP com os números que o servidor mandou.
 
 const ElementBadgeScene := preload("res://ui/components/element_badge.tscn")
 const SkillRowScene := preload("res://screens/creature_details/skill_row.tscn")
+const GeneRowScene := preload("res://screens/creature_details/gene_row.tscn")
 
 const SKILL_SLOTS := 4
 const GLOW_ALPHA := 0.55
+## Acima desta luminância, o selo da raridade pede texto escuro.
+const LIGHT_RANK_LUMINANCE := 0.3
 const NO_ITEM := "Nenhum"
 const MAX_LEVEL_TEXT := "Nível máximo"
 const GENDERS: Dictionary[String, String] = {"male": "Macho", "female": "Fêmea", "none": "Sem gênero"}
 
 var _uid: String = ""
+## Cópia do estilo do tema, só deste selo (o fundo é a cor da raridade).
+var _rank_style: StyleBoxFlat
 
 @onready var _glow: TextureRect = %Glow
 @onready var _portrait: CreaturePortrait = %Portrait
@@ -26,8 +31,8 @@ var _uid: String = ""
 @onready var _hp_bar: HpBar = %HpBar
 @onready var _xp_bar: ProgressBar = %XpBar
 @onready var _xp_label: Label = %XpLabel
-@onready var _tabs: Array[Button] = [%ResumoTab, %AtributosTab, %TecnicasTab]
-@onready var _pages: Array[Control] = [%ResumoPage, %AtributosPage, %TecnicasPage]
+@onready var _tabs: Array[Button] = [%ResumoTab, %AtributosTab, %GenesTab, %TecnicasTab]
+@onready var _pages: Array[Control] = [%ResumoPage, %AtributosPage, %GenesPage, %TecnicasPage]
 @onready var _description_label: Label = %DescriptionLabel
 @onready var _temperament_label: Label = %TemperamentLabel
 @onready var _trait_name_label: Label = %TraitNameLabel
@@ -36,6 +41,10 @@ var _uid: String = ""
 @onready var _gender_label: Label = %GenderLabel
 @onready var _radar: StatRadar = %Radar
 @onready var _temperament_note: Label = %TemperamentNote
+@onready var _genes_total_label: Label = %GenesTotalLabel
+@onready var _rank_badge: PanelContainer = %RankBadge
+@onready var _rank_label: Label = %RankLabel
+@onready var _gene_rows: VBoxContainer = %GeneRows
 @onready var _skill_rows: VBoxContainer = %SkillRows
 @onready var _nickname_panel: NicknamePanel = %NicknamePanel
 
@@ -52,6 +61,10 @@ func _ready() -> void:
 		_tabs[index].pressed.connect(_show_page.bind(index))
 	for index: int in SKILL_SLOTS:
 		_skill_rows.add_child(SkillRowScene.instantiate())
+	for slug: String in StatBlock.SLUGS:
+		_gene_rows.add_child(GeneRowScene.instantiate())
+	_rank_style = (_rank_badge.get_theme_stylebox(&"panel") as StyleBoxFlat).duplicate()
+	_rank_badge.add_theme_stylebox_override(&"panel", _rank_style)
 	_show_page(0)
 	Session.player_changed.connect(_refresh)
 	_refresh()
@@ -91,6 +104,7 @@ func _refresh() -> void:
 	_show_xp(creature)
 	_show_summary(creature, species)
 	_show_attributes(creature)
+	_show_genes(creature)
 	_show_skills(creature)
 
 
@@ -160,6 +174,20 @@ func _show_attributes(creature: CreatureInstance) -> void:
 		GameData.get_row("stats", temperament.increased_stat_id)["short_name"],
 		GameData.get_row("stats", temperament.decreased_stat_id)["short_name"],
 	]
+
+
+## A pontuação e a raridade vêm prontas do servidor.
+func _show_genes(creature: CreatureInstance) -> void:
+	_genes_total_label.text = str(creature.genes_total)
+	_rank_label.text = creature.genes_rank_name
+	var color: Color = UiPalette.GENE_RANK_COLORS.get(creature.genes_rank_slug, UiPalette.SURFACE_RAISED)
+	_rank_style.bg_color = color
+	var is_light := color.get_luminance() > LIGHT_RANK_LUMINANCE
+	_rank_label.add_theme_color_override(&"font_color", UiPalette.BACKGROUND if is_light else UiPalette.TEXT)
+	for index: int in StatBlock.SLUGS.size():
+		var slug: String = StatBlock.SLUGS[index]
+		var short_name: String = GameData.get_row("stats", GameData.get_stat_id(slug))["short_name"]
+		(_gene_rows.get_child(index) as GeneRow).set_gene(short_name, creature.genes.get_value(slug))
 
 
 func _show_skills(creature: CreatureInstance) -> void:

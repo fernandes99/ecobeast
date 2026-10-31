@@ -59,6 +59,8 @@ Formato JSON de cada modelo = o formato que a API devolve. Cada modelo tem `stat
 | current_hp          | int                |                                                                  |
 | stats               | StatBlock          | **Calculado** pelo servidor a cada resposta                       |
 | genes               | StatBlock          | 0–31 cada                                                        |
+| genes_total         | int                | **Calculado** pelo servidor: a soma dos 6, de 0 a 186            |
+| genes_rank          | `{slug, name}`     | **Calculado** pelo servidor: a raridade dessa soma               |
 | training_points     | StatBlock          | 0–252 cada, 510 no total                                         |
 | temperament_id      | int                |                                                                  |
 | trait_id            | int                |                                                                  |

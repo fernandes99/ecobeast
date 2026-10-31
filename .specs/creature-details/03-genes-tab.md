@@ -1,6 +1,6 @@
 # 03. Aba Genes
 
-- **Status:** aprovada
+- **Status:** concluída
 - **Depende de:** [02-details-screen](02-details-screen.md)
 
 ## Contexto
@@ -48,15 +48,15 @@ Os Genes de cada criatura são sorteados de 0 a 31 por stat quando ela nasce, e 
 
 ## Critérios de aceite
 
-- [ ] Em testes de unidade, 109 é Comum; 110, Incomum; 129, Incomum; 130, Raro; 144, Raro; 145, Épico; 159, Épico; 160, Excepcional; 0, Comum; e 186, Excepcional.
-- [ ] Um inicial novo traz `genes_total` igual à soma dos `genes`, e `genes_rank` da faixa dela.
-- [ ] O OpenAPI tem os dois campos.
-- [ ] A aba Genes mostra os mesmos números que o servidor mandou, e a pontuação e o selo batem com eles.
-- [ ] Um Gene 31 aparece em dourado, e um Gene 30, não.
-- [ ] As cinco raridades têm selos com cores diferentes e texto legível.
-- [ ] As quatro abas cabem em uma linha, sem cortar texto, e a aba Genes não precisa de rolagem.
-- [ ] Trocar a raridade de faixa no servidor muda a tela sem mudar o jogo.
-- [ ] `npm run lint`, `npm run typecheck`, `npm test` e `npm run test:e2e` passam, e o jogo roda sem erros nem avisos de script.
+- [x] Em testes de unidade, 109 é Comum; 110, Incomum; 129, Incomum; 130, Raro; 144, Raro; 145, Épico; 159, Épico; 160, Excepcional; 0, Comum; e 186, Excepcional.
+- [x] Um inicial novo traz `genes_total` igual à soma dos `genes`, e `genes_rank` da faixa dela.
+- [x] O OpenAPI tem os dois campos.
+- [x] A aba Genes mostra os mesmos números que o servidor mandou, e a pontuação e o selo batem com eles.
+- [x] Um Gene 31 aparece em dourado, e um Gene 30, não.
+- [x] As cinco raridades têm selos com cores diferentes e texto legível.
+- [x] As quatro abas cabem em uma linha, sem cortar texto, e a aba Genes não precisa de rolagem.
+- [x] Trocar a raridade de faixa no servidor muda a tela sem mudar o jogo.
+- [x] `npm run lint`, `npm run typecheck`, `npm test` e `npm run test:e2e` passam, e o jogo roda sem erros nem avisos de script.
 
 ## Desenho técnico
 
@@ -84,8 +84,14 @@ Uma cena temporária, com o `client/override.cfg` da [02](02-details-screen.md#v
 
 ## Tarefas
 
-- [ ] Testes de `genes.ts`; ver falhar; regra (RF-01, RF-02).
-- [ ] Testes do mapper e dos e2e; ver falhar; campos no JSON (RF-03).
-- [ ] Cena temporária; ver falhar; modelo, paleta, `GeneRow` e aba (RF-04 a RF-09).
-- [ ] Capturas, conferência e limpeza dos arquivos temporários.
-- [ ] Documentos; marcar esta spec, a tabela do README e o roadmap como `concluída`; commit `feat: Genes na tela de detalhes`.
+- [x] Testes de `genes.ts`; ver falhar; regra (RF-01, RF-02).
+- [x] Testes do mapper e dos e2e; ver falhar; campos no JSON (RF-03).
+- [x] Cena temporária; ver falhar; modelo, paleta, `GeneRow` e aba (RF-04 a RF-09).
+- [x] Capturas, conferência e limpeza dos arquivos temporários.
+- [x] Documentos; marcar esta spec, a tabela do README e o roadmap como `concluída`; commit `feat: Genes na tela de detalhes`.
+
+## Decisões da implementação
+
+- **Selo Comum:** usa `SURFACE_RAISED` com texto branco, de propósito discreto. As outras raridades têm cor forte e texto escuro; a troca vem de `LIGHT_RANK_LUMINANCE`, na tela, porque o limite do `ElementBadge` deixaria o texto branco sobre as cores novas, com pouco contraste.
+- **Cena temporária:** a parte de Genes foi escrita junto com a aba, então não chegou a ser vista falhando. Os testes do servidor, sim. O critério de faixa foi conferido trocando no jogo os valores recebidos, sem mudar o servidor de verdade.
+- **Conferência:** 90 verificações contra a API e o banco reais, sem Google, incluindo as da [02](02-details-screen.md). Capturas das cinco raridades e do Gene 31 conferidas. `npm run lint` e `npm run typecheck` sem avisos; `npm test` com 135 testes; `npm run test:e2e` com 213. Os temporários e o Domador de teste foram apagados.
