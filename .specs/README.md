@@ -23,6 +23,7 @@ O Ecobeast é um jogo mobile (Android/iOS, retrato): o cliente em **Godot 4.7 co
 | [backend-api](backend-api/) | Servidor: banco no Supabase, API NestJS do catálogo e o jogo lendo o catálogo dela        |
 | [visual-theme](visual-theme/) | Paleta escura em todo o jogo e o Hub no layout do protótipo                            |
 | [auth-google](auth-google/) | Login com Google pelo navegador e o jogador morando no servidor                          |
+| [creature-details](creature-details/) | Tela de detalhes do Ecobeast, com atributos, Técnicas e apelido                |
 
 As próximas iniciativas estão no [roadmap.md](roadmap.md).
 
