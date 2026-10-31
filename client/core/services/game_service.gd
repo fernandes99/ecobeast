@@ -24,3 +24,11 @@ extends RefCounted
 
 ## data: null.
 @abstract func reset_progress() -> Result
+
+
+## data: o BattleTurn da abertura, contra um Ecobeast sorteado pelo servidor.
+@abstract func start_wild_battle() -> Result
+
+
+## data: o BattleTurn da ação, ou null se a batalha não existe mais.
+@abstract func battle_action(action: Dictionary) -> Result

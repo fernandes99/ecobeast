@@ -133,6 +133,16 @@ func get_stat_id(slug: String) -> int:
 	return _stat_ids[slug]
 
 
+## O nome de um status; slug desconhecido volta como veio.
+func get_status_name(slug: String) -> String:
+	return _name_by_slug("status_conditions", slug)
+
+
+## O nome de um stat; slug desconhecido volta como veio.
+func get_stat_name(slug: String) -> String:
+	return _name_by_slug("stats", slug)
+
+
 ## Linha de uma tabela de referência sem modelo próprio (rarities, status_conditions…).
 func get_row(table_name: String, id: int) -> Dictionary:
 	var by_id: Dictionary = _rows_by_id.get(table_name, {})
@@ -140,6 +150,13 @@ func get_row(table_name: String, id: int) -> Dictionary:
 		push_error("Catálogo: %s.json não tem id %d" % [table_name, id])
 		return {}
 	return by_id[id]
+
+
+func _name_by_slug(table_name: String, slug: String) -> String:
+	for row: Dictionary in _rows(table_name):
+		if row["slug"] == slug:
+			return row["name"]
+	return slug
 
 
 # --- Montagem -------------------------------------------------------------------

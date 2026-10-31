@@ -79,6 +79,17 @@ func reset_progress() -> Result:
 	return result
 
 
+## A batalha não fica aqui: quem a mostra é a tela, e o jogador é relido no fim.
+func start_wild_battle() -> Result:
+	@warning_ignore("redundant_await")
+	return await _service.start_wild_battle()
+
+
+func battle_action(action: Dictionary) -> Result:
+	@warning_ignore("redundant_await")
+	return await _service.battle_action(action)
+
+
 func _set_player(value: Player) -> void:
 	player = value
 	player_changed.emit()

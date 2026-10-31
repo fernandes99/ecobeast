@@ -1,6 +1,6 @@
 # 02. Batalha no cliente
 
-- **Status:** aprovada
+- **Status:** concluída
 - **Depende de:** [01-wild-encounter](01-wild-encounter.md)
 
 ## Contexto
@@ -54,15 +54,15 @@ O servidor já responde com o estado e os eventos da batalha, mas o Godot não s
 
 ## Critérios de aceite
 
-- [ ] O JSON do exemplo em [battle-core/architecture.md](../battle-core/architecture.md#api) vira um `BattleView` com todos os campos.
-- [ ] `status` e `result` nulos viram texto vazio, e o inimigo fica sem `uid` e sem `skills`.
-- [ ] Contra o servidor real, `start_wild_battle` e `battle_action` devolvem um `BattleTurn`, e uma ação inválida devolve a mensagem do motor.
-- [ ] Sem batalha em andamento, `battle_action` devolve sucesso com `data` nulo.
-- [ ] Cada linha da tabela de textos é conferida, inclusive os prefixos de crítico e efetividade.
-- [ ] Um evento de tipo desconhecido devolve texto vazio.
-- [ ] `apply` muda o HP, o status, `confused` e os estágios de cada evento da tabela.
-- [ ] Depois de um `switch`, `apply` põe o `uid` certo no cartão do jogador.
-- [ ] O projeto abre sem erros nem avisos de script.
+- [x] O JSON do exemplo em [battle-core/architecture.md](../battle-core/architecture.md#api) vira um `BattleView` com todos os campos.
+- [x] `status` e `result` nulos viram texto vazio, e o inimigo fica sem `uid` e sem `skills`.
+- [x] Contra o servidor real, `start_wild_battle` e `battle_action` devolvem um `BattleTurn`, e uma ação inválida devolve a mensagem do motor.
+- [x] Sem batalha em andamento, `battle_action` devolve sucesso com `data` nulo.
+- [x] Cada linha da tabela de textos é conferida, inclusive os prefixos de crítico e efetividade.
+- [x] Um evento de tipo desconhecido devolve texto vazio.
+- [x] `apply` muda o HP, o status, `confused` e os estágios de cada evento da tabela.
+- [x] Depois de um `switch`, `apply` põe o `uid` certo no cartão do jogador.
+- [x] O projeto abre sem erros nem avisos de script.
 
 ## Desenho técnico
 
@@ -91,8 +91,15 @@ godot --headless -d --path client --quit-after 60
 
 ## Tarefas
 
-- [ ] Cena de conferência dos modelos; ver falhar; implementar (RF-01 a RF-03).
-- [ ] Conferência contra o servidor; ver falhar; chamadas e `Session` (RF-04 a RF-07).
-- [ ] Conferência dos textos; ver falhar; `GameData` e `BattleNarrator` (RF-08 a RF-11, RF-16).
-- [ ] Conferência dos eventos; ver falhar; `BattleDisplay` (RF-12 a RF-15).
-- [ ] Remover os arquivos temporários; marcar esta spec e a tabela do README como `concluída`; commit `feat: batalha no cliente`.
+- [x] Cena de conferência dos modelos; ver falhar; implementar (RF-01 a RF-03).
+- [x] Conferência contra o servidor; ver falhar; chamadas e `Session` (RF-04 a RF-07).
+- [x] Conferência dos textos; ver falhar; `GameData` e `BattleNarrator` (RF-08 a RF-11, RF-16).
+- [x] Conferência dos eventos; ver falhar; `BattleDisplay` (RF-12 a RF-15).
+- [x] Remover os arquivos temporários; marcar esta spec e a tabela do README como `concluída`; commit `feat: batalha no cliente`.
+
+## Decisões da implementação
+
+- **`BattleCreature.copy()` e `BattleView.active()`:** a spec pedia cópias próprias no `BattleDisplay` e a criatura de `active_index`; os dois métodos evitam repetir isso na tela.
+- **`creature_entered` lê os dois lados de `final_view`:** a criatura só entra depois de tudo o que aconteceu no turno, então a resposta já a traz como está.
+- **Nomes por slug no `Catalog`:** `get_status_name` e `get_stat_name` percorrem a tabela, que tem poucas linhas, e devolvem o slug sem erro quando ele não existe.
+- **Conferência:** uma cena temporária contra um servidor de teste na porta 3198 passou com 105 de 105 verificações, depois de falhar pela falta das classes. O jogo abriu sem erros nem avisos de script. Os arquivos temporários foram removidos.

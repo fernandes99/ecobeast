@@ -6,6 +6,8 @@ extends GameService
 const ME_PATH := "/v1/me"
 const STARTER_PATH := "/v1/me/starter"
 const CREATURE_PATH := "/v1/me/creatures/%s"
+const WILD_BATTLE_PATH := "/v1/me/battle/wild"
+const BATTLE_ACTION_PATH := "/v1/me/battle/action"
 
 
 func get_player() -> Result:
@@ -27,6 +29,26 @@ func set_nickname(uid: String, raw_nickname: String) -> Result:
 func reset_progress() -> Result:
 	var response: ApiResponse = await Api.request(HTTPClient.METHOD_DELETE, ME_PATH, null, true)
 	return Result.success() if response.ok else Result.failure(response.error)
+
+
+func start_wild_battle() -> Result:
+	return _turn_result(await Api.request(HTTPClient.METHOD_POST, WILD_BATTLE_PATH, null, true))
+
+
+func battle_action(action: Dictionary) -> Result:
+	var response: ApiResponse = await Api.request(HTTPClient.METHOD_POST, BATTLE_ACTION_PATH, action, true)
+	# A batalha expirou ou o servidor reiniciou: a tela oferece a saída.
+	if response.code == HTTPClient.RESPONSE_NOT_FOUND:
+		return Result.success(null)
+	return _turn_result(response)
+
+
+## data: o BattleTurn da resposta.
+func _turn_result(response: ApiResponse) -> Result:
+	if not response.ok:
+		return Result.failure(response.error)
+	var turn: BattleTurn = BattleTurn.from_dict(response.data) if response.data is Dictionary else null
+	return Result.success(turn) if turn != null else Result.failure(ApiResponse.SERVER_ERROR)
 
 
 ## data: o Player da resposta, ou null se a conta ainda não tem Domador.

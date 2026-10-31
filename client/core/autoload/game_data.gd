@@ -98,5 +98,13 @@ func get_stat_id(slug: String) -> int:
 	return catalog.get_stat_id(slug)
 
 
+func get_status_name(slug: String) -> String:
+	return catalog.get_status_name(slug)
+
+
+func get_stat_name(slug: String) -> String:
+	return catalog.get_stat_name(slug)
+
+
 func get_row(table_name: String, id: int) -> Dictionary:
 	return catalog.get_row(table_name, id)
