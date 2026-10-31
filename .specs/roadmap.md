@@ -10,8 +10,8 @@ O que vem depois do MVP de estrutura (entrada, escolha do inicial e Hub). Cada l
 | 1b  | [`visual-theme`](visual-theme/) | Paleta escura em todo o jogo e o Hub no layout do protótipo do dono, com espaços para as ilustrações | MVP                        | concluída |
 | 2   | [`auth-google`](auth-google/) | Login com Google pelo navegador (Supabase Auth via NestJS); o jogador passa a viver no servidor: criar Domador, escolher inicial e apagar progresso viram rotas do NestJS. Login nativo e "Entrar com a Apple" ficam para depois | backend-api                | concluída    |
 | 3   | [`battle-core`](battle-core/) | Máquina de estados da batalha, dano, ordem do turno, status, IA simples — autoridade no servidor | auth-google                | concluída |
-| 4   | `battle-screen`     | Tela de batalha (TELAS.md #5) ouvindo os eventos do battle-core                                           | battle-core                | planejada |
-| 4b  | `heal-station`      | Refúgio: curar HP, PP e status da equipe (TELAS.md #14); vem antes das zonas, porque a batalha mantém HP e PP | battle-core                | planejada |
+| 4   | [`battle-screen`](battle-screen/) | Tela de batalha (TELAS.md #5) ouvindo os eventos do battle-core, com encontro sorteado pelo servidor | battle-core                | em andamento |
+| 4b  | `heal-station`      | Refúgio: curar HP, PP e status da equipe (TELAS.md #14); vem logo depois da tela de batalha, porque a luta mantém HP e PP e uma derrota total impede lutar de novo | battle-core                | planejada |
 | 5   | `wild-battle`       | Zonas, seleção de zona (TELAS.md #4) e encontros selvagens; tabelas `zones` e `zone_encounters`           | battle-screen, heal-station | planejada |
 | 6   | `capture`           | Esferas de Vínculo, fórmula de captura e animação das 3 tremidas (TELAS.md #6)                            | wild-battle, inventory-shop | planejada |
 | 7   | `progression`       | XP, level up, aprender/esquecer técnica, Ascensão por nível (TELAS.md #7)                                 | battle-core                | planejada |

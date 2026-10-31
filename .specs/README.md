@@ -25,6 +25,7 @@ O Ecobeast é um jogo mobile (Android/iOS, retrato): o cliente em **Godot 4.7 co
 | [auth-google](auth-google/) | Login com Google pelo navegador e o jogador morando no servidor                          |
 | [creature-details](creature-details/) | Tela de detalhes do Ecobeast, com atributos, Genes, Técnicas e apelido         |
 | [battle-core](battle-core/) | O juiz da batalha no servidor: regras, turno, status, IA e API                           |
+| [battle-screen](battle-screen/) | A tela de batalha no jogo, com encontro sorteado pelo servidor                     |
 
 As próximas iniciativas estão no [roadmap.md](roadmap.md).
 
