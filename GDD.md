@@ -71,7 +71,7 @@ O MVP é o Pokémon Simulator modernizado: menus, batalha 1x1 por turnos, captur
 
 - [ ] Escolha do inicial (3 opções: Fogo, Água, Planta)
 - [ ] Tela Home com equipe ativa (6) e menu de Ações
-- [ ] Batalha selvagem por zona (zonas desbloqueiam por nível médio da equipe)
+- [ ] Batalha selvagem a partir de um mapa hexagonal gerado a cada exploração
 - [ ] Batalha contra domadores NPC com IA simples
 - [ ] Batalha por turnos: 4 técnicas, trocar criatura, usar item, fugir
 - [ ] Tipos, STAB, crítico, precisão, status (queimado, paralisado etc.)
