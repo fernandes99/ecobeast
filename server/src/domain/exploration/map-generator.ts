@@ -32,6 +32,7 @@ export interface GeneratedMap {
 interface Cell extends HexCoord {
   elevation: number;
   moisture: number;
+  rock: number;
   ridge: number;
   biome: Biome;
   shape: TerrainShape;
@@ -56,10 +57,15 @@ export function generateMap(
   const edge = createNoise(random);
   const elevation = createNoise(random);
   const moisture = createNoise(random);
+  const rock = createNoise(random);
   const ridge = createNoise(random);
 
   const coords = growRegion(edge, config);
-  const cells = createCells(coords, { elevation, moisture, ridge }, config);
+  const cells = createCells(
+    coords,
+    { elevation, moisture, rock, ridge },
+    config,
+  );
   placeWater(cells, config);
   for (const cell of cells) {
     if (!isWater(cell.biome)) cell.biome = landBiome(cell, config);
@@ -128,7 +134,7 @@ function percentiles(values: number[]): number[] {
 
 function createCells(
   coords: HexCoord[],
-  noises: Record<'elevation' | 'moisture' | 'ridge', Noise2D>,
+  noises: Record<'elevation' | 'moisture' | 'rock' | 'ridge', Noise2D>,
   config: MapConfig,
 ): Cell[] {
   const raw = (noise: Noise2D): number[] =>
@@ -136,6 +142,7 @@ function createCells(
   const field = (noise: Noise2D): number[] => percentiles(raw(noise));
   const elevation = field(noises.elevation);
   const moisture = field(noises.moisture);
+  const rock = field(noises.rock);
   // Perto do meio da faixa, o ruído desenha linhas: é daí que saem as cadeias.
   const ridge = percentiles(
     raw(noises.ridge).map((value) => 1 - Math.abs(value * 2 - 1)),
@@ -145,6 +152,7 @@ function createCells(
     ...coord,
     elevation: elevation[index]!,
     moisture: moisture[index]!,
+    rock: rock[index]!,
     ridge: ridge[index]!,
     biome: 'temperate',
     shape: 'flat',
@@ -172,8 +180,9 @@ function placeWater(cells: Cell[], config: MapConfig): void {
   }
 }
 
-function landBiome({ moisture, ridge }: Cell, config: MapConfig): Biome {
-  if (ridge > config.stoneFrom) return 'stone';
+/** O bioma não olha a crista: plano, colina e montanha existem em todos. */
+function landBiome({ moisture, rock }: Cell, config: MapConfig): Biome {
+  if (rock > 1 - config.stoneFraction) return 'stone';
   return moisture > config.wetLimit ? 'boreal' : 'temperate';
 }
 

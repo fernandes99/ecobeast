@@ -25,7 +25,7 @@ const CONFIG: MapConfig = {
   waterFraction: 0.22,
   deepFraction: 0.4,
   wetLimit: 0.6,
-  stoneFrom: 0.96,
+  stoneFraction: 0.15,
   hillFrom: 0.8,
   mountainFrom: 0.9,
   islandChance: 0.04,
@@ -217,6 +217,47 @@ describe('generateMap', () => {
       const share = tiles.filter((tile) => tile.biome === biome).length;
       expect(share / tiles.length).toBeLessThan(MAX_BIOME_SHARE);
     }
+  });
+
+  it('a pedra é uma região, com plano, colina e montanha', () => {
+    const shapes = new Set(
+      maps.flatMap(({ tiles }) =>
+        tiles
+          .filter(({ biome }) => biome === 'stone')
+          .map((tile) => tile.shape),
+      ),
+    );
+    expect([...shapes].sort()).toEqual([...TERRAIN_SHAPES].sort());
+  });
+
+  it('a pedra é principalmente chão plano', () => {
+    const stone = maps.flatMap(({ tiles }) =>
+      tiles.filter(({ biome }) => biome === 'stone'),
+    );
+    const flat = stone.filter(({ shape }) => shape === 'flat');
+    expect(flat.length / stone.length).toBeGreaterThan(0.5);
+  });
+
+  it('a pedra fica perto de `stoneFraction` da terra', () => {
+    const land = maps.flatMap(({ tiles }) =>
+      tiles.filter(({ biome }) => !isWater(biome)),
+    );
+    const stone = land.filter(({ biome }) => biome === 'stone');
+    expect(stone.length / land.length).toBeGreaterThan(
+      CONFIG.stoneFraction - 0.05,
+    );
+    expect(stone.length / land.length).toBeLessThan(
+      CONFIG.stoneFraction + 0.05,
+    );
+  });
+
+  it('mais `stoneFraction` dá mais pedra', () => {
+    const stoneCount = (config: MapConfig) =>
+      generateMap(9, config).tiles.filter(({ biome }) => biome === 'stone')
+        .length;
+    expect(stoneCount({ ...CONFIG, stoneFraction: 0.4 })).toBeGreaterThan(
+      stoneCount(CONFIG),
+    );
   });
 
   it('há montanhas em vários biomas de terra', () => {

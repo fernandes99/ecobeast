@@ -36,6 +36,7 @@ Tomadas com o dono do projeto:
 | Colina e montanha na água viram ilhas raras                                                   | Decisão do dono                                                                         |
 | Usar só os sprites fornecidos, sem placeholder de terreno                                     | Pedido do dono                                                                          |
 | Só cinco regiões: `temperate`, `boreal`, `stone`, `wshallow` e `wdeep`                         | Decisão do dono, para simplificar. `warm`, `swamp`, `desert` e `snow` saíram do gerador, e os sprites ficaram no projeto |
+| `stone` é uma região própria, com plano, colinas e montanhas                                  | Decisão do dono. Antes, a pedra era só o miolo das cadeias, e por isso a montanha de base cinza aparecia colada no campo e na floresta |
 | Um vão entre os hexágonos, com passos de 34, 24 e 17 px                                       | Pedido do dono depois da fase 03, com um exemplo no Figma                               |
 
 Tomadas no planejamento (corrigíveis; ao mudar uma, atualize aqui e nas specs afetadas):

@@ -12,8 +12,8 @@ export interface MapConfig {
   deepFraction: number;
   /** Acima disto, a umidade dá floresta. */
   wetLimit: number;
-  /** Acima deste valor de crista, o bioma é pedra. */
-  stoneFrom: number;
+  /** Parte da terra que é pedra. */
+  stoneFraction: number;
   /** Acima deste valor de crista, a terra é colina. */
   hillFrom: number;
   /** Acima deste valor de crista, a terra é montanha. */
@@ -34,9 +34,9 @@ export const DEFAULT_MAP_CONFIG: MapConfig = {
   waterFraction: 0.20,
   deepFraction: 0.5,
   wetLimit: 0.50,
-  stoneFrom: 0.95,
-  hillFrom: 0.76,
-  mountainFrom: 0.88,
+  stoneFraction: 0.15,
+  hillFrom: 0.50,
+  mountainFrom: 0.95,
   islandChance: 0.05,
   detailChance: 0.20,
   cleanupPasses: 3,

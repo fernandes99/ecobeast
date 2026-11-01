@@ -48,17 +48,17 @@ O canto do sprite, em pixels da arte, fica em `x = 34 * q + 17 * r` e `y = 24 * 
 Uma função pura em `server/src/domain/exploration/`: `generateMap(seed, config)`. Toda a aleatoriedade vem de um gerador com seed, nesta ordem fixa:
 
 1. **Recorte.** A região cresce a partir de `(0, 0)`: entre as posições vizinhas à região, entra a de menor `distância + ruído × edgeRoughness`, até `tileCount`. O resultado é conectado, sem posições repetidas, com a quantidade exata e borda irregular.
-2. **Campos.** Três ruídos independentes dão elevação, umidade e crista. A crista é `1 - |2 × ruído - 1|`, que fica alta ao longo de linhas compridas: é dela que saem as cadeias de montanhas. Cada campo vira percentil dentro do mapa, de 0 a 1, para a proporção dos terrenos não depender da sorte.
+2. **Campos.** Quatro ruídos independentes dão elevação, umidade, pedra e crista. A crista é `1 - |2 × ruído - 1|`, que fica alta ao longo de linhas compridas: é dela que saem as cadeias de montanhas. Cada campo vira percentil dentro do mapa, de 0 a 1, para a proporção dos terrenos não depender da sorte.
 3. **Água.** Elevação abaixo de `waterFraction` é água; a parte mais baixa dela, `deepFraction`, é `wdeep`, e o resto é `wshallow`. `wdeep` encostado em terra vira `wshallow`.
 4. **Terra.** Na ordem, a primeira regra que valer:
 
 | Condição                                                     | Bioma       |
 | ------------------------------------------------------------ | ----------- |
-| crista acima de `stoneFrom`                                  | `stone`     |
+| campo de pedra entre os `stoneFraction` mais altos           | `stone`     |
 | umidade acima de `wetLimit`                                  | `boreal`    |
 | resto                                                        | `temperate` |
 
-5. **Forma.** Na terra, crista acima de `mountainFrom` é `mont`, acima de `hillFrom` é `hill`, e o resto é `flat`. Assim a forma não depende do bioma, e há montanhas de grama, floresta e pedra. Na água, `islandChance` dá `hill` ou `mont`; o resto é `flat`.
+5. **Forma.** Na terra, crista acima de `mountainFrom` é `mont`, acima de `hillFrom` é `hill`, e o resto é `flat`. Assim a forma não depende do bioma: todo bioma de terra tem plano, colina e montanha, e a montanha de base cinza só existe dentro da região de pedra. Na água, `islandChance` dá `hill` ou `mont`; o resto é `flat`.
 6. **Limpeza.** `mont` de terra sem vizinho `mont` vira `hill`, até não sobrar nenhum. Depois, por `cleanupPasses` vezes, um bioma de terra sem vizinho igual assume o bioma de terra mais comum entre os vizinhos.
 7. **Variante.** Em `flat`, `detailChance` escolhe entre 4 e 6, e o resto entre 1 e 3. Nas outras formas, entre 1 e 3.
 8. **Início.** A posição de terra plana mais perto de `(0, 0)`.
@@ -67,7 +67,7 @@ Os parâmetros ficam juntos em `DEFAULT_MAP_CONFIG`, em `server/src/domain/explo
 
 | Parâmetro       | Valor  | Parâmetro       | Valor |
 | --------------- | ------ | --------------- | ----- |
-| `tileCount`     | 10000  | `stoneFrom`     | 0,95  |
+| `tileCount`     | 10000  | `stoneFraction` | 0,15  |
 | `edgeRoughness` | 0      | `hillFrom`      | 0,76  |
 | `noiseScale`    | 0,05   | `mountainFrom`  | 0,88  |
 | `waterFraction` | 0,2    | `islandChance`  | 0,05  |
