@@ -68,7 +68,7 @@ Tomadas no planejamento (corrigíveis; ao mudar uma, atualize aqui e nas specs a
 
 | Fase                                              | Entrega                                                                  | Status   |
 | ------------------------------------------------- | ------------------------------------------------------------------------ | -------- |
-| [01-hex-grid](01-hex-grid.md)                     | Sprites no jogo, modelos do mapa e o desenho da grade com pixels inteiros | rascunho |
+| [01-hex-grid](01-hex-grid.md)                     | Sprites no jogo, modelos do mapa e o desenho da grade com pixels inteiros | concluída |
 | [02-map-generator](02-map-generator.md)           | Gerador puro com seed e a rota que entrega o mapa                        | rascunho |
 | [03-exploration-screen](03-exploration-screen.md) | A tela do mapa, andar, Procurar Ecobeast e a ligação com o Hub           | rascunho |
 

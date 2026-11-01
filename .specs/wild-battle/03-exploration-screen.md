@@ -60,7 +60,7 @@ Com a grade e o gerador prontos, falta o jogador chegar ao mapa. Esta fase cria 
 - [ ] Andar sobre água e montanha funciona.
 - [ ] Dois toques rápidos dão um passo só.
 - [ ] Arrastar o dedo sobre o mapa não o move.
-- [ ] Em 405×720, 720×1280 e 1080×1920, a arte continua em pixels inteiros depois de andar.
+- [ ] Em 405×720 e nos tamanhos conferidos na [01](01-hex-grid.md), a arte continua em pixels inteiros depois de andar.
 - [ ] Procurar Ecobeast abre uma luta, e ao fim dela "Voltar" retorna ao mapa no mesmo hexágono.
 - [ ] Sem HP, Procurar Ecobeast mostra "Cure sua equipe no Refúgio.", e "Voltar" retorna ao mapa.
 - [ ] Voltar do mapa leva ao Hub, com o HP atualizado.
@@ -93,7 +93,7 @@ Com a grade e o gerador prontos, falta o jogador chegar ao mapa. Esta fase cria 
 
 ## Verificação
 
-Uma cena temporária, nos moldes da [heal-station/02](../heal-station/02-heal-screen.md), abre o mapa pelo Hub contra um servidor de teste, simula toques em cada vizinho, confere os critérios automáticos e salva capturas nos três tamanhos, todas abertas e revisadas. A falta de rede é simulada trocando o endereço do servidor, e o relatório diz isso.
+Uma cena temporária, nos moldes da [heal-station/02](../heal-station/02-heal-screen.md), abre o mapa pelo Hub contra um servidor de teste, simula toques em cada vizinho, confere os critérios automáticos e salva capturas, todas abertas e revisadas. A falta de rede é simulada trocando o endereço do servidor, e o relatório diz isso.
 
 Passos do dono no editor (F5) e no celular:
 
