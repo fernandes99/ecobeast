@@ -57,15 +57,32 @@ const NO_ROWS: CatalogRows = {
   efficacy: [],
   immunities: [],
   items: [],
+  species: [],
 };
 
 describe('toBattleCatalog', () => {
   it('monta os itens com o que a regra de uso precisa', () => {
     const { items } = toBattleCatalog({
       ...NO_ROWS,
-      items: [{ id: 4, healAmount: 20, curesStatus: false }],
+      items: [
+        { id: 4, healAmount: 20, curesStatus: false, captureBonus: null },
+      ],
     });
-    expect(items.get(4)).toEqual({ healAmount: 20, curesStatus: false });
+    expect(items.get(4)).toEqual({
+      healAmount: 20,
+      curesStatus: false,
+      captureBonus: null,
+    });
+  });
+
+  it('traz o bônus das Esferas e a taxa de cada espécie', () => {
+    const { items, captureRates } = toBattleCatalog({
+      ...NO_ROWS,
+      items: [{ id: 1, healAmount: null, curesStatus: false, captureBonus: 2 }],
+      species: [{ id: 7, captureRate: 45 }],
+    });
+    expect(items.get(1)!.captureBonus).toBe(2);
+    expect(captureRates.get(7)).toBe(45);
   });
 
   it('monta a Técnica com os slugs que as regras usam', () => {

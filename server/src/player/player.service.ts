@@ -7,10 +7,9 @@ import {
 import { BattleStore } from '../battle/battle.store.js';
 import { secureRandom } from '../common/secure-random.js';
 import { createCreature } from '../domain/rules/creature-factory.js';
-import { STAT_SLUGS } from '../domain/rules/types.js';
 import { Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
-import { loadCreatureBlueprint } from './creature-params.js';
+import { loadCreatureBlueprint, newCreatureData } from './creature-params.js';
 import { INVALID_NAME, PlayerDto } from './player.dto.js';
 import { creatureStats, PLAYER_INCLUDE, toPlayerDto } from './player.mapper.js';
 
@@ -103,30 +102,10 @@ export class PlayerService {
       // A escrita aninhada é uma transação só; a chave única de
       // player_id + party_slot barra o segundo pedido simultâneo.
       await this.prisma.creatureInstance.create({
-        data: {
-          playerId: userId,
-          speciesId: creature.speciesId,
-          level: creature.level,
-          currentXp: creature.currentXp,
-          currentHp: creature.currentHp,
-          temperamentId: creature.temperamentId,
-          traitId: creature.traitId,
-          gender: creature.gender,
-          isPrismatic: creature.isPrismatic,
-          bond: creature.bond,
+        data: newCreatureData(userId, creature, statIds, {
           location: 'party',
           partySlot: STARTER_SLOT,
-          originalPlayerId: userId,
-          caughtAt: new Date(),
-          stats: {
-            create: STAT_SLUGS.map((slug) => ({
-              statId: statIds[slug],
-              genes: creature.genes[slug],
-              trainingPoints: creature.trainingPoints[slug],
-            })),
-          },
-          skills: { create: creature.skills },
-        },
+        }),
       });
     } catch (error) {
       if (isUniqueViolation(error)) throw new ConflictException(STARTER_TAKEN);

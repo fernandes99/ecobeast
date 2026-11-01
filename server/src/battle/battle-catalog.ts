@@ -35,24 +35,36 @@ export interface CatalogRows {
     multiplier: number;
   }[];
   immunities: { elementId: number; statusCondition: { slug: string } }[];
-  items: { id: number; healAmount: number | null; curesStatus: boolean }[];
+  items: {
+    id: number;
+    healAmount: number | null;
+    curesStatus: boolean;
+    captureBonus: number | null;
+  }[];
+  species: { id: number; captureRate: number }[];
 }
 
 /** O catálogo que as regras da batalha recebem, lido do banco. */
 export async function loadBattleCatalog(
   prisma: PrismaService,
 ): Promise<BattleCatalog> {
-  const [skills, efficacy, immunities, items] = await Promise.all([
+  const [skills, efficacy, immunities, items, species] = await Promise.all([
     prisma.skill.findMany({ include: SKILL_INCLUDE }),
     prisma.elementEfficacy.findMany(),
     prisma.statusConditionImmunity.findMany({
       select: { elementId: true, statusCondition: SLUG },
     }),
     prisma.item.findMany({
-      select: { id: true, healAmount: true, curesStatus: true },
+      select: {
+        id: true,
+        healAmount: true,
+        curesStatus: true,
+        captureBonus: true,
+      },
     }),
+    prisma.species.findMany({ select: { id: true, captureRate: true } }),
   ]);
-  return toBattleCatalog({ skills, efficacy, immunities, items });
+  return toBattleCatalog({ skills, efficacy, immunities, items, species });
 }
 
 export function toBattleCatalog(rows: CatalogRows): BattleCatalog {
@@ -70,11 +82,9 @@ export function toBattleCatalog(rows: CatalogRows): BattleCatalog {
       ]),
     ),
     statusImmunities,
-    items: new Map(
-      rows.items.map(({ id, healAmount, curesStatus }) => [
-        id,
-        { healAmount, curesStatus },
-      ]),
+    items: new Map(rows.items.map(({ id, ...item }) => [id, item])),
+    captureRates: new Map(
+      rows.species.map(({ id, captureRate }) => [id, captureRate]),
     ),
   };
 }

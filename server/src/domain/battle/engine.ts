@@ -1,6 +1,12 @@
-import { NO_ITEM, resolveItem, type ItemEffect } from '../items/use-item.js';
+import {
+  CANNOT_USE,
+  NO_ITEM,
+  resolveItem,
+  type ItemEffect,
+} from '../items/use-item.js';
 import { executeAction, toFieldAction } from './actions.js';
 import { chooseEnemyAction } from './ai.js';
+import { captureChance, NOT_CAPTURABLE } from './capture.js';
 import { hasPp } from './emergency.js';
 import { activeOf, hasCreatureStanding, rollChance } from './field.js';
 import { noStages } from './stages.js';
@@ -12,6 +18,7 @@ import type {
   BattleBagItem,
   BattleCatalog,
   BattleEvent,
+  BattleItem,
   BattleResult,
   BattleSide,
   BattleState,
@@ -26,6 +33,7 @@ const FLEE_FAIL_CHANCE = 0.2;
 const NO_CREATURE = 'Esse Ecobeast não existe.';
 
 type ItemAction = Extract<BattleAction, { type: 'item' }>;
+type CaptureAction = Extract<BattleAction, { type: 'capture' }>;
 
 export interface BattleOutcome {
   state: BattleState;
@@ -89,6 +97,9 @@ export function applyAction(
     case 'item':
       useBagItem(context, action);
       break;
+    case 'capture':
+      tryCapture(context, action);
+      break;
     default:
       playTurn(context, action);
   }
@@ -132,7 +143,21 @@ function refusalFor(
       const effect = itemEffect(state, action, catalog);
       return 'error' in effect ? effect.error : null;
     }
+    case 'capture':
+      return captureRefusal(state, action, catalog);
   }
+}
+
+/** O item da `bag`, com ao menos uma unidade; nulo sem ele. */
+function ownedItem(
+  state: BattleState,
+  itemId: number,
+  catalog: BattleCatalog,
+): BattleItem | null {
+  const owned = state.bag.some(
+    (slot) => slot.itemId === itemId && slot.quantity > 0,
+  );
+  return owned ? (catalog.items.get(itemId) ?? null) : null;
 }
 
 /** Confere o item e o alvo; não muda nada. */
@@ -141,11 +166,8 @@ function itemEffect(
   action: ItemAction,
   catalog: BattleCatalog,
 ): ItemEffect | { error: string } {
-  const owned = state.bag.some(
-    ({ itemId, quantity }) => itemId === action.item_id && quantity > 0,
-  );
-  const item = catalog.items.get(action.item_id);
-  if (!owned || !item) return { error: NO_ITEM };
+  const item = ownedItem(state, action.item_id, catalog);
+  if (!item) return { error: NO_ITEM };
   const target = state.player.team[action.team_index];
   if (!target) return { error: NO_CREATURE };
   return resolveItem(item, {
@@ -153,6 +175,18 @@ function itemEffect(
     maxHp: target.stats.hp,
     hasStatus: target.statusSlug !== null,
   });
+}
+
+function captureRefusal(
+  state: BattleState,
+  action: CaptureAction,
+  catalog: BattleCatalog,
+): string | null {
+  const item = ownedItem(state, action.item_id, catalog);
+  if (!item) return NO_ITEM;
+  if (item.captureBonus === null) return CANNOT_USE;
+  const rate = catalog.captureRates.get(activeOf(state, 'enemy').speciesId);
+  return rate ? null : NOT_CAPTURABLE;
 }
 
 function skillRefusal(
@@ -210,9 +244,7 @@ function useBagItem(context: TurnContext, action: ItemAction): void {
     target.statusSlug = null;
     target.sleepTurns = 0;
   }
-  const slot = state.bag.find(({ itemId }) => itemId === action.item_id)!;
-  slot.quantity -= 1;
-  slot.used += 1;
+  spendItem(state, action.item_id);
   events.push({
     type: 'item_used',
     side: 'player',
@@ -223,6 +255,31 @@ function useBagItem(context: TurnContext, action: ItemAction): void {
     cured_status: curedStatus,
   });
   playEnemyAlone(context);
+}
+
+/** A Esfera é gasta com ou sem sucesso, e a falha gasta a rodada. */
+function tryCapture(context: TurnContext, action: CaptureAction): void {
+  const { state, catalog, random, events } = context;
+  const enemy = activeOf(state, 'enemy');
+  // `refusalFor` já recusou o item que não captura e a espécie sem taxa.
+  const chance = captureChance({
+    currentHp: enemy.currentHp,
+    maxHp: enemy.stats.hp,
+    captureRate: catalog.captureRates.get(enemy.speciesId)!,
+    captureBonus: catalog.items.get(action.item_id)!.captureBonus!,
+    statusSlug: enemy.statusSlug,
+  });
+  spendItem(state, action.item_id);
+  const success = rollChance(chance, random);
+  events.push({ type: 'capture_attempted', item_id: action.item_id, success });
+  if (success) endBattle(context, 'captured');
+  else playEnemyAlone(context);
+}
+
+function spendItem(state: BattleState, itemId: number): void {
+  const slot = state.bag.find((bagItem) => bagItem.itemId === itemId)!;
+  slot.quantity -= 1;
+  slot.used += 1;
 }
 
 function playEnemyAlone(context: TurnContext): void {

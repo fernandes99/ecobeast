@@ -1,11 +1,20 @@
 import type { BattleCatalog, BattleState } from '../domain/battle/types.js';
+import type { NewCreature } from '../domain/rules/creature-factory.js';
+import type { StatSlug } from '../domain/rules/types.js';
 
 const MAX_IDLE_MS = 30 * 60 * 1000;
+
+/** O que o combate não usa, mas a captura grava. Nunca vai para o cliente. */
+export interface WildCreature {
+  creature: NewCreature;
+  statIds: Record<StatSlug, number>;
+}
 
 /** O catálogo fica junto: uma edição no painel não muda uma luta em andamento. */
 export interface StoredBattle {
   state: BattleState;
   catalog: BattleCatalog;
+  wild: WildCreature;
 }
 
 interface Entry {

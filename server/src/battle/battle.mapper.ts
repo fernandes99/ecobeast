@@ -101,6 +101,8 @@ export function toBattleAction(body: BattleActionBodyDto): BattleAction {
         item_id: body.item_id!,
         team_index: body.team_index!,
       };
+    case 'capture':
+      return { type: 'capture', item_id: body.item_id! };
     default:
       return { type: body.type };
   }

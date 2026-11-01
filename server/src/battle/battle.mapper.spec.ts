@@ -65,6 +65,13 @@ function creature(
 }
 
 describe('toBattleAction', () => {
+  it('leva a Esfera da captura', () => {
+    expect(toBattleAction({ type: 'capture', item_id: 1 })).toEqual({
+      type: 'capture',
+      item_id: 1,
+    });
+  });
+
   it('leva o item e o alvo da ação', () => {
     expect(toBattleAction({ type: 'item', item_id: 4, team_index: 1 })).toEqual(
       { type: 'item', item_id: 4, team_index: 1 },

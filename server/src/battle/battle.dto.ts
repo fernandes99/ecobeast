@@ -12,12 +12,15 @@ import { InventorySlotDto, SkillSlotDto } from '../player/player.dto.js';
 export const INVALID_ENEMY = 'Esse inimigo não existe.';
 export const INVALID_ACTION = 'Ação inválida.';
 
+export type CapturedTo = 'party' | 'storage';
+
 const ACTION_TYPES: BattleAction['type'][] = [
   'skill',
   'emergency',
   'flee',
   'switch',
   'item',
+  'capture',
 ];
 
 const STAGES = {
@@ -60,7 +63,8 @@ export class BattleActionBodyDto {
     description:
       '`skill` usa uma Técnica; `emergency` é o golpe de quem está sem PP; ' +
       '`flee` tenta fugir; `switch` põe o próximo Ecobeast em campo; `item` ' +
-      'usa um item e gasta a rodada.',
+      'usa um item e gasta a rodada; `capture` tenta capturar o inimigo com ' +
+      'uma Esfera.',
     enum: ACTION_TYPES,
     example: 'skill',
   })
@@ -86,8 +90,13 @@ export class BattleActionBodyDto {
   @IsInt({ message: INVALID_ACTION })
   team_index?: number;
 
-  @ApiPropertyOptional({ description: 'Só em `item`: o item.', example: 4 })
-  @ValidateIf((body: BattleActionBodyDto) => body.type === 'item')
+  @ApiPropertyOptional({
+    description: 'Em `item` e `capture`: o item.',
+    example: 4,
+  })
+  @ValidateIf((body: BattleActionBodyDto) =>
+    ['item', 'capture'].includes(body.type),
+  )
   @IsInt({ message: INVALID_ACTION })
   item_id?: number;
 }
@@ -171,7 +180,7 @@ export class BattleDto {
   phase: BattlePhase;
 
   @ApiProperty({
-    enum: ['victory', 'defeat', 'fled'],
+    enum: ['victory', 'defeat', 'fled', 'captured'],
     nullable: true,
     example: null,
   })
@@ -213,4 +222,14 @@ export class BattleResponseDto {
     ],
   })
   events: BattleEvent[];
+
+  @ApiProperty({
+    description:
+      'Para onde foi o Ecobeast capturado: a equipe ou o Santuário. Nulo em ' +
+      'qualquer outra resposta.',
+    enum: ['party', 'storage'],
+    nullable: true,
+    example: null,
+  })
+  captured_to: CapturedTo | null;
 }

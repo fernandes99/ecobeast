@@ -65,6 +65,11 @@ export interface BattleSkill {
   effects: BattleSkillEffect[];
 }
 
+export interface BattleItem extends UsableItem {
+  /** Nulo em quem não é Esfera. */
+  captureBonus: number | null;
+}
+
 /** O que as regras precisam do catálogo. */
 export interface BattleCatalog {
   skills: Map<number, BattleSkill>;
@@ -72,11 +77,13 @@ export interface BattleCatalog {
   efficacy: Map<string, number>;
   /** Slug do status → ids dos Elementos imunes. */
   statusImmunities: Map<string, number[]>;
-  items: Map<number, UsableItem>;
+  items: Map<number, BattleItem>;
+  /** Id da espécie → `capture_rate`, de 0 a 100. */
+  captureRates: Map<number, number>;
 }
 
 export type BattlePhase = 'choose_action' | 'choose_next' | 'ended';
-export type BattleResult = 'victory' | 'defeat' | 'fled';
+export type BattleResult = 'victory' | 'defeat' | 'fled' | 'captured';
 export type SideSlug = 'player' | 'enemy';
 
 export interface BattleSide {
@@ -108,7 +115,8 @@ export type BattleAction =
   | { type: 'emergency' }
   | { type: 'flee' }
   | { type: 'switch'; team_index: number }
-  | { type: 'item'; item_id: number; team_index: number };
+  | { type: 'item'; item_id: number; team_index: number }
+  | { type: 'capture'; item_id: number };
 
 export type CannotActReason = 'fear' | 'freeze' | 'sleep' | 'paralysis';
 
@@ -167,6 +175,7 @@ export type BattleEvent =
       hp: number;
       cured_status: string | null;
     }
+  | { type: 'capture_attempted'; item_id: number; success: boolean }
   | { type: 'flee_failed' }
   | { type: 'battle_ended'; result: BattleResult };
 

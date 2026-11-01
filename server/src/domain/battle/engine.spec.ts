@@ -675,6 +675,165 @@ describe('applyAction', () => {
   });
 });
 
+describe('captura', () => {
+  const SPHERE = 1;
+  const TONIC = 4;
+  const FAGULHO = 1;
+  const RARE_SPECIES = 2;
+  const SUCCESS = always(0.1);
+  const FAILURE = always(0.9);
+  const STRONG = { hp: 19, atk: 500, def: 9, sp_atk: 11, sp_def: 9, spd: 11 };
+  const spheres = makeCatalog(
+    {},
+    [SCRATCH, IDLE],
+    {
+      [SPHERE]: { healAmount: null, curesStatus: false, captureBonus: 1 },
+      [TONIC]: { healAmount: 8, curesStatus: false },
+    },
+    { [FAGULHO]: 45, [RARE_SPECIES]: 0 },
+  );
+  const bag = (itemId = SPHERE, quantity = 1) => [
+    { itemId, quantity, used: 0 },
+  ];
+  const capture = (itemId = SPHERE): BattleAction => ({
+    type: 'capture',
+    item_id: itemId,
+  });
+  const refusal = (state: BattleState, action: BattleAction) => {
+    const outcome = applyAction(state, action, spheres, always(0.5));
+    return 'error' in outcome ? outcome.error : null;
+  };
+
+  it('com sucesso, a luta termina sem o inimigo agir', () => {
+    const state = makeState(idler(), idler(), { bag: bag() });
+    const { state: after, events } = play(state, capture(), spheres, SUCCESS);
+
+    expect(events).toEqual([
+      { type: 'capture_attempted', item_id: SPHERE, success: true },
+      { type: 'battle_ended', result: 'captured' },
+    ]);
+    expect(after.phase).toBe('ended');
+    expect(after.result).toBe('captured');
+  });
+
+  it('com sucesso, não há dano de fim de turno', () => {
+    const state = makeState(idler({ statusSlug: 'poison' }), idler(), {
+      bag: bag(),
+    });
+    const { state: after, events } = play(state, capture(), spheres, SUCCESS);
+    expect(eventsOf(events, 'status_damage')).toEqual([]);
+    expect(after.player.team[0]!.currentHp).toBe(19);
+  });
+
+  it('com falha, o inimigo age e a luta segue', () => {
+    const state = makeState(idler(), idler(), { bag: bag() });
+    const { state: after, events } = play(state, capture(), spheres, FAILURE);
+
+    expect(events[0]).toEqual({
+      type: 'capture_attempted',
+      item_id: SPHERE,
+      success: false,
+    });
+    expect(eventsOf(events, 'skill_used')).toEqual([
+      { type: 'skill_used', side: 'enemy', skill_id: IDLE.id },
+    ]);
+    expect(after.phase).toBe('choose_action');
+    expect(after.turn).toBe(2);
+  });
+
+  it('a tentativa vem antes do inimigo, mesmo com ele mais rápido', () => {
+    const fast = { ...STRONG, spd: 500 };
+    const state = makeState(idler(), idler({ stats: fast }), { bag: bag() });
+    const { events } = play(state, capture(), spheres, FAILURE);
+    expect(events[0]!.type).toBe('capture_attempted');
+  });
+
+  it.each([
+    ['sucesso', SUCCESS],
+    ['falha', FAILURE],
+  ])('a Esfera é gasta com %s', (_name, random) => {
+    const state = makeState(idler(), idler(), { bag: bag(SPHERE, 3) });
+    const { state: after } = play(state, capture(), spheres, random);
+    expect(after.bag).toEqual([{ itemId: SPHERE, quantity: 2, used: 1 }]);
+  });
+
+  it('a chance usa o HP e o status do inimigo naquele momento', () => {
+    const weak = idler({ currentHp: 1, statusSlug: 'sleep' });
+    const state = makeState(idler(), weak, { bag: bag() });
+    // Com chance certa, nenhum sorteio é pedido.
+    const { state: after } = play(state, capture(), spheres, sequence());
+    expect(after.result).toBe('captured');
+  });
+
+  it('se o inimigo derrotar o último Ecobeast depois da falha, é derrota', () => {
+    const hitter = knower(SCRATCH, { stats: STRONG });
+    const state = makeState(idler({ currentHp: 1 }), hitter, { bag: bag() });
+    const { state: after } = play(state, capture(), spheres, FAILURE);
+    expect(after.result).toBe('defeat');
+    expect(after.bag[0]!.used).toBe(1);
+  });
+
+  it('a última Esfera deixa de valer', () => {
+    const state = makeState(idler(), idler(), { bag: bag() });
+    const { state: after } = play(state, capture(), spheres, FAILURE);
+    expect(refusal(after, capture())).toBe('Você não tem esse item.');
+  });
+
+  describe('recusas não gastam a rodada nem a Esfera', () => {
+    it.each<[string, Partial<BattleState>, BattleAction, string]>([
+      ['fora da Mochila', { bag: [] }, capture(), 'Você não tem esse item.'],
+      [
+        'zerada',
+        { bag: [{ itemId: SPHERE, quantity: 0, used: 1 }] },
+        capture(),
+        'Você não tem esse item.',
+      ],
+      [
+        'que não existe',
+        { bag: bag(99) },
+        capture(99),
+        'Você não tem esse item.',
+      ],
+      [
+        'que não captura',
+        { bag: bag(TONIC) },
+        capture(TONIC),
+        'Esse item não pode ser usado agora.',
+      ],
+    ])('item %s', (_name, overrides, action, message) => {
+      expect(refusal(makeState(idler(), idler(), overrides), action)).toBe(
+        message,
+      );
+    });
+
+    it('inimigo com capture_rate 0', () => {
+      const state = makeState(idler(), idler({ speciesId: RARE_SPECIES }), {
+        bag: bag(),
+      });
+      expect(refusal(state, capture())).toBe(
+        'Esse Ecobeast não pode ser capturado.',
+      );
+    });
+
+    it('enquanto escolhe o próximo Ecobeast', () => {
+      const state = makeState([idler({ currentHp: 0 }), idler()], idler(), {
+        bag: bag(),
+        phase: 'choose_next',
+      });
+      expect(refusal(state, capture())).toBe('Escolha o próximo Ecobeast.');
+    });
+
+    it('com a luta encerrada', () => {
+      const state = makeState(idler(), idler(), {
+        bag: bag(),
+        phase: 'ended',
+        result: 'fled',
+      });
+      expect(refusal(state, capture())).toBe('A batalha já terminou.');
+    });
+  });
+});
+
 describe('itens', () => {
   const TONIC = 4;
   const BALM = 6;

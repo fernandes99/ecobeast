@@ -1,6 +1,6 @@
 # 01. Regra da captura
 
-- **Status:** rascunho
+- **Status:** concluída
 - **Depende de:** [inventory-shop/04-battle-items](../inventory-shop/04-battle-items.md)
 
 ## Contexto
@@ -52,47 +52,46 @@ O motor da batalha conhece a `bag`, mas recusa as Esferas. Esta fase cria a fór
 
 ## Critérios de aceite
 
-- [ ] Com HP cheio, `capture_rate` 45, bônus 1 e sem status, a chance é 0,15.
-- [ ] Com HP 1 de 300, `capture_rate` 45, bônus 2 e sem status, a chance fica acima de 0,89 e abaixo de 0,9.
-- [ ] Sono e Congelado multiplicam por 2,5; Paralisado, Queimado e Envenenado, por 1,5.
-- [ ] Confuso, sozinho, não muda a chance.
-- [ ] A chance nunca passa de 1.
-- [ ] `capture_rate` 0 é recusado sem gastar a Esfera.
-- [ ] Um Tônico na ação `capture` é recusado com "Esse item não pode ser usado agora."
-- [ ] Uma Esfera fora da `bag` é recusada com "Você não tem esse item."
-- [ ] `capture` em `choose_next` é recusada com "Escolha o próximo Ecobeast."
-- [ ] Uma Esfera na ação `item` continua recusada.
-- [ ] Com sorteio favorável, a luta termina em `captured`, sem evento do inimigo.
-- [ ] Com sorteio contrário, o inimigo ataca depois de `capture_attempted`, e a luta segue.
-- [ ] Se o inimigo derrotar o último Ecobeast depois da falha, a luta termina em `defeat`, e a Esfera sai da Mochila.
-- [ ] O capturado aparece em `GET /v1/me`, na equipe, com o HP e os PP do fim da luta.
-- [ ] Os seis Genes, o Temperamento, o Traço e o gênero gravados são os do inimigo daquela luta.
-- [ ] Com 6 na equipe, o capturado vai para `storage`, e `GET /v1/me` continua com 6.
-- [ ] Com a vaga 2 livre e a 3 ocupada, o capturado entra na vaga 2.
-- [ ] O status do inimigo é gravado no capturado.
-- [ ] A resposta nunca traz os Genes do inimigo.
-- [ ] Uma luta abandonada depois de uma falha não gasta a Esfera.
-- [ ] Uma falha na transação não deixa capturado nem Esfera gasta pela metade.
-- [ ] `npm run lint`, `npm run typecheck`, `npm test` e `npm run test:e2e` passam.
+- [x] Com HP cheio, `capture_rate` 45, bônus 1 e sem status, a chance é 0,15.
+- [x] Com HP 1 de 300, `capture_rate` 45, bônus 2 e sem status, a chance fica acima de 0,89 e abaixo de 0,9.
+- [x] Sono e Congelado multiplicam por 2,5; Paralisado, Queimado e Envenenado, por 1,5.
+- [x] Confuso, sozinho, não muda a chance.
+- [x] A chance nunca passa de 1.
+- [x] `capture_rate` 0 é recusado sem gastar a Esfera.
+- [x] Um Tônico na ação `capture` é recusado com "Esse item não pode ser usado agora."
+- [x] Uma Esfera fora da `bag` é recusada com "Você não tem esse item."
+- [x] `capture` em `choose_next` é recusada com "Escolha o próximo Ecobeast."
+- [x] Uma Esfera na ação `item` continua recusada.
+- [x] Com sorteio favorável, a luta termina em `captured`, sem evento do inimigo.
+- [x] Com sorteio contrário, o inimigo ataca depois de `capture_attempted`, e a luta segue.
+- [x] Se o inimigo derrotar o último Ecobeast depois da falha, a luta termina em `defeat`, e a Esfera sai da Mochila.
+- [x] O capturado aparece em `GET /v1/me`, na equipe, com o HP e os PP do fim da luta.
+- [x] Os seis Genes, o Temperamento, o Traço e o gênero gravados são os do inimigo daquela luta.
+- [x] Com 6 na equipe, o capturado vai para `storage`, e `GET /v1/me` continua com 6.
+- [x] Com a vaga 2 livre e a 3 ocupada, o capturado entra na vaga 2.
+- [x] O status do inimigo é gravado no capturado.
+- [x] A resposta nunca traz os Genes do inimigo.
+- [x] Uma luta abandonada depois de uma falha não gasta a Esfera.
+- [x] Uma falha na transação não deixa capturado nem Esfera gasta pela metade.
+- [x] `npm run lint`, `npm run typecheck`, `npm test` e `npm run test:e2e` passam.
 
 ## Desenho técnico
 
 **Criar**
 
-- `server/src/domain/battle/capture.ts`, com `capture.spec.ts`: `captureChance` e `firstFreePartySlot(occupied: number[]): number | null`.
+- `server/src/domain/battle/capture.ts`, com `capture.spec.ts`: `captureChance`, `firstFreePartySlot(occupied: number[]): number | null` e a mensagem nova.
 - `server/test/capture.e2e-spec.ts`: o fluxo com o banco.
 
 **Alterar**
 
-- `server/src/domain/items/use-item.ts`: `captureBonus` em `UsableItem`, e a mensagem nova.
-- `server/src/domain/battle/types.ts`: `captureRates` em `BattleCatalog`, `captured` em `BattleResult`, a ação e o evento.
+- `server/src/domain/battle/types.ts`: `BattleItem`, `captureRates` em `BattleCatalog`, `captured` em `BattleResult`, a ação e o evento.
 - `server/src/domain/battle/engine.ts`: a recusa e a função `tryCapture`, que reaproveita `playEnemyAlone` e `endBattle`. O desconto da `bag` vira uma função usada também por `useBagItem`.
 - `server/src/domain/battle/testing.ts`, `engine.spec.ts`: os casos novos.
 - `server/src/battle/battle-catalog.ts`, com a spec: `capture_rate` e `capture_bonus`.
 - `server/src/battle/battle.store.ts`: o inimigo em `StoredBattle`.
 - `server/src/battle/battle.service.ts`: `createEnemy` devolve também os dados do inimigo, `saveTeam` cria o capturado e `act` devolve `captured_to`.
 - `server/src/battle/battle.mapper.ts`, `battle.dto.ts`: a ação, `captured` e `captured_to`.
-- `server/src/player/creature-params.ts`: a função que monta o `data` do `creatureInstance.create`, tirada de `PlayerService`.
+- `server/src/player/creature-params.ts`: `newCreatureData`, que monta o `data` do `creatureInstance.create`, tirada de `PlayerService`.
 - `server/src/player/player.service.ts`: usa essa função.
 - `.specs/battle-core/architecture.md`: a ação, o evento e o resultado.
 
@@ -112,8 +111,16 @@ Sem passos do dono nesta fase: ela não muda nada na tela.
 
 ## Tarefas
 
-- [ ] Testes de `captureChance` e `firstFreePartySlot`; ver falhar; implementar (RF-01, RF-02).
-- [ ] Testes do motor; ver falhar; ação, evento e resultado (RF-03 a RF-10).
-- [ ] Testes e2e; ver falhar; guardar o inimigo e gravar o capturado (RF-11 a RF-16).
-- [ ] OpenAPI e `.specs/battle-core/architecture.md` (RF-17).
-- [ ] Marcar esta spec e a tabela do README como `concluída`; commit `feat: regra da captura`.
+- [x] Testes de `captureChance` e `firstFreePartySlot`; ver falhar; implementar (RF-01, RF-02).
+- [x] Testes do motor; ver falhar; ação, evento e resultado (RF-03 a RF-10).
+- [x] Testes e2e; ver falhar; guardar o inimigo e gravar o capturado (RF-11 a RF-16).
+- [x] OpenAPI e `.specs/battle-core/architecture.md` (RF-17).
+- [x] Marcar esta spec e a tabela do README como `concluída`; commit `feat: regra da captura`.
+
+## Decisões da implementação
+
+- **`captureBonus` foi para `BattleItem`, não para `UsableItem`:** a rota da Mochila usa `UsableItem` e não captura nada. O catálogo da batalha estende esse tipo, e a spec previa o campo no tipo compartilhado.
+- **`NOT_CAPTURABLE` mora em `domain/battle/capture.ts`:** a Mochila não recusa Esferas por esse motivo, e por isso `use-item.ts` não mudou.
+- **Domador apagado:** `capturePlace` lê a equipe e devolve nulo quando ela está vazia, porque todo Domador tem ao menos o inicial. Um pedido que apague o Domador exatamente entre essa leitura e a transação daria erro, sem gravar nada.
+- **Teste da falha na gravação:** o e2e troca um `statId` no `BattleStore` por um que não existe. A chave estrangeira derruba a transação de verdade, e o teste confere que o inicial, a Esfera e o capturado ficaram como estavam.
+- **Conferência:** os testes novos falharam antes do código e passaram depois. `npm run lint` e `npm run typecheck` sem avisos; `npm test` com 471 testes; `npm run test:e2e` com 360. Sem mudança na tela: o jogo ainda não envia a ação `capture`.

@@ -74,18 +74,27 @@ export function makeEffect(
   };
 }
 
+type TestItem = UsableItem & { captureBonus?: number };
+
 /** `multipliers`: "atacante:defensor" → multiplicador. */
 export function makeCatalog(
   multipliers: Record<string, number> = {},
   skills: BattleSkill[] = [],
-  items: Record<number, UsableItem> = {},
+  items: Record<number, TestItem> = {},
+  captureRates: Record<number, number> = {},
 ): BattleCatalog {
   return {
     skills: new Map(skills.map((skill) => [skill.id, skill])),
     efficacy: new Map(Object.entries(multipliers)),
     statusImmunities: new Map(),
     items: new Map(
-      Object.entries(items).map(([id, item]) => [Number(id), item]),
+      Object.entries(items).map(([id, item]) => [
+        Number(id),
+        { captureBonus: null, ...item },
+      ]),
+    ),
+    captureRates: new Map(
+      Object.entries(captureRates).map(([id, rate]) => [Number(id), rate]),
     ),
   };
 }

@@ -11,6 +11,8 @@ function battle(): StoredBattle {
   return {
     state: makeState(makeCombatant(), makeCombatant()),
     catalog: makeCatalog(),
+    // O `BattleStore` só guarda: não lê o que tem dentro.
+    wild: {} as StoredBattle['wild'],
   };
 }
 

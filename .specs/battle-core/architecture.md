@@ -68,6 +68,7 @@ interface BattleState {
 | `flee`      | —             | `choose_action`, `canFlee`, e não está Preso  |
 | `switch`    | `team_index`  | `choose_next`, e a criatura escolhida tem HP  |
 | `item`      | `item_id`, `team_index` | `choose_action`, com o item na `bag` e efeito no alvo, que pode ser um reserva |
+| `capture`   | `item_id`     | `choose_action`, com uma Esfera na `bag` e um inimigo com `capture_rate` acima de 0 ([capture](../capture/architecture.md#ação-e-eventos)) |
 
 ## Ordem de um turno
 
@@ -94,6 +95,8 @@ interface BattleState {
    - senão, `choose_action`.
 
 A ação `item` gasta a rodada: o item faz efeito antes de qualquer ação do inimigo, seja qual for a Velocidade. Depois, o inimigo age sozinho, e o turno segue para o passo 6, como numa fuga que falhou. Os itens gastos só saem do banco no fim da luta ([inventory-shop](../inventory-shop/architecture.md#o-item-na-batalha)).
+
+A ação `capture` gasta a Esfera e sorteia antes de qualquer ação do inimigo. Com sucesso, a luta termina em `captured`, sem fim de turno. Com falha, o inimigo age sozinho, como depois de um item.
 
 Na fase `choose_next`, a ação `switch` põe a criatura em campo, e o Traço de entrada vale, sem gastar turno nem dar ação ao inimigo. No começo da luta, o Traço de entrada dos dois vale antes do turno 1, primeiro o do jogador.
 
@@ -123,6 +126,7 @@ A resposta traz a lista, na ordem em que aconteceu. Cada evento tem `type` e `si
 | `stat_changed`    | `side`, `stat`, `stages`, `value`         |
 | `fainted`         | `side`                                    |
 | `item_used`       | `side`, `item_id`, `team_index`, `healed`, `hp`, `cured_status` |
+| `capture_attempted` | `item_id`, `success`                    |
 | `flee_failed`     | —                                         |
 | `battle_ended`    | `result`                                  |
 
@@ -134,7 +138,7 @@ Todas exigem a sessão. Erros em pt-BR.
 | --------------------------------- | -------------------------------------- | --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
 | `POST /v1/me/battle`              | `{ "species_id": 1, "level": 5 }`      | `201 { "battle", "events" }` | `404` com `ENABLE_TEST_BATTLE` desligado · `400` "Esse inimigo não existe." · `409` "Crie seu Domador primeiro." · `409` "Cure sua equipe no Refúgio." |
 | `POST /v1/me/battle/wild`         | —                                      | `201 { "battle", "events" }` | `409` "Crie seu Domador primeiro." · `409` "Cure sua equipe no Refúgio." ([battle-screen/01](../battle-screen/01-wild-encounter.md)) |
-| `POST /v1/me/battle/action`       | uma ação da tabela acima               | `200 { "battle", "events" }` | `404` "Nenhuma batalha em andamento." · `400` com o motivo                                                                                |
+| `POST /v1/me/battle/action`       | uma ação da tabela acima               | `200 { "battle", "events", "captured_to" }` | `404` "Nenhuma batalha em andamento." · `400` com o motivo                                                                                |
 
 `battle` é o que o jogador vê:
 

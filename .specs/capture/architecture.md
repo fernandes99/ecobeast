@@ -55,7 +55,7 @@ A resposta da ação ganha `captured_to`, ao lado de `battle` e `events`:
 
 ## O capturado
 
-O motor recebe só o `Combatant`, que não tem Genes, Temperamento nem gênero, e essa parte fica de fora do estado de propósito. Por isso, `StoredBattle` guarda ao lado do estado o `NewCreature` do inimigo e os `statIds`, os mesmos que `createCreature` e `loadCreatureBlueprint` já devolvem. Nada disso vai para o cliente.
+O motor recebe só o `Combatant`, que não tem Genes, Temperamento nem gênero, e essa parte fica de fora do estado de propósito. Por isso, `StoredBattle` guarda, em `wild`, o `NewCreature` do inimigo e os `statIds`, os mesmos que `createCreature` e `loadCreatureBlueprint` já devolvem. Nada disso vai para o cliente.
 
 No fim da luta, `saveTeam` grava o capturado na mesma transação do HP, do PP, do status e dos itens gastos:
 
@@ -72,7 +72,7 @@ No fim da luta, `saveTeam` grava o capturado na mesma transação do HP, do PP, 
 
 As vagas são lidas logo antes da transação. Nada muda a equipe durante uma luta, e `player_id + party_slot` é único, então uma corrida impossível hoje viraria erro, nunca dois Ecobeasts na mesma vaga.
 
-Se o Domador foi apagado no meio da luta, nada é gravado, `captured_to` é `null` e a luta termina sem erro, como já acontece em `saveTeam`.
+Se o Domador foi apagado no meio da luta, nada é gravado, `captured_to` é `null` e a luta termina sem erro, como já acontece em `saveTeam`. Todo Domador tem ao menos o inicial, então uma equipe vazia significa que ele não existe mais.
 
 ## A tela
 
