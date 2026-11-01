@@ -126,14 +126,17 @@ describe('generateMap', () => {
   });
 
   it('só usa biomas, formas e variantes que têm sprite', () => {
-    for (const { tiles } of maps) {
-      for (const tile of tiles) {
-        expect(BIOMES).toContain(tile.biome);
-        expect(TERRAIN_SHAPES).toContain(tile.shape);
-        expect(tile.variant).toBeGreaterThanOrEqual(1);
-        expect(tile.variant).toBeLessThanOrEqual(tile.shape === 'flat' ? 6 : 3);
-      }
-    }
+    // Um `expect` por tile estoura o tempo do teste: são milhares em cada mapa.
+    const withoutSprite = maps
+      .flatMap(({ tiles }) => tiles)
+      .filter(
+        ({ biome, shape, variant }) =>
+          !BIOMES.includes(biome) ||
+          !TERRAIN_SHAPES.includes(shape) ||
+          variant < 1 ||
+          variant > (shape === 'flat' ? 6 : 3),
+      );
+    expect(withoutSprite).toEqual([]);
   });
 
   it('água funda só encosta em água', () => {
