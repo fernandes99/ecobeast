@@ -17,7 +17,7 @@ Cada PNG tem 32×48 px, com o hexágono de ponta para cima. Os valores abaixo fo
 
 `snow` começa em y=5, e `temperate_mont` e `boreal_mont`, em y=4. O excesso cai sobre o tile de cima, o que a ordem de desenho resolve: de cima para baixo, quem está mais abaixo cobre a lateral de quem está acima. Todos os tiles usam a mesma origem.
 
-**Biomas:** `temperate`, `warm`, `boreal`, `swamp`, `desert`, `snow`, `stone`, `wshallow` e `wdeep`. **Formas:** `flat`, `hill` e `mont`.
+**Biomas usados no mapa:** `temperate`, `boreal`, `stone`, `wshallow` e `wdeep`. Os sprites de `warm`, `swamp`, `desert` e `snow` continuam em `res://assets/terrain/`, sem uso. **Formas:** `flat`, `hill` e `mont`.
 
 No jogo, os arquivos ficam em `res://assets/terrain/<biome>_<shape>_<NN>.png`. `hexset_grid_<biome>_flat_01..03` viram `flat_01..03`, `hexset_grid_<biome>_O_flat_01..03` viram `flat_04..06`, e os de `hill` e `mont` mantêm `01..03`. Assim o `O_flat` é só uma variante do plano, e o código não precisa conhecê-lo.
 
@@ -48,40 +48,33 @@ O canto do sprite, em pixels da arte, fica em `x = 34 * q + 17 * r` e `y = 24 * 
 Uma função pura em `server/src/domain/exploration/`: `generateMap(seed, config)`. Toda a aleatoriedade vem de um gerador com seed, nesta ordem fixa:
 
 1. **Recorte.** A região cresce a partir de `(0, 0)`: entre as posições vizinhas à região, entra a de menor `distância + ruído × edgeRoughness`, até `tileCount`. O resultado é conectado, sem posições repetidas, com a quantidade exata e borda irregular.
-2. **Campos.** Quatro ruídos independentes dão elevação, umidade, temperatura e crista. A crista é `1 - |2 × ruído - 1|`, que fica alta ao longo de linhas compridas: é dela que saem as cadeias de montanhas. Cada campo vira percentil dentro do mapa, de 0 a 1, para a proporção dos terrenos não depender da sorte. A temperatura recebe um desvio sorteado por mapa, de até `climateShift`, para alguns mapas saírem mais frios ou mais quentes.
+2. **Campos.** Três ruídos independentes dão elevação, umidade e crista. A crista é `1 - |2 × ruído - 1|`, que fica alta ao longo de linhas compridas: é dela que saem as cadeias de montanhas. Cada campo vira percentil dentro do mapa, de 0 a 1, para a proporção dos terrenos não depender da sorte.
 3. **Água.** Elevação abaixo de `waterFraction` é água; a parte mais baixa dela, `deepFraction`, é `wdeep`, e o resto é `wshallow`. `wdeep` encostado em terra vira `wshallow`.
 4. **Terra.** Na ordem, a primeira regra que valer:
 
 | Condição                                                     | Bioma       |
 | ------------------------------------------------------------ | ----------- |
-| temperatura abaixo de `coldLimit`                            | `snow`      |
 | crista acima de `stoneFrom`                                  | `stone`     |
-| elevação até `swampBand` acima da água e umidade acima de `wetLimit` | `swamp` |
-| temperatura acima de `hotLimit` e umidade abaixo de `dryLimit` | `desert`  |
-| temperatura acima de `hotLimit`                              | `warm`      |
 | umidade acima de `wetLimit`                                  | `boreal`    |
 | resto                                                        | `temperate` |
 
-5. **Forma.** Na terra, crista acima de `mountainFrom` é `mont`, acima de `hillFrom` é `hill`, e o resto é `flat`. Assim a forma não depende do bioma, e há montanhas de grama, floresta, deserto e neve. Na água, `islandChance` dá `hill` ou `mont`; o resto é `flat`.
-6. **Limpeza.** `mont` de terra sem vizinho `mont` vira `hill`, até não sobrar nenhum. Depois, por `cleanupPasses` vezes, um bioma de terra sem vizinho igual assume o bioma de terra mais comum entre os vizinhos. Por fim, em qualquer par proibido, o bioma que não é o mais comum do mapa vira `temperate`.
+5. **Forma.** Na terra, crista acima de `mountainFrom` é `mont`, acima de `hillFrom` é `hill`, e o resto é `flat`. Assim a forma não depende do bioma, e há montanhas de grama, floresta e pedra. Na água, `islandChance` dá `hill` ou `mont`; o resto é `flat`.
+6. **Limpeza.** `mont` de terra sem vizinho `mont` vira `hill`, até não sobrar nenhum. Depois, por `cleanupPasses` vezes, um bioma de terra sem vizinho igual assume o bioma de terra mais comum entre os vizinhos.
 7. **Variante.** Em `flat`, `detailChance` escolhe entre 4 e 6, e o resto entre 1 e 3. Nas outras formas, entre 1 e 3.
 8. **Início.** A posição de terra plana mais perto de `(0, 0)`.
 
-**Pares proibidos:** `desert`–`snow`, `desert`–`swamp`, `desert`–`boreal`, `snow`–`swamp` e `snow`–`warm`.
+Os parâmetros ficam juntos em `DEFAULT_MAP_CONFIG`, em `server/src/domain/exploration/map-config.ts`. O dono os ajusta direto nesse arquivo, _a revisar_:
 
-Os parâmetros ficam juntos em `DEFAULT_MAP_CONFIG`. Valores iniciais, _a revisar_, ajustados olhando mapas gerados:
+| Parâmetro       | Valor  | Parâmetro       | Valor |
+| --------------- | ------ | --------------- | ----- |
+| `tileCount`     | 10000  | `stoneFrom`     | 0,9   |
+| `edgeRoughness` | 0      | `hillFrom`      | 0,9   |
+| `noiseScale`    | 0,05   | `mountainFrom`  | 0,9   |
+| `waterFraction` | 0,2    | `islandChance`  | 0,05  |
+| `deepFraction`  | 0,5    | `detailChance`  | 0,2   |
+| `wetLimit`      | 0,5    | `cleanupPasses` | 3     |
 
-| Parâmetro       | Valor | Parâmetro       | Valor |
-| --------------- | ----- | --------------- | ----- |
-| `tileCount`     | 300   | `dryLimit`      | 0,45  |
-| `edgeRoughness` | 7     | `wetLimit`      | 0,6   |
-| `noiseScale`    | 0,14  | `stoneFrom`     | 0,96  |
-| `waterFraction` | 0,22  | `swampBand`     | 0,12  |
-| `deepFraction`  | 0,4   | `hillFrom`      | 0,8   |
-| `climateShift`  | 0,12  | `mountainFrom`  | 0,9   |
-| `coldLimit`     | 0,12  | `islandChance`  | 0,04  |
-| `hotLimit`      | 0,75  | `detailChance`  | 0,2   |
-|                 |       | `cleanupPasses` | 3     |
+Os testes do gerador têm uma configuração própria, fixa, para esses ajustes não os reprovarem. Com a configuração do jogo, um teste só confere que o mapa é válido.
 
 ## Pixels inteiros
 

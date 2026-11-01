@@ -1,5 +1,3 @@
-import type { Biome } from './map-generator.js';
-
 /** Os parâmetros do gerador (.specs/wild-battle/architecture.md, "Gerador"). */
 export interface MapConfig {
   /** Quantos hexágonos o mapa tem. */
@@ -12,20 +10,10 @@ export interface MapConfig {
   waterFraction: number;
   /** Parte da água que é funda. */
   deepFraction: number;
-  /** O quanto a temperatura de um mapa pode desviar da média. */
-  climateShift: number;
-  /** Abaixo disto, a temperatura dá neve. */
-  coldLimit: number;
-  /** Acima disto, a temperatura dá deserto ou campo quente. */
-  hotLimit: number;
-  /** Abaixo disto, a umidade é seca. */
-  dryLimit: number;
-  /** Acima disto, a umidade dá pântano ou floresta. */
+  /** Acima disto, a umidade dá floresta. */
   wetLimit: number;
   /** Acima deste valor de crista, o bioma é pedra. */
   stoneFrom: number;
-  /** Faixa de elevação logo acima da água em que pode haver pântano. */
-  swampBand: number;
   /** Acima deste valor de crista, a terra é colina. */
   hillFrom: number;
   /** Acima deste valor de crista, a terra é montanha. */
@@ -40,30 +28,16 @@ export interface MapConfig {
 
 /** Valores iniciais, a revisar. */
 export const DEFAULT_MAP_CONFIG: MapConfig = {
-  tileCount: 300,
-  edgeRoughness: 7,
-  noiseScale: 0.14,
-  waterFraction: 0.22,
-  deepFraction: 0.4,
-  climateShift: 0.12,
-  coldLimit: 0.12,
-  hotLimit: 0.75,
-  dryLimit: 0.45,
-  wetLimit: 0.6,
-  stoneFrom: 0.96,
-  swampBand: 0.12,
-  hillFrom: 0.8,
-  mountainFrom: 0.9,
-  islandChance: 0.04,
-  detailChance: 0.2,
+  tileCount: 10000,
+  edgeRoughness: 0, // 0 = Hexagano perfeito nas bordas
+  noiseScale: 0.05,
+  waterFraction: 0.20,
+  deepFraction: 0.5,
+  wetLimit: 0.50,
+  stoneFrom: 0.90,
+  hillFrom: 0.90,
+  mountainFrom: 0.90,
+  islandChance: 0.05,
+  detailChance: 0.20,
   cleanupPasses: 3,
 };
-
-/** Biomas que não podem ficar lado a lado. */
-export const FORBIDDEN_BIOME_PAIRS: readonly (readonly [Biome, Biome])[] = [
-  ['desert', 'snow'],
-  ['desert', 'swamp'],
-  ['desert', 'boreal'],
-  ['snow', 'swamp'],
-  ['snow', 'warm'],
-];

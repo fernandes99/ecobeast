@@ -1,9 +1,5 @@
 import { hexKey, hexNeighbors } from './hex.js';
-import {
-  DEFAULT_MAP_CONFIG,
-  FORBIDDEN_BIOME_PAIRS,
-  MapConfig,
-} from './map-config.js';
+import { DEFAULT_MAP_CONFIG, MapConfig } from './map-config.js';
 import {
   Biome,
   BIOMES,
@@ -16,8 +12,26 @@ import {
 
 const SEEDS = Array.from({ length: 200 }, (_, index) => index * 7919 + 1);
 const MAX_LONELY_LAND = 0.05;
-/** A grama é a base da região e passa de 30%; nenhum bioma deve ir além disto. */
-const MAX_BIOME_SHARE = 0.35;
+/** A grama é a base da região; nenhum bioma deve ir além disto. */
+const MAX_BIOME_SHARE = 0.6;
+/**
+ * Fixa, separada de `DEFAULT_MAP_CONFIG`: o dono ajusta os valores do jogo sem
+ * reprovar estes testes, que conferem o algoritmo, e não o balanceamento.
+ */
+const CONFIG: MapConfig = {
+  tileCount: 300,
+  edgeRoughness: 7,
+  noiseScale: 0.14,
+  waterFraction: 0.22,
+  deepFraction: 0.4,
+  wetLimit: 0.6,
+  stoneFrom: 0.96,
+  hillFrom: 0.8,
+  mountainFrom: 0.9,
+  islandChance: 0.04,
+  detailChance: 0.2,
+  cleanupPasses: 3,
+};
 
 function indexed(map: GeneratedMap): Map<string, MapTile> {
   return new Map(map.tiles.map((tile) => [hexKey(tile), tile]));
@@ -52,19 +66,40 @@ describe('generateMap', () => {
   let maps: GeneratedMap[];
 
   beforeAll(() => {
-    maps = SEEDS.map((seed) => generateMap(seed));
+    maps = SEEDS.map((seed) => generateMap(seed, CONFIG));
+  });
+
+  it('só existem as cinco regiões', () => {
+    expect([...BIOMES].sort()).toEqual(
+      ['boreal', 'stone', 'temperate', 'wdeep', 'wshallow'].sort(),
+    );
+  });
+
+  it('a configuração do jogo gera um mapa válido', () => {
+    const map = generateMap(1);
+    expect(map.tiles).toHaveLength(DEFAULT_MAP_CONFIG.tileCount);
+    expect(new Set(map.tiles.map(hexKey)).size).toBe(map.tiles.length);
+    for (const tile of map.tiles) {
+      expect(BIOMES).toContain(tile.biome);
+      expect(TERRAIN_SHAPES).toContain(tile.shape);
+    }
+    const start = indexed(map).get(hexKey(map.start));
+    expect(isWater(start!.biome)).toBe(false);
+    expect(start!.shape).toBe('flat');
   });
 
   it('devolve a seed recebida', () => {
-    expect(generateMap(123).seed).toBe(123);
+    expect(generateMap(123, CONFIG).seed).toBe(123);
   });
 
   it('a mesma seed dá o mesmo mapa', () => {
-    expect(generateMap(555)).toEqual(generateMap(555));
+    expect(generateMap(555, CONFIG)).toEqual(generateMap(555, CONFIG));
   });
 
   it('seeds diferentes dão mapas diferentes', () => {
-    expect(generateMap(555).tiles).not.toEqual(generateMap(556).tiles);
+    expect(generateMap(555, CONFIG).tiles).not.toEqual(
+      generateMap(556, CONFIG).tiles,
+    );
   });
 
   it('o recorte do mapa muda com a seed', () => {
@@ -74,13 +109,13 @@ describe('generateMap', () => {
 
   it('tem a quantidade pedida, sem posições repetidas', () => {
     for (const map of maps) {
-      expect(map.tiles).toHaveLength(DEFAULT_MAP_CONFIG.tileCount);
+      expect(map.tiles).toHaveLength(CONFIG.tileCount);
       expect(new Set(map.tiles.map(hexKey)).size).toBe(map.tiles.length);
     }
   });
 
   it('muda de tamanho com `tileCount`', () => {
-    const config = { ...DEFAULT_MAP_CONFIG, tileCount: 120 };
+    const config = { ...CONFIG, tileCount: 120 };
     expect(generateMap(9, config).tiles).toHaveLength(120);
   });
 
@@ -107,23 +142,6 @@ describe('generateMap', () => {
       for (const tile of map.tiles.filter(({ biome }) => biome === 'wdeep')) {
         for (const neighbor of neighborsOf(tile, byKey)) {
           expect(isWater(neighbor.biome)).toBe(true);
-        }
-      }
-    }
-  });
-
-  it('nenhum par proibido fica lado a lado', () => {
-    const forbidden = new Set(
-      FORBIDDEN_BIOME_PAIRS.flatMap(([first, second]) => [
-        `${first}-${second}`,
-        `${second}-${first}`,
-      ]),
-    );
-    for (const map of maps) {
-      const byKey = indexed(map);
-      for (const tile of map.tiles) {
-        for (const neighbor of neighborsOf(tile, byKey)) {
-          expect(forbidden.has(`${tile.biome}-${neighbor.biome}`)).toBe(false);
         }
       }
     }
@@ -173,8 +191,8 @@ describe('generateMap', () => {
   it('a água fica perto de `waterFraction`', () => {
     const mean =
       maps.map(waterShare).reduce((sum, share) => sum + share) / maps.length;
-    expect(mean).toBeGreaterThan(DEFAULT_MAP_CONFIG.waterFraction - 0.03);
-    expect(mean).toBeLessThan(DEFAULT_MAP_CONFIG.waterFraction + 0.03);
+    expect(mean).toBeGreaterThan(CONFIG.waterFraction - 0.03);
+    expect(mean).toBeLessThan(CONFIG.waterFraction + 0.03);
   });
 
   it('aparecem todos os biomas ao longo das seeds', () => {
@@ -209,7 +227,7 @@ describe('generateMap', () => {
           .map((tile) => tile.biome),
       ),
     );
-    expect(biomes.size).toBeGreaterThanOrEqual(5);
+    expect(biomes.size).toBe(3);
   });
 
   it('as ilhas são raras', () => {
@@ -218,15 +236,13 @@ describe('generateMap', () => {
     );
     const islands = water.filter((tile) => tile.shape !== 'flat');
     expect(islands.length).toBeGreaterThan(0);
-    expect(islands.length / water.length).toBeLessThan(
-      DEFAULT_MAP_CONFIG.islandChance * 2,
-    );
+    expect(islands.length / water.length).toBeLessThan(CONFIG.islandChance * 2);
   });
 
   it('mais `waterFraction` dá mais água', () => {
-    const wetter: MapConfig = { ...DEFAULT_MAP_CONFIG, waterFraction: 0.4 };
+    const wetter: MapConfig = { ...CONFIG, waterFraction: 0.4 };
     expect(waterShare(generateMap(9, wetter))).toBeGreaterThan(
-      waterShare(generateMap(9)),
+      waterShare(generateMap(9, CONFIG)),
     );
   });
 });

@@ -39,4 +39,4 @@ O jogador nunca vê a coluna "Referência": ela só existe para quem implementa 
 - **Estado do jogador:** tudo que é de um Domador (nome, moedas, criaturas). Ver [onboarding/architecture.md](onboarding/architecture.md).
 - **Hub:** a tela principal do jogo (TELAS.md chama de Home).
 - **Mapa de exploração:** a região hexagonal gerada a cada Explorar zona (`ExplorationMap`). Ver [wild-battle](wild-battle/).
-- **Bioma:** o tipo de terreno de um hexágono (`biome`), como `temperate` ou `desert`. Mais tarde, ele decide o Campo.
+- **Bioma:** o tipo de terreno de um hexágono (`biome`), como `temperate` ou `boreal`. Mais tarde, ele decide o Campo.

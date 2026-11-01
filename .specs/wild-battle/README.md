@@ -14,7 +14,7 @@ Hoje Explorar zona vai direto para a batalha, contra uma espécie sorteada entre
 ## Objetivos
 
 1. Cada exploração mostra um mapa diferente, e a mesma seed reproduz o mesmo mapa.
-2. Os terrenos formam regiões que fazem sentido: florestas agrupadas, cadeias de montanhas, lagos, e nada de deserto encostado em neve.
+2. Os terrenos formam regiões que fazem sentido: florestas agrupadas, cadeias de montanhas e lagos.
 3. Os hexágonos ficam alinhados, com um vão regular entre eles, e a pixel art fica nítida em qualquer tela.
 4. Sair do mapa para lutar e voltar não perde o lugar do jogador.
 
@@ -35,6 +35,7 @@ Tomadas com o dono do projeto:
 | `boreal` faz o papel de floresta por enquanto                                                 | Não há sprite de árvore. Mais tarde, `boreal` será só um Campo                          |
 | Colina e montanha na água viram ilhas raras                                                   | Decisão do dono                                                                         |
 | Usar só os sprites fornecidos, sem placeholder de terreno                                     | Pedido do dono                                                                          |
+| Só cinco regiões: `temperate`, `boreal`, `stone`, `wshallow` e `wdeep`                         | Decisão do dono, para simplificar. `warm`, `swamp`, `desert` e `snow` saíram do gerador, e os sprites ficaram no projeto |
 | Um vão entre os hexágonos, com passos de 34, 24 e 17 px                                       | Pedido do dono depois da fase 03, com um exemplo no Figma                               |
 
 Tomadas no planejamento (corrigíveis; ao mudar uma, atualize aqui e nas specs afetadas):
@@ -42,7 +43,7 @@ Tomadas no planejamento (corrigíveis; ao mudar uma, atualize aqui e nas specs a
 | Decisão                                                                        | Motivo                                                                                                                  |
 | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------- |
 | O servidor gera o mapa, e o cliente só desenha                                 | O texto do dono dizia "o jogo", mas o terreno vai decidir encontros e movimento, e o servidor é a autoridade das regras |
-| O clima vem de ruído de temperatura e umidade, com pares de biomas proibidos   | Regiões coerentes sem escolher cada hexágono sozinho                                                                    |
+| Elevação, umidade e crista vêm de ruído                                        | Regiões coerentes sem escolher cada hexágono sozinho                                                                    |
 | A posição do jogador fica só no cliente                                        | Ela ainda não afeta nenhuma regra. O servidor passa a conferir quando o terreno decidir algo                            |
 | O mapa não fica guardado no servidor                                           | Nada depende dele ainda; a seed basta para reproduzi-lo                                                                 |
 | Os parâmetros do gerador são constantes de código, não tabelas do catálogo     | São ajuste do algoritmo, e os valores ainda vão mudar bastante. Viram tabela quando o dono quiser editá-los no painel   |

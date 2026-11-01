@@ -29,7 +29,7 @@ Com a grade validada, falta quem decide o que vai em cada hexágono. Esta fase c
 - **RF-04:** A borda do mapa é irregular.
 - **RF-05:** Os biomas seguem as regras de [architecture.md](architecture.md#gerador).
 - **RF-06:** `wdeep` só encosta em água.
-- **RF-07:** Nenhum par proibido fica lado a lado.
+- **RF-07:** Removido: os pares proibidos saíram junto com `warm`, `swamp`, `desert` e `snow`.
 - **RF-08:** Biomas de terra formam grupos, e `mont` forma conjuntos.
 - **RF-09:** Só existem biomas, formas e variantes que têm sprite.
 - **RF-10:** `start` é terra plana.
@@ -49,12 +49,12 @@ Os testes de unidade rodam cada critério do gerador em 200 seeds.
 
 - [x] A mesma seed dá o mesmo mapa, e seeds diferentes dão mapas diferentes.
 - [x] Todo mapa tem `tileCount` posições únicas, conectadas, e muda de tamanho quando `tileCount` muda.
-- [x] Nenhum `wdeep` encosta em terra, e nenhum par proibido fica lado a lado.
+- [x] Nenhum `wdeep` encosta em terra.
 - [x] Menos de 5% dos tiles de terra ficam sem vizinho do mesmo bioma, e nenhum `mont` de terra fica sem vizinho `mont`.
 - [x] Todo bioma e toda forma são dos nomes de [architecture.md](architecture.md#sprites), e toda variante está na faixa da forma.
 - [x] `start` existe no mapa e é terra plana.
 - [x] Em média, a água fica perto de `waterFraction`, e a terra é a maior parte do mapa.
-- [x] Ao longo das seeds, aparecem todos os 9 biomas, e as ilhas são raras.
+- [x] Ao longo das seeds, aparecem todos os biomas, e as ilhas são raras.
 - [x] Aumentar `waterFraction` aumenta a água.
 - [x] Sem token, a rota dá `401`; sem Domador, `409`; com equipe, `201`, e com a equipe a 0 HP também.
 - [x] Duas chamadas seguidas devolvem seeds diferentes.
@@ -109,4 +109,6 @@ Um script temporário escreve os mapas de seis seeds em JSON, e um script tempor
 - **Testes a mais:** nenhum bioma de terra aparece em menos de 25% dos mapas, nenhum bioma passa de 35% dos tiles, e há montanhas em pelo menos 5 biomas de terra. O limite de 35% começou em 30% e subiu porque `temperate`, com 30,6%, é a base da região, como o dono pediu.
 - **Os mapas foram montados por script, sem o `HexMapView`:** o script usa os mesmos passos de 32 e 21 px, e a [01](01-hex-grid.md) já provou que o `HexMapView` desenha exatamente isso.
 - **Distribuição em 200 seeds:** `temperate` 30,6%, `boreal` 15,7%, `wshallow` 14,6%, `warm` 9,5%, `snow` 9,4%, `desert` 8,2%, `wdeep` 7,4%, `swamp` 3,3% e `stone` 1,2%. Por forma: `flat` 83,5%, `hill` 9,8% e `mont` 6,7%.
-- **Conferência:** `npm run lint` e `npm run typecheck` sem avisos; `npm test` com 396 testes; `npm run test:e2e` com 273. Os testes novos falharam antes do código. Os mapas de seis seeds foram desenhados e revisados em duas rodadas.
+- **Cinco regiões:** depois da entrega, o dono reduziu o mapa a `temperate`, `boreal`, `stone`, `wshallow` e `wdeep`. Saíram a temperatura, `climateShift`, `coldLimit`, `hotLimit`, `dryLimit`, `swampBand` e os pares proibidos, que só existiam para os biomas removidos. Os valores e a distribuição acima são os da versão com 9 biomas; os atuais estão na [arquitetura](architecture.md#gerador).
+- **Testes com configuração própria:** o dono passou a ajustar `DEFAULT_MAP_CONFIG` direto, e os testes dependiam desses valores. Agora eles usam uma configuração fixa, e um teste só confere que a do jogo gera um mapa válido.
+- **Conferência:** `npm run lint` e `npm run typecheck` sem avisos; `npm test` com 397 testes e `npm run test:e2e` com 273, já com as cinco regiões. Os testes novos falharam antes do código. Os mapas de seis seeds foram desenhados e revisados em duas rodadas.

@@ -1,20 +1,12 @@
 import type { Random } from '../battle/types.js';
 import { HexCoord, hexDistance, hexKey, hexNeighbors } from './hex.js';
-import {
-  DEFAULT_MAP_CONFIG,
-  FORBIDDEN_BIOME_PAIRS,
-  MapConfig,
-} from './map-config.js';
+import { DEFAULT_MAP_CONFIG, MapConfig } from './map-config.js';
 import { createNoise, Noise2D } from './noise.js';
 import { seededRandom } from './seeded-random.js';
 
 export const BIOMES = [
   'temperate',
-  'warm',
   'boreal',
-  'swamp',
-  'desert',
-  'snow',
   'stone',
   'wshallow',
   'wdeep',
@@ -40,7 +32,6 @@ export interface GeneratedMap {
 interface Cell extends HexCoord {
   elevation: number;
   moisture: number;
-  temperature: number;
   ridge: number;
   biome: Biome;
   shape: TerrainShape;
@@ -65,17 +56,10 @@ export function generateMap(
   const edge = createNoise(random);
   const elevation = createNoise(random);
   const moisture = createNoise(random);
-  const temperature = createNoise(random);
   const ridge = createNoise(random);
-  const climate = (random() * 2 - 1) * config.climateShift;
 
   const coords = growRegion(edge, config);
-  const cells = createCells(
-    coords,
-    { elevation, moisture, temperature, ridge },
-    climate,
-    config,
-  );
+  const cells = createCells(coords, { elevation, moisture, ridge }, config);
   placeWater(cells, config);
   for (const cell of cells) {
     if (!isWater(cell.biome)) cell.biome = landBiome(cell, config);
@@ -83,7 +67,6 @@ export function generateMap(
   placeShapes(cells, random, config);
   gatherMountains(cells);
   gatherBiomes(cells, config);
-  separateForbiddenBiomes(cells);
 
   return {
     seed,
@@ -145,8 +128,7 @@ function percentiles(values: number[]): number[] {
 
 function createCells(
   coords: HexCoord[],
-  noises: Record<'elevation' | 'moisture' | 'temperature' | 'ridge', Noise2D>,
-  climate: number,
+  noises: Record<'elevation' | 'moisture' | 'ridge', Noise2D>,
   config: MapConfig,
 ): Cell[] {
   const raw = (noise: Noise2D): number[] =>
@@ -154,7 +136,6 @@ function createCells(
   const field = (noise: Noise2D): number[] => percentiles(raw(noise));
   const elevation = field(noises.elevation);
   const moisture = field(noises.moisture);
-  const temperature = field(noises.temperature);
   // Perto do meio da faixa, o ruído desenha linhas: é daí que saem as cadeias.
   const ridge = percentiles(
     raw(noises.ridge).map((value) => 1 - Math.abs(value * 2 - 1)),
@@ -164,7 +145,6 @@ function createCells(
     ...coord,
     elevation: elevation[index]!,
     moisture: moisture[index]!,
-    temperature: temperature[index]! + climate,
     ridge: ridge[index]!,
     biome: 'temperate',
     shape: 'flat',
@@ -192,15 +172,8 @@ function placeWater(cells: Cell[], config: MapConfig): void {
   }
 }
 
-function landBiome(cell: Cell, config: MapConfig): Biome {
-  const { elevation, moisture, ridge, temperature } = cell;
-  const nearWater = elevation < config.waterFraction + config.swampBand;
-  if (temperature < config.coldLimit) return 'snow';
+function landBiome({ moisture, ridge }: Cell, config: MapConfig): Biome {
   if (ridge > config.stoneFrom) return 'stone';
-  if (nearWater && moisture > config.wetLimit) return 'swamp';
-  if (temperature > config.hotLimit) {
-    return moisture < config.dryLimit ? 'desert' : 'warm';
-  }
   return moisture > config.wetLimit ? 'boreal' : 'temperate';
 }
 
@@ -261,27 +234,6 @@ function countBiomes(cells: Cell[]): Map<Biome, number> {
     counts.set(biome, (counts.get(biome) ?? 0) + 1);
   }
   return counts;
-}
-
-/** Em um par proibido, o bioma mais raro do mapa cede e vira `temperate`. */
-function separateForbiddenBiomes(cells: Cell[]): void {
-  const counts = countBiomes(cells);
-  const forbidden = (a: Biome, b: Biome): boolean =>
-    FORBIDDEN_BIOME_PAIRS.some(
-      ([first, second]) =>
-        (a === first && b === second) || (a === second && b === first),
-    );
-  for (const cell of cells) {
-    for (const neighbor of cell.neighbors) {
-      if (forbidden(cell.biome, neighbor.biome)) {
-        const rarer =
-          counts.get(cell.biome)! < counts.get(neighbor.biome)!
-            ? cell
-            : neighbor;
-        rarer.biome = 'temperate';
-      }
-    }
-  }
 }
 
 function startOf(cells: Cell[]): HexCoord {
