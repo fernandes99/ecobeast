@@ -67,7 +67,7 @@ export class SpeciesDetailDto {
   gender_ratio: number;
 
   @ApiProperty({
-    description: '3 a 255; maior é mais fácil de capturar.',
+    description: '0 a 100; maior é mais fácil de capturar, e 0 não captura.',
     example: 45,
   })
   capture_rate: number;

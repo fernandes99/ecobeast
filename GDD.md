@@ -144,7 +144,7 @@ Separe em duas camadas: a **Espécie** (dados fixos, uma linha do catálogo por 
 | growthRate | enum | Fast, Medium, Slow, Erratic (curva de XP) |
 | baseXpYield | int | XP dado ao ser derrotado |
 | trainingYield | StatBlock | Pontos de treino dados ao vencedor (ex.: +1 Spd) |
-| captureRate | int (3–255) | 45 = difícil, 255 = fácil |
+| captureRate | int (0–100) | 0 = não captura, 100 = mais fácil |
 | rarity | enum | Comum, Incomum, Raro, Épico, Ancestral |
 | possibleTraits | Trait[] | 1–2 traços normais + 1 oculto |
 | learnset | List<LevelSkill> | Técnicas por nível |
@@ -227,7 +227,7 @@ Curvas de XP total por nível: Fast = 0,8·n³; Medium = n³; Slow = 1,25·n³.
 a = \frac{(3 \cdot HP_{max} - 2 \cdot HP_{atual}) \cdot captureRate \cdot bonusEsfera}{3 \cdot HP_{max}} \cdot bonusStatus
 ```
 
-Chance de captura = min(a / 255, 1). Bônus de esfera: comum 1, grande 1,5, ultra 2. Bônus de status: sono ou congelado 2,5; paralisado, queimado ou envenenado 1,5. Para dar emoção, faça 3 "tremidas" de animação antes de revelar o resultado.
+Chance de captura = min(a / 100, 1). Bônus de esfera: comum 1, grande 1,5, ultra 2. Bônus de status: sono ou congelado 2,5; paralisado, queimado ou envenenado 1,5. Para dar emoção, faça 3 "tremidas" de animação antes de revelar o resultado.
 
 ## Técnicas (Skills)
 

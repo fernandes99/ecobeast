@@ -53,7 +53,7 @@ O servidor conecta no Supabase, mas o banco está vazio. Esta fase escreve no `s
 | `elements` | `color_hex ~ '^#[0-9A-Fa-f]{6}$'` |
 | `element_efficacy` | `multiplier IN (0, 0.5, 2)` |
 | `growth_rates` | `xp_multiplier` 0.1–10 |
-| `species` | `base_xp_yield ≥ 1`; `capture_rate` 3–255; `gender_ratio` −1–1; `height_m ≥ 0`; `weight_kg ≥ 0` |
+| `species` | `base_xp_yield ≥ 1`; `capture_rate` 0–100; `gender_ratio` −1–1; `height_m ≥ 0`; `weight_kg ≥ 0` |
 | `species_elements` | `slot IN (1, 2)` |
 | `species_stats` | `base_value` 1–255; `training_yield` 0–3 |
 | `species_traits` | `slot IN (1, 2, 3)` |

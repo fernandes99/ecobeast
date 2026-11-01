@@ -134,7 +134,7 @@ const TABLES := {
 			"growth_rate_id": {"type": "int", "fk": "growth_rates"},
 			"rarity_id": {"type": "int", "fk": "rarities"},
 			"base_xp_yield": {"type": "int", "min": 1},
-			"capture_rate": {"type": "int", "min": 3, "max": 255},
+			"capture_rate": {"type": "int", "min": 0, "max": 100},
 			"gender_ratio": {"type": "float", "min": -1.0, "max": 1.0},
 			"height_m": {"type": "float", "min": 0.0},
 			"weight_kg": {"type": "float", "min": 0.0},

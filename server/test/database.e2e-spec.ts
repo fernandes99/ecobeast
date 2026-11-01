@@ -96,6 +96,30 @@ describe('restrições do banco (e2e)', () => {
     expectRejected(result, 'element_efficacy_multiplier_check');
   });
 
+  it('recusa taxa de captura 101', async () => {
+    const result = await attempt(prisma, async (tx) => {
+      const species = await createSpecies(tx);
+      await tx.species.update({
+        where: { id: species.id },
+        data: { captureRate: 101 },
+      });
+    });
+    expectRejected(result, 'species_capture_rate_check');
+  });
+
+  it('aceita taxa de captura de 0 a 100', async () => {
+    const result = await attempt(prisma, async (tx) => {
+      const species = await createSpecies(tx);
+      for (const captureRate of [0, 100]) {
+        await tx.species.update({
+          where: { id: species.id },
+          data: { captureRate },
+        });
+      }
+    });
+    expect(result).toBe('accepted');
+  });
+
   it('recusa Elemento de espécie no slot 3', async () => {
     const result = await attempt(prisma, async (tx) => {
       const species = await createSpecies(tx);

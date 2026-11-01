@@ -38,7 +38,7 @@ O projeto está configurado, mas não há dados nem forma de lê-los. Esta fase 
 		"id": {"type": "int", "min": 1},
 		"slug": {"type": "string", "unique": true},
 		"growth_rate_id": {"type": "int", "fk": "growth_rates"},
-		"capture_rate": {"type": "int", "min": 3, "max": 255},
+		"capture_rate": {"type": "int", "min": 0, "max": 100},
 		"evolves_from_species_id": {"type": "int", "nullable": true, "fk": "species"},
 	},
 },

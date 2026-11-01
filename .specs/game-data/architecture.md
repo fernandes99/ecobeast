@@ -126,7 +126,7 @@ temperaments ──> stats (aumentado, diminuído)
 | growth_rate_id          | int     | FK → growth_rates                                  |
 | rarity_id               | int     | FK → rarities                                      |
 | base_xp_yield           | int     | XP dado ao ser derrotado                           |
-| capture_rate            | int     | 3–255 (45 = difícil, 255 = fácil)                  |
+| capture_rate            | int     | 0–100 (0 = não captura, 100 = mais fácil)          |
 | gender_ratio            | float   | Fração de machos, 0–1; `-1` = sem gênero           |
 | height_m                | float   |                                                    |
 | weight_kg               | float   |                                                    |
