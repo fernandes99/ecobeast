@@ -32,7 +32,7 @@ Com a grade e o gerador prontos, falta o jogador chegar ao mapa. Esta fase cria 
 - **RF-04:** Com sucesso, o mapa aparece com o jogador em `start`.
 - **RF-05:** O marcador é o retrato do primeiro Ecobeast da equipe, parado no centro da tela. Quem se move é o mapa.
 - **RF-06:** Fora do mapa, o fundo é o da tela.
-- **RF-07:** Não há zoom nem arrastar: gestos que não sejam um toque não mudam nada.
+- **RF-07:** Não há zoom nem arrastar: gestos que não sejam um toque não mudam nada. A única exceção é o botão de depuração do RF-18.
 
 **Andar**
 
@@ -50,6 +50,13 @@ Com a grade e o gerador prontos, falta o jogador chegar ao mapa. Esta fase cria 
 - **RF-16:** "Voltar" e o voltar do Android levam ao Hub e descartam o mapa. Enquanto o mapa é pedido, os dois ficam parados, porque a resposta ainda vai chegar à tela.
 - **RF-17:** Explorar zona de novo gera outro mapa.
 
+**Depuração**
+
+- **RF-18:** Só quando `OS.is_debug_build()`, depois que o mapa aparece, os controles mostram o botão "Debug: ver mapa inteiro". Na versão publicada, ele não existe para o jogador.
+- **RF-19:** Tocar nele cabe o mapa inteiro acima dos botões, com o marcador sobre o hexágono do jogador, e o texto vira "Debug: voltar ao zoom normal".
+- **RF-20:** Com o mapa inteiro na tela, tocar no mapa não move o jogador.
+- **RF-21:** Tocar de novo volta à escala de pixels inteiros, com o jogador no centro.
+
 ## Critérios de aceite
 
 - [x] Explorar zona abre o mapa, com o jogador em `start` e o retrato certo no centro.
@@ -65,6 +72,9 @@ Com a grade e o gerador prontos, falta o jogador chegar ao mapa. Esta fase cria 
 - [x] Sem HP, Procurar Ecobeast mostra "Cure sua equipe no Refúgio.", e "Voltar" retorna ao mapa.
 - [x] Voltar do mapa leva ao Hub, com o HP atualizado.
 - [x] Explorar zona de novo devolve uma seed diferente.
+- [x] Em build de debug, o botão mostra o mapa inteiro acima dos controles, com o marcador sobre o jogador.
+- [x] Com o mapa inteiro, tocar não move o jogador, e voltar restaura escala, filtro e centro.
+- [ ] O botão de debug não aparece na versão publicada (passo do dono, ao exportar).
 - [ ] O mesmo vale em um aparelho com recorte (passo do dono).
 - [x] O projeto abre sem erros nem avisos de script.
 
@@ -125,4 +135,5 @@ godot --headless -d --path client --quit-after 60
 - **Toque e arrasto:** o movimento acontece ao soltar, e só se o dedo tiver corrido até 24 pontos da tela lógica. Isso também impede um arrasto de virar um passo.
 - **Conferência:** uma cena temporária abriu o mapa pelo Hub contra um servidor de teste, com toques entrando como cliques reais pela janela, e passou com 52 de 52 verificações em janelas de 360×640, 405×720, 412×915 e 720×1061, depois de falhar porque Explorar zona ainda abria a batalha. Ela cobre os seis vizinhos, toque longe e fora do mapa, toques rápidos, arrasto, roda do mouse, andar até água, montanha e borda, ida e volta da batalha, equipe sem HP e voltar ao Hub. Depois de andar, a tela foi comparada pixel a pixel com a arte, sem nenhuma diferença. Das 19 capturas da rodada final, 10 foram abertas e revisadas. A falta de rede foi simulada trocando o endereço do servidor. O servidor não mudou nesta fase, por isso os testes dele não foram repetidos. O jogo abriu sem erros nem avisos de script, e os arquivos temporários foram removidos.
 - **Vão entre os hexágonos:** depois da entrega, o dono pediu um espaço entre os hexágonos e mandou um exemplo no Figma, com um print. O espaçamento foi medido no print, e não no Figma, que não foi aberto. Com passos de 34, 24 e 17, cada uma das 44 células do print bateu, pixel a pixel, com um sprite. A conferência acima foi repetida com esses passos: 54 de 54 verificações nos quatro tamanhos, e 3 das 19 capturas abertas e revisadas.
+- **Modo debug:** o dono pediu um botão para ver o mapa inteiro, seguindo o padrão do "Apagar progresso" (`OS.is_debug_build()`). Reduzido cerca de 10 vezes, o mapa ficava granulado, por isso os sprites de terreno passaram a gerar mipmaps, que só o modo de depuração usa. A escala normal continua em pixels inteiros. Conferência: 66 de 66 verificações nos quatro tamanhos, e 2 capturas da versão final revisadas, em 405×720. A versão publicada não foi testada: as verificações rodam em build de debug.
 - **Falta do dono:** jogar no editor e no celular, conferir o tamanho dos hexágonos, o ritmo do passo e o recorte do aparelho.

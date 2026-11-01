@@ -9,6 +9,8 @@ const LOADING_TEXT := "Gerando mapa..."
 const STEP_SECONDS := 0.18
 ## Até quanto o dedo pode correr, em pontos da tela lógica, para ainda ser um toque.
 const MAX_TAP_TRAVEL := 24.0
+const WHOLE_MAP_TEXT := "Debug: ver mapa inteiro"
+const NORMAL_ZOOM_TEXT := "Debug: voltar ao zoom normal"
 
 ## null até o servidor responder.
 var _map: ExplorationMap = null
@@ -17,20 +19,25 @@ var _player_coord := Vector2i.ZERO
 var _loading: bool = true
 var _walking: bool = false
 var _press_position := Vector2.ZERO
+## Só em build de debug: o mapa inteiro na tela, sem andar.
+var _showing_whole_map: bool = false
 
 @onready var _map_area: Control = %MapArea
 @onready var _map_view: HexMapView = %MapView
 @onready var _marker: CreaturePortrait = %PlayerMarker
+@onready var _controls_panel: Control = %ControlsPanel
 @onready var _message: Label = %Message
 @onready var _encounter_button: Button = %EncounterButton
 @onready var _back_button: Button = %BackButton
+@onready var _debug_zoom_button: Button = %DebugZoomButton
 
 
 func _ready() -> void:
 	_map_area.gui_input.connect(_on_map_input)
 	_encounter_button.pressed.connect(Router.push.bind(&"battle"))
 	_back_button.pressed.connect(Router.back)
-	resized.connect(_center_on_player.call_deferred)
+	_debug_zoom_button.pressed.connect(_toggle_whole_map)
+	resized.connect(_fit_view.call_deferred)
 	_marker.set_species(Session.player.party[0].species_id)
 	_begin()
 
@@ -51,11 +58,13 @@ func _begin() -> void:
 	_map = result.data
 	_player_coord = _map.start
 	_map_view.set_map(_map)
-	_center_on_player()
 	_map_view.show()
 	_marker.show()
 	_message.hide()
 	_encounter_button.disabled = false
+	_debug_zoom_button.visible = OS.is_debug_build()
+	# O botão de debug muda a altura do painel.
+	_fit_view.call_deferred()
 
 
 func _on_map_input(event: InputEvent) -> void:
@@ -69,7 +78,7 @@ func _on_map_input(event: InputEvent) -> void:
 
 
 func _tap(point: Vector2) -> void:
-	if _map == null or _walking:
+	if _map == null or _walking or _showing_whole_map:
 		return
 	var art_point := (point - _map_view.position) / _map_view.pixel_scale()
 	var target := _map_view.coord_at(art_point)
@@ -86,9 +95,26 @@ func _step_to(target: Vector2i) -> void:
 	_walking = false
 
 
-func _center_on_player() -> void:
-	if _map != null:
+func _toggle_whole_map() -> void:
+	if _walking:
+		return
+	_showing_whole_map = not _showing_whole_map
+	_debug_zoom_button.text = NORMAL_ZOOM_TEXT if _showing_whole_map else WHOLE_MAP_TEXT
+	_fit_view()
+
+
+func _fit_view() -> void:
+	if _map == null:
+		return
+	if _showing_whole_map:
+		var panel_top := _controls_panel.get_global_rect().position.y
+		_map_view.show_whole_map(Rect2(0.0, 0.0, size.x, panel_top))
+		var player_point := _map_view.position + _map_view.surface_center(_player_coord) * _map_view.pixel_scale()
+		_marker.position = player_point - _marker.size / 2.0
+	else:
+		_map_view.show_pixel_art()
 		_move_map(_player_centered_position())
+		_marker.position = (size - _marker.size) / 2.0
 
 
 func _player_centered_position() -> Vector2:

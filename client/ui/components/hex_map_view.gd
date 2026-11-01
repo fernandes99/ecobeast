@@ -10,6 +10,7 @@ extends Node2D
 const STEP_X := 34
 const STEP_Y := 24
 const ROW_SHIFT := 17
+const TILE_SIZE := Vector2(32.0, 48.0)
 ## Centro da superfície dentro do sprite de 32×48.
 const SURFACE_CENTER := Vector2(16.0, 20.0)
 ## Pontos da tela lógica por pixel da arte, antes de arredondar. A revisar.
@@ -19,6 +20,8 @@ var _tiles: Array[HexTile] = []
 var _textures: Dictionary[String, Texture2D] = {}
 ## Pixels reais por ponto da tela lógica, em cada eixo.
 var _window_scale := Vector2.ONE
+## Onde caber o mapa inteiro, no modo de depuração; vazia na escala normal.
+var _whole_map_area := Rect2()
 
 
 func _ready() -> void:
@@ -39,6 +42,21 @@ func set_map(map: ExplorationMap) -> void:
 	_tiles = map.tiles.values()
 	_tiles.sort_custom(_is_drawn_before)
 	queue_redraw()
+
+
+## Só para depuração: cabe o mapa inteiro em `area`, da tela lógica. Reduzido
+## desse jeito, o mapa precisa de filtro suave, e os pixels deixam de ser inteiros.
+func show_whole_map(area: Rect2) -> void:
+	_whole_map_area = area
+	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	_update_scale()
+
+
+## Volta à escala normal; a posição fica por conta de quem chamou.
+func show_pixel_art() -> void:
+	_whole_map_area = Rect2()
+	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_update_scale()
 
 
 ## O centro da superfície de um hexágono, em pixels da arte.
@@ -79,8 +97,26 @@ func snapped_to_pixels(value: Vector2) -> Vector2:
 ## janela nunca é exatamente igual nos dois, e a diferença se acumula no mapa.
 func _update_scale() -> void:
 	_window_scale = Vector2(get_window().size) / get_viewport_rect().size
+	if _whole_map_area.has_area():
+		_fit_whole_map()
+		return
 	var pixels := maxi(1, roundi(_window_scale.y * ART_SCALE))
 	scale = Vector2(pixels, pixels) / _window_scale
+
+
+func _fit_whole_map() -> void:
+	var bounds := _map_bounds()
+	var ratio := _whole_map_area.size / bounds.size
+	scale = Vector2.ONE * minf(ratio.x, ratio.y)
+	position = _whole_map_area.get_center() - bounds.get_center() * scale
+
+
+## O retângulo que todos os sprites ocupam, em pixels da arte.
+func _map_bounds() -> Rect2:
+	var bounds := Rect2(_tile_origin(_tiles[0].coord), TILE_SIZE)
+	for tile: HexTile in _tiles:
+		bounds = bounds.merge(Rect2(_tile_origin(tile.coord), TILE_SIZE))
+	return bounds
 
 
 func _texture(path: String) -> Texture2D:

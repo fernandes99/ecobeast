@@ -59,7 +59,7 @@ Tomadas no planejamento (corrigíveis; ao mudar uma, atualize aqui e nas specs a
 - Aparecer Ecobeast ao andar. Por enquanto, a batalha só começa pelo botão.
 - Guardar o mapa ou retomar a exploração depois de voltar ao Hub.
 - Sprite de Domador, animação de andar e som.
-- Zoom, arrastar, minimapa e busca de caminho.
+- Zoom para o jogador, arrastar, minimapa e busca de caminho. Em build de debug, há um botão que mostra o mapa inteiro.
 - Rios finos: sem sprites de transição, a água é feita de hexágonos inteiros.
 
 ## Pré-requisitos
