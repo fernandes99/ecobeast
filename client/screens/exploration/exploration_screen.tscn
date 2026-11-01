@@ -92,10 +92,24 @@ layout_mode = 2
 disabled = true
 text = "Procurar Ecobeast"
 
-[node name="BackButton" type="Button" parent="SafeArea/Column/ControlsPanel/Controls"]
+[node name="BottomRow" type="HBoxContainer" parent="SafeArea/Column/ControlsPanel/Controls"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="BagButton" type="Button" parent="SafeArea/Column/ControlsPanel/Controls/BottomRow"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"OutlineButton"
+disabled = true
+text = "Mochila"
+
+[node name="BackButton" type="Button" parent="SafeArea/Column/ControlsPanel/Controls/BottomRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 64)
+layout_mode = 2
+size_flags_horizontal = 3
 theme_type_variation = &"OutlineButton"
 disabled = true
 text = "Voltar"

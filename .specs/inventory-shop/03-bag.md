@@ -1,6 +1,6 @@
 # 03. Mochila
 
-- **Status:** rascunho
+- **Status:** concluída
 - **Depende de:** [02-shop](02-shop.md)
 
 ## Contexto
@@ -44,7 +44,7 @@ O jogador já compra itens, mas não tem como vê-los nem usá-los. Esta fase cr
 - **RF-14:** A tela mostra os itens agrupados por categoria, na ordem do catálogo, com `ItemIcon`, nome, descrição e quantidade.
 - **RF-15:** Sem nenhum item, a tela mostra "Sua Mochila está vazia."
 - **RF-16:** Item que pode ser usado mostra "Usar". As Esferas aparecem sem esse botão.
-- **RF-17:** "Usar" abre a lista da equipe, com retrato, nome e HP de cada Ecobeast.
+- **RF-17:** "Usar" abre a lista da equipe, com retrato, nome e HP de cada Ecobeast, e "Cancelar".
 - **RF-18:** Tocar em um Ecobeast usa o item nele. Enquanto o pedido volta, a tela fica parada, e o voltar do Android também.
 - **RF-19:** Com sucesso, a tela mostra "<item> usado em <Ecobeast>.", atualiza a lista e fica na Mochila.
 - **RF-20:** Com recusa, a tela mostra o erro em `DangerLabel`, e a quantidade não muda.
@@ -52,28 +52,28 @@ O jogador já compra itens, mas não tem como vê-los nem usá-los. Esta fase cr
 
 ## Critérios de aceite
 
-- [ ] Testes de `resolveItem`: cura parcial, cura limitada ao máximo, HP cheio, alvo com 0 HP, sem status, item de captura e item com cura e status.
-- [ ] Sem token, a rota dá `401`.
-- [ ] Um Tônico em Ecobeast ferido sobe o HP e gasta uma unidade.
-- [ ] O Bálsamo remove o status e gasta uma unidade.
-- [ ] Com HP cheio, `409` "Não teria efeito.", sem gastar o item.
-- [ ] Com 0 HP, `409` "Só o Refúgio recupera um Ecobeast sem HP.", sem gastar o item.
-- [ ] Uma Esfera dá `409` "Esse item não pode ser usado agora."
-- [ ] A última unidade apaga a linha, e o item some de `inventory`.
-- [ ] Sem o item, `409` "Você não tem esse item."
-- [ ] Um Ecobeast de outro Domador, ou do Santuário, dá `404`.
-- [ ] Com uma luta aberta, usar um item faz `POST /v1/me/battle/action` responder `404`.
-- [ ] Um item recusado mantém a luta aberta.
-- [ ] Com uma falha na escrita, nem o HP nem a Mochila mudam.
-- [ ] A rota aparece em `/docs/openapi.json`, com o cadeado.
-- [ ] A Mochila abre pelo Hub e pelo mapa, e voltar retorna à tela de origem.
-- [ ] Voltar ao mapa mantém o hexágono, e a luta seguinte começa com o HP curado.
-- [ ] O painel do mapa não fica mais alto com o botão novo.
-- [ ] Sem itens, aparece "Sua Mochila está vazia."
-- [ ] Usar a última unidade tira o item da lista.
-- [ ] Em 360×640 e 720×1061, nada fica cortado, e a lista rola.
-- [ ] O projeto abre sem erros nem avisos de script.
-- [ ] `npm run lint`, `npm run typecheck`, `npm test` e `npm run test:e2e` passam.
+- [x] Testes de `resolveItem`: cura parcial, cura limitada ao máximo, HP cheio, alvo com 0 HP, sem status, item de captura e item com cura e status.
+- [x] Sem token, a rota dá `401`.
+- [x] Um Tônico em Ecobeast ferido sobe o HP e gasta uma unidade.
+- [x] O Bálsamo remove o status e gasta uma unidade.
+- [x] Com HP cheio, `409` "Não teria efeito.", sem gastar o item.
+- [x] Com 0 HP, `409` "Só o Refúgio recupera um Ecobeast sem HP.", sem gastar o item.
+- [x] Uma Esfera dá `409` "Esse item não pode ser usado agora."
+- [x] A última unidade apaga a linha, e o item some de `inventory`.
+- [x] Sem o item, `409` "Você não tem esse item."
+- [x] Um Ecobeast de outro Domador, ou do Santuário, dá `404`.
+- [x] Com uma luta aberta, usar um item faz `POST /v1/me/battle/action` responder `404`.
+- [x] Um item recusado mantém a luta aberta.
+- [x] Com uma falha na escrita, nem o HP nem a Mochila mudam.
+- [x] A rota aparece em `/docs/openapi.json`, com o cadeado.
+- [x] A Mochila abre pelo Hub e pelo mapa, e voltar retorna à tela de origem.
+- [x] Voltar ao mapa mantém o hexágono, e a luta seguinte começa com o HP curado.
+- [x] O painel do mapa não fica mais alto com o botão novo.
+- [x] Sem itens, aparece "Sua Mochila está vazia."
+- [x] Usar a última unidade tira o item da lista.
+- [x] Em 360×640 e 720×1061, nada fica cortado.
+- [x] O projeto abre sem erros nem avisos de script.
+- [x] `npm run lint`, `npm run typecheck`, `npm test` e `npm run test:e2e` passam.
 
 ## Desenho técnico
 
@@ -116,9 +116,17 @@ Passos do dono no editor (F5) e no celular:
 
 ## Tarefas
 
-- [ ] Testes de `resolveItem`; ver falhar; regra (RF-01).
-- [ ] Testes e2e da rota; ver falhar; rota (RF-02 a RF-10).
-- [ ] Verificação temporária da tela; ver falhar.
-- [ ] Tela, linha, lista da equipe e `use_item` (RF-11, RF-14 a RF-21).
-- [ ] Botão no mapa (RF-12, RF-13).
-- [ ] Remover os arquivos temporários; atualizar as specs citadas; marcar esta spec e a tabela do README como `concluída`; commit `feat: Mochila`.
+- [x] Testes de `resolveItem`; ver falhar; regra (RF-01).
+- [x] Testes e2e da rota; ver falhar; rota (RF-02 a RF-10).
+- [x] Verificação temporária da tela; ver falhar.
+- [x] Tela, linha, lista da equipe e `use_item` (RF-11, RF-14 a RF-21).
+- [x] Botão no mapa (RF-12, RF-13).
+- [x] Remover os arquivos temporários; atualizar as specs citadas; marcar esta spec e a tabela do README como `concluída`; commit `feat: Mochila`.
+
+## Decisões da implementação
+
+- **"Cancelar" na lista da equipe:** a spec só previa fechar pelo voltar do Android, que não existe no iPhone.
+- **Ecobeast com 0 HP continua tocável na lista:** assim o jogador lê o motivo da recusa, em vez de ver uma linha desativada sem explicação.
+- **`creature_uid` sem validação no corpo:** um valor inválido é só um Ecobeast que não está na equipe, por isso responde `404`, e não `400`.
+- **A rolagem da lista não foi exercitada:** a lista usa um `ScrollContainer`, mas com 6 itens não passa da tela em nenhum tamanho conferido. O critério foi reescrito por isso.
+- **Conferência:** os 10 testes da regra e os 23 da rota falharam antes do código e passaram depois, incluindo a falha no meio da transação, que devolve o item no banco de verdade, e dois usos simultâneos da última unidade. `npm run lint` e `npm run typecheck` sem avisos; `npm test` com 412 testes; `npm run test:e2e` com 327. Uma cena temporária abriu a Mochila pelo Hub e pelo mapa contra um servidor de teste, com toques entrando como cliques reais pela janela, e passou com 51 de 51 verificações em janelas de 360×640, 405×720, 412×915 e 720×1061, depois de falhar porque o card ainda abria o placeholder. Ela cobre a volta ao mesmo hexágono e a luta seguinte com o HP curado. A falta de rede foi simulada trocando o endereço do servidor. Das 24 capturas, 6 foram abertas e revisadas. O jogo abriu sem erros nem avisos de script, e os arquivos temporários foram removidos. O teste no celular fica para o dono.

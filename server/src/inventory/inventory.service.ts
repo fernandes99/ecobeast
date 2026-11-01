@@ -2,14 +2,20 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
+  NotFoundException,
 } from '@nestjs/common';
+import { BattleStore } from '../battle/battle.store.js';
+import { resolveItem } from '../domain/items/use-item.js';
+import { Prisma } from '../generated/prisma/client.js';
 import { PlayerDto } from '../player/player.dto.js';
-import { PlayerService } from '../player/player.service.js';
+import { creatureStats, PLAYER_INCLUDE } from '../player/player.mapper.js';
+import { CREATURE_NOT_FOUND, PlayerService } from '../player/player.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { INVALID_ITEM } from './inventory.dto.js';
 
 export const NO_PLAYER = 'Crie seu Domador primeiro.';
 export const NOT_ENOUGH_COINS = 'Moedas insuficientes.';
+export const NO_ITEM = 'Você não tem esse item.';
 /** O maior `id` que o banco guarda: acima dele, o Prisma daria erro. */
 const MAX_ITEM_ID = 2_147_483_647;
 
@@ -19,6 +25,7 @@ export class InventoryService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly players: PlayerService,
+    private readonly battles: BattleStore,
   ) {}
 
   /**
@@ -42,6 +49,66 @@ export class InventoryService {
       });
     });
     return (await this.players.get(userId))!;
+  }
+
+  /**
+   * Usa um item fora da luta. A batalha aberta sai antes da escrita: se
+   * terminasse depois, gravaria o HP antigo por cima.
+   */
+  async use(
+    userId: string,
+    itemId: number,
+    creatureUid: string,
+  ): Promise<PlayerDto> {
+    const player = await this.prisma.player.findUnique({
+      where: { id: userId },
+      include: PLAYER_INCLUDE,
+    });
+    if (!player || player.creatures.length === 0) {
+      throw new ConflictException(NO_PLAYER);
+    }
+    const item = await this.findItem(itemId);
+    const creature = player.creatures.find(({ uid }) => uid === creatureUid);
+    if (!creature) throw new NotFoundException(CREATURE_NOT_FOUND);
+    if (!player.inventory.some((slot) => slot.itemId === itemId)) {
+      throw new ConflictException(NO_ITEM);
+    }
+    const effect = resolveItem(item, {
+      currentHp: creature.currentHp,
+      maxHp: creatureStats(creature).hp,
+      hasStatus: creature.statusConditionId !== null,
+    });
+    if ('error' in effect) throw new ConflictException(effect.error);
+
+    this.battles.delete(userId);
+    await this.prisma.$transaction(async (tx) => {
+      await this.spendItem(tx, userId, itemId);
+      await tx.creatureInstance.updateMany({
+        where: { uid: creature.uid },
+        data: {
+          currentHp: creature.currentHp + effect.healed,
+          ...(effect.curesStatus && { statusConditionId: null }),
+        },
+      });
+    });
+    return (await this.players.get(userId))!;
+  }
+
+  /** Dois pedidos pela última unidade: o segundo espera e não acha mais nada. */
+  private async spendItem(
+    tx: Prisma.TransactionClient,
+    playerId: string,
+    itemId: number,
+  ): Promise<void> {
+    const { count } = await tx.inventoryItem.updateMany({
+      where: { playerId, itemId, quantity: { gt: 1 } },
+      data: { quantity: { decrement: 1 } },
+    });
+    if (count > 0) return;
+    const removed = await tx.inventoryItem.deleteMany({
+      where: { playerId, itemId, quantity: 1 },
+    });
+    if (removed.count === 0) throw new ConflictException(NO_ITEM);
   }
 
   private async requireTeam(userId: string): Promise<void> {

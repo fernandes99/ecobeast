@@ -30,6 +30,10 @@ extends RefCounted
 @abstract func buy_item(item_id: int) -> Result
 
 
+## data: o Player depois do uso, fora da luta.
+@abstract func use_item(item_id: int, creature_uid: String) -> Result
+
+
 ## data: null.
 @abstract func reset_progress() -> Result
 

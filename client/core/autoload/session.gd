@@ -87,6 +87,14 @@ func buy_item(item_id: int) -> Result:
 	return result
 
 
+func use_item(item_id: int, creature_uid: String) -> Result:
+	@warning_ignore("redundant_await")
+	var result: Result = await _service.use_item(item_id, creature_uid)
+	if result.ok:
+		_set_player(result.data)
+	return result
+
+
 func reset_progress() -> Result:
 	@warning_ignore("redundant_await")
 	var result: Result = await _service.reset_progress()

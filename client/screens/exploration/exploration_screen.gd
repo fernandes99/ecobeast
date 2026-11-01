@@ -28,6 +28,7 @@ var _showing_whole_map: bool = false
 @onready var _controls_panel: Control = %ControlsPanel
 @onready var _message: Label = %Message
 @onready var _encounter_button: Button = %EncounterButton
+@onready var _bag_button: Button = %BagButton
 @onready var _back_button: Button = %BackButton
 @onready var _debug_zoom_button: Button = %DebugZoomButton
 
@@ -35,6 +36,7 @@ var _showing_whole_map: bool = false
 func _ready() -> void:
 	_map_area.gui_input.connect(_on_map_input)
 	_encounter_button.pressed.connect(Router.push.bind(&"battle"))
+	_bag_button.pressed.connect(Router.push.bind(&"bag"))
 	_back_button.pressed.connect(Router.back)
 	_debug_zoom_button.pressed.connect(_toggle_whole_map)
 	resized.connect(_fit_view.call_deferred)
@@ -62,6 +64,7 @@ func _begin() -> void:
 	_marker.show()
 	_message.hide()
 	_encounter_button.disabled = false
+	_bag_button.disabled = false
 	_debug_zoom_button.visible = OS.is_debug_build()
 	# O botão de debug muda a altura do painel.
 	_fit_view.call_deferred()

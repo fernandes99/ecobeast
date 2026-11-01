@@ -17,7 +17,7 @@ server/
   src/player/            o Domador do usuário logado (/v1/me)
   src/battle/            a batalha do usuário logado (/v1/me/battle), guardada na memória
   src/exploration/       o mapa de exploração do usuário logado (/v1/me/exploration), sem guardar nada
-  src/inventory/         a Loja e a Mochila do usuário logado (/v1/me/shop)
+  src/inventory/         a Loja e a Mochila do usuário logado (/v1/me/shop e /v1/me/items)
   src/common/            peças compartilhadas pelas rotas
   src/catalog/           um módulo por recurso do catálogo
   src/domain/            regras puras de jogo (sem Nest nem Prisma)
