@@ -1,6 +1,6 @@
 # 02. Gerador do mapa
 
-- **Status:** rascunho
+- **Status:** concluída
 - **Depende de:** [01-hex-grid](01-hex-grid.md)
 
 ## Contexto
@@ -47,20 +47,20 @@ Com a grade validada, falta quem decide o que vai em cada hexágono. Esta fase c
 
 Os testes de unidade rodam cada critério do gerador em 200 seeds.
 
-- [ ] A mesma seed dá o mesmo mapa, e seeds diferentes dão mapas diferentes.
-- [ ] Todo mapa tem `tileCount` posições únicas, conectadas, e muda de tamanho quando `tileCount` muda.
-- [ ] Nenhum `wdeep` encosta em terra, e nenhum par proibido fica lado a lado.
-- [ ] Menos de 5% dos tiles de terra ficam sem vizinho do mesmo bioma, e nenhum `mont` de terra fica sem vizinho `mont`.
-- [ ] Todo bioma e toda forma são dos nomes de [architecture.md](architecture.md#sprites), e toda variante está na faixa da forma.
-- [ ] `start` existe no mapa e é terra plana.
-- [ ] Em média, a água fica perto de `waterFraction`, e a terra é a maior parte do mapa.
-- [ ] Ao longo das seeds, aparecem todos os 9 biomas, e as ilhas são raras.
-- [ ] Aumentar `waterFraction` aumenta a água.
-- [ ] Sem token, a rota dá `401`; sem Domador, `409`; com equipe, `201`, e com a equipe a 0 HP também.
-- [ ] Duas chamadas seguidas devolvem seeds diferentes.
-- [ ] A rota aparece em `/docs/openapi.json`, com o cadeado.
-- [ ] Mapas de seis seeds, desenhados com os sprites reais, foram abertos e revisados, e parecem regiões coerentes.
-- [ ] `npm run lint`, `npm run typecheck`, `npm test` e `npm run test:e2e` passam.
+- [x] A mesma seed dá o mesmo mapa, e seeds diferentes dão mapas diferentes.
+- [x] Todo mapa tem `tileCount` posições únicas, conectadas, e muda de tamanho quando `tileCount` muda.
+- [x] Nenhum `wdeep` encosta em terra, e nenhum par proibido fica lado a lado.
+- [x] Menos de 5% dos tiles de terra ficam sem vizinho do mesmo bioma, e nenhum `mont` de terra fica sem vizinho `mont`.
+- [x] Todo bioma e toda forma são dos nomes de [architecture.md](architecture.md#sprites), e toda variante está na faixa da forma.
+- [x] `start` existe no mapa e é terra plana.
+- [x] Em média, a água fica perto de `waterFraction`, e a terra é a maior parte do mapa.
+- [x] Ao longo das seeds, aparecem todos os 9 biomas, e as ilhas são raras.
+- [x] Aumentar `waterFraction` aumenta a água.
+- [x] Sem token, a rota dá `401`; sem Domador, `409`; com equipe, `201`, e com a equipe a 0 HP também.
+- [x] Duas chamadas seguidas devolvem seeds diferentes.
+- [x] A rota aparece em `/docs/openapi.json`, com o cadeado.
+- [x] Mapas de seis seeds, desenhados com os sprites reais, foram abertos e revisados, e parecem regiões coerentes.
+- [x] `npm run lint`, `npm run typecheck`, `npm test` e `npm run test:e2e` passam.
 
 ## Desenho técnico
 
@@ -92,12 +92,21 @@ Os e2e não conferem valores de balanceamento: só o formato do mapa e os códig
 cd server && npm run lint && npm run typecheck && npm test && npm run test:e2e
 ```
 
-Um script temporário escreve os mapas de seis seeds em JSON, e uma cena temporária do Godot os desenha com o `HexMapView`, inteiros, numa imagem por seed. Os parâmetros são ajustados olhando essas imagens, e o que mudar em relação a [architecture.md](architecture.md) é atualizado lá.
+Um script temporário escreve os mapas de seis seeds em JSON, e um script temporário do Godot os monta com os sprites reais, inteiros, numa folha só. Os parâmetros são ajustados olhando essas imagens, e o que mudar em relação a [architecture.md](architecture.md) é atualizado lá.
 
 ## Tarefas
 
-- [ ] `hex`, `seededRandom` e ruído, com testes; ver falhar; implementar.
-- [ ] Testes do gerador; ver falhar; `generateMap` e `DEFAULT_MAP_CONFIG` (RF-01 a RF-11).
-- [ ] Testes e2e; ver falhar; módulo da rota (RF-12 a RF-16).
-- [ ] Desenhar seis mapas, ajustar os parâmetros e revisar as imagens.
-- [ ] Remover os arquivos temporários; marcar esta spec e a tabela do README como `concluída`; commit `feat: gerador do mapa de exploração`.
+- [x] `hex`, `seededRandom` e ruído, com testes; ver falhar; implementar.
+- [x] Testes do gerador; ver falhar; `generateMap` e `DEFAULT_MAP_CONFIG` (RF-01 a RF-11).
+- [x] Testes e2e; ver falhar; módulo da rota (RF-12 a RF-16).
+- [x] Desenhar seis mapas, ajustar os parâmetros e revisar as imagens.
+- [x] Remover os arquivos temporários; marcar esta spec e a tabela do README como `concluída`; commit `feat: gerador do mapa de exploração`.
+
+## Decisões da implementação
+
+- **Um quarto ruído, a crista:** na primeira versão, forma e pedra vinham da mesma elevação. Por isso 76% das montanhas eram de pedra, em blocos maciços, e as montanhas de grama e deserto quase não existiam. Os testes passavam, e o problema só apareceu olhando os mapas. Agora a forma vem da crista, que desenha cadeias, e `stone` fica só no miolo delas. A [arquitetura](architecture.md#gerador) foi atualizada.
+- **Parâmetros ajustados olhando os mapas:** `edgeRoughness` de 3 para 7, porque a borda ainda lembrava um hexágono; `coldLimit` de 0,18 para 0,12 e `climateShift` de 0,2 para 0,12, porque a neve dominava; `swampBand` de 0,06 para 0,12 e `wetLimit` de 0,62 para 0,6, porque o pântano ficava em 1% dos tiles; `stoneFrom` de 0,86 para 0,96; `hillFrom` de 0,78 para 0,8. `noiseScale`, que a spec não previa, é 0,14.
+- **Testes a mais:** nenhum bioma de terra aparece em menos de 25% dos mapas, nenhum bioma passa de 35% dos tiles, e há montanhas em pelo menos 5 biomas de terra. O limite de 35% começou em 30% e subiu porque `temperate`, com 30,6%, é a base da região, como o dono pediu.
+- **Os mapas foram montados por script, sem o `HexMapView`:** o script usa os mesmos passos de 32 e 21 px, e a [01](01-hex-grid.md) já provou que o `HexMapView` desenha exatamente isso.
+- **Distribuição em 200 seeds:** `temperate` 30,6%, `boreal` 15,7%, `wshallow` 14,6%, `warm` 9,5%, `snow` 9,4%, `desert` 8,2%, `wdeep` 7,4%, `swamp` 3,3% e `stone` 1,2%. Por forma: `flat` 83,5%, `hill` 9,8% e `mont` 6,7%.
+- **Conferência:** `npm run lint` e `npm run typecheck` sem avisos; `npm test` com 396 testes; `npm run test:e2e` com 273. Os testes novos falharam antes do código. Os mapas de seis seeds foram desenhados e revisados em duas rodadas.

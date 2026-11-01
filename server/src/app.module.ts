@@ -7,6 +7,7 @@ import { BattleModule } from './battle/battle.module.js';
 import { BundleModule } from './catalog/bundle/bundle.module.js';
 import { CatalogModule } from './catalog/catalog.module.js';
 import { Env, validateEnv } from './config/env.js';
+import { ExplorationModule } from './exploration/exploration.module.js';
 import { HealthModule } from './health/health.module.js';
 import { PlayerModule } from './player/player.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
@@ -30,6 +31,7 @@ import { PrismaModule } from './prisma/prisma.module.js';
     AuthModule,
     PlayerModule,
     BattleModule,
+    ExplorationModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

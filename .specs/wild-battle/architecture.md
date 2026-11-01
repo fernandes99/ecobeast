@@ -48,21 +48,21 @@ O canto do sprite, em pixels da arte, fica em `x = 32 * q + 16 * r` e `y = 21 * 
 Uma função pura em `server/src/domain/exploration/`: `generateMap(seed, config)`. Toda a aleatoriedade vem de um gerador com seed, nesta ordem fixa:
 
 1. **Recorte.** A região cresce a partir de `(0, 0)`: entre as posições vizinhas à região, entra a de menor `distância + ruído × edgeRoughness`, até `tileCount`. O resultado é conectado, sem posições repetidas, com a quantidade exata e borda irregular.
-2. **Campos.** Três ruídos independentes dão elevação, umidade e temperatura. Cada um vira percentil dentro do mapa, de 0 a 1, para a proporção dos terrenos não depender da sorte. A temperatura recebe um desvio sorteado por mapa, de até `climateShift`, para alguns mapas saírem mais frios ou mais quentes.
+2. **Campos.** Quatro ruídos independentes dão elevação, umidade, temperatura e crista. A crista é `1 - |2 × ruído - 1|`, que fica alta ao longo de linhas compridas: é dela que saem as cadeias de montanhas. Cada campo vira percentil dentro do mapa, de 0 a 1, para a proporção dos terrenos não depender da sorte. A temperatura recebe um desvio sorteado por mapa, de até `climateShift`, para alguns mapas saírem mais frios ou mais quentes.
 3. **Água.** Elevação abaixo de `waterFraction` é água; a parte mais baixa dela, `deepFraction`, é `wdeep`, e o resto é `wshallow`. `wdeep` encostado em terra vira `wshallow`.
 4. **Terra.** Na ordem, a primeira regra que valer:
 
 | Condição                                                     | Bioma       |
 | ------------------------------------------------------------ | ----------- |
 | temperatura abaixo de `coldLimit`                            | `snow`      |
-| elevação acima de `stoneFrom`                                | `stone`     |
+| crista acima de `stoneFrom`                                  | `stone`     |
 | elevação até `swampBand` acima da água e umidade acima de `wetLimit` | `swamp` |
 | temperatura acima de `hotLimit` e umidade abaixo de `dryLimit` | `desert`  |
 | temperatura acima de `hotLimit`                              | `warm`      |
 | umidade acima de `wetLimit`                                  | `boreal`    |
 | resto                                                        | `temperate` |
 
-5. **Forma.** Na terra, elevação acima de `mountainFrom` é `mont`, acima de `hillFrom` é `hill`, e o resto é `flat`. Na água, `islandChance` dá `hill` ou `mont`; o resto é `flat`.
+5. **Forma.** Na terra, crista acima de `mountainFrom` é `mont`, acima de `hillFrom` é `hill`, e o resto é `flat`. Assim a forma não depende do bioma, e há montanhas de grama, floresta, deserto e neve. Na água, `islandChance` dá `hill` ou `mont`; o resto é `flat`.
 6. **Limpeza.** `mont` de terra sem vizinho `mont` vira `hill`, até não sobrar nenhum. Depois, por `cleanupPasses` vezes, um bioma de terra sem vizinho igual assume o bioma de terra mais comum entre os vizinhos. Por fim, em qualquer par proibido, o bioma que não é o mais comum do mapa vira `temperate`.
 7. **Variante.** Em `flat`, `detailChance` escolhe entre 4 e 6, e o resto entre 1 e 3. Nas outras formas, entre 1 e 3.
 8. **Início.** A posição de terra plana mais perto de `(0, 0)`.
@@ -71,16 +71,17 @@ Uma função pura em `server/src/domain/exploration/`: `generateMap(seed, config
 
 Os parâmetros ficam juntos em `DEFAULT_MAP_CONFIG`. Valores iniciais, _a revisar_, ajustados olhando mapas gerados:
 
-| Parâmetro       | Valor | Parâmetro      | Valor |
-| --------------- | ----- | -------------- | ----- |
-| `tileCount`     | 300   | `dryLimit`     | 0,45  |
-| `edgeRoughness` | 3     | `wetLimit`     | 0,62  |
-| `waterFraction` | 0,22  | `stoneFrom`    | 0,86  |
-| `deepFraction`  | 0,4   | `swampBand`    | 0,06  |
-| `climateShift`  | 0,2   | `hillFrom`     | 0,78  |
-| `coldLimit`     | 0,18  | `mountainFrom` | 0,9   |
-| `hotLimit`      | 0,75  | `islandChance` | 0,04  |
-| `detailChance`  | 0,2   | `cleanupPasses`| 3     |
+| Parâmetro       | Valor | Parâmetro       | Valor |
+| --------------- | ----- | --------------- | ----- |
+| `tileCount`     | 300   | `dryLimit`      | 0,45  |
+| `edgeRoughness` | 7     | `wetLimit`      | 0,6   |
+| `noiseScale`    | 0,14  | `stoneFrom`     | 0,96  |
+| `waterFraction` | 0,22  | `swampBand`     | 0,12  |
+| `deepFraction`  | 0,4   | `hillFrom`      | 0,8   |
+| `climateShift`  | 0,12  | `mountainFrom`  | 0,9   |
+| `coldLimit`     | 0,12  | `islandChance`  | 0,04  |
+| `hotLimit`      | 0,75  | `detailChance`  | 0,2   |
+|                 |       | `cleanupPasses` | 3     |
 
 ## Pixels inteiros
 

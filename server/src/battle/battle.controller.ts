@@ -46,7 +46,7 @@ export class BattleController {
     summary: 'Começar uma batalha de teste',
     description:
       'Começa uma batalha contra um inimigo selvagem da espécie e do nível dados. ' +
-      'Ainda não há zonas: a rota só existe com `ENABLE_TEST_BATTLE` ligada. ' +
+      'A rota só existe com `ENABLE_TEST_BATTLE` ligada. ' +
       'Uma batalha em andamento é descartada, sem gravar nada.',
   })
   @ApiCreatedResponse({ type: BattleResponseDto })

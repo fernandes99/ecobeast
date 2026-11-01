@@ -2,7 +2,7 @@ import { MAX_LEVEL } from '../rules/xp-curve.js';
 import type { Random } from './types.js';
 
 const MIN_LEVEL = 1;
-/** Provisórios, a revisar: a `wild-battle` troca o sorteio pelas zonas. */
+/** Provisórios, a revisar: a `biome-encounters` troca o sorteio pelo bioma. */
 const LEVELS_BELOW = 2;
 const LEVELS_ABOVE = 1;
 
