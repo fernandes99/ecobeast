@@ -1,6 +1,6 @@
 # 01. Catálogo de itens
 
-- **Status:** rascunho
+- **Status:** concluída
 - **Depende de:** [battle-screen](../battle-screen/), [heal-station](../heal-station/)
 
 ## Contexto
@@ -35,17 +35,17 @@ Sem a tabela `items`, `inventory_items` não aponta para nada. Esta fase cria as
 
 ## Critérios de aceite
 
-- [ ] O banco recusa preço 0, `heal_amount` 0 e `capture_bonus` 0.
-- [ ] O banco recusa um `inventory_items` com `item_id` que não existe.
-- [ ] O banco recusa apagar um item que está na Mochila de alguém.
-- [ ] `seedPlan` devolve a lista das tabelas vazias e `skip` com tudo preenchido.
-- [ ] `npm run db:seed` no banco atual cria 2 categorias e 6 itens, sem mudar as outras tabelas.
-- [ ] Rodar `npm run db:seed` de novo não muda nada.
-- [ ] `GET /v1/catalog` devolve 25 tabelas.
-- [ ] `GET /v1/me` traz `inventory`, e o item criado no teste aparece nele.
-- [ ] O jogo abre com o catálogo novo, sem erros nem avisos de script.
-- [ ] `GameData.get_items()` devolve os 6 itens, com o preço do banco.
-- [ ] `npm run lint`, `npm run typecheck`, `npm test` e `npm run test:e2e` passam.
+- [x] O banco recusa preço 0, `heal_amount` 0 e `capture_bonus` 0.
+- [x] O banco recusa um `inventory_items` com `item_id` que não existe.
+- [x] O banco recusa apagar um item que está na Mochila de alguém.
+- [x] `seedPlan` devolve a lista das tabelas vazias e `skip` com tudo preenchido.
+- [x] `npm run db:seed` no banco atual cria 2 categorias e 6 itens, sem mudar as outras tabelas.
+- [x] Rodar `npm run db:seed` de novo não muda nada.
+- [x] `GET /v1/catalog` devolve 25 tabelas.
+- [x] `GET /v1/me` traz `inventory`, e o item criado no teste aparece nele.
+- [x] O jogo abre com o catálogo novo, sem erros nem avisos de script.
+- [x] `GameData.get_items()` devolve os 6 itens, com o preço do banco.
+- [x] `npm run lint`, `npm run typecheck`, `npm test` e `npm run test:e2e` passam.
 
 ## Desenho técnico
 
@@ -86,9 +86,15 @@ Os testes não conferem preços nem efeitos, que o dono muda no painel: criam um
 
 ## Tarefas
 
-- [ ] Testes das restrições e do `seedPlan`; ver falhar.
-- [ ] Schema, migration e `CATALOG_TABLES` (RF-01 a RF-03, RF-07).
-- [ ] Carga inicial e os JSON (RF-04 a RF-06).
-- [ ] `inventory` no jogador (RF-08).
-- [ ] Cliente: espelho do catálogo, modelos e `quantity_of` (RF-09, RF-10).
-- [ ] Atualizar as specs citadas; marcar esta spec e a tabela do README como `concluída`; commit `feat: catálogo de itens`.
+- [x] Testes das restrições e do `seedPlan`; ver falhar.
+- [x] Schema, migration e `CATALOG_TABLES` (RF-01 a RF-03, RF-07).
+- [x] Carga inicial e os JSON (RF-04 a RF-06).
+- [x] `inventory` no jogador (RF-08).
+- [x] Cliente: espelho do catálogo, modelos e `quantity_of` (RF-09, RF-10).
+- [x] Atualizar as specs citadas; marcar esta spec e a tabela do README como `concluída`; commit `feat: catálogo de itens`.
+
+## Decisões da implementação
+
+- **A Mochila no teste usa ids reais:** a rota lê o banco por outra conexão e não enxerga um item criado numa transação desfeita. Por isso, o teste de `GET /v1/me` usa os dois primeiros itens do catálogo e confere só os ids e as quantidades, nunca preços ou efeitos.
+- **Ordem da migration:** a migration leva o nome do schema em cada comando, como a `init`, para nada ir parar no `public`. Ela foi aplicada com `prisma migrate deploy`, porque `npm run db:migrate` pede confirmação no terminal.
+- **Conferência:** os testes novos falharam antes do código e passaram depois. `npm run lint` e `npm run typecheck` sem avisos; `npm test` com 402 testes; `npm run test:e2e` com 289. No banco de desenvolvimento, `npm run db:seed` carregou 2 tabelas e 8 linhas, e a segunda execução respondeu "Banco já tem catálogo; nada foi feito." Uma cena temporária baixou o catálogo do servidor local e passou com 14 de 14 verificações, depois de falhar porque `get_items` não existia: itens, categorias, `quantity_of`, o catálogo real validado, a FK de categoria inválida e o preço 0 recusados. O jogo abriu sem erros nem avisos de script, e os arquivos temporários foram removidos. Esta fase não muda nenhuma tela.

@@ -90,6 +90,18 @@ func get_temperaments() -> Array[Temperament]:
 	return catalog.get_temperaments()
 
 
+func get_item(id: int) -> Item:
+	return catalog.get_item(id)
+
+
+func get_items() -> Array[Item]:
+	return catalog.get_items()
+
+
+func get_item_categories() -> Array[ItemCategory]:
+	return catalog.get_item_categories()
+
+
 func get_growth_rate(id: int) -> GrowthRate:
 	return catalog.get_growth_rate(id)
 

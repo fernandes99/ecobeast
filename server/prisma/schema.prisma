@@ -473,6 +473,47 @@ model SpeciesSkill {
   @@schema("ecobeasts")
 }
 
+// ─── Itens ───────────────────────────────────────────────────────────────────
+
+/// As categorias de item, que viram as abas da Loja.
+model ItemCategory {
+  id        Int    @id @default(autoincrement())
+  /// CHECK ^[a-z0-9_]+$ (migration items)
+  slug      String @unique
+  name      String
+  sortOrder Int    @unique @map("sort_order")
+
+  items Item[]
+
+  @@map("item_categories")
+  @@schema("ecobeasts")
+}
+
+/// Os itens que o jogo vende (.specs/inventory-shop/architecture.md).
+model Item {
+  id             Int     @id @default(autoincrement())
+  /// CHECK ^[a-z0-9_]+$ (migration items)
+  slug           String  @unique
+  name           String
+  description    String
+  itemCategoryId Int     @map("item_category_id")
+  /// CHECK ≥ 1 (migration items)
+  price          Int
+  sortOrder      Int     @unique @map("sort_order")
+  /// CHECK > 0 (migration items)
+  captureBonus   Float?  @map("capture_bonus")
+  /// CHECK ≥ 1 (migration items)
+  healAmount     Int?    @map("heal_amount")
+  curesStatus    Boolean @default(false) @map("cures_status")
+
+  itemCategory ItemCategory    @relation(fields: [itemCategoryId], references: [id], onDelete: Restrict)
+  inventory    InventoryItem[]
+
+  @@index([itemCategoryId])
+  @@map("items")
+  @@schema("ecobeasts")
+}
+
 // ─── Jogador ─────────────────────────────────────────────────────────────────
 // O cliente nunca lê estas tabelas: recebe o jogador pronto, no formato do
 // contrato em .specs/onboarding/architecture.md.
@@ -597,17 +638,18 @@ model CreatureInstanceSkill {
   @@schema("ecobeasts")
 }
 
-/// Itens da Mochila. Fica vazia até existir a tabela items.
+/// Itens da Mochila. A linha só existe com pelo menos uma unidade.
 model InventoryItem {
   playerId String @map("player_id") @db.Uuid
-  /// FK futura: items
   itemId   Int    @map("item_id")
   /// CHECK ≥ 1 (migration init)
   quantity Int
 
   player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  item   Item   @relation(fields: [itemId], references: [id], onDelete: Restrict)
 
   @@id([playerId, itemId])
+  @@index([itemId])
   @@map("inventory_items")
   @@schema("ecobeasts")
 }

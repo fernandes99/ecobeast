@@ -173,6 +173,14 @@ export class CreatureDto {
   caught_zone_id: number | null;
 }
 
+export class InventorySlotDto {
+  @ApiProperty({ example: 4 })
+  item_id: number;
+
+  @ApiProperty({ description: 'Sempre 1 ou mais.', example: 2 })
+  quantity: number;
+}
+
 export class PlayerDto {
   @ApiProperty({
     description: 'O id do usuário no login.',
@@ -200,6 +208,12 @@ export class PlayerDto {
     type: () => [CreatureDto],
   })
   party: CreatureDto[];
+
+  @ApiProperty({
+    description: 'A Mochila, em ordem de item.',
+    type: () => [InventorySlotDto],
+  })
+  inventory: InventorySlotDto[];
 }
 
 export class PlayerResponseDto {

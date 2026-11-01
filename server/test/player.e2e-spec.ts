@@ -100,6 +100,31 @@ describe('Rotas do jogador (e2e)', () => {
     }
   });
 
+  it('o Domador novo tem a Mochila vazia', async () => {
+    const { user } = await userWithStarter();
+    const res = await user.read().expect(200);
+    expect(res.body.player.inventory).toEqual([]);
+  });
+
+  it('a Mochila vem em ordem de item, com a quantidade', async () => {
+    const { user } = await userWithStarter();
+    const [first, second] = await prisma.item.findMany({
+      orderBy: { id: 'asc' },
+      take: 2,
+    });
+    await prisma.inventoryItem.createMany({
+      data: [
+        { playerId: user.id, itemId: second!.id, quantity: 3 },
+        { playerId: user.id, itemId: first!.id, quantity: 1 },
+      ],
+    });
+    const res = await user.read().expect(200);
+    expect(res.body.player.inventory).toEqual([
+      { item_id: first!.id, quantity: 1 },
+      { item_id: second!.id, quantity: 3 },
+    ]);
+  });
+
   it('um token de outra chave dá 401', async () => {
     const other = await createTestTokens();
     await request(app.getHttpServer())
@@ -127,6 +152,7 @@ describe('Rotas do jogador (e2e)', () => {
         /^\d{4}-\d{2}-\d{2}T[\d:.]+Z$/,
       ) as string,
       party: [],
+      inventory: [],
     });
   });
 

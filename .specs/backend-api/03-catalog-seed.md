@@ -26,7 +26,7 @@ As 28 tabelas existem no Supabase, mas estão vazias. O catálogo de hoje (23 ta
 - **RF-04:** Antes de inserir, o seed conta as linhas de cada tabela do catálogo:
   - todas vazias: carrega;
   - todas com linhas: imprime `Banco já tem catálogo; nada foi feito.` e sai com código 0;
-  - umas vazias e outras não: imprime `Catálogo incompleto no banco (<tabelas com linhas>); nada foi feito.` e sai com código 1.
+  - umas vazias e outras não: carrega só as vazias. Era um erro até a [inventory-shop](../inventory-shop/architecture.md#a-carga-inicial), que precisou de tabelas novas num banco já em uso.
   
   Ele nunca apaga nem sobrescreve linhas.
 - **RF-05:** A carga lê `<SEED_DATA_DIR>/<tabela>.json` na ordem do RF-01 e insere numa única transação. Cada linha passa por `snakeToCamelKeys`. `species` entra em duas etapas: primeiro todas as linhas com `evolves_from_species_id = null`, depois um update com o valor de cada uma. Assim a ordem dos arquivos não importa para a autorreferência.
@@ -47,7 +47,7 @@ As 28 tabelas existem no Supabase, mas estão vazias. O catálogo de hoje (23 ta
 
 - `server/src/catalog/catalog-tables.ts` (RF-01).
 - `server/src/common/case.ts` e `case.spec.ts` (RF-02).
-- `server/prisma/seed.ts` (RF-03 a RF-07). A lógica de decisão do RF-04 fica numa função pura, `seedPlan(counts: Record<string, number>): 'load' | 'skip' | { incomplete: string[] }`, testada sem banco.
+- `server/prisma/seed.ts` (RF-03 a RF-07). A lógica de decisão do RF-04 fica numa função pura, `seedPlan(counts: Record<string, number>): 'skip' | { load: string[] }`, testada sem banco.
 - `server/test/seed.e2e-spec.ts`: depois do seed, toda linha de cada JSON existe no banco com a mesma chave. O teste confere só a presença das chaves, não a igualdade de tabela inteira, para continuar valendo quando o dono acrescentar linhas ou mudar valores.
 
 **Alterar**
@@ -72,7 +72,7 @@ npm run test:e2e
 
 - [x] `case.ts` com testes: `{ growth_rate_id: 2, slug: 'a' }` ↔ `{ growthRateId: 2, slug: 'a' }`; a ordem das chaves é mantida.
 - [x] `catalog-tables.ts` (RF-01); teste de unidade: 23 nomes, sem repetição, iguais aos nomes dos arquivos `.json` de `SEED_DATA_DIR`. A ordem de dependência é provada pelo próprio seed, que falharia numa FK.
-- [x] `seedPlan` com testes: tudo 0 → `load`; tudo > 0 → `skip`; misto → `incomplete` com os nomes das tabelas não vazias.
+- [x] `seedPlan` com testes: tudo > 0 → `skip`; qualquer tabela vazia → `load` com os nomes das vazias.
 - [x] `seed.ts` (RF-04 a RF-07); rodar no banco de desenvolvimento.
 - [x] `seed.e2e-spec.ts`.
 - [x] Marcar esta spec e a tabela do README como `concluída`; commit `feat: carga inicial do catálogo`.

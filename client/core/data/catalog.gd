@@ -22,6 +22,9 @@ var _learnsets: Dictionary = {}       # species_id -> Array[LearnsetEntry]
 var _evolutions: Dictionary = {}      # species_id -> Array[EvolutionRule]
 var _species_traits: Dictionary = {}  # species_id -> Array[Dictionary]
 var _starters: Array[CreatureSpecies] = []
+var _items: Dictionary = {}           # id -> Item
+var _item_list: Array[Item] = []
+var _item_categories: Array[ItemCategory] = []
 
 
 ## Carrega todas as tabelas do schema pela fonte, valida e monta o catálogo.
@@ -122,6 +125,20 @@ func get_temperaments() -> Array[Temperament]:
 	return _temperament_list
 
 
+func get_item(id: int) -> Item:
+	return _lookup(_items, id, "item")
+
+
+## Na ordem da Loja.
+func get_items() -> Array[Item]:
+	return _item_list
+
+
+## Na ordem das abas da Loja.
+func get_item_categories() -> Array[ItemCategory]:
+	return _item_categories
+
+
 func get_growth_rate(id: int) -> GrowthRate:
 	return _lookup(_growth_rates, id, "curva de XP")
 
@@ -181,6 +198,9 @@ func _clear() -> void:
 	_evolutions.clear()
 	_species_traits.clear()
 	_starters.clear()
+	_items.clear()
+	_item_list.clear()
+	_item_categories.clear()
 
 
 func _build() -> void:
@@ -221,6 +241,13 @@ func _build() -> void:
 
 	for row: Dictionary in _sorted(_rows("starter_options"), "sort_order"):
 		_starters.append(_species[row["species_id"]])
+
+	for row: Dictionary in _sorted(_rows("item_categories"), "sort_order"):
+		_item_categories.append(ItemCategory.from_row(row))
+	for row: Dictionary in _sorted(_rows("items"), "sort_order"):
+		var item := Item.from_row(row)
+		_items[item.id] = item
+		_item_list.append(item)
 
 
 func _build_elements() -> void:

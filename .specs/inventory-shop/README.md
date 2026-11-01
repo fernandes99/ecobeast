@@ -73,7 +73,7 @@ Tomadas no planejamento (corrigíveis; ao mudar uma, atualize aqui e nas specs a
 
 | Fase | Entrega | Status |
 | --- | --- | --- |
-| [01-item-catalog](01-item-catalog.md) | Tabelas dos itens, os 6 itens no banco e a Mochila na resposta do jogador | rascunho |
+| [01-item-catalog](01-item-catalog.md) | Tabelas dos itens, os 6 itens no banco e a Mochila na resposta do jogador | concluída |
 | [02-shop](02-shop.md) | Rota de compra e tela da Loja | rascunho |
 | [03-bag](03-bag.md) | Rota de uso e tela da Mochila, abrindo pelo Hub e pelo mapa | rascunho |
 | [04-battle-items](04-battle-items.md) | Ação de usar item na batalha e o botão Itens | rascunho |

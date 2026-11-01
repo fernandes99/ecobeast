@@ -29,6 +29,7 @@ export const PLAYER_INCLUDE = {
       },
     },
   },
+  inventory: { orderBy: { itemId: 'asc' } },
 } satisfies Prisma.PlayerInclude;
 
 export type PlayerRow = Prisma.PlayerGetPayload<{
@@ -76,6 +77,10 @@ export function toPlayerDto(row: PlayerRow): PlayerDto {
     coins: row.coins,
     created_at: row.createdAt.toISOString(),
     party: row.creatures.map(toCreatureDto),
+    inventory: row.inventory.map(({ itemId, quantity }) => ({
+      item_id: itemId,
+      quantity,
+    })),
   };
 }
 

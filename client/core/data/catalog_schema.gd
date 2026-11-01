@@ -232,6 +232,31 @@ const TABLES := {
 			"zone_id": {"type": "int", "nullable": true, "fk_future": "zones"},
 		},
 	},
+	# --- Itens ----------------------------------------------------------------
+	"item_categories": {
+		"key": ["id"],
+		"columns": {
+			"id": ID,
+			"slug": SLUG,
+			"name": TEXT,
+			"sort_order": {"type": "int", "unique": true},
+		},
+	},
+	"items": {
+		"key": ["id"],
+		"columns": {
+			"id": ID,
+			"slug": SLUG,
+			"name": TEXT,
+			"description": TEXT,
+			"item_category_id": {"type": "int", "fk": "item_categories"},
+			"price": {"type": "int", "min": 1},
+			"sort_order": {"type": "int", "unique": true},
+			"capture_bonus": {"type": "float", "nullable": true, "min": 0.01},
+			"heal_amount": {"type": "int", "nullable": true, "min": 1},
+			"cures_status": {"type": "bool"},
+		},
+	},
 	"starter_options": {
 		"key": ["species_id"],
 		"columns": {

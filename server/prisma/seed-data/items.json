@@ -1,0 +1,8 @@
+[
+	{ "id": 1, "slug": "bond_sphere", "name": "Esfera de Vínculo", "description": "A esfera básica para capturar um Ecobeast.", "item_category_id": 1, "price": 100, "sort_order": 1, "capture_bonus": 1.0, "heal_amount": null, "cures_status": false },
+	{ "id": 2, "slug": "reinforced_sphere", "name": "Esfera Reforçada", "description": "Captura com mais facilidade que a Esfera de Vínculo.", "item_category_id": 1, "price": 300, "sort_order": 2, "capture_bonus": 1.5, "heal_amount": null, "cures_status": false },
+	{ "id": 3, "slug": "supreme_sphere", "name": "Esfera Suprema", "description": "A esfera mais forte: captura com o dobro de facilidade.", "item_category_id": 1, "price": 600, "sort_order": 3, "capture_bonus": 2.0, "heal_amount": null, "cures_status": false },
+	{ "id": 4, "slug": "light_tonic", "name": "Tônico Leve", "description": "Cura 20 de HP de um Ecobeast.", "item_category_id": 2, "price": 100, "sort_order": 4, "capture_bonus": null, "heal_amount": 20, "cures_status": false },
+	{ "id": 5, "slug": "strong_tonic", "name": "Tônico Forte", "description": "Cura 60 de HP de um Ecobeast.", "item_category_id": 2, "price": 300, "sort_order": 5, "capture_bonus": null, "heal_amount": 60, "cures_status": false },
+	{ "id": 6, "slug": "pure_balm", "name": "Bálsamo Puro", "description": "Remove Queimado, Envenenado, Paralisado, Adormecido ou Congelado.", "item_category_id": 2, "price": 150, "sort_order": 6, "capture_bonus": null, "heal_amount": null, "cures_status": true }
+]

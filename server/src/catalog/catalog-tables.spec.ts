@@ -4,9 +4,9 @@ import { CATALOG_TABLES, SEED_DATA_DIR } from './catalog-tables.js';
 describe('CATALOG_TABLES', () => {
   const names = CATALOG_TABLES.map((table) => table.name);
 
-  it('tem as 23 tabelas, sem repetição', () => {
-    expect(names).toHaveLength(23);
-    expect(new Set(names).size).toBe(23);
+  it('tem as 25 tabelas, sem repetição', () => {
+    expect(names).toHaveLength(25);
+    expect(new Set(names).size).toBe(25);
   });
 
   it('casa com os arquivos .json da pasta de dados do seed', () => {
@@ -23,6 +23,9 @@ describe('CATALOG_TABLES', () => {
     );
     expect(names.indexOf('skills')).toBeLessThan(
       names.indexOf('species_skills'),
+    );
+    expect(names.indexOf('item_categories')).toBeLessThan(
+      names.indexOf('items'),
     );
     expect(names.at(-1)).toBe('starter_options');
   });

@@ -43,7 +43,7 @@ Formato JSON de cada modelo = o formato que a API devolve. Cada modelo tem `stat
 | created_at | String                     | ISO 8601 em UTC (`2026-10-14T12:00:00Z`) |
 | party      | Array[CreatureInstance]    | 0 a 6, na ordem dos slots                |
 
-`has_starter() -> bool` = equipe não vazia.
+`has_starter() -> bool` = equipe não vazia. `inventory` é a Mochila, uma lista de `InventorySlot` (`item_id`, `quantity`), e `quantity_of(item_id) -> int` devolve 0 para o item que o jogador não tem ([inventory-shop](../inventory-shop/architecture.md#contrato)).
 
 **`CreatureInstance`** (`creature_instance.gd`)
 

@@ -60,6 +60,7 @@ function player(creatures: CreatureRow[] = []): PlayerRow {
     coins: 1000,
     createdAt: new Date('2026-10-30T12:00:00.000Z'),
     creatures,
+    inventory: [],
   };
 }
 
@@ -72,7 +73,16 @@ describe('toPlayerDto', () => {
       coins: 1000,
       created_at: '2026-10-30T12:00:00.000Z',
       party: [],
+      inventory: [],
     });
+  });
+
+  it('converte a Mochila para o contrato do cliente', () => {
+    const row = {
+      ...player(),
+      inventory: [{ playerId: 'p1', itemId: 4, quantity: 2 }],
+    };
+    expect(toPlayerDto(row).inventory).toEqual([{ item_id: 4, quantity: 2 }]);
   });
 
   it('converte a criatura para o contrato do cliente', () => {

@@ -14,10 +14,20 @@ var coins: int = 0
 var created_at: String
 ## Na ordem dos slots da equipe.
 var party: Array[CreatureInstance] = []
+## A Mochila, em ordem de item.
+var inventory: Array[InventorySlot] = []
 
 
 func has_starter() -> bool:
 	return not party.is_empty()
+
+
+## 0 se o jogador não tem o item.
+func quantity_of(item_id: int) -> int:
+	for slot: InventorySlot in inventory:
+		if slot.item_id == item_id:
+			return slot.quantity
+	return 0
 
 
 ## Tira os espaços das pontas e troca sequências de espaços por um só.
@@ -41,4 +51,7 @@ static func from_dict(d: Dictionary) -> Player:
 	for creature_dict: Variant in DictFields.get_array(d, "party"):
 		if creature_dict is Dictionary:
 			player.party.append(CreatureInstance.from_dict(creature_dict))
+	for slot_dict: Variant in DictFields.get_array(d, "inventory"):
+		if slot_dict is Dictionary:
+			player.inventory.append(InventorySlot.from_dict(slot_dict))
 	return player

@@ -52,6 +52,35 @@ export async function createSpecies(tx: Tx) {
   });
 }
 
+export async function createItem(
+  tx: Tx,
+  overrides: {
+    price?: number;
+    captureBonus?: number;
+    healAmount?: number;
+    curesStatus?: boolean;
+  } = {},
+) {
+  const category = await tx.itemCategory.create({
+    data: {
+      slug: testSlug('ic'),
+      name: 'Teste',
+      sortOrder: 1000 + Math.floor(Math.random() * 1e6),
+    },
+  });
+  return tx.item.create({
+    data: {
+      slug: testSlug('it'),
+      name: 'Teste',
+      description: 'Item de teste.',
+      itemCategoryId: category.id,
+      price: 100,
+      sortOrder: 1000 + Math.floor(Math.random() * 1e6),
+      ...overrides,
+    },
+  });
+}
+
 export async function createSkillParents(tx: Tx) {
   const element = await createElement(tx);
   const category = await tx.skillCategory.create({

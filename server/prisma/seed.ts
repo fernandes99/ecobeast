@@ -1,7 +1,7 @@
 // Carga inicial do catálogo (.specs/backend-api/03-catalog-seed.md).
-// Copia os JSON de SEED_DATA_DIR para o banco uma única vez: só roda com o
-// catálogo vazio e nunca apaga nem sobrescreve linhas. Depois dela, o banco é
-// o dono do catálogo. Rodar com: npm run db:seed
+// Copia os JSON de SEED_DATA_DIR para as tabelas vazias e nunca apaga nem
+// sobrescreve linhas. Depois dela, o banco é o dono do que foi carregado.
+// Rodar com: npm run db:seed
 import 'dotenv/config';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -42,13 +42,14 @@ async function countTables(): Promise<Record<string, number>> {
   return counts;
 }
 
-async function load(): Promise<number> {
+async function load(names: string[]): Promise<number> {
+  const tables = CATALOG_TABLES.filter((table) => names.includes(table.name));
   let current = '';
   let inserted = 0;
   try {
     await prisma.$transaction(
       async (tx) => {
-        for (const table of CATALOG_TABLES) {
+        for (const table of tables) {
           current = table.name;
           const rows = readTable(table.name).map(snakeToCamelKeys);
           if (table.name === 'species') {
@@ -73,7 +74,7 @@ async function load(): Promise<number> {
         }
         current = 'sequências';
         // Uma linha criada depois no painel ganha o id seguinte ao maior.
-        for (const table of CATALOG_TABLES.filter(
+        for (const table of tables.filter(
           (t) => t.key.length === 1 && t.key[0] === 'id',
         )) {
           await tx.$queryRawUnsafe(
@@ -95,16 +96,10 @@ async function main(): Promise<number> {
     console.log('Banco já tem catálogo; nada foi feito.');
     return 0;
   }
-  if (plan !== 'load') {
-    console.error(
-      `Catálogo incompleto no banco (${plan.incomplete.join(', ')}); nada foi feito.`,
-    );
-    return 1;
-  }
   try {
-    const rows = await load();
+    const rows = await load(plan.load);
     console.log(
-      `Catálogo carregado: ${CATALOG_TABLES.length} tabelas, ${rows} linhas`,
+      `Catálogo carregado: ${plan.load.length} tabelas, ${rows} linhas`,
     );
     return 0;
   } catch (error) {

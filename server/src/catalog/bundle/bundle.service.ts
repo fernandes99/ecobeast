@@ -18,7 +18,7 @@ interface ReadDelegate {
 }
 
 /**
- * Monta o catálogo inteiro (.specs/backend-api/06-catalog-bundle.md): as 23
+ * Monta o catálogo inteiro (.specs/backend-api/06-catalog-bundle.md): as 25
  * tabelas no formato dos JSON do cliente, com a versão. Guarda o resultado por
  * 60 s; uma mudança feita no painel aparece em até 1 minuto.
  */

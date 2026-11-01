@@ -2,6 +2,7 @@ import { PrismaClient } from '../src/generated/prisma/client.js';
 import { attempt, createTestPrisma } from './support/db.js';
 import {
   createElement,
+  createItem,
   createPlayerWithCreature,
   createSkillParents,
   createSpecies,
@@ -37,10 +38,10 @@ describe('restrições do banco (e2e)', () => {
     expect(rows.map((row) => row.table_name)).toEqual([]);
   });
 
-  it('as 29 tabelas e o histórico de migrations ficam no schema ecobeasts', async () => {
+  it('as 31 tabelas e o histórico de migrations ficam no schema ecobeasts', async () => {
     const rows = await prisma.$queryRaw<{ n: number }[]>`
       SELECT count(*)::int AS n FROM information_schema.tables WHERE table_schema = 'ecobeasts'`;
-    expect(rows[0].n).toBe(30);
+    expect(rows[0].n).toBe(32);
   });
 
   it('recusa Técnica com precisão 150', async () => {
@@ -118,6 +119,54 @@ describe('restrições do banco (e2e)', () => {
       }
     });
     expect(result).toBe('accepted');
+  });
+
+  it('recusa item com preço 0', async () => {
+    const result = await attempt(prisma, (tx) => createItem(tx, { price: 0 }));
+    expectRejected(result, 'items_price_check');
+  });
+
+  it('recusa item com cura 0', async () => {
+    const result = await attempt(prisma, (tx) =>
+      createItem(tx, { healAmount: 0 }),
+    );
+    expectRejected(result, 'items_heal_amount_check');
+  });
+
+  it('recusa item com bônus de captura 0', async () => {
+    const result = await attempt(prisma, (tx) =>
+      createItem(tx, { captureBonus: 0 }),
+    );
+    expectRejected(result, 'items_capture_bonus_check');
+  });
+
+  it('aceita item com preço, cura e bônus válidos', async () => {
+    const result = await attempt(prisma, (tx) =>
+      createItem(tx, { price: 1, healAmount: 1, captureBonus: 0.5 }),
+    );
+    expect(result).toBe('accepted');
+  });
+
+  it('recusa Mochila com item que não existe', async () => {
+    const result = await attempt(prisma, async (tx) => {
+      const { player } = await createPlayerWithCreature(tx);
+      await tx.inventoryItem.create({
+        data: { playerId: player.id, itemId: 2_000_000_000, quantity: 1 },
+      });
+    });
+    expectRejected(result, 'inventory_items_item_id_fkey');
+  });
+
+  it('recusa apagar um item que está na Mochila de alguém', async () => {
+    const result = await attempt(prisma, async (tx) => {
+      const { player } = await createPlayerWithCreature(tx);
+      const item = await createItem(tx);
+      await tx.inventoryItem.create({
+        data: { playerId: player.id, itemId: item.id, quantity: 1 },
+      });
+      await tx.item.delete({ where: { id: item.id } });
+    });
+    expectRejected(result, 'inventory_items_item_id_fkey');
   });
 
   it('recusa Elemento de espécie no slot 3', async () => {

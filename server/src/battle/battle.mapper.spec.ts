@@ -95,6 +95,7 @@ describe('toCombatant', () => {
       coins: 0,
       createdAt: new Date(),
       creatures: [row],
+      inventory: [],
     });
     expect(toCombatant(row).stats).toEqual(party[0]!.stats);
   });

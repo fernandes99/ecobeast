@@ -219,11 +219,12 @@ Colunas que o tipo do efeito não usa ficam `null`.
 
 **`starter_options`** — chave `species_id` (FK → species); `sort_order` int. As espécies oferecidas na escolha do inicial.
 
+**`item_categories`** e **`items`** — as categorias, que viram as abas da Loja, e os itens, com preço e efeito. As colunas e o conteúdo estão em [inventory-shop/architecture.md](../inventory-shop/architecture.md#tabelas).
+
 ## Tabelas futuras (só documentadas)
 
 Entram com as iniciativas do [roadmap](../roadmap.md); não têm arquivo no MVP.
 
-- `item_categories` (captura, cura, batalha, evolução, treino) e `items` (`id`, `slug`, `name`, `description`, `item_category_id`, `price`, `capture_bonus?`, `heal_amount?`…).
 - `weathers`.
 - `zones` (`id`, `slug`, `name`, `recommended_level`, `unlock_average_level`) e `zone_encounters` (`zone_id`, `species_id`, `min_level`, `max_level`, `spawn_weight`). A rever: a [wild-battle](../wild-battle/) trocou a seleção de zonas por um mapa hexagonal, e a `biome-encounters` decide o que substitui estas tabelas.
 - `npc_tamers`, `npc_tamer_creatures`, `arenas` (`id`, `slug`, `name`, `element_id`, `npc_tamer_id`, `badge_name`, `sort_order`).
