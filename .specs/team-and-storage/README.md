@@ -74,7 +74,7 @@ Tomadas no planejamento (corrigíveis; ao mudar uma, atualize aqui e nas specs a
 
 | Fase | Entrega | Status |
 | --- | --- | --- |
-| [01-team-api](01-team-api.md) | Rotas do Santuário, de mover, trocar e reordenar | rascunho |
+| [01-team-api](01-team-api.md) | Rotas do Santuário, de mover, trocar e reordenar | concluída |
 | [02-storage-screen](02-storage-screen.md) | Tela do Santuário, com busca, filtro e troca | rascunho |
 | [03-team-screen](03-team-screen.md) | Tela Equipe, com segurar e arrastar | rascunho |
 | [04-battle-switch](04-battle-switch.md) | Trocar quem está em campo durante a luta | rascunho |

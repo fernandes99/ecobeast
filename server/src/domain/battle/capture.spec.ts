@@ -1,4 +1,4 @@
-import { captureChance, firstFreePartySlot } from './capture.js';
+import { captureChance } from './capture.js';
 
 const FULL = { currentHp: 300, maxHp: 300 };
 const BASE = { ...FULL, captureRate: 45, captureBonus: 1, statusSlug: null };
@@ -47,23 +47,5 @@ describe('captureChance', () => {
 
   it('com capture_rate 0, a chance é 0', () => {
     expect(captureChance({ ...BASE, captureRate: 0 })).toBe(0);
-  });
-});
-
-describe('firstFreePartySlot', () => {
-  it('sem ninguém, é a primeira', () => {
-    expect(firstFreePartySlot([])).toBe(1);
-  });
-
-  it('pega a vaga depois da última', () => {
-    expect(firstFreePartySlot([1, 2])).toBe(3);
-  });
-
-  it('prefere a vaga do meio', () => {
-    expect(firstFreePartySlot([1, 3, 4])).toBe(2);
-  });
-
-  it('com as 6 ocupadas, não há vaga', () => {
-    expect(firstFreePartySlot([1, 2, 3, 4, 5, 6])).toBeNull();
   });
 });

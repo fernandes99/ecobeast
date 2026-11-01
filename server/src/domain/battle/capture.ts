@@ -1,6 +1,5 @@
 export const NOT_CAPTURABLE = 'Esse Ecobeast não pode ser capturado.';
 
-const PARTY_SIZE = 6;
 /** Provisórios, a revisar (.specs/capture/architecture.md, "Fórmula"). */
 const STATUS_BONUS: Record<string, number> = {
   sleep: 2.5,
@@ -33,12 +32,4 @@ export function captureChance({
     (hpShare * captureRate * captureBonus * statusBonus) / 100,
     1,
   );
-}
-
-/** A primeira vaga da equipe, de 1 a 6; nulo com a equipe cheia. */
-export function firstFreePartySlot(occupied: number[]): number | null {
-  for (let slot = 1; slot <= PARTY_SIZE; slot += 1) {
-    if (!occupied.includes(slot)) return slot;
-  }
-  return null;
 }

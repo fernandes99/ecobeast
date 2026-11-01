@@ -5,29 +5,32 @@ import { MAX_LEVEL, totalXpForLevel } from '../domain/rules/xp-curve.js';
 import { Prisma } from '../generated/prisma/client.js';
 import { CreatureDto, PlayerDto } from './player.dto.js';
 
+/** O que o JSON de um Ecobeast precisa ler do banco. */
+export const CREATURE_INCLUDE = {
+  stats: { include: { stat: { select: { slug: true } } } },
+  skills: { orderBy: { slot: 'asc' } },
+  species: {
+    select: {
+      growthRate: { select: { xpMultiplier: true } },
+      stats: {
+        select: { baseValue: true, stat: { select: { slug: true } } },
+      },
+    },
+  },
+  temperament: {
+    select: {
+      increasedStat: { select: { slug: true } },
+      decreasedStat: { select: { slug: true } },
+    },
+  },
+} satisfies Prisma.CreatureInstanceInclude;
+
 /** O que uma resposta do jogador precisa ler do banco. */
 export const PLAYER_INCLUDE = {
   creatures: {
     where: { location: 'party' },
     orderBy: { partySlot: 'asc' },
-    include: {
-      stats: { include: { stat: { select: { slug: true } } } },
-      skills: { orderBy: { slot: 'asc' } },
-      species: {
-        select: {
-          growthRate: { select: { xpMultiplier: true } },
-          stats: {
-            select: { baseValue: true, stat: { select: { slug: true } } },
-          },
-        },
-      },
-      temperament: {
-        select: {
-          increasedStat: { select: { slug: true } },
-          decreasedStat: { select: { slug: true } },
-        },
-      },
-    },
+    include: CREATURE_INCLUDE,
   },
   inventory: { orderBy: { itemId: 'asc' } },
 } satisfies Prisma.PlayerInclude;
@@ -84,7 +87,7 @@ export function toPlayerDto(row: PlayerRow): PlayerDto {
   };
 }
 
-function toCreatureDto(row: CreatureRow): CreatureDto {
+export function toCreatureDto(row: CreatureRow): CreatureDto {
   const genes = toStatBlock(row.stats, (stat) => stat.genes);
   const trainingPoints = toStatBlock(row.stats, (stat) => stat.trainingPoints);
   const { xpMultiplier } = row.species.growthRate;

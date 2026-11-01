@@ -1,6 +1,6 @@
 # 01. Rotas da equipe e do Santuário
 
-- **Status:** rascunho
+- **Status:** concluída
 - **Depende de:** [capture/01-capture-rules](../capture/01-capture-rules.md)
 
 ## Contexto
@@ -39,28 +39,28 @@ O banco já guarda quem está na equipe e quem está no Santuário, mas nenhuma 
 
 ## Critérios de aceite
 
-- [ ] Um Domador novo lista o Santuário vazio.
-- [ ] Sem Domador, as quatro rotas respondem `409` "Crie seu Domador primeiro."
-- [ ] O Santuário não traz o Ecobeast de outro Domador.
-- [ ] Os capturados mais recentes vêm primeiro.
-- [ ] `order` muda a ordem de `GET /v1/me`.
-- [ ] `order` com vagas 1, 3 e 5 ocupadas deixa os três nas vagas 1, 2 e 3.
-- [ ] `order` com alguém faltando, sobrando, repetido ou do Santuário dá `400`, sem mudar nada.
-- [ ] `bring` com vaga entra na primeira vaga livre, mesmo no meio.
-- [ ] `bring` com a equipe cheia e sem `replace_uid` dá `409`, sem mudar nada.
-- [ ] `bring` com `replace_uid` troca os dois, e quem entra fica na vaga de quem saiu.
-- [ ] `bring` de quem já está na equipe dá `400`.
-- [ ] `replace_uid` do Santuário ou de outro Domador dá `404`.
-- [ ] `store` tira o Ecobeast de `GET /v1/me` e o põe em `GET /v1/me/storage`.
-- [ ] `store` do último Ecobeast dá `400`, sem mudar nada.
-- [ ] `store` de quem já está no Santuário dá `400`.
-- [ ] Um Ecobeast de outro Domador dá `404` em `bring` e `store`.
-- [ ] Depois de mover, HP, status, PP, Genes, Treino e apelido continuam iguais.
-- [ ] Uma batalha aberta some depois de `order`, `bring` e `store`, sem gravar HP.
-- [ ] Dois `store` ao mesmo tempo com 2 Ecobeasts na equipe deixam 1 na equipe.
-- [ ] Dois `bring` ao mesmo tempo com 1 vaga deixam 6 na equipe.
-- [ ] Uma falha no meio de `order` não muda a equipe.
-- [ ] `npm run lint`, `npm run typecheck`, `npm test` e `npm run test:e2e` passam.
+- [x] Um Domador novo lista o Santuário vazio.
+- [x] Sem Domador, as quatro rotas respondem `409` "Crie seu Domador primeiro."
+- [x] O Santuário não traz o Ecobeast de outro Domador.
+- [x] Os capturados mais recentes vêm primeiro.
+- [x] `order` muda a ordem de `GET /v1/me`.
+- [x] `order` com vagas 1, 3 e 5 ocupadas deixa os três nas vagas 1, 2 e 3.
+- [x] `order` com alguém faltando, sobrando, repetido ou do Santuário dá `400`, sem mudar nada.
+- [x] `bring` com vaga entra na primeira vaga livre, mesmo no meio.
+- [x] `bring` com a equipe cheia e sem `replace_uid` dá `409`, sem mudar nada.
+- [x] `bring` com `replace_uid` troca os dois, e quem entra fica na vaga de quem saiu.
+- [x] `bring` de quem já está na equipe dá `400`.
+- [x] `replace_uid` do Santuário ou de outro Domador dá `404`.
+- [x] `store` tira o Ecobeast de `GET /v1/me` e o põe em `GET /v1/me/storage`.
+- [x] `store` do último Ecobeast dá `400`, sem mudar nada.
+- [x] `store` de quem já está no Santuário dá `400`.
+- [x] Um Ecobeast de outro Domador dá `404` em `bring` e `store`.
+- [x] Depois de mover, HP, status, PP, Genes, Treino e apelido continuam iguais.
+- [x] Uma batalha aberta some depois de `order`, `bring` e `store`, sem gravar HP.
+- [x] Dois `store` ao mesmo tempo com 2 Ecobeasts na equipe deixam 1 na equipe.
+- [x] Dois `bring` ao mesmo tempo com 1 vaga deixam 6 na equipe.
+- [x] Uma falha no meio de `order` não muda a equipe.
+- [x] `npm run lint`, `npm run typecheck`, `npm test` e `npm run test:e2e` passam.
 
 ## Desenho técnico
 
@@ -75,7 +75,7 @@ O banco já guarda quem está na equipe e quem está no Santuário, mas nenhuma 
 - `server/src/domain/battle/capture.ts`: sai `firstFreePartySlot`.
 - `server/src/domain/battle/capture.spec.ts`: os testes vão para `party.spec.ts`.
 - `server/src/battle/battle.service.ts`: o import de `firstFreePartySlot`.
-- `server/src/player/player.mapper.ts`: exporta `toCreatureDto` e a parte do `PLAYER_INCLUDE` que lê um Ecobeast, sem o filtro da equipe.
+- `server/src/player/player.mapper.ts`: exporta `toCreatureDto` e `CREATURE_INCLUDE`, a parte do `PLAYER_INCLUDE` que lê um Ecobeast, sem o filtro da equipe.
 - `server/src/app.module.ts`: o módulo novo.
 - `server/CLAUDE.md`: `src/team/` na estrutura.
 
@@ -93,9 +93,19 @@ Sem passos do dono nesta fase: ela não muda nada na tela.
 
 ## Tarefas
 
-- [ ] Testes de `party.ts`; ver falhar; implementar e mover `firstFreePartySlot`.
-- [ ] Testes e2e de `GET /v1/me/storage`; ver falhar; implementar (RF-01, RF-02).
-- [ ] Testes e2e de `order`; ver falhar; implementar (RF-03, RF-04).
-- [ ] Testes e2e de `bring` e `store`; ver falhar; implementar (RF-05 a RF-13).
-- [ ] OpenAPI (RF-14) e `server/CLAUDE.md`.
-- [ ] Marcar esta spec e a tabela do README como `concluída`; commit `feat: rotas da equipe e do Santuário`.
+- [x] Testes de `party.ts`; ver falhar; implementar e mover `firstFreePartySlot`.
+- [x] Testes e2e de `GET /v1/me/storage`; ver falhar; implementar (RF-01, RF-02).
+- [x] Testes e2e de `order`; ver falhar; implementar (RF-03, RF-04).
+- [x] Testes e2e de `bring` e `store`; ver falhar; implementar (RF-05 a RF-13).
+- [x] OpenAPI (RF-14) e `server/CLAUDE.md`.
+- [x] Marcar esta spec e a tabela do README como `concluída`; commit `feat: rotas da equipe e do Santuário`.
+
+## Decisões da implementação
+
+- **A trava é um `update` na linha do Domador:** a spec previa só a transação, mas nela dois pedidos leem a mesma equipe antes de qualquer escrita. `coins + 0` trava a linha sem mudar nada e sem SQL à mão.
+- **Prova da trava:** os testes de pedidos simultâneos nasceram junto com ela, então foram rodados sem a trava. Sem ela, dois `store` zeram a equipe, e dois `bring` terminam em erro 500.
+- **Um uid malformado não chega ao banco:** a coluna é `uuid`, e o Prisma daria erro. `isUUID` trata esse caso como Ecobeast inexistente, e o `replace_uid` é comparado na memória com a equipe.
+- **Sem inicial conta como sem Domador nas rotas de escrita:** é a mesma resposta da Loja e da Mochila. `GET /v1/me/storage` responde a lista vazia nesse caso.
+- **Um pedido recusado não descarta a batalha:** ela só sai depois das conferências. A spec não dizia nada sobre isso, e o e2e confere.
+- **Transação com 20 s de limite:** `order` faz até 8 acessos ao banco dentro dela, e o limite padrão de 5 s ficaria curto com o Supabase longe.
+- **Conferência:** os testes novos falharam antes do código e passaram depois. `npm run lint` e `npm run typecheck` sem avisos; `npm test` com 478 testes; `npm run test:e2e` com 404. Sem mudança na tela.

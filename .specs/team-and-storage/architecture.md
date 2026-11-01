@@ -23,7 +23,7 @@ Toda rota de escrita responde `409` "Crie seu Domador primeiro." sem Domador. Fi
 - **`store`:** o Ecobeast vai para o Santuário, e a vaga dele fica livre. Se ele for o último da equipe, a rota recusa.
 - HP, status, PP, Genes, Treino e apelido nunca mudam nessas rotas.
 
-Cada rota lê e grava em uma transação interativa, para dois pedidos ao mesmo tempo não deixarem a equipe sem ninguém ou acima de 6.
+Cada rota lê e grava em uma transação interativa, que começa travando a linha do Domador com um `update` que não muda nada (`coins + 0`). De dois pedidos ao mesmo tempo, o segundo espera o primeiro e lê a equipe já mudada, então a equipe nunca fica sem ninguém nem acima de 6. Só a transação não bastaria: os dois leriam a mesma equipe antes de qualquer escrita.
 
 `player_id + party_slot` é único e checado linha a linha, e o `CHECK` só aceita vagas de 1 a 6. Por isso, `order` e a troca de `bring` não podem mudar as vagas direto. Na mesma transação, os Ecobeasts afetados passam primeiro para `storage` e voltam depois, já nas vagas certas.
 
@@ -31,8 +31,7 @@ Cada rota lê e grava em uma transação interativa, para dois pedidos ao mesmo 
 
 `server/src/domain/team/party.ts`:
 
-- `PARTY_SIZE`, hoje dentro de `domain/battle/capture.ts`.
-- `firstFreePartySlot`, movida de `domain/battle/capture.ts`.
+- `PARTY_SIZE` e `firstFreePartySlot`, movidas de `domain/battle/capture.ts`.
 - `isSameTeam(current: string[], requested: string[]): boolean`.
 
 ## O cliente

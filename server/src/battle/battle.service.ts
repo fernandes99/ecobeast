@@ -7,7 +7,6 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { secureRandom } from '../common/secure-random.js';
 import { Env } from '../config/env.js';
-import { firstFreePartySlot } from '../domain/battle/capture.js';
 import { rollEncounter } from '../domain/battle/encounter.js';
 import { applyAction, startBattle } from '../domain/battle/engine.js';
 import type {
@@ -22,6 +21,7 @@ import {
   type NewCreature,
 } from '../domain/rules/creature-factory.js';
 import { MAX_LEVEL } from '../domain/rules/xp-curve.js';
+import { firstFreePartySlot } from '../domain/team/party.js';
 import {
   type CreaturePlace,
   loadCreatureBlueprint,

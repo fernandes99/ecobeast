@@ -12,6 +12,7 @@ import { HealthModule } from './health/health.module.js';
 import { InventoryModule } from './inventory/inventory.module.js';
 import { PlayerModule } from './player/player.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
+import { TeamModule } from './team/team.module.js';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { PrismaModule } from './prisma/prisma.module.js';
     BattleModule,
     ExplorationModule,
     InventoryModule,
+    TeamModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
