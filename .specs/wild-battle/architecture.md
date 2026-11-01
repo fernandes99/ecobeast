@@ -68,7 +68,7 @@ Os parâmetros ficam juntos em `DEFAULT_MAP_CONFIG`, em `server/src/domain/explo
 | Parâmetro       | Valor  | Parâmetro       | Valor |
 | --------------- | ------ | --------------- | ----- |
 | `tileCount`     | 10000  | `stoneFraction` | 0,15  |
-| `edgeRoughness` | 0      | `hillFrom`      | 0,5   |
+| `edgeRoughness` | 200    | `hillFrom`      | 0,6   |
 | `noiseScale`    | 0,05   | `mountainFrom`  | 0,95  |
 | `waterFraction` | 0,2    | `islandChance`  | 0,05  |
 | `deepFraction`  | 0,5    | `detailChance`  | 0,2   |
