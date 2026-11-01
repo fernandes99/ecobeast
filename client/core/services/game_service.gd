@@ -30,6 +30,10 @@ extends RefCounted
 @abstract func reset_progress() -> Result
 
 
+## data: o ExplorationMap, um mapa novo a cada chamada.
+@abstract func start_exploration() -> Result
+
+
 ## data: o BattleTurn da abertura, contra um Ecobeast sorteado pelo servidor.
 @abstract func start_wild_battle() -> Result
 

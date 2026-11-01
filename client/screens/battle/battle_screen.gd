@@ -24,9 +24,9 @@ var _display := BattleDisplay.new()
 var _narrator := BattleNarrator.new()
 ## Um turno está indo ou voltando do servidor, ou aparecendo na tela.
 var _busy: bool = false
-## O fim da luta gravou HP e PP: o Hub precisa do jogador novo.
+## O fim da luta gravou HP e PP: é preciso reler o jogador.
 var _needs_reload: bool = false
-## "Voltar ao Hub" já terminou: o próximo Router.back fecha esta tela.
+## "Voltar" já terminou: o próximo Router.back fecha esta tela.
 var _leaving: bool = false
 
 @onready var _turn_row: Control = %TurnRow
@@ -44,7 +44,7 @@ var _leaving: bool = false
 @onready var _result_box: VBoxContainer = %ResultBox
 @onready var _result_label: Label = %ResultLabel
 @onready var _result_message: Label = %ResultMessage
-@onready var _hub_button: Button = %HubButton
+@onready var _exit_button: Button = %ExitButton
 @onready var _next_panel: NextCreaturePanel = %NextPanel
 
 
@@ -58,13 +58,13 @@ func _ready() -> void:
 	_flee_button.pressed.connect(_act.bind({"type": "flee"}))
 	%EmergencyButton.pressed.connect(_act.bind({"type": "emergency"}))
 	%SkillsBackButton.pressed.connect(_show_controls.bind(_actions_grid))
-	_hub_button.pressed.connect(_leave)
+	_exit_button.pressed.connect(_leave)
 	_next_panel.chosen.connect(_choose_next)
 	_begin()
 
 
 ## Chamado pelo Router no voltar do Android ou Esc. Sair da luta é Correr; o
-## voltar só fecha as Técnicas ou, com a luta encerrada, leva ao Hub.
+## voltar só fecha as Técnicas ou, com a luta encerrada, volta ao mapa.
 func handle_back() -> bool:
 	if _leaving:
 		return false
@@ -252,7 +252,7 @@ func _show_battle_gone() -> void:
 	_show_exit("", true)
 
 
-## Só a saída. `needs_reload`: a luta chegou a existir, e o Hub relê o jogador.
+## Só a saída. `needs_reload`: a luta chegou a existir, e o jogador é relido.
 func _show_exit(text: String, needs_reload: bool) -> void:
 	_needs_reload = needs_reload
 	_result_label.text = text
@@ -261,13 +261,13 @@ func _show_exit(text: String, needs_reload: bool) -> void:
 
 
 func _leave() -> void:
-	if _hub_button.disabled:
+	if _exit_button.disabled:
 		return
 	if _needs_reload:
-		_hub_button.disabled = true
+		_exit_button.disabled = true
 		_result_message.hide()
 		var result: Result = await Session.load_player()
-		_hub_button.disabled = false
+		_exit_button.disabled = false
 		if not result.ok:
 			_result_message.text = result.error
 			_result_message.show()

@@ -15,6 +15,8 @@ const ART_SCALE := 3.0
 
 var _tiles: Array[HexTile] = []
 var _textures: Dictionary[String, Texture2D] = {}
+## Pixels reais por ponto da tela lógica, em cada eixo.
+var _window_scale := Vector2.ONE
 
 
 func _ready() -> void:
@@ -42,17 +44,41 @@ func surface_center(coord: Vector2i) -> Vector2:
 	return _tile_origin(coord) + SURFACE_CENTER
 
 
+## O hexágono que contém um ponto, em pixels da arte. Não confere se ele existe.
+func coord_at(point: Vector2) -> Vector2i:
+	var relative := point - SURFACE_CENTER
+	var r := relative.y / STEP_Y
+	var q := (relative.x - ROW_SHIFT * r) / STEP_X
+	var s := -q - r
+	var rounded_q := roundf(q)
+	var rounded_r := roundf(r)
+	var rounded_s := roundf(s)
+	# As três coordenadas somam 0: a que mais arredondou é recalculada.
+	var error_q := absf(rounded_q - q)
+	var error_r := absf(rounded_r - r)
+	if error_q > error_r and error_q > absf(rounded_s - s):
+		rounded_q = -rounded_r - rounded_s
+	elif error_r > absf(rounded_s - s):
+		rounded_r = -rounded_q - rounded_s
+	return Vector2i(roundi(rounded_q), roundi(rounded_r))
+
+
 ## A escala do nó na tela lógica, que dá um número inteiro de pixels reais.
 func pixel_scale() -> Vector2:
 	return scale
 
 
+## Arredonda uma posição da tela lógica para um pixel real inteiro.
+func snapped_to_pixels(value: Vector2) -> Vector2:
+	return (value * _window_scale).round() / _window_scale
+
+
 ## Um eixo de cada vez: a tela lógica tem tamanho inteiro, então a escala da
 ## janela nunca é exatamente igual nos dois, e a diferença se acumula no mapa.
 func _update_scale() -> void:
-	var window_scale := Vector2(get_window().size) / get_viewport_rect().size
-	var pixels := maxi(1, roundi(window_scale.y * ART_SCALE))
-	scale = Vector2(pixels, pixels) / window_scale
+	_window_scale = Vector2(get_window().size) / get_viewport_rect().size
+	var pixels := maxi(1, roundi(_window_scale.y * ART_SCALE))
+	scale = Vector2(pixels, pixels) / _window_scale
 
 
 func _texture(path: String) -> Texture2D:

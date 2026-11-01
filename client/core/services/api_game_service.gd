@@ -7,6 +7,7 @@ const ME_PATH := "/v1/me"
 const STARTER_PATH := "/v1/me/starter"
 const CREATURE_PATH := "/v1/me/creatures/%s"
 const HEAL_PATH := "/v1/me/heal"
+const EXPLORATION_PATH := "/v1/me/exploration"
 const WILD_BATTLE_PATH := "/v1/me/battle/wild"
 const BATTLE_ACTION_PATH := "/v1/me/battle/action"
 
@@ -34,6 +35,14 @@ func heal_team() -> Result:
 func reset_progress() -> Result:
 	var response: ApiResponse = await Api.request(HTTPClient.METHOD_DELETE, ME_PATH, null, true)
 	return Result.success() if response.ok else Result.failure(response.error)
+
+
+func start_exploration() -> Result:
+	var response: ApiResponse = await Api.request(HTTPClient.METHOD_POST, EXPLORATION_PATH, null, true)
+	if not response.ok:
+		return Result.failure(response.error)
+	var map: Variant = response.data.get("map") if response.data is Dictionary else null
+	return Result.success(ExplorationMap.from_dict(map)) if map is Dictionary else Result.failure(ApiResponse.SERVER_ERROR)
 
 
 func start_wild_battle() -> Result:

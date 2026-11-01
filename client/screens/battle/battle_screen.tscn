@@ -189,11 +189,11 @@ theme_override_font_sizes/font_size = 20
 horizontal_alignment = 1
 autowrap_mode = 3
 
-[node name="HubButton" type="Button" parent="SafeArea/Column/Controls/ResultBox"]
+[node name="ExitButton" type="Button" parent="SafeArea/Column/Controls/ResultBox"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 96)
 layout_mode = 2
-text = "Voltar ao Hub"
+text = "Voltar"
 
 [node name="BottomSpace" type="Control" parent="SafeArea/Column"]
 custom_minimum_size = Vector2(0, 8)

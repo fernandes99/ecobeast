@@ -3,6 +3,8 @@
 - **Status:** concluída
 - **Depende de:** [02-battle-client](02-battle-client.md), [visual-theme](../visual-theme/README.md)
 
+> A [wild-battle/03](../wild-battle/03-exploration-screen.md) mudou esta tela: a batalha agora abre pelo mapa e volta para ele, e o botão "Voltar ao Hub" desta spec passou a dizer "Voltar".
+
 ## Contexto
 
 Com a rota do encontro e a batalha no cliente prontas, falta o que o jogador vê (TELAS.md #5). O layout é a opção A que o dono escolheu no canvas: o inimigo em um cartão no topo, seu Ecobeast em outro cartão, o histórico do turno entre eles e quatro botões embaixo.

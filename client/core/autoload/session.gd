@@ -87,6 +87,12 @@ func reset_progress() -> Result:
 	return result
 
 
+## O mapa não fica aqui: ele só vive enquanto a tela de exploração estiver aberta.
+func start_exploration() -> Result:
+	@warning_ignore("redundant_await")
+	return await _service.start_exploration()
+
+
 ## A batalha não fica aqui: quem a mostra é a tela, e o jogador é relido no fim.
 func start_wild_battle() -> Result:
 	@warning_ignore("redundant_await")

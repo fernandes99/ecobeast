@@ -70,6 +70,6 @@ Tomadas no planejamento (corrigíveis; ao mudar uma, atualize aqui e nas specs a
 | ------------------------------------------------- | ------------------------------------------------------------------------ | -------- |
 | [01-hex-grid](01-hex-grid.md)                     | Sprites no jogo, modelos do mapa e o desenho da grade com pixels inteiros | concluída |
 | [02-map-generator](02-map-generator.md)           | Gerador puro com seed e a rota que entrega o mapa                        | concluída |
-| [03-exploration-screen](03-exploration-screen.md) | A tela do mapa, andar, Procurar Ecobeast e a ligação com o Hub           | rascunho |
+| [03-exploration-screen](03-exploration-screen.md) | A tela do mapa, andar, Procurar Ecobeast e a ligação com o Hub           | concluída |
 
 O desenho compartilhado está em [architecture.md](architecture.md).

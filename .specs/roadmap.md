@@ -12,7 +12,7 @@ O que vem depois do MVP de estrutura (entrada, escolha do inicial e Hub). Cada l
 | 3   | [`battle-core`](battle-core/) | Máquina de estados da batalha, dano, ordem do turno, status, IA simples — autoridade no servidor | auth-google                | concluída |
 | 4   | [`battle-screen`](battle-screen/) | Tela de batalha (TELAS.md #5) ouvindo os eventos do battle-core, com encontro sorteado pelo servidor | battle-core                | concluída |
 | 4b  | [`heal-station`](heal-station/) | Refúgio: curar HP, PP e status da equipe (TELAS.md #14); vem logo depois da tela de batalha, porque a luta mantém HP e PP e uma derrota total impede lutar de novo | battle-core                | concluída |
-| 5   | [`wild-battle`](wild-battle/) | Mapa hexagonal gerado a cada exploração, com o jogador andando por ele; substitui a seleção de zonas (TELAS.md #4) | battle-screen, heal-station | planejada |
+| 5   | [`wild-battle`](wild-battle/) | Mapa hexagonal gerado a cada exploração, com o jogador andando por ele; substitui a seleção de zonas (TELAS.md #4) | battle-screen, heal-station | concluída |
 | 5b  | `biome-encounters`  | O bioma do hexágono decide o Campo e os Ecobeasts que aparecem; encontros ao andar; regiões fundas de água e montanha só com Ecobeasts que voem ou nadem | wild-battle                | planejada |
 | 6   | `capture`           | Esferas de Vínculo, fórmula de captura e animação das 3 tremidas (TELAS.md #6)                            | wild-battle, inventory-shop | planejada |
 | 7   | `progression`       | XP, level up, aprender/esquecer técnica, Ascensão por nível (TELAS.md #7)                                 | battle-core                | planejada |

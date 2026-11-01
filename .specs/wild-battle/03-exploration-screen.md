@@ -1,6 +1,6 @@
 # 03. Tela do mapa
 
-- **Status:** rascunho
+- **Status:** concluída
 - **Depende de:** [02-map-generator](02-map-generator.md)
 
 ## Contexto
@@ -37,7 +37,7 @@ Com a grade e o gerador prontos, falta o jogador chegar ao mapa. Esta fase cria 
 **Andar**
 
 - **RF-08:** Tocar em um hexágono vizinho do jogador move o jogador para lá.
-- **RF-09:** O toque vale para o hexágono cuja superfície tem o centro mais perto do ponto tocado. Se esse hexágono não for vizinho, ou não existir no mapa, nada acontece.
+- **RF-09:** O toque vale para o hexágono que contém o ponto tocado, pela geometria da grade. Se esse hexágono não for vizinho, ou não existir no mapa, nada acontece.
 - **RF-10:** O passo é uma transição de `STEP_SECONDS`, de 0,18 s, _a revisar_. Toques durante o passo são ignorados.
 - **RF-11:** Qualquer terreno aceita o jogador.
 - **RF-12:** Ao fim do passo, o hexágono do jogador está no centro da tela, com a posição do mapa em pixels reais inteiros.
@@ -52,33 +52,34 @@ Com a grade e o gerador prontos, falta o jogador chegar ao mapa. Esta fase cria 
 
 ## Critérios de aceite
 
-- [ ] Explorar zona abre o mapa, com o jogador em `start` e o retrato certo no centro.
-- [ ] Sem servidor, o erro aparece, e Voltar leva ao Hub.
-- [ ] Tocar em cada um dos seis vizinhos move o jogador para ele.
-- [ ] Tocar longe, no próprio hexágono ou fora do mapa não move o jogador.
-- [ ] Depois de andar, o mapa continua centrado no jogador.
-- [ ] Andar sobre água e montanha funciona.
-- [ ] Dois toques rápidos dão um passo só.
-- [ ] Arrastar o dedo sobre o mapa não o move.
-- [ ] Em 405×720 e nos tamanhos conferidos na [01](01-hex-grid.md), a arte continua em pixels inteiros depois de andar.
-- [ ] Procurar Ecobeast abre uma luta, e ao fim dela "Voltar" retorna ao mapa no mesmo hexágono.
-- [ ] Sem HP, Procurar Ecobeast mostra "Cure sua equipe no Refúgio.", e "Voltar" retorna ao mapa.
-- [ ] Voltar do mapa leva ao Hub, com o HP atualizado.
-- [ ] Explorar zona de novo devolve uma seed diferente.
+- [x] Explorar zona abre o mapa, com o jogador em `start` e o retrato certo no centro.
+- [x] Sem servidor, o erro aparece, e Voltar leva ao Hub.
+- [x] Tocar em cada um dos seis vizinhos move o jogador para ele.
+- [x] Tocar longe, no próprio hexágono ou fora do mapa não move o jogador.
+- [x] Depois de andar, o mapa continua centrado no jogador.
+- [x] Andar sobre água e montanha funciona.
+- [x] Dois toques rápidos dão um passo só.
+- [x] Arrastar o dedo sobre o mapa não o move.
+- [x] Em 405×720 e nos tamanhos conferidos na [01](01-hex-grid.md), a arte continua em pixels inteiros depois de andar.
+- [x] Procurar Ecobeast abre uma luta, e ao fim dela "Voltar" retorna ao mapa no mesmo hexágono.
+- [x] Sem HP, Procurar Ecobeast mostra "Cure sua equipe no Refúgio.", e "Voltar" retorna ao mapa.
+- [x] Voltar do mapa leva ao Hub, com o HP atualizado.
+- [x] Explorar zona de novo devolve uma seed diferente.
 - [ ] O mesmo vale em um aparelho com recorte (passo do dono).
-- [ ] O projeto abre sem erros nem avisos de script.
+- [x] O projeto abre sem erros nem avisos de script.
 
 ## Desenho técnico
 
 **Criar**, em `client/screens/exploration/`:
 
-- `exploration_screen.tscn` e `.gd`: a tela. O mapa fica atrás, numa área que recorta o que passa das bordas e recebe os toques. Os botões ficam dentro de um `SafeArea`, por cima.
+- `exploration_screen.tscn` e `.gd`: a tela. O mapa fica atrás, numa área que recorta o que passa das bordas e recebe os toques. Os botões ficam num `SectionPanel`, dentro de um `SafeArea`, por cima.
 
 **Alterar**
 
 - `client/core/services/game_service.gd` e `api_game_service.gd`: `start_exploration() -> Result`, com data: o `ExplorationMap`.
 - `client/core/autoload/session.gd`: `start_exploration()`, sem guardar o mapa, como a batalha.
 - `client/core/autoload/router.gd`: `&"exploration"` em `SCREENS`.
+- `client/ui/components/hex_map_view.gd`: `coord_at(point: Vector2) -> Vector2i` e `snapped_to_pixels(value: Vector2) -> Vector2`.
 - `client/screens/hub/hub_screen.gd`: o destino de "Explorar zona".
 - `client/screens/battle/battle_screen.gd` e `.tscn`: `%HubButton` vira `%ExitButton`, com o texto "Voltar".
 - `.specs/battle-screen/03-battle-screen.md`: uma nota dizendo que o botão mudou aqui.
@@ -109,9 +110,18 @@ godot --headless -d --path client --quit-after 60
 
 ## Tarefas
 
-- [ ] Verificação temporária; ver falhar.
-- [ ] `start_exploration()`, o registro da tela e o Hub (RF-01, RF-02).
-- [ ] Tela, marcador e câmera (RF-03 a RF-07).
-- [ ] Andar (RF-08 a RF-12).
-- [ ] Procurar Ecobeast, a saída da batalha e o voltar (RF-13 a RF-17).
-- [ ] Remover os arquivos temporários; atualizar `TELAS.md`, o roadmap e o `CLAUDE.md`; marcar esta spec e a tabela do README como `concluída`; commit `feat: mapa de exploração`.
+- [x] Verificação temporária; ver falhar.
+- [x] `start_exploration()`, o registro da tela e o Hub (RF-01, RF-02).
+- [x] Tela, marcador e câmera (RF-03 a RF-07).
+- [x] Andar (RF-08 a RF-12).
+- [x] Procurar Ecobeast, a saída da batalha e o voltar (RF-13 a RF-17).
+- [x] Remover os arquivos temporários; atualizar `TELAS.md`, o roadmap e o `CLAUDE.md`; marcar esta spec e a tabela do README como `concluída`; commit `feat: mapa de exploração`.
+
+## Decisões da implementação
+
+- **Os botões ficam num `SectionPanel`:** a spec os punha soltos sobre o mapa, e as capturas mostraram o "Voltar", que é um botão de contorno, ilegível sobre os terrenos. O painel tem 92% de opacidade, o que basta para ler sobre qualquer terreno. O painel também recebe os toques, então tocar nele não move o jogador.
+- **O toque usa a geometria da grade, não a distância em linha reta:** `coord_at` arredonda o ponto para a coordenada axial mais próxima. Na grade achatada deste sprite, isso acompanha melhor o desenho do hexágono do que medir a distância até o centro. O RF-09 foi reescrito por isso.
+- **`snapped_to_pixels` no `HexMapView`:** a tela precisa arredondar a posição a cada quadro do passo, e quem conhece a escala da janela é o mapa.
+- **Toque e arrasto:** o movimento acontece ao soltar, e só se o dedo tiver corrido até 24 pontos da tela lógica. Isso também impede um arrasto de virar um passo.
+- **Conferência:** uma cena temporária abriu o mapa pelo Hub contra um servidor de teste, com toques entrando como cliques reais pela janela, e passou com 52 de 52 verificações em janelas de 360×640, 405×720, 412×915 e 720×1061, depois de falhar porque Explorar zona ainda abria a batalha. Ela cobre os seis vizinhos, toque longe e fora do mapa, toques rápidos, arrasto, roda do mouse, andar até água, montanha e borda, ida e volta da batalha, equipe sem HP e voltar ao Hub. Depois de andar, a tela foi comparada pixel a pixel com a arte, sem nenhuma diferença. Das 19 capturas da rodada final, 10 foram abertas e revisadas. A falta de rede foi simulada trocando o endereço do servidor. O servidor não mudou nesta fase, por isso os testes dele não foram repetidos. O jogo abriu sem erros nem avisos de script, e os arquivos temporários foram removidos.
+- **Falta do dono:** jogar no editor e no celular, conferir o tamanho dos hexágonos, o ritmo do passo e o recorte do aparelho.
