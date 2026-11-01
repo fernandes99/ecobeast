@@ -79,6 +79,14 @@ func heal_team() -> Result:
 	return result
 
 
+func buy_item(item_id: int) -> Result:
+	@warning_ignore("redundant_await")
+	var result: Result = await _service.buy_item(item_id)
+	if result.ok:
+		_set_player(result.data)
+	return result
+
+
 func reset_progress() -> Result:
 	@warning_ignore("redundant_await")
 	var result: Result = await _service.reset_progress()

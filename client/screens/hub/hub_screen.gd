@@ -54,7 +54,7 @@ const DESTINATIONS: Dictionary[String, Dictionary] = {
 	"Explorar zona": {"id": &"exploration", "params": {}},
 	"Desafiar Domador": {"id": &"placeholder", "params": {"title": "Desafiar Domador"}},
 	"Arenas": {"id": &"placeholder", "params": {"title": "Arenas"}},
-	"Loja": {"id": &"placeholder", "params": {"title": "Loja"}},
+	"Loja": {"id": &"shop", "params": {}},
 	"Refúgio": {"id": &"heal_station", "params": {}},
 	"Santuário": {"id": &"placeholder", "params": {"title": "Santuário"}},
 	"Bestiário": {"id": &"placeholder", "params": {"title": "Bestiário"}},

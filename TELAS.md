@@ -13,7 +13,7 @@ Celular, orientação retrato. Estilo fantasia leve, colorido e amigável. 14 el
 9. **Equipe** — 6 slots reorganizáveis, trocar com o Santuário.
 10. **Santuário** — grade com filtros (elemento, nível, raridade) e busca.
 11. **Bestiário** — grade numerada (visto, capturado, silhueta); detalhe com descrição, elementos, habitat e linha evolutiva.
-12. **Loja** — abas Esferas, Cura, Itens de batalha, Evolução; cards com preço e comprar.
+12. **Loja** — uma aba por categoria (hoje Esferas e Cura; depois Itens de batalha e Evolução); cards com preço e comprar.
 13. **Mochila** — itens por categoria com quantidade; escolher alvo ao usar.
 14. **Refúgio** — a equipe, com HP, PP e status, e o botão "Curar todos".
 15. **Arenas** — 8 emblemas (obtidos/bloqueados), mestre de cada Arena e "Desafiar"; Liga final.

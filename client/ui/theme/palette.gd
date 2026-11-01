@@ -47,6 +47,12 @@ const GENE_RANK_COLORS: Dictionary[String, Color] = {
 	"exceptional": Color("#E86AA8"),
 }
 
+## Forma provisória dos itens (inventory-shop/02, RF-19): categoria -> cor.
+const ITEM_CATEGORY_COLORS: Dictionary[String, Color] = {
+	"capture": ACCENT,
+	"heal": HP_HIGH,
+}
+
 ## Faixas da barra de HP.
 const HP_MID := WARNING
 const HP_LOW := DANGER

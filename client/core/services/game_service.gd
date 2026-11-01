@@ -26,6 +26,10 @@ extends RefCounted
 @abstract func heal_team() -> Result
 
 
+## data: o Player com as moedas e a Mochila depois da compra.
+@abstract func buy_item(item_id: int) -> Result
+
+
 ## data: null.
 @abstract func reset_progress() -> Result
 

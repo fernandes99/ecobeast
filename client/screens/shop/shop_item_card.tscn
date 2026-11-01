@@ -1,0 +1,74 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://screens/shop/shop_item_card.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://ui/components/item_icon.tscn" id="2_icon"]
+[ext_resource type="Texture2D" path="res://ui/icons/coin.svg" id="3_coin"]
+
+[node name="ShopItemCard" type="PanelContainer"]
+layout_mode = 2
+mouse_filter = 1
+theme_type_variation = &"SectionPanel"
+script = ExtResource("1_script")
+
+[node name="Row" type="HBoxContainer" parent="."]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 14
+
+[node name="Icon" parent="Row" instance=ExtResource("2_icon")]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="Info" type="VBoxContainer" parent="Row"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+mouse_filter = 2
+theme_override_constants/separation = 6
+
+[node name="NameLabel" type="Label" parent="Row/Info"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"BoldLabel"
+autowrap_mode = 3
+
+[node name="DescriptionLabel" type="Label" parent="Row/Info"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"SecondaryLabel"
+theme_override_font_sizes/font_size = 20
+autowrap_mode = 3
+
+[node name="Footer" type="HBoxContainer" parent="Row/Info"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 8
+
+[node name="CoinIcon" type="TextureRect" parent="Row/Info/Footer"]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture = ExtResource("3_coin")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="PriceLabel" type="Label" parent="Row/Info/Footer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"BoldLabel"
+
+[node name="OwnedLabel" type="Label" parent="Row/Info/Footer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"SecondaryLabel"
+theme_override_font_sizes/font_size = 20
+horizontal_alignment = 1
+
+[node name="BuyButton" type="Button" parent="Row/Info/Footer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(150, 64)
+layout_mode = 2
+text = "Comprar"

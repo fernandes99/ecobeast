@@ -70,6 +70,7 @@ Contraste mínimo de 4,5 : 1 para texto que carrega informação: `TEXT` e `TEXT
 | Arquivo                                   | Onde aparece                         | Tamanho sugerido para gerar |
 | ----------------------------------------- | ------------------------------------ | --------------------------- |
 | `res://assets/creatures/<slug>/front.png` | Retratos (já existe)                 | 512 × 512, fundo transparente |
+| `res://assets/items/<slug>.png`           | Ícone de cada item, com o `slug` da tabela `items` | 256 × 256, fundo transparente |
 | `res://assets/backgrounds/hub.png`        | Cenário atrás do Hub inteiro         | Vertical 9 : 16 (1080 × 1920), sem transparência |
 | `res://assets/ui/actions/<ação>.webp`     | Topo de cada card de ação do Hub     | Quadrada, sem transparência, com o desenho no centro (as atuais: 276 × 276, WebP com perda a 90%) |
 | `res://assets/backgrounds/starter_select.webp` | Cenário da escolha do inicial   | Vertical 9 : 16 (1080 × 1920), sem transparência |

@@ -9,5 +9,6 @@ import { PlayerService } from './player.service.js';
   imports: [AuthModule, BattleModule],
   controllers: [PlayerController],
   providers: [PlayerService],
+  exports: [PlayerService],
 })
 export class PlayerModule {}

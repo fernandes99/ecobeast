@@ -9,6 +9,7 @@ import { CatalogModule } from './catalog/catalog.module.js';
 import { Env, validateEnv } from './config/env.js';
 import { ExplorationModule } from './exploration/exploration.module.js';
 import { HealthModule } from './health/health.module.js';
+import { InventoryModule } from './inventory/inventory.module.js';
 import { PlayerModule } from './player/player.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 
@@ -32,6 +33,7 @@ import { PrismaModule } from './prisma/prisma.module.js';
     PlayerModule,
     BattleModule,
     ExplorationModule,
+    InventoryModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

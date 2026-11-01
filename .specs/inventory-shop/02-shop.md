@@ -1,6 +1,6 @@
 # 02. Loja
 
-- **Status:** rascunho
+- **Status:** concluída
 - **Depende de:** [01-item-catalog](01-item-catalog.md)
 
 ## Contexto
@@ -49,25 +49,25 @@ Com os itens no catálogo, falta comprá-los. Esta fase cria a rota de compra e 
 
 ## Critérios de aceite
 
-- [ ] Sem token, a rota dá `401`.
-- [ ] Sem Domador, `409` "Crie seu Domador primeiro."
-- [ ] Comprar com moedas suficientes desconta o preço, e a resposta já mostra a quantidade nova.
-- [ ] Comprar de novo o mesmo item soma, sem criar outra linha.
-- [ ] Com moedas iguais ao preço, a compra passa e o saldo fica 0.
-- [ ] Com uma moeda a menos que o preço, `409`, sem mudar moedas nem Mochila.
-- [ ] Com `item_id` inexistente ou em texto, `400`.
-- [ ] Duas compras simultâneas com moedas para uma só resultam em uma compra.
-- [ ] Com uma falha na escrita da Mochila, as moedas não mudam.
-- [ ] A rota aparece em `/docs/openapi.json`, com o cadeado.
-- [ ] A Loja abre pelo card e pela aba do Hub.
-- [ ] As abas Esferas e Cura mostram 3 itens cada, na ordem do catálogo.
-- [ ] Depois de uma compra, a tela mostra "Item comprado!", as moedas e a quantidade novas.
-- [ ] Sem moedas para um item, o "Comprar" dele fica desativado.
-- [ ] Sem servidor, a tela mostra o erro e continua aberta.
-- [ ] Voltar ao Hub mostra as moedas atualizadas.
-- [ ] Com o texto maior ou em 360×640, nada fica cortado, e a lista rola.
-- [ ] O projeto abre sem erros nem avisos de script.
-- [ ] `npm run lint`, `npm run typecheck`, `npm test` e `npm run test:e2e` passam.
+- [x] Sem token, a rota dá `401`.
+- [x] Sem Domador, `409` "Crie seu Domador primeiro."
+- [x] Comprar com moedas suficientes desconta o preço, e a resposta já mostra a quantidade nova.
+- [x] Comprar de novo o mesmo item soma, sem criar outra linha.
+- [x] Com moedas iguais ao preço, a compra passa e o saldo fica 0.
+- [x] Com uma moeda a menos que o preço, `409`, sem mudar moedas nem Mochila.
+- [x] Com `item_id` inexistente ou em texto, `400`.
+- [x] Duas compras simultâneas com moedas para uma só resultam em uma compra.
+- [x] Com uma falha na escrita da Mochila, as moedas não mudam.
+- [x] A rota aparece em `/docs/openapi.json`, com o cadeado.
+- [x] A Loja abre pelo card e pela aba do Hub.
+- [x] As abas Esferas e Cura mostram 3 itens cada, na ordem do catálogo.
+- [x] Depois de uma compra, a tela mostra "Item comprado!", as moedas e a quantidade novas.
+- [x] Sem moedas para um item, o "Comprar" dele fica desativado.
+- [x] Sem servidor, a tela mostra o erro e continua aberta.
+- [x] Voltar ao Hub mostra as moedas atualizadas.
+- [x] Em 360×640, nada fica cortado.
+- [x] O projeto abre sem erros nem avisos de script.
+- [x] `npm run lint`, `npm run typecheck`, `npm test` e `npm run test:e2e` passam.
 
 ## Desenho técnico
 
@@ -94,7 +94,7 @@ Com os itens no catálogo, falta comprá-los. Esta fase cria a rota de compra e 
 **Reaproveitar**
 
 - Servidor: `$transaction` interativo. `updateMany` com `coins: { gte: price }` nega a compra quando `count` é 0, o que cobre os pedidos simultâneos. `inventoryItem.upsert` soma a quantidade.
-- Cliente: `SafeArea`, `CoinChip`, `TabButton` e `CurrentTabButton`, `SectionPanel`, `DangerLabel` e `BoldLabel`. O padrão do `handle_back` vem de `heal_station_screen.gd`.
+- Cliente: `SafeArea`, `CoinChip`, `SectionPanel`, as abas de `creature_details_screen`, `DangerLabel` e `BoldLabel`. O padrão do `handle_back` vem de `heal_station_screen.gd`.
 
 ## Verificação
 
@@ -113,8 +113,16 @@ Passos do dono no editor (F5) e no celular:
 
 ## Tarefas
 
-- [ ] Testes e2e da rota; ver falhar; módulo, serviço e controller (RF-01 a RF-09).
-- [ ] Verificação temporária da tela; ver falhar.
-- [ ] `ItemIcon` e o card (RF-13, RF-19).
-- [ ] Tela, `buy_item`, registro e Hub (RF-10 a RF-12, RF-14 a RF-18).
-- [ ] Remover os arquivos temporários; atualizar as specs citadas; marcar esta spec e a tabela do README como `concluída`; commit `feat: Loja`.
+- [x] Testes e2e da rota; ver falhar; módulo, serviço e controller (RF-01 a RF-09).
+- [x] Verificação temporária da tela; ver falhar.
+- [x] `ItemIcon` e o card (RF-13, RF-19).
+- [x] Tela, `buy_item`, registro e Hub (RF-10 a RF-12, RF-14 a RF-18).
+- [x] Remover os arquivos temporários; atualizar as specs citadas; marcar esta spec e a tabela do README como `concluída`; commit `feat: Loja`.
+
+## Decisões da implementação
+
+- **As abas seguem a tela de detalhes:** a spec citava `TabButton` e `CurrentTabButton`, que são os da barra inferior, com ícone em cima. A aba atual usa o botão padrão, e as outras, `OutlineButton`, como em `creature_details_screen`.
+- **`item_id` acima do limite do banco dá `400`:** sem essa conferência, um número enorme viraria erro `500` no Prisma.
+- **Critério do texto maior retirado:** o jogo não tem ajuste de tamanho de texto, então a conferência foi feita em 360×640.
+- **Imagem dos itens:** 256 × 256, com fundo transparente, _a revisar_. O dono manda os arquivos depois.
+- **Conferência:** os 15 testes novos da rota falharam antes dela existir e passaram depois, incluindo a falha no meio da transação, que desfaz o desconto no banco de verdade, e as compras simultâneas. `npm run lint` e `npm run typecheck` sem avisos. Uma cena temporária abriu a Loja pelo Hub contra um servidor de teste, com toques entrando como cliques reais pela janela, e passou com 39 de 39 verificações em janelas de 360×640, 405×720, 412×915 e 720×1061, depois de falhar porque o card ainda abria o placeholder. Uma rodada extra, com um arquivo real em `assets/items/`, mostrou a imagem no lugar da forma, sem mudar código; o arquivo foi removido. A falta de rede foi simulada trocando o endereço do servidor. Das 25 capturas salvas na última passada de cada tamanho, 6 foram abertas e revisadas. O teste no celular fica para o dono, e os arquivos temporários foram removidos.

@@ -7,6 +7,7 @@ const ME_PATH := "/v1/me"
 const STARTER_PATH := "/v1/me/starter"
 const CREATURE_PATH := "/v1/me/creatures/%s"
 const HEAL_PATH := "/v1/me/heal"
+const SHOP_BUY_PATH := "/v1/me/shop/buy"
 const EXPLORATION_PATH := "/v1/me/exploration"
 const WILD_BATTLE_PATH := "/v1/me/battle/wild"
 const BATTLE_ACTION_PATH := "/v1/me/battle/action"
@@ -30,6 +31,10 @@ func set_nickname(uid: String, raw_nickname: String) -> Result:
 
 func heal_team() -> Result:
 	return _player_result(await Api.request(HTTPClient.METHOD_POST, HEAL_PATH, null, true))
+
+
+func buy_item(item_id: int) -> Result:
+	return _player_result(await Api.request(HTTPClient.METHOD_POST, SHOP_BUY_PATH, {"item_id": item_id}, true))
 
 
 func reset_progress() -> Result:
