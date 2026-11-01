@@ -2,7 +2,7 @@
 
 ## Sprites
 
-Cada PNG tem 32×48 px, com o hexágono de ponta para cima. Os valores abaixo foram medidos nos arquivos, e o espaçamento foi conferido montando grades de teste: com 21 px a superfície fica contínua, com 22 aparece uma linha entre as fileiras, e com 20 as peças se sobrepõem.
+Cada PNG tem 32×48 px, com o hexágono de ponta para cima. Os valores abaixo foram medidos nos arquivos. O mapa deixa um vão entre os hexágonos, pedido pelo dono: os passos vêm do exemplo dele, e cada uma das 44 células da imagem de referência bateu, pixel a pixel, com um sprite nessa grade. Com passos de 32, 21 e 16 px os hexágonos ficariam encostados, numa superfície contínua.
 
 | Medida                     | Valor                                   |
 | -------------------------- | --------------------------------------- |
@@ -11,9 +11,9 @@ Cada PNG tem 32×48 px, com o hexágono de ponta para cima. Os valores abaixo fo
 | Borda vertical             | y de 14 a 26 (13 px)                    |
 | Lateral do bloco           | y de 35 a 47 (13 px)                    |
 | Centro da superfície       | (16, 20)                                |
-| Passo horizontal           | 32 px                                   |
-| Passo vertical             | 21 px                                   |
-| Deslocamento de cada linha | 16 px                                   |
+| Passo horizontal           | 34 px (vão de 2 px)                     |
+| Passo vertical             | 24 px (mostra a lateral do tile de cima) |
+| Deslocamento de cada linha | 17 px                                   |
 
 `snow` começa em y=5, e `temperate_mont` e `boreal_mont`, em y=4. O excesso cai sobre o tile de cima, o que a ordem de desenho resolve: de cima para baixo, quem está mais abaixo cobre a lateral de quem está acima. Todos os tiles usam a mesma origem.
 
@@ -25,7 +25,7 @@ No jogo, os arquivos ficam em `res://assets/terrain/<biome>_<shape>_<NN>.png`. `
 
 Coordenadas axiais `(q, r)`. Os seis vizinhos de uma posição são `(q+1, r)`, `(q-1, r)`, `(q, r+1)`, `(q, r-1)`, `(q+1, r-1)` e `(q-1, r+1)`.
 
-O canto do sprite, em pixels da arte, fica em `x = 32 * q + 16 * r` e `y = 21 * r`. O resultado é sempre inteiro. O centro da superfície soma `(16, 20)`.
+O canto do sprite, em pixels da arte, fica em `x = 34 * q + 17 * r` e `y = 24 * r`. O resultado é sempre inteiro. O centro da superfície soma `(16, 20)`.
 
 ## Contrato
 

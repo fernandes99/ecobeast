@@ -5,9 +5,11 @@ extends Node2D
 ## lateral de quem está acima. A geometria vem dos sprites
 ## (.specs/wild-battle/architecture.md).
 
-const STEP_X := 32
-const STEP_Y := 21
-const ROW_SHIFT := 16
+## Os passos deixam um vão entre os hexágonos, do exemplo do dono. Encostados
+## (sem vão) seriam 32, 21 e 16.
+const STEP_X := 34
+const STEP_Y := 24
+const ROW_SHIFT := 17
 ## Centro da superfície dentro do sprite de 32×48.
 const SURFACE_CENTER := Vector2(16.0, 20.0)
 ## Pontos da tela lógica por pixel da arte, antes de arredondar. A revisar.

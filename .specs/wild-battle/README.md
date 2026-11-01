@@ -15,7 +15,7 @@ Hoje Explorar zona vai direto para a batalha, contra uma espécie sorteada entre
 
 1. Cada exploração mostra um mapa diferente, e a mesma seed reproduz o mesmo mapa.
 2. Os terrenos formam regiões que fazem sentido: florestas agrupadas, cadeias de montanhas, lagos, e nada de deserto encostado em neve.
-3. Os hexágonos se encaixam sem emendas, e a pixel art fica nítida em qualquer tela.
+3. Os hexágonos ficam alinhados, com um vão regular entre eles, e a pixel art fica nítida em qualquer tela.
 4. Sair do mapa para lutar e voltar não perde o lugar do jogador.
 
 ## Decisões
@@ -35,6 +35,7 @@ Tomadas com o dono do projeto:
 | `boreal` faz o papel de floresta por enquanto                                                 | Não há sprite de árvore. Mais tarde, `boreal` será só um Campo                          |
 | Colina e montanha na água viram ilhas raras                                                   | Decisão do dono                                                                         |
 | Usar só os sprites fornecidos, sem placeholder de terreno                                     | Pedido do dono                                                                          |
+| Um vão entre os hexágonos, com passos de 34, 24 e 17 px                                       | Pedido do dono depois da fase 03, com um exemplo no Figma                               |
 
 Tomadas no planejamento (corrigíveis; ao mudar uma, atualize aqui e nas specs afetadas):
 

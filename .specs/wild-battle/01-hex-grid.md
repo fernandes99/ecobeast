@@ -33,7 +33,7 @@ Esta fase valida o que todo o resto usa: os sprites no jogo e o encaixe da grade
 
 **Desenho**
 
-- **RF-06:** `HexMapView` desenha cada tile no ponto de [architecture.md](architecture.md#coordenadas), usando os passos de 32 e 21 px.
+- **RF-06:** `HexMapView` desenha cada tile no ponto de [architecture.md](architecture.md#coordenadas).
 - **RF-07:** Os tiles são desenhados de cima para baixo, para quem está mais abaixo cobrir a lateral de quem está acima.
 - **RF-08:** `HexMapView` usa filtro `NEAREST`.
 - **RF-09:** `HexMapView` se escala por um número inteiro de pixels reais, recalculado quando a janela muda.
@@ -92,4 +92,5 @@ godot --headless -d --path client --quit-after 60
 - **A escala é calculada em cada eixo:** a primeira versão usava um número só e errou 486 pixels numa janela de 720×1061. A tela lógica tem tamanho inteiro (868×1280 nesse caso), então a escala da janela não é igual em X e Y, e a diferença se acumula ao longo do mapa. Por isso `pixel_scale()` devolve `Vector2`, e não `float`.
 - **`map_seed`, e não `seed`:** `seed` já é uma função do GDScript.
 - **Os tamanhos da verificação mudaram:** a tela do computador usado não abre janelas com mais de 1061 px de altura, então 720×1280 virou 720×1061, e 1080×1920 não foi aberto. As escalas maiores foram simuladas diminuindo a tela lógica. Nenhum celular real foi testado.
+- **O vão entre os hexágonos veio depois:** esta fase foi entregue com passos de 32 e 21 px, sem vão. Depois da [03](03-exploration-screen.md), o dono pediu o vão, e os passos mudaram para 34, 24 e 17. A conferência abaixo é a da versão sem vão; a da versão final está na 03.
 - **Conferência:** a cena temporária falhou antes do código, por faltarem sprites e modelos. Depois, com um mapa de 432 tiles que usa todos os sprites, 27 de 27 verificações passaram nas 7 combinações de tamanho e escala, com 0 pixel diferente da arte em 72 capturas. Das capturas, 3 foram abertas e revisadas, em 405×720, 720×1061 e na escala 6. Os 108 PNGs foram comparados byte a byte com os originais. O jogo abriu sem erros nem avisos de script, e os arquivos temporários foram removidos.
