@@ -9,6 +9,10 @@ const CREATURE_PATH := "/v1/me/creatures/%s"
 const HEAL_PATH := "/v1/me/heal"
 const SHOP_BUY_PATH := "/v1/me/shop/buy"
 const ITEM_USE_PATH := "/v1/me/items/use"
+const STORAGE_PATH := "/v1/me/storage"
+const TEAM_ORDER_PATH := "/v1/me/team/order"
+const TEAM_BRING_PATH := "/v1/me/team/bring"
+const TEAM_STORE_PATH := "/v1/me/team/store"
 const EXPLORATION_PATH := "/v1/me/exploration"
 const WILD_BATTLE_PATH := "/v1/me/battle/wild"
 const BATTLE_ACTION_PATH := "/v1/me/battle/action"
@@ -41,6 +45,35 @@ func buy_item(item_id: int) -> Result:
 func use_item(item_id: int, creature_uid: String) -> Result:
 	var body := {"item_id": item_id, "creature_uid": creature_uid}
 	return _player_result(await Api.request(HTTPClient.METHOD_POST, ITEM_USE_PATH, body, true))
+
+
+func load_storage() -> Result:
+	var response: ApiResponse = await Api.request(HTTPClient.METHOD_GET, STORAGE_PATH, null, true)
+	if not response.ok:
+		return Result.failure(response.error)
+	var rows: Variant = response.data.get("creatures") if response.data is Dictionary else null
+	if not rows is Array:
+		return Result.failure(ApiResponse.SERVER_ERROR)
+	var creatures: Array[CreatureInstance] = []
+	for row: Variant in rows:
+		if row is Dictionary:
+			creatures.append(CreatureInstance.from_dict(row))
+	return Result.success(creatures)
+
+
+func reorder_team(uids: Array[String]) -> Result:
+	return _player_result(await Api.request(HTTPClient.METHOD_POST, TEAM_ORDER_PATH, {"uids": uids}, true))
+
+
+func bring_to_team(uid: String, replace_uid: String) -> Result:
+	var body := {"uid": uid}
+	if not replace_uid.is_empty():
+		body["replace_uid"] = replace_uid
+	return _player_result(await Api.request(HTTPClient.METHOD_POST, TEAM_BRING_PATH, body, true))
+
+
+func send_to_storage(uid: String) -> Result:
+	return _player_result(await Api.request(HTTPClient.METHOD_POST, TEAM_STORE_PATH, {"uid": uid}, true))
 
 
 func reset_progress() -> Result:

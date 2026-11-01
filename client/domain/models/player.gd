@@ -5,6 +5,8 @@ extends RefCounted
 
 ## Nome já normalizado: 2 a 16 letras, números ou espaços.
 const NAME_PATTERN := "^[\\p{L}\\p{N} ]{2,16}$"
+## Quantos Ecobeasts cabem na equipe principal.
+const PARTY_SIZE := 6
 
 var id: String
 var name: String

@@ -34,6 +34,22 @@ extends RefCounted
 @abstract func use_item(item_id: int, creature_uid: String) -> Result
 
 
+## data: os Ecobeasts do Santuário, um Array[CreatureInstance].
+@abstract func load_storage() -> Result
+
+
+## data: o Player com a equipe na ordem nova.
+@abstract func reorder_team(uids: Array[String]) -> Result
+
+
+## data: o Player com o Ecobeast na equipe. Com `replace_uid`, os dois trocam de lugar.
+@abstract func bring_to_team(uid: String, replace_uid: String) -> Result
+
+
+## data: o Player sem o Ecobeast na equipe.
+@abstract func send_to_storage(uid: String) -> Result
+
+
 ## data: null.
 @abstract func reset_progress() -> Result
 

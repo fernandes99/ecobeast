@@ -13,6 +13,8 @@ signal logged_in
 
 ## O último Player recebido do serviço, ou null se ainda não existe.
 var player: Player = null
+## O Santuário, como veio na última leitura: quem o abre chama `load_storage`.
+var storage: Array[CreatureInstance] = []
 
 var _service: GameService = ApiGameService.new()
 var _auth := AuthService.new()
@@ -67,6 +69,9 @@ func set_nickname(uid: String, raw_nickname: String) -> Result:
 	@warning_ignore("redundant_await")
 	var result: Result = await _service.set_nickname(uid, raw_nickname)
 	if result.ok:
+		# A resposta só traz a equipe: a tela só atualiza depois do Santuário.
+		if _storage_has(uid):
+			await load_storage()
 		_set_player(result.data)
 	return result
 
@@ -95,6 +100,33 @@ func use_item(item_id: int, creature_uid: String) -> Result:
 	return result
 
 
+func load_storage() -> Result:
+	@warning_ignore("redundant_await")
+	var result: Result = await _service.load_storage()
+	if result.ok:
+		storage = result.data
+	return result
+
+
+func reorder_team(uids: Array[String]) -> Result:
+	@warning_ignore("redundant_await")
+	var result: Result = await _service.reorder_team(uids)
+	if result.ok:
+		_set_player(result.data)
+	return result
+
+
+## Sem `replace_uid`, o Ecobeast entra em uma vaga livre.
+func bring_to_team(uid: String, replace_uid: String = "") -> Result:
+	@warning_ignore("redundant_await")
+	return await _apply_team_change(await _service.bring_to_team(uid, replace_uid))
+
+
+func send_to_storage(uid: String) -> Result:
+	@warning_ignore("redundant_await")
+	return await _apply_team_change(await _service.send_to_storage(uid))
+
+
 func reset_progress() -> Result:
 	@warning_ignore("redundant_await")
 	var result: Result = await _service.reset_progress()
@@ -120,6 +152,21 @@ func battle_action(action: Dictionary) -> Result:
 	return await _service.battle_action(action)
 
 
+## O Santuário mudou com a equipe: as telas só atualizam depois de reler os dois.
+func _apply_team_change(result: Result) -> Result:
+	if not result.ok:
+		return result
+	var reloaded: Result = await load_storage()
+	_set_player(result.data)
+	return result if reloaded.ok else reloaded
+
+
+func _storage_has(uid: String) -> bool:
+	return storage.any(func(creature: CreatureInstance) -> bool: return creature.uid == uid)
+
+
 func _set_player(value: Player) -> void:
 	player = value
+	if value == null:
+		storage = []
 	player_changed.emit()

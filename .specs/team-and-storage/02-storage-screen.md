@@ -1,6 +1,6 @@
 # 02. Tela do Santuário
 
-- **Status:** rascunho
+- **Status:** concluída
 - **Depende de:** [01-team-api](01-team-api.md)
 
 ## Contexto
@@ -36,7 +36,7 @@ O card "Santuário" do Hub abre um placeholder (TELAS.md #10). Esta fase cria a 
 
 - **RF-07:** A busca procura no apelido e no nome da espécie, sem diferenciar maiúsculas nem acentos.
 - **RF-08:** Os filtros são "Todos" e um botão por Elemento presente no Santuário, numa faixa que rola para o lado.
-- **RF-09:** A ordem começa em nível, do maior para o menor, e um toque em "Nível" inverte.
+- **RF-09:** A ordem começa em nível, do maior para o menor, e um toque no botão "Maior nível" inverte, trocando o texto para "Menor nível".
 - **RF-10:** Busca, filtro e ordem valem juntos. A quantidade do topo continua sendo o total do Santuário.
 - **RF-11:** Sem resultado, a tela mostra "Nenhum Ecobeast encontrado."
 
@@ -54,33 +54,34 @@ O card "Santuário" do Hub abre um placeholder (TELAS.md #10). Esta fase cria a 
 
 ## Critérios de aceite
 
-- [ ] O card "Santuário" abre a tela, e a aba de voltar retorna ao Hub.
-- [ ] Sem Ecobeasts, aparece "Nenhum Ecobeast no Santuário."
-- [ ] Com o servidor fora, aparece o erro, e "Tentar de novo" carrega a lista depois que ele volta.
-- [ ] Buscar "fag" encontra Fagulho, e buscar "goticulo" encontra Gotículo.
-- [ ] Buscar o apelido encontra o Ecobeast.
-- [ ] Só aparecem filtros de Elementos presentes no Santuário.
-- [ ] Um Ecobeast com dois Elementos aparece nos dois filtros.
-- [ ] O toque em "Nível" inverte a ordem.
-- [ ] Busca e filtro juntos sem resultado mostram "Nenhum Ecobeast encontrado."
-- [ ] Com vaga, mover tira o Ecobeast da grade e o põe no Hub.
-- [ ] Com a equipe cheia, a troca põe o Ecobeast na equipe e devolve o outro à grade.
-- [ ] "Cancelar" não muda nada.
-- [ ] Dar apelido a um Ecobeast do Santuário aparece na grade ao voltar.
-- [ ] A tela de detalhes abre um Ecobeast do Santuário com os dados dele.
-- [ ] Um toque rolando a grade não abre o painel.
-- [ ] Com mais Ecobeasts do que cabem na tela, a grade rola até o fim.
-- [ ] Em 360×640, 405×720, 412×915 e 720×1061, a grade e os painéis cabem.
-- [ ] O projeto abre sem erros nem avisos de script.
+- [x] O card "Santuário" abre a tela, e a aba de voltar retorna ao Hub.
+- [x] Sem Ecobeasts, aparece "Nenhum Ecobeast no Santuário."
+- [x] Com o servidor fora, aparece o erro, e "Tentar de novo" carrega a lista depois que ele volta.
+- [x] Buscar "fag" encontra Fagulho, e buscar "goticulo" encontra Gotículo.
+- [x] Buscar o apelido encontra o Ecobeast.
+- [x] Só aparecem filtros de Elementos presentes no Santuário.
+- [x] Um Ecobeast com dois Elementos aparece nos dois filtros.
+- [x] O toque no botão de ordem inverte a ordem.
+- [x] Busca e filtro juntos sem resultado mostram "Nenhum Ecobeast encontrado."
+- [x] Com vaga, mover tira o Ecobeast da grade e o põe no Hub.
+- [x] Com a equipe cheia, a troca põe o Ecobeast na equipe e devolve o outro à grade.
+- [x] "Cancelar" não muda nada.
+- [x] Dar apelido a um Ecobeast do Santuário aparece na grade ao voltar.
+- [x] A tela de detalhes abre um Ecobeast do Santuário com os dados dele.
+- [x] Um toque rolando a grade não abre o painel.
+- [x] Com mais Ecobeasts do que cabem na tela, a grade rola até o fim.
+- [x] Em 360×640, 405×720, 412×915 e 720×1061, a grade e os painéis cabem.
+- [x] O projeto abre sem erros nem avisos de script.
 
 ## Desenho técnico
 
 **Criar**
 
 - `client/screens/storage/storage_screen.tscn` e `.gd`: a tela.
+- `client/screens/storage/storage_filter.gd`: a busca, o filtro e a ordem, sem depender da tela.
 - `client/screens/storage/storage_cell.tscn` e `.gd`: a célula, estendendo `TapPanel`.
 - `client/screens/storage/creature_actions_panel.tscn` e `.gd`: o painel de ações, que a [03](03-team-screen.md) também usa.
-- `client/screens/storage/team_swap_panel.tscn` e `.gd`: "Trocar com quem?".
+- `client/screens/storage/team_swap_panel.tscn` e `.gd`: "Trocar com quem?", com as linhas de `BagTargetRow`.
 
 **Alterar**
 
@@ -88,6 +89,7 @@ O card "Santuário" do Hub abre um placeholder (TELAS.md #10). Esta fase cria a 
 - `client/core/autoload/session.gd`: `storage` e as chamadas.
 - `client/core/autoload/router.gd`: `&"storage"`.
 - `client/screens/hub/hub_screen.gd`: o destino do card.
+- `client/domain/models/player.gd`: `PARTY_SIZE`, que estava no Hub e agora a tela do Santuário também usa.
 - `client/screens/creature_details/creature_details_screen.gd`: procura também em `Session.storage`.
 
 **Reaproveitar**
@@ -112,9 +114,21 @@ Passos do dono no editor (F5) e no celular:
 
 ## Tarefas
 
-- [ ] Verificação temporária da tela; ver falhar.
-- [ ] Serviços e `Session`.
-- [ ] Grade e estados da tela (RF-01 a RF-06).
-- [ ] Busca, filtro e ordem (RF-07 a RF-11).
-- [ ] Ações e troca (RF-12 a RF-20).
-- [ ] Remover os arquivos temporários; marcar esta spec e a tabela do README como `concluída`; commit `feat: tela do Santuário`.
+- [x] Verificação temporária da tela; ver falhar.
+- [x] Serviços e `Session`.
+- [x] Grade e estados da tela (RF-01 a RF-06).
+- [x] Busca, filtro e ordem (RF-07 a RF-11).
+- [x] Ações e troca (RF-12 a RF-20).
+- [x] Remover os arquivos temporários; marcar esta spec e a tabela do README como `concluída`; commit `feat: tela do Santuário`.
+
+## Decisões da implementação
+
+- **O botão de ordem diz "Maior nível" ou "Menor nível":** a fonte não garante as setas do mockup, e as palavras dizem a ordem atual.
+- **`StorageFilter` saiu da tela:** ela fica só com os nós, e a regra de busca cabe em um arquivo.
+- **`contains` com texto vazio dá falso no Godot:** a grade sumia com a busca vazia. A conferência pegou, e o filtro trata esse caso.
+- **Escolher um filtro não refaz a faixa:** refazer apagaria o botão tocado e arriscaria perder a rolagem. Só a aparência muda.
+- **A leitura do Santuário vem antes de avisar as telas:** `Session` relê o Santuário e só depois emite `player_changed`, para a grade e os detalhes nunca mostrarem dados velhos. Se a releitura falhar depois de mover, a tela mostra o erro, mesmo com o Ecobeast já na equipe.
+- **Sem servidor na escolha de quem sai, o erro aparece no painel:** ele continua aberto, para o jogador tentar de novo.
+- **Rolagem com o dedo não foi exercitada:** o `ScrollContainer` só arrasta com toque de verdade. A conferência rolou pelo valor da rolagem e testou que arrastar sobre uma célula não abre o painel. Rolar com o dedo fica para o teste no celular.
+- **Rede simulada:** a falta de servidor foi testada trocando o endereço da API por uma porta sem nada.
+- **Conferência:** uma cena temporária abriu a tela contra um servidor de teste, com toques entrando como cliques reais pela janela. Passou com 79 de 79 verificações em janelas de 360×640, 405×720, 412×915 e 720×1061, depois de falhar porque a tela não existia. Em uma rodada, o jogo fechou sozinho em 360×640, com código 0 e sem erro, depois de 38 verificações. A causa não foi encontrada, e as duas repetições desse tamanho passaram com 79 de 79. Das 36 capturas de tela, 8 foram abertas e revisadas. Os arquivos temporários foram removidos. O teste no celular fica para o dono.

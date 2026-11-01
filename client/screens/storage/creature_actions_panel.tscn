@@ -1,0 +1,96 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://screens/storage/creature_actions_panel.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://ui/components/safe_area.tscn" id="2_safe_area"]
+[ext_resource type="PackedScene" path="res://ui/components/creature_portrait.tscn" id="3_portrait"]
+
+[node name="CreatureActionsPanel" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="Dim" type="ColorRect" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="SafeArea" parent="." instance=ExtResource("2_safe_area")]
+layout_mode = 1
+
+[node name="Sheet" type="PanelContainer" parent="SafeArea"]
+layout_mode = 2
+size_flags_vertical = 8
+
+[node name="Content" type="VBoxContainer" parent="SafeArea/Sheet"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Head" type="HBoxContainer" parent="SafeArea/Sheet/Content"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Portrait" parent="SafeArea/Sheet/Content/Head" instance=ExtResource("3_portrait")]
+unique_name_in_owner = true
+layout_mode = 2
+portrait_size = 96
+
+[node name="Info" type="VBoxContainer" parent="SafeArea/Sheet/Content/Head"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+
+[node name="NameLabel" type="Label" parent="SafeArea/Sheet/Content/Head/Info"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"TitleLabel"
+theme_override_font_sizes/font_size = 30
+clip_text = true
+
+[node name="LevelLabel" type="Label" parent="SafeArea/Sheet/Content/Head/Info"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"SecondaryLabel"
+
+[node name="MoveButton" type="Button" parent="SafeArea/Sheet/Content"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 72)
+layout_mode = 2
+
+[node name="Note" type="Label" parent="SafeArea/Sheet/Content"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_type_variation = &"SecondaryLabel"
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="DetailsButton" type="Button" parent="SafeArea/Sheet/Content"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 72)
+layout_mode = 2
+theme_type_variation = &"OutlineButton"
+text = "Ver detalhes"
+
+[node name="Message" type="Label" parent="SafeArea/Sheet/Content"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_type_variation = &"DangerLabel"
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="CloseButton" type="Button" parent="SafeArea/Sheet/Content"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 72)
+layout_mode = 2
+theme_type_variation = &"OutlineButton"
+text = "Voltar"

@@ -84,11 +84,11 @@ func _show_page(current: int) -> void:
 		_tabs[index].theme_type_variation = &"" if index == current else &"OutlineButton"
 
 
-## A criatura desta tela no jogador atual, ou null.
+## A criatura desta tela, na equipe ou no Santuário, ou null.
 func _creature() -> CreatureInstance:
 	if Session.player == null:
 		return null
-	for creature: CreatureInstance in Session.player.party:
+	for creature: CreatureInstance in Session.player.party + Session.storage:
 		if creature.uid == _uid:
 			return creature
 	return null

@@ -8,7 +8,6 @@ const CreatureSlotScene := preload("res://ui/components/creature_slot.tscn")
 const ActionTileScene := preload("res://ui/components/action_tile.tscn")
 const ProfileDebugPanelScene := preload("res://screens/hub/profile_debug_panel.tscn")
 
-const PARTY_SIZE := 6
 const TAB_HEIGHT := 76
 const CURRENT_TAB := "Home"
 const ICON_PATH := "res://ui/icons/%s.svg"
@@ -56,7 +55,7 @@ const DESTINATIONS: Dictionary[String, Dictionary] = {
 	"Arenas": {"id": &"placeholder", "params": {"title": "Arenas"}},
 	"Loja": {"id": &"shop", "params": {}},
 	"Refúgio": {"id": &"heal_station", "params": {}},
-	"Santuário": {"id": &"placeholder", "params": {"title": "Santuário"}},
+	"Santuário": {"id": &"storage", "params": {}},
 	"Bestiário": {"id": &"placeholder", "params": {"title": "Bestiário"}},
 	"Mochila": {"id": &"bag", "params": {}},
 	"Equipe": {"id": &"placeholder", "params": {"title": "Equipe"}},
@@ -83,7 +82,7 @@ func _ready() -> void:
 	if ResourceLoader.exists(SCENE_PATH):
 		_scene_texture = load(SCENE_PATH) as Texture2D
 	_scene_art.texture = _scene_texture if _scene_texture != null else _sky_gradient()
-	for index: int in PARTY_SIZE:
+	for index: int in Player.PARTY_SIZE:
 		var slot: CreatureSlot = CreatureSlotScene.instantiate()
 		slot.pressed.connect(_open_details.bind(index))
 		_party_row.add_child(slot)
@@ -177,7 +176,7 @@ func _refresh() -> void:
 	_name_label.text = player.name
 	_level_label.text = "Nv. %d" % player.level
 	_coins_label.text = _format_thousands(player.coins)
-	for index: int in PARTY_SIZE:
+	for index: int in Player.PARTY_SIZE:
 		var slot := _party_row.get_child(index) as CreatureSlot
 		if index < player.party.size():
 			slot.set_creature(player.party[index])
