@@ -28,6 +28,7 @@ O Ecobeast é um jogo mobile (Android/iOS, retrato): o cliente em **Godot 4.7 co
 | [battle-screen](battle-screen/) | A tela de batalha no jogo, com encontro sorteado pelo servidor                     |
 | [heal-station](heal-station/) | O Refúgio: tela e rota que curam a equipe                                                |
 | [wild-battle](wild-battle/) | Mapa hexagonal gerado a cada exploração, com o jogador andando por ele                    |
+| [inventory-shop](inventory-shop/) | Loja, Mochila e o uso de itens no mapa e na luta                                   |
 
 As próximas iniciativas estão no [roadmap.md](roadmap.md).
 

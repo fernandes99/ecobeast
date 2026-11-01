@@ -10,6 +10,8 @@ O jogador nunca vê a coluna "Referência": ela só existe para quem implementa 
 | Treinador           | Domador (Tamer)                  | `Player`\*                             | `players`                                         |
 | Treinador NPC       | Domador (NPC)                    | `NpcTamer`\*                           | `npc_tamers`                                      |
 | Pokébola            | Esfera de Vínculo (Bond Sphere)  | `CaptureItem`                          | `items` (categoria captura)                       |
+| Poção               | Tônico                           | `Item`\*                               | `items` (categoria cura)                          |
+| Mochila             | Mochila                          | `InventorySlot`\*                      | `inventory_items`                                 |
 | Pokédex             | Bestiário (Codex)                | `Codex`                                | derivado de `species` + estado do jogador         |
 | Tipo                | Afinidade / Elemento             | `Element`\*                            | `elements`, `element_efficacy`                    |
 | Golpe / Move        | Técnica                          | `Skill`                                | `skills`, `skill_effects`, `species_skills`       |

@@ -227,7 +227,7 @@ Curvas de XP total por nível: Fast = 0,8·n³; Medium = n³; Slow = 1,25·n³.
 a = \frac{(3 \cdot HP_{max} - 2 \cdot HP_{atual}) \cdot captureRate \cdot bonusEsfera}{3 \cdot HP_{max}} \cdot bonusStatus
 ```
 
-Chance de captura = min(a / 100, 1). Bônus de esfera: comum 1, grande 1,5, ultra 2. Bônus de status: sono ou congelado 2,5; paralisado, queimado ou envenenado 1,5. Para dar emoção, faça 3 "tremidas" de animação antes de revelar o resultado.
+Chance de captura = min(a / 100, 1). Bônus de esfera: Vínculo 1, Reforçada 1,5, Suprema 2. Bônus de status: sono ou congelado 2,5; paralisado, queimado ou envenenado 1,5. Para dar emoção, faça 3 "tremidas" de animação antes de revelar o resultado.
 
 ## Técnicas (Skills)
 
@@ -373,8 +373,8 @@ Status voláteis (somem ao sair de campo): Confuso (33% de se atingir, 2–5 tur
 
 | Categoria | Exemplos |
 | --- | --- |
-| Captura | Esfera de Vínculo, Grande Esfera, Ultra Esfera, Esfera Noturna |
-| Cura | Poção (20 HP), Super Poção (60), Tônico Total, Antídoto, Pomada |
+| Captura | Esfera de Vínculo, Esfera Reforçada, Esfera Suprema, Esfera Noturna |
+| Cura | Tônico Leve (20 HP), Tônico Forte (60), Tônico Total, Bálsamo Puro |
 | Batalha (segurados) | Amuleto Ígneo (+20% Fogo), Fruta de Cura, Cinto da Resistência |
 | Evolução | Pedra da Maré, Pedra Solar, Cristal Lunar |
 | Treino | Doce Raro (+1 nível), Vitaminas (+Treino), Manual de Técnica |

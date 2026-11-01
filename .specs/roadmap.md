@@ -19,7 +19,7 @@ O que vem depois do MVP de estrutura (entrada, escolha do inicial e Hub). Cada l
 | 8   | `npc-tamers`        | Domadores NPC com equipe fixa e recompensa em moedas; tabela `npc_tamers`                                 | battle-screen              | planejada |
 | 9   | `team-and-storage`  | Equipe com 6 slots reorganizáveis e Santuário com filtros e busca (TELAS.md #9 e #10)                     | capture                    | planejada |
 | 10  | [`creature-details`](creature-details/) | Tela de detalhes da criatura (TELAS.md #8); vem antes do `battle-core`, por decisão do dono | auth-google                | concluída |
-| 11  | `inventory-shop`    | Mochila e Loja (TELAS.md #12 e #13); tabelas `items`, `item_categories`, `inventory_items`                | backend-api                | planejada |
+| 11  | [`inventory-shop`](inventory-shop/) | Mochila e Loja (TELAS.md #12 e #13); tabelas `items`, `item_categories`, `inventory_items`; usar itens no mapa e na luta | backend-api, battle-screen, wild-battle | planejada |
 | 13  | `codex`             | Bestiário com visto/capturado, detalhe e linha evolutiva (TELAS.md #11)                                   | wild-battle                | planejada |
 | 14  | `arenas-league`     | 8 Arenas, emblemas, Liga final e desbloqueio secreto do Ancestral (TELAS.md #15)                          | npc-tamers                 | planejada |
 | 15  | `profile-settings`  | Perfil com estatísticas e configurações (TELAS.md #16)                                                    | auth-google                | planejada |
@@ -53,6 +53,8 @@ Evoluções por item, vínculo, horário, zona e troca; criação (breeding) e h
 - **Fuga:** a chance fixa de 20% de falhar é provisória. Rever, talvez com um cálculo a partir do inimigo ([battle-core](battle-core/README.md)).
 - **Abandonar batalha:** fechar o app no meio da luta escapa de uma derrota. Aceito por enquanto; rever quando a batalha for guardada no banco.
 - **Preço do Refúgio:** a cura é de graça por enquanto, e o dono quer cobrar moedas depois. Falta definir o valor e o que acontece com quem não tem moedas, para não prender o jogador depois de uma derrota.
+- **Renda de moedas:** hoje as 1.000 moedas iniciais são tudo o que existe, e nenhuma luta paga recompensa. O dono vai definir depois, com os vários cenários de ganho.
+- **Nomes dos próximos itens:** os itens do GDD que ainda não entraram no catálogo passam pela mesma revisão de nomes da [inventory-shop](inventory-shop/) antes de serem criados.
 - **Nível do Domador:** o Hub mostra o nível, mas o GDD não diz como ele sobe. No MVP fica fixo em 1.
 - **Curva Erratic:** citada no GDD sem fórmula. Fora do catálogo até ser definida.
 - **Estilo de arte:** as telas usam placeholders (forma na cor do elemento) até existir arte das 3 linhas iniciais.
