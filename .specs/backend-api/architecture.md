@@ -61,7 +61,7 @@ O Prisma não descreve `CHECK` no `schema.prisma`, então essa é a única exce�
 
 - `prisma/seed.ts` lê `prisma/seed-data/<tabela>.json` (até a fase 07, `../client/data/`) e insere as linhas em ordem de dependência (referências antes de espécies, espécies antes de Técnicas aprendidas…), numa transação.
 - Só roda se o banco estiver vazio: se `species` tiver qualquer linha, avisa e não faz nada. Nunca sobrescreve uma mudança feita à mão.
-- No fim, ajusta as sequências dos ids e confere a contagem: 25 tabelas, 436 linhas, os mesmos números do validador do cliente.
+- No fim, ajusta as sequências dos ids e confere a contagem: 25 tabelas, 444 linhas, os mesmos números do validador do cliente.
 - Ninguém edita os JSON da carga (`client/data/` até a fase 07, `prisma/seed-data/` depois). Depois da carga, mudança de valor é feita no banco.
 - Na fase 07, os arquivos saem do cliente e vão para `server/prisma/seed-data/` (com `git mv`), e o seed passa a ler de lá. Eles ficam como a foto inicial do catálogo, para montar um banco do zero. Um banco novo com os valores atuais (o de produção, por exemplo) é copiado do banco de desenvolvimento, e não desses arquivos.
 
