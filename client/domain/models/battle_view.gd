@@ -11,6 +11,8 @@ var turn: int = 1
 var can_flee: bool = false
 var active_index: int = 0
 var team: Array[BattleCreature] = []
+## O que resta na Mochila, descontando o que já foi usado na luta.
+var items: Array[InventorySlot] = []
 var enemy: BattleCreature = null
 var enemy_team_size: int = 0
 var enemy_fainted: int = 0
@@ -32,6 +34,9 @@ static func from_dict(d: Dictionary) -> BattleView:
 	for creature_dict: Variant in DictFields.get_array(player, "team"):
 		if creature_dict is Dictionary:
 			view.team.append(BattleCreature.from_dict(creature_dict))
+	for slot_dict: Variant in DictFields.get_array(player, "items"):
+		if slot_dict is Dictionary:
+			view.items.append(InventorySlot.from_dict(slot_dict))
 	var enemy_side := DictFields.get_dict(d, "enemy")
 	view.enemy = BattleCreature.from_dict(DictFields.get_dict(enemy_side, "active"))
 	view.enemy_team_size = DictFields.get_int(enemy_side, "team_size")

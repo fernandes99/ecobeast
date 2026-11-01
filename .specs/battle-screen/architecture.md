@@ -70,6 +70,7 @@ Uma criatura só entra depois de tudo o que aconteceu no turno ([ordem de um tur
 | `status_ended`     | `<nome> não está mais <status>.`                                            |
 | `stat_changed`     | `<stat> de <nome> subiu.` ou `caiu.`; com 2 estágios ou mais, `subiu muito.` ou `caiu muito.` |
 | `fainted`          | `<nome> desmaiou.`                                                          |
+| `item_used`        | Com cura: `Você usou <item> em <nome>: +<n> de HP.` Só com status: `Você usou <item> em <nome>: não está mais <status>.` |
 | `flee_failed`      | `Não conseguiu fugir!`                                                      |
 | `battle_ended`     | nenhuma                                                                     |
 

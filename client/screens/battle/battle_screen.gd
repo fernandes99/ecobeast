@@ -37,6 +37,7 @@ var _leaving: bool = false
 @onready var _log_lines: VBoxContainer = %LogLines
 @onready var _actions_grid: GridContainer = %ActionsGrid
 @onready var _attack_button: Button = %AttackButton
+@onready var _items_button: Button = %ItemsButton
 @onready var _flee_button: Button = %FleeButton
 @onready var _skills_box: VBoxContainer = %SkillsBox
 @onready var _skills_grid: GridContainer = %SkillsGrid
@@ -46,6 +47,7 @@ var _leaving: bool = false
 @onready var _result_message: Label = %ResultMessage
 @onready var _exit_button: Button = %ExitButton
 @onready var _next_panel: NextCreaturePanel = %NextPanel
+@onready var _items_panel: BattleItemsPanel = %ItemsPanel
 
 
 func _ready() -> void:
@@ -55,6 +57,8 @@ func _ready() -> void:
 		_skills_grid.add_child(button)
 	_scroll.get_v_scroll_bar().changed.connect(_scroll_to_end)
 	_attack_button.pressed.connect(_open_skills)
+	_items_button.pressed.connect(_open_items)
+	_items_panel.chosen.connect(_use_item)
 	_flee_button.pressed.connect(_act.bind({"type": "flee"}))
 	%EmergencyButton.pressed.connect(_act.bind({"type": "emergency"}))
 	%SkillsBackButton.pressed.connect(_show_controls.bind(_actions_grid))
@@ -64,11 +68,14 @@ func _ready() -> void:
 
 
 ## Chamado pelo Router no voltar do Android ou Esc. Sair da luta é Correr; o
-## voltar só fecha as Técnicas ou, com a luta encerrada, volta ao mapa.
+## voltar só fecha os itens e as Técnicas ou, com a luta encerrada, volta ao mapa.
 func handle_back() -> bool:
 	if _leaving:
 		return false
 	if _next_panel.visible:
+		return true
+	if _items_panel.visible:
+		_items_panel.go_back()
 		return true
 	if _skills_box.visible:
 		_show_controls(_actions_grid)
@@ -128,6 +135,7 @@ func _choose_next(team_index: int) -> void:
 func _show_turn(turn: BattleTurn) -> void:
 	_set_busy(true)
 	_show_controls(_actions_grid)
+	_narrator.set_team_names(_team_names(turn.view))
 	for event: Dictionary in turn.events:
 		_display.apply(event, turn.view)
 		_refresh_cards()
@@ -143,7 +151,7 @@ func _show_turn(turn: BattleTurn) -> void:
 	_set_busy(false)
 	match _view.phase:
 		"choose_next":
-			_next_panel.open(_view.team, _team_names())
+			_next_panel.open(_view.team, _team_names(_view))
 		"ended":
 			_show_exit(RESULT_TEXTS.get(_view.result, ""), true)
 
@@ -151,6 +159,7 @@ func _show_turn(turn: BattleTurn) -> void:
 func _set_busy(busy: bool) -> void:
 	_busy = busy
 	_attack_button.disabled = busy
+	_items_button.disabled = busy
 	_flee_button.disabled = busy or _view == null or not _view.can_flee
 
 
@@ -171,6 +180,16 @@ func _open_skills() -> void:
 	_skills_grid.visible = has_pp
 	_emergency_box.visible = not has_pp
 	_show_controls(_skills_box)
+
+
+func _open_items() -> void:
+	if not _busy:
+		_items_panel.open(_view.items, _view.team, _team_names(_view))
+
+
+func _use_item(item_id: int, team_index: int) -> void:
+	_items_panel.close()
+	_act({"type": "item", "item_id": item_id, "team_index": team_index})
 
 
 func _refresh_cards() -> void:
@@ -197,9 +216,9 @@ func _player_name(creature: BattleCreature) -> String:
 	return party_creature.display_name(species) if party_creature != null else species.name
 
 
-func _team_names() -> Array[String]:
+func _team_names(view: BattleView) -> Array[String]:
 	var names: Array[String] = []
-	for creature: BattleCreature in _view.team:
+	for creature: BattleCreature in view.team:
 		names.append(_player_name(creature))
 	return names
 

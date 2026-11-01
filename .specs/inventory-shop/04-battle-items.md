@@ -1,6 +1,6 @@
 # 04. Itens na batalha
 
-- **Status:** rascunho
+- **Status:** concluída
 - **Depende de:** [03-bag](03-bag.md)
 
 ## Contexto
@@ -52,33 +52,33 @@ O botão Itens da batalha está desativado desde a [battle-screen](../battle-scr
 
 ## Critérios de aceite
 
-- [ ] Um item fora da `bag` é recusado com "Você não tem esse item."
-- [ ] Um inimigo mais rápido ataca depois do item.
-- [ ] Um Tônico em quem está em campo sobe o HP, e o evento vem antes do ataque do inimigo.
-- [ ] Um Tônico em um reserva muda o HP dele, sem mudar quem está em campo.
-- [ ] O Bálsamo tira o status e acorda quem dormia.
-- [ ] Com HP cheio, a ação é recusada, sem gastar turno nem item.
-- [ ] Item em alvo com 0 HP é recusado.
-- [ ] Item em `choose_next` é recusado com "Escolha o próximo Ecobeast."
-- [ ] Uma Esfera é recusada com "Esse item não pode ser usado agora."
-- [ ] Com o veneno ativo, o dano de fim de turno acontece depois do item.
-- [ ] Se o inimigo derrotar o alvo depois do item, a luta segue para `choose_next` ou `defeat`.
-- [ ] No fim da luta, a Mochila no banco perdeu só o que foi gasto.
-- [ ] A última unidade gasta na luta apaga a linha.
-- [ ] Comprar um item com a luta aberta não muda a `bag`, e o fim da luta não apaga a compra.
-- [ ] Uma luta abandonada não gasta o item.
-- [ ] O botão Itens abre o painel, e o item usado aparece no histórico.
-- [ ] Depois do item, o inimigo ataca, e a quantidade do painel diminui.
-- [ ] Depois da luta, a Mochila mostra a quantidade certa.
-- [ ] Em 360×640 e 720×1061, o painel cabe, e a lista rola.
-- [ ] O projeto abre sem erros nem avisos de script.
-- [ ] `npm run lint`, `npm run typecheck`, `npm test` e `npm run test:e2e` passam.
+- [x] Um item fora da `bag` é recusado com "Você não tem esse item."
+- [x] Um inimigo mais rápido ataca depois do item.
+- [x] Um Tônico em quem está em campo sobe o HP, e o evento vem antes do ataque do inimigo.
+- [x] Um Tônico em um reserva muda o HP dele, sem mudar quem está em campo.
+- [x] O Bálsamo tira o status e acorda quem dormia.
+- [x] Com HP cheio, a ação é recusada, sem gastar turno nem item.
+- [x] Item em alvo com 0 HP é recusado.
+- [x] Item em `choose_next` é recusado com "Escolha o próximo Ecobeast."
+- [x] Uma Esfera é recusada com "Esse item não pode ser usado agora."
+- [x] Com o veneno ativo, o dano de fim de turno acontece depois do item.
+- [x] Se o inimigo derrotar o alvo depois do item, a luta segue para `choose_next` ou `defeat`.
+- [x] No fim da luta, a Mochila no banco perdeu só o que foi gasto.
+- [x] A última unidade gasta na luta apaga a linha.
+- [x] Comprar um item com a luta aberta não muda a `bag`, e o fim da luta não apaga a compra.
+- [x] Uma luta abandonada não gasta o item.
+- [x] O botão Itens abre o painel, e o item usado aparece no histórico.
+- [x] Depois do item, o inimigo ataca, e a quantidade do painel diminui.
+- [x] Depois da luta, a Mochila mostra a quantidade certa.
+- [x] Em 360×640 e 720×1061, o painel cabe.
+- [x] O projeto abre sem erros nem avisos de script.
+- [x] `npm run lint`, `npm run typecheck`, `npm test` e `npm run test:e2e` passam.
 
 ## Desenho técnico
 
 **Criar**
 
-- `client/screens/battle/battle_items_panel.tscn` e `.gd`, `battle_item_row.tscn` e `.gd`.
+- `client/screens/battle/battle_items_panel.tscn` e `.gd`. As linhas reaproveitam `BagItemRow` e `NextCreatureRow`.
 
 **Alterar**
 
@@ -120,8 +120,17 @@ Passos do dono no editor (F5) e no celular:
 
 ## Tarefas
 
-- [ ] Testes do motor; ver falhar; `bag`, ação e evento (RF-01 a RF-10).
-- [ ] Testes e2e; ver falhar; gravar no fim da luta (RF-11, RF-12).
-- [ ] Verificação temporária da tela; ver falhar.
-- [ ] Painel, botão, histórico e cartão (RF-13 a RF-21).
-- [ ] Remover os arquivos temporários; atualizar as specs citadas; marcar esta spec e as tabelas como `concluída`; commit `feat: itens na batalha`.
+- [x] Testes do motor; ver falhar; `bag`, ação e evento (RF-01 a RF-10).
+- [x] Testes e2e; ver falhar; gravar no fim da luta (RF-11, RF-12).
+- [x] Verificação temporária da tela; ver falhar.
+- [x] Painel, botão, histórico e cartão (RF-13 a RF-21).
+- [x] Remover os arquivos temporários; atualizar as specs citadas; marcar esta spec e as tabelas como `concluída`; commit `feat: itens na batalha`.
+
+## Decisões da implementação
+
+- **O painel reaproveita as linhas que já existiam:** `BagItemRow`, da Mochila, para os itens, e `NextCreatureRow`, do próximo Ecobeast, para o alvo. A spec previa uma linha nova, que seria uma cópia.
+- **Reserva com 0 HP fica desativado na escolha do alvo:** é o comportamento da `NextCreatureRow`, e na luta o jogador não precisa ler a recusa para entender. O servidor recusa do mesmo jeito.
+- **`NO_ITEM` foi para `domain/items/use-item.ts`:** o motor da batalha e a rota da Mochila usam a mesma mensagem.
+- **O botão Itens usa o mesmo tamanho de texto de Atacar e Correr:** agora é uma ação de verdade. A troca veio depois da última rodada de capturas, e o jogo abriu sem erros.
+- **A rolagem não foi exercitada:** com os itens atuais, o painel cabe em todos os tamanhos, por isso ele não tem rolagem, e o critério foi reescrito. Mais itens de cura vão pedir uma lista que role.
+- **Conferência:** os testes novos do motor e os 12 de ponta a ponta falharam antes do código e passaram depois. `npm run lint` e `npm run typecheck` sem avisos; `npm test` com 438 testes; `npm run test:e2e` com 339. Uma cena temporária jogou lutas contra um servidor de teste, com toques entrando como cliques reais pela janela, e passou com 37 de 37 verificações em janelas de 360×640, 405×720, 412×915 e 720×1061, depois de falhar porque o painel não existia. O inimigo é sorteado, então cada tamanho enfrentou adversários diferentes. Das 20 capturas, 5 foram abertas e revisadas. O jogo abriu sem erros nem avisos de script, e os arquivos temporários foram removidos. O teste no celular fica para o dono.

@@ -4,6 +4,7 @@ import type { NewCreature } from '../domain/rules/creature-factory.js';
 import { toPlayerDto } from '../player/player.mapper.js';
 import {
   BattleCreatureRow,
+  toBattleAction,
   toBattleDto,
   toCombatant,
   toEnemyCombatant,
@@ -62,6 +63,14 @@ function creature(
     ...overrides,
   };
 }
+
+describe('toBattleAction', () => {
+  it('leva o item e o alvo da ação', () => {
+    expect(toBattleAction({ type: 'item', item_id: 4, team_index: 1 })).toEqual(
+      { type: 'item', item_id: 4, team_index: 1 },
+    );
+  });
+});
 
 describe('toCombatant', () => {
   it('leva a criatura para a batalha com o HP, o PP e o status do banco', () => {
@@ -191,6 +200,7 @@ describe('toBattleDto', () => {
             skills: [{ skill_id: 1, current_pp: 33 }],
           },
         ],
+        items: [],
       },
       enemy: {
         active: {
@@ -206,6 +216,17 @@ describe('toBattleDto', () => {
         fainted: 0,
       },
     });
+  });
+
+  it('mostra o que resta na Mochila, sem os itens zerados', () => {
+    const dto = toBattleDto({
+      ...state(),
+      bag: [
+        { itemId: 4, quantity: 2, used: 1 },
+        { itemId: 6, quantity: 0, used: 1 },
+      ],
+    });
+    expect(dto.player.items).toEqual([{ item_id: 4, quantity: 2 }]);
   });
 
   it('não mostra as Técnicas nem o Traço do inimigo', () => {

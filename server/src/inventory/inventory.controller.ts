@@ -12,6 +12,7 @@ import {
 } from '@nestjs/swagger';
 import { AuthGuard } from '../auth/auth.guard.js';
 import { CurrentUser } from '../auth/current-user.decorator.js';
+import { NO_ITEM } from '../domain/items/use-item.js';
 import { PlayerResponseDto } from '../player/player.dto.js';
 import { CREATURE_NOT_FOUND } from '../player/player.service.js';
 import {
@@ -21,7 +22,6 @@ import {
 } from './inventory.dto.js';
 import {
   InventoryService,
-  NO_ITEM,
   NO_PLAYER,
   NOT_ENOUGH_COINS,
 } from './inventory.service.js';

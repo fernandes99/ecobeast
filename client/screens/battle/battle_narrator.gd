@@ -24,11 +24,17 @@ const SIMPLE_LINES: Dictionary[String, String] = {
 }
 
 var _names: Dictionary[String, String] = {"player": "", "enemy": ""}
+var _team_names: Array[String] = []
 var _is_opening := true
 
 
 func set_side_name(side: String, display_name: String) -> void:
 	_names[side] = display_name
+
+
+## O nome de cada criatura da equipe, para o item usado em um reserva.
+func set_team_names(names: Array[String]) -> void:
+	_team_names = names
 
 
 ## Termina a abertura: daqui em diante, quem entra "entra na luta".
@@ -70,6 +76,8 @@ func describe(event: Dictionary) -> String:
 			return _stat_changed(event, who)
 		"flee_failed":
 			return "Não conseguiu fugir!"
+		"item_used":
+			return _item_used(event)
 	return ""
 
 
@@ -102,6 +110,16 @@ func _stat_changed(event: Dictionary, who: String) -> String:
 	var verb := "subiu" if stages > 0 else "caiu"
 	var strength := " muito" if absi(stages) >= BIG_STAT_CHANGE else ""
 	return "%s de %s %s%s." % [GameData.get_stat_name(DictFields.get_string(event, "stat")), who, verb, strength]
+
+
+func _item_used(event: Dictionary) -> String:
+	var item_name := GameData.get_item(DictFields.get_id(event, "item_id")).name
+	var target: String = _team_names[DictFields.get_int(event, "team_index")]
+	var healed := DictFields.get_int(event, "healed")
+	if healed > 0:
+		return "Você usou %s em %s: +%d de HP." % [item_name, target, healed]
+	var status := GameData.get_status_name(DictFields.get_string(event, "cured_status")).to_lower()
+	return "Você usou %s em %s: não está mais %s." % [item_name, target, status]
 
 
 func _status_name(event: Dictionary) -> String:

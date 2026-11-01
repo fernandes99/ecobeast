@@ -52,9 +52,22 @@ function effect(
   };
 }
 
-const NO_ROWS: CatalogRows = { skills: [], efficacy: [], immunities: [] };
+const NO_ROWS: CatalogRows = {
+  skills: [],
+  efficacy: [],
+  immunities: [],
+  items: [],
+};
 
 describe('toBattleCatalog', () => {
+  it('monta os itens com o que a regra de uso precisa', () => {
+    const { items } = toBattleCatalog({
+      ...NO_ROWS,
+      items: [{ id: 4, healAmount: 20, curesStatus: false }],
+    });
+    expect(items.get(4)).toEqual({ healAmount: 20, curesStatus: false });
+  });
+
   it('monta a Técnica com os slugs que as regras usam', () => {
     const { skills } = toBattleCatalog({ ...NO_ROWS, skills: [skill()] });
     expect(skills.get(2)).toEqual({

@@ -1,3 +1,4 @@
+import type { UsableItem } from '../items/use-item.js';
 import type { StatBlock } from '../rules/types.js';
 
 /** Número em [0, 1): em produção vem do `crypto.randomInt`; nos testes, é fixo. */
@@ -71,6 +72,7 @@ export interface BattleCatalog {
   efficacy: Map<string, number>;
   /** Slug do status → ids dos Elementos imunes. */
   statusImmunities: Map<string, number[]>;
+  items: Map<number, UsableItem>;
 }
 
 export type BattlePhase = 'choose_action' | 'choose_next' | 'ended';
@@ -82,6 +84,13 @@ export interface BattleSide {
   activeIndex: number;
 }
 
+/** Um item da Mochila na luta; `used` é o que o fim dela grava no banco. */
+export interface BattleBagItem {
+  itemId: number;
+  quantity: number;
+  used: number;
+}
+
 export interface BattleState {
   phase: BattlePhase;
   result: BattleResult | null;
@@ -90,6 +99,7 @@ export interface BattleState {
   canFlee: boolean;
   player: BattleSide;
   enemy: BattleSide;
+  bag: BattleBagItem[];
 }
 
 /** Ações e eventos já têm o formato da API: passam sem tradução. */
@@ -97,7 +107,8 @@ export type BattleAction =
   | { type: 'skill'; slot: number }
   | { type: 'emergency' }
   | { type: 'flee' }
-  | { type: 'switch'; team_index: number };
+  | { type: 'switch'; team_index: number }
+  | { type: 'item'; item_id: number; team_index: number };
 
 export type CannotActReason = 'fear' | 'freeze' | 'sleep' | 'paralysis';
 
@@ -147,6 +158,15 @@ export type BattleEvent =
       value: number;
     }
   | { type: 'fainted'; side: SideSlug }
+  | {
+      type: 'item_used';
+      side: 'player';
+      item_id: number;
+      team_index: number;
+      healed: number;
+      hp: number;
+      cured_status: string | null;
+    }
   | { type: 'flee_failed' }
   | { type: 'battle_ended'; result: BattleResult };
 

@@ -11,6 +11,7 @@ import { rollEncounter } from '../domain/battle/encounter.js';
 import { applyAction, startBattle } from '../domain/battle/engine.js';
 import type {
   BattleAction,
+  BattleBagItem,
   BattleEvent,
   BattleState,
   Combatant,
@@ -33,6 +34,11 @@ const NO_PLAYER = 'Crie seu Domador primeiro.';
 const NO_HEALTHY_CREATURE = 'Cure sua equipe no Refúgio.';
 export const NO_BATTLE = 'Nenhuma batalha em andamento.';
 const CAN_FLEE_WILD = true;
+
+interface Team {
+  creatures: Combatant[];
+  bag: BattleBagItem[];
+}
 
 function toResponse(state: BattleState, events: BattleEvent[]) {
   return { battle: toBattleDto(state), events };
@@ -68,7 +74,7 @@ export class BattleService {
     });
     const { speciesId, level } = rollEncounter(
       species.map(({ id }) => id),
-      team.find((creature) => creature.currentHp > 0)!.level,
+      team.creatures.find((creature) => creature.currentHp > 0)!.level,
       secureRandom,
     );
     return this.begin(userId, team, await this.createEnemy(speciesId, level));
@@ -101,23 +107,24 @@ export class BattleService {
 
   private async begin(
     userId: string,
-    team: Combatant[],
+    team: Team,
     enemy: Combatant,
   ): Promise<BattleResponseDto> {
     const catalog = await loadBattleCatalog(this.prisma);
     const { state, events } = startBattle(
-      team,
+      team.creatures,
       [enemy],
       CAN_FLEE_WILD,
       catalog,
       secureRandom,
+      team.bag,
     );
     // Substitui a batalha anterior, se houver, sem gravar nada dela.
     this.store.set(userId, { state, catalog });
     return toResponse(state, events);
   }
 
-  private async loadTeam(userId: string): Promise<Combatant[]> {
+  private async loadTeam(userId: string): Promise<Team> {
     const player = await this.prisma.player.findUnique({
       where: { id: userId },
       include: BATTLE_PLAYER_INCLUDE,
@@ -128,7 +135,14 @@ export class BattleService {
     if (player.creatures.every((creature) => creature.currentHp === 0)) {
       throw new ConflictException(NO_HEALTHY_CREATURE);
     }
-    return player.creatures.map(toCombatant);
+    return {
+      creatures: player.creatures.map(toCombatant),
+      bag: player.inventory.map(({ itemId, quantity }) => ({
+        itemId,
+        quantity,
+        used: 0,
+      })),
+    };
   }
 
   private async createEnemy(
@@ -154,8 +168,8 @@ export class BattleService {
   }
 
   /**
-   * Grava HP, status e PP de uma vez. Com `updateMany`, um Domador apagado no
-   * meio da luta não encontra nada, e a batalha termina sem erro.
+   * Grava HP, status, PP e itens gastos de uma vez. Com `updateMany`, um Domador
+   * apagado no meio da luta não encontra nada, e a batalha termina sem erro.
    */
   private async saveTeam(userId: string, state: BattleState): Promise<void> {
     const conditions = await this.prisma.statusCondition.findMany({
@@ -163,8 +177,8 @@ export class BattleService {
     });
     const statusIds = new Map(conditions.map(({ id, slug }) => [slug, id]));
 
-    await this.prisma.$transaction(
-      state.player.team.flatMap((creature) => {
+    await this.prisma.$transaction([
+      ...state.player.team.flatMap((creature) => {
         const uid = creature.creatureUid!;
         const statusSlug = creature.statusSlug;
         return [
@@ -183,6 +197,21 @@ export class BattleService {
           ),
         ];
       }),
-    );
+      ...state.bag
+        .filter(({ used }) => used > 0)
+        .flatMap(({ itemId, used }) => {
+          const row = { playerId: userId, itemId };
+          // O CHECK de quantidade não aceita 0: a linha sai antes do desconto.
+          return [
+            this.prisma.inventoryItem.deleteMany({
+              where: { ...row, quantity: { lte: used } },
+            }),
+            this.prisma.inventoryItem.updateMany({
+              where: row,
+              data: { quantity: { decrement: used } },
+            }),
+          ];
+        }),
+    ]);
   }
 }

@@ -28,6 +28,9 @@ func apply(event: Dictionary, final_view: BattleView) -> void:
 	if type == "creature_entered":
 		_enter(side, final_view)
 		return
+	if type == "item_used":
+		_apply_item(event, final_view)
+		return
 
 	var creature := player if side == "player" else enemy
 	if type in HP_EVENTS:
@@ -45,6 +48,15 @@ func apply(event: Dictionary, final_view: BattleView) -> void:
 			creature.confused = false
 		"stat_changed":
 			creature.stages[DictFields.get_string(event, "stat")] = DictFields.get_int(event, "value")
+
+
+## O item pode ter sido usado em um reserva, que o cartão não mostra.
+func _apply_item(event: Dictionary, final_view: BattleView) -> void:
+	if DictFields.get_int(event, "team_index") != final_view.active_index:
+		return
+	player.hp = DictFields.get_int(event, "hp")
+	if not DictFields.get_string(event, "cured_status").is_empty():
+		player.status = ""
 
 
 func _enter(side: String, final_view: BattleView) -> void:

@@ -7,7 +7,7 @@ import type {
   BattleResult,
   StageSlug,
 } from '../domain/battle/types.js';
-import { SkillSlotDto } from '../player/player.dto.js';
+import { InventorySlotDto, SkillSlotDto } from '../player/player.dto.js';
 
 export const INVALID_ENEMY = 'Esse inimigo não existe.';
 export const INVALID_ACTION = 'Ação inválida.';
@@ -17,6 +17,7 @@ const ACTION_TYPES: BattleAction['type'][] = [
   'emergency',
   'flee',
   'switch',
+  'item',
 ];
 
 const STAGES = {
@@ -58,7 +59,8 @@ export class BattleActionBodyDto {
   @ApiProperty({
     description:
       '`skill` usa uma Técnica; `emergency` é o golpe de quem está sem PP; ' +
-      '`flee` tenta fugir; `switch` põe o próximo Ecobeast em campo.',
+      '`flee` tenta fugir; `switch` põe o próximo Ecobeast em campo; `item` ' +
+      'usa um item e gasta a rodada.',
     enum: ACTION_TYPES,
     example: 'skill',
   })
@@ -75,12 +77,19 @@ export class BattleActionBodyDto {
 
   @ApiPropertyOptional({
     description:
-      'Só em `switch`: a posição do Ecobeast na equipe, a partir de 0.',
+      'Em `switch` e `item`: a posição do Ecobeast na equipe, a partir de 0.',
     example: 1,
   })
-  @ValidateIf((body: BattleActionBodyDto) => body.type === 'switch')
+  @ValidateIf((body: BattleActionBodyDto) =>
+    ['switch', 'item'].includes(body.type),
+  )
   @IsInt({ message: INVALID_ACTION })
   team_index?: number;
+
+  @ApiPropertyOptional({ description: 'Só em `item`: o item.', example: 4 })
+  @ValidateIf((body: BattleActionBodyDto) => body.type === 'item')
+  @IsInt({ message: INVALID_ACTION })
+  item_id?: number;
 }
 
 export class EnemyCreatureDto {
@@ -128,6 +137,13 @@ export class PlayerSideDto {
 
   @ApiProperty({ type: () => [PlayerCreatureDto] })
   team: PlayerCreatureDto[];
+
+  @ApiProperty({
+    description:
+      'O que resta na Mochila, descontando o que já foi usado na luta.',
+    type: () => [InventorySlotDto],
+  })
+  items: InventorySlotDto[];
 }
 
 export class EnemySideDto {

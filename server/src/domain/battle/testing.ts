@@ -1,5 +1,6 @@
 import { applyAction, type BattleOutcome } from './engine.js';
 import { noStages } from './stages.js';
+import type { UsableItem } from '../items/use-item.js';
 import type {
   BattleAction,
   BattleCatalog,
@@ -77,11 +78,15 @@ export function makeEffect(
 export function makeCatalog(
   multipliers: Record<string, number> = {},
   skills: BattleSkill[] = [],
+  items: Record<number, UsableItem> = {},
 ): BattleCatalog {
   return {
     skills: new Map(skills.map((skill) => [skill.id, skill])),
     efficacy: new Map(Object.entries(multipliers)),
     statusImmunities: new Map(),
+    items: new Map(
+      Object.entries(items).map(([id, item]) => [Number(id), item]),
+    ),
   };
 }
 
@@ -135,6 +140,7 @@ export function makeState(
     canFlee: true,
     player: { team: [player].flat(), activeIndex: 0 },
     enemy: { team: [enemy].flat(), activeIndex: 0 },
+    bag: [],
     ...overrides,
   };
 }

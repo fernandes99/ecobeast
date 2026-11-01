@@ -1,3 +1,4 @@
+export const NO_ITEM = 'Você não tem esse item.';
 export const CANNOT_USE = 'Esse item não pode ser usado agora.';
 export const CANNOT_REVIVE = 'Só o Refúgio recupera um Ecobeast sem HP.';
 export const NO_EFFECT = 'Não teria efeito.';

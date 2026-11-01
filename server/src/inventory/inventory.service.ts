@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { BattleStore } from '../battle/battle.store.js';
-import { resolveItem } from '../domain/items/use-item.js';
+import { NO_ITEM, resolveItem } from '../domain/items/use-item.js';
 import { Prisma } from '../generated/prisma/client.js';
 import { PlayerDto } from '../player/player.dto.js';
 import { creatureStats, PLAYER_INCLUDE } from '../player/player.mapper.js';
@@ -15,7 +15,6 @@ import { INVALID_ITEM } from './inventory.dto.js';
 
 export const NO_PLAYER = 'Crie seu Domador primeiro.';
 export const NOT_ENOUGH_COINS = 'Moedas insuficientes.';
-export const NO_ITEM = 'Você não tem esse item.';
 /** O maior `id` que o banco guarda: acima dele, o Prisma daria erro. */
 const MAX_ITEM_ID = 2_147_483_647;
 

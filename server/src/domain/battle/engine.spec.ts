@@ -674,3 +674,241 @@ describe('applyAction', () => {
     });
   });
 });
+
+describe('itens', () => {
+  const TONIC = 4;
+  const BALM = 6;
+  const SPHERE = 1;
+  const STRONG = { hp: 19, atk: 500, def: 9, sp_atk: 11, sp_def: 9, spd: 11 };
+  const items = makeCatalog({}, [SCRATCH, IDLE], {
+    [TONIC]: { healAmount: 8, curesStatus: false },
+    [BALM]: { healAmount: null, curesStatus: true },
+    [SPHERE]: { healAmount: null, curesStatus: false },
+  });
+  const bag = (itemId = TONIC, quantity = 1) => [{ itemId, quantity, used: 0 }];
+  const useItem = (itemId = TONIC, teamIndex = 0): BattleAction => ({
+    type: 'item',
+    item_id: itemId,
+    team_index: teamIndex,
+  });
+  const refusal = (state: BattleState, action: BattleAction) => {
+    const outcome = applyAction(state, action, items, always(0.5));
+    return 'error' in outcome ? outcome.error : null;
+  };
+
+  it('cura quem está em campo e avisa no evento', () => {
+    const state = makeState(idler({ currentHp: 5 }), idler(), { bag: bag() });
+    const { state: after, events } = play(state, useItem(), items);
+    expect(after.player.team[0]!.currentHp).toBe(13);
+    expect(eventsOf(events, 'item_used')).toEqual([
+      {
+        type: 'item_used',
+        side: 'player',
+        item_id: TONIC,
+        team_index: 0,
+        healed: 8,
+        hp: 13,
+        cured_status: null,
+      },
+    ]);
+  });
+
+  it('o item vem antes do inimigo, mesmo com ele mais rápido', () => {
+    const state = makeState(idler({ currentHp: 5 }), withSpeed(99), {
+      bag: bag(),
+    });
+    const { events } = play(state, useItem(), items);
+    const types = events.map((event) => event.type);
+    expect(types.indexOf('item_used')).toBeLessThan(
+      types.indexOf('skill_used'),
+    );
+  });
+
+  it('gasta a rodada: o inimigo ataca, e o turno avança', () => {
+    const state = makeState(idler({ currentHp: 5 }), fighter(), {
+      bag: bag(),
+    });
+    const { state: after, events } = play(state, useItem(), items);
+    expect(actingOrder(events)).toEqual(['enemy']);
+    expect(after.player.team[0]!.currentHp).toBeLessThan(13);
+    expect(after.turn).toBe(2);
+    expect(after.phase).toBe('choose_action');
+  });
+
+  it('cura um reserva, sem mudar quem está em campo', () => {
+    const state = makeState([idler(), idler({ currentHp: 3 })], idler(), {
+      bag: bag(),
+    });
+    const { state: after, events } = play(state, useItem(TONIC, 1), items);
+    expect(after.player.team[1]!.currentHp).toBe(11);
+    expect(after.player.activeIndex).toBe(0);
+    expect(eventsOf(events, 'item_used')[0]!.team_index).toBe(1);
+  });
+
+  it('não passa do HP máximo', () => {
+    const state = makeState(idler({ currentHp: 17 }), idler(), { bag: bag() });
+    const { state: after, events } = play(state, useItem(), items);
+    expect(after.player.team[0]!.currentHp).toBe(19);
+    expect(eventsOf(events, 'item_used')[0]!.healed).toBe(2);
+  });
+
+  it('o Bálsamo tira o status e acorda quem dormia', () => {
+    const state = makeState(
+      idler({ statusSlug: 'sleep', sleepTurns: 3 }),
+      idler(),
+      { bag: bag(BALM) },
+    );
+    const { state: after, events } = play(state, useItem(BALM), items);
+    expect(after.player.team[0]!.statusSlug).toBeNull();
+    expect(after.player.team[0]!.sleepTurns).toBe(0);
+    expect(eventsOf(events, 'item_used')[0]!.cured_status).toBe('sleep');
+  });
+
+  it('dormindo, o jogador ainda pode usar um item', () => {
+    const state = makeState(
+      idler({ currentHp: 5, statusSlug: 'sleep', sleepTurns: 3 }),
+      idler(),
+      { bag: bag() },
+    );
+    expect(refusal(state, useItem())).toBeNull();
+  });
+
+  it('o veneno ainda dói depois do item', () => {
+    const state = makeState(
+      idler({ currentHp: 5, statusSlug: 'poison' }),
+      idler(),
+      { bag: bag() },
+    );
+    const { events } = play(state, useItem(), items);
+    const types = events.map((event) => event.type);
+    expect(types.indexOf('item_used')).toBeLessThan(
+      types.indexOf('status_damage'),
+    );
+  });
+
+  it('tira 1 da quantidade e conta o gasto', () => {
+    const state = makeState(idler({ currentHp: 1 }), idler(), {
+      bag: bag(TONIC, 3),
+    });
+    const { state: after } = play(state, useItem(), items);
+    expect(after.bag).toEqual([{ itemId: TONIC, quantity: 2, used: 1 }]);
+  });
+
+  it('a unidade gasta não pode ser usada de novo', () => {
+    const state = makeState(idler({ currentHp: 1 }), idler(), { bag: bag() });
+    const { state: after } = play(state, useItem(), items);
+    expect(refusal(after, useItem())).toBe('Você não tem esse item.');
+  });
+
+  it('não altera o estado recebido', () => {
+    const state = makeState(idler({ currentHp: 5 }), idler(), { bag: bag() });
+    const copy = structuredClone(state);
+    play(state, useItem(), items);
+    expect(state).toEqual(copy);
+  });
+
+  it('se o inimigo derrubar o alvo depois do item, a luta segue', () => {
+    const state = makeState(
+      [idler({ currentHp: 1 }), idler()],
+      fighter({ stats: STRONG }),
+      { bag: bag() },
+    );
+    const { state: after } = play(state, useItem(), items);
+    expect(after.player.team[0]!.currentHp).toBe(0);
+    expect(after.phase).toBe('choose_next');
+  });
+
+  it('se o inimigo derrubar o último, a luta acaba em derrota', () => {
+    const state = makeState(
+      idler({ currentHp: 1 }),
+      fighter({ stats: STRONG }),
+      { bag: bag() },
+    );
+    const { state: after } = play(state, useItem(), items);
+    expect(after.result).toBe('defeat');
+    expect(after.bag[0]!.used).toBe(1);
+  });
+
+  describe('recusas não gastam a rodada', () => {
+    it.each<[string, Partial<BattleState>, BattleAction, string]>([
+      ['fora da Mochila', { bag: [] }, useItem(), 'Você não tem esse item.'],
+      [
+        'com quantidade zero',
+        { bag: [{ itemId: TONIC, quantity: 0, used: 1 }] },
+        useItem(),
+        'Você não tem esse item.',
+      ],
+      [
+        'que não está no catálogo',
+        { bag: bag(99) },
+        useItem(99),
+        'Você não tem esse item.',
+      ],
+      [
+        'em um Ecobeast que não existe',
+        { bag: bag() },
+        useItem(TONIC, 5),
+        'Esse Ecobeast não existe.',
+      ],
+      [
+        'de captura',
+        { bag: bag(SPHERE) },
+        useItem(SPHERE),
+        'Esse item não pode ser usado agora.',
+      ],
+    ])('item %s', (_name, overrides, action, message) => {
+      const state = makeState(idler({ currentHp: 5 }), idler(), overrides);
+      expect(refusal(state, action)).toBe(message);
+    });
+
+    it('com HP cheio', () => {
+      const state = makeState(idler(), idler(), { bag: bag() });
+      expect(refusal(state, useItem())).toBe('Não teria efeito.');
+    });
+
+    it('em um reserva com 0 HP', () => {
+      const state = makeState([idler(), idler({ currentHp: 0 })], idler(), {
+        bag: bag(),
+      });
+      expect(refusal(state, useItem(TONIC, 1))).toBe(
+        'Só o Refúgio recupera um Ecobeast sem HP.',
+      );
+    });
+
+    it('enquanto escolhe o próximo Ecobeast', () => {
+      const state = makeState(
+        [idler({ currentHp: 0 }), idler({ currentHp: 5 })],
+        idler(),
+        { bag: bag(), phase: 'choose_next' },
+      );
+      expect(refusal(state, useItem(TONIC, 1))).toBe(
+        'Escolha o próximo Ecobeast.',
+      );
+    });
+  });
+
+  it('startBattle guarda uma cópia da Mochila', () => {
+    const mine = bag(TONIC, 2);
+    const { state } = startBattle(
+      [idler()],
+      [idler()],
+      true,
+      items,
+      always(0.5),
+      mine,
+    );
+    expect(state.bag).toEqual(mine);
+    expect(state.bag).not.toBe(mine);
+  });
+
+  it('sem Mochila, a luta começa com ela vazia', () => {
+    const { state } = startBattle(
+      [idler()],
+      [idler()],
+      true,
+      items,
+      always(0.5),
+    );
+    expect(state.bag).toEqual([]);
+  });
+});

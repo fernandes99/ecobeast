@@ -4,6 +4,7 @@
 [ext_resource type="PackedScene" path="res://ui/components/safe_area.tscn" id="2_safe_area"]
 [ext_resource type="PackedScene" path="res://screens/battle/battle_side_card.tscn" id="3_card"]
 [ext_resource type="PackedScene" path="res://screens/battle/next_creature_panel.tscn" id="4_next"]
+[ext_resource type="PackedScene" path="res://screens/battle/battle_items_panel.tscn" id="5_items"]
 
 [node name="BattleScreen" type="Control"]
 layout_mode = 3
@@ -96,10 +97,9 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_type_variation = &"OutlineButton"
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 32
 disabled = true
-text = "Itens
-Em breve"
+text = "Itens"
 
 [node name="TeamButton" type="Button" parent="SafeArea/Column/Controls/ActionsGrid"]
 unique_name_in_owner = true
@@ -199,6 +199,10 @@ text = "Voltar"
 custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
 mouse_filter = 2
+
+[node name="ItemsPanel" parent="." instance=ExtResource("5_items")]
+unique_name_in_owner = true
+layout_mode = 1
 
 [node name="NextPanel" parent="." instance=ExtResource("4_next")]
 unique_name_in_owner = true

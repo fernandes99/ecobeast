@@ -31,6 +31,7 @@ export const BATTLE_PLAYER_INCLUDE = {
       statusCondition: { select: { slug: true } },
     },
   },
+  inventory: true,
 } satisfies Prisma.PlayerInclude;
 
 export type BattleCreatureRow = Prisma.PlayerGetPayload<{
@@ -94,6 +95,12 @@ export function toBattleAction(body: BattleActionBodyDto): BattleAction {
       return { type: 'skill', slot: body.slot! };
     case 'switch':
       return { type: 'switch', team_index: body.team_index! };
+    case 'item':
+      return {
+        type: 'item',
+        item_id: body.item_id!,
+        team_index: body.team_index!,
+      };
     default:
       return { type: body.type };
   }
@@ -101,7 +108,7 @@ export function toBattleAction(body: BattleActionBodyDto): BattleAction {
 
 /** O que o jogador vê: do inimigo, só quem está em campo. */
 export function toBattleDto(state: BattleState): BattleDto {
-  const { player, enemy } = state;
+  const { player, enemy, bag } = state;
   return {
     phase: state.phase,
     result: state.result,
@@ -117,6 +124,9 @@ export function toBattleDto(state: BattleState): BattleDto {
           current_pp: skill.currentPp,
         })),
       })),
+      items: bag
+        .filter(({ quantity }) => quantity > 0)
+        .map(({ itemId, quantity }) => ({ item_id: itemId, quantity })),
     },
     enemy: {
       active: toVisibleCreature(enemy.team[enemy.activeIndex]!),

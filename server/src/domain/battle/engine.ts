@@ -1,3 +1,4 @@
+import { NO_ITEM, resolveItem, type ItemEffect } from '../items/use-item.js';
 import { executeAction, toFieldAction } from './actions.js';
 import { chooseEnemyAction } from './ai.js';
 import { hasPp } from './emergency.js';
@@ -8,6 +9,7 @@ import { applyEntryTrait } from './traits.js';
 import { orderActions } from './turn-order.js';
 import type {
   BattleAction,
+  BattleBagItem,
   BattleCatalog,
   BattleEvent,
   BattleResult,
@@ -21,6 +23,9 @@ import type {
 
 /** Fixa por enquanto; a regra será revista, talvez com base no inimigo. */
 const FLEE_FAIL_CHANCE = 0.2;
+const NO_CREATURE = 'Esse Ecobeast não existe.';
+
+type ItemAction = Extract<BattleAction, { type: 'item' }>;
 
 export interface BattleOutcome {
   state: BattleState;
@@ -37,6 +42,7 @@ export function startBattle(
   canFlee: boolean,
   catalog: BattleCatalog,
   random: Random,
+  bag: BattleBagItem[] = [],
 ): BattleOutcome {
   const context: TurnContext = {
     state: {
@@ -46,6 +52,7 @@ export function startBattle(
       canFlee,
       player: newSide(player),
       enemy: newSide(enemy),
+      bag: structuredClone(bag),
     },
     catalog,
     random,
@@ -78,6 +85,9 @@ export function applyAction(
       break;
     case 'flee':
       flee(context);
+      break;
+    case 'item':
+      useBagItem(context, action);
       break;
     default:
       playTurn(context, action);
@@ -118,7 +128,31 @@ function refusalFor(
         : 'Não dá para fugir agora.';
     case 'switch':
       return 'Esse Ecobeast não pode lutar.';
+    case 'item': {
+      const effect = itemEffect(state, action, catalog);
+      return 'error' in effect ? effect.error : null;
+    }
   }
+}
+
+/** Confere o item e o alvo; não muda nada. */
+function itemEffect(
+  state: BattleState,
+  action: ItemAction,
+  catalog: BattleCatalog,
+): ItemEffect | { error: string } {
+  const owned = state.bag.some(
+    ({ itemId, quantity }) => itemId === action.item_id && quantity > 0,
+  );
+  const item = catalog.items.get(action.item_id);
+  if (!owned || !item) return { error: NO_ITEM };
+  const target = state.player.team[action.team_index];
+  if (!target) return { error: NO_CREATURE };
+  return resolveItem(item, {
+    currentHp: target.currentHp,
+    maxHp: target.stats.hp,
+    hasStatus: target.statusSlug !== null,
+  });
 }
 
 function skillRefusal(
@@ -154,12 +188,45 @@ function playTurn(context: TurnContext, action: BattleAction): void {
 }
 
 function flee(context: TurnContext): void {
-  const { state, catalog, events, random } = context;
+  const { events, random } = context;
   if (!rollChance(FLEE_FAIL_CHANCE, random)) {
     endBattle(context, 'fled');
     return;
   }
   events.push({ type: 'flee_failed' });
+  playEnemyAlone(context);
+}
+
+/** O item gasta a rodada: faz efeito antes de qualquer ação do inimigo. */
+function useBagItem(context: TurnContext, action: ItemAction): void {
+  const { state, catalog, events } = context;
+  // `refusalFor` já recusou o item que não pode ser usado.
+  const effect = itemEffect(state, action, catalog) as ItemEffect;
+  const target = state.player.team[action.team_index]!;
+  const curedStatus = effect.curesStatus ? target.statusSlug : null;
+
+  target.currentHp += effect.healed;
+  if (effect.curesStatus) {
+    target.statusSlug = null;
+    target.sleepTurns = 0;
+  }
+  const slot = state.bag.find(({ itemId }) => itemId === action.item_id)!;
+  slot.quantity -= 1;
+  slot.used += 1;
+  events.push({
+    type: 'item_used',
+    side: 'player',
+    item_id: action.item_id,
+    team_index: action.team_index,
+    healed: effect.healed,
+    hp: target.currentHp,
+    cured_status: curedStatus,
+  });
+  playEnemyAlone(context);
+}
+
+function playEnemyAlone(context: TurnContext): void {
+  const { state, catalog, random } = context;
   const enemyAction = chooseEnemyAction(state, catalog, random);
   executeAction(context, toFieldAction(context, 'enemy', enemyAction));
   finishTurn(context, ['player', 'enemy']);
