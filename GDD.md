@@ -227,7 +227,7 @@ Curvas de XP total por nível: Fast = 0,8·n³; Medium = n³; Slow = 1,25·n³.
 a = \frac{(3 \cdot HP_{max} - 2 \cdot HP_{atual}) \cdot captureRate \cdot bonusEsfera}{3 \cdot HP_{max}} \cdot bonusStatus
 ```
 
-Chance de captura = min(a / 100, 1). Bônus de esfera: Vínculo 1, Reforçada 1,5, Suprema 2. Bônus de status: sono ou congelado 2,5; paralisado, queimado ou envenenado 1,5. Para dar emoção, faça 3 "tremidas" de animação antes de revelar o resultado.
+Chance de captura = min(a / 100, 1). Bônus de esfera: Vínculo 1, Reforçada 1,5, Suprema 2. Bônus de status: sono ou congelado 2,5; paralisado, queimado ou envenenado 1,5. Antes de revelar o resultado, a tela mostra um carregamento, com o Ecobeast entrando na Esfera. Não há arremesso nem tremidas, para não copiar o ato de captura da referência ([capture](.specs/capture/README.md)).
 
 ## Técnicas (Skills)
 
