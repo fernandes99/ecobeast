@@ -70,4 +70,4 @@ Tomadas no planejamento (corrigíveis; ao mudar uma, atualize aqui e nas specs a
 | Fase | Entrega | Status |
 | --- | --- | --- |
 | [01-capture-rules](01-capture-rules.md) | Fórmula, ação `capture` no motor e gravação do capturado | concluída |
-| [02-capture-screen](02-capture-screen.md) | Esferas no painel de itens, tela de carregamento e resultado | rascunho |
+| [02-capture-screen](02-capture-screen.md) | Esferas no painel de itens, tela de carregamento e resultado | concluída |

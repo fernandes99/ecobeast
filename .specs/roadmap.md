@@ -14,7 +14,7 @@ O que vem depois do MVP de estrutura (entrada, escolha do inicial e Hub). Cada l
 | 4b  | [`heal-station`](heal-station/) | Refúgio: curar HP, PP e status da equipe (TELAS.md #14); vem logo depois da tela de batalha, porque a luta mantém HP e PP e uma derrota total impede lutar de novo | battle-core                | concluída |
 | 5   | [`wild-battle`](wild-battle/) | Mapa hexagonal gerado a cada exploração, com o jogador andando por ele; substitui a seleção de zonas (TELAS.md #4) | battle-screen, heal-station | concluída |
 | 5b  | `biome-encounters`  | O bioma do hexágono decide o Campo e os Ecobeasts que aparecem; encontros ao andar; regiões fundas de água e montanha só com Ecobeasts que voem ou nadem | wild-battle                | planejada |
-| 6   | [`capture`](capture/) | Esferas de Vínculo, fórmula de captura e o carregamento do Ecobeast entrando na Esfera (TELAS.md #6); o capturado vai para a equipe de 6 ou para o Santuário | wild-battle, inventory-shop | planejada |
+| 6   | [`capture`](capture/) | Esferas de Vínculo, fórmula de captura e o carregamento do Ecobeast entrando na Esfera (TELAS.md #6); o capturado vai para a equipe de 6 ou para o Santuário | wild-battle, inventory-shop | concluída |
 | 7   | `progression`       | XP, level up, aprender/esquecer técnica, Ascensão por nível (TELAS.md #7)                                 | battle-core                | planejada |
 | 8   | `npc-tamers`        | Domadores NPC com equipe fixa e recompensa em moedas; tabela `npc_tamers`                                 | battle-screen              | planejada |
 | 9   | `team-and-storage`  | Equipe com 6 slots reorganizáveis e Santuário com filtros e busca (TELAS.md #9 e #10)                     | capture                    | planejada |
@@ -51,7 +51,7 @@ Evoluções por item, vínculo, horário, zona e troca; criação (breeding) e h
 
 - **Backend, o que falta decidir:** a stack está nas decisões acima. Ficam para o planejamento do `backend-api`: hospedagem do NestJS (candidato: Render, na mesma região do Supabase), quem é o dono do catálogo (decidido: o banco; o cliente baixa pela API com a `HttpDataSource`) e o plano do Supabase para produção (o grátis pausa o projeto depois de uma semana sem uso).
 - **Fuga:** a chance fixa de 20% de falhar é provisória. Rever, talvez com um cálculo a partir do inimigo ([battle-core](battle-core/README.md)).
-- **Abandonar batalha:** fechar o app no meio da luta escapa de uma derrota. Aceito por enquanto; rever quando a batalha for guardada no banco.
+- **Abandonar batalha:** fechar o app no meio da luta escapa de uma derrota e devolve a Esfera de uma captura que falhou. Aceito por enquanto; rever quando a batalha for guardada no banco.
 - **Preço do Refúgio:** a cura é de graça por enquanto, e o dono quer cobrar moedas depois. Falta definir o valor e o que acontece com quem não tem moedas, para não prender o jogador depois de uma derrota.
 - **Renda de moedas:** hoje as 1.000 moedas iniciais são tudo o que existe, e nenhuma luta paga recompensa. O dono vai definir depois, com os vários cenários de ganho.
 - **Nomes dos próximos itens:** os itens do GDD que ainda não entraram no catálogo passam pela mesma revisão de nomes da [inventory-shop](inventory-shop/) antes de serem criados.

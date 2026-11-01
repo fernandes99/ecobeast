@@ -13,6 +13,11 @@ const CANNOT_ACT: Dictionary[String, String] = {
 	"sleep": "%s está dormindo.",
 	"paralysis": "%s está paralisado e não agiu.",
 }
+## `captured_to` -> texto com o nome do capturado.
+const CAPTURED_TO: Dictionary[String, String] = {
+	"party": "%s entrou na equipe.",
+	"storage": "%s foi para o Santuário.",
+}
 ## Tipo do evento -> texto com o nome de quem o sofre.
 const SIMPLE_LINES: Dictionary[String, String] = {
 	"woke_up": "%s acordou.",
@@ -78,7 +83,15 @@ func describe(event: Dictionary) -> String:
 			return "Não conseguiu fugir!"
 		"item_used":
 			return _item_used(event)
+		"capture_attempted":
+			return _capture_attempted(event)
 	return ""
+
+
+## Para onde foi o capturado; "" sem captura.
+func describe_captured_to(captured_to: String) -> String:
+	var line: String = CAPTURED_TO.get(captured_to, "")
+	return line % _names["enemy"] if not line.is_empty() else ""
 
 
 func _entered(side: String, who: String) -> String:
@@ -120,6 +133,12 @@ func _item_used(event: Dictionary) -> String:
 		return "Você usou %s em %s: +%d de HP." % [item_name, target, healed]
 	var status := GameData.get_status_name(DictFields.get_string(event, "cured_status")).to_lower()
 	return "Você usou %s em %s: não está mais %s." % [item_name, target, status]
+
+
+func _capture_attempted(event: Dictionary) -> String:
+	var item_name := GameData.get_item(DictFields.get_id(event, "item_id")).name
+	var outcome := "foi capturado!" if DictFields.get_bool(event, "success") else "escapou!"
+	return "Você usou %s: %s %s" % [item_name, _names["enemy"], outcome]
 
 
 func _status_name(event: Dictionary) -> String:

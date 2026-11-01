@@ -16,6 +16,7 @@ const RESULT_TEXTS: Dictionary[String, String] = {
 	"victory": "Você venceu!",
 	"defeat": "Você perdeu.",
 	"fled": "Você fugiu.",
+	"captured": "Capturado!",
 }
 
 ## O último estado do servidor; null até a abertura terminar.
@@ -48,6 +49,7 @@ var _leaving: bool = false
 @onready var _exit_button: Button = %ExitButton
 @onready var _next_panel: NextCreaturePanel = %NextPanel
 @onready var _items_panel: BattleItemsPanel = %ItemsPanel
+@onready var _capture_overlay: CaptureOverlay = %CaptureOverlay
 
 
 func _ready() -> void:
@@ -59,6 +61,7 @@ func _ready() -> void:
 	_attack_button.pressed.connect(_open_skills)
 	_items_button.pressed.connect(_open_items)
 	_items_panel.chosen.connect(_use_item)
+	_items_panel.capture_chosen.connect(_capture)
 	_flee_button.pressed.connect(_act.bind({"type": "flee"}))
 	%EmergencyButton.pressed.connect(_act.bind({"type": "emergency"}))
 	%SkillsBackButton.pressed.connect(_show_controls.bind(_actions_grid))
@@ -139,10 +142,15 @@ func _show_turn(turn: BattleTurn) -> void:
 	for event: Dictionary in turn.events:
 		_display.apply(event, turn.view)
 		_refresh_cards()
+		if DictFields.get_string(event, "type") == "capture_attempted":
+			await _play_capture(event)
 		var line := _narrator.describe(event)
 		if not line.is_empty():
 			_add_line(line)
 			await get_tree().create_timer(LINE_DELAY).timeout
+	var destination := _narrator.describe_captured_to(turn.captured_to)
+	if not destination.is_empty():
+		_add_line(destination)
 	_view = turn.view
 	_display.reset(_view)
 	_refresh_cards()
@@ -190,6 +198,16 @@ func _open_items() -> void:
 func _use_item(item_id: int, team_index: int) -> void:
 	_items_panel.close()
 	_act({"type": "item", "item_id": item_id, "team_index": team_index})
+
+
+func _capture(item_id: int) -> void:
+	_items_panel.close()
+	_act({"type": "capture", "item_id": item_id})
+
+
+func _play_capture(event: Dictionary) -> void:
+	var item := GameData.get_item(DictFields.get_id(event, "item_id"))
+	await _capture_overlay.play(item, _display.enemy.species_id, DictFields.get_bool(event, "success"))
 
 
 func _refresh_cards() -> void:

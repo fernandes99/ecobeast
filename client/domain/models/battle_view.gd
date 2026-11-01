@@ -5,7 +5,7 @@ extends RefCounted
 
 ## choose_action, choose_next ou ended.
 var phase: String = ""
-## victory, defeat ou fled; "" enquanto a luta dura.
+## victory, defeat, fled ou captured; "" enquanto a luta dura.
 var result: String = ""
 var turn: int = 1
 var can_flee: bool = false

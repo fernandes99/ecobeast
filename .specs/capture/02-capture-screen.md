@@ -1,6 +1,6 @@
 # 02. Tela da captura
 
-- **Status:** rascunho
+- **Status:** concluída
 - **Depende de:** [01-capture-rules](01-capture-rules.md)
 
 ## Contexto
@@ -50,20 +50,20 @@ O servidor já decide a captura. Falta o que o jogador vê (TELAS.md #6): as Esf
 
 ## Critérios de aceite
 
-- [ ] Com uma Esfera na Mochila, o painel de itens a mostra com a quantidade.
-- [ ] Sem itens, o painel continua com "Nenhum item para usar."
-- [ ] Com mais de um Ecobeast na equipe, a Esfera não pergunta o alvo.
-- [ ] O carregamento mostra a imagem da Esfera usada, não uma fixa.
+- [x] Com uma Esfera na Mochila, o painel de itens a mostra com a quantidade.
+- [x] Sem itens, o painel continua com "Nenhum item para usar."
+- [x] Com mais de um Ecobeast na equipe, a Esfera não pergunta o alvo.
+- [x] O carregamento mostra a imagem da Esfera usada, não uma fixa.
 - [ ] Sem sprite da espécie, o retrato com a forma provisória faz o mesmo movimento.
-- [ ] A resposta do servidor define o resultado: a tela não sorteia nada.
-- [ ] Depois de "Escapou!", o inimigo ataca, e a quantidade da Esfera diminuiu no painel.
-- [ ] Depois de "Capturado!", aparecem o resultado e o botão Voltar.
-- [ ] O novo Ecobeast aparece no Hub, e a próxima luta permite usar um Tônico nele.
-- [ ] Com 6 na equipe, o histórico diz que ele foi para o Santuário.
-- [ ] Sem resposta do servidor, a mensagem de erro aparece, e nenhuma animação começa.
-- [ ] O voltar do Android durante o carregamento não muda nada.
-- [ ] Em 360×640, 405×720, 412×915 e 720×1061, a tela de carregamento cabe, sem cortar a Esfera nem o texto.
-- [ ] O projeto abre sem erros nem avisos de script.
+- [x] A resposta do servidor define o resultado: a tela não sorteia nada.
+- [x] Depois de "Escapou!", o inimigo ataca, e a quantidade da Esfera diminuiu no painel.
+- [x] Depois de "Capturado!", aparecem o resultado e o botão Voltar.
+- [x] O novo Ecobeast aparece no Hub, e a próxima luta permite usar um Tônico nele.
+- [x] Com 6 na equipe, o histórico diz que ele foi para o Santuário.
+- [x] Sem resposta do servidor, a mensagem de erro aparece, e nenhuma animação começa.
+- [x] O voltar do Android durante o carregamento não muda nada.
+- [x] Em 360×640, 405×720, 412×915 e 720×1061, a tela de carregamento cabe, sem cortar a Esfera nem o texto.
+- [x] O projeto abre sem erros nem avisos de script.
 
 ## Desenho técnico
 
@@ -78,7 +78,7 @@ O servidor já decide a captura. Falta o que o jogador vê (TELAS.md #6): as Esf
 - `client/domain/models/battle_turn.gd`: `captured_to`.
 - `client/screens/bag/bag_item_row.gd`: `offer_capture`, falso por padrão, mostra Usar também nas Esferas.
 - `client/screens/battle/battle_items_panel.gd`: a ordem, as Esferas e o sinal `capture_chosen(item_id)`.
-- `client/screens/battle/battle_narrator.gd`: `capture_attempted` e o destino.
+- `client/screens/battle/battle_narrator.gd`: `capture_attempted` e `describe_captured_to`.
 - `client/screens/battle/battle_screen.gd` e `.tscn`: a tela por cima, `_show_turn` aguarda o carregamento antes de escrever a linha do evento, e `RESULT_TEXTS` ganha `captured`.
 - `.specs/battle-screen/architecture.md`: o texto do evento.
 - `.specs/roadmap.md`: `capture` concluída.
@@ -106,8 +106,18 @@ Passos do dono no editor (F5) e no celular:
 
 ## Tarefas
 
-- [ ] Verificação temporária da tela; ver falhar.
-- [ ] Esferas no painel e a ação (RF-01 a RF-04).
-- [ ] Anel e tela de carregamento (RF-05 a RF-12).
-- [ ] Histórico e resultado (RF-13 a RF-16).
-- [ ] Remover os arquivos temporários; atualizar as specs citadas; marcar esta spec e as tabelas como `concluída`; commit `feat: tela da captura`.
+- [x] Verificação temporária da tela; ver falhar.
+- [x] Esferas no painel e a ação (RF-01 a RF-04).
+- [x] Anel e tela de carregamento (RF-05 a RF-12).
+- [x] Histórico e resultado (RF-13 a RF-16).
+- [x] Remover os arquivos temporários; atualizar as specs citadas; marcar esta spec e as tabelas como `concluída`; commit `feat: tela da captura`.
+
+## Decisões da implementação
+
+- **O anel é desenhado, não uma imagem:** `CaptureRing` usa `draw_arc`, com as cores de `UiPalette`. A `TextureProgressBar` do Godot pediria duas imagens só para isso.
+- **`CaptureOverlay.play` espera até fechar:** `_show_turn` faz `await` nela antes de escrever a linha do evento, e assim os eventos do inimigo só aparecem depois do carregamento.
+- **O tempo do resultado inclui o sprite voltando:** a volta leva 0,25 s dentro de 1,2 s, para o resultado durar o mesmo com sucesso e com falha.
+- **O voltar não precisou de código novo:** `handle_back` já não faz nada com o turno em andamento, e a conferência mostra isso.
+- **Critério não exercitado:** as 9 espécies têm sprite, então o retrato com a forma provisória não apareceu no carregamento. O movimento é do nó `CreaturePortrait`, com ou sem sprite, mas isso não foi visto na tela.
+- **Rede simulada:** a falta de servidor foi testada trocando o endereço da API por uma porta sem nada, sem cortar a rede de verdade.
+- **Conferência:** uma cena temporária jogou lutas contra um servidor de teste, com capturas e fugas forçadas pela taxa da luta, e toques entrando como cliques reais pela janela. Passou com 50 de 50 verificações em janelas de 360×640, 405×720, 412×915 e 720×1061, depois de falhar porque as Esferas não apareciam e a tela de carregamento não existia. O carregamento mediu perto de 3,5 s, e o resultado, perto de 1,2 s, com folga de 0,4 s. Das 28 capturas de tela, 8 foram abertas e revisadas. Os arquivos temporários foram removidos. O teste no celular fica para o dono.

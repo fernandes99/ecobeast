@@ -9,6 +9,8 @@ const QUANTITY_TEXT := "x%d"
 
 var item: Item = null
 var quantity: int = 0
+## Mostra Usar também nas Esferas, que só funcionam na luta.
+var offer_capture: bool = false
 
 @onready var _icon: ItemIcon = %Icon
 @onready var _name_label: Label = %NameLabel
@@ -23,4 +25,4 @@ func _ready() -> void:
 	_name_label.text = item.name
 	_quantity_label.text = QUANTITY_TEXT % quantity
 	_description_label.text = item.description
-	_use_button.visible = item.can_be_used()
+	_use_button.visible = item.can_be_used() or (offer_capture and item.can_capture())

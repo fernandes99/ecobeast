@@ -22,6 +22,11 @@ func can_be_used() -> bool:
 	return heal_amount > 0 or cures_status
 
 
+## É uma Esfera. Só a batalha oferece a captura.
+func can_capture() -> bool:
+	return capture_bonus > 0.0
+
+
 static func from_row(row: Dictionary) -> Item:
 	var item := Item.new()
 	item.id = row["id"]

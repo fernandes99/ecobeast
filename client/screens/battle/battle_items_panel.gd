@@ -1,10 +1,11 @@
 class_name BattleItemsPanel
 extends Control
-## Painel de itens da batalha (inventory-shop/04, RF-14 a RF-17): primeiro o
-## item e, se houver mais de um Ecobeast, o alvo. Só exibe e repassa o toque:
-## quem manda a ação é a tela.
+## Painel de itens da batalha (inventory-shop/04, RF-14 a RF-17; capture/02):
+## primeiro o item e, se houver mais de um Ecobeast, o alvo. A Esfera não pede
+## alvo. Só exibe e repassa o toque: quem manda a ação é a tela.
 
 signal chosen(item_id: int, team_index: int)
+signal capture_chosen(item_id: int)
 
 const ItemRowScene := preload("res://screens/bag/bag_item_row.tscn")
 const TargetRowScene := preload("res://screens/battle/next_creature_row.tscn")
@@ -32,7 +33,9 @@ func _ready() -> void:
 
 ## `names`: o nome de exibição de cada criatura de `team`, na mesma ordem.
 func open(slots: Array[InventorySlot], team: Array[BattleCreature], names: Array[String]) -> void:
-	_slots = slots
+	_slots = slots.duplicate()
+	_slots.sort_custom(func(first: InventorySlot, second: InventorySlot) -> bool:
+		return GameData.get_item(first.item_id).sort_order < GameData.get_item(second.item_id).sort_order)
 	_team = team
 	_names = names
 	_show_items()
@@ -57,14 +60,22 @@ func _show_items() -> void:
 	_clear(_item_list)
 	for slot: InventorySlot in _slots:
 		var item := GameData.get_item(slot.item_id)
-		if item.can_be_used():
+		if item.can_be_used() or item.can_capture():
 			var row: BagItemRow = ItemRowScene.instantiate()
 			row.item = item
 			row.quantity = slot.quantity
-			row.use_pressed.connect(_choose_target)
+			row.offer_capture = true
+			row.use_pressed.connect(_choose_item)
 			_item_list.add_child(row)
 	_item_list.show()
 	_empty_label.visible = _item_list.get_child_count() == 0
+
+
+func _choose_item(item: Item) -> void:
+	if item.can_capture():
+		capture_chosen.emit(item.id)
+	else:
+		_choose_target(item)
 
 
 func _choose_target(item: Item) -> void:
