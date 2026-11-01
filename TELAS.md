@@ -10,8 +10,8 @@ Celular, orientação retrato. Estilo fantasia leve, colorido e amigável. 14 el
 6. **Captura** — tela escurecida por cima da luta, com o Ecobeast entrando na Esfera enquanto um anel enche; depois, "Capturado!" ou "Escapou!". Sem arremesso nem tremidas.
 7. **Fim de batalha** — XP, level up, moedas; pop-up de nova técnica (escolher qual esquecer); tela de evolução com botão cancelar.
 8. **Detalhes da criatura** — sprite grande, nome/apelido, nível, elementos, temperamento, traço, item; gráfico de atributos (HP, Atk, Def, SpAtk, SpDef, Spd); 4 técnicas.
-9. **Equipe** — 6 slots reorganizáveis, trocar com o Santuário.
-10. **Santuário** — grade com filtros (elemento, nível, raridade) e busca.
+9. **Equipe** — 6 vagas: segurar e arrastar muda a ordem, e o primeiro com HP começa a luta. Mostra HP e status, e cada Ecobeast abre detalhes e a troca com o Santuário.
+10. **Santuário** — grade com busca, filtro por Elemento e ordem por nível; o filtro de raridade fica para quando houver espécies de raridades diferentes. Cada Ecobeast abre detalhes e a ação de mover para a equipe.
 11. **Bestiário** — grade numerada (visto, capturado, silhueta); detalhe com descrição, elementos, habitat e linha evolutiva.
 12. **Loja** — uma aba por categoria (hoje Esferas e Cura; depois Itens de batalha e Evolução); cards com preço e comprar.
 13. **Mochila** — itens por categoria com quantidade; escolher alvo ao usar. Abre pelo Hub e pelo mapa.

@@ -30,6 +30,7 @@ O Ecobeast é um jogo mobile (Android/iOS, retrato): o cliente em **Godot 4.7 co
 | [wild-battle](wild-battle/) | Mapa hexagonal gerado a cada exploração, com o jogador andando por ele                    |
 | [inventory-shop](inventory-shop/) | Loja, Mochila e o uso de itens no mapa e na luta                                   |
 | [capture](capture/)         | Usar Esferas na luta para capturar Ecobeasts, com o carregamento na tela                  |
+| [team-and-storage](team-and-storage/) | Equipe, Santuário e troca de Ecobeast durante a luta                           |
 
 As próximas iniciativas estão no [roadmap.md](roadmap.md).
 
