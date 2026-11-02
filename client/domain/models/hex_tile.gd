@@ -3,7 +3,7 @@ extends RefCounted
 ## Um hexágono do mapa de exploração (.specs/wild-battle/architecture.md): a
 ## posição em coordenadas axiais (x = q, y = r) e o terreno.
 
-const SPRITE_PATH := "res://assets/terrain/%s_%s_%02d.png"
+const WATER_BIOMES: Array[String] = ["wshallow", "wdeep"]
 
 var coord: Vector2i
 var biome: String
@@ -11,8 +11,22 @@ var shape: String
 var variant: int
 
 
-func sprite_path() -> String:
-	return SPRITE_PATH % [biome, shape, variant]
+## A textura que este hexágono mostra: colina e montanha têm a sua, em qualquer
+## bioma; o resto usa a do bioma.
+func surface() -> String:
+	return shape if shape == "hill" or shape == "mont" else biome
+
+
+## A altura: 0 é água, 1 é terra, 2 é colina, 3 é pedra, e 4 é montanha. Uma ilha
+## segue a forma, e a colina da região de pedra fica na altura da pedra.
+func level() -> int:
+	if shape == "mont":
+		return 4
+	if biome == "stone":
+		return 3
+	if shape == "hill":
+		return 2
+	return 0 if WATER_BIOMES.has(biome) else 1
 
 
 ## null se faltar a posição, o bioma ou a forma.

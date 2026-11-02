@@ -20,7 +20,7 @@ Com a grade e o gerador prontos, falta o jogador chegar ao mapa. Esta fase cria 
 - Zoom, arrastar e destaque dos hexágonos vizinhos.
 - Bloquear terreno, e encontros ao andar ou por bioma.
 - Guardar a posição no servidor.
-- Animação de andar do marcador e som.
+- Som ao andar. A animação do marcador veio na [10](10-tamer-sprite.md).
 
 ## Requisitos
 
@@ -30,7 +30,7 @@ Com a grade e o gerador prontos, falta o jogador chegar ao mapa. Esta fase cria 
 - **RF-02:** Ao abrir, a tela mostra "Gerando mapa..." e chama `Session.start_exploration()`.
 - **RF-03:** Com falha, a tela mostra o erro em `DangerLabel`, com "Voltar" disponível.
 - **RF-04:** Com sucesso, o mapa aparece com o jogador em `start`.
-- **RF-05:** O marcador é o retrato do primeiro Ecobeast da equipe, parado no centro da tela. Quem se move é o mapa.
+- **RF-05:** O marcador é o Domador ([10](10-tamer-sprite.md)), parado no centro da tela. Quem se move é o mapa.
 - **RF-06:** Fora do mapa, o fundo é o da tela.
 - **RF-07:** Não há zoom nem arrastar: gestos que não sejam um toque não mudam nada. A única exceção é o botão de depuração do RF-18.
 
@@ -38,7 +38,7 @@ Com a grade e o gerador prontos, falta o jogador chegar ao mapa. Esta fase cria 
 
 - **RF-08:** Tocar em um hexágono vizinho do jogador move o jogador para lá.
 - **RF-09:** O toque vale para o hexágono que contém o ponto tocado, pela geometria da grade. Se esse hexágono não for vizinho, ou não existir no mapa, nada acontece.
-- **RF-10:** O passo é uma transição de `STEP_SECONDS`, de 0,18 s, _a revisar_. Toques durante o passo são ignorados.
+- **RF-10:** O passo é uma transição de `STEP_SECONDS`, de 0,36 s, _a revisar_. Toques durante o passo são ignorados.
 - **RF-11:** Qualquer terreno aceita o jogador.
 - **RF-12:** Ao fim do passo, o hexágono do jogador está no centro da tela, com a posição do mapa em pixels reais inteiros.
 
@@ -59,7 +59,7 @@ Com a grade e o gerador prontos, falta o jogador chegar ao mapa. Esta fase cria 
 
 ## Critérios de aceite
 
-- [x] Explorar zona abre o mapa, com o jogador em `start` e o retrato certo no centro.
+- [x] Explorar zona abre o mapa, com o jogador em `start` e o Domador no centro.
 - [x] Sem servidor, o erro aparece, e Voltar leva ao Hub.
 - [x] Tocar em cada um dos seis vizinhos move o jogador para ele.
 - [x] Tocar longe, no próprio hexágono ou fora do mapa não move o jogador.
@@ -130,10 +130,11 @@ godot --headless -d --path client --quit-after 60
 ## Decisões da implementação
 
 - **Os botões ficam num `SectionPanel`:** a spec os punha soltos sobre o mapa, e as capturas mostraram o "Voltar", que é um botão de contorno, ilegível sobre os terrenos. O painel tem 92% de opacidade, o que basta para ler sobre qualquer terreno. O painel também recebe os toques, então tocar nele não move o jogador.
-- **O toque usa a geometria da grade, não a distância em linha reta:** `coord_at` arredonda o ponto para a coordenada axial mais próxima. Na grade achatada deste sprite, isso acompanha melhor o desenho do hexágono do que medir a distância até o centro. O RF-09 foi reescrito por isso.
+- **O toque usa a geometria da grade, não a distância em linha reta:** `coord_at` arredonda o ponto para a coordenada axial mais próxima. Na grade achatada deste sprite, isso acompanha melhor o desenho do hexágono do que medir a distância até o centro. O RF-09 foi reescrito por isso. Na [05](05-terrain-elevation.md), o arredondamento deu lugar ao hexágono exato.
 - **`snapped_to_pixels` no `HexMapView`:** a tela precisa arredondar a posição a cada quadro do passo, e quem conhece a escala da janela é o mapa.
 - **Toque e arrasto:** o movimento acontece ao soltar, e só se o dedo tiver corrido até 24 pontos da tela lógica. Isso também impede um arrasto de virar um passo.
 - **Conferência:** uma cena temporária abriu o mapa pelo Hub contra um servidor de teste, com toques entrando como cliques reais pela janela, e passou com 52 de 52 verificações em janelas de 360×640, 405×720, 412×915 e 720×1061, depois de falhar porque Explorar zona ainda abria a batalha. Ela cobre os seis vizinhos, toque longe e fora do mapa, toques rápidos, arrasto, roda do mouse, andar até água, montanha e borda, ida e volta da batalha, equipe sem HP e voltar ao Hub. Depois de andar, a tela foi comparada pixel a pixel com a arte, sem nenhuma diferença. Das 19 capturas da rodada final, 10 foram abertas e revisadas. A falta de rede foi simulada trocando o endereço do servidor. O servidor não mudou nesta fase, por isso os testes dele não foram repetidos. O jogo abriu sem erros nem avisos de script, e os arquivos temporários foram removidos.
 - **Vão entre os hexágonos:** depois da entrega, o dono pediu um espaço entre os hexágonos e mandou um exemplo no Figma, com um print. O espaçamento foi medido no print, e não no Figma, que não foi aberto. Com passos de 34, 24 e 17, cada uma das 44 células do print bateu, pixel a pixel, com um sprite. A conferência acima foi repetida com esses passos: 54 de 54 verificações nos quatro tamanhos, e 3 das 19 capturas abertas e revisadas.
+- **O vão saiu depois:** para o mapa ter textura contínua por bioma, o dono pediu os hexágonos encostados, e os passos voltaram a 32, 21 e 16. Conferência: uma cena temporária com 2.791 tiles planos, em janelas de 360×640, 405×720, 412×915 e 720×1061, não mostrou nenhum pixel do fundo entre os hexágonos. Com o vão, em 405×720, eram 4.032. Sete pontos da superfície de cada tile caíram no tile certo. A tela do mapa contra o servidor não foi repetida nesta mudança.
 - **Modo debug:** o dono pediu um botão para ver o mapa inteiro, seguindo o padrão do "Apagar progresso" (`OS.is_debug_build()`). Reduzido cerca de 10 vezes, o mapa ficava granulado, por isso os sprites de terreno passaram a gerar mipmaps, que só o modo de depuração usa. A escala normal continua em pixels inteiros. Conferência: 66 de 66 verificações nos quatro tamanhos, e 2 capturas da versão final revisadas, em 405×720. A versão publicada não foi testada: as verificações rodam em build de debug.
 - **Falta do dono:** jogar no editor e no celular, conferir o tamanho dos hexágonos, o ritmo do passo e o recorte do aparelho.

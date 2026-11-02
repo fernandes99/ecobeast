@@ -5,8 +5,8 @@ extends Control
 ## só aqui até o terreno decidir alguma regra.
 
 const LOADING_TEXT := "Gerando mapa..."
-## Duração de um passo, em segundos. A revisar.
-const STEP_SECONDS := 0.18
+## Duração de um passo, em segundos: um ciclo inteiro da corrida do Domador.
+const STEP_SECONDS := TamerSprite.RUN_SECONDS
 ## Até quanto o dedo pode correr, em pontos da tela lógica, para ainda ser um toque.
 const MAX_TAP_TRAVEL := 24.0
 const WHOLE_MAP_TEXT := "Debug: ver mapa inteiro"
@@ -24,7 +24,7 @@ var _showing_whole_map: bool = false
 
 @onready var _map_area: Control = %MapArea
 @onready var _map_view: HexMapView = %MapView
-@onready var _marker: CreaturePortrait = %PlayerMarker
+@onready var _marker: TamerSprite = %PlayerMarker
 @onready var _controls_panel: Control = %ControlsPanel
 @onready var _message: Label = %Message
 @onready var _encounter_button: Button = %EncounterButton
@@ -40,7 +40,6 @@ func _ready() -> void:
 	_back_button.pressed.connect(Router.back)
 	_debug_zoom_button.pressed.connect(_toggle_whole_map)
 	resized.connect(_fit_view.call_deferred)
-	_marker.set_species(Session.player.party[0].species_id)
 	_begin()
 
 
@@ -60,6 +59,8 @@ func _begin() -> void:
 	_map = result.data
 	_player_coord = _map.start
 	_map_view.set_map(_map)
+	_map_view.set_current(_player_coord)
+	_map_view.set_actor_row(_marker, _player_coord.y)
 	_map_view.show()
 	_marker.show()
 	_message.hide()
@@ -91,10 +92,19 @@ func _tap(point: Vector2) -> void:
 
 func _step_to(target: Vector2i) -> void:
 	_walking = true
+	_marker.face(target - _player_coord)
+	_marker.play_run()
+	# Indo para a frente, ele muda de plano antes de sair: a linha nova cobriria os pés
+	# dele. Voltando, é a linha de onde ele veio que cobriria, então muda ao chegar.
+	if target.y > _player_coord.y:
+		_map_view.set_actor_row(_marker, target.y)
 	_player_coord = target
+	_map_view.set_current(target)
 	var step := create_tween()
 	step.tween_method(_move_map, _map_view.position, _player_centered_position(), STEP_SECONDS)
 	await step.finished
+	_map_view.set_actor_row(_marker, target.y)
+	_marker.play_idle()
 	_walking = false
 
 
@@ -112,21 +122,25 @@ func _fit_view() -> void:
 	if _showing_whole_map:
 		var panel_top := _controls_panel.get_global_rect().position.y
 		_map_view.show_whole_map(Rect2(0.0, 0.0, size.x, panel_top))
-		var player_point := _map_view.position + _map_view.surface_center(_player_coord) * _map_view.pixel_scale()
-		_marker.position = player_point - _marker.size / 2.0
+		_marker.position = _map_view.surface_center(_player_coord)
 	else:
 		_map_view.show_pixel_art()
 		_move_map(_player_centered_position())
-		_marker.position = (size - _marker.size) / 2.0
+	# Filho do mapa, ele encolheria junto com o mapa inteiro.
+	_marker.scale = _map_view.art_scale() / _map_view.pixel_scale()
 
 
+## Parte do centro já arredondado: em uma tela de tamanho ímpar, ele cai no meio de
+## um pixel, e arredondar depois da conta deixaria o Domador fora do hexágono.
 func _player_centered_position() -> Vector2:
-	return size / 2.0 - _map_view.surface_center(_player_coord) * _map_view.pixel_scale()
+	return _map_view.snapped_to_pixels(size / 2.0) - _map_view.surface_center(_player_coord) * _map_view.pixel_scale()
 
 
-## Sempre em pixels reais inteiros, para a pixel art não borrar no caminho.
+## Sempre em pixels reais inteiros, para a pixel art não borrar no caminho. O Domador
+## é filho do mapa: a posição dele desconta o mapa, e ele fica parado na tela.
 func _move_map(value: Vector2) -> void:
 	_map_view.position = _map_view.snapped_to_pixels(value)
+	_marker.position = (_map_view.snapped_to_pixels(size / 2.0) - _map_view.position) / _map_view.pixel_scale()
 
 
 func _show_message(text: String, variation: StringName) -> void:

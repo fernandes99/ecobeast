@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://screens/exploration/exploration_screen.gd" id="1_script"]
 [ext_resource type="Script" path="res://ui/components/hex_map_view.gd" id="2_map_view"]
-[ext_resource type="PackedScene" path="res://ui/components/creature_portrait.tscn" id="3_portrait"]
+[ext_resource type="Script" path="res://ui/components/tamer_sprite.gd" id="3_tamer"]
 [ext_resource type="PackedScene" path="res://ui/components/safe_area.tscn" id="4_safe_area"]
 
 [node name="ExplorationScreen" type="Control"]
@@ -29,23 +29,10 @@ unique_name_in_owner = true
 visible = false
 script = ExtResource("2_map_view")
 
-[node name="PlayerMarker" parent="." instance=ExtResource("3_portrait")]
+[node name="PlayerMarker" type="AnimatedSprite2D" parent="MapArea/MapView"]
 unique_name_in_owner = true
 visible = false
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -48.0
-offset_top = -48.0
-offset_right = 48.0
-offset_bottom = 48.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-portrait_size = 96
+script = ExtResource("3_tamer")
 
 [node name="SafeArea" parent="." instance=ExtResource("4_safe_area")]
 layout_mode = 1
