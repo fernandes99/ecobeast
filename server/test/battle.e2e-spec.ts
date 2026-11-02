@@ -383,6 +383,83 @@ describe('Rotas da batalha (e2e)', () => {
       expect(battle.player.team[1]!.uid).toBe(second.uid);
       expect(events.map((event) => event.type)).toEqual(['creature_entered']);
     });
+
+    describe('troca durante a luta', () => {
+      const SWITCH = { type: 'switch', team_index: 1 };
+
+      async function userWithBench() {
+        const user = await strongUser();
+        const second = await addSecondCreature(user, {
+          level: 100,
+          currentHp: 120,
+        });
+        return { user, second };
+      }
+
+      it('põe o outro em campo e gasta a rodada', async () => {
+        const { user, second } = await userWithBench();
+        const opening = await start(user, WEAK_ENEMY);
+
+        const res = await user.act(SWITCH).expect(200);
+
+        const { battle, events } = res.body as BattleBody;
+        expect(battle.phase).toBe('choose_action');
+        expect(battle.turn).toBe(opening.battle.turn + 1);
+        expect(battle.player.active_index).toBe(1);
+        expect(battle.player.team[1]!.uid).toBe(second.uid);
+        expect(events[0]).toMatchObject({
+          type: 'creature_entered',
+          side: 'player',
+          hp: 120,
+          status: null,
+        });
+        expect(events.some((e) => e.type === 'skill_used')).toBe(true);
+      });
+
+      it('uma troca recusada não gasta a rodada', async () => {
+        const { user } = await userWithBench();
+        const opening = await start(user, WEAK_ENEMY);
+
+        const res = await user.act({ type: 'switch', team_index: 0 });
+
+        expect(res.status).toBe(400);
+        expect((res.body as { message: string }).message).toBe(
+          'Esse Ecobeast já está em campo.',
+        );
+        expect(app.get(BattleStore).get(user.id)!.state.turn).toBe(
+          opening.battle.turn,
+        );
+      });
+
+      it('Preso, a troca é recusada', async () => {
+        const { user } = await userWithBench();
+        await start(user, WEAK_ENEMY);
+        app.get(BattleStore).get(user.id)!.state.player.team[0]!.isTrapped =
+          true;
+
+        const res = await user.act(SWITCH);
+
+        expect(res.status).toBe(400);
+        expect((res.body as { message: string }).message).toBe(
+          'Não dá para trocar agora.',
+        );
+      });
+
+      it('o fim da luta grava o HP dos dois Ecobeasts', async () => {
+        const { user } = await userWithBench();
+        await start(user, WEAK_ENEMY);
+        const { state } = app.get(BattleStore).get(user.id)!;
+        state.player.team[0]!.currentHp = 33;
+
+        const switched = await user.act(SWITCH).expect(200);
+        const { battle } = await fight(user, switched.body as BattleBody);
+
+        expect(battle.result).toBe('victory');
+        expect(battle.player.active_index).toBe(1);
+        expect(battle.player.team[0]!.hp).toBe(33);
+        await expectTeamSaved(user, battle);
+      });
+    });
   });
 
   describe('fim', () => {

@@ -35,7 +35,7 @@ Os eventos que mudam a tela:
 
 | Evento                                                 | Efeito no `BattleDisplay`                                   |
 | ------------------------------------------------------ | ----------------------------------------------------------- |
-| `creature_entered`                                     | Põe a criatura ativa daquele lado no `BattleView` da resposta |
+| `creature_entered`                                     | Põe a criatura ativa daquele lado, com `hp` e `status` do evento, sem estágios nem `confused` |
 | `damage`, `recoil`, `healed`, `confused_hit`, `status_damage` | `hp` do lado                                         |
 | `status_applied`                                       | `confusion` liga `confused`; `fear` e `trapped` não mudam nada; os outros viram o status do lado |
 | `status_ended`                                         | `confusion` desliga `confused`                              |
@@ -43,7 +43,7 @@ Os eventos que mudam a tela:
 | `fainted`                                              | Limpa o status e `confused` do lado                         |
 | `stat_changed`                                         | `stages[stat]` do lado recebe `value`                       |
 
-Uma criatura só entra depois de tudo o que aconteceu no turno ([ordem de um turno](../battle-core/architecture.md#ordem-de-um-turno)), então o `BattleView` da resposta já a traz como está naquele momento. `creature_entered` a lê de lá porque o evento não tem o `uid` nem o HP.
+Quem entra vem do `BattleView` da resposta, porque o evento não tem o `uid`. O `hp` e o `status` vêm do evento: na troca durante a luta, ela pode apanhar no mesmo turno, e o cartão só pode mostrar o dano junto com a linha do ataque. Os estágios e `confused` começam zerados pelo mesmo motivo, e os eventos seguintes os mudam.
 
 ## O texto de cada evento
 

@@ -185,6 +185,8 @@ describe('desmaio', () => {
         species_id: 4,
         level: 5,
         max_hp: 19,
+        hp: 19,
+        status: null,
       },
     ]);
   });
@@ -399,6 +401,8 @@ describe('startBattle', () => {
         species_id: 1,
         level: 5,
         max_hp: 19,
+        hp: 19,
+        status: null,
       },
       {
         type: 'creature_entered',
@@ -406,6 +410,8 @@ describe('startBattle', () => {
         species_id: 7,
         level: 4,
         max_hp: 19,
+        hp: 19,
+        status: null,
       },
     ]);
   });
@@ -654,10 +660,28 @@ describe('applyAction', () => {
         'Esse Ecobeast não pode lutar.',
       ],
       [
-        'trocar por vontade própria',
+        'trocar para quem está em campo',
         makeState([fighter(), fighter()], fighter()),
+        { type: 'switch', team_index: 0 },
+        'Esse Ecobeast já está em campo.',
+      ],
+      [
+        'trocar no turno para quem tem 0 HP',
+        makeState([fighter(), fighter({ currentHp: 0 })], fighter()),
         { type: 'switch', team_index: 1 },
         'Esse Ecobeast não pode lutar.',
+      ],
+      [
+        'trocar no turno para quem não existe',
+        makeState([fighter(), fighter()], fighter()),
+        { type: 'switch', team_index: 9 },
+        'Esse Ecobeast não pode lutar.',
+      ],
+      [
+        'trocar estando Preso',
+        makeState([fighter({ isTrapped: true }), fighter()], fighter()),
+        { type: 'switch', team_index: 1 },
+        'Não dá para trocar agora.',
       ],
       [
         'agir depois do fim',
@@ -672,6 +696,141 @@ describe('applyAction', () => {
       });
       expect(state).toEqual(copy);
     });
+  });
+});
+
+describe('troca durante a luta', () => {
+  const SWITCH: BattleAction = { type: 'switch', team_index: 1 };
+
+  it('põe o outro em campo, e o turno avança', () => {
+    const { state } = play(
+      makeState([idler(), idler({ speciesId: 4 })], idler()),
+      SWITCH,
+      catalog,
+    );
+    expect(state.player.activeIndex).toBe(1);
+    expect(state.phase).toBe('choose_action');
+    expect(state.turn).toBe(2);
+  });
+
+  it('quem entra chega antes de um inimigo mais rápido', () => {
+    const { events } = play(
+      makeState([idler(), withSpeed(1)], withSpeed(99)),
+      SWITCH,
+      catalog,
+    );
+    expect(events.map((event) => event.type).slice(0, 2)).toEqual([
+      'creature_entered',
+      'skill_used',
+    ]);
+  });
+
+  it('só o inimigo age no turno', () => {
+    const { events } = play(
+      makeState([idler(), fighter()], fighter()),
+      SWITCH,
+      catalog,
+    );
+    expect(actingOrder(events)).toEqual(['enemy']);
+  });
+
+  it('o ataque do inimigo acerta quem entrou', () => {
+    const { state } = play(
+      makeState([idler(), idler()], fighter()),
+      SWITCH,
+      catalog,
+    );
+    expect(state.player.team[0]!.currentHp).toBe(19);
+    expect(state.player.team[1]!.currentHp).toBeLessThan(19);
+  });
+
+  it('creature_entered traz o HP e o status de antes do ataque', () => {
+    const { events } = play(
+      makeState(
+        [idler(), idler({ currentHp: 12, statusSlug: 'poison' })],
+        fighter(),
+      ),
+      SWITCH,
+      catalog,
+    );
+    expect(eventsOf(events, 'creature_entered')).toEqual([
+      {
+        type: 'creature_entered',
+        side: 'player',
+        species_id: 1,
+        level: 5,
+        max_hp: 19,
+        hp: 12,
+        status: 'poison',
+      },
+    ]);
+  });
+
+  it('quem saiu mantém HP, status e PP', () => {
+    const leaving = idler({
+      currentHp: 7,
+      statusSlug: 'poison',
+      skills: [{ skillId: IDLE.id, currentPp: 3 }],
+    });
+    const { state } = play(
+      makeState([leaving, idler()], idler()),
+      SWITCH,
+      catalog,
+    );
+    expect(state.player.team[0]).toMatchObject({
+      currentHp: 7,
+      statusSlug: 'poison',
+      skills: [{ skillId: IDLE.id, currentPp: 3 }],
+    });
+  });
+
+  it('quem volta vem sem mudanças de atributos nem efeitos temporários', () => {
+    const back = idler({ confusionTurns: 3, isTrapped: true });
+    back.stages.atk = 2;
+    const { state } = play(
+      makeState([idler(), back], idler()),
+      SWITCH,
+      catalog,
+    );
+    expect(state.player.team[1]).toMatchObject({
+      confusionTurns: 0,
+      isTrapped: false,
+    });
+    expect(state.player.team[1]!.stages.atk).toBe(0);
+  });
+
+  it('o veneno de quem entrou dói no fim do turno', () => {
+    const { events, state } = play(
+      makeState([idler(), idler({ statusSlug: 'poison' })], idler()),
+      SWITCH,
+      catalog,
+    );
+    expect(eventsOf(events, 'status_damage')[0]).toMatchObject({
+      side: 'player',
+    });
+    expect(state.player.team[1]!.currentHp).toBeLessThan(19);
+  });
+
+  it('se o inimigo derrubar quem entrou, o jogador escolhe o próximo', () => {
+    const { state } = play(
+      makeState([idler(), idler({ currentHp: 1 })], fighter()),
+      SWITCH,
+      catalog,
+    );
+    expect(state.player.team[1]!.currentHp).toBe(0);
+    expect(state.phase).toBe('choose_next');
+  });
+
+  it('o inimigo que cai no fim do turno dá a vitória', () => {
+    const { state } = play(
+      makeState(
+        [idler(), idler()],
+        idler({ currentHp: 1, statusSlug: 'poison' }),
+      ),
+      SWITCH,
+      catalog,
+    );
+    expect(state.result).toBe('victory');
   });
 });
 

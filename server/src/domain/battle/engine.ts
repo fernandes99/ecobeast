@@ -89,7 +89,11 @@ export function applyAction(
   };
   switch (action.type) {
     case 'switch':
-      sendNextCreature(context, action.team_index);
+      if (state.phase === 'choose_next') {
+        sendNextCreature(context, action.team_index);
+      } else {
+        switchCreature(context, action.team_index);
+      }
       break;
     case 'flee':
       flee(context);
@@ -138,7 +142,7 @@ function refusalFor(
         ? null
         : 'Não dá para fugir agora.';
     case 'switch':
-      return 'Esse Ecobeast não pode lutar.';
+      return fieldSwitchRefusal(state, action.team_index);
     case 'item': {
       const effect = itemEffect(state, action, catalog);
       return 'error' in effect ? effect.error : null;
@@ -206,6 +210,21 @@ function switchRefusal(state: BattleState, teamIndex: number): string | null {
   return chosen && chosen.currentHp > 0
     ? null
     : 'Esse Ecobeast não pode lutar.';
+}
+
+/** A troca por vontade própria, com alguém de pé em campo. */
+function fieldSwitchRefusal(
+  state: BattleState,
+  teamIndex: number,
+): string | null {
+  const refusal = switchRefusal(state, teamIndex);
+  if (refusal) return refusal;
+  if (teamIndex === state.player.activeIndex) {
+    return 'Esse Ecobeast já está em campo.';
+  }
+  return activeOf(state, 'player').isTrapped
+    ? 'Não dá para trocar agora.'
+    : null;
 }
 
 function playTurn(context: TurnContext, action: BattleAction): void {
@@ -295,6 +314,13 @@ function sendNextCreature(context: TurnContext, teamIndex: number): void {
   enterField(context, 'player');
 }
 
+/** A troca gasta a rodada: quem entra chega antes de qualquer ação do inimigo. */
+function switchCreature(context: TurnContext, teamIndex: number): void {
+  context.state.player.activeIndex = teamIndex;
+  enterField(context, 'player');
+  playEnemyAlone(context);
+}
+
 /** `order` é a ordem em que as criaturas agiram. */
 function finishTurn(context: TurnContext, order: SideSlug[]): void {
   order.forEach((side) => applyEndOfTurn(context, side));
@@ -343,6 +369,8 @@ function enterField(context: TurnContext, side: SideSlug): void {
     species_id: creature.speciesId,
     level: creature.level,
     max_hp: creature.stats.hp,
+    hp: creature.currentHp,
+    status: creature.statusSlug,
   });
   applyEntryTrait(context, side);
 }

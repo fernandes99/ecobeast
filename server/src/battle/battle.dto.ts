@@ -62,9 +62,9 @@ export class BattleActionBodyDto {
   @ApiProperty({
     description:
       '`skill` usa uma Técnica; `emergency` é o golpe de quem está sem PP; ' +
-      '`flee` tenta fugir; `switch` põe o próximo Ecobeast em campo; `item` ' +
-      'usa um item e gasta a rodada; `capture` tenta capturar o inimigo com ' +
-      'uma Esfera.',
+      '`flee` tenta fugir; `switch` põe outro Ecobeast em campo, gastando a ' +
+      'rodada em `choose_action`; `item` usa um item e gasta a rodada; ' +
+      '`capture` tenta capturar o inimigo com uma Esfera.',
     enum: ACTION_TYPES,
     example: 'skill',
   })

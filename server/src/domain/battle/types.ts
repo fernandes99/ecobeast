@@ -129,6 +129,8 @@ export type BattleEvent =
       species_id: number;
       level: number;
       max_hp: number;
+      hp: number;
+      status: string | null;
     }
   | { type: 'skill_used'; side: SideSlug; skill_id: number | null }
   | { type: 'cannot_act'; side: SideSlug; reason: CannotActReason }

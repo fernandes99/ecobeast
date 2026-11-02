@@ -1,6 +1,6 @@
 # 04. Troca durante a luta
 
-- **Status:** rascunho
+- **Status:** concluída
 - **Depende de:** [03-team-screen](03-team-screen.md)
 
 ## Contexto
@@ -47,25 +47,25 @@ A ação `switch` só vale depois de um desmaio, e o botão Equipe da batalha es
 
 ## Critérios de aceite
 
-- [ ] A troca põe o outro Ecobeast em campo, e o turno avança.
-- [ ] Um inimigo mais rápido ataca depois da entrada.
-- [ ] O ataque do inimigo acerta quem entrou.
-- [ ] Trocar para quem está em campo é recusado sem gastar a rodada.
-- [ ] Trocar para quem tem 0 HP é recusado sem gastar a rodada.
-- [ ] Trocar para uma posição que não existe é recusado sem gastar a rodada.
-- [ ] Preso, a troca é recusada sem gastar a rodada.
-- [ ] Quem saiu mantém HP, status e PP, e volta sem as mudanças de atributos.
-- [ ] O veneno de quem entrou dói no fim do turno.
-- [ ] Se o inimigo derrubar quem entrou, a luta segue para `choose_next` ou `defeat`.
-- [ ] O fim da luta grava o HP dos dois Ecobeasts.
-- [ ] Com 1 Ecobeast, o botão Equipe fica desativado.
-- [ ] O painel mostra só a equipe, com quem está em campo desativado.
-- [ ] O cartão mostra o HP cheio de quem entrou até a linha do ataque.
-- [ ] "Voltar" fecha o painel sem gastar a rodada.
-- [ ] Depois de um desmaio, o painel não tem "Voltar".
-- [ ] Em 360×640 e 720×1061, o painel cabe com 6 Ecobeasts.
-- [ ] O projeto abre sem erros nem avisos de script.
-- [ ] `npm run lint`, `npm run typecheck`, `npm test` e `npm run test:e2e` passam.
+- [x] A troca põe o outro Ecobeast em campo, e o turno avança.
+- [x] Um inimigo mais rápido ataca depois da entrada.
+- [x] O ataque do inimigo acerta quem entrou.
+- [x] Trocar para quem está em campo é recusado sem gastar a rodada.
+- [x] Trocar para quem tem 0 HP é recusado sem gastar a rodada.
+- [x] Trocar para uma posição que não existe é recusado sem gastar a rodada.
+- [x] Preso, a troca é recusada sem gastar a rodada.
+- [x] Quem saiu mantém HP, status e PP, e volta sem as mudanças de atributos.
+- [x] O veneno de quem entrou dói no fim do turno.
+- [x] Se o inimigo derrubar quem entrou, a luta segue para `choose_next`.
+- [x] O fim da luta grava o HP dos dois Ecobeasts.
+- [x] Com 1 Ecobeast, o botão Equipe fica desativado.
+- [x] O painel mostra só a equipe, com quem está em campo desativado.
+- [x] O cartão mostra o HP cheio de quem entrou até a linha do ataque.
+- [x] "Voltar" fecha o painel sem gastar a rodada.
+- [x] Depois de um desmaio, o painel não tem "Voltar".
+- [x] Em 360×640 e 720×1061, o painel cabe com 6 Ecobeasts.
+- [x] O projeto abre sem erros nem avisos de script.
+- [x] `npm run lint`, `npm run typecheck`, `npm test` e `npm run test:e2e` passam.
 
 ## Desenho técnico
 
@@ -105,8 +105,19 @@ Passos do dono no editor (F5) e no celular:
 
 ## Tarefas
 
-- [ ] Testes do motor; ver falhar; ação e evento (RF-01 a RF-08).
-- [ ] Testes e2e; ver falhar; ajustar o que faltar.
-- [ ] Verificação temporária da tela; ver falhar.
-- [ ] Botão, painel e cartão (RF-09 a RF-18).
-- [ ] Remover os arquivos temporários; atualizar as specs citadas; marcar esta spec e as tabelas como `concluída`; commit `feat: troca durante a luta`.
+- [x] Testes do motor; ver falhar; ação e evento (RF-01 a RF-08).
+- [x] Testes e2e; ver falhar; ajustar o que faltar.
+- [x] Verificação temporária da tela; ver falhar.
+- [x] Botão, painel e cartão (RF-09 a RF-18).
+- [x] Remover os arquivos temporários; atualizar as specs citadas; marcar esta spec e as tabelas como `concluída`; commit `feat: troca durante a luta`.
+
+## Decisões da implementação
+
+- **A troca nunca termina em derrota:** quem sai tem HP, então sobra alguém de pé mesmo se o inimigo derrubar quem entrou. Por isso, o critério cita só `choose_next`.
+- **O cartão começa sem estágios nem `confused`:** além de `hp` e `status`, que a spec pedia. O estado final da resposta já traria as mudanças do turno, e o cartão as mostraria antes da linha do ataque.
+- **O título do painel não mudou:** "Escolha o próximo Ecobeast" serve à troca e ao desmaio.
+- **Com os outros em 0 HP, o botão Equipe fica ativo:** a regra é ter mais de 1 Ecobeast. O painel abre com todos desativados, e "Voltar" fecha.
+- **Quem está em campo não tem um aviso próprio:** a linha só fica desativada, como pede a RF-12.
+- **Um Adormecido sorteia os turnos de novo ao entrar:** é a regra de sempre de `enterField`. Agora o jogador pode usá-la, trocando para fora e voltando. Fica para o balanceamento.
+- **Rede simulada:** a falta de servidor foi testada trocando o endereço da API por uma porta sem nada.
+- **Conferência:** os testes do motor falharam antes da regra, e os 4 e2e novos falharam com a regra desligada. Uma cena temporária abriu lutas contra um servidor de teste, com o mouse entrando por `Input.parse_input_event` em pixels da janela. Passou com 47 de 47 verificações em janelas de 360×640, 405×720, 412×915 e 720×1061, depois de falhar porque o botão e o "Voltar" não existiam. Quatro proteções da tela foram desligadas de propósito, e 10 verificações falharam, cobrindo todas elas. Das 20 capturas de tela, 4 foram abertas e revisadas. Os arquivos temporários foram removidos. O teste no celular fica para o dono.

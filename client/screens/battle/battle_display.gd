@@ -18,15 +18,14 @@ func reset(view: BattleView) -> void:
 	enemy = view.enemy.copy()
 
 
-## `final_view` é a resposta do turno: uma criatura só entra depois de tudo o
-## que aconteceu nele, e o evento não traz o uid nem o HP dela.
+## `final_view` é a resposta do turno: o evento de quem entra não traz o uid.
 func apply(event: Dictionary, final_view: BattleView) -> void:
 	var side := DictFields.get_string(event, "side")
 	if side != "player" and side != "enemy":
 		return
 	var type := DictFields.get_string(event, "type")
 	if type == "creature_entered":
-		_enter(side, final_view)
+		_enter(side, event, final_view)
 		return
 	if type == "item_used":
 		_apply_item(event, final_view)
@@ -59,11 +58,18 @@ func _apply_item(event: Dictionary, final_view: BattleView) -> void:
 		player.status = ""
 
 
-func _enter(side: String, final_view: BattleView) -> void:
+## Quem entra ainda pode apanhar no turno: `final_view` dá quem é, e o evento,
+## como chegou. O resto vem pelos eventos seguintes.
+func _enter(side: String, event: Dictionary, final_view: BattleView) -> void:
+	var creature := final_view.active().copy() if side == "player" else final_view.enemy.copy()
+	creature.hp = DictFields.get_int(event, "hp")
+	creature.status = DictFields.get_string(event, "status")
+	creature.confused = false
+	creature.stages = {}
 	if side == "player":
-		player = final_view.active().copy()
+		player = creature
 	else:
-		enemy = final_view.enemy.copy()
+		enemy = creature
 
 
 func _apply_status(creature: BattleCreature, status: String) -> void:

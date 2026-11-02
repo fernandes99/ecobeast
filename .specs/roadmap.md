@@ -17,7 +17,7 @@ O que vem depois do MVP de estrutura (entrada, escolha do inicial e Hub). Cada l
 | 6   | [`capture`](capture/) | Esferas de Vínculo, fórmula de captura e o carregamento do Ecobeast entrando na Esfera (TELAS.md #6); o capturado vai para a equipe de 6 ou para o Santuário | wild-battle, inventory-shop | concluída |
 | 7   | `progression`       | XP, level up, aprender/esquecer técnica, Ascensão por nível (TELAS.md #7)                                 | battle-core                | planejada |
 | 8   | `npc-tamers`        | Domadores NPC com equipe fixa e recompensa em moedas; tabela `npc_tamers`                                 | battle-screen              | planejada |
-| 9   | [`team-and-storage`](team-and-storage/) | Equipe com 6 vagas reorganizáveis, Santuário com busca e filtro (TELAS.md #9 e #10) e troca de Ecobeast durante a luta | capture                    | planejada |
+| 9   | [`team-and-storage`](team-and-storage/) | Equipe com 6 vagas reorganizáveis, Santuário com busca e filtro (TELAS.md #9 e #10) e troca de Ecobeast durante a luta | capture                    | concluída |
 | 10  | [`creature-details`](creature-details/) | Tela de detalhes da criatura (TELAS.md #8); vem antes do `battle-core`, por decisão do dono | auth-google                | concluída |
 | 11  | [`inventory-shop`](inventory-shop/) | Mochila e Loja (TELAS.md #12 e #13); tabelas `items`, `item_categories`, `inventory_items`; usar itens no mapa e na luta | backend-api, battle-screen, wild-battle | concluída |
 | 13  | `codex`             | Bestiário com visto/capturado, detalhe e linha evolutiva (TELAS.md #11)                                   | wild-battle                | planejada |

@@ -151,6 +151,15 @@ describe('Brisa Ligeira', () => {
     );
     expect(state.player.team[1]!.stages.spd).toBe(1);
   });
+
+  it('vale na troca durante a luta', () => {
+    const { state } = play(
+      makeState([idle(), tailwind()], idle()),
+      { type: 'switch', team_index: 1 },
+      catalog,
+    );
+    expect(state.player.team[1]!.stages.spd).toBe(1);
+  });
 });
 
 it('um Traço sem efeito no motor é ignorado', () => {

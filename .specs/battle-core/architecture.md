@@ -66,7 +66,7 @@ interface BattleState {
 | `skill`     | `slot` (1–4)  | `choose_action`, e a Técnica tem PP           |
 | `emergency` | —             | `choose_action`, e nenhuma Técnica tem PP     |
 | `flee`      | —             | `choose_action`, `canFlee`, e não está Preso  |
-| `switch`    | `team_index`  | `choose_next`, e a criatura escolhida tem HP  |
+| `switch`    | `team_index`  | `choose_next` ou `choose_action`, e a criatura escolhida tem HP. Em `choose_action`, ela não pode já estar em campo, e quem está em campo não pode estar Preso ([team-and-storage](../team-and-storage/architecture.md#a-troca-na-luta)) |
 | `item`      | `item_id`, `team_index` | `choose_action`, com o item na `bag` e efeito no alvo, que pode ser um reserva |
 | `capture`   | `item_id`     | `choose_action`, com uma Esfera na `bag` e um inimigo com `capture_rate` acima de 0 ([capture](../capture/architecture.md#ação-e-eventos)) |
 
@@ -98,6 +98,8 @@ A ação `item` gasta a rodada: o item faz efeito antes de qualquer ação do in
 
 A ação `capture` gasta a Esfera e sorteia antes de qualquer ação do inimigo. Com sucesso, a luta termina em `captured`, sem fim de turno. Com falha, o inimigo age sozinho, como depois de um item.
 
+Em `choose_action`, a ação `switch` gasta a rodada: a criatura entra antes de qualquer ação do inimigo, seja qual for a Velocidade, e o Traço de entrada vale. Depois, o inimigo age sozinho, como depois de um item.
+
 Na fase `choose_next`, a ação `switch` põe a criatura em campo, e o Traço de entrada vale, sem gastar turno nem dar ação ao inimigo. No começo da luta, o Traço de entrada dos dois vale antes do turno 1, primeiro o do jogador.
 
 ## Eventos
@@ -107,7 +109,7 @@ A resposta traz a lista, na ordem em que aconteceu. Cada evento tem `type` e `si
 | `type`            | Campos                                    |
 | ----------------- | ----------------------------------------- |
 | `battle_started`  | —                                         |
-| `creature_entered` | `side`, `species_id`, `level`, `max_hp`   |
+| `creature_entered` | `side`, `species_id`, `level`, `max_hp`, `hp`, `status` (nulo sem status) |
 | `skill_used`      | `side`, `skill_id` (nulo no golpe de emergência) |
 | `cannot_act`      | `side`, `reason` (`fear`, `freeze`, `sleep`, `paralysis`) |
 | `woke_up`         | `side`                                    |

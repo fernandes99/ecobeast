@@ -108,10 +108,9 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_type_variation = &"OutlineButton"
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 32
 disabled = true
-text = "Equipe
-Em breve"
+text = "Equipe"
 
 [node name="FleeButton" type="Button" parent="SafeArea/Column/Controls/ActionsGrid"]
 unique_name_in_owner = true

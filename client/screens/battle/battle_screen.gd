@@ -39,6 +39,7 @@ var _leaving: bool = false
 @onready var _actions_grid: GridContainer = %ActionsGrid
 @onready var _attack_button: Button = %AttackButton
 @onready var _items_button: Button = %ItemsButton
+@onready var _team_button: Button = %TeamButton
 @onready var _flee_button: Button = %FleeButton
 @onready var _skills_box: VBoxContainer = %SkillsBox
 @onready var _skills_grid: GridContainer = %SkillsGrid
@@ -62,20 +63,22 @@ func _ready() -> void:
 	_items_button.pressed.connect(_open_items)
 	_items_panel.chosen.connect(_use_item)
 	_items_panel.capture_chosen.connect(_capture)
+	_team_button.pressed.connect(_open_team)
 	_flee_button.pressed.connect(_act.bind({"type": "flee"}))
 	%EmergencyButton.pressed.connect(_act.bind({"type": "emergency"}))
 	%SkillsBackButton.pressed.connect(_show_controls.bind(_actions_grid))
 	_exit_button.pressed.connect(_leave)
-	_next_panel.chosen.connect(_choose_next)
+	_next_panel.chosen.connect(_on_creature_chosen)
 	_begin()
 
 
 ## Chamado pelo Router no voltar do Android ou Esc. Sair da luta é Correr; o
-## voltar só fecha os itens e as Técnicas ou, com a luta encerrada, volta ao mapa.
+## voltar só fecha os painéis e as Técnicas ou, com a luta encerrada, volta ao mapa.
 func handle_back() -> bool:
 	if _leaving:
 		return false
 	if _next_panel.visible:
+		_next_panel.go_back()
 		return true
 	if _items_panel.visible:
 		_items_panel.go_back()
@@ -116,6 +119,15 @@ func _act(action: Dictionary) -> void:
 		_show_battle_gone()
 	else:
 		await _show_turn(result.data)
+
+
+## Pelo botão Equipe, a troca gasta a rodada, como qualquer ação.
+func _on_creature_chosen(team_index: int) -> void:
+	if _view.phase == "choose_next":
+		_choose_next(team_index)
+		return
+	_next_panel.close()
+	_act({"type": "switch", "team_index": team_index})
 
 
 func _choose_next(team_index: int) -> void:
@@ -168,6 +180,7 @@ func _set_busy(busy: bool) -> void:
 	_busy = busy
 	_attack_button.disabled = busy
 	_items_button.disabled = busy
+	_team_button.disabled = busy or _view == null or _view.team.size() < 2
 	_flee_button.disabled = busy or _view == null or not _view.can_flee
 
 
@@ -193,6 +206,11 @@ func _open_skills() -> void:
 func _open_items() -> void:
 	if not _busy:
 		_items_panel.open(_view.items, _view.team, _team_names(_view))
+
+
+func _open_team() -> void:
+	if not _busy:
+		_next_panel.open(_view.team, _team_names(_view), _view.active_index, true)
 
 
 func _use_item(item_id: int, team_index: int) -> void:
