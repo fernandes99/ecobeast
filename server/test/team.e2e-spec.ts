@@ -9,8 +9,8 @@ import { createTestApp } from './support/app.js';
 import { createTestPrisma } from './support/db.js';
 import { createTestTokens, TestTokens } from './support/tokens.js';
 
-const FAGULHO = 1;
-const WEAK_ENEMY = { species_id: FAGULHO, level: 1 };
+const RUVO = 1;
+const WEAK_ENEMY = { species_id: RUVO, level: 1 };
 const NO_PLAYER = 'Crie seu Domador primeiro.';
 const NOT_FOUND = 'Ecobeast não encontrado.';
 const INVALID_ORDER = 'Ordem inválida.';
@@ -57,7 +57,7 @@ describe('Equipe e Santuário (e2e)', () => {
       id,
       create: () => http().post('/v1/me').set(auth).send({ name: 'Ana' }),
       starter: () =>
-        http().post('/v1/me/starter').set(auth).send({ species_id: FAGULHO }),
+        http().post('/v1/me/starter').set(auth).send({ species_id: RUVO }),
       read: () => http().get('/v1/me').set(auth),
       storage: () => http().get('/v1/me/storage').set(auth),
       order: (body: object) =>

@@ -45,10 +45,10 @@ export class SpeciesDetailDto {
   @ApiProperty({ description: 'Número no Bestiário.', example: 1 })
   id: number;
 
-  @ApiProperty({ example: 'fagulho' })
+  @ApiProperty({ example: 'ruvo' })
   slug: string;
 
-  @ApiProperty({ example: 'Fagulho' })
+  @ApiProperty({ example: 'Ruvo' })
   name: string;
 
   @ApiProperty({ example: 'Filhote de lobo com brasas no pelo.' })

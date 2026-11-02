@@ -8,7 +8,7 @@ import { createTestApp } from './support/app.js';
 import { createTestPrisma } from './support/db.js';
 import { createTestTokens, TestTokens } from './support/tokens.js';
 
-const FAGULHO = 1;
+const RUVO = 1;
 const FLEE = { type: 'flee' };
 const NO_PLAYER = 'Crie seu Domador primeiro.';
 const NO_HEALTHY = 'Cure sua equipe no Refúgio.';
@@ -53,7 +53,7 @@ describe('Rota de cura (e2e)', () => {
       id,
       create: () => http().post('/v1/me').set(auth).send({ name: 'Ana' }),
       starter: () =>
-        http().post('/v1/me/starter').set(auth).send({ species_id: FAGULHO }),
+        http().post('/v1/me/starter').set(auth).send({ species_id: RUVO }),
       read: () => http().get('/v1/me').set(auth),
       heal: () => http().post('/v1/me/heal').set(auth),
       wild: () => http().post('/v1/me/battle/wild').set(auth),

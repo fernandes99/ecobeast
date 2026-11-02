@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cpuvfrwpenw4l"
-path="res://.godot/imported/front.png-eea77625aea8f3e6682fc005d295a4e7.ctex"
+uid="uid://ck12be0rkjkrx"
+path="res://.godot/imported/front.png-02012042b58ce09b1c8fdf248adc485d.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/creatures/goticulo/front.png"
-dest_files=["res://.godot/imported/front.png-eea77625aea8f3e6682fc005d295a4e7.ctex"]
+source_file="res://assets/creatures/ruvak/front.png"
+dest_files=["res://.godot/imported/front.png-02012042b58ce09b1c8fdf248adc485d.ctex"]
 
 [params]
 

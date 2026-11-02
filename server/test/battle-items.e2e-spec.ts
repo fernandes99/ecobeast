@@ -11,8 +11,8 @@ import { createTestTokens, TestTokens } from './support/tokens.js';
 // A luta guarda o gasto na memória, e o banco só muda no fim dela
 // (.specs/inventory-shop/architecture.md, "O item na batalha").
 
-const FAGULHO = 1;
-const WEAK_ENEMY = { species_id: FAGULHO, level: 1 };
+const RUVO = 1;
+const WEAK_ENEMY = { species_id: RUVO, level: 1 };
 const FLEE = { type: 'flee' };
 const NO_ITEM = 'Você não tem esse item.';
 const NO_EFFECT = 'Não teria efeito.';
@@ -64,7 +64,7 @@ describe('Itens na batalha (e2e)', () => {
     await http()
       .post('/v1/me/starter')
       .set(auth)
-      .send({ species_id: FAGULHO })
+      .send({ species_id: RUVO })
       .expect(200);
     await prisma.creatureInstance.updateMany({
       where: { playerId: id },

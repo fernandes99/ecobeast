@@ -11,7 +11,7 @@ import { createTestTokens, TestTokens } from './support/tokens.js';
 // Os testes não conferem os valores dos itens: leem do banco, que o dono muda
 // no painel.
 
-const FAGULHO = 1;
+const RUVO = 1;
 const USE_PATH = '/v1/me/items/use';
 const FLEE = { type: 'flee' };
 const NO_PLAYER = 'Crie seu Domador primeiro.';
@@ -71,7 +71,7 @@ describe('Rota de uso de item (e2e)', () => {
       id,
       create: () => http().post('/v1/me').set(auth).send({ name: 'Ana' }),
       starter: () =>
-        http().post('/v1/me/starter').set(auth).send({ species_id: FAGULHO }),
+        http().post('/v1/me/starter').set(auth).send({ species_id: RUVO }),
       read: () => http().get('/v1/me').set(auth),
       use: (body: object) => http().post(USE_PATH).set(auth).send(body),
       wild: () => http().post('/v1/me/battle/wild').set(auth),
@@ -300,7 +300,7 @@ describe('Rota de uso de item (e2e)', () => {
   it.each([
     ['em branco', ''],
     ['ausente', undefined],
-    ['que não é um uuid', 'fagulho'],
+    ['que não é um uuid', 'ruvo'],
   ])('com creature_uid %s, dá 404', async (_name, creatureUid) => {
     const { user } = await userWithStarter();
     await give(user, tonic, 1);

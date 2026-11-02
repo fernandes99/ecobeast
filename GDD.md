@@ -136,7 +136,7 @@ Separe em duas camadas: a **Espécie** (dados fixos, uma linha do catálogo por 
 | Campo | Tipo | Exemplo / observação |
 | --- | --- | --- |
 | id | int | 25 (número no Bestiário) |
-| speciesName | string | "Fagulho" |
+| speciesName | string | "Ruvo" |
 | description | string | Texto do Bestiário |
 | primaryElement / secondaryElement | ElementType | Fogo / Nenhum |
 | baseHP, baseAtk, baseDef, baseSpAtk, baseSpDef, baseSpd | int (1–255) | 45, 60, 40, 65, 50, 70 |
@@ -296,9 +296,9 @@ Regras práticas:
 - Formas evoluídas herdam a lista da forma anterior, com as técnicas fortes um pouco mais tarde
 - Selvagens chegam com as 4 últimas técnicas aprendidas até o nível delas
 
-**Exemplo: linha de Fagulho (Fogo)**
+**Exemplo: linha de Ruvo (Fogo)**
 
-| Nível | Fagulho | Brasalobo | Infernolobo |
+| Nível | Ruvo | Ruvak | Ruvaroth |
 | --- | --- | --- | --- |
 | 1 | Arranhão, Rugido Feroz | Arranhão, Rugido Feroz | Arranhão, Rugido Feroz |
 | 0 (ao evoluir) | — | Mordida Brasa | Lâmina Sombria |
@@ -321,8 +321,8 @@ Cada espécie tem uma lista de `EvolutionRule { CreatureSpecies target; Evolutio
 
 | Gatilho | Exemplo | Quando entra |
 | --- | --- | --- |
-| Nível | Fagulho → Brasalobo no nível 16 | MVP |
-| Item | Gotículo + Pedra da Maré → Marisgarra | Pós-lançamento |
+| Nível | Ruvo → Ruvak no nível 16 | MVP |
+| Item | Nilu + Pedra da Maré → Nilgar | Pós-lançamento |
 | Vínculo | Bond ≥ 220 ao subir de nível | Pós-lançamento |
 | Horário | Nível 20 à noite → forma Sombra | Pós-lançamento |
 | Zona | Subir de nível na Caverna Gélida → forma Gelo | Pós-lançamento |
@@ -333,9 +333,9 @@ Cada espécie tem uma lista de `EvolutionRule { CreatureSpecies target; Evolutio
 
 | Forma | Elementos | Nível | HP / Atk / Def / SpA / SpD / Spd | Total |
 | --- | --- | --- | --- | --- |
-| Fagulho | Fogo | 1–15 | 44 / 58 / 42 / 60 / 48 / 66 | 318 |
-| Brasalobo | Fogo | 16–35 | 60 / 78 / 56 / 80 / 62 / 84 | 420 |
-| Infernolobo | Fogo / Sombra | 36+ | 78 / 108 / 72 / 100 / 76 / 101 | 535 |
+| Ruvo | Fogo | 1–15 | 44 / 58 / 42 / 60 / 48 / 66 | 318 |
+| Ruvak | Fogo | 16–35 | 60 / 78 / 56 / 80 / 62 / 84 | 420 |
+| Ruvaroth | Fogo / Sombra | 36+ | 78 / 108 / 72 / 100 / 76 / 101 | 535 |
 
 Ao evoluir: mantém nível, XP, Genes, Treino, Temperamento, técnicas e vínculo; recalcula stats; o traço vai para o slot equivalente da nova espécie; aprende a técnica de nível 0.
 

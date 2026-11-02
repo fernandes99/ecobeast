@@ -19,7 +19,7 @@ Esta iniciativa cria o banco e o servidor e muda o dono do catálogo: **o banco 
 2. Mudar um valor no banco (o poder de uma Técnica, por exemplo) muda o que a API devolve na hora, para todos.
 3. Endpoints de leitura de todo o catálogo, no formato da PokeAPI: lista paginada, detalhe por id ou slug, sub-recursos (as Técnicas de uma espécie, a linha de Ascensão) e referências entre recursos.
 4. Documentação da API navegável e testável no navegador (Scalar).
-5. O jogo abre e mostra Fagulho, Gotículo e Brotelho vindos do banco, sem os JSON locais.
+5. O jogo abre e mostra Ruvo, Nilu e Elu vindos do banco, sem os JSON locais.
 
 ## Decisões
 

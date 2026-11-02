@@ -91,9 +91,9 @@ describe('GET /v1/catalog (e2e)', () => {
   );
 
   it('números e null chegam sem transformação', () => {
-    const fagulho = body.tables['species'].find((s) => s['id'] === 1)!;
-    expect(typeof fagulho['gender_ratio']).toBe('number');
-    expect(fagulho['evolves_from_species_id']).toBeNull();
+    const ruvo = body.tables['species'].find((s) => s['id'] === 1)!;
+    expect(typeof ruvo['gender_ratio']).toBe('number');
+    expect(ruvo['evolves_from_species_id']).toBeNull();
   });
 
   it('o ETag é a versão entre aspas', () => {

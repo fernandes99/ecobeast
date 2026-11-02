@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://r4rowpjqi2dd"
-path="res://.godot/imported/front.png-9ae9f36425070f0497465cb81d34042c.ctex"
+path="res://.godot/imported/front.png-93d571ce2481fc7ae0a5b8955dfdd4d5.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/creatures/zefirama/front.png"
-dest_files=["res://.godot/imported/front.png-9ae9f36425070f0497465cb81d34042c.ctex"]
+source_file="res://assets/creatures/eluvara/front.png"
+dest_files=["res://.godot/imported/front.png-93d571ce2481fc7ae0a5b8955dfdd4d5.ctex"]
 
 [params]
 

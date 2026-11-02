@@ -40,7 +40,7 @@ describe('carga inicial do catálogo (e2e)', () => {
     },
   );
 
-  it('Brasalobo (id 2) ascende de Fagulho (id 1)', async () => {
+  it('Ruvak (id 2) ascende de Ruvo (id 1)', async () => {
     const species = await prisma.species.findUnique({ where: { id: 2 } });
     expect(species?.evolvesFromSpeciesId).toBe(1);
   });

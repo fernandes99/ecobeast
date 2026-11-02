@@ -32,7 +32,7 @@ describe('rotas de espécies (e2e)', () => {
     expect(ids).toEqual([...ids].sort((a, b) => a - b));
     expect(body.results[0]).toEqual({
       id: 1,
-      slug: 'fagulho',
+      slug: 'ruvo',
       name: expect.any(String),
       url: '/v1/species/1',
     });
@@ -68,8 +68,8 @@ describe('rotas de espécies (e2e)', () => {
 
   it('detalhe por id, por slug e por slug em maiúsculas é igual', async () => {
     const byId = (await get('/v1/species/1').expect(200)).body;
-    expect((await get('/v1/species/fagulho').expect(200)).body).toEqual(byId);
-    expect((await get('/v1/species/FAGULHO').expect(200)).body).toEqual(byId);
+    expect((await get('/v1/species/ruvo').expect(200)).body).toEqual(byId);
+    expect((await get('/v1/species/RUVO').expect(200)).body).toEqual(byId);
   });
 
   it.each(['9999', 'xyz', '99999999999'])(
@@ -117,7 +117,7 @@ describe('rotas de espécies (e2e)', () => {
     });
   });
 
-  it('Infernolobo (3): fire no slot 1, shadow no slot 2, ascende de 2', async () => {
+  it('Ruvaroth (3): fire no slot 1, shadow no slot 2, ascende de 2', async () => {
     const { body } = await get('/v1/species/3').expect(200);
     const elements = body.elements.map(
       (e: { slot: number; element: { slug: string } }) => [
@@ -145,12 +145,12 @@ describe('rotas de espécies (e2e)', () => {
     });
   });
 
-  it('GET /v1/species/fagulho/skills aceita slug; espécie inexistente dá 404', async () => {
-    await get('/v1/species/fagulho/skills').expect(200);
+  it('GET /v1/species/ruvo/skills aceita slug; espécie inexistente dá 404', async () => {
+    await get('/v1/species/ruvo/skills').expect(200);
     await get('/v1/species/xyz/skills').expect(404);
   });
 
-  it('GET /v1/species/2/evolutions devolve a linha inteira a partir de Fagulho', async () => {
+  it('GET /v1/species/2/evolutions devolve a linha inteira a partir de Ruvo', async () => {
     const { body } = await get('/v1/species/2/evolutions').expect(200);
     expect(body.chain.species.id).toBe(1);
     const second = body.chain.evolves_to[0];
@@ -160,7 +160,7 @@ describe('rotas de espécies (e2e)', () => {
     expect(second.node.evolves_to[0].node.evolves_to).toEqual([]);
   });
 
-  it('pedir Fagulho, Brasalobo ou Infernolobo devolve a mesma linha', async () => {
+  it('pedir Ruvo, Ruvak ou Ruvaroth devolve a mesma linha', async () => {
     const lines = await Promise.all(
       [1, 2, 3].map(
         async (id) => (await get(`/v1/species/${id}/evolutions`)).body,

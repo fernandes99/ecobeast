@@ -60,7 +60,7 @@ Os itens de "Fora do escopo" do [README](README.md).
 ## Critérios de aceite
 
 - [x] Tocar no inicial no Hub abre a tela com o sprite, o nome e o nível dele; voltar e Esc retornam ao Hub.
-- [x] Um inicial nível 5 recém-criado mostra a barra de XP vazia e "faltam 91 XP" (Fagulho, curva média).
+- [x] Um inicial nível 5 recém-criado mostra a barra de XP vazia e "faltam 91 XP" (Ruvo, curva média).
 - [x] As três abas trocam o conteúdo sem rolagem em 720×1280, e nada corta na janela 405×720.
 - [x] Resumo mostra a descrição, o Temperamento, o Traço com o efeito, "Nenhum" no item e o gênero.
 - [x] Os números do hexágono são iguais aos `stats` do servidor; o aumentado e o diminuído têm as marcas, e o texto de baixo nomeia os dois.

@@ -10,9 +10,9 @@ import { createTestApp } from './support/app.js';
 import { createTestPrisma } from './support/db.js';
 import { createTestTokens, TestTokens } from './support/tokens.js';
 
-const FAGULHO = 1;
-const WEAK_ENEMY = { species_id: FAGULHO, level: 1 };
-const STRONG_ENEMY = { species_id: FAGULHO, level: 100 };
+const RUVO = 1;
+const WEAK_ENEMY = { species_id: RUVO, level: 1 };
+const STRONG_ENEMY = { species_id: RUVO, level: 100 };
 const FLEE = { type: 'flee' };
 const NO_PLAYER = 'Crie seu Domador primeiro.';
 const NO_HEALTHY = 'Cure sua equipe no Refúgio.';
@@ -80,7 +80,7 @@ describe('Rotas da batalha (e2e)', () => {
       id,
       create: () => http().post('/v1/me').set(auth).send({ name: 'Ana' }),
       starter: () =>
-        http().post('/v1/me/starter').set(auth).send({ species_id: FAGULHO }),
+        http().post('/v1/me/starter').set(auth).send({ species_id: RUVO }),
       remove: () => http().delete('/v1/me').set(auth),
       start: (body: object) =>
         http().post('/v1/me/battle').set(auth).send(body),
@@ -261,10 +261,10 @@ describe('Rotas da batalha (e2e)', () => {
 
     it.each([
       ['espécie 999', { species_id: 999, level: 5 }],
-      ['nível 0', { species_id: FAGULHO, level: 0 }],
-      ['nível 101', { species_id: FAGULHO, level: 101 }],
-      ['nível quebrado', { species_id: FAGULHO, level: 1.5 }],
-      ['nível em texto', { species_id: FAGULHO, level: '5' }],
+      ['nível 0', { species_id: RUVO, level: 0 }],
+      ['nível 101', { species_id: RUVO, level: 101 }],
+      ['nível quebrado', { species_id: RUVO, level: 1.5 }],
+      ['nível em texto', { species_id: RUVO, level: '5' }],
       ['espécie em texto', { species_id: 'um', level: 5 }],
       ['corpo vazio', {}],
     ])('%s dá 400', async (_name, body) => {
@@ -273,7 +273,7 @@ describe('Rotas da batalha (e2e)', () => {
       expect(res.body.message).toBe(INVALID_ENEMY);
     });
 
-    it('começa com o Fagulho, e o JSON não mostra o inimigo por dentro', async () => {
+    it('começa com o Ruvo, e o JSON não mostra o inimigo por dentro', async () => {
       const user = await userWithStarter();
       const { battle, events } = await start(user, WEAK_ENEMY);
       const [creature] = await team(user);
@@ -286,7 +286,7 @@ describe('Rotas da batalha (e2e)', () => {
       });
       expect(battle.player.team[0]).toMatchObject({
         uid: creature!.uid,
-        species_id: FAGULHO,
+        species_id: RUVO,
         hp: creature!.currentHp,
       });
       expect(Object.keys(battle.enemy).sort()).toEqual([

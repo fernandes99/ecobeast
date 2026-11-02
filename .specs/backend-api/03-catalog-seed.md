@@ -37,7 +37,7 @@ As 28 tabelas existem no Supabase, mas estão vazias. O catálogo de hoje (23 ta
 
 - [x] Com o banco vazio, `npm run db:seed` imprime `Catálogo carregado: 23 tabelas, 436 linhas`.
 - [x] Rodar `npm run db:seed` de novo imprime `Banco já tem catálogo; nada foi feito.`, e nada muda no banco.
-- [x] No painel do Supabase, `species` tem as 9 espécies com os mesmos ids e nomes dos JSON. Brasalobo (`id` 2) tem `evolves_from_species_id` 1.
+- [x] No painel do Supabase, `species` tem as 9 espécies com os mesmos ids e nomes dos JSON. Ruvak (`id` 2) tem `evolves_from_species_id` 1.
 - [x] Criar uma `growth_rates` nova pelo painel, sem informar o `id`, gera o id seguinte ao maior existente. (Conferido por um teste e2e numa transação desfeita; o dono pode repetir pelo painel.)
 - [x] `npm run lint`, `npm run typecheck`, `npm test` e `npm run test:e2e` passam.
 

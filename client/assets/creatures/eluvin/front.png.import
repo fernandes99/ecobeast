@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bnhurl00d28tn"
-path="res://.godot/imported/front.png-a8329066743e59ee279752eced34b4c4.ctex"
+uid="uid://cwso183h74nrf"
+path="res://.godot/imported/front.png-045760ad6ca84a0b5869b2153d374b31.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/creatures/infernolobo/front.png"
-dest_files=["res://.godot/imported/front.png-a8329066743e59ee279752eced34b4c4.ctex"]
+source_file="res://assets/creatures/eluvin/front.png"
+dest_files=["res://.godot/imported/front.png-045760ad6ca84a0b5869b2153d374b31.ctex"]
 
 [params]
 

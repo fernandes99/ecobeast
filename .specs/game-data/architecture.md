@@ -120,8 +120,8 @@ temperaments ──> stats (aumentado, diminuído)
 | Coluna                  | Tipo    | Observação                                         |
 | ----------------------- | ------- | -------------------------------------------------- |
 | id                      | int     | Número no Bestiário                                |
-| slug                    | string  | `fagulho`                                          |
-| name                    | string  | "Fagulho"                                          |
+| slug                    | string  | `ruvo`                                             |
+| name                    | string  | "Ruvo"                                             |
 | description             | string  | Texto do Bestiário                                 |
 | growth_rate_id          | int     | FK → growth_rates                                  |
 | rarity_id               | int     | FK → rarities                                      |

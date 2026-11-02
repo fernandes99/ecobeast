@@ -57,7 +57,7 @@ O card "Santuário" do Hub abre um placeholder (TELAS.md #10). Esta fase cria a 
 - [x] O card "Santuário" abre a tela, e a aba de voltar retorna ao Hub.
 - [x] Sem Ecobeasts, aparece "Nenhum Ecobeast no Santuário."
 - [x] Com o servidor fora, aparece o erro, e "Tentar de novo" carrega a lista depois que ele volta.
-- [x] Buscar "fag" encontra Fagulho, e buscar "goticulo" encontra Gotículo.
+- [x] Buscar "ruv" encontra Ruvo, e buscar "nílu" encontra Nilu, sem depender de acento.
 - [x] Buscar o apelido encontra o Ecobeast.
 - [x] Só aparecem filtros de Elementos presentes no Santuário.
 - [x] Um Ecobeast com dois Elementos aparece nos dois filtros.

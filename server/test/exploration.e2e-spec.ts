@@ -7,7 +7,7 @@ import { createTestApp } from './support/app.js';
 import { createTestPrisma } from './support/db.js';
 import { createTestTokens, TestTokens } from './support/tokens.js';
 
-const FAGULHO = 1;
+const RUVO = 1;
 const NO_PLAYER = 'Crie seu Domador primeiro.';
 
 interface ExplorationBody {
@@ -51,7 +51,7 @@ describe('Rota do mapa de exploração (e2e)', () => {
       id,
       create: () => http().post('/v1/me').set(auth).send({ name: 'Ana' }),
       starter: () =>
-        http().post('/v1/me/starter').set(auth).send({ species_id: FAGULHO }),
+        http().post('/v1/me/starter').set(auth).send({ species_id: RUVO }),
       explore: () => http().post('/v1/me/exploration').set(auth),
     };
   }

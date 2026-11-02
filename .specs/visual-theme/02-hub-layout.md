@@ -81,7 +81,7 @@ Depois da [01](01-dark-theme.md), o Hub já está na paleta escura, mas ainda no
 - [x] O inicial aparece no primeiro card com a arte, o nome, o nível, o círculo do Elemento e o HP; os outros 5 dizem "Vazio".
 - [x] Sem `hub.png` nem imagens de ações, o cenário é o gradiente de céu e cada card mostra o seu ícone. Colocando uma imagem qualquer em `res://assets/ui/actions/shop.webp`, a Loja passa a mostrá-lo sem mudar código. (Conferir e remover o arquivo de teste.)
 - [x] Cada card de ação, o lápis da equipe e as 4 abas (fora Home) abrem o placeholder certo; o voltar retorna ao Hub com a rolagem onde estava. (Toques simulados pela cena temporária; o toque de verdade no celular é passo do dono.)
-- [x] Um nome de 16 caracteres largos ("MMMMMMMMMMMMMMMM") e "Marisgarra" num card não saem dos seus espaços.
+- [x] Um nome de 16 caracteres largos ("MMMMMMMMMMMMMMMM") e "Ruvaroth" num card não saem dos seus espaços.
 - [x] Numa tela mais baixa (janela 405 × 640), o conteúdo se ajusta (o espaço do céu diminui) e a barra inferior continua visível; o que não couber rola.
 - [x] O jogo roda sem erros de script e o editor não mostra avisos.
 
@@ -138,7 +138,7 @@ Comparar a última captura com `hub-prototype.png`. Passo do dono: F5 no editor 
 - **Tema:** saíram `ActionButton` e `CoinDot`, que ficaram sem uso. Entraram `PlayerPanel`, `CoinChip`, `SectionPanel`, `IconButton` e `XpBar`; o `AvatarPanel` passou a ter cantos 44 (círculo de 88 px).
 - **Conferência** pela cena temporária (apagada no fim):
   - capturas do Hub com e sem PNG de ação;
-  - modo "estresse": nome de 16 "M", seis espécies com "Marisgarra" e HP médio e baixo;
+  - modo "estresse": nome de 16 "M", seis espécies com "Ruvaroth" e HP médio e baixo;
   - janela de 405 × 640;
   - os 14 toques de navegação.
 

@@ -5,7 +5,7 @@
 
 ## Contexto
 
-Depois da fase 01, o jogador cria o Domador e cai no placeholder "Escolha do inicial". Esta fase entrega as regras que criam uma criatura (stats, XP e geração, em `res://domain/rules/`), implementa `choose_starter` e a tela em que o jogador escolhe entre Fagulho, Gotículo e Brotelho (TELAS.md #2). O Hub vem em [hub/01](../hub/01-hub-screen.md); até lá, depois da escolha o jogo abre o placeholder "Hub".
+Depois da fase 01, o jogador cria o Domador e cai no placeholder "Escolha do inicial". Esta fase entrega as regras que criam uma criatura (stats, XP e geração, em `res://domain/rules/`), implementa `choose_starter` e a tela em que o jogador escolhe entre Ruvo, Nilu e Elu (TELAS.md #2). O Hub vem em [hub/01](../hub/01-hub-screen.md); até lá, depois da escolha o jogo abre o placeholder "Hub".
 
 ## Escopo
 
@@ -36,13 +36,13 @@ Depois da fase 01, o jogador cria o Domador e cai no placeholder "Escolha do ini
 
 ## Critérios de aceite
 
-- [x] Com um Domador sem equipe, F5 abre a escolha com Fagulho, Gotículo e Brotelho, nessa ordem, com cores de Fogo, Água e Flora.
-- [x] Tocar em Gotículo e depois em "Voltar" fecha o painel e nada é gravado.
-- [x] Confirmar Brotelho abre o placeholder "Hub"; `save.json` tem uma criatura `species_id` 7, nível 5, `current_xp` 125, 2 técnicas (Patada com 35 PP e Olhar Manhoso com 30 PP), `trait_id` 5, `bond` 70 e `is_prismatic` false.
+- [x] Com um Domador sem equipe, F5 abre a escolha com Ruvo, Nilu e Elu, nessa ordem, com cores de Fogo, Água e Flora.
+- [x] Tocar em Nilu e depois em "Voltar" fecha o painel e nada é gravado.
+- [x] Confirmar Elu abre o placeholder "Hub"; `save.json` tem uma criatura `species_id` 7, nível 5, `current_xp` 125, 2 técnicas (Patada com 35 PP e Olhar Manhoso com 30 PP), `trait_id` 5, `bond` 70 e `is_prismatic` false.
 - [x] O `current_hp` gravado é igual ao HP calculado à mão com a fórmula de [architecture.md](architecture.md) para os Genes gravados.
 - [x] Apagar o save e repetir 3 vezes gera Genes e Temperamentos diferentes.
 - [x] Fechar e reabrir abre direto o placeholder "Hub".
-- [x] Um script temporário confirma o exemplo do `StatCalculator` em [architecture.md](architecture.md) (Fagulho, nível 5, Genes 0, neutro: 19/10/9/11/9/11). (Apagar depois.)
+- [x] Um script temporário confirma o exemplo do `StatCalculator` em [architecture.md](architecture.md) (Ruvo, nível 5, Genes 0, neutro: 19/10/9/11/9/11). (Apagar depois.)
 
 Conferidos por uma cena temporária (já apagada). Ela abriu o jogo numa janela, tocou nos cartões e nos botões do painel, simulou a reabertura chamando o boot de novo e salvou capturas de tela. Também conferiu:
 

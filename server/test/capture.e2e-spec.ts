@@ -12,8 +12,8 @@ import { createTestTokens, TestTokens } from './support/tokens.js';
 // O sorteio não é controlável pela API: cada teste troca a taxa e o bônus da
 // luta no `BattleStore`, sem conferir os valores do catálogo.
 
-const FAGULHO = 1;
-const WEAK_ENEMY = { species_id: FAGULHO, level: 1 };
+const RUVO = 1;
+const WEAK_ENEMY = { species_id: RUVO, level: 1 };
 const FLEE = { type: 'flee' };
 const NOT_CAPTURABLE = 'Esse Ecobeast não pode ser capturado.';
 const CANNOT_USE = 'Esse item não pode ser usado agora.';
@@ -64,7 +64,7 @@ describe('Captura (e2e)', () => {
     await http()
       .post('/v1/me/starter')
       .set(auth)
-      .send({ species_id: FAGULHO })
+      .send({ species_id: RUVO })
       .expect(200);
     await prisma.creatureInstance.updateMany({
       where: { playerId: id },
@@ -95,7 +95,7 @@ describe('Captura (e2e)', () => {
   /** Taxa e bônus só desta luta, que fazem a chance virar certeza ou quase zero. */
   function force(user: User, success: boolean) {
     const { catalog } = stored(user);
-    catalog.captureRates.set(FAGULHO, success ? 100 : 1);
+    catalog.captureRates.set(RUVO, success ? 100 : 1);
     catalog.items.get(sphere.id)!.captureBonus = success ? 1000 : 1e-12;
   }
 
@@ -207,7 +207,7 @@ describe('Captura (e2e)', () => {
 
       const [, caught] = await creatures(user);
       expect(caught).toMatchObject({
-        speciesId: FAGULHO,
+        speciesId: RUVO,
         level: 1,
         temperamentId: creature.temperamentId,
         traitId: creature.traitId,
@@ -368,7 +368,7 @@ describe('Captura (e2e)', () => {
     it('capture_rate 0 dá 400, sem gastar a Esfera', async () => {
       const user = await strongUser();
       const opening = (await user.start().expect(201)).body as Body;
-      stored(user).catalog.captureRates.set(FAGULHO, 0);
+      stored(user).catalog.captureRates.set(RUVO, 0);
 
       const res = await user.act(CAPTURE()).expect(400);
 

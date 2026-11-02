@@ -8,8 +8,8 @@ import { createTestApp } from './support/app.js';
 import { createTestPrisma } from './support/db.js';
 import { createTestTokens, TestTokens } from './support/tokens.js';
 
-const FAGULHO = 1;
-const BRASALOBO = 2;
+const RUVO = 1;
+const RUVAK = 2;
 const INVALID_NAME = 'Use de 2 a 16 letras, números ou espaços.';
 const CREATURE_NOT_FOUND = 'Ecobeast não encontrado.';
 const STAT_KEYS = ['atk', 'def', 'hp', 'sp_atk', 'sp_def', 'spd'];
@@ -81,7 +81,7 @@ describe('Rotas do jogador (e2e)', () => {
   async function userWithStarter() {
     const user = await newUser();
     await user.create({ name: 'Ana' }).expect(201);
-    const res = await user.starter({ species_id: FAGULHO }).expect(200);
+    const res = await user.starter({ species_id: RUVO }).expect(200);
     return { user, uid: (res.body.player.party[0] as Creature).uid };
   }
 
@@ -90,7 +90,7 @@ describe('Rotas do jogador (e2e)', () => {
     const responses = await Promise.all([
       server().get('/v1/me'),
       server().post('/v1/me').send({ name: 'Ana' }),
-      server().post('/v1/me/starter').send({ species_id: FAGULHO }),
+      server().post('/v1/me/starter').send({ species_id: RUVO }),
       server().delete('/v1/me'),
       server().patch(`/v1/me/creatures/${randomUUID()}`).send({ nickname: '' }),
     ]);
@@ -204,14 +204,14 @@ describe('Rotas do jogador (e2e)', () => {
 
   it('escolher o inicial antes do Domador dá 409', async () => {
     const user = await newUser();
-    const res = await user.starter({ species_id: FAGULHO }).expect(409);
+    const res = await user.starter({ species_id: RUVO }).expect(409);
     expect(res.body.message).toBe('Crie seu Domador primeiro.');
   });
 
   it('espécie fora dos iniciais dá 400', async () => {
     const user = await newUser();
     await user.create({ name: 'Ana' }).expect(201);
-    const res = await user.starter({ species_id: BRASALOBO }).expect(400);
+    const res = await user.starter({ species_id: RUVAK }).expect(400);
     expect(res.body.message).toBe('Esse Ecobeast não pode ser escolhido.');
   });
 
@@ -226,12 +226,12 @@ describe('Rotas do jogador (e2e)', () => {
     const user = await newUser();
     await user.create({ name: 'Ana' }).expect(201);
 
-    const res = await user.starter({ species_id: FAGULHO }).expect(200);
+    const res = await user.starter({ species_id: RUVO }).expect(200);
     const party = res.body.player.party as Creature[];
     expect(party).toHaveLength(1);
     const creature = party[0]!;
 
-    expect(creature.species_id).toBe(FAGULHO);
+    expect(creature.species_id).toBe(RUVO);
     expect(creature.nickname).toBe('');
     expect(creature.level).toBe(5);
     expect(creature.is_prismatic).toBe(false);
@@ -273,7 +273,7 @@ describe('Rotas do jogador (e2e)', () => {
   it('as Técnicas vêm com o PP cheio e o Traço não é oculto', async () => {
     const user = await newUser();
     await user.create({ name: 'Ana' }).expect(201);
-    const res = await user.starter({ species_id: FAGULHO }).expect(200);
+    const res = await user.starter({ species_id: RUVO }).expect(200);
     const creature = res.body.player.party[0] as Creature;
 
     const skills = await prisma.skill.findMany({
@@ -284,7 +284,7 @@ describe('Rotas do jogador (e2e)', () => {
       expect(slot.current_pp).toBe(skill?.maxPp);
     }
     const trait = await prisma.speciesTrait.findFirstOrThrow({
-      where: { speciesId: FAGULHO, traitId: creature.trait_id },
+      where: { speciesId: RUVO, traitId: creature.trait_id },
     });
     expect(trait.isHidden).toBe(false);
   });
@@ -292,8 +292,8 @@ describe('Rotas do jogador (e2e)', () => {
   it('um segundo inicial dá 409', async () => {
     const user = await newUser();
     await user.create({ name: 'Ana' }).expect(201);
-    await user.starter({ species_id: FAGULHO }).expect(200);
-    const res = await user.starter({ species_id: FAGULHO }).expect(409);
+    await user.starter({ species_id: RUVO }).expect(200);
+    const res = await user.starter({ species_id: RUVO }).expect(409);
     expect(res.body.message).toBe('Você já escolheu seu Ecobeast.');
   });
 
@@ -302,8 +302,8 @@ describe('Rotas do jogador (e2e)', () => {
     await user.create({ name: 'Ana' }).expect(201);
 
     const responses = await Promise.all([
-      user.starter({ species_id: FAGULHO }),
-      user.starter({ species_id: FAGULHO }),
+      user.starter({ species_id: RUVO }),
+      user.starter({ species_id: RUVO }),
     ]);
 
     expect(responses.map((res) => res.status).sort()).toEqual([200, 409]);
@@ -318,7 +318,7 @@ describe('Rotas do jogador (e2e)', () => {
   it('o inicial nasce no começo do nível e traz o XP do próximo', async () => {
     const user = await newUser();
     await user.create({ name: 'Ana' }).expect(201);
-    const res = await user.starter({ species_id: FAGULHO }).expect(200);
+    const res = await user.starter({ species_id: RUVO }).expect(200);
     const creature = res.body.player.party[0] as Creature;
 
     expect(creature.level_xp).toBe(creature.current_xp);
@@ -414,7 +414,7 @@ describe('Rotas do jogador (e2e)', () => {
   it('DELETE /v1/me apaga o Domador e o que é dele', async () => {
     const user = await newUser();
     await user.create({ name: 'Ana' }).expect(201);
-    await user.starter({ species_id: FAGULHO }).expect(200);
+    await user.starter({ species_id: RUVO }).expect(200);
 
     await user.remove().expect(204);
 

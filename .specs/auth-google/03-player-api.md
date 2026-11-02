@@ -32,7 +32,7 @@ Com a sessão conferida pelo `AuthGuard` ([01](01-auth-server.md)) e as regras d
 
 - [x] Sem token, cada rota dá `401`.
 - [x] Um usuário novo: `GET /v1/me` dá `player: null`; `POST /v1/me` com `"  Ana   Maria "` cria "Ana Maria" com 1000 moedas; um segundo `POST` dá `409`.
-- [x] `POST /v1/me/starter` antes do Domador dá `409`; com `species_id` 2 (não inicial), `400`; com 1, `200` com Fagulho no nível 5, 4 ou menos Técnicas, HP cheio e `stats` coerentes com Genes e Temperamento; um segundo, `409`.
+- [x] `POST /v1/me/starter` antes do Domador dá `409`; com `species_id` 2 (não inicial), `400`; com 1, `200` com Ruvo no nível 5, 4 ou menos Técnicas, HP cheio e `stats` coerentes com Genes e Temperamento; um segundo, `409`.
 - [x] O `GET /v1/me` seguinte devolve o mesmo jogador, e o banco tem 1 criatura, 6 linhas de stats e as Técnicas.
 - [x] Dois `POST /v1/me/starter` ao mesmo tempo terminam com uma criatura só (um `200` e um `409`).
 - [x] `DELETE /v1/me` dá `204`, e o `GET /v1/me` seguinte, `player: null`.

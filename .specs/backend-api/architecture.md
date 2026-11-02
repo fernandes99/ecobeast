@@ -90,7 +90,7 @@ O Prisma não descreve `CHECK` no `schema.prisma`, então essa é a única exce�
 
 ## Documentação
 
-- O `@nestjs/swagger` gera o documento OpenAPI a partir dos controllers e dos DTOs, com descrições em pt-BR e exemplos (o Fagulho como espécie de exemplo).
+- O `@nestjs/swagger` gera o documento OpenAPI a partir dos controllers e dos DTOs, com descrições em pt-BR e exemplos (o Ruvo como espécie de exemplo).
 - A **Scalar** (`@scalar/nestjs-api-reference`) mostra esse documento em `/docs`, e o JSON fica em `/docs/openapi.json`. A Swagger UI não é montada.
 
 ## Testes

@@ -837,7 +837,7 @@ describe('troca durante a luta', () => {
 describe('captura', () => {
   const SPHERE = 1;
   const TONIC = 4;
-  const FAGULHO = 1;
+  const RUVO = 1;
   const RARE_SPECIES = 2;
   const SUCCESS = always(0.1);
   const FAILURE = always(0.9);
@@ -849,7 +849,7 @@ describe('captura', () => {
       [SPHERE]: { healAmount: null, curesStatus: false, captureBonus: 1 },
       [TONIC]: { healAmount: 8, curesStatus: false },
     },
-    { [FAGULHO]: 45, [RARE_SPECIES]: 0 },
+    { [RUVO]: 45, [RARE_SPECIES]: 0 },
   );
   const bag = (itemId = SPHERE, quantity = 1) => [
     { itemId, quantity, used: 0 },

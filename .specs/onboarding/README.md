@@ -22,7 +22,7 @@ Quem abre o jogo pela primeira vez (ou depois de apagar o progresso).
 
 1. Primeira abertura: a tela de entrada mostra o logo e pede o nome do Domador.
 2. "Começar" cria o Domador e abre a escolha do inicial.
-3. A escolha mostra Fagulho, Gotículo e Brotelho. Tocar num deles pede confirmação.
+3. A escolha mostra Ruvo, Nilu e Elu. Tocar num deles pede confirmação.
 4. Confirmar cria a criatura no nível 5, coloca na equipe e abre o Hub.
 5. Nas próximas aberturas o jogo vai direto para o Hub. Se o jogador fechou o jogo entre o nome e a escolha, volta para a escolha.
 

@@ -14,7 +14,7 @@ import type {
 
 /** Ajudantes dos testes da batalha; o código do jogo não usa este arquivo. */
 
-/** Um Fagulho nível 5, sem Genes nem Temperamento, com HP cheio. */
+/** Um Ruvo nível 5, sem Genes nem Temperamento, com HP cheio. */
 export function makeCombatant(overrides: Partial<Combatant> = {}): Combatant {
   return {
     creatureUid: 'c1',

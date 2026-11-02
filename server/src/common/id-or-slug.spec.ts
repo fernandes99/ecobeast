@@ -6,12 +6,12 @@ describe('parseIdOrSlug', () => {
   });
 
   it('o resto é slug', () => {
-    expect(parseIdOrSlug('fagulho')).toEqual({ slug: 'fagulho' });
+    expect(parseIdOrSlug('ruvo')).toEqual({ slug: 'ruvo' });
     expect(parseIdOrSlug('1a')).toEqual({ slug: '1a' });
   });
 
   it('slug vai para minúsculas', () => {
-    expect(parseIdOrSlug('FAGULHO')).toEqual({ slug: 'fagulho' });
+    expect(parseIdOrSlug('RUVO')).toEqual({ slug: 'ruvo' });
   });
 
   it('id maior que um inteiro do banco não vira id (dá 404, e não erro 500)', () => {

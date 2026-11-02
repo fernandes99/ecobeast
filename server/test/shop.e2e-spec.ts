@@ -10,7 +10,7 @@ import { createTestTokens, TestTokens } from './support/tokens.js';
 
 // Os testes não conferem preços: leem o preço do banco, que o dono muda no painel.
 
-const FAGULHO = 1;
+const RUVO = 1;
 const BUY_PATH = '/v1/me/shop/buy';
 const NO_PLAYER = 'Crie seu Domador primeiro.';
 const NOT_ENOUGH_COINS = 'Moedas insuficientes.';
@@ -45,7 +45,7 @@ describe('Rota de compra (e2e)', () => {
       id,
       create: () => http().post('/v1/me').set(auth).send({ name: 'Ana' }),
       starter: () =>
-        http().post('/v1/me/starter').set(auth).send({ species_id: FAGULHO }),
+        http().post('/v1/me/starter').set(auth).send({ species_id: RUVO }),
       read: () => http().get('/v1/me').set(auth),
       buy: (body: object = { item_id: item.id }) =>
         http().post(BUY_PATH).set(auth).send(body),

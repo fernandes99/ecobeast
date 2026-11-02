@@ -64,7 +64,7 @@ O motor funciona, mas ninguém o alcança. Esta fase o expõe: o NestJS monta os
 - [x] Sem token, as duas rotas dão `401`.
 - [x] Com a variável desligada, começar dá `404`.
 - [x] Sem Domador, `409`; com a equipe toda a 0 HP, `409` "Cure sua equipe no Refúgio."; com espécie 999 ou nível 101, `400`.
-- [x] Uma batalha começa com o Fagulho, e o JSON não mostra as Técnicas do inimigo.
+- [x] Uma batalha começa com o Ruvo, e o JSON não mostra as Técnicas do inimigo.
 - [x] Usar Técnicas até vencer dá `victory`, e o banco fica com o `current_hp` e o PP da resposta.
 - [x] Uma derrota grava 0 HP, e a batalha seguinte dá `409`.
 - [x] Fugir com sucesso grava o HP e o PP daquele momento.

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cur8ls0segicg"
-path="res://.godot/imported/front.png-e269e51f04acc57dd7d4bc32abf259e5.ctex"
+uid="uid://l7k8yw0xds5p"
+path="res://.godot/imported/front.png-e3340223558d06058f4dc0edbd14bdd5.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/creatures/fagulho/front.png"
-dest_files=["res://.godot/imported/front.png-e269e51f04acc57dd7d4bc32abf259e5.ctex"]
+source_file="res://assets/creatures/elu/front.png"
+dest_files=["res://.godot/imported/front.png-e3340223558d06058f4dc0edbd14bdd5.ctex"]
 
 [params]
 

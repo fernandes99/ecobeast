@@ -14,7 +14,7 @@ export class StarterDto {
   sort_order: number;
 
   @ApiProperty({
-    example: { id: 1, slug: 'fagulho', name: 'Fagulho', url: '/v1/species/1' },
+    example: { id: 1, slug: 'ruvo', name: 'Ruvo', url: '/v1/species/1' },
   })
   species: ResourceRef;
 }

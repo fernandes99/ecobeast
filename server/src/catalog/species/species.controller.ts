@@ -29,7 +29,7 @@ export class SpeciesController {
     'Uma espécie',
     'Dados básicos: medidas, captura, curva de XP, raridade, Elementos, stats base e Traços. As Técnicas e a linha de Ascensão ficam nas rotas /skills e /evolutions.',
     () => SpeciesDetailDto,
-    'fagulho',
+    'ruvo',
   )
   detail(@Param('idOrSlug') idOrSlug: string): Promise<SpeciesDetailDto> {
     return this.species.detail(idOrSlug);
@@ -40,7 +40,7 @@ export class SpeciesController {
     'Técnicas de uma espécie',
     'O que a espécie aprende: a Técnica, o método (por nível, ao ascender, ensinável) e o nível.',
     () => SpeciesSkillsDto,
-    'fagulho',
+    'ruvo',
   )
   skills(@Param('idOrSlug') idOrSlug: string): Promise<SpeciesSkillsDto> {
     return this.species.skills(idOrSlug);
@@ -51,7 +51,7 @@ export class SpeciesController {
     'Linha de Ascensão de uma espécie',
     'A linha inteira, a partir da primeira forma; pedir qualquer espécie da linha devolve o mesmo resultado.',
     () => EvolutionChainDto,
-    'brasalobo',
+    'ruvak',
   )
   evolutions(@Param('idOrSlug') idOrSlug: string): Promise<EvolutionChainDto> {
     return this.species.evolutions(idOrSlug);

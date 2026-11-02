@@ -5,10 +5,10 @@ export class ResourceRef {
   @ApiProperty({ example: 1 })
   id: number;
 
-  @ApiProperty({ example: 'fagulho' })
+  @ApiProperty({ example: 'ruvo' })
   slug: string;
 
-  @ApiProperty({ example: 'Fagulho' })
+  @ApiProperty({ example: 'Ruvo' })
   name: string;
 
   @ApiProperty({

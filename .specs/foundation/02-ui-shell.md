@@ -58,7 +58,7 @@ Depois da fase 01 o jogo abre uma cena vazia, e depois de [game-data](../game-da
 
 - [x] F5 abre a tela "Ecobeast / Em construção", sem botão Voltar, no fundo creme e com a fonte Nunito.
 - [x] Quebrar uma FK em qualquer `res://data/*.json` e dar F5 mostra "Erro nos dados do jogo" com o erro listado. Desfazer.
-- [x] Uma cena de teste temporária mostra os três portraits iniciais (Fagulho, Gotículo, Brotelho) como círculos nas cores de Fogo, Água e Flora, e os 14 `ElementBadge` legíveis. (Apagar a cena depois.)
+- [x] Uma cena de teste temporária mostra os três portraits iniciais (Ruvo, Nilu, Elu) como círculos nas cores de Fogo, Água e Flora, e os 14 `ElementBadge` legíveis. (Apagar a cena depois.)
 - [x] Na mesma cena, `HpBar` com 30/30, 12/30 e 5/30 aparece verde, amarela e vermelha.
 - [x] Um `push` seguido de Esc volta para a tela anterior com o estado que ela tinha.
 - [ ] Com a janela no formato de um celular com notch (Projeto > Configurações > `display/window/size` ou o emulador de dispositivo do editor), o conteúdo não fica embaixo do recorte.

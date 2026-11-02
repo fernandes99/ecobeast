@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cwso183h74nrf"
-path="res://.godot/imported/front.png-1f14dada815b8e56d914257d988bcb99.ctex"
+uid="uid://bjv503jx30aip"
+path="res://.godot/imported/front.png-231db0e5d9cc4a6d19f969575e81c19f.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/creatures/ramalebre/front.png"
-dest_files=["res://.godot/imported/front.png-1f14dada815b8e56d914257d988bcb99.ctex"]
+source_file="res://assets/creatures/nilgar/front.png"
+dest_files=["res://.godot/imported/front.png-231db0e5d9cc4a6d19f969575e81c19f.ctex"]
 
 [params]
 

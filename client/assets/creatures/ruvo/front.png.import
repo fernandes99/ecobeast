@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bjplv86jrlg2u"
-path="res://.godot/imported/front.png-dd6cb774e56ae5e21c98dc3b06a28d41.ctex"
+uid="uid://cur8ls0segicg"
+path="res://.godot/imported/front.png-1de5be17bf5247914b79da5ed4cf77a2.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/creatures/abissarra/front.png"
-dest_files=["res://.godot/imported/front.png-dd6cb774e56ae5e21c98dc3b06a28d41.ctex"]
+source_file="res://assets/creatures/ruvo/front.png"
+dest_files=["res://.godot/imported/front.png-1de5be17bf5247914b79da5ed4cf77a2.ctex"]
 
 [params]
 

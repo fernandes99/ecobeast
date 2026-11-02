@@ -7,13 +7,15 @@
 
 Com as tabelas de referência preenchidas, falta o conteúdo que a escolha do inicial e o Hub mostram. Esta fase cria as 3 linhas evolutivas iniciais completas — Fogo, Água e Flora, com duas Ascensões cada —, os traços, as técnicas que os learnsets usam e as opções da escolha do inicial.
 
-A linha de Fogo vem do `GDD.md` (seções "Técnicas por nível" e "Evoluções"). As linhas de Água e Flora foram propostas no planejamento seguindo o mesmo padrão e estão **_a revisar_** pelo dono: nomes, conceito, números e técnicas podem mudar sem cerimônia.
+A linha de Fogo vem do `GDD.md` (seções "Técnicas por nível" e "Evoluções"). As linhas de Água e Flora foram propostas no planejamento seguindo o mesmo padrão e estão **_a revisar_** pelo dono: conceito, números e técnicas podem mudar sem cerimônia.
 
 Conceito das linhas:
 
-- **Fogo — Fagulho → Brasalobo → Infernolobo:** lobo de brasas, rápido e ofensivo; a forma final ganha Sombra.
-- **Água — Gotículo → Marisgarra → Abissarra** _(a revisar)_: crustáceo de poça de maré, defensivo; o casco vira metal na forma final (Água/Metal).
-- **Flora — Brotelho → Ramalebre → Zefirama** _(a revisar)_: lebre com broto entre as orelhas, de ataque especial; a forma final ganha Vento.
+- **Fogo — Ruvo → Ruvak → Ruvaroth:** lobo de brasas, rápido e ofensivo; a forma final ganha Sombra.
+- **Água — Nilu → Nilgar → Nilgorr** _(a revisar)_: crustáceo de poça de maré, defensivo; o casco vira metal na forma final (Água/Metal).
+- **Flora — Elu → Eluvin → Eluvara** _(a revisar)_: lebre com broto entre as orelhas, de ataque especial; a forma final ganha Vento.
+
+Os nomes destas 9 espécies são palavras inventadas, sem idioma e sem junção de duas palavras, para funcionarem em qualquer país; dentro de uma linha, repetem o começo. Essa escolha vale só para as 3 linhas iniciais: outras espécies podem juntar duas palavras, desde que o nome não fique em português. O dono aprovou estes nomes em 2026-11-02, no lugar dos originais em português. Os ids não mudaram, e as descrições continuam em pt-BR. Como exceção, `server/prisma/seed-data/species.json` foi editado nessa troca, para a carga inicial continuar batendo com as pastas de `res://assets/creatures/<slug>/`.
 
 O triângulo funciona pela tabela do GDD: Fogo vence Flora, Água vence Fogo e Flora vence Água.
 
@@ -35,30 +37,30 @@ Preencher: `species`, `species_elements`, `species_stats`, `traits`, `species_tr
 
 | id  | name        | Elementos     | XP  | Altura (m) | Peso (kg) | Descrição (Bestiário)                                                                              |
 | --- | ----------- | ------------- | --- | ---------- | --------- | -------------------------------------------------------------------------------------------------- |
-| 1   | Fagulho     | Fogo          | 62  | 0.5        | 9.0       | Filhote de lobo com brasas no pelo. Quando se anima, solta faíscas pela cauda.                     |
-| 2   | Brasalobo   | Fogo          | 142 | 1.0        | 32.0      | Corre pelas encostas vulcânicas. O pelo aquece tanto que seca a grama por onde passa.              |
-| 3   | Infernolobo | Fogo / Sombra | 236 | 1.6        | 78.0      | Dizem que surge nos eclipses. Sua chama escurece até ficar negra diante de um rival digno.         |
-| 4   | Gotículo    | Água          | 62  | 0.3        | 6.5       | Pequeno crustáceo que carrega uma gota de maré no casco. Sem ela, fica tímido e se esconde.        |
-| 5   | Marisgarra  | Água          | 142 | 0.9        | 38.0      | Suas garras fecham com a força da maré cheia. Protege as poças onde nasceu.                        |
-| 6   | Abissarra   | Água / Metal  | 236 | 1.5        | 160.0     | O casco endureceu nas profundezas até virar metal. Nenhuma corrente o tira do lugar.               |
-| 7   | Brotelho    | Flora         | 62  | 0.4        | 4.2       | Filhote de lebre com um broto entre as orelhas. O broto se abre quando ele toma sol.               |
-| 8   | Ramalebre   | Flora         | 142 | 0.9        | 18.5      | Salta entre os galhos mais altos. As orelhas viraram folhas que captam o vento.                    |
-| 9   | Zefirama    | Flora / Vento | 236 | 1.4        | 42.0      | Guarda os bosques ventosos. Com um bater de orelhas, espalha sementes por quilômetros.             |
+| 1   | Ruvo        | Fogo          | 62  | 0.5        | 9.0       | Filhote de lobo com brasas no pelo. Quando se anima, solta faíscas pela cauda.                     |
+| 2   | Ruvak       | Fogo          | 142 | 1.0        | 32.0      | Corre pelas encostas vulcânicas. O pelo aquece tanto que seca a grama por onde passa.              |
+| 3   | Ruvaroth    | Fogo / Sombra | 236 | 1.6        | 78.0      | Dizem que surge nos eclipses. Sua chama escurece até ficar negra diante de um rival digno.         |
+| 4   | Nilu        | Água          | 62  | 0.3        | 6.5       | Pequeno crustáceo que carrega uma gota de maré no casco. Sem ela, fica tímido e se esconde.        |
+| 5   | Nilgar      | Água          | 142 | 0.9        | 38.0      | Suas garras fecham com a força da maré cheia. Protege as poças onde nasceu.                        |
+| 6   | Nilgorr     | Água / Metal  | 236 | 1.5        | 160.0     | O casco endureceu nas profundezas até virar metal. Nenhuma corrente o tira do lugar.               |
+| 7   | Elu         | Flora         | 62  | 0.4        | 4.2       | Filhote de lebre com um broto entre as orelhas. O broto se abre quando ele toma sol.               |
+| 8   | Eluvin      | Flora         | 142 | 0.9        | 18.5      | Salta entre os galhos mais altos. As orelhas viraram folhas que captam o vento.                    |
+| 9   | Eluvara     | Flora / Vento | 236 | 1.4        | 42.0      | Guarda os bosques ventosos. Com um bater de orelhas, espalha sementes por quilômetros.             |
 
 - **RF-02:** `species_elements.json`: 12 linhas, a partir da coluna Elementos (primeiro = `slot` 1).
 - **RF-03:** `species_stats.json`: 54 linhas (9 espécies × 6 stats). Fogo do GDD; Água e Flora _a revisar_. O número entre parênteses é o `training_yield`; os outros stats têm 0.
 
 | Espécie     | HP  | Atq     | Def     | Atq.E   | Def.E | Vel     | Total |
 | ----------- | --- | ------- | ------- | ------- | ----- | ------- | ----- |
-| Fagulho     | 44  | 58      | 42      | 60      | 48    | 66 (1)  | 318   |
-| Brasalobo   | 60  | 78      | 56      | 80      | 62    | 84 (2)  | 420   |
-| Infernolobo | 78  | 108 (3) | 72      | 100     | 76    | 101     | 535   |
-| Gotículo    | 54  | 52      | 62 (1)  | 46      | 58    | 46      | 318   |
-| Marisgarra  | 70  | 70      | 82 (2)  | 60      | 76    | 62      | 420   |
-| Abissarra   | 92  | 96      | 110 (3) | 72      | 98    | 64      | 532   |
-| Brotelho    | 46  | 44      | 48      | 64 (1)  | 56    | 60      | 318   |
-| Ramalebre   | 60  | 56      | 62      | 84 (2)  | 74    | 84      | 420   |
-| Zefirama    | 76  | 70      | 76      | 112 (3) | 94    | 104     | 532   |
+| Ruvo        | 44  | 58      | 42      | 60      | 48    | 66 (1)  | 318   |
+| Ruvak       | 60  | 78      | 56      | 80      | 62    | 84 (2)  | 420   |
+| Ruvaroth    | 78  | 108 (3) | 72      | 100     | 76    | 101     | 535   |
+| Nilu        | 54  | 52      | 62 (1)  | 46      | 58    | 46      | 318   |
+| Nilgar      | 70  | 70      | 82 (2)  | 60      | 76    | 62      | 420   |
+| Nilgorr     | 92  | 96      | 110 (3) | 72      | 98    | 64      | 532   |
+| Elu         | 46  | 44      | 48      | 64 (1)  | 56    | 60      | 318   |
+| Eluvin      | 60  | 56      | 62      | 84 (2)  | 74    | 84      | 420   |
+| Eluvara     | 76  | 70      | 76      | 112 (3) | 94    | 104     | 532   |
 
 **Traços**
 
@@ -129,7 +131,7 @@ Mordida Brasa, Fumaça Densa, Presa Ígnea, Uivo, Couraça de Cinzas e Garra do 
 
 - **RF-09:** `species_skills.json`, todas com `level_up`, exceto as linhas "Ao ascender" (`evolution`, nível 0). Fogo segue o GDD; Água e Flora _a revisar_. Nível 1: as duas técnicas de cada linha.
 
-| Nível          | Fagulho / Brasalobo / Infernolobo     | Gotículo / Marisgarra / Abissarra   | Brotelho / Ramalebre / Zefirama        |
+| Nível          | Ruvo / Ruvak / Ruvaroth               | Nilu / Nilgar / Nilgorr             | Elu / Eluvin / Eluvara                 |
 | -------------- | ------------------------------------- | ----------------------------------- | -------------------------------------- |
 | 1              | Arranhão, Rugido Feroz                | Beliscão, Couraça                   | Patada, Olhar Manhoso                  |
 | Ao ascender    | — / Mordida Brasa / Lâmina Sombria    | — / Garra de Maré / Pinça de Aço    | — / Folha Navalha / Lufada Cortante    |
@@ -149,12 +151,12 @@ Linhas sem indicação valem para as três formas. Total: 93 linhas (8 por forma
 **Ascensões e iniciais**
 
 - **RF-10:** `evolutions.json`: 6 regras com o gatilho `level`: 1 → 2 e 4 → 5 e 7 → 8 no nível 16; 2 → 3 e 5 → 6 e 8 → 9 no nível 36. Demais colunas `null`.
-- **RF-11:** `starter_options.json`: Fagulho (`sort_order` 1), Gotículo (2), Brotelho (3).
+- **RF-11:** `starter_options.json`: Ruvo (`sort_order` 1), Nilu (2), Elu (3).
 
 ## Critérios de aceite
 
 - [x] O validador termina com "Catálogo OK" e código 0.
-- [x] Um script temporário confere: `GameData.get_starters()` devolve Fagulho, Gotículo e Brotelho, nessa ordem; `get_species(3).element_ids` = `[1, 11]`; `get_species(1).base_stats.total()` = 318; `get_learnset(2)` começa com Mordida Brasa (nível 0); `get_evolutions(1)` tem uma regra para a espécie 2 no nível 16. (Apagar depois.)
+- [x] Um script temporário confere: `GameData.get_starters()` devolve Ruvo, Nilu e Elu, nessa ordem; `get_species(3).element_ids` = `[1, 11]`; `get_species(1).base_stats.total()` = 318; `get_learnset(2)` começa com Mordida Brasa (nível 0); `get_evolutions(1)` tem uma regra para a espécie 2 no nível 16. (Apagar depois.)
 - [x] `get_skill(13).effects` tem um efeito `recoil` com `percent` 33; `get_skill(36).effects` tem dois `modify_stat` em Si mesmo.
 - [x] Nenhum nome de espécie, técnica ou traço é igual ou parecido com nomes do Pokémon.
 

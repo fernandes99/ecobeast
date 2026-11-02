@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://l7k8yw0xds5p"
-path="res://.godot/imported/front.png-2a39fc683b3f4f9dfef16015dca8c456.ctex"
+uid="uid://cpuvfrwpenw4l"
+path="res://.godot/imported/front.png-833ffece611c5af3b7b9c92ed8b55b24.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/creatures/brotelho/front.png"
-dest_files=["res://.godot/imported/front.png-2a39fc683b3f4f9dfef16015dca8c456.ctex"]
+source_file="res://assets/creatures/nilu/front.png"
+dest_files=["res://.godot/imported/front.png-833ffece611c5af3b7b9c92ed8b55b24.ctex"]
 
 [params]
 

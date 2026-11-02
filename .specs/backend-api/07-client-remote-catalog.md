@@ -66,9 +66,9 @@ Godot: o download usa o nó `HTTPRequest`, que faz a requisição em segundo pla
 
 ## Critérios de aceite
 
-- [x] Com o servidor rodando (`npm run start:dev`) e o cache apagado, F5 no Godot abre o jogo normalmente: entrada, escolha com Fagulho, Gotículo e Brotelho, e Hub. O arquivo `catalog_cache.json` aparece em `%APPDATA%\Godot\app_userdata\Ecobeast\`.
+- [x] Com o servidor rodando (`npm run start:dev`) e o cache apagado, F5 no Godot abre o jogo normalmente: entrada, escolha com Ruvo, Nilu e Elu, e Hub. O arquivo `catalog_cache.json` aparece em `%APPDATA%\Godot\app_userdata\Ecobeast\`.
 - [x] Reabrir o jogo sem mudança no catálogo usa a cópia guardada: o servidor responde `304`.
-- [ ] Mudar no painel o `name` de Gotículo para "Gotículo Teste", esperar 1 minuto e reabrir o jogo mostra o nome novo na escolha do inicial. (Passo do dono; desfazer depois.)
+- [ ] Mudar no painel o `name` de Nilu para "Nilu Teste", esperar 1 minuto e reabrir o jogo mostra o nome novo na escolha do inicial. (Passo do dono; desfazer depois.)
 - [ ] Com o servidor parado, com ou sem cache, aparece "Não foi possível conectar ao servidor…". Depois de subir o servidor, "Tentar de novo" abre o jogo. (O `LOAD_OFFLINE` com e sem cache foi conferido pelo script; a tela e o botão ficam para o F5 do dono.)
 - [x] Uma cópia guardada com a versão certa e as tabelas estragadas não trava o jogo: ele baixa tudo de novo e abre normalmente.
 - [x] `client/data/` não existe mais. `server/prisma/seed-data/` tem os 23 arquivos com o histórico preservado (`git log --follow`).

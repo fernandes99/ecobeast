@@ -53,7 +53,7 @@ A escolha do inicial ainda é a tela do MVP: três cartões empilhados, em cor l
 ## Critérios de aceite
 
 - [x] A captura (540 × 960) lado a lado com `starter-prototype.png` mostra a mesma organização: logo, faixa do título, três cartões em linha e a arena embaixo.
-- [x] Fagulho, Gotículo e Brotelho aparecem nessa ordem, com a moldura, a moeda, a cena e o botão do seu Elemento.
+- [x] Ruvo, Nilu e Elu aparecem nessa ordem, com a moldura, a moeda, a cena e o botão do seu Elemento.
 - [x] Tocar no cartão ou no botão "Escolher" abre a confirmação da espécie certa, e "Voltar" a fecha sem escolher.
 - [x] Nenhuma imagem contém texto além do logo.
 - [x] Numa janela mais baixa (405 × 640), nada sai da tela: o stretch `expand` mantém a altura em 1280 e alarga a área, e os cartões acompanham a largura.
@@ -101,7 +101,7 @@ Capturar a tela com o Movie Maker e comparar com `starter-prototype.png`. Passo 
 
 ## Decisões da implementação
 
-- **Nomes e descrições vêm do catálogo:** o protótipo mostra nomes e textos de exemplo (Pyrolyn, Aqualis, Leafon). Os cartões continuam mostrando Fagulho, Gotículo e Brotelho e as descrições do Bestiário, porque o catálogo é a fonte da verdade.
+- **Nomes e descrições vêm do catálogo:** o protótipo mostra nomes e textos de exemplo (Pyrolyn, Aqualis, Leafon). Os cartões continuam mostrando Ruvo, Nilu e Elu e as descrições do Bestiário, porque o catálogo é a fonte da verdade.
 - **Sem botão de voltar:** a tela é a primeira depois de criar o Domador, e não há para onde voltar.
 - **Confirmação mantida:** "Escolher" no cartão abre o painel de confirmação em vez de escolher direto, porque a escolha não pode ser desfeita.
 - **Logo como imagem:** é a exceção à regra de não ter texto em imagem, porque é uma marca fixa, não um texto que muda.

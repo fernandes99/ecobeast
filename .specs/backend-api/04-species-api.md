@@ -28,7 +28,7 @@ O banco tem o catálogo. Esta fase cria as peças que todo recurso da API usa (p
   - `previous` é `<path>?limit=<limit>&offset=<max(offset−limit, 0)>` quando `offset > 0`, e `null` nos outros casos;
   - um `offset` além do total devolve `results: []`, com `count` igual ao total.
 - **RF-03:** `ref(resource: string, row: { id: number; slug: string; name: string }): ResourceRef` devolve `{ id, slug, name, url: "/v1/<resource>/<id>" }`.
-- **RF-04:** `parseIdOrSlug(param: string): { id: number } | { slug: string }` trata só dígitos como id e o resto como slug, em minúsculas (`FAGULHO` → `fagulho`). Um recurso que não existe responde `404` com `message` "<Recurso> não encontrado: <param>" (ex.: "Espécie não encontrada: xyz").
+- **RF-04:** `parseIdOrSlug(param: string): { id: number } | { slug: string }` trata só dígitos como id e o resto como slug, em minúsculas (`RUVO` → `ruvo`). Um recurso que não existe responde `404` com `message` "<Recurso> não encontrado: <param>" (ex.: "Espécie não encontrada: xyz").
 - **RF-05:** O `@nestjs/throttler` vale para todas as rotas, com limite de `THROTTLE_LIMIT` chamadas (do config, padrão 100) por 60 segundos por IP. Acima disso, responde `429`. Os testes e2e sobem a aplicação com `THROTTLE_LIMIT=10000`, para não esbarrar no limite, menos o teste do próprio limite.
 
 **Espécies** (`server/src/catalog/species/`)
@@ -40,15 +40,15 @@ O banco tem o catálogo. Esta fase cria as peças que todo recurso da API usa (p
   - `stats`: `[{ stat, base_value, training_yield }]`, por `id` do stat;
   - `traits`: `[{ slot, is_hidden, trait }]`, por `slot`.
 - **RF-08:** `GET /v1/species/{idOrSlug}/skills` devolve `{ species, skills: [{ skill, learn_method, level }] }`, ordenado por método (`id`), nível (com `null` no fim) e Técnica (`id`).
-- **RF-09:** `GET /v1/species/{idOrSlug}/evolutions` devolve a linha de Ascensão inteira da espécie pedida, a partir da espécie que não ascende de nenhuma outra. O formato é `{ chain: Node }`, com `Node = { species, evolves_to: [{ trigger, min_level, min_bond, time_of_day, item_id, zone_id, node: Node }] }`. Pedir Fagulho, Brasalobo ou Infernolobo devolve a mesma linha.
-- **RF-10:** Cada rota tem no OpenAPI um resumo e uma descrição em pt-BR, os parâmetros e o formato de resposta (DTOs com `@ApiProperty`), com Fagulho como exemplo. As respostas `400`, `404` e `429` também são documentadas. A tag é "Espécies".
+- **RF-09:** `GET /v1/species/{idOrSlug}/evolutions` devolve a linha de Ascensão inteira da espécie pedida, a partir da espécie que não ascende de nenhuma outra. O formato é `{ chain: Node }`, com `Node = { species, evolves_to: [{ trigger, min_level, min_bond, time_of_day, item_id, zone_id, node: Node }] }`. Pedir Ruvo, Ruvak ou Ruvaroth devolve a mesma linha.
+- **RF-10:** Cada rota tem no OpenAPI um resumo e uma descrição em pt-BR, os parâmetros e o formato de resposta (DTOs com `@ApiProperty`), com Ruvo como exemplo. As respostas `400`, `404` e `429` também são documentadas. A tag é "Espécies".
 
 ## Critérios de aceite
 
 - [x] `GET /v1/species` devolve `count` igual ao número de linhas de `species`, `results` com os ids em ordem crescente e `previous` igual a `null`.
 - [x] `GET /v1/species?limit=2&offset=2` devolve 2 resultados, `next` igual a `/v1/species?limit=2&offset=4` e `previous` igual a `/v1/species?limit=2&offset=0`.
 - [x] `limit=0`, `limit=101`, `limit=abc` e `offset=-1` devolvem `400` com a mensagem em pt-BR.
-- [x] `GET /v1/species/1`, `/v1/species/fagulho` e `/v1/species/FAGULHO` devolvem o mesmo corpo.
+- [x] `GET /v1/species/1`, `/v1/species/ruvo` e `/v1/species/RUVO` devolvem o mesmo corpo.
 - [x] `GET /v1/species/9999` e `/v1/species/xyz` devolvem `404`, com "Espécie não encontrada: …".
 - [x] `GET /v1/species/3` tem `elements` com `fire` no `slot` 1 e `shadow` no `slot` 2, e `evolves_from.id` igual a 2.
 - [x] `GET /v1/species/1/skills` tem pelo menos uma entrada com `learn_method.slug` igual a `level_up` e `level` igual a 1.
@@ -82,7 +82,7 @@ npm run start:dev   # e testar as rotas pela Scalar em http://localhost:3100/doc
 ## Tarefas
 
 - [x] `page` com testes: total 9, limit 2, offset 2 → next `offset=4`, previous `offset=0`; offset 8 → next `null`; offset 20 → `results: []`, previous `offset=18`.
-- [x] `parseIdOrSlug` com testes: `"1"` → `{ id: 1 }`; `"fagulho"` → slug; `"FAGULHO"` → slug `fagulho`; `"1a"` → slug.
+- [x] `parseIdOrSlug` com testes: `"1"` → `{ id: 1 }`; `"ruvo"` → slug; `"RUVO"` → slug `ruvo`; `"1a"` → slug.
 - [x] `ref` e `PaginationQueryDto` (com as mensagens do RF-01).
 - [x] e2e das rotas de espécies (critérios acima); rodar e ver falhar.
 - [x] `SpeciesService` e `SpeciesController` (RF-06 a RF-09); os e2e passam.

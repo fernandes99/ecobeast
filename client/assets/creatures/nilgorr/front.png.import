@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ck12be0rkjkrx"
-path="res://.godot/imported/front.png-390b0c479cd15392058ef4c4e0d2ae71.ctex"
+uid="uid://bjplv86jrlg2u"
+path="res://.godot/imported/front.png-3d9426d604e035aa7d04d28588672c55.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/creatures/brasalobo/front.png"
-dest_files=["res://.godot/imported/front.png-390b0c479cd15392058ef4c4e0d2ae71.ctex"]
+source_file="res://assets/creatures/nilgorr/front.png"
+dest_files=["res://.godot/imported/front.png-3d9426d604e035aa7d04d28588672c55.ctex"]
 
 [params]
 

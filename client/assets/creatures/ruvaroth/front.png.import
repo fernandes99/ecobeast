@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bjv503jx30aip"
-path="res://.godot/imported/front.png-1b58f529b558e286222f9f07670b638f.ctex"
+uid="uid://bnhurl00d28tn"
+path="res://.godot/imported/front.png-c196f62c058e2522690b6e9df67771a7.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/creatures/marisgarra/front.png"
-dest_files=["res://.godot/imported/front.png-1b58f529b558e286222f9f07670b638f.ctex"]
+source_file="res://assets/creatures/ruvaroth/front.png"
+dest_files=["res://.godot/imported/front.png-c196f62c058e2522690b6e9df67771a7.ctex"]
 
 [params]
 

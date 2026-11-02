@@ -60,7 +60,7 @@ describe('typeMultiplier', () => {
 });
 
 describe('calculateDamage', () => {
-  it('Arranhão de um Fagulho nível 5 causa 5', () => {
+  it('Arranhão de um Ruvo nível 5 causa 5', () => {
     expect(damage()).toBe(5);
   });
 

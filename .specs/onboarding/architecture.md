@@ -91,7 +91,7 @@ Funções puras em `server/src/domain/rules/`, que recebem tudo por parâmetro (
 - HP = `floor((2·base + genes + floor(treino/4)) · nível / 100) + nível + 10`
 - Outros = `floor((floor((2·base + genes + floor(treino/4)) · nível / 100) + 5) · T)`, com T = 1,1 no stat aumentado, 0,9 no diminuído, 1,0 nos demais (neutros: 1,0 em todos). O `floor` final é do planejamento: stats são inteiros.
 
-Exemplo (Fagulho, nível 5, Genes e Treino 0, neutro): HP 19, Atq 10, Def 9, Atq.E 11, Def.E 9, Vel 11.
+Exemplo (Ruvo, nível 5, Genes e Treino 0, neutro): HP 19, Atq 10, Def 9, Atq.E 11, Def.E 9, Vel 11.
 
 **Criar uma criatura:**
 
