@@ -1,0 +1,105 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://screens/team/team_row.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://ui/components/creature_portrait.tscn" id="2_portrait"]
+[ext_resource type="PackedScene" path="res://ui/components/hp_bar.tscn" id="3_hp_bar"]
+[ext_resource type="Texture2D" path="res://ui/icons/grip.svg" id="4_grip"]
+
+[node name="TeamRow" type="PanelContainer"]
+custom_minimum_size = Vector2(0, 140)
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 1
+mouse_default_cursor_shape = 2
+theme_type_variation = &"SectionPanel"
+script = ExtResource("1_script")
+
+[node name="HoldTimer" type="Timer" parent="."]
+unique_name_in_owner = true
+wait_time = 0.3
+one_shot = true
+
+[node name="FilledRow" type="HBoxContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+theme_override_constants/separation = 14
+
+[node name="Portrait" parent="FilledRow" instance=ExtResource("2_portrait")]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
+portrait_size = 96
+
+[node name="Info" type="VBoxContainer" parent="FilledRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+mouse_filter = 2
+theme_override_constants/separation = 6
+
+[node name="Header" type="HBoxContainer" parent="FilledRow/Info"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 8
+
+[node name="NameLabel" type="Label" parent="FilledRow/Info/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"BoldLabel"
+theme_override_font_sizes/font_size = 24
+clip_text = true
+
+[node name="LevelLabel" type="Label" parent="FilledRow/Info/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"SecondaryLabel"
+theme_override_font_sizes/font_size = 20
+
+[node name="LeaderChip" type="PanelContainer" parent="FilledRow/Info/Header"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+theme_type_variation = &"ElementPill"
+
+[node name="LeaderLabel" type="Label" parent="FilledRow/Info/Header/LeaderChip"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"BoldLabel"
+theme_override_font_sizes/font_size = 18
+text = "Começa a luta"
+
+[node name="Tags" type="HBoxContainer" parent="FilledRow/Info"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 6
+
+[node name="HpBar" parent="FilledRow/Info" instance=ExtResource("3_hp_bar")]
+unique_name_in_owner = true
+layout_mode = 2
+show_numbers = true
+
+[node name="Grip" type="TextureRect" parent="FilledRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture = ExtResource("4_grip")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="VacantLabel" type="Label" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_vertical = 4
+theme_type_variation = &"SecondaryLabel"
+theme_override_font_sizes/font_size = 20
+text = "Vaga livre: toque para trazer do Santuário"
+horizontal_alignment = 1
