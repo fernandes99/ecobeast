@@ -43,6 +43,7 @@ Tomadas com o dono do projeto:
 | O Domador aparece no mapa, parado e correndo, com o template de Eris Esra por enquanto         | Pedido do dono. A arte final entra trocando as folhas                                   |
 | Planos no mapa: o Domador fica entre as decorações de cima e as de baixo do hexágono           | Pedido do dono, para ele passar atrás do que está na frente                             |
 | Vento nas plantas, em uma onda pelo mapa, feito por shader, sem arte nova                      | Pedido do dono. Vale para qualquer arte que entrar depois                               |
+| Menu de depuração no mapa, com spawn de Ecobeasts que passeiam no próprio hexágono             | Pedido do dono, para validar as folhas de cada Ecobeast                                 |
 | Só cinco regiões: `temperate`, `boreal`, `stone`, `wshallow` e `wdeep`                         | Decisão do dono, para simplificar. `warm`, `swamp`, `desert` e `snow` saíram do gerador, e os sprites ficaram no projeto |
 | `stone` é uma região própria, com plano, colinas e montanhas                                  | Decisão do dono. Antes, a pedra era só o miolo das cadeias, e por isso a montanha de base cinza aparecia colada no campo e na floresta |
 | Hexágonos encostados, com passos de 32, 21 e 16 px                                            | O dono tirou o vão de 2 px que tinha pedido depois da fase 03, porque ele impede a textura contínua por bioma |
@@ -53,8 +54,8 @@ Tomadas no planejamento (corrigíveis; ao mudar uma, atualize aqui e nas specs a
 | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------- |
 | O servidor gera o mapa, e o cliente só desenha                                 | O texto do dono dizia "o jogo", mas o terreno vai decidir encontros e movimento, e o servidor é a autoridade das regras |
 | Elevação, umidade e crista vêm de ruído                                        | Regiões coerentes sem escolher cada hexágono sozinho                                                                    |
-| A posição do jogador fica só no cliente                                        | Ela ainda não afeta nenhuma regra. O servidor passa a conferir quando o terreno decidir algo                            |
-| O mapa não fica guardado no servidor                                           | Nada depende dele ainda; a seed basta para reproduzi-lo                                                                 |
+| A posição do jogador fica só no cliente                                        | Ela ainda não afetava nenhuma regra. Desde a [biome-encounters](../biome-encounters/), o servidor a confere ao Procurar        |
+| O mapa não fica guardado no servidor                                           | Nada depende dos hexágonos; a seed basta para reproduzi-los. A [biome-encounters](../biome-encounters/) guarda só os Ecobeasts e a posição     |
 | Os parâmetros do gerador são constantes de código, não tabelas do catálogo     | São ajuste do algoritmo, e os valores ainda vão mudar bastante. Viram tabela quando o dono quiser editá-los no painel   |
 | Depois da luta, a batalha volta para o mapa, no mesmo hexágono                 | O mapa só se perde ao voltar para o Hub                                                                                 |
 | Escala inteira de pixels, recalculada para cada tela                           | A tela do jogo escala em frações, o que borraria a pixel art                                                            |
@@ -90,5 +91,6 @@ Tomadas no planejamento (corrigíveis; ao mudar uma, atualize aqui e nas specs a
 | [10-tamer-sprite](10-tamer-sprite.md)             | O Domador no mapa, parado e correndo para os seis lados                  | concluída |
 | [11-depth-planes](11-depth-planes.md)             | O Domador na frente do que está atrás e atrás do que está na frente      | concluída |
 | [12-plant-wind](12-plant-wind.md)                 | As plantas balançam com o vento, em uma onda pelo mapa                   | concluída |
+| [13-debug-menu](13-debug-menu.md)                 | Menu de depuração no mapa, com spawn de qualquer Ecobeast                | concluída |
 
 O desenho compartilhado está em [architecture.md](architecture.md).

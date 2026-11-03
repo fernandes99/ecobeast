@@ -89,8 +89,9 @@ func start_exploration() -> Result:
 	return Result.success(ExplorationMap.from_dict(map)) if map is Dictionary else Result.failure(ApiResponse.SERVER_ERROR)
 
 
-func start_wild_battle() -> Result:
-	return _turn_result(await Api.request(HTTPClient.METHOD_POST, WILD_BATTLE_PATH, null, true))
+func start_wild_battle(coord: Vector2i) -> Result:
+	var body := {"q": coord.x, "r": coord.y}
+	return _turn_result(await Api.request(HTTPClient.METHOD_POST, WILD_BATTLE_PATH, body, true))
 
 
 func battle_action(action: Dictionary) -> Result:

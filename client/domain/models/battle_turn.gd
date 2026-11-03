@@ -6,6 +6,8 @@ var view: BattleView = null
 var events: Array[Dictionary] = []
 ## party ou storage, se esta chamada capturou um Ecobeast; "" nas outras.
 var captured_to: String = ""
+## O Ecobeast que saiu do mapa para esta luta; 0 nas outras chamadas.
+var spawn_id: int = 0
 
 
 ## null se a resposta não tiver `battle` ou `events`.
@@ -15,6 +17,7 @@ static func from_dict(d: Dictionary) -> BattleTurn:
 	var turn := BattleTurn.new()
 	turn.view = BattleView.from_dict(d["battle"])
 	turn.captured_to = DictFields.get_string(d, "captured_to")
+	turn.spawn_id = DictFields.get_int(d, "spawn_id")
 	for event: Variant in d["events"]:
 		if event is Dictionary:
 			turn.events.append(event)

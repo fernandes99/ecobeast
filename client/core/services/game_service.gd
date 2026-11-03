@@ -58,8 +58,8 @@ extends RefCounted
 @abstract func start_exploration() -> Result
 
 
-## data: o BattleTurn da abertura, contra um Ecobeast sorteado pelo servidor.
-@abstract func start_wild_battle() -> Result
+## data: o BattleTurn da abertura, contra um Ecobeast do hexágono do Domador.
+@abstract func start_wild_battle(coord: Vector2i) -> Result
 
 
 ## data: o BattleTurn da ação, ou null se a batalha não existe mais.

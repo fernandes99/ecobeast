@@ -103,7 +103,7 @@ A tela chama `set_current` ao abrir o mapa e no início de cada passo.
 
 ## Domador
 
-`TamerSprite` é um `AnimatedSprite2D` filho do `HexMapView`, na [profundidade](#planos-de-profundidade) da linha dele. O Domador fica parado no centro da tela, e quem se move é o mapa: `_move_map` desconta o movimento do mapa da posição dele. A posição do nó é o ponto entre os pés, e como ele herda a escala do mapa, um pixel da folha vale um pixel da arte.
+`TamerSprite` é um `SheetSprite`, um `AnimatedSprite2D` filho do `HexMapView`, na [profundidade](#planos-de-profundidade) da linha dele. O Domador fica parado no centro da tela, e quem se move é o mapa: `_move_map` desconta o movimento do mapa da posição dele. A posição do nó é o ponto entre os pés, e como ele herda a escala do mapa, um pixel da folha vale um pixel da arte.
 
 `assets/tamer/idle.png` e `run.png` têm células de 32×32 px, uma coluna por quadro e cinco linhas, todas olhando para a direita. O número de colunas vem da largura da imagem.
 
@@ -149,6 +149,22 @@ O máximo de cada tipo precisa ser menor que a folga dele na célula, ou a plant
 
 O material é um só, `_wind_material`, em todos os nós de decorações. O `strength` é o ajuste geral da força: zero desliga o vento. Os outros parâmetros ficam no início do shader.
 
+## Menu de depuração
+
+Só em build de debug, os controles do mapa mostram o botão "Debug", que abre um painel no topo da tela, por cima do mapa, deixando livres o Domador e os vizinhos dele. Ele reúne o mapa inteiro e o spawn de Ecobeasts, para validar as folhas de cada um sem depender de encontro nem de batalha.
+
+A lista tem todos os Ecobeasts do catálogo. `CreatureSprite.has_sheets(slug)` procura `assets/creatures/<slug>/idle.png` e `walk.png`, e quem não tem as duas fica desativado. Por isso um Ecobeast com folhas novas aparece ativo sem mudar código. As folhas vêm da skill `creature-sprites`.
+
+`SheetSprite` é a base com as folhas e as direções, usada pelo `TamerSprite` e pelo `CreatureSprite`. O Domador vira para um vizinho do hexágono, com `face`. O Ecobeast vira para qualquer direção do mapa, com `face_toward`, que escolhe a linha da [tabela](#domador) pelo ângulo do movimento e usa `flip_h` para a esquerda.
+
+O Ecobeast é um filho do `HexMapView`, com a posição em pixels da arte, como as decorações. Ele não precisa acompanhar o mapa, ao contrário do Domador, que fica parado na tela. `wander_in(coord, center)` sorteia pontos no mesmo limite das decorações, e a cada quadro `_process` anda até o ponto ou espera. Ele nunca muda de hexágono.
+
+Ele usa `set_actor_row` com a linha do hexágono, então a [profundidade](#planos-de-profundidade) dele é a da linha inteira, e não a do ponto em que está. Dentro do mesmo hexágono, ele pode aparecer na frente de uma planta que deveria cobri-lo. Dois personagens na mesma linha ficam na ordem em que chegaram a ela.
+
+É só enfeite: o servidor não sabe que ele existe, e ele some ao sair da tela do mapa.
+
+**Escala:** o tamanho de um Ecobeast no mapa vem da altura do catálogo. O Domador tem 1,70 m e 25 pixels, então um Ecobeast tem `height_m × 25 / 1,70` pixels: o Ruvo, com 0,50 m, tem 7. A célula de 32×32 não muda, e a verificação da skill `creature-sprites` confere a altura.
+
 ## Arremates
 
 Duas superfícies vizinhas diferentes têm um arremate na divisa: um recorte irregular, dentro de um dos dois hexágonos, que esconde a linha reta. A exceção é a divisa entre `wshallow` e `wdeep`, que fica reta. Como as decorações, é só enfeite e sai do cliente, em `HexTransitions.transitions_of(tile, map)`, sem mudar o contrato.
@@ -192,7 +208,7 @@ O canto do hexágono, em pixels da arte, fica em `x = 64 * q + 32 * r` e `y = 42
 }
 ```
 
-`variant` vai de 1 a 6 em `flat` (o cliente guarda o valor, mas as superfícies não o usam) e de 1 a 3 nas outras formas. Falha: `409` "Crie seu Domador primeiro."
+`variant` vai de 1 a 6 em `flat` (o cliente guarda o valor, mas as superfícies não o usam) e de 1 a 3 nas outras formas. Falha: `409` "Crie seu Domador primeiro." O `map` também traz `creatures`, os Ecobeasts do mapa, descritos na [biome-encounters](../biome-encounters/architecture.md#contrato).
 
 ## Gerador
 

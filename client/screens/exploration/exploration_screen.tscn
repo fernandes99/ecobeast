@@ -43,6 +43,43 @@ layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 12
 
+[node name="DebugMenu" type="PanelContainer" parent="SafeArea/Column"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_type_variation = &"SectionPanel"
+
+[node name="Items" type="VBoxContainer" parent="SafeArea/Column/DebugMenu"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="DebugZoomButton" type="Button" parent="SafeArea/Column/DebugMenu/Items"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+theme_type_variation = &"OutlineButton"
+text = "Debug: ver mapa inteiro"
+
+[node name="SpawnLabel" type="Label" parent="SafeArea/Column/DebugMenu/Items"]
+layout_mode = 2
+theme_type_variation = &"SecondaryLabel"
+text = "Spawnar Ecobeast"
+
+[node name="DebugSpecies" type="GridContainer" parent="SafeArea/Column/DebugMenu/Items"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 8
+columns = 4
+
+[node name="DebugClearButton" type="Button" parent="SafeArea/Column/DebugMenu/Items"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+theme_type_variation = &"OutlineButton"
+disabled = true
+text = "Remover Ecobeasts"
+
 [node name="Space" type="Control" parent="SafeArea/Column"]
 layout_mode = 2
 size_flags_vertical = 3
@@ -64,13 +101,13 @@ layout_mode = 2
 horizontal_alignment = 1
 autowrap_mode = 3
 
-[node name="DebugZoomButton" type="Button" parent="SafeArea/Column/ControlsPanel/Controls"]
+[node name="DebugButton" type="Button" parent="SafeArea/Column/ControlsPanel/Controls"]
 unique_name_in_owner = true
 visible = false
 custom_minimum_size = Vector2(0, 56)
 layout_mode = 2
 theme_type_variation = &"OutlineButton"
-text = "Debug: ver mapa inteiro"
+text = "Debug"
 
 [node name="EncounterButton" type="Button" parent="SafeArea/Column/ControlsPanel/Controls"]
 unique_name_in_owner = true

@@ -52,7 +52,7 @@ Com a grade e o gerador prontos, falta o jogador chegar ao mapa. Esta fase cria 
 
 **Depuração**
 
-- **RF-18:** Só quando `OS.is_debug_build()`, depois que o mapa aparece, os controles mostram o botão "Debug: ver mapa inteiro". Na versão publicada, ele não existe para o jogador.
+- **RF-18:** Só quando `OS.is_debug_build()`, depois que o mapa aparece, o [menu de depuração](13-debug-menu.md) tem o botão "Debug: ver mapa inteiro". Na versão publicada, ele não existe para o jogador.
 - **RF-19:** Tocar nele cabe o mapa inteiro acima dos botões, com o marcador sobre o hexágono do jogador, e o texto vira "Debug: voltar ao zoom normal".
 - **RF-20:** Com o mapa inteiro na tela, tocar no mapa não move o jogador.
 - **RF-21:** Tocar de novo volta à escala de pixels inteiros, com o jogador no centro.

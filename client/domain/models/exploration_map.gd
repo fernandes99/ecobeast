@@ -16,6 +16,15 @@ const DIRECTIONS: Array[Vector2i] = [
 var map_seed: int = 0
 var start := Vector2i.ZERO
 var tiles: Dictionary[Vector2i, HexTile] = {}
+## Os Ecobeasts ainda no mapa, por id.
+var creatures: Dictionary[int, MapCreature] = {}
+
+
+## Quantos passos pela grade separam duas posições.
+static func distance(from: Vector2i, to: Vector2i) -> int:
+	var delta := from - to
+	@warning_ignore("integer_division")
+	return (absi(delta.x) + absi(delta.y) + absi(delta.x + delta.y)) / 2
 
 
 func has(coord: Vector2i) -> bool:
@@ -36,6 +45,10 @@ func neighbors(coord: Vector2i) -> Array[Vector2i]:
 	return result
 
 
+func has_creature(coord: Vector2i) -> bool:
+	return creatures.values().any(func(creature: MapCreature) -> bool: return creature.coord == coord)
+
+
 static func from_dict(d: Dictionary) -> ExplorationMap:
 	var map := ExplorationMap.new()
 	map.map_seed = DictFields.get_int(d, "seed")
@@ -45,4 +58,8 @@ static func from_dict(d: Dictionary) -> ExplorationMap:
 		var tile: HexTile = HexTile.from_dict(tile_dict) if tile_dict is Dictionary else null
 		if tile != null:
 			map.tiles[tile.coord] = tile
+	for creature_dict: Variant in DictFields.get_array(d, "creatures"):
+		var creature: MapCreature = MapCreature.from_dict(creature_dict) if creature_dict is Dictionary else null
+		if creature != null:
+			map.creatures[creature.id] = creature
 	return map

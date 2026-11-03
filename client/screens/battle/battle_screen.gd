@@ -20,6 +20,8 @@ const RESULT_TEXTS: Dictionary[String, String] = {
 }
 
 ## O último estado do servidor; null até a abertura terminar.
+## O hexágono do Domador, de onde sai o inimigo.
+var _coord := Vector2i.ZERO
 var _view: BattleView = null
 var _display := BattleDisplay.new()
 var _narrator := BattleNarrator.new()
@@ -51,6 +53,10 @@ var _leaving: bool = false
 @onready var _next_panel: NextCreaturePanel = %NextPanel
 @onready var _items_panel: BattleItemsPanel = %ItemsPanel
 @onready var _capture_overlay: CaptureOverlay = %CaptureOverlay
+
+
+func setup(params: Dictionary) -> void:
+	_coord = params.get("coord", Vector2i.ZERO)
 
 
 func _ready() -> void:
@@ -92,7 +98,7 @@ func handle_back() -> bool:
 
 func _begin() -> void:
 	_add_line(SEARCHING_TEXT)
-	var result: Result = await Session.start_wild_battle()
+	var result: Result = await Session.start_wild_battle(_coord)
 	_clear_log()
 	if not result.ok:
 		_show_exit(result.error, false)

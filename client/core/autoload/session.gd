@@ -18,6 +18,7 @@ var storage: Array[CreatureInstance] = []
 
 var _service: GameService = ApiGameService.new()
 var _auth := AuthService.new()
+var _fought_spawn := 0
 
 
 func has_auth_session() -> bool:
@@ -142,9 +143,20 @@ func start_exploration() -> Result:
 
 
 ## A batalha não fica aqui: quem a mostra é a tela, e o jogador é relido no fim.
-func start_wild_battle() -> Result:
+func start_wild_battle(coord: Vector2i) -> Result:
 	@warning_ignore("redundant_await")
-	return await _service.start_wild_battle()
+	var result: Result = await _service.start_wild_battle(coord)
+	if result.ok:
+		_fought_spawn = (result.data as BattleTurn).spawn_id
+	return result
+
+
+## O Ecobeast que saiu do mapa desde a última leitura, ou 0: a tela do mapa, que
+## ficou escondida durante a luta, usa isto para tirá-lo de lá.
+func take_fought_spawn() -> int:
+	var spawn_id := _fought_spawn
+	_fought_spawn = 0
+	return spawn_id
 
 
 func battle_action(action: Dictionary) -> Result:
