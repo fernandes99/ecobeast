@@ -153,8 +153,7 @@ Separe em duas camadas: a **Espécie** (dados fixos, uma linha do catálogo por 
 | evolutions | List<EvolutionRule> | Para quem evolui e como |
 | genderRatio | float | 0,5 = 50% macho; -1 = sem gênero |
 | heightM, weightKg | float | Para o Bestiário e técnicas baseadas em peso |
-| habitatZones | Zone[] | Onde aparece selvagem |
-| spawnWeight | int | Peso no sorteio de encontro |
+| biomes | `species_biomes` | Onde aparece selvagem, com uma taxa de 0 a 100 por bioma |
 | sprite, backSprite, icon, cry | assets | Arquivo em `res://assets/` |
 
 **Instância — `CreatureInstance` (dados salvos)**

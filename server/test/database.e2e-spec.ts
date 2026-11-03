@@ -1,5 +1,5 @@
 import { PrismaClient } from '../src/generated/prisma/client.js';
-import { attempt, createTestPrisma } from './support/db.js';
+import { attempt, createTestPrisma, testSlug, type Tx } from './support/db.js';
 import {
   createElement,
   createItem,
@@ -38,10 +38,10 @@ describe('restrições do banco (e2e)', () => {
     expect(rows.map((row) => row.table_name)).toEqual([]);
   });
 
-  it('as 31 tabelas e o histórico de migrations ficam no schema ecobeasts', async () => {
+  it('as 33 tabelas e o histórico de migrations ficam no schema ecobeasts', async () => {
     const rows = await prisma.$queryRaw<{ n: number }[]>`
       SELECT count(*)::int AS n FROM information_schema.tables WHERE table_schema = 'ecobeasts'`;
-    expect(rows[0].n).toBe(32);
+    expect(rows[0].n).toBe(34);
   });
 
   it('recusa Técnica com precisão 150', async () => {
@@ -119,6 +119,47 @@ describe('restrições do banco (e2e)', () => {
       }
     });
     expect(result).toBe('accepted');
+  });
+
+  async function createSpeciesBiome(tx: Tx, rate: number) {
+    const species = await createSpecies(tx);
+    const biome = await tx.biome.create({
+      data: { slug: testSlug('biome'), name: 'Teste', description: 'Teste' },
+    });
+    return tx.speciesBiome.create({
+      data: { speciesId: species.id, biomeId: biome.id, rate },
+    });
+  }
+
+  it.each([-1, 101])('recusa taxa de bioma %i', async (rate) => {
+    const result = await attempt(prisma, (tx) => createSpeciesBiome(tx, rate));
+    expectRejected(result, 'species_biomes_rate_check');
+  });
+
+  it.each([0, 100])('aceita taxa de bioma %i', async (rate) => {
+    const result = await attempt(prisma, (tx) => createSpeciesBiome(tx, rate));
+    expect(result).toBe('accepted');
+  });
+
+  it('recusa slug de bioma com letra maiúscula', async () => {
+    const result = await attempt(prisma, (tx) =>
+      tx.biome.create({
+        data: { slug: 'Boreal', name: 'Teste', description: 'Teste' },
+      }),
+    );
+    expectRejected(result, 'biomes_slug_check');
+  });
+
+  it('recusa taxa de uma espécie que não existe', async () => {
+    const result = await attempt(prisma, async (tx) => {
+      const biome = await tx.biome.create({
+        data: { slug: testSlug('biome'), name: 'Teste', description: 'Teste' },
+      });
+      await tx.speciesBiome.create({
+        data: { speciesId: 999_999, biomeId: biome.id, rate: 50 },
+      });
+    });
+    expectRejected(result, 'species_biomes_species_id_fkey');
   });
 
   it('recusa item com preço 0', async () => {

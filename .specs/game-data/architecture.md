@@ -29,6 +29,7 @@ species ──< species_skills >── skills          (skill_learn_methods)
 species ──< evolutions >── species              (evolution_triggers)
 species ──> growth_rates, rarities, species (evolves_from)
 species ──< starter_options
+species ──< species_biomes >── biomes
 temperaments ──> stats (aumentado, diminuído)
 ```
 
@@ -221,12 +222,31 @@ Colunas que o tipo do efeito não usa ficam `null`.
 
 **`item_categories`** e **`items`** — as categorias, que viram as abas da Loja, e os itens, com preço e efeito. As colunas e o conteúdo estão em [inventory-shop/architecture.md](../inventory-shop/architecture.md#tabelas).
 
+**`biomes`** — os 7 biomas de encontro. O `slug` é usado no código; `name` e `description` são livres.
+
+| Coluna      | Tipo   | Observação                                                                  |
+| ----------- | ------ | --------------------------------------------------------------------------- |
+| id          | int    |                                                                             |
+| slug        | string | `temperate`, `boreal`, `stone`, `hill`, `mountain`, `wshallow` ou `wdeep`   |
+| name        | string | "Planície"                                                                  |
+| description | string |                                                                             |
+
+**`species_biomes`** — onde cada espécie nasce. Chave (`species_id`, `biome_id`). Sem linha para um bioma, a espécie não nasce nele.
+
+| Coluna     | Tipo | Observação                                                                  |
+| ---------- | ---- | --------------------------------------------------------------------------- |
+| species_id | int  | FK → species                                                                |
+| biome_id   | int  | FK → biomes                                                                 |
+| rate       | int  | 0–100, o peso da espécie na disputa pelas vagas do bioma                    |
+
+Como elas viram Ecobeasts no mapa está em [biome-encounters/architecture.md](../biome-encounters/architecture.md).
+
 ## Tabelas futuras (só documentadas)
 
 Entram com as iniciativas do [roadmap](../roadmap.md); não têm arquivo no MVP.
 
 - `weathers`.
-- `zones` (`id`, `slug`, `name`, `recommended_level`, `unlock_average_level`) e `zone_encounters` (`zone_id`, `species_id`, `min_level`, `max_level`, `spawn_weight`). A rever: a [wild-battle](../wild-battle/) trocou a seleção de zonas por um mapa hexagonal, e a `biome-encounters` decide o que substitui estas tabelas.
+- `zones` não vai existir como seleção de zonas: a [wild-battle](../wild-battle/) trocou isso pelo mapa hexagonal, e `biomes` e `species_biomes` substituem `zone_encounters`. As colunas `evolutions.zone_id` e `creature_instances.caught_zone_id` seguem nulas até uma iniciativa decidir o que guardam.
 - `npc_tamers`, `npc_tamer_creatures`, `arenas` (`id`, `slug`, `name`, `element_id`, `npc_tamer_id`, `badge_name`, `sort_order`).
 
 ### Estado do jogador (no servidor)

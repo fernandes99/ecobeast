@@ -13,7 +13,9 @@ O que vem depois do MVP de estrutura (entrada, escolha do inicial e Hub). Cada l
 | 4   | [`battle-screen`](battle-screen/) | Tela de batalha (TELAS.md #5) ouvindo os eventos do battle-core, com encontro sorteado pelo servidor | battle-core                | concluída |
 | 4b  | [`heal-station`](heal-station/) | Refúgio: curar HP, PP e status da equipe (TELAS.md #14); vem logo depois da tela de batalha, porque a luta mantém HP e PP e uma derrota total impede lutar de novo | battle-core                | concluída |
 | 5   | [`wild-battle`](wild-battle/) | Mapa hexagonal gerado a cada exploração, com o jogador andando por ele; substitui a seleção de zonas (TELAS.md #4) | battle-screen, heal-station | concluída |
-| 5b  | `biome-encounters`  | O bioma do hexágono decide o Campo e os Ecobeasts que aparecem; encontros ao andar; regiões fundas de água e montanha só com Ecobeasts que voem ou nadem | wild-battle                | planejada |
+| 5b  | [`biome-encounters`](biome-encounters/) | Ecobeasts nascem no mapa por taxa de bioma, e Procurar enfrenta um do hexágono do Domador | wild-battle, capture       | concluída |
+| 5c  | `hidden-encounters` | Encontro escondido ao andar, sem ver o Ecobeast antes                                                     | biome-encounters           | planejada |
+| 5d  | `biome-terrain`     | O bioma do hexágono decide o Campo; regiões fundas de água e montanha só com Ecobeasts que voem ou nadem  | biome-encounters           | planejada |
 | 6   | [`capture`](capture/) | Esferas de Vínculo, fórmula de captura e o carregamento do Ecobeast entrando na Esfera (TELAS.md #6); o capturado vai para a equipe de 6 ou para o Santuário | wild-battle, inventory-shop | concluída |
 | 7   | `progression`       | XP, level up, aprender/esquecer técnica, Ascensão por nível (TELAS.md #7)                                 | battle-core                | planejada |
 | 8   | `npc-tamers`        | Domadores NPC com equipe fixa e recompensa em moedas; tabela `npc_tamers`                                 | battle-screen              | planejada |

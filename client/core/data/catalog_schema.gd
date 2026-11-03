@@ -77,6 +77,10 @@ const TABLES := {
 			"sort_order": {"type": "int", "unique": true},
 		},
 	},
+	"biomes": {
+		"key": ["id"],
+		"columns": {"id": ID, "slug": SLUG, "name": TEXT, "description": TEXT},
+	},
 	"temperaments": {
 		"key": ["id"],
 		"columns": {
@@ -169,6 +173,14 @@ const TABLES := {
 			"trait_id": {"type": "int", "fk": "traits"},
 			"slot": {"type": "int", "values": [1, 2, 3]},
 			"is_hidden": {"type": "bool"},
+		},
+	},
+	"species_biomes": {
+		"key": ["species_id", "biome_id"],
+		"columns": {
+			"species_id": {"type": "int", "fk": "species"},
+			"biome_id": {"type": "int", "fk": "biomes"},
+			"rate": {"type": "int", "min": 0, "max": 100},
 		},
 	},
 	"skills": {

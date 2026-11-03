@@ -111,6 +111,20 @@ model Rarity {
   @@schema("ecobeasts")
 }
 
+/// Os 7 biomas de encontro. O slug é usado no código e não muda.
+model Biome {
+  id          Int    @id @default(autoincrement())
+  /// CHECK ^[a-z0-9_]+$ (migration biomes)
+  slug        String @unique
+  name        String
+  description String
+
+  species SpeciesBiome[]
+
+  @@map("biomes")
+  @@schema("ecobeasts")
+}
+
 /// Os 25 Temperamentos: um stat aumentado e um diminuído.
 model Temperament {
   id              Int    @id @default(autoincrement())
@@ -261,6 +275,7 @@ model Species {
   evolutionsTo   Evolution[]        @relation("EvolutionTo")
   starterOption  StarterOption?
   creatures      CreatureInstance[]
+  biomes         SpeciesBiome[]
 
   @@index([growthRateId])
   @@index([rarityId])
@@ -282,6 +297,22 @@ model SpeciesElement {
   @@id([speciesId, slot])
   @@index([elementId])
   @@map("species_elements")
+  @@schema("ecobeasts")
+}
+
+/// Onde cada espécie nasce: sem linha para um bioma, ela não nasce nele.
+model SpeciesBiome {
+  speciesId Int @map("species_id")
+  biomeId   Int @map("biome_id")
+  /// CHECK 0–100 (migration biomes)
+  rate      Int
+
+  species Species @relation(fields: [speciesId], references: [id], onDelete: Restrict)
+  biome   Biome   @relation(fields: [biomeId], references: [id], onDelete: Restrict)
+
+  @@id([speciesId, biomeId])
+  @@index([biomeId])
+  @@map("species_biomes")
   @@schema("ecobeasts")
 }
 

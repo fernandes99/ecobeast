@@ -1,12 +1,13 @@
-import { readdirSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { CATALOG_TABLES, SEED_DATA_DIR } from './catalog-tables.js';
 
 describe('CATALOG_TABLES', () => {
   const names = CATALOG_TABLES.map((table) => table.name);
 
-  it('tem as 25 tabelas, sem repetição', () => {
-    expect(names).toHaveLength(25);
-    expect(new Set(names).size).toBe(25);
+  it('tem as 27 tabelas, sem repetição', () => {
+    expect(names).toHaveLength(27);
+    expect(new Set(names).size).toBe(27);
   });
 
   it('casa com os arquivos .json da pasta de dados do seed', () => {
@@ -27,6 +28,12 @@ describe('CATALOG_TABLES', () => {
     expect(names.indexOf('item_categories')).toBeLessThan(
       names.indexOf('items'),
     );
+    expect(names.indexOf('biomes')).toBeLessThan(
+      names.indexOf('species_biomes'),
+    );
+    expect(names.indexOf('species')).toBeLessThan(
+      names.indexOf('species_biomes'),
+    );
     expect(names.at(-1)).toBe('starter_options');
   });
 
@@ -39,6 +46,54 @@ describe('CATALOG_TABLES', () => {
       model: 'elementEfficacy',
       key: ['attacker_element_id', 'defender_element_id'],
     });
+  });
+});
+
+describe('carga inicial dos biomas (biome-encounters/01)', () => {
+  const read = <T>(name: string) =>
+    JSON.parse(readFileSync(join(SEED_DATA_DIR, `${name}.json`), 'utf8')) as T[];
+  const biomes = read<{ id: number; slug: string }>('biomes');
+  const rates = read<{ species_id: number; biome_id: number; rate: number }>(
+    'species_biomes',
+  );
+  const biomeId = (slug: string) => biomes.find((b) => b.slug === slug)!.id;
+  const ELU = 7;
+
+  it('tem os 7 biomas de encontro', () => {
+    expect(biomes.map(({ slug }) => slug).sort()).toEqual(
+      [
+        'boreal',
+        'hill',
+        'mountain',
+        'stone',
+        'temperate',
+        'wdeep',
+        'wshallow',
+      ].sort(),
+    );
+  });
+
+  it('não grava taxa 0: sem linha, a espécie não nasce no bioma', () => {
+    expect(rates.every(({ rate }) => rate >= 1 && rate <= 100)).toBe(true);
+  });
+
+  it('dá taxas aos 9 Ecobeasts, sem pares repetidos', () => {
+    const species = new Set(rates.map(({ species_id }) => species_id));
+    expect([...species].sort((a, b) => a - b)).toEqual([
+      1, 2, 3, 4, 5, 6, 7, 8, 9,
+    ]);
+    const pairs = rates.map((row) => `${row.species_id}|${row.biome_id}`);
+    expect(new Set(pairs).size).toBe(pairs.length);
+  });
+
+  it('o Elu é bem mais comum no boreal que na montanha, e não está na água', () => {
+    const rate = (slug: string) =>
+      rates.find(
+        (row) => row.species_id === ELU && row.biome_id === biomeId(slug),
+      )?.rate;
+    expect(rate('boreal')).toBeGreaterThan(rate('mountain')! * 10);
+    expect(rate('wshallow')).toBeUndefined();
+    expect(rate('wdeep')).toBeUndefined();
   });
 });
 

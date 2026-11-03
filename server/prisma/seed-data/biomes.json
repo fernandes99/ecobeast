@@ -1,0 +1,9 @@
+[
+	{ "id": 1, "slug": "temperate", "name": "Planície", "description": "Campos abertos e bosques de folhas largas." },
+	{ "id": 2, "slug": "boreal", "name": "Boreal", "description": "Pinheiros fechados, frio e chão úmido." },
+	{ "id": 3, "slug": "stone", "name": "Pedra", "description": "Chão de rocha exposta, com pouca vegetação." },
+	{ "id": 4, "slug": "hill", "name": "Colina", "description": "Encostas onde o terreno começa a subir." },
+	{ "id": 5, "slug": "mountain", "name": "Montanha", "description": "Picos altos, de ar rarefeito e pouca comida." },
+	{ "id": 6, "slug": "wshallow", "name": "Água rasa", "description": "Margens e poças, onde a maré vai e volta." },
+	{ "id": 7, "slug": "wdeep", "name": "Água profunda", "description": "Longe da margem, onde a luz quase não chega." }
+]

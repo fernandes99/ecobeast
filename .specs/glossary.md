@@ -42,3 +42,4 @@ O jogador nunca vê a coluna "Referência": ela só existe para quem implementa 
 - **Hub:** a tela principal do jogo (TELAS.md chama de Home).
 - **Mapa de exploração:** a região hexagonal gerada a cada Explorar zona (`ExplorationMap`). Ver [wild-battle](wild-battle/).
 - **Bioma:** o tipo de terreno de um hexágono (`biome`), como `temperate` ou `boreal`. Mais tarde, ele decide o Campo.
+- **Bioma de encontro:** um dos 7 da tabela `biomes`, que recebem as taxas de `species_biomes`. São os 5 biomas de terreno, em hexágono plano, mais `hill` e `mountain`, que valem para qualquer colina ou montanha.
