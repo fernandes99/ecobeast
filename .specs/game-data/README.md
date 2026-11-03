@@ -60,5 +60,6 @@ Tomadas no planejamento (corrigíveis; ao mudar uma, atualize aqui e nas specs a
 | [01-data-layer](01-data-layer.md)             | Schema em código, leitura dos JSON, validador, `GameData` e modelos        | concluída |
 | [02-core-tables](02-core-tables.md)           | Tabelas de referência: elementos e efetividade, stats, temperamentos etc.  | concluída |
 | [03-starter-content](03-starter-content.md)   | As 3 linhas iniciais: espécies, traços, técnicas, learnsets e Ascensões    | concluída |
+| [04-hushling-line](04-hushling-line.md)       | Hushling e Echofrost, com as primeiras Técnicas de Gelo e Mente            | concluída |
 
 O schema completo está em [architecture.md](architecture.md).
