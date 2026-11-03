@@ -221,7 +221,7 @@ describe('restrições do banco (e2e)', () => {
     expectRejected(result, 'species_elements_slot_check');
   });
 
-  it('recusa Ascensão com horário "dusk"', async () => {
+  it('recusa Evolução com horário "dusk"', async () => {
     const result = await attempt(prisma, async (tx) => {
       const from = await createSpecies(tx);
       const to = await createSpecies(tx);

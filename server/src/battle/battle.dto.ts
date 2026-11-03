@@ -7,7 +7,12 @@ import type {
   BattleResult,
   StageSlug,
 } from '../domain/battle/types.js';
-import { InventorySlotDto, SkillSlotDto } from '../player/player.dto.js';
+import type { StatBlock } from '../domain/rules/types.js';
+import {
+  InventorySlotDto,
+  SkillSlotDto,
+  STAT_BLOCK,
+} from '../player/player.dto.js';
 
 export const INVALID_ENEMY = 'Esse inimigo não existe.';
 export const INVALID_ACTION = 'Ação inválida.';
@@ -215,6 +220,74 @@ export class BattleDto {
   enemy: EnemySideDto;
 }
 
+export class EvolutionOfferDto {
+  @ApiProperty({
+    description: 'A espécie em que ele pode evoluir.',
+    example: 2,
+  })
+  species_id: number;
+}
+
+/** .specs/progression/architecture.md, "Contrato". */
+export class CreatureProgressDto {
+  @ApiProperty({ example: '7f9c2a1e-…' })
+  uid: string;
+
+  @ApiProperty({ description: 'Índice na equipe da luta.', example: 0 })
+  team_index: number;
+
+  @ApiProperty({ description: 'XP ganho nesta luta.', example: 42 })
+  xp_gained: number;
+
+  @ApiProperty({ example: 11 })
+  level_before: number;
+
+  @ApiProperty({ example: 12 })
+  level_after: number;
+
+  @ApiProperty({ description: 'XP total, já gravado.', example: 1750 })
+  current_xp: number;
+
+  @ApiProperty({ description: 'XP total do nível atual.', example: 1728 })
+  level_xp: number;
+
+  @ApiProperty({
+    description: 'XP total do próximo nível. Nulo no nível máximo.',
+    type: 'integer',
+    nullable: true,
+    example: 2197,
+  })
+  next_level_xp: number | null;
+
+  @ApiProperty({ ...STAT_BLOCK, description: 'Stats no nível de antes.' })
+  stats_before: StatBlock;
+
+  @ApiProperty({ ...STAT_BLOCK, description: 'Stats no nível novo.' })
+  stats_after: StatBlock;
+
+  @ApiProperty({
+    type: () => EvolutionOfferDto,
+    nullable: true,
+    description: 'A evolução oferecida. Nula quando não há.',
+    example: null,
+  })
+  evolution: EvolutionOfferDto | null;
+
+  @ApiProperty({
+    description: 'Técnicas aprendidas com vaga, já gravadas.',
+    type: [Number],
+    example: [],
+  })
+  learned_skill_ids: number[];
+
+  @ApiProperty({
+    description: 'Técnicas que esperam a escolha do jogador.',
+    type: [Number],
+    example: [],
+  })
+  pending_skill_ids: number[];
+}
+
 export class BattleResponseDto {
   @ApiProperty({ type: () => BattleDto })
   battle: BattleDto;
@@ -258,4 +331,12 @@ export class BattleResponseDto {
     example: null,
   })
   spawn_id: number | null;
+
+  @ApiProperty({
+    description:
+      'Na resposta que termina a luta com vitória, quem recebeu XP, na ordem ' +
+      'da equipe. Vazio em qualquer outra resposta.',
+    type: () => [CreatureProgressDto],
+  })
+  progression: CreatureProgressDto[];
 }

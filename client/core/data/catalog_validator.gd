@@ -330,7 +330,7 @@ func _check_species_skills() -> void:
 					has_level_one[rows[i]["species_id"]] = true
 			"evolution":
 				if level != 0:
-					_row_error("species_skills", lines[i], "técnica ao ascender precisa de level = 0")
+					_row_error("species_skills", lines[i], "técnica ao evoluir precisa de level = 0")
 			"teachable":
 				if level != null:
 					_row_error("species_skills", lines[i], "técnica ensinável precisa de level = null")
@@ -386,7 +386,7 @@ func _check_evolutions() -> void:
 	for i: int in rows.size():
 		var row := rows[i]
 		if row["species_id"] == row["evolved_species_id"]:
-			_row_error("evolutions", lines[i], "espécie não pode ascender para ela mesma")
+			_row_error("evolutions", lines[i], "espécie não pode evoluir para ela mesma")
 		if _slug_of("evolution_triggers", row["evolution_trigger_id"]) == "level" and row["min_level"] == null:
 			_row_error("evolutions", lines[i], "gatilho 'level' precisa de min_level")
 		var evolved := _row_by_id("species", row["evolved_species_id"])

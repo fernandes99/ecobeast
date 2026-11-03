@@ -75,14 +75,15 @@ describe('toBattleCatalog', () => {
     });
   });
 
-  it('traz o bônus das Esferas e a taxa de cada espécie', () => {
-    const { items, captureRates } = toBattleCatalog({
+  it('traz o bônus das Esferas, a taxa e o XP base de cada espécie', () => {
+    const { items, captureRates, xpYields } = toBattleCatalog({
       ...NO_ROWS,
       items: [{ id: 1, healAmount: null, curesStatus: false, captureBonus: 2 }],
-      species: [{ id: 7, captureRate: 45 }],
+      species: [{ id: 7, captureRate: 45, baseXpYield: 62 }],
     });
     expect(items.get(1)!.captureBonus).toBe(2);
     expect(captureRates.get(7)).toBe(45);
+    expect(xpYields.get(7)).toBe(62);
   });
 
   it('monta a Técnica com os slugs que as regras usam', () => {

@@ -3,7 +3,7 @@ extends RefCounted
 ## Uma Técnica aprendida por uma espécie (linha de species_skills).
 
 var skill_id: int
-## Nível em que aprende; 0 = ao ascender.
+## Nível em que aprende; 0 = ao evoluir.
 var level: int
 ## "level_up" ou "evolution".
 var method_slug: String

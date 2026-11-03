@@ -63,7 +63,7 @@ export function encounterBiome({
 
 /**
  * O nível em que a espécie é comum na natureza. Sem nível mínimo, como na
- * Ascensão por Vínculo, ele sai da espécie anterior. A volta é limitada porque
+ * Evolução por Vínculo, ele sai da espécie anterior. A volta é limitada porque
  * as evoluções se editam no painel, e um ciclo não pode travar o servidor.
  */
 export function naturalLevel(

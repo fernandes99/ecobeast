@@ -84,8 +84,8 @@ const RESOURCES = [
   {
     path: 'evolution-triggers',
     model: 'evolutionTrigger',
-    tag: 'Gatilhos de Ascensão',
-    notFound: 'Gatilho de Ascensão não encontrado',
+    tag: 'Gatilhos de Evolução',
+    notFound: 'Gatilho de Evolução não encontrado',
   },
 ] as const;
 

@@ -1,6 +1,6 @@
 class_name EvolutionRule
 extends RefCounted
-## Uma regra de Ascensão (tabela evolutions). Colunas nulas viram -1 ou "".
+## Uma regra de Evolução (tabela evolutions). Colunas nulas viram -1 ou "".
 
 const OPTIONAL_COLUMNS: Array[String] = ["min_level", "item_id", "min_bond", "time_of_day", "zone_id"]
 

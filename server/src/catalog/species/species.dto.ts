@@ -91,7 +91,7 @@ export class SpeciesDetailDto {
   @ApiProperty({
     type: () => ResourceRef,
     nullable: true,
-    description: 'De quem ascende; null na primeira forma.',
+    description: 'De quem evolui; null na primeira forma.',
   })
   evolves_from: ResourceRef | null;
 
@@ -120,7 +120,7 @@ export class SpeciesSkillEntryDto {
   learn_method: ResourceRef;
 
   @ApiProperty({
-    description: 'Nível em que aprende; 0 = ao ascender; null = ensinável.',
+    description: 'Nível em que aprende; 0 = ao evoluir; null = ensinável.',
     example: 1,
     nullable: true,
     type: Number,
@@ -194,7 +194,7 @@ export class EvolutionStepDto {
 export class EvolutionChainDto {
   @ApiProperty({
     type: () => EvolutionNodeDto,
-    description: 'A primeira forma da linha e, dentro dela, as Ascensões.',
+    description: 'A primeira forma da linha e, dentro dela, as Evoluções.',
   })
   chain: EvolutionNodeDto;
 }

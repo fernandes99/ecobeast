@@ -244,7 +244,7 @@ export const SkillLearnMethodsController = namedResource(
   'skillLearnMethod',
   'Métodos de aprendizado',
   'Método de aprendizado não encontrado',
-  'Métodos de aprendizado (por nível, ao ascender, ensinável)',
+  'Métodos de aprendizado (por nível, ao evoluir, ensinável)',
   'level_up',
 );
 export const EffectTypesController = namedResource(
@@ -258,8 +258,8 @@ export const EffectTypesController = namedResource(
 export const EvolutionTriggersController = namedResource(
   'evolution-triggers',
   'evolutionTrigger',
-  'Gatilhos de Ascensão',
-  'Gatilho de Ascensão não encontrado',
-  'Gatilhos de Ascensão (nível, item, Vínculo…)',
+  'Gatilhos de Evolução',
+  'Gatilho de Evolução não encontrado',
+  'Gatilhos de Evolução (nível, item, Vínculo…)',
   'level',
 );

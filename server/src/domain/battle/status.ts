@@ -1,4 +1,5 @@
 import { calculateDamage, rollDamageFactor } from './damage.js';
+import { awardXp } from './experience.js';
 import { activeOf, rollChance } from './field.js';
 import type {
   BattleSkill,
@@ -177,6 +178,7 @@ export function faintIfDown(context: TurnContext, side: SideSlug): void {
   creature.sleepTurns = 0;
   clearVolatile(creature);
   context.events.push({ type: 'fainted', side });
+  if (side === 'enemy') awardXp(context);
 }
 
 export function applyEndOfTurn(context: TurnContext, side: SideSlug): void {

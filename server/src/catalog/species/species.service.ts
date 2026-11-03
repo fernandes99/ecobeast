@@ -101,7 +101,7 @@ export class SpeciesService {
     };
   }
 
-  /** A linha inteira, a partir da forma que não ascende de nenhuma outra (RF-09). */
+  /** A linha inteira, a partir da forma que não evolui de nenhuma outra (RF-09). */
   async evolutions(param: string): Promise<EvolutionChainDto> {
     let current = await this.findName(param);
     const seen = new Set<number>([current.id]);

@@ -156,6 +156,8 @@ describe('toEnemyCombatant', () => {
       isProtected: false,
       stages: noStages(),
       skills: [{ skillId: 3, currentPp: 25 }],
+      foughtBy: [],
+      xpEarned: 0,
     });
   });
 });

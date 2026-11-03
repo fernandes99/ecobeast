@@ -41,7 +41,7 @@ export interface CatalogRows {
     curesStatus: boolean;
     captureBonus: number | null;
   }[];
-  species: { id: number; captureRate: number }[];
+  species: { id: number; captureRate: number; baseXpYield: number }[];
 }
 
 /** O catálogo que as regras da batalha recebem, lido do banco. */
@@ -62,7 +62,9 @@ export async function loadBattleCatalog(
         captureBonus: true,
       },
     }),
-    prisma.species.findMany({ select: { id: true, captureRate: true } }),
+    prisma.species.findMany({
+      select: { id: true, captureRate: true, baseXpYield: true },
+    }),
   ]);
   return toBattleCatalog({ skills, efficacy, immunities, items, species });
 }
@@ -85,6 +87,9 @@ export function toBattleCatalog(rows: CatalogRows): BattleCatalog {
     items: new Map(rows.items.map(({ id, ...item }) => [id, item])),
     captureRates: new Map(
       rows.species.map(({ id, captureRate }) => [id, captureRate]),
+    ),
+    xpYields: new Map(
+      rows.species.map(({ id, baseXpYield }) => [id, baseXpYield]),
     ),
   };
 }

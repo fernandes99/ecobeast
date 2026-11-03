@@ -53,7 +53,7 @@ async function load(names: string[]): Promise<number> {
           current = table.name;
           const rows = readTable(table.name).map(snakeToCamelKeys);
           if (table.name === 'species') {
-            // Autorreferência: primeiro todas sem "de quem ascende", depois o valor.
+            // Autorreferência: primeiro todas sem "de quem evolui", depois o valor.
             await delegate(tx, table.model).createMany({
               data: rows.map((row) => ({ ...row, evolvesFromSpeciesId: null })),
             });

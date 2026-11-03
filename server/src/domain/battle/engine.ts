@@ -8,6 +8,7 @@ import { executeAction, toFieldAction } from './actions.js';
 import { chooseEnemyAction } from './ai.js';
 import { captureChance, NOT_CAPTURABLE } from './capture.js';
 import { hasPp } from './emergency.js';
+import { recordEntry } from './experience.js';
 import { activeOf, hasCreatureStanding, rollChance } from './field.js';
 import { noStages } from './stages.js';
 import { applyEndOfTurn, clearVolatile, rollSleepTurns } from './status.js';
@@ -357,6 +358,7 @@ function endBattle(context: TurnContext, result: BattleResult): void {
 }
 
 function enterField(context: TurnContext, side: SideSlug): void {
+  recordEntry(context, side);
   const creature = activeOf(context.state, side);
   creature.stages = noStages();
   clearVolatile(creature);

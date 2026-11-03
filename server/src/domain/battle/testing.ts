@@ -32,6 +32,8 @@ export function makeCombatant(overrides: Partial<Combatant> = {}): Combatant {
     isProtected: false,
     stages: noStages(),
     skills: [],
+    foughtBy: [],
+    xpEarned: 0,
     ...overrides,
   };
 }
@@ -82,6 +84,7 @@ export function makeCatalog(
   skills: BattleSkill[] = [],
   items: Record<number, TestItem> = {},
   captureRates: Record<number, number> = {},
+  xpYields: Record<number, number> = {},
 ): BattleCatalog {
   return {
     skills: new Map(skills.map((skill) => [skill.id, skill])),
@@ -95,6 +98,9 @@ export function makeCatalog(
     ),
     captureRates: new Map(
       Object.entries(captureRates).map(([id, rate]) => [Number(id), rate]),
+    ),
+    xpYields: new Map(
+      Object.entries(xpYields).map(([id, xp]) => [Number(id), xp]),
     ),
   };
 }
@@ -136,13 +142,17 @@ export function eventsOf<Type extends BattleEvent['type']>(
   );
 }
 
-/** Uma batalha em andamento, com a primeira criatura de cada lado em campo. */
+/**
+ * Uma batalha em andamento, com a primeira criatura de cada lado em campo. O
+ * inimigo em campo sem `foughtBy` começa com quem está em campo do outro lado,
+ * como no `startBattle`.
+ */
 export function makeState(
   player: Combatant | Combatant[],
   enemy: Combatant | Combatant[],
   overrides: Partial<BattleState> = {},
 ): BattleState {
-  return {
+  const state: BattleState = {
     phase: 'choose_action',
     result: null,
     turn: 1,
@@ -152,4 +162,14 @@ export function makeState(
     bag: [],
     ...overrides,
   };
+  const index = state.enemy.activeIndex;
+  const facing = state.enemy.team[index];
+  if (facing && facing.foughtBy.length === 0) {
+    // Uma cópia: a criatura recebida pode estar em outros testes.
+    state.enemy.team[index] = {
+      ...facing,
+      foughtBy: [state.player.activeIndex],
+    };
+  }
+  return state;
 }

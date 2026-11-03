@@ -36,6 +36,10 @@ export interface Combatant {
   isProtected: boolean;
   stages: Record<StageSlug, number>;
   skills: CombatantSkill[];
+  /** Só no inimigo: os índices da equipe do jogador que estiveram em campo contra ele. */
+  foughtBy: number[];
+  /** Só no jogador: o XP somado nesta luta, gravado no fim da vitória. */
+  xpEarned: number;
 }
 
 export interface BattleSkillEffect {
@@ -80,6 +84,8 @@ export interface BattleCatalog {
   items: Map<number, BattleItem>;
   /** Id da espécie → `capture_rate`, de 0 a 100. */
   captureRates: Map<number, number>;
+  /** Id da espécie → `base_xp_yield`. */
+  xpYields: Map<number, number>;
 }
 
 export type BattlePhase = 'choose_action' | 'choose_next' | 'ended';
@@ -168,6 +174,7 @@ export type BattleEvent =
       value: number;
     }
   | { type: 'fainted'; side: SideSlug }
+  | { type: 'xp_gained'; team_index: number; amount: number }
   | {
       type: 'item_used';
       side: 'player';

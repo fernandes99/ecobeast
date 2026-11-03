@@ -18,6 +18,10 @@ import type {
 import { type HexCoord, hexDistance } from '../domain/exploration/hex.js';
 import type { MapSpawn } from '../domain/exploration/spawns.js';
 import {
+  type CreatureProgress,
+  progressCreature,
+} from '../domain/progression/levels.js';
+import {
   createCreature,
   type NewCreature,
 } from '../domain/rules/creature-factory.js';
@@ -29,11 +33,13 @@ import {
   loadCreatureBlueprint,
   newCreatureData,
 } from '../player/creature-params.js';
+import { CREATURE_INCLUDE, creatureStats } from '../player/player.mapper.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { loadBattleCatalog } from './battle-catalog.js';
 import {
   BattleResponseDto,
   type CapturedTo,
+  type CreatureProgressDto,
   INVALID_ENEMY,
   NO_EXPLORATION,
   NOTHING_HERE,
@@ -63,16 +69,49 @@ interface Enemy extends WildCreature {
   combatant: Combatant;
 }
 
+/** Quem ganhou XP na luta, já com o nível, o XP e o HP que vão para o banco. */
+interface ProgressedCreature {
+  uid: string;
+  teamIndex: number;
+  xpGained: number;
+  progress: CreatureProgress;
+}
+
 function toResponse(
   state: BattleState,
   events: BattleEvent[],
   capturedTo: CapturedTo | null = null,
+  progressed: ProgressedCreature[] = [],
 ) {
   return {
     battle: toBattleDto(state),
     events,
     captured_to: capturedTo,
     spawn_id: null,
+    progression: progressed.map(toProgressDto),
+  };
+}
+
+function toProgressDto({
+  uid,
+  teamIndex,
+  xpGained,
+  progress,
+}: ProgressedCreature): CreatureProgressDto {
+  return {
+    uid,
+    team_index: teamIndex,
+    xp_gained: xpGained,
+    level_before: progress.levelBefore,
+    level_after: progress.levelAfter,
+    current_xp: progress.currentXp,
+    level_xp: progress.levelXp,
+    next_level_xp: progress.nextLevelXp,
+    stats_before: progress.statsBefore,
+    stats_after: progress.statsAfter,
+    evolution: null,
+    learned_skill_ids: [],
+    pending_skill_ids: [],
   };
 }
 
@@ -171,8 +210,56 @@ export class BattleService {
       return toResponse(outcome.state, outcome.events);
     }
     this.store.delete(userId);
-    const capturedTo = await this.saveTeam(userId, outcome.state, battle.wild);
-    return toResponse(outcome.state, outcome.events, capturedTo);
+    const progressed = await this.progressTeam(userId, outcome.state);
+    const capturedTo = await this.saveTeam(
+      userId,
+      outcome.state,
+      battle.wild,
+      progressed,
+    );
+    return toResponse(outcome.state, outcome.events, capturedTo, progressed);
+  }
+
+  /**
+   * O nível, o XP, os stats e o HP de quem ganhou XP, a partir do que está no
+   * banco. Só a vitória dá XP; nos outros fins, a lista é vazia.
+   */
+  private async progressTeam(
+    userId: string,
+    state: BattleState,
+  ): Promise<ProgressedCreature[]> {
+    if (state.result !== 'victory') return [];
+    const earners = state.player.team
+      .map((creature, teamIndex) => ({ creature, teamIndex }))
+      .filter(({ creature }) => creature.xpEarned > 0);
+    if (earners.length === 0) return [];
+
+    const rows = await this.prisma.creatureInstance.findMany({
+      where: {
+        playerId: userId,
+        uid: { in: earners.map(({ creature }) => creature.creatureUid!) },
+      },
+      include: CREATURE_INCLUDE,
+    });
+    const byUid = new Map(rows.map((row) => [row.uid, row]));
+    // Um Ecobeast apagado no meio da luta fica de fora, como no `saveTeam`.
+    return earners.flatMap(({ creature, teamIndex }) => {
+      const row = byUid.get(creature.creatureUid!);
+      if (!row) return [];
+      const progress = progressCreature(
+        {
+          level: row.level,
+          currentXp: row.currentXp,
+          currentHp: creature.currentHp,
+        },
+        creature.xpEarned,
+        row.species.growthRate.xpMultiplier,
+        (level) => creatureStats({ ...row, level }),
+      );
+      return [
+        { uid: row.uid, teamIndex, xpGained: creature.xpEarned, progress },
+      ];
+    });
   }
 
   private async begin(
@@ -239,7 +326,7 @@ export class BattleService {
   }
 
   /**
-   * Grava HP, status, PP, itens gastos e o capturado de uma vez. Com `updateMany`,
+   * Grava HP, status, PP, XP, nível, itens gastos e o capturado de uma vez. Com `updateMany`,
    * um Domador apagado no meio da luta não encontra nada, e a batalha termina
    * sem erro. Devolve para onde foi o capturado.
    */
@@ -247,7 +334,11 @@ export class BattleService {
     userId: string,
     state: BattleState,
     wild: WildCreature,
+    progressed: ProgressedCreature[],
   ): Promise<CapturedTo | null> {
+    const progressByUid = new Map(
+      progressed.map(({ uid, progress }) => [uid, progress]),
+    );
     const conditions = await this.prisma.statusCondition.findMany({
       select: { id: true, slug: true },
     });
@@ -260,12 +351,17 @@ export class BattleService {
       ...state.player.team.flatMap((creature) => {
         const uid = creature.creatureUid!;
         const statusSlug = creature.statusSlug;
+        const progress = progressByUid.get(uid);
         return [
           this.prisma.creatureInstance.updateMany({
             where: { uid, playerId: userId },
             data: {
-              currentHp: creature.currentHp,
+              currentHp: progress?.currentHp ?? creature.currentHp,
               statusConditionId: statusSlug ? statusIds.get(statusSlug)! : null,
+              ...(progress && {
+                level: progress.levelAfter,
+                currentXp: progress.currentXp,
+              }),
             },
           }),
           ...creature.skills.map(({ skillId, currentPp }) =>

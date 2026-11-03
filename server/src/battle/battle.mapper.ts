@@ -62,6 +62,8 @@ export function toCombatant(row: BattleCreatureRow): Combatant {
       skillId,
       currentPp,
     })),
+    foughtBy: [],
+    xpEarned: 0,
   };
 }
 
@@ -86,6 +88,8 @@ export function toEnemyCombatant(
       skillId,
       currentPp,
     })),
+    foughtBy: [],
+    xpEarned: 0,
   };
 }
 

@@ -127,6 +127,7 @@ A resposta traz a lista, na ordem em que aconteceu. Cada evento tem `type` e `si
 | `status_ended`    | `side`, `status`                          |
 | `stat_changed`    | `side`, `stat`, `stages`, `value`         |
 | `fainted`         | `side`                                    |
+| `xp_gained`       | `team_index`, `amount`, logo depois do `fainted` do inimigo ([progression](../progression/architecture.md#quem-recebe-xp)) |
 | `item_used`       | `side`, `item_id`, `team_index`, `healed`, `hp`, `cured_status` |
 | `capture_attempted` | `item_id`, `success`                    |
 | `flee_failed`     | —                                         |
@@ -140,7 +141,7 @@ Todas exigem a sessão. Erros em pt-BR.
 | --------------------------------- | -------------------------------------- | --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
 | `POST /v1/me/battle`              | `{ "species_id": 1, "level": 5 }`      | `201 { "battle", "events" }` | `404` com `ENABLE_TEST_BATTLE` desligado · `400` "Esse inimigo não existe." · `409` "Crie seu Domador primeiro." · `409` "Cure sua equipe no Refúgio." |
 | `POST /v1/me/battle/wild`         | `{ "q": 3, "r": -2 }`                  | `201 { "battle", "events", "spawn_id" }` | `400` "Posição inválida." · `404` "Essa exploração acabou. Saia e entre de novo." · `409` "Você não chegou até aí." · `409` "Nada por aqui." · `409` "Crie seu Domador primeiro." · `409` "Cure sua equipe no Refúgio." ([biome-encounters](../biome-encounters/architecture.md#contrato)) |
-| `POST /v1/me/battle/action`       | uma ação da tabela acima               | `200 { "battle", "events", "captured_to" }` | `404` "Nenhuma batalha em andamento." · `400` com o motivo                                                                                |
+| `POST /v1/me/battle/action`       | uma ação da tabela acima               | `200 { "battle", "events", "captured_to", "progression" }`, com `progression` só na vitória ([progression](../progression/architecture.md#contrato)) | `404` "Nenhuma batalha em andamento." · `400` com o motivo                                                                                |
 
 `battle` é o que o jogador vê:
 

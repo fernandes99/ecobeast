@@ -27,7 +27,7 @@ export class SpeciesController {
   @Get(':idOrSlug')
   @ApiDetailRoute(
     'Uma espécie',
-    'Dados básicos: medidas, captura, curva de XP, raridade, Elementos, stats base e Traços. As Técnicas e a linha de Ascensão ficam nas rotas /skills e /evolutions.',
+    'Dados básicos: medidas, captura, curva de XP, raridade, Elementos, stats base e Traços. As Técnicas e a linha de Evolução ficam nas rotas /skills e /evolutions.',
     () => SpeciesDetailDto,
     'ruvo',
   )
@@ -38,7 +38,7 @@ export class SpeciesController {
   @Get(':idOrSlug/skills')
   @ApiDetailRoute(
     'Técnicas de uma espécie',
-    'O que a espécie aprende: a Técnica, o método (por nível, ao ascender, ensinável) e o nível.',
+    'O que a espécie aprende: a Técnica, o método (por nível, ao evoluir, ensinável) e o nível.',
     () => SpeciesSkillsDto,
     'ruvo',
   )
@@ -48,7 +48,7 @@ export class SpeciesController {
 
   @Get(':idOrSlug/evolutions')
   @ApiDetailRoute(
-    'Linha de Ascensão de uma espécie',
+    'Linha de Evolução de uma espécie',
     'A linha inteira, a partir da primeira forma; pedir qualquer espécie da linha devolve o mesmo resultado.',
     () => EvolutionChainDto,
     'ruvak',

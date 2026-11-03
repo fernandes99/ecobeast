@@ -23,7 +23,7 @@ O jogador nunca vê a coluna "Referência": ela só existe para quem implementa 
 | Ginásio / Líder     | Arena / Mestre de Arena          | `Arena` / `ArenaBoss`                  | `arenas`                                          |
 | Shiny               | Prismático                       | `is_prismatic`                         | `creature_instances.is_prismatic`                 |
 | Lendário            | Ancestral                        | raridade `ancestral`                   | `rarities.slug = "ancestral"`                     |
-| Evolução            | Ascensão                         | `Evolution` / `EvolutionRule`\*        | `evolutions`                                      |
+| Evolução            | Evolução (evoluir)               | `Evolution` / `EvolutionRule`\*        | `evolutions`                                      |
 | Centro Pokémon      | Refúgio                          | `HealStation`                          | —                                                 |
 | Inicial             | Ecobeast inicial                 | starter                                | `starter_options`                                 |
 
@@ -33,6 +33,7 @@ O jogador nunca vê a coluna "Referência": ela só existe para quem implementa 
 - **`Element` em vez de `ElementType`:** os elementos são linhas de uma tabela (`elements`), não um enum fixo no código. Os ids são estáveis (Fogo = 1 … Arcano = 14).
 - **`CreatureTrait` em vez de `Trait`:** evita conflito com uma possível palavra reservada `trait` em versões futuras do GDScript.
 - **`EvolutionRule`:** cada linha de `evolutions` é uma regra (de qual espécie, para qual, por qual gatilho).
+- **Evolução no jogo:** até a [progression](progression/), o termo no jogo era "Ascensão". O dono trocou por "Evolução" e "evoluir", palavras comuns, em 03/11/2026. As specs concluídas antes disso ainda dizem "Ascensão".
 
 ## Outros termos
 

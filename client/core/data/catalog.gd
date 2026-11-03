@@ -92,7 +92,7 @@ func get_starters() -> Array[CreatureSpecies]:
 	return _starters
 
 
-## Técnicas por nível e ao ascender, por nível (as de ascender, nível 0, primeiro).
+## Técnicas por nível e ao evoluir, por nível (as de evoluir, nível 0, primeiro).
 func get_learnset(species_id: int) -> Array[LearnsetEntry]:
 	var empty: Array[LearnsetEntry] = []
 	return _learnsets.get(species_id, empty)

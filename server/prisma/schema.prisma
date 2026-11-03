@@ -171,7 +171,7 @@ model SkillTarget {
   @@schema("ecobeasts")
 }
 
-/// Como uma espécie aprende uma Técnica: por nível, ao ascender, ensinável.
+/// Como uma espécie aprende uma Técnica: por nível, ao evoluir, ensinável.
 model SkillLearnMethod {
   id   Int    @id @default(autoincrement())
   /// CHECK ^[a-z0-9_]+$ (migration init)
@@ -227,7 +227,7 @@ model EffectType {
   @@schema("ecobeasts")
 }
 
-/// Gatilhos de Ascensão: nível, item, Vínculo, horário, zona…
+/// Gatilhos de Evolução: nível, item, Vínculo, horário, zona…
 model EvolutionTrigger {
   id   Int    @id @default(autoincrement())
   /// CHECK ^[a-z0-9_]+$ (migration init)
@@ -366,7 +366,7 @@ model SpeciesTrait {
   @@schema("ecobeasts")
 }
 
-/// Regras de Ascensão: de uma espécie para outra, com o gatilho e as condições.
+/// Regras de Evolução: de uma espécie para outra, com o gatilho e as condições.
 model Evolution {
   id                 Int     @id @default(autoincrement())
   speciesId          Int     @map("species_id")

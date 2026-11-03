@@ -60,7 +60,7 @@ Crie um vocabulário próprio para tudo que o jogador vê. Isso é o que mais af
 | Ginásio / Líder | Arena / Mestre de Arena | Arena / ArenaBoss |
 | Shiny | Prismático | IsPrismatic |
 | Lendário | Ancestral | Rarity.Ancestral |
-| Evolução | Ascensão | Evolution |
+| Evolução | Evolução | Evolution |
 | Centro Pokémon | Refúgio | HealStation |
 
 ## Features do jogo
@@ -315,7 +315,7 @@ Regras práticas:
 
 Técnicas de tutor e de item (teachableSkills) cobrem outros elementos para dar variedade ao time.
 
-## Evoluções (Ascensão)
+## Evoluções
 
 Cada espécie tem uma lista de `EvolutionRule { CreatureSpecies target; EvolutionTrigger trigger; int level; Item item; int minBond; TimeOfDay time; Zone zone; }`. A regra é checada após a batalha (nível, vínculo) ou ao usar um item; o jogador pode cancelar segurando o botão.
 

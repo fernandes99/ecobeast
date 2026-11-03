@@ -1,6 +1,6 @@
 # 01. XP e nível
 
-- **Status:** rascunho
+- **Status:** concluída
 - **Depende de:** [battle-core](../battle-core/), [team-and-storage](../team-and-storage/), [architecture.md](architecture.md)
 
 ## Contexto
@@ -39,17 +39,17 @@ O termo "Ascensão" também sai do jogo nesta fase, por decisão do dono.
 
 ## Critérios de aceite
 
-- [ ] Ruvo de nível 5, sozinho, vence um selvagem de nível 5 com `base_xp_yield` 62: recebe 44 de XP, e o evento e a `progression` mostram isso.
-- [ ] Dois Ecobeasts que entraram em campo e não desmaiaram recebem 22 cada um pelo mesmo inimigo.
-- [ ] Um Ecobeast que entrou em campo, desmaiou e foi trocado não recebe XP, e quem sobrou recebe o total.
-- [ ] Um Ecobeast que nunca entrou em campo não recebe XP.
-- [ ] Um Ecobeast no nível 100 que lutou não recebe XP nem conta na divisão.
-- [ ] Capturar, fugir e perder não mudam o `current_xp` de ninguém.
-- [ ] Passar de 1.708 para 1.750 de XP, na curva Média, muda o nível de 11 para 12, e o HP atual sobe o mesmo tanto que o máximo.
-- [ ] Um ganho grande que pula vários níveis devolve um item só, com o primeiro e o último nível.
-- [ ] Depois da vitória, `GET /v1/me` mostra o nível, o XP e o HP novos.
-- [ ] `GET /v1/catalog` mostra "Ao evoluir" em `skill_learn_methods`.
-- [ ] O glossário e os documentos vivos (`CLAUDE.md`, `GDD.md`, `README.md` da raiz, `.specs/roadmap.md` e `.specs/glossary.md`) não usam mais "Ascensão" para a evolução.
+- [x] Ruvo de nível 5, sozinho, vence um selvagem de nível 5 com `base_xp_yield` 62: recebe 44 de XP, e o evento e a `progression` mostram isso.
+- [x] Dois Ecobeasts que entraram em campo e não desmaiaram recebem 22 cada um pelo mesmo inimigo.
+- [x] Um Ecobeast que entrou em campo, desmaiou e foi trocado não recebe XP, e quem sobrou recebe o total.
+- [x] Um Ecobeast que nunca entrou em campo não recebe XP.
+- [x] Um Ecobeast no nível 100 que lutou não recebe XP nem conta na divisão.
+- [x] Capturar, fugir e perder não mudam o `current_xp` de ninguém.
+- [x] Passar de 1.708 para 1.750 de XP, na curva Média, muda o nível de 11 para 12, e o HP atual sobe o mesmo tanto que o máximo.
+- [x] Um ganho grande que pula vários níveis devolve um item só, com o primeiro e o último nível.
+- [x] Depois da vitória, `GET /v1/me` mostra o nível, o XP e o HP novos.
+- [x] `GET /v1/catalog` mostra "Ao evoluir" em `skill_learn_methods`.
+- [x] O glossário e os documentos vivos (`CLAUDE.md`, `GDD.md`, `README.md` da raiz, `.specs/roadmap.md` e `.specs/glossary.md`) não usam mais "Ascensão" para a evolução.
 
 ## Desenho técnico
 
@@ -83,10 +83,10 @@ E2e novos em `server/test/progression.e2e-spec.ts`, usando o `placeWild` de `ser
 
 ## Tarefas
 
-- [ ] `xp.ts` e `levels.ts`, com testes
-- [ ] `foughtBy`, `xpEarned` e `xp_gained` no motor da batalha, com testes
-- [ ] `xpYields` no catálogo da batalha
-- [ ] Gravação e `progression` no `BattleService`, e o DTO
-- [ ] Migração e seed de "Ao evoluir"
-- [ ] "Ascensão" fora dos documentos vivos e do código
-- [ ] E2e, e status e tabelas atualizados
+- [x] `xp.ts` e `levels.ts`, com testes
+- [x] `foughtBy`, `xpEarned` e `xp_gained` no motor da batalha, com testes
+- [x] `xpYields` no catálogo da batalha
+- [x] Gravação e `progression` no `BattleService`, e o DTO
+- [x] Migração e seed de "Ao evoluir"
+- [x] "Ascensão" fora dos documentos vivos e do código
+- [x] E2e, e status e tabelas atualizados

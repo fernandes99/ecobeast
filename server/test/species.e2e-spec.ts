@@ -117,7 +117,7 @@ describe('rotas de espécies (e2e)', () => {
     });
   });
 
-  it('Ruvaroth (3): fire no slot 1, shadow no slot 2, ascende de 2', async () => {
+  it('Ruvaroth (3): fire no slot 1, shadow no slot 2, evolui de 2', async () => {
     const { body } = await get('/v1/species/3').expect(200);
     const elements = body.elements.map(
       (e: { slot: number; element: { slug: string } }) => [
