@@ -8,6 +8,8 @@ var events: Array[Dictionary] = []
 var captured_to: String = ""
 ## O Ecobeast que saiu do mapa para esta luta; 0 nas outras chamadas.
 var spawn_id: int = 0
+## Na vitória, quem recebeu XP, na ordem da equipe; vazio nas outras chamadas.
+var progression: Array[CreatureProgress] = []
 
 
 ## null se a resposta não tiver `battle` ou `events`.
@@ -21,4 +23,7 @@ static func from_dict(d: Dictionary) -> BattleTurn:
 	for event: Variant in d["events"]:
 		if event is Dictionary:
 			turn.events.append(event)
+	for item: Variant in DictFields.get_array(d, "progression"):
+		if item is Dictionary:
+			turn.progression.append(CreatureProgress.from_dict(item))
 	return turn

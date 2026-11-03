@@ -53,6 +53,7 @@ var _leaving: bool = false
 @onready var _next_panel: NextCreaturePanel = %NextPanel
 @onready var _items_panel: BattleItemsPanel = %ItemsPanel
 @onready var _capture_overlay: CaptureOverlay = %CaptureOverlay
+@onready var _level_up_overlay: LevelUpOverlay = %LevelUpOverlay
 
 
 func setup(params: Dictionary) -> void:
@@ -83,6 +84,9 @@ func _ready() -> void:
 func handle_back() -> bool:
 	if _leaving:
 		return false
+	if _level_up_overlay.visible:
+		_level_up_overlay.close()
+		return true
 	if _next_panel.visible:
 		_next_panel.go_back()
 		return true
@@ -179,7 +183,24 @@ func _show_turn(turn: BattleTurn) -> void:
 		"choose_next":
 			_next_panel.open(_view.team, _team_names(_view))
 		"ended":
+			await _celebrate(turn.progression)
 			_show_exit(RESULT_TEXTS.get(_view.result, ""), true)
+
+
+## Depois do log da vitória (progression/03): a barra de XP de quem está em campo
+## enche, e cada um que subiu de nível ganha uma comemoração, na ordem da equipe.
+func _celebrate(progression: Array[CreatureProgress]) -> void:
+	if progression.is_empty():
+		return
+	_show_controls(null)
+	for progress: CreatureProgress in progression:
+		if progress.uid == _display.player.uid:
+			await _player_card.animate_xp(progress)
+	for progress: CreatureProgress in progression:
+		if not progress.leveled_up():
+			continue
+		var creature: BattleCreature = _view.team[progress.team_index]
+		await _level_up_overlay.play(progress, creature.species_id, _player_name(creature))
 
 
 func _set_busy(busy: bool) -> void:

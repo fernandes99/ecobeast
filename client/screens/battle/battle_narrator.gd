@@ -83,6 +83,8 @@ func describe(event: Dictionary) -> String:
 			return "Não conseguiu fugir!"
 		"item_used":
 			return _item_used(event)
+		"xp_gained":
+			return _xp_gained(event)
 		"capture_attempted":
 			return _capture_attempted(event)
 	return ""
@@ -133,6 +135,14 @@ func _item_used(event: Dictionary) -> String:
 		return "Você usou %s em %s: +%d de HP." % [item_name, target, healed]
 	var status := GameData.get_status_name(DictFields.get_string(event, "cured_status")).to_lower()
 	return "Você usou %s em %s: não está mais %s." % [item_name, target, status]
+
+
+## Quem recebeu é da equipe, e pode não estar em campo.
+func _xp_gained(event: Dictionary) -> String:
+	var index := DictFields.get_int(event, "team_index")
+	if index < 0 or index >= _team_names.size():
+		return ""
+	return "%s recebeu %d de XP." % [_team_names[index], DictFields.get_int(event, "amount")]
 
 
 func _capture_attempted(event: Dictionary) -> String:

@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" path="res://screens/battle/next_creature_panel.tscn" id="4_next"]
 [ext_resource type="PackedScene" path="res://screens/battle/battle_items_panel.tscn" id="5_items"]
 [ext_resource type="PackedScene" path="res://screens/battle/capture_overlay.tscn" id="6_capture"]
+[ext_resource type="PackedScene" path="res://screens/battle/level_up_overlay.tscn" id="7_level_up"]
 
 [node name="BattleScreen" type="Control"]
 layout_mode = 3
@@ -209,5 +210,9 @@ unique_name_in_owner = true
 layout_mode = 1
 
 [node name="CaptureOverlay" parent="." instance=ExtResource("6_capture")]
+unique_name_in_owner = true
+layout_mode = 1
+
+[node name="LevelUpOverlay" parent="." instance=ExtResource("7_level_up")]
 unique_name_in_owner = true
 layout_mode = 1

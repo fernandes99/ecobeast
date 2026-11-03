@@ -9,6 +9,8 @@ const ElementBadgeScene := preload("res://ui/components/element_badge.tscn")
 const STAGE_ORDER: Array[String] = ["atk", "def", "sp_atk", "sp_def", "spd", "accuracy", "evasion"]
 const CONFUSION_SLUG := "confusion"
 const CHIP_FONT_SIZE := 18
+## Segundos para a barra de XP encher, a cada trecho. A revisar.
+const XP_FILL_TIME := 0.8
 
 @export var is_enemy: bool = false
 
@@ -46,6 +48,23 @@ func set_xp(ratio: float) -> void:
 	_xp_ratio = ratio
 	if is_node_ready():
 		_xp_bar.value = ratio
+
+
+## A barra enche até o XP novo. Quem subiu de nível enche até o fim, mostra o
+## nível novo e recomeça do zero. Só termina quando a barra para.
+func animate_xp(progress: CreatureProgress) -> void:
+	if progress.leveled_up():
+		await _fill_xp(1.0)
+		_level_label.text = "Nv. %d" % progress.level_after
+		_xp_bar.value = 0.0
+	await _fill_xp(progress.xp_ratio())
+	_xp_ratio = progress.xp_ratio()
+
+
+func _fill_xp(ratio: float) -> void:
+	var tween := create_tween()
+	tween.tween_property(_xp_bar, "value", ratio, XP_FILL_TIME)
+	await tween.finished
 
 
 func _refresh() -> void:
