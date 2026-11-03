@@ -83,10 +83,10 @@ Preencher: `species`, `species_elements`, `species_stats`, `traits`, `species_tr
 
 | id  | name                   | Elemento | Cat.     | Poder | Prec. | PP  | Contato | Outros / efeitos (`skill_effects`)          |
 | --- | ---------------------- | -------- | -------- | ----- | ----- | --- | ------- | ------------------------------------------- |
-| 1   | Arranhão †             | Fera     | Física   | 40    | 100   | 35  | sim     | —                                           |
-| 2   | Rugido Feroz †         | Fera     | Suporte  | 0     | 100   | 30  | não     | −1 Atq do inimigo                           |
-| 3   | Investida Veloz †      | Fera     | Física   | 40    | 100   | 30  | sim     | prioridade +1                               |
-| 4   | Uivo †                 | Fera     | Suporte  | 0     | 0     | 40  | não     | Si mesmo; +1 Atq                            |
+| 1   | Arranhão †             | Instinto | Física   | 40    | 100   | 35  | sim     | —                                           |
+| 2   | Rugido Feroz †         | Instinto | Suporte  | 0     | 100   | 30  | não     | −1 Atq do inimigo                           |
+| 3   | Investida Veloz †      | Instinto | Física   | 40    | 100   | 30  | sim     | prioridade +1                               |
+| 4   | Uivo †                 | Instinto | Suporte  | 0     | 0     | 40  | não     | Si mesmo; +1 Atq                            |
 | 5   | Faísca Rápida †        | Fogo     | Especial | 40    | 100   | 25  | não     | 10% Queimado                                |
 | 6   | Mordida Brasa †        | Fogo     | Física   | 60    | 100   | 20  | sim     | 10% Queimado                                |
 | 7   | Fumaça Densa †         | Fogo     | Suporte  | 0     | 100   | 20  | não     | −1 Precisão do inimigo                      |
@@ -96,7 +96,7 @@ Preencher: `species`, `species_elements`, `species_stats`, `traits`, `species_tr
 | 11  | Lâmina Sombria †       | Sombra   | Física   | 70    | 100   | 15  | sim     | crítico alto                                |
 | 12  | Garra do Eclipse †     | Sombra   | Física   | 90    | 100   | 10  | sim     | —                                           |
 | 13  | Erupção Solar †        | Fogo     | Especial | 120   | 85    | 5   | não     | Recuo 33%                                   |
-| 14  | Beliscão               | Fera     | Física   | 40    | 100   | 35  | sim     | —                                           |
+| 14  | Beliscão               | Instinto | Física   | 40    | 100   | 35  | sim     | —                                           |
 | 15  | Couraça †              | Metal    | Suporte  | 0     | 0     | 20  | não     | Si mesmo; +1 Def                            |
 | 16  | Jato de Maré †         | Água     | Especial | 40    | 100   | 25  | não     | —                                           |
 | 17  | Espuma Densa           | Água     | Suporte  | 0     | 95    | 20  | não     | −1 Vel do inimigo                           |
@@ -109,8 +109,8 @@ Preencher: `species`, `species_elements`, `species_stats`, `traits`, `species_tr
 | 24  | Muralha de Coral       | Água     | Suporte  | 0     | 0     | 20  | não     | Si mesmo; +1 Def; +1 Def.E                  |
 | 25  | Martelo de Ferro       | Metal    | Física   | 90    | 95    | 10  | sim     | —                                           |
 | 26  | Maremoto               | Água     | Especial | 120   | 85    | 5   | não     | Recuo 33%                                   |
-| 27  | Patada                 | Fera     | Física   | 40    | 100   | 35  | sim     | —                                           |
-| 28  | Olhar Manhoso          | Fera     | Suporte  | 0     | 100   | 30  | não     | −1 Def do inimigo                           |
+| 27  | Patada                 | Instinto | Física   | 40    | 100   | 35  | sim     | —                                           |
+| 28  | Olhar Manhoso          | Instinto | Suporte  | 0     | 100   | 30  | não     | −1 Def do inimigo                           |
 | 29  | Chicote de Raiz †      | Flora    | Física   | 45    | 100   | 25  | sim     | —                                           |
 | 30  | Esporos Sonolentos     | Flora    | Suporte  | 0     | 75    | 15  | não     | Adormecido (100%)                           |
 | 31  | Seiva Vital †          | Flora    | Especial | 60    | 100   | 15  | não     | Drenar 50%                                  |

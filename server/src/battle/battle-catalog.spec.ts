@@ -19,7 +19,7 @@ function skill(overrides: Partial<SkillRow> = {}): SkillRow {
     makesContact: false,
     minHits: 1,
     maxHits: 1,
-    element: { slug: 'beast' },
+    element: { slug: 'instinct' },
     skillCategory: { slug: 'support' },
     skillTarget: { slug: 'enemy' },
     effects: [],
@@ -90,7 +90,7 @@ describe('toBattleCatalog', () => {
     expect(skills.get(2)).toEqual({
       id: 2,
       elementId: 13,
-      elementSlug: 'beast',
+      elementSlug: 'instinct',
       category: 'support',
       power: 0,
       accuracy: 100,

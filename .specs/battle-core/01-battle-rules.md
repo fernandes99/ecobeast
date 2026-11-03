@@ -33,7 +33,7 @@ O motor do turno ([02](02-battle-engine.md)) precisa das contas do `GDD.md`: est
 
 ## Critérios de aceite
 
-- [x] Ruvo nível 5, Atq 10, contra Def 9, com Arranhão (Poder 40, físico, Fera, sem STAB nem crítico, Tipo 1, Aleatório 1) causa 5.
+- [x] Ruvo nível 5, Atq 10, contra Def 9, com Arranhão (Poder 40, físico, Instinto, sem STAB nem crítico, Tipo 1, Aleatório 1) causa 5.
 - [x] A mesma conta com STAB causa 8, e com Tipo 2, 11.
 - [x] Aleatório 0,85 causa 4.
 - [x] `stageMultiplier` dá 1 em 0; 1,5 em +1; 4 em +6; 2/3 em -1; e 1/4 em -6.

@@ -39,14 +39,14 @@ export function makeCombatant(overrides: Partial<Combatant> = {}): Combatant {
 export const FIRE = 1;
 export const WATER = 2;
 export const FLORA = 3;
-export const BEAST = 13;
+export const INSTINCT = 13;
 
-/** Arranhão: físico, Poder 40, Fera. */
+/** Arranhão: físico, Poder 40, Instinto. */
 export function makeSkill(overrides: Partial<BattleSkill> = {}): BattleSkill {
   return {
     id: 1,
-    elementId: BEAST,
-    elementSlug: 'beast',
+    elementId: INSTINCT,
+    elementSlug: 'instinct',
     category: 'physical',
     power: 40,
     accuracy: 100,

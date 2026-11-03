@@ -117,15 +117,15 @@ Proposta: 14 elementos, com uma tabela própria (não a cópia da tabela do Pok�
 | Terra | Fogo, Volt, Toxina, Metal | Flora | Vento | Água, Flora, Gelo |
 | Vento | Flora, Toxina | Volt, Metal, Terra | — | Volt, Gelo |
 | Gelo | Flora, Terra, Vento, Arcano | Fogo, Água, Gelo, Metal | — | Fogo, Metal |
-| Metal | Gelo, Fera | Fogo, Água, Volt, Metal | — | Fogo, Terra |
+| Metal | Gelo, Instinto | Fogo, Água, Volt, Metal | — | Fogo, Terra |
 | Toxina | Flora, Luz | Toxina, Terra, Sombra | Metal | Terra, Vento, Mente |
-| Mente | Fera, Toxina | Mente, Metal | Sombra | Sombra |
+| Mente | Instinto, Toxina | Mente, Metal | Sombra | Sombra |
 | Sombra | Mente, Luz | Sombra, Arcano | — | Luz |
 | Luz | Sombra, Arcano | Luz, Fogo, Metal | — | Toxina, Sombra |
-| Fera | — | Metal, Terra | — | Metal, Mente |
+| Instinto | — | Metal, Terra | — | Metal, Mente |
 | Arcano | Arcano | Metal, Luz | — | Gelo, Luz, Arcano |
 
-Resistências (recebe 0,5x) saem da mesma tabela, lida pela coluna do defensor. No código, guarde tudo numa matriz `float[14,14]` (atacante × defensor) com valor padrão 1. Fera é o elemento "neutro" e Arcano é o elemento raro dos Ancestrais.
+Resistências (recebe 0,5x) saem da mesma tabela, lida pela coluna do defensor. No código, guarde tudo numa matriz `float[14,14]` (atacante × defensor) com valor padrão 1. Instinto é o elemento "neutro" e Arcano é o elemento raro dos Ancestrais.
 
 ## Atributos técnicos da criatura
 
@@ -268,7 +268,7 @@ Cada técnica é uma linha do catálogo (`skills`) com dados e uma lista de efei
 
 | Técnica | Elemento | Categoria | Poder | Precisão | PP | Efeito |
 | --- | --- | --- | --- | --- | --- | --- |
-| Arranhão | Fera | Física | 40 | 100 | 35 | — |
+| Arranhão | Instinto | Física | 40 | 100 | 35 | — |
 | Faísca Rápida | Fogo | Especial | 40 | 100 | 25 | 10% queimar |
 | Chama Espiral | Fogo | Especial | 90 | 100 | 15 | 10% queimar |
 | Erupção Solar | Fogo | Especial | 120 | 85 | 5 | Recuo 33% |
@@ -276,8 +276,8 @@ Cada técnica é uma linha do catálogo (`skills`) com dados e uma lista de efei
 | Chicote de Raiz | Flora | Física | 45 | 100 | 25 | — |
 | Seiva Vital | Flora | Especial | 60 | 100 | 15 | Drena 50% |
 | Choque Curto | Volt | Especial | 40 | 100 | 30 | 10% paralisar |
-| Investida Veloz | Fera | Física | 40 | 100 | 30 | Prioridade +1 |
-| Rugido Feroz | Fera | Suporte | — | 100 | 30 | −1 Atk inimigo |
+| Investida Veloz | Instinto | Física | 40 | 100 | 30 | Prioridade +1 |
+| Rugido Feroz | Instinto | Suporte | — | 100 | 30 | −1 Atk inimigo |
 | Couraça | Metal | Suporte | — | — | 20 | +1 Def próprio |
 | Névoa Tóxica | Toxina | Suporte | — | 90 | 15 | Envenena |
 | Lâmina Sombria | Sombra | Física | 70 | 100 | 15 | Crítico alto |
@@ -289,7 +289,7 @@ Cada espécie tem uma lista `LevelSkill { int level; SkillData skill; }`. Ao sub
 
 Regras práticas:
 
-- Nível 1: 2 técnicas (1 de dano Fera + 1 de suporte)
+- Nível 1: 2 técnicas (1 de dano Instinto + 1 de suporte)
 - Primeira técnica do próprio elemento entre os níveis 5 e 9
 - Uma técnica nova a cada 3–5 níveis até o 50; depois a cada 7–10
 - Nível 0 = aprende ao evoluir (técnica marcante da forma nova)

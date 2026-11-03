@@ -1,7 +1,7 @@
 import { calculateDamage, rollDamageFactor, typeMultiplier } from './damage.js';
 import {
   always,
-  BEAST,
+  INSTINCT,
   FIRE,
   FLORA,
   makeCatalog,
@@ -46,7 +46,7 @@ describe('typeMultiplier', () => {
   const catalog = makeCatalog({ '1:3': 2, '1:2': 0.5, '4:5': 0 });
 
   it('par sem linha vale 1', () => {
-    expect(typeMultiplier(BEAST, [FLORA], catalog)).toBe(1);
+    expect(typeMultiplier(INSTINCT, [FLORA], catalog)).toBe(1);
   });
 
   it('multiplica os dois Elementos do defensor', () => {
@@ -65,7 +65,7 @@ describe('calculateDamage', () => {
   });
 
   it('com STAB, causa 8', () => {
-    expect(damage({ attacker: { elementIds: [BEAST] } })).toBe(8);
+    expect(damage({ attacker: { elementIds: [INSTINCT] } })).toBe(8);
   });
 
   it('com Tipo 2, causa 11', () => {

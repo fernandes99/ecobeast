@@ -21,24 +21,26 @@ Preencher: `elements`, `element_efficacy`, `stats`, `growth_rates`, `rarities`, 
 
 - **RF-01:** `elements.json` com as 14 linhas abaixo. Cores _a revisar_.
 
-| id  | slug     | name   | color_hex | is_rare |
-| --- | -------- | ------ | --------- | ------- |
-| 1   | `fire`   | Fogo   | `#F2603C` | false   |
-| 2   | `water`  | Água   | `#3A8FE0` | false   |
-| 3   | `flora`  | Flora  | `#4CB050` | false   |
-| 4   | `volt`   | Volt   | `#F5C518` | false   |
-| 5   | `earth`  | Terra  | `#B07A43` | false   |
-| 6   | `wind`   | Vento  | `#7CC9B8` | false   |
-| 7   | `ice`    | Gelo   | `#6FCDEB` | false   |
-| 8   | `metal`  | Metal  | `#8C99A6` | false   |
-| 9   | `toxin`  | Toxina | `#9B4FC9` | false   |
-| 10  | `mind`   | Mente  | `#E86AA8` | false   |
-| 11  | `shadow` | Sombra | `#4A3F6B` | false   |
-| 12  | `light`  | Luz    | `#F7E7A6` | false   |
-| 13  | `beast`  | Fera   | `#B08B6E` | false   |
-| 14  | `arcane` | Arcano | `#6C5CE7` | true    |
+| id  | slug       | name     | color_hex | is_rare |
+| --- | ---------- | -------- | --------- | ------- |
+| 1   | `fire`     | Fogo     | `#F2603C` | false   |
+| 2   | `water`    | Água     | `#3A8FE0` | false   |
+| 3   | `flora`    | Flora    | `#4CB050` | false   |
+| 4   | `volt`     | Volt     | `#F5C518` | false   |
+| 5   | `earth`    | Terra    | `#B07A43` | false   |
+| 6   | `wind`     | Vento    | `#7CC9B8` | false   |
+| 7   | `ice`      | Gelo     | `#6FCDEB` | false   |
+| 8   | `metal`    | Metal    | `#8C99A6` | false   |
+| 9   | `toxin`    | Toxina   | `#9B4FC9` | false   |
+| 10  | `mind`     | Mente    | `#E86AA8` | false   |
+| 11  | `shadow`   | Sombra   | `#4A3F6B` | false   |
+| 12  | `light`    | Luz      | `#F7E7A6` | false   |
+| 13  | `instinct` | Instinto | `#B08B6E` | false   |
+| 14  | `arcane`   | Arcano   | `#6C5CE7` | true    |
 
-- **RF-02:** `element_efficacy.json` transcreve as colunas "Forte contra" (2), "Pouco eficaz contra" (0,5) e "Sem efeito" (0) da tabela de elementos do `GDD.md`, linha a linha, com o elemento da linha como atacante. São 76 linhas, nesta contagem por atacante: Fogo 7, Água 5, Flora 8, Volt 6, Terra 6, Vento 5, Gelo 8, Metal 6, Toxina 6, Mente 5, Sombra 4, Luz 5, Fera 2, Arcano 3. A coluna "Fraco a" do GDD não gera linhas (é a mesma informação lida pelo defensor) e foi conferida: bate com as outras três.
+O Elemento 13 se chamava Fera (`beast`) até 2026-11-02. O novo nome deixa claro o papel dele, o Elemento neutro do jogo. `server/prisma/seed-data/elements.json` segue com o nome antigo, porque é só a foto da carga inicial.
+
+- **RF-02:** `element_efficacy.json` transcreve as colunas "Forte contra" (2), "Pouco eficaz contra" (0,5) e "Sem efeito" (0) da tabela de elementos do `GDD.md`, linha a linha, com o elemento da linha como atacante. São 76 linhas, nesta contagem por atacante: Fogo 7, Água 5, Flora 8, Volt 6, Terra 6, Vento 5, Gelo 8, Metal 6, Toxina 6, Mente 5, Sombra 4, Luz 5, Instinto 2, Arcano 3. A coluna "Fraco a" do GDD não gera linhas (é a mesma informação lida pelo defensor) e foi conferida: bate com as outras três.
 
 - **RF-03:** `stats.json`:
 
