@@ -1,6 +1,6 @@
 # Telas do protótipo — Ecobeast
 
-Celular, orientação retrato. Estilo fantasia leve, colorido e amigável. 14 elementos (Fogo, Água, Flora, Volt, Terra, Vento, Gelo, Metal, Toxina, Mente, Sombra, Luz, Instinto, Arcano), cada um com cor e ícone próprios. Nada parecido com Pokémon.
+Celular, orientação retrato. Estilo fantasia leve, colorido e amigável. 15 elementos (Fogo, Água, Flora, Volt, Terra, Vento, Gelo, Metal, Toxina, Mente, Sombra, Luz, Instinto, Arcano, Inseto), cada um com cor e ícone próprios. Nada parecido com Pokémon.
 
 1. **Splash / Título** — logo, botão "Jogar", ícone de configurações.
 2. **Escolha do inicial** — 3 criaturas (Fogo, Água, Flora) com nome, elemento e botão "Escolher".

@@ -51,7 +51,7 @@ Tomadas no planejamento (corrigíveis; ao mudar uma, atualize aqui e nas specs a
 | Sem filtro de raridade por enquanto | Hoje todas as espécies são "Raro", e o filtro não mudaria nada |
 | A busca procura no apelido e no nome da espécie | É o nome que o jogador vê na tela |
 | A ordem padrão é nível do maior para o menor, com um toque invertendo | É o critério mais útil para escolher quem levar |
-| O filtro só mostra os Elementos presentes no Santuário | São 14 Elementos, e a maioria ficaria sem resultado |
+| O filtro só mostra os Elementos presentes no Santuário | São 15 Elementos, e a maioria ficaria sem resultado |
 | O botão Equipe da batalha fica desativado com 1 Ecobeast só | Não há com quem trocar |
 
 ## Fora do escopo

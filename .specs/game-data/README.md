@@ -61,5 +61,6 @@ Tomadas no planejamento (corrigíveis; ao mudar uma, atualize aqui e nas specs a
 | [02-core-tables](02-core-tables.md)           | Tabelas de referência: elementos e efetividade, stats, temperamentos etc.  | concluída |
 | [03-starter-content](03-starter-content.md)   | As 3 linhas iniciais: espécies, traços, técnicas, learnsets e Ascensões    | concluída |
 | [04-hushling-line](04-hushling-line.md)       | Hushling e Echofrost, com as primeiras Técnicas de Gelo e Mente            | concluída |
+| [05-insect-element](05-insect-element.md)     | O Elemento Inseto e a eficácia dele                                        | concluída |
 
 O schema completo está em [architecture.md](architecture.md).

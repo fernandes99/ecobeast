@@ -106,26 +106,27 @@ O MVP é o Pokémon Simulator modernizado: menus, batalha 1x1 por turnos, captur
 
 ## Tipos (Elementos) e efetividade
 
-Proposta: 14 elementos, com uma tabela própria (não a cópia da tabela do Pokémon). Cada criatura tem 1 ou 2 elementos; com 2, os multiplicadores se multiplicam (2 × 2 = 4x, 0,5 × 0,5 = 0,25x).
+Proposta: 15 elementos, com uma tabela própria (não a cópia da tabela do Pokémon). Cada criatura tem 1 ou 2 elementos; com 2, os multiplicadores se multiplicam (2 × 2 = 4x, 0,5 × 0,5 = 0,25x).
 
 | Elemento | Forte contra (causa 2x) | Pouco eficaz contra (0,5x) | Sem efeito (0x) | Fraco a (recebe 2x) |
 | --- | --- | --- | --- | --- |
-| Fogo | Flora, Gelo, Metal | Fogo, Água, Terra, Arcano | — | Água, Terra |
+| Fogo | Flora, Gelo, Metal, Inseto | Fogo, Água, Terra, Arcano | — | Água, Terra |
 | Água | Fogo, Terra | Água, Flora, Arcano | — | Volt, Flora |
-| Flora | Água, Terra | Fogo, Flora, Vento, Toxina, Metal, Arcano | — | Fogo, Gelo, Vento, Toxina |
+| Flora | Água, Terra | Fogo, Flora, Vento, Toxina, Metal, Arcano, Inseto | — | Fogo, Gelo, Vento, Toxina, Inseto |
 | Volt | Água, Vento | Volt, Flora, Arcano | Terra | Terra |
-| Terra | Fogo, Volt, Toxina, Metal | Flora | Vento | Água, Flora, Gelo |
+| Terra | Fogo, Volt, Toxina, Metal | Flora, Inseto | Vento | Água, Flora, Gelo, Inseto |
 | Vento | Flora, Toxina | Volt, Metal, Terra | — | Volt, Gelo |
-| Gelo | Flora, Terra, Vento, Arcano | Fogo, Água, Gelo, Metal | — | Fogo, Metal |
+| Gelo | Flora, Terra, Vento, Arcano, Inseto | Fogo, Água, Gelo, Metal | — | Fogo, Metal |
 | Metal | Gelo, Instinto | Fogo, Água, Volt, Metal | — | Fogo, Terra |
 | Toxina | Flora, Luz | Toxina, Terra, Sombra | Metal | Terra, Vento, Mente |
 | Mente | Instinto, Toxina | Mente, Metal | Sombra | Sombra |
 | Sombra | Mente, Luz | Sombra, Arcano | — | Luz |
-| Luz | Sombra, Arcano | Luz, Fogo, Metal | — | Toxina, Sombra |
+| Luz | Sombra, Arcano, Inseto | Luz, Fogo, Metal | — | Toxina, Sombra |
 | Instinto | — | Metal, Terra | — | Metal, Mente |
 | Arcano | Arcano | Metal, Luz | — | Gelo, Luz, Arcano |
+| Inseto | Flora, Terra | Fogo, Metal, Luz | — | Fogo, Gelo, Luz |
 
-Resistências (recebe 0,5x) saem da mesma tabela, lida pela coluna do defensor. No código, guarde tudo numa matriz `float[14,14]` (atacante × defensor) com valor padrão 1. Instinto é o elemento "neutro" e Arcano é o elemento raro dos Ancestrais.
+Resistências (recebe 0,5x) saem da mesma tabela, lida pela coluna do defensor. No código, guarde tudo numa matriz `float[15,15]` (atacante × defensor) com valor padrão 1. Instinto é o elemento "neutro" e Arcano é o elemento raro dos Ancestrais.
 
 ## Atributos técnicos da criatura
 

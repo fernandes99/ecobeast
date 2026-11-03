@@ -36,7 +36,7 @@ temperaments ──> stats (aumentado, diminuído)
 
 ### Referência (preenchidas em [02-core-tables](02-core-tables.md))
 
-**`elements`** — os 14 elementos.
+**`elements`** — os 15 elementos.
 
 | Coluna    | Tipo   | Observação                                 |
 | --------- | ------ | ------------------------------------------ |
