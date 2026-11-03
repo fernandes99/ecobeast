@@ -18,7 +18,7 @@ Linhas novas no banco (schema `ecobeasts`), nas tabelas `species`, `species_elem
 ## Fora do escopo
 
 - A Ascensão acontecer no jogo: XP, subir de nível e Ascensão por nível são da iniciativa `progression`, e os demais gatilhos vêm depois dela (ver [roadmap.md](../roadmap.md)).
-- A ilustração: sem `res://assets/creatures/<slug>/front.png`, o `CreaturePortrait` desenha o círculo provisório.
+- As folhas `idle.png` e `walk.png` entrarem em outras telas além do spawn de depuração: as duas espécies já têm `front.png` e as duas folhas.
 - Encontros por bioma (`biome-encounters`).
 - `server/prisma/seed-data/`: é só a foto da carga inicial. Um banco recriado do zero não terá esta linha.
 
