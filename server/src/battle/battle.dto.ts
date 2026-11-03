@@ -11,6 +11,10 @@ import { InventorySlotDto, SkillSlotDto } from '../player/player.dto.js';
 
 export const INVALID_ENEMY = 'Esse inimigo não existe.';
 export const INVALID_ACTION = 'Ação inválida.';
+export const INVALID_POSITION = 'Posição inválida.';
+export const NO_EXPLORATION = 'Essa exploração acabou. Saia e entre de novo.';
+export const UNREACHABLE = 'Você não chegou até aí.';
+export const NOTHING_HERE = 'Nada por aqui.';
 
 export type CapturedTo = 'party' | 'storage';
 
@@ -56,6 +60,18 @@ export class StartBattleBodyDto {
   @ValidateIf((body: StartBattleBodyDto) => Number.isInteger(body.species_id))
   @IsInt({ message: INVALID_ENEMY })
   level: number;
+}
+
+export class StartWildBodyDto {
+  @ApiProperty({ description: 'Coluna onde o Domador está.', example: 3 })
+  @IsInt({ message: INVALID_POSITION })
+  q: number;
+
+  @ApiProperty({ description: 'Linha onde o Domador está.', example: -2 })
+  // Um erro por vez: a validação junta as mensagens numa frase só.
+  @ValidateIf((body: StartWildBodyDto) => Number.isInteger(body.q))
+  @IsInt({ message: INVALID_POSITION })
+  r: number;
 }
 
 export class BattleActionBodyDto {
@@ -232,4 +248,14 @@ export class BattleResponseDto {
     example: null,
   })
   captured_to: CapturedTo | null;
+
+  @ApiProperty({
+    description:
+      'O Ecobeast que saiu do mapa para esta luta. Nulo em qualquer resposta ' +
+      'que não seja o começo de um encontro selvagem.',
+    type: 'integer',
+    nullable: true,
+    example: null,
+  })
+  spawn_id: number | null;
 }

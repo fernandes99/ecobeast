@@ -7,7 +7,6 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { secureRandom } from '../common/secure-random.js';
 import { Env } from '../config/env.js';
-import { rollEncounter } from '../domain/battle/encounter.js';
 import { applyAction, startBattle } from '../domain/battle/engine.js';
 import type {
   BattleAction,
@@ -16,12 +15,15 @@ import type {
   BattleState,
   Combatant,
 } from '../domain/battle/types.js';
+import { type HexCoord, hexDistance } from '../domain/exploration/hex.js';
+import type { MapSpawn } from '../domain/exploration/spawns.js';
 import {
   createCreature,
   type NewCreature,
 } from '../domain/rules/creature-factory.js';
 import { MAX_LEVEL } from '../domain/rules/xp-curve.js';
 import { firstFreePartySlot } from '../domain/team/party.js';
+import { ExplorationStore } from '../exploration/exploration.store.js';
 import {
   type CreaturePlace,
   loadCreatureBlueprint,
@@ -33,6 +35,9 @@ import {
   BattleResponseDto,
   type CapturedTo,
   INVALID_ENEMY,
+  NO_EXPLORATION,
+  NOTHING_HERE,
+  UNREACHABLE,
 } from './battle.dto.js';
 import {
   BATTLE_PLAYER_INCLUDE,
@@ -46,6 +51,8 @@ const NO_PLAYER = 'Crie seu Domador primeiro.';
 const NO_HEALTHY_CREATURE = 'Cure sua equipe no Refúgio.';
 export const NO_BATTLE = 'Nenhuma batalha em andamento.';
 const CAN_FLEE_WILD = true;
+/** Um passo no cliente leva 360 ms; a diferença é a folga para o relógio. */
+export const MIN_STEP_MS = 300;
 
 interface Team {
   creatures: Combatant[];
@@ -61,7 +68,12 @@ function toResponse(
   events: BattleEvent[],
   capturedTo: CapturedTo | null = null,
 ) {
-  return { battle: toBattleDto(state), events, captured_to: capturedTo };
+  return {
+    battle: toBattleDto(state),
+    events,
+    captured_to: capturedTo,
+    spawn_id: null,
+  };
 }
 
 /** O inimigo como o fim da luta o deixou. */
@@ -83,6 +95,7 @@ export class BattleService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly store: BattleStore,
+    private readonly explorations: ExplorationStore,
     private readonly config: ConfigService<Env, true>,
   ) {}
 
@@ -98,19 +111,43 @@ export class BattleService {
     return this.begin(userId, team, await this.createEnemy(speciesId, level));
   }
 
-  /** O inimigo é sorteado aqui, perto do nível de quem entra em campo. */
-  async startWild(userId: string): Promise<BattleResponseDto> {
+  /** O inimigo sai do hexágono do Domador; a equipe é conferida antes de gastá-lo. */
+  async startWild(
+    userId: string,
+    position: HexCoord,
+  ): Promise<BattleResponseDto> {
     const team = await this.loadTeam(userId);
-    const species = await this.prisma.species.findMany({
-      select: { id: true },
-      orderBy: { id: 'asc' },
+    const spawn = this.takeSpawn(userId, position);
+    const enemy = await this.createEnemy(spawn.speciesId, spawn.level);
+    return { ...(await this.begin(userId, team, enemy)), spawn_id: spawn.id };
+  }
+
+  /**
+   * Da leitura à remoção não há `await`: dois pedidos ao mesmo tempo não
+   * enfrentam o mesmo Ecobeast. Quem mente a posição não chega antes de quem anda.
+   */
+  private takeSpawn(userId: string, position: HexCoord): MapSpawn {
+    const exploration = this.explorations.get(userId);
+    if (!exploration) throw new NotFoundException(NO_EXPLORATION);
+
+    const now = Date.now();
+    const walked = hexDistance(exploration.position, position);
+    if (walked * MIN_STEP_MS > now - exploration.positionAt) {
+      throw new ConflictException(UNREACHABLE);
+    }
+    this.explorations.set(userId, {
+      ...exploration,
+      position,
+      positionAt: now,
     });
-    const { speciesId, level } = rollEncounter(
-      species.map(({ id }) => id),
-      team.creatures.find((creature) => creature.currentHp > 0)!.level,
-      secureRandom,
+
+    const here = [...exploration.spawns.values()].filter(
+      ({ q, r }) => q === position.q && r === position.r,
     );
-    return this.begin(userId, team, await this.createEnemy(speciesId, level));
+    if (here.length === 0) throw new ConflictException(NOTHING_HERE);
+    const spawn = here[Math.floor(secureRandom() * here.length)]!;
+    exploration.spawns.delete(spawn.id);
+    return spawn;
   }
 
   /**

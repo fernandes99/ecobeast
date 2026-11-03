@@ -2,13 +2,16 @@ import { INestApplication } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import request from 'supertest';
 import type { App } from 'supertest/types.js';
+import { MIN_STEP_MS } from '../src/battle/battle.service.js';
 import { BattleStore } from '../src/battle/battle.store.js';
 import type { BattleEvent } from '../src/domain/battle/types.js';
+import { ExplorationStore } from '../src/exploration/exploration.store.js';
 import { Prisma, PrismaClient } from '../src/generated/prisma/client.js';
 import { PrismaService } from '../src/prisma/prisma.service.js';
 import { createTestApp } from './support/app.js';
 import { createTestPrisma } from './support/db.js';
 import { createTestTokens, TestTokens } from './support/tokens.js';
+import { HERE, placeWild } from './support/wild.js';
 
 const RUVO = 1;
 const WEAK_ENEMY = { species_id: RUVO, level: 1 };
@@ -19,6 +22,10 @@ const NO_HEALTHY = 'Cure sua equipe no Refúgio.';
 const INVALID_ENEMY = 'Esse inimigo não existe.';
 const INVALID_ACTION = 'Ação inválida.';
 const NO_BATTLE = 'Nenhuma batalha em andamento.';
+const INVALID_POSITION = 'Posição inválida.';
+const NO_EXPLORATION = 'Essa exploração acabou. Saia e entre de novo.';
+const UNREACHABLE = 'Você não chegou até aí.';
+const NOTHING_HERE = 'Nada por aqui.';
 /** Bem mais turnos do que uma luta precisa; só evita um teste sem fim. */
 const MAX_TURNS = 60;
 
@@ -45,6 +52,11 @@ interface Battle {
 interface BattleBody {
   battle: Battle;
   events: BattleEvent[];
+  spawn_id: number | null;
+}
+
+interface ExplorationBody {
+  map: { creatures: { id: number; q: number; r: number }[] };
 }
 
 describe('Rotas da batalha (e2e)', () => {
@@ -82,9 +94,12 @@ describe('Rotas da batalha (e2e)', () => {
       starter: () =>
         http().post('/v1/me/starter').set(auth).send({ species_id: RUVO }),
       remove: () => http().delete('/v1/me').set(auth),
+      explore: () => http().post('/v1/me/exploration').set(auth),
       start: (body: object) =>
         http().post('/v1/me/battle').set(auth).send(body),
-      wild: () => http().post('/v1/me/battle/wild').set(auth),
+      wild: (body: object = HERE) =>
+        http().post('/v1/me/battle/wild').set(auth).send(body),
+      wildRaw: () => http().post('/v1/me/battle/wild').set(auth),
       act: (body: object) =>
         http().post('/v1/me/battle/action').set(auth).send(body),
     };
@@ -571,9 +586,13 @@ describe('Rotas da batalha (e2e)', () => {
   });
 
   describe('encontro selvagem', () => {
-    async function wild(user: User): Promise<BattleBody> {
-      return (await user.wild().expect(201)).body as BattleBody;
+    async function wild(user: User, position = HERE): Promise<BattleBody> {
+      return (await user.wild(position).expect(201)).body as BattleBody;
     }
+
+    /** Sem o valor padrão de `user.wild`, para mandar um corpo inválido. */
+    const http = (user: User, body: object | undefined) =>
+      user.wildRaw().send(body);
 
     it('sem token, dá 401', async () => {
       await request(app.getHttpServer()).post('/v1/me/battle/wild').expect(401);
@@ -581,6 +600,7 @@ describe('Rotas da batalha (e2e)', () => {
 
     it('sem Domador, dá 409', async () => {
       const user = await newUser();
+      placeWild(app, user.id);
       const res = await user.wild().expect(409);
       expect(res.body.message).toBe(NO_PLAYER);
     });
@@ -588,14 +608,159 @@ describe('Rotas da batalha (e2e)', () => {
     it('sem criaturas, dá 409', async () => {
       const user = await newUser();
       await user.create().expect(201);
+      placeWild(app, user.id);
       const res = await user.wild().expect(409);
       expect(res.body.message).toBe(NO_PLAYER);
     });
 
-    it('com a equipe toda a 0 HP, dá 409', async () => {
+    it('com a equipe toda a 0 HP, dá 409, e o Ecobeast fica no mapa', async () => {
       const user = await userWithStarter({ currentHp: 0 });
+      const store = placeWild(app, user.id);
+
       const res = await user.wild().expect(409);
+
       expect(res.body.message).toBe(NO_HEALTHY);
+      expect(store.get(user.id)!.spawns.size).toBe(1);
+    });
+
+    it.each([
+      ['sem corpo', undefined],
+      ['sem r', { q: 0 }],
+      ['com q quebrado', { q: 0.5, r: 0 }],
+      ['com texto', { q: 'a', r: 0 }],
+    ])('%s, dá 400', async (_label, body) => {
+      const user = await userWithStarter();
+      placeWild(app, user.id);
+
+      const res = await http(user, body).expect(400);
+
+      expect(res.body.message).toBe(INVALID_POSITION);
+    });
+
+    it('sem exploração, dá 404', async () => {
+      const user = await userWithStarter();
+
+      const res = await user.wild().expect(404);
+
+      expect(res.body.message).toBe(NO_EXPLORATION);
+    });
+
+    it('longe demais para o tempo que passou, dá 409', async () => {
+      const user = await userWithStarter();
+      placeWild(app, user.id, [{ q: 40, r: 0 }]);
+
+      const res = await user.wild({ q: 40, r: 0 }).expect(409);
+
+      expect(res.body.message).toBe(UNREACHABLE);
+    });
+
+    it('longe, depois de passar o tempo do caminho, funciona', async () => {
+      const user = await userWithStarter();
+      const store = placeWild(app, user.id, [{ q: 40, r: 0 }]);
+      store.get(user.id)!.positionAt = Date.now() - 40 * MIN_STEP_MS;
+
+      await user.wild({ q: 40, r: 0 }).expect(201);
+    });
+
+    it('a distância conta passos na grade, não colunas', async () => {
+      const user = await userWithStarter();
+      const store = placeWild(app, user.id, [{ q: 40, r: -40 }]);
+      store.get(user.id)!.positionAt = Date.now() - 40 * MIN_STEP_MS;
+
+      await user.wild({ q: 40, r: -40 }).expect(201);
+    });
+
+    it('a posição aceita passa a valer para o próximo pedido', async () => {
+      const user = await userWithStarter();
+      const store = placeWild(app, user.id, [
+        { q: 40, r: 0 },
+        { q: 80, r: 0 },
+      ]);
+      store.get(user.id)!.positionAt = Date.now() - 40 * MIN_STEP_MS;
+      await user.wild({ q: 40, r: 0 }).expect(201);
+
+      const res = await user.wild({ q: 80, r: 0 }).expect(409);
+
+      expect(res.body.message).toBe(UNREACHABLE);
+      expect(store.get(user.id)!.position).toEqual({ q: 40, r: 0 });
+    });
+
+    it('em um hexágono sem Ecobeast, dá 409', async () => {
+      const user = await userWithStarter();
+      const store = placeWild(app, user.id, [{ q: 1, r: 0 }]);
+
+      const res = await user.wild().expect(409);
+
+      expect(res.body.message).toBe(NOTHING_HERE);
+      expect(store.get(user.id)!.spawns.size).toBe(1);
+    });
+
+    it('a resposta diz qual Ecobeast saiu do mapa', async () => {
+      const user = await userWithStarter();
+      const store = placeWild(app, user.id, [{ q: 1, r: 0 }, {}]);
+
+      const { spawn_id } = await wild(user);
+
+      expect(spawn_id).toBe(2);
+      expect([...store.get(user.id)!.spawns.keys()]).toEqual([1]);
+    });
+
+    it('agir na luta responde sem `spawn_id`', async () => {
+      const user = await userWithStarter();
+      placeWild(app, user.id);
+      const { battle } = await wild(user);
+
+      const res = await user.act(nextAttack(battle)).expect(200);
+
+      expect(res.body.spawn_id).toBeNull();
+    });
+
+    it('o Ecobeast só pode ser enfrentado uma vez', async () => {
+      const user = await userWithStarter();
+      placeWild(app, user.id);
+      await wild(user);
+
+      const res = await user.wild().expect(409);
+
+      expect(res.body.message).toBe(NOTHING_HERE);
+    });
+
+    it('em um hexágono com dois, cada busca enfrenta um deles', async () => {
+      const user = await userWithStarter();
+      placeWild(app, user.id, [{}, {}]);
+
+      const first = await wild(user);
+      const second = await wild(user);
+
+      expect([first.spawn_id, second.spawn_id].sort()).toEqual([1, 2]);
+      await user.wild().expect(409);
+    });
+
+    it('dois pedidos ao mesmo tempo não enfrentam o mesmo Ecobeast', async () => {
+      const user = await userWithStarter();
+      placeWild(app, user.id);
+
+      const responses = await Promise.all([user.wild(), user.wild()]);
+
+      expect(responses.map(({ status }) => status).sort()).toEqual([201, 409]);
+    });
+
+    it('o Ecobeast do mapa de verdade é o que entra na luta', async () => {
+      const user = await userWithStarter();
+      const { body } = await user.explore().expect(201);
+      const { creatures } = (body as ExplorationBody).map;
+      const store = app.get(ExplorationStore);
+      store.get(user.id)!.positionAt = Date.now() - 100_000 * MIN_STEP_MS;
+      const { q, r } = creatures[0]!;
+      const stored = new Map(store.get(user.id)!.spawns);
+
+      const { battle, spawn_id } = await wild(user, { q, r });
+
+      const spawn = stored.get(spawn_id!)!;
+      expect({ q: spawn.q, r: spawn.r }).toEqual({ q, r });
+      expect(battle.enemy.active['species_id']).toBe(spawn.speciesId);
+      expect(battle.enemy.active['level']).toBe(spawn.level);
+      expect(store.get(user.id)!.spawns.has(spawn_id!)).toBe(false);
     });
 
     it('funciona com a variável de teste desligada', async () => {
@@ -604,40 +769,36 @@ describe('Rotas da batalha (e2e)', () => {
         env: { ENABLE_TEST_BATTLE: false },
       });
       const user = await userWithStarter({}, closed);
+      placeWild(closed, user.id);
       await user.wild().expect(201);
       await user.start(WEAK_ENEMY).expect(404);
       await closed.close();
     });
 
-    it('o inimigo existe e tem nível perto do Ecobeast de frente', async () => {
+    it('o inimigo tem a espécie e o nível guardados no mapa', async () => {
       const user = await userWithStarter({ level: 20 });
-      for (let round = 0; round < 6; round += 1) {
-        const { battle } = await wild(user);
-        const species = await prisma.species.count({
-          where: { id: battle.enemy.active['species_id'] as number },
-        });
-        expect(species).toBe(1);
-        const level = battle.enemy.active['level'] as number;
-        expect(level).toBeGreaterThanOrEqual(18);
-        expect(level).toBeLessThanOrEqual(21);
-      }
+      placeWild(app, user.id, [{ speciesId: 8, level: 37 }]);
+
+      const { battle } = await wild(user);
+
+      expect(battle.enemy.active['species_id']).toBe(8);
+      expect(battle.enemy.active['level']).toBe(37);
     });
 
-    it('com o primeiro caído, o nível vem do segundo', async () => {
+    it('com o primeiro caído, entra o segundo', async () => {
       const user = await userWithStarter({ level: 50, currentHp: 0 });
       await addSecondCreature(user, { level: 30, currentHp: 5 });
-      for (let round = 0; round < 6; round += 1) {
-        const { battle } = await wild(user);
-        expect(battle.player.active_index).toBe(1);
-        const level = battle.enemy.active['level'] as number;
-        expect(level).toBeGreaterThanOrEqual(28);
-        expect(level).toBeLessThanOrEqual(31);
-      }
+      placeWild(app, user.id);
+
+      const { battle } = await wild(user);
+
+      expect(battle.player.active_index).toBe(1);
     });
 
     it('uma nova batalha descarta a anterior, sem gravar', async () => {
       const user = await userWithStarter();
       const before = await team(user);
+      placeWild(app, user.id, [{}, {}]);
       const first = await wild(user);
       // O sorteio não importa aqui: ninguém cai, e a luta não termina.
       const { state } = app.get(BattleStore).get(user.id)!;
@@ -653,6 +814,7 @@ describe('Rotas da batalha (e2e)', () => {
 
     it('a luta vai até o fim e grava HP e PP', async () => {
       const user = await userWithStarter();
+      placeWild(app, user.id);
       const { battle } = await fight(user, await wild(user));
 
       expect(battle.phase).toBe('ended');

@@ -7,6 +7,8 @@
 
 `POST /v1/me/battle` recebe a espécie e o nível do inimigo, por isso só existe com `ENABLE_TEST_BATTLE` ligada. O jogo precisa de uma rota em que o próprio servidor escolha o oponente, sempre disponível. Esta fase a cria. A [wild-battle](../roadmap.md) troca o sorteio pelas zonas mais tarde.
 
+**Mudou depois:** a [biome-encounters/03](../biome-encounters/03-exploration-session.md) tirou o `rollEncounter` e passou a exigir `q` e `r` no corpo da rota, que agora enfrenta um Ecobeast do hexágono do Domador. RF-01 a RF-04 e RF-08 ficam aqui como registro.
+
 ## Escopo
 
 - Regra pura do sorteio do encontro.

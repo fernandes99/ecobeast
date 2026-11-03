@@ -8,6 +8,7 @@ import { Item, PrismaClient } from '../src/generated/prisma/client.js';
 import { createTestApp } from './support/app.js';
 import { createTestPrisma } from './support/db.js';
 import { createTestTokens, TestTokens } from './support/tokens.js';
+import { HERE, placeWild } from './support/wild.js';
 
 // O sorteio não é controlável pela API: cada teste troca a taxa e o bônus da
 // luta no `BattleStore`, sem conferir os valores do catálogo.
@@ -78,7 +79,10 @@ describe('Captura (e2e)', () => {
       me: () => http().get('/v1/me').set(auth),
       remove: () => http().delete('/v1/me').set(auth),
       start: () => http().post('/v1/me/battle').set(auth).send(WEAK_ENEMY),
-      wild: () => http().post('/v1/me/battle/wild').set(auth),
+      wild: () => {
+        placeWild(app, id);
+        return http().post('/v1/me/battle/wild').set(auth).send(HERE);
+      },
       act: (body: object) =>
         http().post('/v1/me/battle/action').set(auth).send(body),
     };

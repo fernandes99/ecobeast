@@ -7,6 +7,7 @@ import { PrismaService } from '../src/prisma/prisma.service.js';
 import { createTestApp } from './support/app.js';
 import { createTestPrisma } from './support/db.js';
 import { createTestTokens, TestTokens } from './support/tokens.js';
+import { HERE, placeWild } from './support/wild.js';
 
 const RUVO = 1;
 const FLEE = { type: 'flee' };
@@ -56,7 +57,10 @@ describe('Rota de cura (e2e)', () => {
         http().post('/v1/me/starter').set(auth).send({ species_id: RUVO }),
       read: () => http().get('/v1/me').set(auth),
       heal: () => http().post('/v1/me/heal').set(auth),
-      wild: () => http().post('/v1/me/battle/wild').set(auth),
+      wild: () => {
+        placeWild(app, id);
+        return http().post('/v1/me/battle/wild').set(auth).send(HERE);
+      },
       act: (body: object) =>
         http().post('/v1/me/battle/action').set(auth).send(body),
     };

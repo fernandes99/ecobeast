@@ -13,7 +13,10 @@ import { CurrentUser } from '../auth/current-user.decorator.js';
 import { ExplorationResponseDto } from './exploration.dto.js';
 import { ExplorationService, NO_PLAYER } from './exploration.service.js';
 
-/** O mapa de exploração (.specs/wild-battle/02-map-generator.md). */
+/**
+ * O mapa de exploração (.specs/wild-battle/02-map-generator.md) e os Ecobeasts
+ * dele (.specs/biome-encounters/03-exploration-session.md).
+ */
 @ApiTags('Exploração')
 @ApiBearerAuth()
 @ApiUnauthorizedResponse({
@@ -31,8 +34,10 @@ export class ExplorationController {
   @ApiOperation({
     summary: 'Começar uma exploração',
     description:
-      'Gera um mapa hexagonal novo, com seed sorteada pelo servidor. O mapa não ' +
-      'fica guardado: cada chamada devolve outro.',
+      'Gera um mapa hexagonal novo, com seed sorteada pelo servidor, e sorteia os ' +
+      'Ecobeasts dele pelas taxas de cada bioma e pela média de nível da equipe. ' +
+      'O servidor guarda os Ecobeasts e a posição do Domador até a próxima ' +
+      'exploração. Cada chamada devolve outro mapa.',
   })
   @ApiCreatedResponse({ type: ExplorationResponseDto })
   @ApiConflictResponse({

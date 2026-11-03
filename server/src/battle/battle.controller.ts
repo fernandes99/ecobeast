@@ -18,7 +18,12 @@ import {
   BattleResponseDto,
   INVALID_ACTION,
   INVALID_ENEMY,
+  INVALID_POSITION,
+  NO_EXPLORATION,
+  NOTHING_HERE,
   StartBattleBodyDto,
+  StartWildBodyDto,
+  UNREACHABLE,
 } from './battle.dto.js';
 import { toBattleAction } from './battle.mapper.js';
 import { BattleService, NO_BATTLE } from './battle.service.js';
@@ -66,14 +71,26 @@ export class BattleController {
   @ApiOperation({
     summary: 'Começar um encontro selvagem',
     description:
-      'Começa uma batalha contra um Ecobeast sorteado pelo servidor, com nível ' +
-      'perto do Ecobeast que entra em campo. Uma batalha em andamento é ' +
-      'descartada, sem gravar nada.',
+      'Começa uma batalha contra um Ecobeast do hexágono do Domador, escolhido ao ' +
+      'acaso entre os que estão lá. O servidor confere se dava para chegar até a ' +
+      'posição andando. O Ecobeast sai do mapa aqui, e `spawn_id` diz qual foi. ' +
+      'Uma batalha em andamento é descartada, sem gravar nada.',
   })
   @ApiCreatedResponse({ type: BattleResponseDto })
-  @ApiConflictResponse({ description: NO_TEAM_RESPONSES })
-  startWild(@CurrentUser() userId: string): Promise<BattleResponseDto> {
-    return this.battles.startWild(userId);
+  @ApiBadRequestResponse({
+    description: `Corpo malformado: "${INVALID_POSITION}"`,
+  })
+  @ApiNotFoundResponse({ description: `Sem exploração: "${NO_EXPLORATION}"` })
+  @ApiConflictResponse({
+    description:
+      `${NO_TEAM_RESPONSES} Longe demais para o tempo que passou: "${UNREACHABLE}" ` +
+      `Nenhum Ecobeast no hexágono: "${NOTHING_HERE}"`,
+  })
+  startWild(
+    @CurrentUser() userId: string,
+    @Body() body: StartWildBodyDto,
+  ): Promise<BattleResponseDto> {
+    return this.battles.startWild(userId, body);
   }
 
   @Post('action')

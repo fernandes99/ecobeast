@@ -2,6 +2,10 @@ import { INestApplication } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import request from 'supertest';
 import type { App } from 'supertest/types.js';
+import type { MapTile } from '../src/domain/exploration/map-generator.js';
+import { DEFAULT_SPAWN_CONFIG } from '../src/domain/exploration/spawn-config.js';
+import { encounterBiome } from '../src/domain/exploration/spawns.js';
+import { ExplorationStore } from '../src/exploration/exploration.store.js';
 import { PrismaClient } from '../src/generated/prisma/client.js';
 import { createTestApp } from './support/app.js';
 import { createTestPrisma } from './support/db.js';
@@ -17,10 +21,11 @@ interface ExplorationBody {
     tiles: {
       q: number;
       r: number;
-      biome: string;
-      shape: string;
+      biome: MapTile['biome'];
+      shape: MapTile['shape'];
       variant: number;
     }[];
+    creatures: { id: number; species_id: number; q: number; r: number }[];
   };
 }
 
@@ -100,6 +105,82 @@ describe('Rota do mapa de exploração (e2e)', () => {
       'shape',
       'variant',
     ]);
+  });
+
+  it('devolve os Ecobeasts sem nível nem nome', async () => {
+    const user = await userWithStarter();
+
+    const { body } = await user.explore().expect(201);
+
+    const { creatures } = (body as ExplorationBody).map;
+    expect(creatures).toHaveLength(DEFAULT_SPAWN_CONFIG.count);
+    expect(Object.keys(creatures[0]!).sort()).toEqual([
+      'id',
+      'q',
+      'r',
+      'species_id',
+    ]);
+  });
+
+  it('todo Ecobeast nasce em um hexágono do mapa e em um bioma dele', async () => {
+    const user = await userWithStarter();
+    const rates = await prisma.speciesBiome.findMany({
+      where: { rate: { gt: 0 } },
+      include: { biome: true },
+    });
+    const allowed = new Set(
+      rates.map(({ speciesId, biome }) => `${speciesId}|${biome.slug}`),
+    );
+
+    const { body } = await user.explore().expect(201);
+
+    const { tiles, creatures } = (body as ExplorationBody).map;
+    const byKey = new Map(tiles.map((tile) => [`${tile.q},${tile.r}`, tile]));
+    for (const { species_id, q, r } of creatures) {
+      const tile = byKey.get(`${q},${r}`);
+      expect(tile).toBeDefined();
+      expect(allowed).toContain(`${species_id}|${encounterBiome(tile!)}`);
+    }
+  });
+
+  it('a média do time decide o nível de quem nasce', async () => {
+    const levelsOf = async (level: number) => {
+      const user = await userWithStarter();
+      await prisma.creatureInstance.updateMany({
+        where: { playerId: user.id },
+        data: { level },
+      });
+      await user.explore().expect(201);
+      const { spawns } = app.get(ExplorationStore).get(user.id)!;
+      return [...spawns.values()].map((spawn) => spawn.level);
+    };
+
+    const low = await levelsOf(5);
+    const high = await levelsOf(100);
+
+    expect(Math.max(...low)).toBeLessThan(Math.min(...high));
+  });
+
+  it('guarda os Ecobeasts e o Domador no início do mapa', async () => {
+    const user = await userWithStarter();
+
+    const { body } = await user.explore().expect(201);
+
+    const { map } = body as ExplorationBody;
+    const stored = app.get(ExplorationStore).get(user.id)!;
+    expect(stored.position).toEqual(map.start);
+    expect([...stored.spawns.keys()]).toEqual(map.creatures.map(({ id }) => id));
+  });
+
+  it('uma exploração nova substitui a anterior', async () => {
+    const user = await userWithStarter();
+    await user.explore().expect(201);
+    const store = app.get(ExplorationStore);
+    store.get(user.id)!.spawns.clear();
+
+    await user.explore().expect(201);
+
+    expect(store.get(user.id)!.spawns.size).toBe(DEFAULT_SPAWN_CONFIG.count);
   });
 
   it('cada chamada gera um mapa novo', async () => {

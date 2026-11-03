@@ -27,8 +27,16 @@ export class MapTileDto extends HexCoordDto {
   variant: number;
 }
 
+export class MapCreatureDto extends HexCoordDto {
+  @ApiProperty({ description: 'Este Ecobeast no mapa.', example: 1 })
+  id: number;
+
+  @ApiProperty({ description: 'Id da espécie, para o desenho.', example: 7 })
+  species_id: number;
+}
+
 export class ExplorationMapDto {
-  @ApiProperty({ description: 'Reproduz este mapa.', example: 1234567 })
+  @ApiProperty({ description: 'Reproduz o terreno.', example: 1234567 })
   seed: number;
 
   @ApiProperty({
@@ -39,6 +47,12 @@ export class ExplorationMapDto {
 
   @ApiProperty({ type: [MapTileDto] })
   tiles: MapTileDto[];
+
+  @ApiProperty({
+    type: [MapCreatureDto],
+    description: 'Os Ecobeasts do mapa. O nível só aparece na luta.',
+  })
+  creatures: MapCreatureDto[];
 }
 
 export class ExplorationResponseDto {
