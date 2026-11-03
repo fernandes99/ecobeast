@@ -41,7 +41,7 @@ Com dois participantes, cada um recebe metade, e as vitórias dobram.
 - **Com oferta,** as Técnicas da luta só são calculadas depois da escolha. Por isso, nesse caso, `learned_skill_ids` e `pending_skill_ids` vêm vazios no fim da luta.
 - **Evoluir:**
   - O `species_id` muda para a espécie nova. O apelido, o nível, o XP, os Genes, o Treino, o Temperamento, o Vínculo, o status e as Técnicas continuam.
-  - O Traço vai para a linha de `species_traits` da espécie nova com o mesmo `slot` e o mesmo `is_hidden` da linha antiga. Sem essa linha, vai para a de slot 1 não oculta.
+  - O Traço vai para a linha de `species_traits` da espécie nova com o mesmo `slot` e o mesmo `is_hidden` da linha antiga. Sem essa linha, vai para a de slot 1 não oculta, depois para a primeira não oculta, e, sem nenhuma, fica o Traço atual.
   - Os stats são recalculados, e o HP atual sobe o mesmo tanto que o máximo, e pelo menos 1.
   - Depois, as Técnicas da espécie nova seguem a regra acima.
 - **Cancelar:** a espécie fica a mesma, e as Técnicas seguem a regra acima com a espécie antiga.
@@ -91,7 +91,7 @@ As rotas das escolhas ficam em `server/src/progression/progression.controller.ts
 
 | Falha | Status | Mensagem |
 | --- | --- | --- |
-| Corpo inválido | 400 | a do `ValidationPipe` |
+| Corpo inválido, incluindo `forget_skill_id` ausente (para não aprender, ele vem `null`) | 400 | "Escolha inválida." |
 | Sem evolução pendente para o `uid`, ou o `skill_id` não está pendente | 404 | "Essa escolha não está mais disponível." |
 | `forget_skill_id` não é uma Técnica do Ecobeast | 400 | "Esse Ecobeast não conhece essa Técnica." |
 | Há uma evolução pendente e chegou uma escolha de Técnica para o mesmo `uid` | 409 | "Escolha primeiro se ele vai evoluir." |

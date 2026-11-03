@@ -35,6 +35,11 @@ import {
 } from '../player/creature-params.js';
 import { CREATURE_INCLUDE, creatureStats } from '../player/player.mapper.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import {
+  type LeveledCreature,
+  ProgressionService,
+  type VictoryPlan,
+} from '../progression/progression.service.js';
 import { loadBattleCatalog } from './battle-catalog.js';
 import {
   BattleResponseDto,
@@ -75,6 +80,8 @@ interface ProgressedCreature {
   teamIndex: number;
   xpGained: number;
   progress: CreatureProgress;
+  /** Só em quem subiu de nível. */
+  plan: VictoryPlan | null;
 }
 
 function toResponse(
@@ -97,6 +104,7 @@ function toProgressDto({
   teamIndex,
   xpGained,
   progress,
+  plan,
 }: ProgressedCreature): CreatureProgressDto {
   return {
     uid,
@@ -109,9 +117,12 @@ function toProgressDto({
     next_level_xp: progress.nextLevelXp,
     stats_before: progress.statsBefore,
     stats_after: progress.statsAfter,
-    evolution: null,
-    learned_skill_ids: [],
-    pending_skill_ids: [],
+    evolution:
+      plan?.evolutionSpeciesId == null
+        ? null
+        : { species_id: plan.evolutionSpeciesId },
+    learned_skill_ids: plan?.learned.map((skill) => skill.skillId) ?? [],
+    pending_skill_ids: plan?.pending ?? [],
   };
 }
 
@@ -135,6 +146,7 @@ export class BattleService {
     private readonly prisma: PrismaService,
     private readonly store: BattleStore,
     private readonly explorations: ExplorationStore,
+    private readonly progression: ProgressionService,
     private readonly config: ConfigService<Env, true>,
   ) {}
 
@@ -210,29 +222,40 @@ export class BattleService {
       return toResponse(outcome.state, outcome.events);
     }
     this.store.delete(userId);
-    const progressed = await this.progressTeam(userId, outcome.state);
+    const { progressed, leveled } = await this.progressTeam(
+      userId,
+      outcome.state,
+    );
     const capturedTo = await this.saveTeam(
       userId,
       outcome.state,
       battle.wild,
       progressed,
     );
+    if (outcome.state.result === 'victory') {
+      const plans = new Map(
+        progressed.flatMap(({ uid, plan }) => (plan ? [[uid, plan]] : [])),
+      );
+      this.progression.remember(userId, leveled, plans);
+    }
     return toResponse(outcome.state, outcome.events, capturedTo, progressed);
   }
 
   /**
    * O nível, o XP, os stats e o HP de quem ganhou XP, a partir do que está no
-   * banco. Só a vitória dá XP; nos outros fins, a lista é vazia.
+   * banco, e as Técnicas e a evolução de quem subiu de nível. Só a vitória dá
+   * XP; nos outros fins, as listas são vazias.
    */
   private async progressTeam(
     userId: string,
     state: BattleState,
-  ): Promise<ProgressedCreature[]> {
-    if (state.result !== 'victory') return [];
+  ): Promise<{ progressed: ProgressedCreature[]; leveled: LeveledCreature[] }> {
+    const none = { progressed: [], leveled: [] };
+    if (state.result !== 'victory') return none;
     const earners = state.player.team
       .map((creature, teamIndex) => ({ creature, teamIndex }))
       .filter(({ creature }) => creature.xpEarned > 0);
-    if (earners.length === 0) return [];
+    if (earners.length === 0) return none;
 
     const rows = await this.prisma.creatureInstance.findMany({
       where: {
@@ -242,8 +265,9 @@ export class BattleService {
       include: CREATURE_INCLUDE,
     });
     const byUid = new Map(rows.map((row) => [row.uid, row]));
+    const leveled: LeveledCreature[] = [];
     // Um Ecobeast apagado no meio da luta fica de fora, como no `saveTeam`.
-    return earners.flatMap(({ creature, teamIndex }) => {
+    const progressed = earners.flatMap(({ creature, teamIndex }) => {
       const row = byUid.get(creature.creatureUid!);
       if (!row) return [];
       const progress = progressCreature(
@@ -256,10 +280,28 @@ export class BattleService {
         row.species.growthRate.xpMultiplier,
         (level) => creatureStats({ ...row, level }),
       );
+      if (progress.levelAfter > progress.levelBefore) {
+        leveled.push({
+          uid: row.uid,
+          speciesId: row.speciesId,
+          levelBefore: progress.levelBefore,
+          levelAfter: progress.levelAfter,
+          skills: row.skills,
+        });
+      }
       return [
-        { uid: row.uid, teamIndex, xpGained: creature.xpEarned, progress },
+        {
+          uid: row.uid,
+          teamIndex,
+          xpGained: creature.xpEarned,
+          progress,
+          plan: null as VictoryPlan | null,
+        },
       ];
     });
+    const plans = await this.progression.planVictory(leveled);
+    for (const item of progressed) item.plan = plans.get(item.uid) ?? null;
+    return { progressed, leveled };
   }
 
   private async begin(
@@ -339,6 +381,9 @@ export class BattleService {
     const progressByUid = new Map(
       progressed.map(({ uid, progress }) => [uid, progress]),
     );
+    const learned = progressed.flatMap(({ uid, plan }) =>
+      (plan?.learned ?? []).map((skill) => ({ creatureUid: uid, ...skill })),
+    );
     const conditions = await this.prisma.statusCondition.findMany({
       select: { id: true, slug: true },
     });
@@ -372,6 +417,9 @@ export class BattleService {
           ),
         ];
       }),
+      ...(learned.length > 0
+        ? [this.prisma.creatureInstanceSkill.createMany({ data: learned })]
+        : []),
       ...state.bag
         .filter(({ used }) => used > 0)
         .flatMap(({ itemId, used }) => {

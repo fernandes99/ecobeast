@@ -116,6 +116,10 @@ describe('XP e nível depois da luta (e2e)', () => {
             .send(body)
             .expect(200)
         ).body as BattleBody,
+      evolve: (uid: string, body: object) =>
+        http().post(`/v1/me/creatures/${uid}/evolution`).set(auth).send(body),
+      learn: (uid: string, body: object) =>
+        http().post(`/v1/me/creatures/${uid}/skills`).set(auth).send(body),
     };
   }
 
@@ -362,5 +366,242 @@ describe('XP e nível depois da luta (e2e)', () => {
       where: { slug: 'evolution' },
     });
     expect(method.name).toBe('Ao evoluir');
+  });
+
+  describe('Técnicas e evolução', () => {
+    /** No 16, o Ruvo pode virar Ruvak (2), que aprende a 6 ao evoluir. */
+    const RUVAK = 2;
+    /**
+     * No 34, o Ruvak aprende a Técnica 9 e ainda não evolui (só no 36); o
+     * inicial sabe a 1 e a 2. Um Ruvo no 34 receberia a oferta de evolução.
+     */
+    const BEFORE_34 = {
+      speciesId: RUVAK,
+      level: 33,
+      currentXp: 34 ** 3 - 1,
+      currentHp: 80,
+    };
+    const AT_34 = 9;
+    const RUVAK_EVOLUTION_SKILL = 6;
+    const BEFORE_16 = { level: 15, currentXp: 16 ** 3 - 1, currentHp: 40 };
+
+    async function skillsOf(uid: string) {
+      const rows = await prisma.creatureInstanceSkill.findMany({
+        where: { creatureUid: uid },
+        orderBy: { slot: 'asc' },
+      });
+      return rows.map(({ slot, skillId, currentPp }) => ({
+        slot,
+        skillId,
+        currentPp,
+      }));
+    }
+
+    /** Completa as 4 vagas com as Técnicas 3 e 7. */
+    async function fillSkills(uid: string): Promise<void> {
+      await prisma.creatureInstanceSkill.createMany({
+        data: [
+          { creatureUid: uid, slot: 3, skillId: 3, currentPp: 5 },
+          { creatureUid: uid, slot: 4, skillId: 7, currentPp: 5 },
+        ],
+      });
+    }
+
+    async function maxPp(skillId: number): Promise<number> {
+      return (await prisma.skill.findUniqueOrThrow({ where: { id: skillId } }))
+        .maxPp;
+    }
+
+    async function win(user: User): Promise<BattleBody> {
+      return (await playOut(user, await user.start())).last;
+    }
+
+    it('com vaga, a Técnica do nível é aprendida com o PP cheio', async () => {
+      const user = await newUser(BEFORE_34);
+      const [row] = await party(user);
+      const last = await win(user);
+
+      expect(last.progression[0]).toMatchObject({
+        evolution: null,
+        learned_skill_ids: [AT_34],
+        pending_skill_ids: [],
+      });
+      expect(await skillsOf(row!.uid)).toContainEqual({
+        slot: 3,
+        skillId: AT_34,
+        currentPp: await maxPp(AT_34),
+      });
+    });
+
+    it('com 4, a Técnica fica pendente e esquecer uma põe a nova no lugar', async () => {
+      const user = await newUser(BEFORE_34);
+      const [row] = await party(user);
+      await fillSkills(row!.uid);
+      const last = await win(user);
+
+      expect(last.progression[0]).toMatchObject({
+        learned_skill_ids: [],
+        pending_skill_ids: [AT_34],
+      });
+      expect((await skillsOf(row!.uid)).map((skill) => skill.skillId)).toEqual([
+        1, 2, 3, 7,
+      ]);
+
+      const res = await user
+        .learn(row!.uid, { skill_id: AT_34, forget_skill_id: 2 })
+        .expect(200);
+      expect(res.body.pending_skill_ids).toEqual([]);
+      expect(
+        res.body.creature.skills.map(
+          (skill: { skill_id: number }) => skill.skill_id,
+        ),
+      ).toEqual([1, AT_34, 3, 7]);
+      expect((await skillsOf(row!.uid))[1]).toEqual({
+        slot: 2,
+        skillId: AT_34,
+        currentPp: await maxPp(AT_34),
+      });
+    });
+
+    it('não aprender mantém as 4, e a mesma escolha de novo dá 404', async () => {
+      const user = await newUser(BEFORE_34);
+      const [row] = await party(user);
+      await fillSkills(row!.uid);
+      await win(user);
+
+      await user
+        .learn(row!.uid, { skill_id: AT_34, forget_skill_id: null })
+        .expect(200);
+      expect((await skillsOf(row!.uid)).map((skill) => skill.skillId)).toEqual([
+        1, 2, 3, 7,
+      ]);
+      const again = await user
+        .learn(row!.uid, { skill_id: AT_34, forget_skill_id: null })
+        .expect(404);
+      expect(again.body.message).toBe('Essa escolha não está mais disponível.');
+    });
+
+    it('esquecer uma Técnica que ele não conhece dá 400, e a escolha continua', async () => {
+      const user = await newUser(BEFORE_34);
+      const [row] = await party(user);
+      await fillSkills(row!.uid);
+      await win(user);
+
+      const res = await user
+        .learn(row!.uid, { skill_id: AT_34, forget_skill_id: 999 })
+        .expect(400);
+      expect(res.body.message).toBe('Esse Ecobeast não conhece essa Técnica.');
+      await user
+        .learn(row!.uid, { skill_id: AT_34, forget_skill_id: 1 })
+        .expect(200);
+    });
+
+    it('corpo sem forget_skill_id ou sem accept dá 400', async () => {
+      const user = await newUser(BEFORE_34);
+      const [row] = await party(user);
+      await user.learn(row!.uid, { skill_id: AT_34 }).expect(400);
+      await user.evolve(row!.uid, {}).expect(400);
+    });
+
+    it('uma escolha da luta anterior dá 404 depois de outra vitória', async () => {
+      const user = await newUser(BEFORE_34);
+      const [row] = await party(user);
+      await fillSkills(row!.uid);
+      await win(user);
+      await win(user);
+
+      await user
+        .learn(row!.uid, { skill_id: AT_34, forget_skill_id: 1 })
+        .expect(404);
+    });
+
+    it('no nível de evolução, a vitória oferece a espécie nova e nada de Técnicas', async () => {
+      const user = await newUser(BEFORE_16);
+      const last = await win(user);
+
+      expect(last.progression[0]).toMatchObject({
+        level_after: 16,
+        evolution: { species_id: RUVAK },
+        learned_skill_ids: [],
+        pending_skill_ids: [],
+      });
+    });
+
+    it('aceitar transforma em Ruvak, com o resto igual e a Técnica de evolução', async () => {
+      const user = await newUser({ ...BEFORE_16, nickname: 'Fogo' });
+      const [before] = await party(user);
+      await win(user);
+      const [beaten] = await party(user);
+
+      const res = await user.evolve(before!.uid, { accept: true }).expect(200);
+      expect(res.body.learned_skill_ids).toEqual([RUVAK_EVOLUTION_SKILL]);
+      expect(res.body.pending_skill_ids).toEqual([]);
+      const [after] = await party(user);
+      expect(after).toMatchObject({
+        speciesId: RUVAK,
+        nickname: 'Fogo',
+        level: 16,
+        currentXp: beaten!.currentXp,
+        temperamentId: before!.temperamentId,
+        traitId: before!.traitId,
+      });
+      expect(after!.currentHp).toBeGreaterThan(beaten!.currentHp);
+      expect(res.body.creature.species_id).toBe(RUVAK);
+      expect(
+        (await skillsOf(before!.uid)).map((skill) => skill.skillId),
+      ).toContain(RUVAK_EVOLUTION_SKILL);
+      const me = await user.me().expect(200);
+      expect(me.body.player.party[0].species_id).toBe(RUVAK);
+      await user.evolve(before!.uid, { accept: true }).expect(404);
+    });
+
+    it('cancelar mantém o Ruvo, e a oferta volta no próximo nível', async () => {
+      const user = await newUser(BEFORE_16);
+      const [row] = await party(user);
+      await win(user);
+
+      const res = await user.evolve(row!.uid, { accept: false }).expect(200);
+      expect(res.body.creature.species_id).toBe(RUVO);
+      expect(res.body.learned_skill_ids).toEqual([]);
+
+      await prisma.creatureInstance.update({
+        where: { uid: row!.uid },
+        data: { currentXp: 17 ** 3 - 1 },
+      });
+      const last = await win(user);
+      expect(last.progression[0]).toMatchObject({
+        level_after: 17,
+        evolution: { species_id: RUVAK },
+      });
+    });
+
+    it('escolher Técnica antes de decidir a evolução dá 409', async () => {
+      const user = await newUser(BEFORE_16);
+      const [row] = await party(user);
+      await win(user);
+
+      const res = await user
+        .learn(row!.uid, { skill_id: AT_34, forget_skill_id: null })
+        .expect(409);
+      expect(res.body.message).toBe('Escolha primeiro se ele vai evoluir.');
+    });
+
+    it('o Ecobeast de outro Domador dá 404', async () => {
+      const owner = await newUser(BEFORE_16);
+      const [row] = await party(owner);
+      await win(owner);
+      const other = await newUser(LEVEL_30);
+
+      await other.evolve(row!.uid, { accept: true }).expect(404);
+      await other
+        .learn(row!.uid, { skill_id: AT_34, forget_skill_id: null })
+        .expect(404);
+      await owner.evolve(row!.uid, { accept: true }).expect(200);
+    });
+
+    it('um uid malformado dá 404', async () => {
+      const user = await newUser(LEVEL_30);
+      await user.evolve('nao-e-uuid', { accept: true }).expect(404);
+    });
   });
 });

@@ -1,6 +1,6 @@
 # 02. Técnicas e evolução no servidor
 
-- **Status:** rascunho
+- **Status:** concluída
 - **Depende de:** [01-xp-and-levels](01-xp-and-levels.md), [architecture.md](architecture.md)
 
 ## Contexto
@@ -38,15 +38,15 @@ Com a [01](01-xp-and-levels.md), a vitória sobe o nível, mas as Técnicas e a 
 
 ## Critérios de aceite
 
-- [ ] Um Ruvo com 2 Técnicas que passa por um nível com Técnica nova termina com 3, e ela vem em `learned_skill_ids`.
-- [ ] Um Ruvo com 4 Técnicas recebe a nova em `pending_skill_ids`, e as Técnicas dele não mudam até a escolha.
-- [ ] Escolher esquecer uma Técnica põe a nova na mesma vaga, com o PP cheio. `GET /v1/me` mostra a troca.
-- [ ] Escolher não aprender deixa as 4 Técnicas iguais. A mesma escolha de novo dá 404.
-- [ ] Um Ruvo que chega ao nível 16 recebe `evolution: { species_id: 2 }`. Aceitar o transforma em Ruvak com o mesmo apelido, nível, XP, Genes e Temperamento, os stats do Ruvak e a Técnica de evolução do Ruvak (aprendida ou pendente).
-- [ ] Cancelar mantém o Ruvo. Na próxima vitória em que ele subir de nível, a oferta volta.
-- [ ] Escolher uma Técnica de um Ecobeast com evolução não decidida dá 409.
-- [ ] Um `uid` de outro jogador dá 404.
-- [ ] Uma escolha da luta anterior dá 404 depois de uma nova vitória.
+- [x] Um Ruvo com 2 Técnicas que passa por um nível com Técnica nova termina com 3, e ela vem em `learned_skill_ids`.
+- [x] Um Ruvo com 4 Técnicas recebe a nova em `pending_skill_ids`, e as Técnicas dele não mudam até a escolha.
+- [x] Escolher esquecer uma Técnica põe a nova na mesma vaga, com o PP cheio. `GET /v1/me` mostra a troca.
+- [x] Escolher não aprender deixa as 4 Técnicas iguais. A mesma escolha de novo dá 404.
+- [x] Um Ruvo que chega ao nível 16 recebe `evolution: { species_id: 2 }`. Aceitar o transforma em Ruvak com o mesmo apelido, nível, XP, Genes e Temperamento, os stats do Ruvak e a Técnica de evolução do Ruvak (aprendida ou pendente).
+- [x] Cancelar mantém o Ruvo. Na próxima vitória em que ele subir de nível, a oferta volta.
+- [x] Escolher uma Técnica de um Ecobeast com evolução não decidida dá 409.
+- [x] Um `uid` de outro jogador dá 404.
+- [x] Uma escolha da luta anterior dá 404 depois de uma nova vitória.
 
 ## Desenho técnico
 
@@ -75,8 +75,8 @@ E2e em `server/test/progression.e2e-spec.ts`, com cada critério de aceite acima
 
 ## Tarefas
 
-- [ ] `learnset.ts` e `evolution.ts`, com testes
-- [ ] `ProgressionStore`
-- [ ] Técnicas e oferta de evolução no fim da vitória
-- [ ] Rotas de evolução e de Técnica, com o DTO e a doc
-- [ ] E2e, e status e tabelas atualizados
+- [x] `learnset.ts` e `evolution.ts`, com testes
+- [x] `ProgressionStore`
+- [x] Técnicas e oferta de evolução no fim da vitória
+- [x] Rotas de evolução e de Técnica, com o DTO e a doc
+- [x] E2e, e status e tabelas atualizados

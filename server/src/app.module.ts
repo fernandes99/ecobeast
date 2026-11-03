@@ -12,6 +12,7 @@ import { HealthModule } from './health/health.module.js';
 import { InventoryModule } from './inventory/inventory.module.js';
 import { PlayerModule } from './player/player.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
+import { ProgressionModule } from './progression/progression.module.js';
 import { TeamModule } from './team/team.module.js';
 
 @Module({
@@ -36,6 +37,7 @@ import { TeamModule } from './team/team.module.js';
     ExplorationModule,
     InventoryModule,
     TeamModule,
+    ProgressionModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
