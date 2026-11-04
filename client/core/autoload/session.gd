@@ -19,6 +19,9 @@ var storage: Array[CreatureInstance] = []
 var _service: GameService = ApiGameService.new()
 var _auth := AuthService.new()
 var _fought_spawn := 0
+## Depuração: o modo God, ligado no menu do mapa. Vale para as lutas que começarem
+## depois e some ao fechar o jogo; o servidor só aceita com a rota de teste ligada.
+var debug_god := false
 
 
 func has_auth_session() -> bool:
@@ -145,7 +148,7 @@ func start_exploration() -> Result:
 ## A batalha não fica aqui: quem a mostra é a tela, e o jogador é relido no fim.
 func start_wild_battle(coord: Vector2i) -> Result:
 	@warning_ignore("redundant_await")
-	var result: Result = await _service.start_wild_battle(coord)
+	var result: Result = await _service.start_wild_battle(coord, debug_god)
 	if result.ok:
 		_fought_spawn = (result.data as BattleTurn).spawn_id
 	return result
@@ -162,6 +165,25 @@ func take_fought_spawn() -> int:
 func battle_action(action: Dictionary) -> Result:
 	@warning_ignore("redundant_await")
 	return await _service.battle_action(action)
+
+
+func debug_almost_level_up() -> Result:
+	@warning_ignore("redundant_await")
+	var result: Result = await _service.debug_almost_level_up()
+	if result.ok:
+		_set_player(result.data)
+	return result
+
+
+## O jogador não muda aqui: a tela de batalha o relê no "Voltar".
+func evolve(uid: String, accept: bool) -> Result:
+	@warning_ignore("redundant_await")
+	return await _service.evolve(uid, accept)
+
+
+func learn_skill(uid: String, skill_id: int, forget_skill_id: int) -> Result:
+	@warning_ignore("redundant_await")
+	return await _service.learn_skill(uid, skill_id, forget_skill_id)
 
 
 ## O Santuário mudou com a equipe: as telas só atualizam depois de reler os dois.

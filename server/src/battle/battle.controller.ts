@@ -90,7 +90,11 @@ export class BattleController {
     @CurrentUser() userId: string,
     @Body() body: StartWildBodyDto,
   ): Promise<BattleResponseDto> {
-    return this.battles.startWild(userId, body);
+    return this.battles.startWild(
+      userId,
+      { q: body.q, r: body.r },
+      body.god === true,
+    );
   }
 
   @Post('action')

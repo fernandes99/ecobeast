@@ -120,6 +120,13 @@ describe('XP e nível depois da luta (e2e)', () => {
         http().post(`/v1/me/creatures/${uid}/evolution`).set(auth).send(body),
       learn: (uid: string, body: object) =>
         http().post(`/v1/me/creatures/${uid}/skills`).set(auth).send(body),
+      wildGod: (server: INestApplication<App> = app) =>
+        request(server.getHttpServer())
+          .post('/v1/me/battle/wild')
+          .set(auth)
+          .send({ ...HERE, god: true }),
+      almostLevelUp: (server: INestApplication<App> = app) =>
+        request(server.getHttpServer()).post('/v1/me/debug/xp').set(auth),
     };
   }
 
@@ -602,6 +609,90 @@ describe('XP e nível depois da luta (e2e)', () => {
     it('um uid malformado dá 404', async () => {
       const user = await newUser(LEVEL_30);
       await user.evolve('nao-e-uuid', { accept: true }).expect(404);
+    });
+  });
+
+  describe('depuração: quase subir de nível', () => {
+    it('deixa cada um da equipe a 1 XP do próximo nível, e a próxima vitória sobe', async () => {
+      const user = await newUser(LEVEL_30);
+      await addSecondCreature(user);
+      await prisma.creatureInstance.updateMany({
+        where: { playerId: user.id, partySlot: 2 },
+        data: { level: 100, currentXp: 1_000_000 },
+      });
+
+      const res = await user.almostLevelUp().expect(200);
+      expect(
+        res.body.player.party.map(
+          (creature: { current_xp: number; level: number }) => [
+            creature.level,
+            creature.current_xp,
+          ],
+        ),
+      ).toEqual([
+        [30, LEVEL_31_XP - 1],
+        [100, 1_000_000],
+      ]);
+
+      const last = (await playOut(user, await user.start())).last;
+      expect(last.progression[0]).toMatchObject({
+        level_before: 30,
+        level_after: 31,
+      });
+    });
+
+    it('sem Domador, dá 409', async () => {
+      const id = randomUUID();
+      users.push(id);
+      await request(app.getHttpServer())
+        .post('/v1/me/debug/xp')
+        .set({ Authorization: `Bearer ${await tokens.sign(id)}` })
+        .expect(409);
+    });
+
+    it('com ENABLE_TEST_BATTLE desligada, a rota não existe', async () => {
+      const closed = await createTestApp({
+        tokenVerifier: tokens.verifier,
+        env: { ENABLE_TEST_BATTLE: false },
+      });
+      const user = await newUser(LEVEL_30);
+      await user.almostLevelUp(closed).expect(404);
+      await closed.close();
+    });
+  });
+
+  describe('depuração: modo God', () => {
+    /** Um selvagem de nível 40 aguenta vários golpes de um nível 30. */
+    const TOUGH_WILD = [{ level: 40 }];
+
+    it('o primeiro golpe que acerta derruba o inimigo', async () => {
+      const user = await newUser(LEVEL_30);
+      placeWild(app, user.id, TOUGH_WILD);
+      const first = (await user.wildGod().expect(201)).body as BattleBody;
+      const { events } = await playOut(user, first);
+
+      const hits = events.filter(
+        (event) => event.type === 'damage' && event.side === 'enemy',
+      );
+      expect(hits).toHaveLength(1);
+      expect(hits[0]).toMatchObject({ hp: 0 });
+    });
+
+    it('com ENABLE_TEST_BATTLE desligada, o god é ignorado', async () => {
+      const closed = await createTestApp({
+        tokenVerifier: tokens.verifier,
+        env: { ENABLE_TEST_BATTLE: false },
+      });
+      const user = await newUser(LEVEL_30);
+      placeWild(closed, user.id, TOUGH_WILD);
+      const first = (await user.wildGod(closed).expect(201)).body as BattleBody;
+      const res = await request(closed.getHttpServer())
+        .post('/v1/me/battle/action')
+        .set({ Authorization: `Bearer ${await tokens.sign(user.id)}` })
+        .send(nextAttack(first.battle))
+        .expect(200);
+      expect((res.body as BattleBody).battle.phase).not.toBe('ended');
+      await closed.close();
     });
   });
 });

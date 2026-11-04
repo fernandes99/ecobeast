@@ -53,32 +53,83 @@ theme_type_variation = &"SectionPanel"
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="DebugZoomButton" type="Button" parent="SafeArea/Column/DebugMenu/Items"]
+[node name="DebugMain" type="VBoxContainer" parent="SafeArea/Column/DebugMenu/Items"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="DebugZoomButton" type="Button" parent="SafeArea/Column/DebugMenu/Items/DebugMain"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 56)
 layout_mode = 2
 theme_type_variation = &"OutlineButton"
 text = "Debug: ver mapa inteiro"
 
-[node name="SpawnLabel" type="Label" parent="SafeArea/Column/DebugMenu/Items"]
-layout_mode = 2
-theme_type_variation = &"SecondaryLabel"
-text = "Spawnar Ecobeast"
-
-[node name="DebugSpecies" type="GridContainer" parent="SafeArea/Column/DebugMenu/Items"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_constants/h_separation = 8
-theme_override_constants/v_separation = 8
-columns = 4
-
-[node name="DebugClearButton" type="Button" parent="SafeArea/Column/DebugMenu/Items"]
+[node name="DebugSpawnButton" type="Button" parent="SafeArea/Column/DebugMenu/Items/DebugMain"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 56)
 layout_mode = 2
 theme_type_variation = &"OutlineButton"
+text = "Spawn"
+
+[node name="DebugGodButton" type="Button" parent="SafeArea/Column/DebugMenu/Items/DebugMain"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+theme_type_variation = &"OutlineButton"
+text = "God: desligado"
+
+[node name="DebugXpButton" type="Button" parent="SafeArea/Column/DebugMenu/Items/DebugMain"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+theme_type_variation = &"OutlineButton"
+text = "Quase subir de nível"
+
+[node name="DebugSpawn" type="VBoxContainer" parent="SafeArea/Column/DebugMenu/Items"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="SpawnLabel" type="Label" parent="SafeArea/Column/DebugMenu/Items/DebugSpawn"]
+layout_mode = 2
+theme_type_variation = &"SecondaryLabel"
+text = "Spawnar Ecobeast"
+
+[node name="SpawnScroll" type="ScrollContainer" parent="SafeArea/Column/DebugMenu/Items/DebugSpawn"]
+custom_minimum_size = Vector2(0, 240)
+layout_mode = 2
+horizontal_scroll_mode = 0
+
+[node name="DebugSpecies" type="GridContainer" parent="SafeArea/Column/DebugMenu/Items/DebugSpawn/SpawnScroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 8
+columns = 5
+
+[node name="SpawnActions" type="HBoxContainer" parent="SafeArea/Column/DebugMenu/Items/DebugSpawn"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="DebugClearButton" type="Button" parent="SafeArea/Column/DebugMenu/Items/DebugSpawn/SpawnActions"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"OutlineButton"
 disabled = true
 text = "Remover Ecobeasts"
+
+[node name="DebugSpawnBackButton" type="Button" parent="SafeArea/Column/DebugMenu/Items/DebugSpawn/SpawnActions"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"OutlineButton"
+text = "Voltar"
 
 [node name="Space" type="Control" parent="SafeArea/Column"]
 layout_mode = 2

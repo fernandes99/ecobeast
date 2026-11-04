@@ -166,11 +166,18 @@ export class BattleService {
   async startWild(
     userId: string,
     position: HexCoord,
+    god = false,
   ): Promise<BattleResponseDto> {
     const team = await this.loadTeam(userId);
     const spawn = this.takeSpawn(userId, position);
     const enemy = await this.createEnemy(spawn.speciesId, spawn.level);
-    return { ...(await this.begin(userId, team, enemy)), spawn_id: spawn.id };
+    // O modo God é só de depuração: fora das rotas de teste, ele não existe.
+    const godMode =
+      god && this.config.get('ENABLE_TEST_BATTLE', { infer: true });
+    return {
+      ...(await this.begin(userId, team, enemy, godMode)),
+      spawn_id: spawn.id,
+    };
   }
 
   /**
@@ -308,6 +315,7 @@ export class BattleService {
     userId: string,
     team: Team,
     { combatant, ...wild }: Enemy,
+    godMode = false,
   ): Promise<BattleResponseDto> {
     const catalog = await loadBattleCatalog(this.prisma);
     const { state, events } = startBattle(
@@ -317,6 +325,7 @@ export class BattleService {
       catalog,
       secureRandom,
       team.bag,
+      { godMode },
     );
     // Substitui a batalha anterior, se houver, sem gravar nada dela.
     this.store.set(userId, { state, catalog, wild });

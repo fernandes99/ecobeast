@@ -52,6 +52,7 @@ export function startBattle(
   catalog: BattleCatalog,
   random: Random,
   bag: BattleBagItem[] = [],
+  { godMode = false }: { godMode?: boolean } = {},
 ): BattleOutcome {
   const context: TurnContext = {
     state: {
@@ -62,6 +63,7 @@ export function startBattle(
       player: newSide(player),
       enemy: newSide(enemy),
       bag: structuredClone(bag),
+      godMode,
     },
     catalog,
     random,

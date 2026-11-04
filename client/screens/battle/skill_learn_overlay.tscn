@@ -1,0 +1,142 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://screens/battle/skill_learn_overlay.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://ui/components/element_badge.tscn" id="2_badge"]
+
+[node name="SkillLearnOverlay" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="Dim" type="ColorRect" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Center" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Content" type="VBoxContainer" parent="Center"]
+custom_minimum_size = Vector2(600, 0)
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 20
+
+[node name="Title" type="Label" parent="Center/Content"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(600, 0)
+layout_mode = 2
+theme_type_variation = &"TitleLabel"
+theme_override_font_sizes/font_size = 34
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="InfoRow" type="HBoxContainer" parent="Center/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 12
+
+[node name="Badge" parent="Center/Content/InfoRow" instance=ExtResource("2_badge")]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="Info" type="Label" parent="Center/Content/InfoRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"SecondaryLabel"
+theme_override_font_sizes/font_size = 24
+
+[node name="ChooseBox" type="VBoxContainer" parent="Center/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Question" type="Label" parent="Center/Content/ChooseBox"]
+layout_mode = 2
+theme_type_variation = &"SecondaryLabel"
+theme_override_font_sizes/font_size = 26
+text = "Ele já sabe 4 Técnicas. Qual esquecer?"
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="KnownList" type="VBoxContainer" parent="Center/Content/ChooseBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="SkipButton" type="Button" parent="Center/Content/ChooseBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 80)
+layout_mode = 2
+theme_type_variation = &"OutlineButton"
+
+[node name="ConfirmBox" type="VBoxContainer" parent="Center/Content"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="ConfirmLabel" type="Label" parent="Center/Content/ConfirmBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(600, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="Buttons" type="HBoxContainer" parent="Center/Content/ConfirmBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="NoButton" type="Button" parent="Center/Content/ConfirmBox/Buttons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 80)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"OutlineButton"
+text = "Não"
+
+[node name="YesButton" type="Button" parent="Center/Content/ConfirmBox/Buttons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 80)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Sim"
+
+[node name="Error" type="Label" parent="Center/Content"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(600, 0)
+layout_mode = 2
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="RetryButton" type="Button" parent="Center/Content"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(0, 80)
+layout_mode = 2
+text = "Tentar de novo"
+
+[node name="ContinueButton" type="Button" parent="Center/Content"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(0, 80)
+layout_mode = 2
+text = "Continuar"

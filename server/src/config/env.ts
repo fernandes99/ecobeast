@@ -23,7 +23,10 @@ const envSchema = z.object({
   SUPABASE_PUBLISHABLE_KEY: z.string().min(1),
   /** O endereço deste servidor visto pelo navegador; padrão http://localhost:<PORT>. */
   PUBLIC_BASE_URL: httpUrl.optional(),
-  /** Libera POST /v1/me/battle até existirem as zonas (battle-core/03). */
+  /**
+   * Libera as rotas de teste: POST /v1/me/battle (battle-core/03),
+   * POST /v1/me/debug/xp (progression/04) e o `god` da luta no mapa.
+   */
   ENABLE_TEST_BATTLE: z.stringbool().default(false),
 });
 

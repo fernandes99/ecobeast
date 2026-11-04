@@ -89,6 +89,8 @@ As rotas das escolhas ficam em `server/src/progression/progression.controller.ts
 
 `creature` tem o formato do Ecobeast em `GET /v1/me` (`CreatureDto`).
 
+Para testar, `POST /v1/me/debug/xp` deixa a equipe a 1 XP do próximo nível ([04](04-evolution-and-skills-screens.md), RF-14). Só existe com `ENABLE_TEST_BATTLE` ligada.
+
 | Falha | Status | Mensagem |
 | --- | --- | --- |
 | Corpo inválido, incluindo `forget_skill_id` ausente (para não aprender, ele vem `null`) | 400 | "Escolha inválida." |

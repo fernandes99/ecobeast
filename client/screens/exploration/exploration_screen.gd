@@ -4,15 +4,24 @@ extends Control
 ## toque, sem zoom nem arrastar. Quem gera o mapa e os Ecobeasts é o servidor, e ele
 ## confere a posição do Domador ao Procurar (biome-encounters/04).
 
+const PortraitScene := preload("res://ui/components/creature_portrait.tscn")
+
 const LOADING_TEXT := "Gerando mapa..."
 const NOTHING_HERE_TEXT := "Nada por aqui."
+const ALMOST_LEVEL_UP_TEXT := "A equipe está a 1 XP do próximo nível."
 ## Duração de um passo, em segundos: um ciclo inteiro da corrida do Domador.
 const STEP_SECONDS := TamerSprite.RUN_SECONDS
 ## Até quanto o dedo pode correr, em pontos da tela lógica, para ainda ser um toque.
 const MAX_TAP_TRAVEL := 24.0
 const WHOLE_MAP_TEXT := "Debug: ver mapa inteiro"
 const NORMAL_ZOOM_TEXT := "Debug: voltar ao zoom normal"
-const DEBUG_SPECIES_HEIGHT := 56.0
+const DEBUG_SPECIES_HEIGHT := 112.0
+const DEBUG_PORTRAIT_SIZE := 64
+const DEBUG_NAME_FONT_SIZE := 18
+## Quanto apaga o cartão de quem ainda não tem folhas.
+const DEBUG_DISABLED_ALPHA := 0.35
+const GOD_ON_TEXT := "God: ligado"
+const GOD_OFF_TEXT := "God: desligado"
 ## Até onde os Ecobeasts existem como nós, em hexágonos: passa da tela com folga,
 ## para eles nascerem e saírem sem ninguém ver. A revisar.
 const CREATURE_RADIUS := 16
@@ -45,6 +54,12 @@ var _spawned := 0
 @onready var _debug_zoom_button: Button = %DebugZoomButton
 @onready var _debug_species: Control = %DebugSpecies
 @onready var _debug_clear_button: Button = %DebugClearButton
+@onready var _debug_xp_button: Button = %DebugXpButton
+@onready var _debug_main: Control = %DebugMain
+@onready var _debug_spawn: Control = %DebugSpawn
+@onready var _debug_spawn_button: Button = %DebugSpawnButton
+@onready var _debug_spawn_back_button: Button = %DebugSpawnBackButton
+@onready var _debug_god_button: Button = %DebugGodButton
 
 
 func _ready() -> void:
@@ -55,6 +70,11 @@ func _ready() -> void:
 	_debug_button.pressed.connect(_toggle_debug_menu)
 	_debug_zoom_button.pressed.connect(_toggle_whole_map)
 	_debug_clear_button.pressed.connect(_clear_creatures)
+	_debug_xp_button.pressed.connect(_almost_level_up)
+	_debug_spawn_button.pressed.connect(_show_debug_part.bind(true))
+	_debug_spawn_back_button.pressed.connect(_show_debug_part.bind(false))
+	_debug_god_button.pressed.connect(_toggle_god)
+	_refresh_god_button()
 	resized.connect(_fit_view.call_deferred)
 	visibility_changed.connect(_on_visibility_changed)
 	_begin()
@@ -158,21 +178,61 @@ func _toggle_whole_map() -> void:
 	_fit_view()
 
 
+## O menu sempre abre na parte principal.
 func _toggle_debug_menu() -> void:
+	_show_debug_part(false)
 	_debug_menu.visible = not _debug_menu.visible
 
 
-## Todos os Ecobeasts do catálogo; quem ainda não tem folhas fica desativado.
+## A lista do Spawn, ou os botões principais.
+func _show_debug_part(spawn: bool) -> void:
+	_debug_spawn.visible = spawn
+	_debug_main.visible = not spawn
+
+
+## O God vale para as lutas que começarem depois; o menu continua aberto.
+func _toggle_god() -> void:
+	Session.debug_god = not Session.debug_god
+	_refresh_god_button()
+
+
+func _refresh_god_button() -> void:
+	_debug_god_button.text = GOD_ON_TEXT if Session.debug_god else GOD_OFF_TEXT
+
+
+## Todos os Ecobeasts do catálogo, cada um com o retrato e o nome; quem ainda não
+## tem folhas fica apagado e desativado.
 func _fill_debug_species() -> void:
 	for species: CreatureSpecies in GameData.get_all_species():
 		var button := Button.new()
-		button.text = species.name
 		button.theme_type_variation = &"OutlineButton"
 		button.custom_minimum_size = Vector2(0.0, DEBUG_SPECIES_HEIGHT)
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		button.disabled = not CreatureSprite.has_sheets(species.slug)
 		button.pressed.connect(_spawn.bind(species.slug))
+		button.add_child(_species_card(species, button.disabled))
 		_debug_species.add_child(button)
+
+
+func _species_card(species: CreatureSpecies, disabled: bool) -> Control:
+	var card := VBoxContainer.new()
+	card.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	card.alignment = BoxContainer.ALIGNMENT_CENTER
+	card.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	card.modulate.a = DEBUG_DISABLED_ALPHA if disabled else 1.0
+	var portrait: CreaturePortrait = PortraitScene.instantiate()
+	portrait.portrait_size = DEBUG_PORTRAIT_SIZE
+	portrait.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	card.add_child(portrait)
+	portrait.set_species(species.id)
+	var label := Label.new()
+	label.text = species.name
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.clip_text = true
+	label.add_theme_font_size_override(&"font_size", DEBUG_NAME_FONT_SIZE)
+	card.add_child(label)
+	return card
 
 
 ## Cada um vai para o vizinho seguinte, para não caírem juntos.
@@ -189,6 +249,20 @@ func _clear_creatures() -> void:
 		creature.queue_free()
 	_creatures.clear()
 	_debug_clear_button.disabled = true
+
+
+## Só para testar a progressão (progression/04): cada um da equipe fica a 1 XP do
+## próximo nível, e a próxima vitória sobe. O servidor só aceita com a rota de
+## teste ligada.
+func _almost_level_up() -> void:
+	_debug_xp_button.disabled = true
+	var result: Result = await Session.debug_almost_level_up()
+	_debug_xp_button.disabled = false
+	_debug_menu.hide()
+	if result.ok:
+		_show_message(ALMOST_LEVEL_UP_TEXT, &"SecondaryLabel")
+	else:
+		_show_message(result.error, &"DangerLabel")
 
 
 ## Deixa com nó só os Ecobeasts perto do Domador. Quem sai e volta fica no mesmo

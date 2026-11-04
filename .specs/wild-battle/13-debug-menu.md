@@ -16,6 +16,7 @@ O Ecobeast do spawn é só para olhar: não passa pelo servidor, não bloqueia c
 - Spawn de qualquer Ecobeast do catálogo que tenha folhas, em um hexágono vizinho do Domador.
 - Passeio dentro do hexágono, parado e andando.
 - Remover todos os Ecobeasts do spawn.
+- Depois, a [progression/04](../progression/04-evolution-and-skills-screens.md) mudou o menu: veja "Mudanças depois", no fim.
 
 ## Fora do escopo
 
@@ -121,3 +122,14 @@ godot --headless -d --path client --quit-after 60
 - **O Ruvo foi redesenhado com 7 pixels:** ao ver o spawn, o dono pediu o tamanho proporcional à altura do catálogo, com o Domador em 1,70 m. A primeira versão tinha 24 pixels, quase a altura dele. Agora a escala está em [architecture.md](architecture.md#menu-de-depuração) e é conferida pela skill.
 - **Os 9 ganharam folhas:** depois do Ruvo, os outros 8 foram desenhados com a skill, cada um na altura do catálogo, e todos ficaram ativos no spawn, sem mudar código. A verificação da tela real coloca os 9 juntos no mapa.
 - **Falta do dono:** jogar no editor e conferir, ao exportar, que o menu não aparece. Nenhum celular foi testado.
+
+## Mudanças depois (progression/04)
+
+O dono pediu, durante a [progression/04](../progression/04-evolution-and-skills-screens.md), um menu mais curto e um modo God:
+
+- **Menu em duas partes:** "Debug" abre só os botões "Debug: ver mapa inteiro", "Spawn", "God: desligado" e "Quase subir de nível". "Spawn" troca para a lista de Ecobeasts, e "Voltar" volta aos botões. O menu sempre abre na parte principal.
+- **Spawn com retrato:** cada Ecobeast é um cartão com o `front.png` e o nome, em 5 colunas, numa área que rola com 2 linhas à vista, para o menu não crescer com o catálogo. Quem não tem folhas fica apagado e desativado, como antes. "Remover Ecobeasts" fica ao lado do "Voltar".
+- **God:** liga e desliga sem fechar o menu, e o texto do botão mostra o estado. Com ele ligado, todo golpe do jogador que acerta derruba o inimigo de uma vez; o inimigo continua atacando normal, e os golpes ainda podem errar (escolha do planejamento, que o dono pode mudar). Vale para as lutas que começarem depois e some ao fechar o jogo (`Session.debug_god`). Quem decide é o servidor: a luta no mapa recebe `god: true`, e ele só vale com `ENABLE_TEST_BATTLE` ligada.
+- **Quase subir de nível:** [progression/04](../progression/04-evolution-and-skills-screens.md), RF-14 e RF-15. Ele e o God passam pelo servidor, ao contrário do resto do menu.
+- **Conferência:** o menu foi desenhado nas duas partes em 360×640, com o catálogo de um servidor de teste. A luta com o God ligado foi conferida pelos testes do servidor, e não na tela.
+

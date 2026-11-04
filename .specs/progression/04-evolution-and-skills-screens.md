@@ -1,6 +1,6 @@
 # 04. Telas de evolução e de Técnica
 
-- **Status:** rascunho
+- **Status:** em andamento
 - **Depende de:** [02-skills-and-evolution](02-skills-and-evolution.md), [03-level-up-screen](03-level-up-screen.md), [architecture.md](architecture.md)
 
 ## Contexto
@@ -13,6 +13,7 @@ Com a [02](02-skills-and-evolution.md), o servidor oferece a evolução, ensina 
 - O aviso "<nome> aprendeu <Técnica>!".
 - A tela de escolher a Técnica, com as 4 atuais e "Não aprender".
 - A ordem dessas telas e as chamadas às rotas da [02](02-skills-and-evolution.md).
+- Uma ferramenta de teste, pedida pelo dono: no menu de depuração do mapa, "Quase subir de nível" deixa a equipe a 1 XP do próximo nível.
 
 ## Fora do escopo
 
@@ -35,6 +36,12 @@ Com a [02](02-skills-and-evolution.md), o servidor oferece a evolução, ensina 
 - **RF-12:** outra falha, como a rede, mostra a mensagem do erro e "Tentar de novo", sem avançar.
 - **RF-13:** o "Voltar" recarrega o jogador, e a Equipe, o Hub e os detalhes mostram a espécie, as Técnicas e o nível novos.
 
+**Ferramenta de teste**
+
+- **RF-14:** `POST /v1/me/debug/xp` deixa cada Ecobeast da equipe abaixo do nível 100 com o XP total do próximo nível menos 1, e devolve o jogador. Ela só existe com `ENABLE_TEST_BATTLE` ligada, como a batalha de teste, e sem ela dá 404. Sem Domador, dá 409.
+- **RF-15:** o menu de depuração do mapa ([wild-battle/13](../wild-battle/13-debug-menu.md)) ganha o botão "Quase subir de nível". Ele chama a rota, fecha o menu e mostra "A equipe está a 1 XP do próximo nível." ou o erro.
+- **RF-16:** o menu ganha também o modo God e passa a ter duas partes, com o Spawn em cartões com retrato. O desenho está em [wild-battle/13](../wild-battle/13-debug-menu.md#mudanças-depois-progression04).
+
 ## Critérios de aceite
 
 - [ ] Um Ruvo que chega ao nível 16 vê a comemoração e depois a evolução. Sem tocar em nada, ele vira Ruvak, e os detalhes mostram o Ruvak.
@@ -43,12 +50,12 @@ Com a [02](02-skills-and-evolution.md), o servidor oferece a evolução, ensina 
 - [ ] Um Ecobeast com 4 Técnicas vê a escolha. Esquecer uma põe a nova no lugar, e "Não aprender" mantém as 4.
 - [ ] O "Não" das confirmações volta para a escolha.
 - [ ] Com o servidor fora do ar no meio da escolha, aparece "Tentar de novo". Com o servidor de volta, a escolha conclui.
-- [ ] As telas cabem sem rolar em 720×1280, 405×720, 360×640 e 412×915.
-- [ ] O editor abre sem erros nem avisos de script.
+- [x] As telas cabem sem rolar em 720×1280, 405×720, 360×640 e 412×915.
+- [x] O editor abre sem erros nem avisos de script.
 
 ## Desenho técnico
 
-- **Alterar** `client/core/services/game_service.gd` e `api_game_service.gd`: `evolve(uid: String, accept: bool) -> Result` e `learn_skill(uid: String, skill_id: int, forget_skill_id: int) -> Result`, com `forget_skill_id` igual a 0 para não aprender, enviado como `null`.
+- **Alterar** `client/core/services/game_service.gd` e `api_game_service.gd`: `evolve(uid: String, accept: bool) -> Result` e `learn_skill(uid: String, skill_id: int, forget_skill_id: int) -> Result`, com `forget_skill_id` igual a -1 para não aprender, enviado como `null`, como os outros ids ausentes do cliente. Os dois devolvem um `ProgressChoice` (`res://domain/models/progress_choice.gd`), ou `null` no 404.
 - **Alterar** `client/core/autoload/session.gd`: `evolve` e `learn_skill`, que chamam o serviço.
 - **Criar** em `client/screens/battle/` as telas `evolution_overlay.tscn`/`.gd` e `skill_learn_overlay.tscn`/`.gd`, no mesmo formato do `LevelUpOverlay`, com o sinal `finished`. A confirmação é um painel dentro da própria tela de Técnica.
 - **Alterar** `client/screens/battle/battle_screen.gd`: a sequência do RF-01, com a lista de Técnicas vinda da evolução quando houver.
@@ -63,8 +70,8 @@ Com a [02](02-skills-and-evolution.md), o servidor oferece a evolução, ensina 
 
 ## Tarefas
 
-- [ ] `evolve` e `learn_skill` no serviço e na `Session`
-- [ ] `EvolutionOverlay`
-- [ ] `SkillLearnOverlay`, com a confirmação
-- [ ] A sequência completa na tela de batalha
+- [x] `evolve` e `learn_skill` no serviço e na `Session`
+- [x] `EvolutionOverlay`
+- [x] `SkillLearnOverlay`, com a confirmação
+- [x] A sequência completa na tela de batalha
 - [ ] Teste nos quatro tamanhos, e status e tabelas atualizados

@@ -1,5 +1,11 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsIn, IsInt, ValidateIf } from 'class-validator';
+import {
+  IsBoolean,
+  IsIn,
+  IsInt,
+  IsOptional,
+  ValidateIf,
+} from 'class-validator';
 import type {
   BattleAction,
   BattleEvent,
@@ -77,6 +83,16 @@ export class StartWildBodyDto {
   @ValidateIf((body: StartWildBodyDto) => Number.isInteger(body.q))
   @IsInt({ message: INVALID_POSITION })
   r: number;
+
+  @ApiPropertyOptional({
+    description:
+      'Depuração: todo golpe do jogador que acerta derruba o inimigo. Só vale com ' +
+      '`ENABLE_TEST_BATTLE` ligada; sem ela, é ignorado.',
+    example: false,
+  })
+  @IsOptional()
+  @IsBoolean({ message: INVALID_POSITION })
+  god?: boolean;
 }
 
 export class BattleActionBodyDto {

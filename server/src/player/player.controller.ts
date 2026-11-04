@@ -124,6 +124,25 @@ export class PlayerController {
     return { player: await this.players.heal(userId) };
   }
 
+  @Post('debug/xp')
+  @HttpCode(200)
+  @ApiOperation({
+    summary: 'Depuração: quase subir de nível',
+    description:
+      'Deixa cada Ecobeast da equipe abaixo do nível 100 a 1 XP do próximo nível, ' +
+      'para a próxima vitória subir. A rota só existe com `ENABLE_TEST_BATTLE` ligada.',
+  })
+  @ApiOkResponse({ type: PlayerResponseDto })
+  @ApiNotFoundResponse({ description: '`ENABLE_TEST_BATTLE` desligada.' })
+  @ApiConflictResponse({
+    description: 'Sem Domador ou sem equipe: "Crie seu Domador primeiro."',
+  })
+  async almostLevelUp(
+    @CurrentUser() userId: string,
+  ): Promise<PlayerResponseDto> {
+    return { player: await this.players.almostLevelUp(userId) };
+  }
+
   @Patch('creatures/:uid')
   @ApiOperation({
     summary: 'Dar apelido a um Ecobeast',

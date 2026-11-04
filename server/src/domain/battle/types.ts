@@ -113,6 +113,8 @@ export interface BattleState {
   player: BattleSide;
   enemy: BattleSide;
   bag: BattleBagItem[];
+  /** Depuração: todo golpe do jogador que acerta derruba o inimigo. */
+  godMode: boolean;
 }
 
 /** Ações e eventos já têm o formato da API: passam sem tradução. */

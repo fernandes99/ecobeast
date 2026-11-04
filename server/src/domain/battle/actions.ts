@@ -126,7 +126,10 @@ function strike(context: TurnContext, action: FieldAction): number | null {
     isCritical,
     randomFactor: rollDamageFactor(random),
   });
-  const dealt = Math.min(damage, defender.currentHp);
+  const godStrike = state.godMode && side === 'player';
+  const dealt = godStrike
+    ? defender.currentHp
+    : Math.min(damage, defender.currentHp);
   defender.currentHp -= dealt;
   events.push({
     type: 'damage',

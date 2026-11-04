@@ -16,6 +16,9 @@ const TEAM_STORE_PATH := "/v1/me/team/store"
 const EXPLORATION_PATH := "/v1/me/exploration"
 const WILD_BATTLE_PATH := "/v1/me/battle/wild"
 const BATTLE_ACTION_PATH := "/v1/me/battle/action"
+const DEBUG_XP_PATH := "/v1/me/debug/xp"
+const EVOLUTION_PATH := "/v1/me/creatures/%s/evolution"
+const LEARN_SKILL_PATH := "/v1/me/creatures/%s/skills"
 
 
 func get_player() -> Result:
@@ -89,8 +92,10 @@ func start_exploration() -> Result:
 	return Result.success(ExplorationMap.from_dict(map)) if map is Dictionary else Result.failure(ApiResponse.SERVER_ERROR)
 
 
-func start_wild_battle(coord: Vector2i) -> Result:
+func start_wild_battle(coord: Vector2i, god: bool = false) -> Result:
 	var body := {"q": coord.x, "r": coord.y}
+	if god:
+		body["god"] = true
 	return _turn_result(await Api.request(HTTPClient.METHOD_POST, WILD_BATTLE_PATH, body, true))
 
 
@@ -100,6 +105,31 @@ func battle_action(action: Dictionary) -> Result:
 	if response.code == HTTPClient.RESPONSE_NOT_FOUND:
 		return Result.success(null)
 	return _turn_result(response)
+
+
+func debug_almost_level_up() -> Result:
+	return _player_result(await Api.request(HTTPClient.METHOD_POST, DEBUG_XP_PATH, null, true))
+
+
+func evolve(uid: String, accept: bool) -> Result:
+	var body := {"accept": accept}
+	return _choice_result(await Api.request(HTTPClient.METHOD_POST, EVOLUTION_PATH % uid, body, true))
+
+
+func learn_skill(uid: String, skill_id: int, forget_skill_id: int) -> Result:
+	var body := {"skill_id": skill_id, "forget_skill_id": forget_skill_id if forget_skill_id >= 0 else null}
+	return _choice_result(await Api.request(HTTPClient.METHOD_POST, LEARN_SKILL_PATH % uid, body, true))
+
+
+## data: o ProgressChoice da resposta, ou null se a escolha expirou, já foi feita
+## ou o servidor reiniciou (404).
+func _choice_result(response: ApiResponse) -> Result:
+	if response.code == HTTPClient.RESPONSE_NOT_FOUND:
+		return Result.success(null)
+	if not response.ok:
+		return Result.failure(response.error)
+	var choice: ProgressChoice = ProgressChoice.from_dict(response.data) if response.data is Dictionary else null
+	return Result.success(choice) if choice != null else Result.failure(ApiResponse.SERVER_ERROR)
 
 
 ## data: o BattleTurn da resposta.

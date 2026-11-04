@@ -59,8 +59,24 @@ extends RefCounted
 
 
 ## data: o BattleTurn da abertura, contra um Ecobeast do hexágono do Domador.
-@abstract func start_wild_battle(coord: Vector2i) -> Result
+## `god`: depuração, todo golpe do jogador que acerta derruba o inimigo.
+@abstract func start_wild_battle(coord: Vector2i, god: bool = false) -> Result
 
 
 ## data: o BattleTurn da ação, ou null se a batalha não existe mais.
 @abstract func battle_action(action: Dictionary) -> Result
+
+
+## Só para testar: cada um da equipe fica a 1 XP do próximo nível.
+## data: o Player atualizado.
+@abstract func debug_almost_level_up() -> Result
+
+
+## Responde à evolução oferecida na última vitória.
+## data: o ProgressChoice, ou null se a escolha não existe mais.
+@abstract func evolve(uid: String, accept: bool) -> Result
+
+
+## Troca `forget_skill_id` pela Técnica pendente; com -1, não aprende a nova.
+## data: o ProgressChoice, ou null se a escolha não existe mais.
+@abstract func learn_skill(uid: String, skill_id: int, forget_skill_id: int) -> Result

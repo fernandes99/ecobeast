@@ -54,6 +54,8 @@ var _leaving: bool = false
 @onready var _items_panel: BattleItemsPanel = %ItemsPanel
 @onready var _capture_overlay: CaptureOverlay = %CaptureOverlay
 @onready var _level_up_overlay: LevelUpOverlay = %LevelUpOverlay
+@onready var _evolution_overlay: EvolutionOverlay = %EvolutionOverlay
+@onready var _skill_overlay: SkillLearnOverlay = %SkillLearnOverlay
 
 
 func setup(params: Dictionary) -> void:
@@ -86,6 +88,12 @@ func handle_back() -> bool:
 		return false
 	if _level_up_overlay.visible:
 		_level_up_overlay.close()
+		return true
+	if _evolution_overlay.visible:
+		_evolution_overlay.go_back()
+		return true
+	if _skill_overlay.visible:
+		_skill_overlay.go_back()
 		return true
 	if _next_panel.visible:
 		_next_panel.go_back()
@@ -187,8 +195,9 @@ func _show_turn(turn: BattleTurn) -> void:
 			_show_exit(RESULT_TEXTS.get(_view.result, ""), true)
 
 
-## Depois do log da vitória (progression/03): a barra de XP de quem está em campo
-## enche, e cada um que subiu de nível ganha uma comemoração, na ordem da equipe.
+## Depois do log da vitória (progression/03 e 04): a barra de XP de quem está em
+## campo enche. Depois, na ordem da equipe, cada um que subiu de nível ganha a
+## comemoração, a evolução, os avisos de Técnica aprendida e as escolhas pendentes.
 func _celebrate(progression: Array[CreatureProgress]) -> void:
 	if progression.is_empty():
 		return
@@ -200,7 +209,40 @@ func _celebrate(progression: Array[CreatureProgress]) -> void:
 		if not progress.leveled_up():
 			continue
 		var creature: BattleCreature = _view.team[progress.team_index]
-		await _level_up_overlay.play(progress, creature.species_id, _player_name(creature))
+		var display_name := _player_name(creature)
+		await _level_up_overlay.play(progress, creature.species_id, display_name)
+		var learned := progress.learned_skill_ids
+		var pending := progress.pending_skill_ids
+		var known := _known_skills(progress.uid, learned)
+		if progress.evolution_species_id >= 0:
+			var evolved := await _evolution_overlay.play(
+				progress.uid, creature.species_id, progress.evolution_species_id, display_name
+			)
+			if evolved == null:
+				continue
+			var species := GameData.get_species(evolved.creature.species_id)
+			display_name = evolved.creature.display_name(species)
+			learned = evolved.learned_skill_ids
+			pending = evolved.pending_skill_ids
+			known = evolved.creature.skills
+		for skill_id: int in learned:
+			await _skill_overlay.play_learned(display_name, skill_id)
+		for skill_id: int in pending:
+			var chosen := await _skill_overlay.play_choice(progress.uid, display_name, skill_id, known)
+			if chosen != null:
+				known = chosen.creature.skills
+
+
+## As Técnicas que ele sabe depois da vitória: as de antes da luta, mais as
+## aprendidas com vaga, que o servidor já gravou.
+func _known_skills(uid: String, learned: Array[int]) -> Array[SkillSlot]:
+	var known: Array[SkillSlot] = []
+	var party_creature := _party_creature(uid)
+	if party_creature != null:
+		known.append_array(party_creature.skills)
+	for skill_id: int in learned:
+		known.append(SkillSlot.create(skill_id, GameData.get_skill(skill_id).max_pp))
+	return known
 
 
 func _set_busy(busy: bool) -> void:

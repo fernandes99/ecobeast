@@ -4,9 +4,12 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { BattleStore } from '../battle/battle.store.js';
 import { secureRandom } from '../common/secure-random.js';
+import { Env } from '../config/env.js';
 import { createCreature } from '../domain/rules/creature-factory.js';
+import { MAX_LEVEL, totalXpForLevel } from '../domain/rules/xp-curve.js';
 import { Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { loadCreatureBlueprint, newCreatureData } from './creature-params.js';
@@ -52,6 +55,7 @@ export class PlayerService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly battles: BattleStore,
+    private readonly config: ConfigService<Env, true>,
   ) {}
 
   async get(userId: string): Promise<PlayerDto | null> {
@@ -162,6 +166,41 @@ export class PlayerService {
           }),
         ),
       ]),
+    );
+    return (await this.get(userId))!;
+  }
+
+  /**
+   * Só para testar a progressão (progression/04): deixa cada um da equipe abaixo
+   * do nível 100 a 1 XP do próximo nível. Só existe com `ENABLE_TEST_BATTLE`.
+   */
+  async almostLevelUp(userId: string): Promise<PlayerDto> {
+    if (!this.config.get('ENABLE_TEST_BATTLE', { infer: true })) {
+      throw new NotFoundException('Rota não encontrada.');
+    }
+    const player = await this.prisma.player.findUnique({
+      where: { id: userId },
+      include: PLAYER_INCLUDE,
+    });
+    if (!player || player.creatures.length === 0) {
+      throw new ConflictException(NO_PLAYER);
+    }
+
+    await this.prisma.$transaction(
+      player.creatures
+        .filter((creature) => creature.level < MAX_LEVEL)
+        .map((creature) =>
+          this.prisma.creatureInstance.update({
+            where: { uid: creature.uid },
+            data: {
+              currentXp:
+                totalXpForLevel(
+                  creature.species.growthRate.xpMultiplier,
+                  creature.level + 1,
+                ) - 1,
+            },
+          }),
+        ),
     );
     return (await this.get(userId))!;
   }
