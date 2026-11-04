@@ -58,6 +58,7 @@ Com dois participantes, cada um recebe metade, e as vitórias dobram.
 O fim da luta (`POST /v1/me/battle/action`) ganha:
 
 - **O evento `xp_gained`**, `{ type: 'xp_gained', team_index, amount }`, logo depois do `fainted` do inimigo, um para cada Ecobeast que recebeu, na ordem do índice.
+- **Os eventos `coins_gained` e `coins_lost`**, `{ type, amount }`, logo antes do `battle_ended`, na vitória e na derrota. A regra está na [05](05-wild-coins.md).
 - **`progression`** na resposta. Na vitória, é a lista de quem recebeu XP, na ordem do `team_index`. Nos outros resultados e no meio da luta, é `[]`.
 
 ```jsonc

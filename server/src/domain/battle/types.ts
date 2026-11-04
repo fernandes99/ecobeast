@@ -115,6 +115,10 @@ export interface BattleState {
   bag: BattleBagItem[];
   /** Depuração: todo golpe do jogador que acerta derruba o inimigo. */
   godMode: boolean;
+  /** As moedas do Domador no começo: a derrota não tira mais do que isso. */
+  coins: number;
+  /** O que o fim da luta soma às moedas; negativo na derrota. */
+  coinsChange: number;
 }
 
 /** Ações e eventos já têm o formato da API: passam sem tradução. */
@@ -177,6 +181,8 @@ export type BattleEvent =
     }
   | { type: 'fainted'; side: SideSlug }
   | { type: 'xp_gained'; team_index: number; amount: number }
+  | { type: 'coins_gained'; amount: number }
+  | { type: 'coins_lost'; amount: number }
   | {
       type: 'item_used';
       side: 'player';

@@ -10,6 +10,7 @@ const SKILL_SLOTS := 4
 const LINE_DELAY := 0.9
 const MAX_LOG_LINES := 50
 const LOG_FONT_SIZE := 24
+const COIN_ICON_PATH := "res://ui/icons/coin.svg"
 const SEARCHING_TEXT := "Procurando um Ecobeast..."
 const GONE_TEXT := "Essa batalha não existe mais."
 const RESULT_TEXTS: Dictionary[String, String] = {
@@ -344,17 +345,49 @@ func _show_turn_number(turn: int) -> void:
 func _add_line(text: String, color: Color = UiPalette.TEXT) -> void:
 	var count := _log_lines.get_child_count()
 	if count > 0:
-		var previous := _log_lines.get_child(count - 1) as Label
-		if previous.get_theme_color(&"font_color") == UiPalette.TEXT:
-			previous.add_theme_color_override(&"font_color", UiPalette.TEXT_SECONDARY)
+		var previous := _log_lines.get_child(count - 1) as Control
+		if _line_color(previous) == UiPalette.TEXT:
+			_set_line_color(previous, UiPalette.TEXT_SECONDARY)
 	if count >= MAX_LOG_LINES:
 		_remove_line(_log_lines.get_child(0))
+	var line: Control
+	if text.contains(BattleNarrator.COIN_ICON):
+		line = _coin_line(text)
+	else:
+		line = _text_line(text)
+	_set_line_color(line, color)
+	_log_lines.add_child(line)
+
+
+func _text_line(text: String) -> Label:
 	var label := Label.new()
 	label.text = text
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.add_theme_font_size_override(&"font_size", LOG_FONT_SIZE)
-	label.add_theme_color_override(&"font_color", color)
-	_log_lines.add_child(label)
+	return label
+
+
+## A linha de moedas (progression/05): o ícone entra no lugar da marca do narrador.
+func _coin_line(text: String) -> RichTextLabel:
+	var line := RichTextLabel.new()
+	line.bbcode_enabled = true
+	line.fit_content = true
+	line.scroll_active = false
+	line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	line.add_theme_font_size_override(&"normal_font_size", LOG_FONT_SIZE)
+	var icon := "[img=%dx%d]%s[/img]" % [LOG_FONT_SIZE, LOG_FONT_SIZE, COIN_ICON_PATH]
+	# Um apelido pode ter colchetes, que não podem virar marcação.
+	line.text = text.replace("[", "[lb]").replace(BattleNarrator.COIN_ICON, icon)
+	return line
+
+
+## Label e RichTextLabel guardam a cor do texto com nomes diferentes.
+func _line_color(line: Control) -> Color:
+	return line.get_theme_color(&"default_color" if line is RichTextLabel else &"font_color")
+
+
+func _set_line_color(line: Control, color: Color) -> void:
+	line.add_theme_color_override(&"default_color" if line is RichTextLabel else &"font_color", color)
 
 
 func _clear_log() -> void:

@@ -68,6 +68,7 @@ export const MIN_STEP_MS = 300;
 interface Team {
   creatures: Combatant[];
   bag: BattleBagItem[];
+  coins: number;
 }
 
 interface Enemy extends WildCreature {
@@ -325,7 +326,7 @@ export class BattleService {
       catalog,
       secureRandom,
       team.bag,
-      { godMode },
+      { godMode, coins: team.coins },
     );
     // Substitui a batalha anterior, se houver, sem gravar nada dela.
     this.store.set(userId, { state, catalog, wild });
@@ -350,6 +351,7 @@ export class BattleService {
         quantity,
         used: 0,
       })),
+      coins: player.coins,
     };
   }
 
@@ -377,7 +379,7 @@ export class BattleService {
   }
 
   /**
-   * Grava HP, status, PP, XP, nível, itens gastos e o capturado de uma vez. Com `updateMany`,
+   * Grava HP, status, PP, XP, nível, itens gastos, moedas e o capturado de uma vez. Com `updateMany`,
    * um Domador apagado no meio da luta não encontra nada, e a batalha termina
    * sem erro. Devolve para onde foi o capturado.
    */
@@ -444,6 +446,19 @@ export class BattleService {
             }),
           ];
         }),
+      // Quem gastou moedas em outra tela durante a luta e ficou com menos do
+      // que a derrota tira não perde nada: as moedas nunca ficam negativas.
+      ...(state.coinsChange !== 0
+        ? [
+            this.prisma.player.updateMany({
+              where: {
+                id: userId,
+                coins: { gte: Math.max(0, -state.coinsChange) },
+              },
+              data: { coins: { increment: state.coinsChange } },
+            }),
+          ]
+        : []),
       ...(place
         ? [
             this.prisma.creatureInstance.create({

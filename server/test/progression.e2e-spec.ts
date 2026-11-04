@@ -695,4 +695,103 @@ describe('XP e nível depois da luta (e2e)', () => {
       await closed.close();
     });
   });
+
+  describe('moedas (progression/05)', () => {
+    function coinEvents(events: BattleEvent[]) {
+      return events.filter(
+        (event) =>
+          event.type === 'coins_gained' || event.type === 'coins_lost',
+      );
+    }
+
+    async function coinsOf(user: User): Promise<number> {
+      const player = await prisma.player.findUniqueOrThrow({
+        where: { id: user.id },
+      });
+      return player.coins;
+    }
+
+    async function setCoins(user: User, coins: number): Promise<void> {
+      await prisma.player.update({ where: { id: user.id }, data: { coins } });
+    }
+
+    it('a vitória soma as moedas do evento', async () => {
+      const user = await newUser(LEVEL_30);
+      const before = await coinsOf(user);
+      const { last, events } = await playOut(user, await user.start());
+
+      expect(last.battle.result).toBe('victory');
+      // Selvagem 1 contra 30: 20 × 1 ÷ 30 dá menos de 1, e o mínimo é 1.
+      expect(coinEvents(events)).toEqual([{ type: 'coins_gained', amount: 1 }]);
+      expect(await coinsOf(user)).toBe(before + 1);
+      const me = await user.me().expect(200);
+      expect(me.body.player.coins).toBe(before + 1);
+    });
+
+    it('a luta do mapa também dá moedas', async () => {
+      const user = await newUser(LEVEL_30);
+      const before = await coinsOf(user);
+      placeWild(app, user.id, [{ level: 1 }]);
+      await playOut(user, await user.wild());
+      expect(await coinsOf(user)).toBe(before + 1);
+    });
+
+    it('a derrota tira as moedas do evento', async () => {
+      const user = await newUser({ ...LEVEL_30, currentHp: 1 });
+      await setCoins(user, 100);
+      const { last, events } = await playOut(
+        user,
+        await user.start(STRONG_ENEMY),
+      );
+
+      expect(last.battle.result).toBe('defeat');
+      const [lost] = coinEvents(events);
+      // Selvagem 100 contra 30: 5 × 100 ÷ 30 ≈ 16,7, então de 8 a 25.
+      expect(lost).toMatchObject({ type: 'coins_lost' });
+      const amount = (lost as { amount: number }).amount;
+      expect(amount).toBeGreaterThanOrEqual(8);
+      expect(amount).toBeLessThanOrEqual(25);
+      expect(await coinsOf(user)).toBe(100 - amount);
+    });
+
+    it('a derrota não deixa as moedas abaixo de 0', async () => {
+      const user = await newUser({ ...LEVEL_30, currentHp: 1 });
+      await setCoins(user, 3);
+      const { events } = await playOut(user, await user.start(STRONG_ENEMY));
+      expect(coinEvents(events)).toEqual([{ type: 'coins_lost', amount: 3 }]);
+      expect(await coinsOf(user)).toBe(0);
+    });
+
+    it('sem moedas, a derrota não tira nada nem avisa', async () => {
+      const user = await newUser({ ...LEVEL_30, currentHp: 1 });
+      await setCoins(user, 0);
+      const { events } = await playOut(user, await user.start(STRONG_ENEMY));
+      expect(coinEvents(events)).toEqual([]);
+      expect(await coinsOf(user)).toBe(0);
+    });
+
+    it('fugir e capturar não mexem nas moedas', async () => {
+      const fleeing = await newUser(LEVEL_30);
+      const fleeingBefore = await coinsOf(fleeing);
+      const fled = await playOut(fleeing, await fleeing.start(), () => ({
+        type: 'flee',
+      }));
+      expect(coinEvents(fled.events)).toEqual([]);
+      expect(await coinsOf(fleeing)).toBe(fleeingBefore);
+
+      const catching = await newUser(LEVEL_30);
+      const catchingBefore = await coinsOf(catching);
+      await prisma.inventoryItem.create({
+        data: { playerId: catching.id, itemId: sphereId, quantity: 1 },
+      });
+      await catching.start();
+      const { catalog } = app.get(BattleStore).get(catching.id)!;
+      catalog.captureRates.set(RUVO, 100);
+      catalog.items.get(sphereId)!.captureBonus = 1000;
+      const caught = await catching.act({ type: 'capture', item_id: sphereId });
+      expect(caught.battle.result).toBe('captured');
+      expect(coinEvents(caught.events)).toEqual([]);
+      expect(await coinsOf(catching)).toBe(catchingBefore);
+    });
+  });
 });

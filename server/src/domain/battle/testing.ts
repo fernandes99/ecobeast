@@ -161,6 +161,8 @@ export function makeState(
     enemy: { team: [enemy].flat(), activeIndex: 0 },
     bag: [],
     godMode: false,
+    coins: 0,
+    coinsChange: 0,
     ...overrides,
   };
   const index = state.enemy.activeIndex;

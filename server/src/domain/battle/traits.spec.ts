@@ -91,7 +91,8 @@ describe('Instinto', () => {
       ),
       USE_FIRST,
       catalog,
-      sequence(0, 0.9, 0.5),
+      // O último é o das moedas da vitória.
+      sequence(0, 0.9, 0.5, 0.5),
     );
     expect(eventsOf(events, 'stat_changed')).toEqual([]);
   });

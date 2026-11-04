@@ -332,7 +332,8 @@ describe('voláteis', () => {
       makeState(player, idle({ currentHp: 1 })),
       USE_FIRST,
       catalog,
-      sequence(0, 0.5, 0.9, 0.5),
+      // O último é o das moedas da vitória.
+      sequence(0, 0.5, 0.9, 0.5, 0.5),
     );
     expect(state.result).toBe('victory');
     expect(state.player.team[0]).toMatchObject({

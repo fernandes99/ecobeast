@@ -87,6 +87,7 @@ describe('XP ao derrubar o inimigo', () => {
     expect(types.slice(types.indexOf('fainted'))).toEqual([
       'fainted',
       'xp_gained',
+      'coins_gained',
       'battle_ended',
     ]);
     expect(eventsOf(events, 'xp_gained')).toEqual([

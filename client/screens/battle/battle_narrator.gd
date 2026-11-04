@@ -5,6 +5,8 @@ extends RefCounted
 ## não muda nada. Um evento sem linha, ou desconhecido, devolve texto vazio.
 
 const EMERGENCY_SKILL_NAME := "Golpe de Esforço"
+## Marca o lugar do ícone nas linhas de moedas; a tela troca pela imagem.
+const COIN_ICON := "{moeda}"
 ## A partir de quantos estágios a mudança é "muito".
 const BIG_STAT_CHANGE := 2
 const CANNOT_ACT: Dictionary[String, String] = {
@@ -85,6 +87,10 @@ func describe(event: Dictionary) -> String:
 			return _item_used(event)
 		"xp_gained":
 			return _xp_gained(event)
+		"coins_gained":
+			return "Você recebeu %s %d por derrotar %s." % [COIN_ICON, DictFields.get_int(event, "amount"), _names["enemy"]]
+		"coins_lost":
+			return "Você perdeu %s %d para %s." % [COIN_ICON, DictFields.get_int(event, "amount"), _names["enemy"]]
 		"capture_attempted":
 			return _capture_attempted(event)
 	return ""

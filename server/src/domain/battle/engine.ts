@@ -8,7 +8,7 @@ import { executeAction, toFieldAction } from './actions.js';
 import { chooseEnemyAction } from './ai.js';
 import { captureChance, NOT_CAPTURABLE } from './capture.js';
 import { hasPp } from './emergency.js';
-import { recordEntry } from './experience.js';
+import { recordEntry, settleCoins } from './experience.js';
 import { activeOf, hasCreatureStanding, rollChance } from './field.js';
 import { noStages } from './stages.js';
 import { applyEndOfTurn, clearVolatile, rollSleepTurns } from './status.js';
@@ -52,7 +52,7 @@ export function startBattle(
   catalog: BattleCatalog,
   random: Random,
   bag: BattleBagItem[] = [],
-  { godMode = false }: { godMode?: boolean } = {},
+  { godMode = false, coins = 0 }: { godMode?: boolean; coins?: number } = {},
 ): BattleOutcome {
   const context: TurnContext = {
     state: {
@@ -64,6 +64,8 @@ export function startBattle(
       enemy: newSide(enemy),
       bag: structuredClone(bag),
       godMode,
+      coins,
+      coinsChange: 0,
     },
     catalog,
     random,
@@ -356,6 +358,7 @@ function endBattle(context: TurnContext, result: BattleResult): void {
   state.result = result;
   clearVolatile(activeOf(state, 'player'));
   clearVolatile(activeOf(state, 'enemy'));
+  settleCoins(context, result);
   events.push({ type: 'battle_ended', result });
 }
 

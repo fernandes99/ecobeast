@@ -1,6 +1,6 @@
 # 05. Moedas da vitória e da derrota
 
-- **Status:** rascunho
+- **Status:** em andamento
 - **Depende de:** [01-xp-and-levels](01-xp-and-levels.md), [03-level-up-screen](03-level-up-screen.md), [architecture.md](architecture.md)
 
 ## Contexto
@@ -50,12 +50,12 @@ Exemplos, com os limites incluídos:
 
 ## Critérios de aceite
 
-- [ ] Vencer um selvagem nível 5 com um Ecobeast nível 5 em campo grava de 10 a 30 moedas a mais, e o log mostra a mesma quantia.
-- [ ] Perder grava a perda sorteada, nunca abaixo de 0, e o log mostra a mesma quantia. Com 0 moedas, nada muda e a linha não aparece.
-- [ ] Fugir ou capturar não muda as moedas, e o log não mostra a linha.
+- [x] Vencer um selvagem nível 5 com um Ecobeast nível 5 em campo grava de 10 a 30 moedas a mais, e o log mostra a mesma quantia.
+- [x] Perder grava a perda sorteada, nunca abaixo de 0, e o log mostra a mesma quantia. Com 0 moedas, nada muda e a linha não aparece.
+- [x] Fugir ou capturar não muda as moedas, e o log não mostra a linha.
 - [ ] Na vitória, a linha aparece com o ícone, depois de "{nome} recebeu X de XP." e antes da tela de comemoração.
 - [ ] Ao voltar ao Hub, o número de moedas no topo já está atualizado.
-- [ ] Testes unitários e e2e passam, com `typecheck` e `lint` sem erros.
+- [x] Testes unitários e e2e passam, com `typecheck` e `lint` sem erros.
 
 ## Desenho técnico
 
@@ -64,14 +64,16 @@ Servidor:
 - `src/domain/progression/coins.ts`: `COINS_WIN_BASE`, `COINS_LOSS_BASE`, `winCoins(enemyLevel, fielderLevel, random)` e `lostCoins(enemyLevel, fielderLevel, coins, random)`.
 - `BattleState.coins`, com as moedas do Domador no começo da luta, e `BattleState.coinsChange`, que começa em 0. O `startBattle` recebe as moedas nas opções, ao lado do `godMode`, e o `makeState` dos testes começa com 0 nos dois.
 - `endBattle`, em `engine.ts`: antes do `battle_ended`, a vitória e a derrota sorteiam, guardam o valor em `coinsChange` (negativo na derrota) e emitem o evento. Os tipos novos entram em `BattleEvent` e na lista de eventos do [contrato da batalha](../battle-core/architecture.md).
-- `BattleService`: o `loadTeam` lê as moedas do Domador. No `saveTeam`, um `coinsChange` diferente de 0 vira `player.update({ coins: { increment: coinsChange } })` dentro do `$transaction`. A Loja não abre durante a luta, então as moedas do começo continuam valendo no fim.
+- `BattleService`: o `loadTeam` lê as moedas do Domador. No `saveTeam`, um `coinsChange` diferente de 0 vira um `player.updateMany` com `coins: { increment: coinsChange }` dentro do `$transaction`. O filtro `coins >= perda` protege quem gastou moedas em outra tela durante a luta: em vez de ficar negativo, ele não perde nada.
 
 Jogo:
 
 - `battle_narrator.gd`: `coins_gained` e `coins_lost` viram o texto da linha, com o nome do inimigo.
-- `battle_screen.gd`: as linhas de moedas são as únicas do log com ícone. `_add_line` ganha um parâmetro opcional de ícone, e o escurecimento das linhas antigas passa a valer para elas também.
+- `battle_narrator.gd` marca o lugar do ícone com `COIN_ICON`. Em `battle_screen.gd`, a linha com a marca vira um `RichTextLabel`, e as outras continuam `Label`. Os dois escurecem do mesmo jeito.
 
 ## Verificação
+
+Servidor: `typecheck` e `lint` sem erros, 607 testes unitários e 475 e2e. Jogo: as cenas da luta compilam, e uma captura em 360×640 mostrou as linhas com o ícone e o escurecimento. Falta o dono jogar uma vitória e uma derrota de verdade.
 
 ```bash
 cd server && npm run typecheck && npm run lint && npm test && npm run test:e2e
@@ -86,9 +88,9 @@ Na tela real, em 360×640:
 
 ## Tarefas
 
-- [ ] Testes unitários do sorteio e dos eventos, e e2e da gravação.
-- [ ] `winCoins`, `lostCoins`, `coins`, `coinsChange` e os eventos.
-- [ ] Gravar as moedas na vitória e na derrota.
-- [ ] Linhas com ícone no log.
-- [ ] Atualizar o contrato da batalha, o README da iniciativa e a dúvida "Renda de moedas" do roadmap.
-- [ ] Rodar a verificação e dizer o que ficou para o dono.
+- [x] Testes unitários do sorteio e dos eventos, e e2e da gravação.
+- [x] `winCoins`, `lostCoins`, `coins`, `coinsChange` e os eventos.
+- [x] Gravar as moedas na vitória e na derrota.
+- [x] Linhas com ícone no log.
+- [x] Atualizar o contrato da batalha, o README da iniciativa e a dúvida "Renda de moedas" do roadmap.
+- [x] Rodar a verificação e dizer o que ficou para o dono.

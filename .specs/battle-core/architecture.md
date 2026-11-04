@@ -131,6 +131,8 @@ A resposta traz a lista, na ordem em que aconteceu. Cada evento tem `type` e `si
 | `item_used`       | `side`, `item_id`, `team_index`, `healed`, `hp`, `cured_status` |
 | `capture_attempted` | `item_id`, `success`                    |
 | `flee_failed`     | —                                         |
+| `coins_gained`    | `amount`, na vitória, logo antes do `battle_ended` ([progression/05](../progression/05-wild-coins.md)) |
+| `coins_lost`      | `amount`, na derrota com perda acima de 0, logo antes do `battle_ended` |
 | `battle_ended`    | `result`                                  |
 
 ## API
