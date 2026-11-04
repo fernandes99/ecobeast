@@ -72,14 +72,14 @@ A espécie vira slug com `GameData.get_species(species_id)`, e `CreatureSprite.h
 
 ## Verificação
 
-O dono testou no editor e aprovou. A tela real passou nos quatro tamanhos. Falta o celular.
+O dono testou no editor e aprovou. A tela real passou nos quatro tamanhos. O dono deu por concluídos o teste no celular e os Ecobeasts pequenos atrás das plantas em 2026-11-03.
 
 ```bash
 cd server && npm run start:dev
 godot --headless -d --path client --quit-after 60
 ```
 
-Na tela real, em 720×1061, 405×720, 360×640 e 412×915: entrar em Explorar, andar até um Ecobeast, Procurar, voltar e conferir que ele sumiu. O celular fica para o dono.
+Na tela real, em 720×1061, 405×720, 360×640 e 412×915: entrar em Explorar, andar até um Ecobeast, Procurar, voltar e conferir que ele sumiu. No celular, o mesmo caminho.
 
 ## Tarefas
 

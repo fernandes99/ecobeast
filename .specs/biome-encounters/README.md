@@ -52,7 +52,7 @@ Tomadas no planejamento (corrigíveis; ao mudar uma, atualize aqui e nas specs a
 | Não existe atributo novo de raridade de spawn; a `rarity` segue como rótulo | A taxa por bioma já faz esse papel. Dois controles para a mesma coisa se confundiriam |
 | O nível natural vem da tabela `evolutions`, e a base de uma linha tem nível natural 1 | Evita uma coluna nova que repetiria o `min_level` |
 | Uma evolução sem `min_level`, como a por Vínculo, tem o nível natural da espécie anterior mais 20, _a revisar_ | Com 1, o Echofrost apareceria para quem acabou de começar. O 20 é o salto entre o Ruvak (16) e o Ruvaroth (36) |
-| Hushling e Echofrost ficam sem taxas até terem folhas | Sem elas, o Ecobeast seria invisível no mapa |
+| Hushling e Echofrost ficam sem taxas até terem folhas. Com as folhas prontas, o dono deu as taxas por resolvidas | Sem elas, o Ecobeast seria invisível no mapa |
 | A taxa cai pela metade a cada nível que falta para o nível natural | Uma regra só cobre o Ruvak (16) e o Ruvaroth (36) |
 | A média do time usa toda a equipe principal, inclusive quem está sem HP, e vale no momento em que a exploração começa | É o mais simples de explicar, e o mapa nasce pronto |
 | Variar o nível de 5 para cada lado, com pesos ¼ e ¾ | Dá de 10 a 20 no exemplo do dono, e mantém o fim do jogo perto do time |

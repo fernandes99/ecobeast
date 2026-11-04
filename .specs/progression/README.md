@@ -24,12 +24,13 @@ Ecobeasts ganham XP ao vencer, sobem de nível, aprendem Técnicas novas e evolu
 | Fórmula do XP: `floor(xp_base × nível do inimigo ÷ 7)`, a do GDD sem o bônus de Domador nem de item | O GDD já define. O bônus de Domador chega com a `npc-tamers`, e o de item quando houver item. Os números são _a revisar_ |
 | Um Ecobeast no nível 100 não entra na divisão | Escolha do planejamento: ele não pode usar o XP, e incluí-lo tiraria XP de quem pode. _A revisar_ |
 | As escolhas que ficam pendentes (Técnica com as vagas cheias e evolução) moram na memória do servidor, como a exploração | Escolha do planejamento: o XP e o nível já foram gravados. Se o jogo fechar no meio, a evolução volta no próximo nível, e uma Técnica não escolhida conta como "Não aprender". Mesmo aceite de "Abandonar batalha" do [roadmap](../roadmap.md) |
+| Vencer um selvagem dá moedas, e perder tira moedas: um sorteio de 50% a 150% de `BASE × (nível do selvagem ÷ nível de quem está em campo no fim)`, com base 20 na vitória e 5 na derrota. A linha "Você recebeu 🪙 X por derrotar {Ecobeast}." entra logo depois do XP | Decisão do dono, a partir da regra do `pokebattle`: a quantia é pequena porque quem vai pagar bem são os Domadores NPC. As bases são _a revisar_ |
 | As telas de comemoração, evolução e Técnica abrem por cima da tela de batalha, antes do botão "Voltar" | Escolha do planejamento, a mesma forma da Esfera na [capture](../capture/): sair continua sendo um `Router.back()` para o mapa |
 
 ## Fora do escopo
 
 - O bônus de XP contra Domadores NPC (vem com a `npc-tamers`) e os itens que dão XP ou dividem XP com quem não lutou.
-- Moedas por vitória: a renda de moedas é uma dúvida global do [roadmap](../roadmap.md).
+- Moedas por vitória contra Domadores NPC: vêm com a `npc-tamers`. As do selvagem estão na [05](05-wild-coins.md).
 - Evoluções por item, Vínculo, horário, zona, troca ou Temperamento: o catálogo já tem esses gatilhos, mas só o de nível entra agora.
 - Reaprender uma Técnica esquecida ou recusada, e ensinar Técnicas por item (`teachable`).
 - Ganho de Vínculo ao subir de nível, nível do Domador e o Bestiário registrando a espécie evoluída (vem com o `codex`).
@@ -50,5 +51,6 @@ Ecobeasts ganham XP ao vencer, sobem de nível, aprendem Técnicas novas e evolu
 | 2 | [02-skills-and-evolution](02-skills-and-evolution.md) | Servidor: Técnicas aprendidas ou oferecidas, evolução oferecida e as rotas das escolhas | concluída |
 | 3 | [03-level-up-screen](03-level-up-screen.md) | Jogo: XP no log, barra de XP enchendo e a tela de comemoração | concluída |
 | 4 | [04-evolution-and-skills-screens](04-evolution-and-skills-screens.md) | Jogo: tela da evolução com "Cancelar" e tela de escolher a Técnica | em andamento |
+| 5 | [05-wild-coins](05-wild-coins.md) | Servidor e jogo: moedas ao vencer e ao perder para um selvagem, com a linha no log | rascunho |
 
 O desenho compartilhado está no [architecture.md](architecture.md).

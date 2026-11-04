@@ -40,7 +40,7 @@ Os biomas existem só como texto no gerador do mapa, e nenhum dado diz onde cada
 
 ### Biomas
 
-Nomes e descrições _a revisar_. O `slug` é usado no código e não muda.
+Nomes e descrições revisados pelo dono em 2026-11-03. O `slug` é usado no código e não muda.
 
 | id | slug | name | description |
 | ---: | --- | --- | --- |
@@ -54,7 +54,7 @@ Nomes e descrições _a revisar_. O `slug` é usado no código e não muda.
 
 ### Taxas iniciais
 
-_A revisar._ Saem das descrições de `species.json`. Um traço significa que a espécie não tem linha naquele bioma. Hushling e Echofrost ficam sem linhas até terem folhas:
+Revisadas pelo dono em 2026-11-03. Saem das descrições de `species.json`. Um traço significa que a espécie não tem linha naquele bioma. Hushling e Echofrost ficaram sem linhas até terem folhas. Depois delas, o dono deu as taxas dos dois por resolvidas, no banco, fora de `seed-data/`:
 
 | Espécie | Planície | Boreal | Pedra | Colina | Montanha | Água rasa | Água profunda |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
