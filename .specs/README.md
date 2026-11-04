@@ -32,7 +32,7 @@ O Ecobeast é um jogo mobile (Android/iOS, retrato): o cliente em **Godot 4.7 co
 | [capture](capture/)         | Usar Esferas na luta para capturar Ecobeasts, com o carregamento na tela                  |
 | [team-and-storage](team-and-storage/) | Equipe, Santuário e troca de Ecobeast durante a luta                           |
 | [biome-encounters](biome-encounters/) | Ecobeasts nascendo no mapa, por taxa de bioma, e encontro pelo hexágono        |
-| [progression](progression/) | XP depois da vitória, subir de nível, Técnicas novas e Evolução                         |
+| [progression](progression/) | XP e moedas depois da luta, subir de nível, Técnicas novas e Evolução                   |
 
 As próximas iniciativas estão no [roadmap.md](roadmap.md).
 

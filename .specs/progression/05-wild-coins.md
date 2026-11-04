@@ -1,6 +1,6 @@
 # 05. Moedas da vitória e da derrota
 
-- **Status:** em andamento
+- **Status:** concluída
 - **Depende de:** [01-xp-and-levels](01-xp-and-levels.md), [03-level-up-screen](03-level-up-screen.md), [architecture.md](architecture.md)
 
 ## Contexto
@@ -53,8 +53,8 @@ Exemplos, com os limites incluídos:
 - [x] Vencer um selvagem nível 5 com um Ecobeast nível 5 em campo grava de 10 a 30 moedas a mais, e o log mostra a mesma quantia.
 - [x] Perder grava a perda sorteada, nunca abaixo de 0, e o log mostra a mesma quantia. Com 0 moedas, nada muda e a linha não aparece.
 - [x] Fugir ou capturar não muda as moedas, e o log não mostra a linha.
-- [ ] Na vitória, a linha aparece com o ícone, depois de "{nome} recebeu X de XP." e antes da tela de comemoração.
-- [ ] Ao voltar ao Hub, o número de moedas no topo já está atualizado.
+- [x] Na vitória, a linha aparece com o ícone, depois de "{nome} recebeu X de XP." e antes da tela de comemoração.
+- [x] Ao voltar ao Hub, o número de moedas no topo já está atualizado.
 - [x] Testes unitários e e2e passam, com `typecheck` e `lint` sem erros.
 
 ## Desenho técnico
@@ -73,7 +73,7 @@ Jogo:
 
 ## Verificação
 
-Servidor: `typecheck` e `lint` sem erros, 607 testes unitários e 475 e2e. Jogo: as cenas da luta compilam, e uma captura em 360×640 mostrou as linhas com o ícone e o escurecimento. Falta o dono jogar uma vitória e uma derrota de verdade.
+Servidor: `typecheck` e `lint` sem erros, 607 testes unitários e 475 e2e. Jogo: as cenas da luta compilam, e uma captura em 360×640 mostrou as linhas com o ícone e o escurecimento. O dono jogou vitórias e derrotas de verdade e aprovou em 2026-11-03.
 
 ```bash
 cd server && npm run typecheck && npm run lint && npm test && npm run test:e2e

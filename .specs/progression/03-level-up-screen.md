@@ -31,15 +31,15 @@ Com a [01](01-xp-and-levels.md), o servidor devolve `xp_gained` e `progression`,
 
 ## Critérios de aceite
 
-- [ ] Vencendo sozinho, o log mostra "Ruvo recebeu 44 de XP." antes de "Você venceu!".
-- [ ] Com dois participantes, o log mostra uma linha para cada um.
-- [ ] A barra de XP do Ecobeast em campo enche, e, ao subir de nível, recomeça do zero com o nível novo ao lado do nome.
-- [ ] Quem subiu de nível vê a tela com o nível antigo e o novo e os 6 stats de antes e depois, e os números são os da resposta do servidor.
-- [ ] Dois Ecobeasts que subiram de nível na mesma luta abrem duas telas, uma depois da outra.
-- [ ] Depois do "Voltar", a Equipe e o Hub mostram o nível novo.
+- [x] Vencendo sozinho, o log mostra "Ruvo recebeu 44 de XP." antes de "Você venceu!".
+- [x] Com dois participantes, o log mostra uma linha para cada um.
+- [x] A barra de XP do Ecobeast em campo enche, e, ao subir de nível, recomeça do zero com o nível novo ao lado do nome.
+- [x] Quem subiu de nível vê a tela com o nível antigo e o novo e os 6 stats de antes e depois, e os números são os da resposta do servidor.
+- [x] Dois Ecobeasts que subiram de nível na mesma luta abrem duas telas, uma depois da outra.
+- [x] Depois do "Voltar", a Equipe e o Hub mostram o nível novo.
 - [x] A tela cabe sem rolar em 720×1280, 405×720, 360×640 e 412×915.
 
-Os critérios sem marca precisam de uma luta de verdade: ficam para o teste do dono, junto com a [04](04-evolution-and-skills-screens.md), que mexe na mesma sequência. A tela foi conferida sozinha, com dados de exemplo, nos quatro tamanhos.
+O dono testou numa luta de verdade, junto com a [04](04-evolution-and-skills-screens.md) e a [05](05-wild-coins.md), e aprovou em 2026-11-03. A tela foi conferida sozinha, com dados de exemplo, nos quatro tamanhos.
 - [x] O editor abre sem erros nem avisos de script.
 
 ## Desenho técnico

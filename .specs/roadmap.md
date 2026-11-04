@@ -17,7 +17,7 @@ O que vem depois do MVP de estrutura (entrada, escolha do inicial e Hub). Cada l
 | 5c  | `hidden-encounters` | Encontro escondido ao andar, sem ver o Ecobeast antes                                                     | biome-encounters           | planejada |
 | 5d  | `biome-terrain`     | O bioma do hexágono decide o Campo; regiões fundas de água e montanha só com Ecobeasts que voem ou nadem  | biome-encounters           | planejada |
 | 6   | [`capture`](capture/) | Esferas de Vínculo, fórmula de captura e o carregamento do Ecobeast entrando na Esfera (TELAS.md #6); o capturado vai para a equipe de 6 ou para o Santuário | wild-battle, inventory-shop | concluída |
-| 7   | [`progression`](progression/) | XP dividido entre quem lutou, subir de nível, aprender/esquecer Técnica e Evolução por nível, que pode ser cancelada (TELAS.md #7) | battle-core, team-and-storage | em andamento |
+| 7   | [`progression`](progression/) | XP dividido entre quem lutou, subir de nível, aprender/esquecer Técnica e Evolução por nível, que pode ser cancelada (TELAS.md #7), e moedas contra o selvagem | battle-core, team-and-storage | concluída |
 | 8   | `npc-tamers`        | Domadores NPC com equipe fixa e recompensa em moedas; tabela `npc_tamers`                                 | battle-screen              | planejada |
 | 9   | [`team-and-storage`](team-and-storage/) | Equipe com 6 vagas reorganizáveis, Santuário com busca e filtro (TELAS.md #9 e #10) e troca de Ecobeast durante a luta | capture                    | concluída |
 | 10  | [`creature-details`](creature-details/) | Tela de detalhes da criatura (TELAS.md #8); vem antes do `battle-core`, por decisão do dono | auth-google                | concluída |

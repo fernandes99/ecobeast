@@ -50,7 +50,7 @@ Ecobeasts ganham XP ao vencer, sobem de nível, aprendem Técnicas novas e evolu
 | 1 | [01-xp-and-levels](01-xp-and-levels.md) | Servidor: XP dividido entre quem lutou, nível e stats gravados, e o termo Evolução no catálogo | concluída |
 | 2 | [02-skills-and-evolution](02-skills-and-evolution.md) | Servidor: Técnicas aprendidas ou oferecidas, evolução oferecida e as rotas das escolhas | concluída |
 | 3 | [03-level-up-screen](03-level-up-screen.md) | Jogo: XP no log, barra de XP enchendo e a tela de comemoração | concluída |
-| 4 | [04-evolution-and-skills-screens](04-evolution-and-skills-screens.md) | Jogo: tela da evolução com "Cancelar" e tela de escolher a Técnica | em andamento |
-| 5 | [05-wild-coins](05-wild-coins.md) | Servidor e jogo: moedas ao vencer e ao perder para um selvagem, com a linha no log | em andamento |
+| 4 | [04-evolution-and-skills-screens](04-evolution-and-skills-screens.md) | Jogo: tela da evolução com "Cancelar" e tela de escolher a Técnica | concluída |
+| 5 | [05-wild-coins](05-wild-coins.md) | Servidor e jogo: moedas ao vencer e ao perder para um selvagem, com a linha no log | concluída |
 
 O desenho compartilhado está no [architecture.md](architecture.md).

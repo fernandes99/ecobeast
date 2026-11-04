@@ -1,6 +1,6 @@
 # 04. Telas de evolução e de Técnica
 
-- **Status:** em andamento
+- **Status:** concluída
 - **Depende de:** [02-skills-and-evolution](02-skills-and-evolution.md), [03-level-up-screen](03-level-up-screen.md), [architecture.md](architecture.md)
 
 ## Contexto
@@ -44,12 +44,12 @@ Com a [02](02-skills-and-evolution.md), o servidor oferece a evolução, ensina 
 
 ## Critérios de aceite
 
-- [ ] Um Ruvo que chega ao nível 16 vê a comemoração e depois a evolução. Sem tocar em nada, ele vira Ruvak, e os detalhes mostram o Ruvak.
-- [ ] Com "Cancelar", ele continua Ruvo. Ao subir de nível de novo, a evolução volta a aparecer.
-- [ ] Um Ecobeast com vaga vê "aprendeu" e tem a Técnica nova nos detalhes.
-- [ ] Um Ecobeast com 4 Técnicas vê a escolha. Esquecer uma põe a nova no lugar, e "Não aprender" mantém as 4.
-- [ ] O "Não" das confirmações volta para a escolha.
-- [ ] Com o servidor fora do ar no meio da escolha, aparece "Tentar de novo". Com o servidor de volta, a escolha conclui.
+- [x] Um Ruvo que chega ao nível 16 vê a comemoração e depois a evolução. Sem tocar em nada, ele vira Ruvak, e os detalhes mostram o Ruvak.
+- [x] Com "Cancelar", ele continua Ruvo. Ao subir de nível de novo, a evolução volta a aparecer.
+- [x] Um Ecobeast com vaga vê "aprendeu" e tem a Técnica nova nos detalhes.
+- [x] Um Ecobeast com 4 Técnicas vê a escolha. Esquecer uma põe a nova no lugar, e "Não aprender" mantém as 4.
+- [x] O "Não" das confirmações volta para a escolha.
+- [x] Com o servidor fora do ar no meio da escolha, aparece "Tentar de novo". Com o servidor de volta, a escolha conclui.
 - [x] As telas cabem sem rolar em 720×1280, 405×720, 360×640 e 412×915.
 - [x] O editor abre sem erros nem avisos de script.
 
@@ -74,4 +74,4 @@ Com a [02](02-skills-and-evolution.md), o servidor oferece a evolução, ensina 
 - [x] `EvolutionOverlay`
 - [x] `SkillLearnOverlay`, com a confirmação
 - [x] A sequência completa na tela de batalha
-- [ ] Teste nos quatro tamanhos, e status e tabelas atualizados
+- [x] Teste nos quatro tamanhos, e status e tabelas atualizados
