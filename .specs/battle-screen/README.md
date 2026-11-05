@@ -1,5 +1,7 @@
 # Battle screen
 
+> Esta tela vai ser trocada pela luta num tabuleiro de hexágonos, que está em planejamento. O motor do servidor já aceita vários Ecobeasts por lado, pela [battle-slots/01](../battle-slots/01-engine-slots.md).
+
 A batalha que o jogador vê. Tocar em **Explorar zona** no Hub começa uma luta contra um Ecobeast sorteado pelo servidor, e a tela mostra o turno linha a linha, a partir dos eventos do [battle-core](../battle-core/). O jogo só diz o que o jogador quer fazer: quem decide tudo é o servidor.
 
 ## Contexto

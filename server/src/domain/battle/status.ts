@@ -1,12 +1,12 @@
 import { calculateDamage, rollDamageFactor } from './damage.js';
 import { awardXp } from './experience.js';
-import { activeOf, rollChance } from './field.js';
+import { combatantAt, rollChance } from './field.js';
 import type {
   BattleSkill,
   CannotActReason,
   Combatant,
   Random,
-  SideSlug,
+  Spot,
   TurnContext,
 } from './types.js';
 
@@ -43,53 +43,53 @@ export function rollSleepTurns(random: Random): number {
 }
 
 /** Confere, na ordem, o que impede a criatura de agir neste turno. */
-export function canAct(context: TurnContext, side: SideSlug): boolean {
-  const creature = activeOf(context.state, side);
-  if (creature.isFeared) return loseTurn(context, side, 'fear');
-  if (creature.statusSlug === 'freeze' && !thaw(context, side)) return false;
-  if (creature.statusSlug === 'sleep' && !wakeUp(context, side)) return false;
+export function canAct(context: TurnContext, spot: Spot): boolean {
+  const creature = combatantAt(context.state, spot);
+  if (creature.isFeared) return loseTurn(context, spot, 'fear');
+  if (creature.statusSlug === 'freeze' && !thaw(context, spot)) return false;
+  if (creature.statusSlug === 'sleep' && !wakeUp(context, spot)) return false;
   if (
     creature.statusSlug === 'paralysis' &&
     rollChance(PARALYSIS_CHANCE, context.random)
   ) {
-    return loseTurn(context, side, 'paralysis');
+    return loseTurn(context, spot, 'paralysis');
   }
-  return creature.confusionTurns === 0 || !hitsItself(context, side);
+  return creature.confusionTurns === 0 || !hitsItself(context, spot);
 }
 
 function loseTurn(
   context: TurnContext,
-  side: SideSlug,
+  spot: Spot,
   reason: CannotActReason,
 ): false {
-  context.events.push({ type: 'cannot_act', side, reason });
+  context.events.push({ type: 'cannot_act', ...spot, reason });
   return false;
 }
 
-function thaw(context: TurnContext, side: SideSlug): boolean {
+function thaw(context: TurnContext, spot: Spot): boolean {
   if (!rollChance(THAW_CHANCE, context.random)) {
-    return loseTurn(context, side, 'freeze');
+    return loseTurn(context, spot, 'freeze');
   }
-  activeOf(context.state, side).statusSlug = null;
-  context.events.push({ type: 'thawed', side });
+  combatantAt(context.state, spot).statusSlug = null;
+  context.events.push({ type: 'thawed', ...spot });
   return true;
 }
 
-function wakeUp(context: TurnContext, side: SideSlug): boolean {
-  const creature = activeOf(context.state, side);
+function wakeUp(context: TurnContext, spot: Spot): boolean {
+  const creature = combatantAt(context.state, spot);
   if (creature.sleepTurns > 0) {
     creature.sleepTurns -= 1;
-    return loseTurn(context, side, 'sleep');
+    return loseTurn(context, spot, 'sleep');
   }
   creature.statusSlug = null;
-  context.events.push({ type: 'woke_up', side });
+  context.events.push({ type: 'woke_up', ...spot });
   return true;
 }
 
 /** Uma tentativa de agir sob confusão; ela dura esse número de tentativas. */
-function hitsItself(context: TurnContext, side: SideSlug): boolean {
+function hitsItself(context: TurnContext, spot: Spot): boolean {
   const { catalog, events, random } = context;
-  const creature = activeOf(context.state, side);
+  const creature = combatantAt(context.state, spot);
   creature.confusionTurns -= 1;
 
   const isHit = rollChance(CONFUSED_HIT_CHANCE, random);
@@ -106,13 +106,13 @@ function hitsItself(context: TurnContext, side: SideSlug): boolean {
     creature.currentHp -= lost;
     events.push({
       type: 'confused_hit',
-      side,
+      ...spot,
       damage: lost,
       hp: creature.currentHp,
     });
   }
   if (creature.confusionTurns === 0 && creature.currentHp > 0) {
-    events.push({ type: 'status_ended', side, status: 'confusion' });
+    events.push({ type: 'status_ended', ...spot, status: 'confusion' });
   }
   return isHit;
 }
@@ -120,20 +120,20 @@ function hitsItself(context: TurnContext, side: SideSlug): boolean {
 /** Aplica o status; se não pegar, avisa com `effect_failed`. */
 export function applyStatus(
   context: TurnContext,
-  side: SideSlug,
+  spot: Spot,
   statusSlug: string,
 ): void {
   const { catalog, events, random } = context;
-  const creature = activeOf(context.state, side);
+  const creature = combatantAt(context.state, spot);
   const immuneElementIds = catalog.statusImmunities.get(statusSlug) ?? [];
   const isImmune = creature.elementIds.some((elementId) =>
     immuneElementIds.includes(elementId),
   );
   if (isImmune || !setStatus(creature, statusSlug, random)) {
-    events.push({ type: 'effect_failed', side });
+    events.push({ type: 'effect_failed', ...spot });
     return;
   }
-  events.push({ type: 'status_applied', side, status: statusSlug });
+  events.push({ type: 'status_applied', ...spot, status: statusSlug });
 }
 
 function setStatus(
@@ -171,18 +171,18 @@ export function clearVolatile(creature: Combatant): void {
 }
 
 /** Quem chegou a 0 HP desmaia, e o desmaio limpa todo o status. */
-export function faintIfDown(context: TurnContext, side: SideSlug): void {
-  const creature = activeOf(context.state, side);
+export function faintIfDown(context: TurnContext, spot: Spot): void {
+  const creature = combatantAt(context.state, spot);
   if (creature.currentHp > 0) return;
   creature.statusSlug = null;
   creature.sleepTurns = 0;
   clearVolatile(creature);
-  context.events.push({ type: 'fainted', side });
-  if (side === 'enemy') awardXp(context);
+  context.events.push({ type: 'fainted', ...spot });
+  if (spot.side === 'enemy') awardXp(context, creature);
 }
 
-export function applyEndOfTurn(context: TurnContext, side: SideSlug): void {
-  const creature = activeOf(context.state, side);
+export function applyEndOfTurn(context: TurnContext, spot: Spot): void {
+  const creature = combatantAt(context.state, spot);
   const status = creature.statusSlug;
   const loss = status === null ? undefined : END_OF_TURN_LOSS[status];
   if (status !== null && loss !== undefined) {
@@ -193,12 +193,12 @@ export function applyEndOfTurn(context: TurnContext, side: SideSlug): void {
     creature.currentHp -= damage;
     context.events.push({
       type: 'status_damage',
-      side,
+      ...spot,
       status,
       damage,
       hp: creature.currentHp,
     });
-    faintIfDown(context, side);
+    faintIfDown(context, spot);
   }
   creature.isFeared = false;
   creature.isProtected = false;

@@ -56,6 +56,7 @@ describe('Instinto', () => {
       {
         type: 'stat_changed',
         side: 'player',
+        position: 0,
         stat: 'spd',
         stages: 1,
         value: 1,

@@ -1,33 +1,47 @@
 import { lostCoins, winCoins } from '../progression/coins.js';
 import { splitXp, xpYield } from '../progression/xp.js';
 import { MAX_LEVEL } from '../rules/xp-curve.js';
-import { activeOf } from './field.js';
-import type { BattleResult, SideSlug, TurnContext } from './types.js';
+import {
+  activeAt,
+  combatantAt,
+  occupiedSpots,
+  standingSpots,
+} from './field.js';
+import type {
+  BattleResult,
+  BattleState,
+  Combatant,
+  SideSlug,
+  Spot,
+  TurnContext,
+} from './types.js';
 
 /**
- * Anota quem está em campo contra quem. O inimigo que entra começa com o
- * Ecobeast do jogador em campo; o do jogador que entra passa a contar para o
- * inimigo em campo.
+ * Anota quem está em campo contra quem. O inimigo que entra começa com os
+ * Ecobeasts do jogador de pé em campo; o do jogador que entra passa a contar
+ * para cada inimigo em campo.
  */
-export function recordEntry(context: TurnContext, side: SideSlug): void {
+export function recordEntry(context: TurnContext, spot: Spot): void {
   const { state } = context;
-  const playerIndex = state.player.activeIndex;
-  const enemy = activeOf(state, 'enemy');
-  if (side === 'enemy') {
-    enemy.foughtBy =
-      activeOf(state, 'player').currentHp > 0 ? [playerIndex] : [];
-  } else if (!enemy.foughtBy.includes(playerIndex)) {
-    enemy.foughtBy.push(playerIndex);
+  if (spot.side === 'enemy') {
+    combatantAt(state, spot).foughtBy = standingSpots(state, 'player').map(
+      ({ position }) => state.player.activeIndices[position]!,
+    );
+    return;
+  }
+  const playerIndex = state.player.activeIndices[spot.position]!;
+  for (const enemySpot of occupiedSpots(state, 'enemy')) {
+    const enemy = combatantAt(state, enemySpot);
+    if (!enemy.foughtBy.includes(playerIndex)) enemy.foughtBy.push(playerIndex);
   }
 }
 
 /**
- * Reparte o XP do inimigo em campo, que acabou de desmaiar, entre quem
- * esteve em campo contra ele, está de pé e não chegou ao nível 100.
+ * Reparte o XP do inimigo que acabou de desmaiar entre quem esteve em campo
+ * contra ele, está de pé e não chegou ao nível 100.
  */
-export function awardXp(context: TurnContext): void {
+export function awardXp(context: TurnContext, enemy: Combatant): void {
   const { state, catalog, events } = context;
-  const enemy = activeOf(state, 'enemy');
   const receivers = [...enemy.foughtBy]
     .sort((a, b) => a - b)
     .filter((index) => {
@@ -48,21 +62,55 @@ export function awardXp(context: TurnContext): void {
 }
 
 /**
- * A vitória dá moedas e a derrota tira, pela razão entre o nível do inimigo
- * e o de quem está em campo no fim (progression/05). Fuga e captura não mexem.
+ * A vitória dá moedas por inimigo desmaiado, e a derrota tira, pela razão
+ * entre os níveis de quem está em campo no fim (progression/05 e
+ * battle-slots/architecture.md, "XP e moedas"). Fuga e captura não mexem.
  */
 export function settleCoins(context: TurnContext, result: BattleResult): void {
   const { state, events, random } = context;
-  const enemyLevel = activeOf(state, 'enemy').level;
-  const fielderLevel = activeOf(state, 'player').level;
+  const fielderLevel = fieldLevel(state, 'player');
   if (result === 'victory') {
-    const amount = winCoins(enemyLevel, fielderLevel, random);
-    state.coinsChange = amount;
-    events.push({ type: 'coins_gained', amount });
+    for (const enemy of state.enemy.team) {
+      if (enemy.currentHp > 0 || enemy.captured) continue;
+      const amount = winCoins(enemy.level, fielderLevel, random);
+      state.coinsChange += amount;
+      events.push({
+        type: 'coins_gained',
+        amount,
+        species_id: enemy.speciesId,
+      });
+    }
   } else if (result === 'defeat') {
-    const amount = lostCoins(enemyLevel, fielderLevel, state.coins, random);
+    const enemies = fieldCreatures(state, 'enemy');
+    const amount = lostCoins(
+      averageLevel(enemies),
+      fielderLevel,
+      state.coins,
+      random,
+    );
     if (amount === 0) return;
     state.coinsChange = -amount;
-    events.push({ type: 'coins_lost', amount });
+    events.push({
+      type: 'coins_lost',
+      amount,
+      species_ids: enemies.map((enemy) => enemy.speciesId),
+    });
   }
+}
+
+/** Quem está em campo no fim, mesmo desmaiado; o capturado já saiu. */
+function fieldCreatures(state: BattleState, side: SideSlug): Combatant[] {
+  return occupiedSpots(state, side)
+    .map((spot) => activeAt(state, spot)!)
+    .filter((creature) => !creature.captured);
+}
+
+function fieldLevel(state: BattleState, side: SideSlug): number {
+  return averageLevel(fieldCreatures(state, side));
+}
+
+/** A média dos níveis, arredondada para baixo; 1 sem ninguém, para não dividir por 0. */
+function averageLevel(creatures: Combatant[]): number {
+  const total = creatures.reduce((sum, creature) => sum + creature.level, 0);
+  return Math.max(1, Math.floor(total / Math.max(1, creatures.length)));
 }

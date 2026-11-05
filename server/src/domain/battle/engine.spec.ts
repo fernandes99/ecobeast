@@ -156,7 +156,7 @@ describe('desmaio', () => {
     expect(state.result).toBeNull();
     expect(actingOrder(events)).toEqual(['enemy']);
     expect(eventsOf(events, 'fainted')).toEqual([
-      { type: 'fainted', side: 'player' },
+      { type: 'fainted', side: 'player', position: 0 },
     ]);
   });
 
@@ -175,13 +175,15 @@ describe('desmaio', () => {
       catalog,
       sequence(),
     );
-    expect(state.player.activeIndex).toBe(1);
+    expect(state.player.activeIndices[0]).toBe(1);
     expect(state.phase).toBe('choose_action');
     expect(state.turn).toBe(fainted.state.turn);
     expect(events).toEqual([
       {
         type: 'creature_entered',
         side: 'player',
+        position: 0,
+        team_index: 1,
         species_id: 4,
         level: 5,
         max_hp: 19,
@@ -293,10 +295,11 @@ describe('desmaio', () => {
       BENCH_TURN,
       catalog,
     );
-    expect(state.enemy.activeIndex).toBe(1);
+    expect(state.enemy.activeIndices[0]).toBe(1);
     expect(state).toMatchObject({ phase: 'choose_action', turn: 2 });
     expect(eventsOf(events, 'creature_entered')[0]).toMatchObject({
       side: 'enemy',
+      position: 0,
       species_id: 9,
     });
   });
@@ -311,7 +314,7 @@ describe('desmaio', () => {
       BENCH_TURN,
       catalog,
     );
-    expect(state.enemy.activeIndex).toBe(2);
+    expect(state.enemy.activeIndices[0]).toBe(2);
   });
 
   it('caindo os dois, o próximo inimigo entra e o jogador escolhe', () => {
@@ -323,7 +326,7 @@ describe('desmaio', () => {
       BENCH_TURN,
       catalog,
     );
-    expect(state.enemy.activeIndex).toBe(1);
+    expect(state.enemy.activeIndices[0]).toBe(1);
     expect(state.phase).toBe('choose_next');
   });
 
@@ -365,8 +368,8 @@ describe('startBattle', () => {
       catalog,
       sequence(),
     );
-    expect(state.player.activeIndex).toBe(1);
-    expect(state.enemy.activeIndex).toBe(0);
+    expect(state.player.activeIndices[0]).toBe(1);
+    expect(state.enemy.activeIndices[0]).toBe(0);
   });
 
   it('começa no turno 1, na fase de escolher a ação', () => {
@@ -398,6 +401,8 @@ describe('startBattle', () => {
       {
         type: 'creature_entered',
         side: 'player',
+        position: 0,
+        team_index: 0,
         species_id: 1,
         level: 5,
         max_hp: 19,
@@ -407,6 +412,8 @@ describe('startBattle', () => {
       {
         type: 'creature_entered',
         side: 'enemy',
+        position: 0,
+        team_index: 0,
         species_id: 7,
         level: 4,
         max_hp: 19,
@@ -464,6 +471,7 @@ describe('applyAction', () => {
       expect(eventsOf(events, 'damage')[0]).toEqual({
         type: 'damage',
         side: 'enemy',
+        position: 0,
         damage: 5,
         hp: 14,
         multiplier: 1,
@@ -507,6 +515,7 @@ describe('applyAction', () => {
       expect(eventsOf(events, 'no_effect')[0]).toEqual({
         type: 'no_effect',
         side: 'enemy',
+        position: 0,
       });
     });
   });
@@ -532,7 +541,7 @@ describe('applyAction', () => {
       );
       expect(state.player.team[0]!.skills[0]!.currentPp).toBe(9);
       expect(eventsOf(events, 'missed')).toEqual([
-        { type: 'missed', side: 'player' },
+        { type: 'missed', side: 'player', position: 0 },
       ]);
     });
   });
@@ -560,7 +569,7 @@ describe('applyAction', () => {
       );
       expect(actingOrder(events)).toEqual(['player']);
       expect(eventsOf(events, 'fainted')).toEqual([
-        { type: 'fainted', side: 'enemy' },
+        { type: 'fainted', side: 'enemy', position: 0 },
       ]);
     });
 
@@ -708,7 +717,7 @@ describe('troca durante a luta', () => {
       SWITCH,
       catalog,
     );
-    expect(state.player.activeIndex).toBe(1);
+    expect(state.player.activeIndices[0]).toBe(1);
     expect(state.phase).toBe('choose_action');
     expect(state.turn).toBe(2);
   });
@@ -757,6 +766,8 @@ describe('troca durante a luta', () => {
       {
         type: 'creature_entered',
         side: 'player',
+        position: 0,
+        team_index: 1,
         species_id: 1,
         level: 5,
         max_hp: 19,
@@ -807,6 +818,7 @@ describe('troca durante a luta', () => {
     );
     expect(eventsOf(events, 'status_damage')[0]).toMatchObject({
       side: 'player',
+      position: 0,
     });
     expect(state.player.team[1]!.currentHp).toBeLessThan(19);
   });
@@ -868,7 +880,13 @@ describe('captura', () => {
     const { state: after, events } = play(state, capture(), spheres, SUCCESS);
 
     expect(events).toEqual([
-      { type: 'capture_attempted', item_id: SPHERE, success: true },
+      {
+        type: 'capture_attempted',
+        item_id: SPHERE,
+        success: true,
+        target: 0,
+        captured_to: 'storage',
+      },
       { type: 'battle_ended', result: 'captured' },
     ]);
     expect(after.phase).toBe('ended');
@@ -892,9 +910,11 @@ describe('captura', () => {
       type: 'capture_attempted',
       item_id: SPHERE,
       success: false,
+      target: 0,
+      captured_to: null,
     });
     expect(eventsOf(events, 'skill_used')).toEqual([
-      { type: 'skill_used', side: 'enemy', skill_id: IDLE.id },
+      { type: 'skill_used', side: 'enemy', position: 0, skill_id: IDLE.id },
     ]);
     expect(after.phase).toBe('choose_action');
     expect(after.turn).toBe(2);
@@ -1022,6 +1042,7 @@ describe('itens', () => {
       {
         type: 'item_used',
         side: 'player',
+        position: 0,
         item_id: TONIC,
         team_index: 0,
         healed: 8,
@@ -1059,7 +1080,7 @@ describe('itens', () => {
     });
     const { state: after, events } = play(state, useItem(TONIC, 1), items);
     expect(after.player.team[1]!.currentHp).toBe(11);
-    expect(after.player.activeIndex).toBe(0);
+    expect(after.player.activeIndices[0]).toBe(0);
     expect(eventsOf(events, 'item_used')[0]!.team_index).toBe(1);
   });
 

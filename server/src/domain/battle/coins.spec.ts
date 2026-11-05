@@ -49,7 +49,7 @@ describe('moedas contra o selvagem', () => {
     );
     // Níveis iguais: de 10 a 30, e o sorteio do meio dá 20.
     expect(eventsOf(events, 'coins_gained')).toEqual([
-      { type: 'coins_gained', amount: 20 },
+      { type: 'coins_gained', amount: 20, species_id: 4 },
     ]);
     const types = events.map((event) => event.type);
     expect(types.indexOf('coins_gained')).toBeGreaterThan(
@@ -80,12 +80,10 @@ describe('moedas contra o selvagem', () => {
     expect(state.result).toBe('defeat');
     // Níveis iguais: de 2 a 7, e o sorteio do meio dá 5.
     expect(eventsOf(events, 'coins_lost')).toEqual([
-      { type: 'coins_lost', amount: 5 },
+      { type: 'coins_lost', amount: 5, species_ids: [4] },
     ]);
     const types = events.map((event) => event.type);
-    expect(types.indexOf('coins_lost')).toBe(
-      types.indexOf('battle_ended') - 1,
-    );
+    expect(types.indexOf('coins_lost')).toBe(types.indexOf('battle_ended') - 1);
     expect(state.coinsChange).toBe(-5);
   });
 

@@ -1,4 +1,11 @@
-import { Body, Controller, HttpCode, Post, UseGuards } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  HttpCode,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
@@ -16,6 +23,7 @@ import { CurrentUser } from '../auth/current-user.decorator.js';
 import {
   BattleActionBodyDto,
   BattleResponseDto,
+  ENEMIES_OR_SPECIES,
   INVALID_ACTION,
   INVALID_ENEMY,
   INVALID_POSITION,
@@ -25,7 +33,7 @@ import {
   StartWildBodyDto,
   UNREACHABLE,
 } from './battle.dto.js';
-import { toBattleAction } from './battle.mapper.js';
+import { toBattleActions } from './battle.mapper.js';
 import { BattleService, NO_BATTLE } from './battle.service.js';
 
 const NO_TEAM_RESPONSES =
@@ -50,13 +58,14 @@ export class BattleController {
   @ApiOperation({
     summary: 'Começar uma batalha de teste',
     description:
-      'Começa uma batalha contra um inimigo selvagem da espécie e do nível dados. ' +
+      'Começa uma batalha contra um inimigo selvagem da espécie e do nível dados, ' +
+      'ou contra a equipe de `enemies`, com `slots` vagas de cada lado. ' +
       'A rota só existe com `ENABLE_TEST_BATTLE` ligada. ' +
       'Uma batalha em andamento é descartada, sem gravar nada.',
   })
   @ApiCreatedResponse({ type: BattleResponseDto })
   @ApiBadRequestResponse({
-    description: `Espécie ou nível inválido: "${INVALID_ENEMY}"`,
+    description: `Espécie, nível ou vagas inválidos: "${INVALID_ENEMY}" Os dois jeitos juntos: "${ENEMIES_OR_SPECIES}"`,
   })
   @ApiNotFoundResponse({ description: '`ENABLE_TEST_BATTLE` desligada.' })
   @ApiConflictResponse({ description: NO_TEAM_RESPONSES })
@@ -64,7 +73,20 @@ export class BattleController {
     @CurrentUser() userId: string,
     @Body() body: StartBattleBodyDto,
   ): Promise<BattleResponseDto> {
-    return this.battles.start(userId, body.species_id, body.level);
+    if (body.enemies && body.species_id !== undefined) {
+      throw new BadRequestException(ENEMIES_OR_SPECIES);
+    }
+    const enemies = body.enemies ?? [
+      { species_id: body.species_id!, level: body.level! },
+    ];
+    return this.battles.start(
+      userId,
+      enemies.map(({ species_id, level }) => ({
+        speciesId: species_id,
+        level,
+      })),
+      body.slots ?? 1,
+    );
   }
 
   @Post('wild')
@@ -102,7 +124,8 @@ export class BattleController {
   @ApiOperation({
     summary: 'Agir na batalha',
     description:
-      'O jogo diz o que o jogador quer fazer, e o servidor decide o resto. ' +
+      'O jogo diz o que o jogador quer fazer, uma ação por Ecobeast de pé em ' +
+      'campo, e o servidor decide o resto. ' +
       'A resposta traz o estado e os eventos deste turno. Quando `phase` é ' +
       '`ended`, HP, PP e status da equipe já estão gravados.',
   })
@@ -115,6 +138,6 @@ export class BattleController {
     @CurrentUser() userId: string,
     @Body() body: BattleActionBodyDto,
   ): Promise<BattleResponseDto> {
-    return this.battles.act(userId, toBattleAction(body));
+    return this.battles.act(userId, toBattleActions(body));
   }
 }

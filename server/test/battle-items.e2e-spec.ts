@@ -129,6 +129,7 @@ describe('Itens na batalha (e2e)', () => {
     expect(body.events[0]).toMatchObject({
       type: 'item_used',
       side: 'player',
+      position: 0,
       item_id: tonic.id,
       team_index: 0,
     });

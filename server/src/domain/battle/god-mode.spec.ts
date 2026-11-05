@@ -40,6 +40,7 @@ describe('modo God (depuração)', () => {
     );
     expect(eventsOf(events, 'damage')[0]).toMatchObject({
       side: 'enemy',
+      position: 0,
       damage: 999,
       hp: 0,
     });

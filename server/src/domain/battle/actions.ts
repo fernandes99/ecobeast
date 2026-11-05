@@ -2,7 +2,14 @@ import { critChance, hitChance } from './accuracy.js';
 import { calculateDamage, rollDamageFactor, typeMultiplier } from './damage.js';
 import { applyEffects } from './effects.js';
 import { EMERGENCY_SKILL } from './emergency.js';
-import { activeOf, opponentOf, rollChance } from './field.js';
+import {
+  activeAt,
+  combatantAt,
+  isStanding,
+  opponentOf,
+  rollChance,
+  standingSpots,
+} from './field.js';
 import { canAct, faintIfDown } from './status.js';
 import { applyDefeatTrait } from './traits.js';
 import type { TurnAction } from './turn-order.js';
@@ -10,32 +17,50 @@ import type {
   BattleAction,
   BattleSkill,
   CombatantSkill,
-  SideSlug,
+  Spot,
   TurnContext,
 } from './types.js';
 
 const PROTECT_EFFECT = 'protect';
 
 export interface FieldAction extends TurnAction {
-  side: SideSlug;
+  spot: Spot;
   skill: BattleSkill;
   /** Nulo no golpe de emergência, que não gasta PP. */
   learned: CombatantSkill | null;
+  /** A posição do adversário escolhido; nula sem escolha, e então vale o primeiro de pé. */
+  target: number | null;
 }
 
 export function toFieldAction(
   context: TurnContext,
-  side: SideSlug,
+  spot: Spot,
   action: BattleAction,
 ): FieldAction {
-  const combatant = activeOf(context.state, side);
+  const combatant = combatantAt(context.state, spot);
+  const target = 'target' in action ? (action.target ?? null) : null;
   if (action.type !== 'skill') {
     const skill = EMERGENCY_SKILL;
-    return { side, combatant, skill, priority: skill.priority, learned: null };
+    const priority = skill.priority;
+    return { spot, combatant, skill, priority, learned: null, target };
   }
   const learned = combatant.skills[action.slot - 1]!;
   const skill = context.catalog.skills.get(learned.skillId)!;
-  return { side, combatant, skill, priority: skill.priority, learned };
+  return { spot, combatant, skill, priority: skill.priority, learned, target };
+}
+
+/**
+ * O adversário que a ação atinge: o escolhido, se seguir de pé, ou o de pé de
+ * menor posição. Nulo sem nenhum.
+ */
+function foeOf(context: TurnContext, action: FieldAction): Spot | null {
+  const side = opponentOf(action.spot.side);
+  if (action.target !== null) {
+    const chosen = { side, position: action.target };
+    const creature = activeAt(context.state, chosen);
+    if (creature && isStanding(creature)) return chosen;
+  }
+  return standingSpots(context.state, side)[0] ?? null;
 }
 
 /**
@@ -44,32 +69,37 @@ export function toFieldAction(
  */
 export function executeAction(context: TurnContext, action: FieldAction): void {
   const { state } = context;
-  const { side, skill } = action;
-  const author = activeOf(state, side);
-  const targetSide = opponentOf(side);
-  const target = activeOf(state, targetSide);
+  const { spot, skill } = action;
+  const author = combatantAt(state, spot);
   const aimsAtTarget = skill.targetSlug !== 'self';
-  if (author.currentHp === 0) return;
-  if (aimsAtTarget && target.currentHp === 0) return;
+  if (!isStanding(author)) return;
+  const foe = foeOf(context, action);
+  if (aimsAtTarget && foe === null) return;
 
-  if (canAct(context, side)) useSkill(context, action);
-  const defeatedTarget = aimsAtTarget && target.currentHp === 0;
-  if (aimsAtTarget) faintIfDown(context, targetSide);
-  faintIfDown(context, side);
-  if (defeatedTarget && author.currentHp > 0) applyDefeatTrait(context, side);
+  if (canAct(context, spot)) useSkill(context, action, foe);
+  const target = aimsAtTarget ? combatantAt(state, foe!) : null;
+  const defeatedTarget = target !== null && target.currentHp === 0;
+  if (aimsAtTarget) faintIfDown(context, foe!);
+  faintIfDown(context, spot);
+  if (defeatedTarget && author.currentHp > 0) applyDefeatTrait(context, spot);
 }
 
-function useSkill(context: TurnContext, action: FieldAction): void {
+/** `foe` é o adversário atingido; nulo numa Técnica em si mesmo sem adversário de pé. */
+function useSkill(
+  context: TurnContext,
+  action: FieldAction,
+  foe: Spot | null,
+): void {
   const { state, events, random } = context;
-  const { side, skill, learned } = action;
-  const author = activeOf(state, side);
-  const target = activeOf(state, opponentOf(side));
+  const { spot, skill, learned } = action;
+  const author = combatantAt(state, spot);
+  const target = foe && combatantAt(state, foe);
   const aimsAtTarget = skill.targetSlug !== 'self';
 
   if (learned) learned.currentPp -= 1;
   events.push({
     type: 'skill_used',
-    side,
+    ...spot,
     skill_id: learned ? skill.id : null,
   });
 
@@ -77,32 +107,37 @@ function useSkill(context: TurnContext, action: FieldAction): void {
     author.isProtected = true;
     return;
   }
-  if (aimsAtTarget && target.isProtected) {
-    events.push({ type: 'blocked', side: opponentOf(side) });
+  if (aimsAtTarget && target!.isProtected) {
+    events.push({ type: 'blocked', ...foe! });
     return;
   }
 
-  const chance = hitChance(
-    skill.accuracy,
-    author.stages.accuracy,
-    target.stages.evasion,
-  );
-  if (aimsAtTarget && !rollChance(chance, random)) {
-    events.push({ type: 'missed', side });
-    return;
+  if (aimsAtTarget) {
+    const chance = hitChance(
+      skill.accuracy,
+      author.stages.accuracy,
+      target!.stages.evasion,
+    );
+    if (!rollChance(chance, random)) {
+      events.push({ type: 'missed', ...spot });
+      return;
+    }
   }
 
-  const dealt = skill.power > 0 ? strike(context, action) : 0;
-  if (dealt !== null) applyEffects(context, side, skill, dealt);
+  const dealt = skill.power > 0 ? strike(context, action, foe!) : 0;
+  if (dealt !== null) applyEffects(context, spot, foe, skill, dealt);
 }
 
 /** Aplica o dano no alvo; devolve o HP que ele perdeu, ou nulo se for imune. */
-function strike(context: TurnContext, action: FieldAction): number | null {
+function strike(
+  context: TurnContext,
+  action: FieldAction,
+  foe: Spot,
+): number | null {
   const { state, catalog, events, random } = context;
-  const { side, skill } = action;
-  const attacker = activeOf(state, side);
-  const targetSide = opponentOf(side);
-  const defender = activeOf(state, targetSide);
+  const { spot, skill } = action;
+  const attacker = combatantAt(state, spot);
+  const defender = combatantAt(state, foe);
 
   const multiplier = typeMultiplier(
     skill.elementId,
@@ -110,7 +145,7 @@ function strike(context: TurnContext, action: FieldAction): number | null {
     catalog,
   );
   if (multiplier === 0) {
-    events.push({ type: 'no_effect', side: targetSide });
+    events.push({ type: 'no_effect', ...foe });
     return null;
   }
 
@@ -126,14 +161,14 @@ function strike(context: TurnContext, action: FieldAction): number | null {
     isCritical,
     randomFactor: rollDamageFactor(random),
   });
-  const godStrike = state.godMode && side === 'player';
+  const godStrike = state.godMode && spot.side === 'player';
   const dealt = godStrike
     ? defender.currentHp
     : Math.min(damage, defender.currentHp);
   defender.currentHp -= dealt;
   events.push({
     type: 'damage',
-    side: targetSide,
+    ...foe,
     damage: dealt,
     hp: defender.currentHp,
     multiplier,

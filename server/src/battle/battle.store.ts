@@ -14,7 +14,8 @@ export interface WildCreature {
 export interface StoredBattle {
   state: BattleState;
   catalog: BattleCatalog;
-  wild: WildCreature;
+  /** Um por Ecobeast da equipe inimiga, na mesma ordem. */
+  wilds: WildCreature[];
 }
 
 interface Entry {

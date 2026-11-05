@@ -140,7 +140,7 @@ describe('apply_status', () => {
     );
     expect(state.enemy.team[0]!.statusSlug).toBe('burn');
     expect(eventsOf(events, 'status_applied')).toEqual([
-      { type: 'status_applied', side: 'enemy', status: 'burn' },
+      { type: 'status_applied', side: 'enemy', position: 0, status: 'burn' },
     ]);
   });
 
@@ -179,7 +179,7 @@ describe('apply_status', () => {
     );
     expect(state.enemy.team[0]!.statusSlug).toBeNull();
     expect(eventsOf(events, 'effect_failed')).toEqual([
-      { type: 'effect_failed', side: 'enemy' },
+      { type: 'effect_failed', side: 'enemy', position: 0 },
     ]);
   });
 
@@ -225,7 +225,7 @@ describe('flinch', () => {
       sequence(0, 0.9, 0.5, 0.19),
     );
     expect(eventsOf(events, 'cannot_act')).toEqual([
-      { type: 'cannot_act', side: 'enemy', reason: 'fear' },
+      { type: 'cannot_act', side: 'enemy', position: 0, reason: 'fear' },
     ]);
     expect(state.enemy.team[0]!.isFeared).toBe(false);
   });
@@ -267,6 +267,7 @@ describe('modify_stat', () => {
       {
         type: 'stat_changed',
         side: 'enemy',
+        position: 0,
         stat: 'atk',
         stages: -1,
         value: -1,
@@ -284,7 +285,7 @@ describe('modify_stat', () => {
     const { events } = play(state, USE_FIRST, catalog);
     expect(eventsOf(events, 'stat_changed')).toEqual([]);
     expect(eventsOf(events, 'effect_failed')).toEqual([
-      { type: 'effect_failed', side: 'enemy' },
+      { type: 'effect_failed', side: 'enemy', position: 0 },
     ]);
   });
 
@@ -334,7 +335,7 @@ describe('heal', () => {
     );
     expect(state.player.team[0]!.currentHp).toBe(14);
     expect(eventsOf(events, 'healed')).toEqual([
-      { type: 'healed', side: 'player', amount: 9, hp: 14 },
+      { type: 'healed', side: 'player', position: 0, amount: 9, hp: 14 },
     ]);
   });
 
@@ -355,7 +356,7 @@ describe('heal', () => {
     );
     expect(eventsOf(events, 'healed')).toEqual([]);
     expect(eventsOf(events, 'effect_failed')).toEqual([
-      { type: 'effect_failed', side: 'player' },
+      { type: 'effect_failed', side: 'player', position: 0 },
     ]);
   });
 
@@ -379,7 +380,7 @@ describe('drain', () => {
     );
     expect(eventsOf(events, 'damage')[0]).toMatchObject({ damage: 5 });
     expect(eventsOf(events, 'healed')).toEqual([
-      { type: 'healed', side: 'player', amount: 2, hp: 12 },
+      { type: 'healed', side: 'player', position: 0, amount: 2, hp: 12 },
     ]);
   });
 
@@ -427,7 +428,7 @@ describe('recoil', () => {
     );
     expect(eventsOf(events, 'damage')[0]).toMatchObject({ damage: 11 });
     expect(eventsOf(events, 'recoil')).toEqual([
-      { type: 'recoil', side: 'player', damage: 3, hp: 16 },
+      { type: 'recoil', side: 'player', position: 0, damage: 3, hp: 16 },
     ]);
     expect(state.player.team[0]!.currentHp).toBe(16);
   });
@@ -479,7 +480,7 @@ describe('protect', () => {
       'enemy',
     ]);
     expect(eventsOf(events, 'blocked')).toEqual([
-      { type: 'blocked', side: 'player' },
+      { type: 'blocked', side: 'player', position: 0 },
     ]);
     expect(state.player.team[0]!.currentHp).toBe(19);
     expect(state.enemy.team[0]!.skills[0]!.currentPp).toBe(19);

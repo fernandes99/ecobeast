@@ -85,6 +85,7 @@ describe('dano de status no fim do turno', () => {
       {
         type: 'status_damage',
         side: 'player',
+        position: 0,
         status: statusSlug,
         damage: maxHp - hp,
         hp,
@@ -114,7 +115,7 @@ describe('dano de status no fim do turno', () => {
     );
     expect(state.result).toBe('defeat');
     expect(eventsOf(events, 'fainted')).toEqual([
-      { type: 'fainted', side: 'player' },
+      { type: 'fainted', side: 'player', position: 0 },
     ]);
   });
 
@@ -144,7 +145,7 @@ describe('Paralisado', () => {
       sequence(0, 0.24),
     );
     expect(eventsOf(events, 'cannot_act')).toEqual([
-      { type: 'cannot_act', side: 'player', reason: 'paralysis' },
+      { type: 'cannot_act', side: 'player', position: 0, reason: 'paralysis' },
     ]);
     expect(state.player.team[0]!.skills[0]!.currentPp).toBe(10);
   });
@@ -166,7 +167,7 @@ describe('Adormecido', () => {
     const asleep = attacker({ statusSlug: 'sleep', sleepTurns: 2 });
     const first = play(makeState(asleep, idle()), USE_FIRST, catalog);
     expect(eventsOf(first.events, 'cannot_act')).toEqual([
-      { type: 'cannot_act', side: 'player', reason: 'sleep' },
+      { type: 'cannot_act', side: 'player', position: 0, reason: 'sleep' },
     ]);
 
     const second = play(first.state, USE_FIRST, catalog);
@@ -175,7 +176,7 @@ describe('Adormecido', () => {
 
     const third = play(second.state, USE_FIRST, catalog);
     expect(eventsOf(third.events, 'woke_up')).toEqual([
-      { type: 'woke_up', side: 'player' },
+      { type: 'woke_up', side: 'player', position: 0 },
     ]);
     expect(eventsOf(third.events, 'cannot_act')).toEqual([]);
     expect(third.state.player.team[0]).toMatchObject({
@@ -208,7 +209,7 @@ describe('Congelado', () => {
       always(0.19),
     );
     expect(eventsOf(events, 'thawed')).toEqual([
-      { type: 'thawed', side: 'player' },
+      { type: 'thawed', side: 'player', position: 0 },
     ]);
     expect(eventsOf(events, 'skill_used').map((e) => e.side)).toContain(
       'player',
@@ -224,7 +225,7 @@ describe('Congelado', () => {
       always(0.2),
     );
     expect(eventsOf(events, 'cannot_act')).toEqual([
-      { type: 'cannot_act', side: 'player', reason: 'freeze' },
+      { type: 'cannot_act', side: 'player', position: 0, reason: 'freeze' },
     ]);
     expect(state.player.team[0]!.statusSlug).toBe('freeze');
   });
@@ -243,7 +244,7 @@ describe('Confuso', () => {
     );
     const creature = state.player.team[0]!;
     expect(eventsOf(events, 'confused_hit')).toEqual([
-      { type: 'confused_hit', side: 'player', damage: 4, hp: 15 },
+      { type: 'confused_hit', side: 'player', position: 0, damage: 4, hp: 15 },
     ]);
     expect(eventsOf(events, 'skill_used').map((e) => e.side)).toEqual([
       'enemy',
@@ -271,7 +272,12 @@ describe('Confuso', () => {
       sequence(0, 0.5, 0.9, 0.5),
     );
     expect(eventsOf(events, 'status_ended')).toEqual([
-      { type: 'status_ended', side: 'player', status: 'confusion' },
+      {
+        type: 'status_ended',
+        side: 'player',
+        position: 0,
+        status: 'confusion',
+      },
     ]);
     expect(state.player.team[0]!.confusionTurns).toBe(0);
   });
@@ -297,7 +303,7 @@ describe('Amedrontado', () => {
       catalog,
     );
     expect(eventsOf(events, 'cannot_act')).toEqual([
-      { type: 'cannot_act', side: 'player', reason: 'fear' },
+      { type: 'cannot_act', side: 'player', position: 0, reason: 'fear' },
     ]);
     expect(state.player.team[0]).toMatchObject({ isFeared: false });
     expect(state.player.team[0]!.skills[0]!.currentPp).toBe(10);
@@ -315,7 +321,7 @@ describe('Amedrontado', () => {
       catalog,
     );
     expect(eventsOf(events, 'cannot_act')).toEqual([
-      { type: 'cannot_act', side: 'player', reason: 'fear' },
+      { type: 'cannot_act', side: 'player', position: 0, reason: 'fear' },
     ]);
     expect(state.player.team[0]!.sleepTurns).toBe(2);
   });
@@ -346,27 +352,31 @@ describe('voláteis', () => {
 describe('applyStatus', () => {
   it('aplica um status principal', () => {
     const turn = context(idle());
-    applyStatus(turn, 'enemy', 'poison');
+    applyStatus(turn, { side: 'enemy', position: 0 }, 'poison');
     expect(turn.state.enemy.team[0]!.statusSlug).toBe('poison');
     expect(turn.events).toEqual([
-      { type: 'status_applied', side: 'enemy', status: 'poison' },
+      { type: 'status_applied', side: 'enemy', position: 0, status: 'poison' },
     ]);
   });
 
   it('não pega em quem tem outro status principal', () => {
     const turn = context(idle({ statusSlug: 'burn' }));
-    applyStatus(turn, 'enemy', 'poison');
+    applyStatus(turn, { side: 'enemy', position: 0 }, 'poison');
     expect(turn.state.enemy.team[0]!.statusSlug).toBe('burn');
-    expect(turn.events).toEqual([{ type: 'effect_failed', side: 'enemy' }]);
+    expect(turn.events).toEqual([
+      { type: 'effect_failed', side: 'enemy', position: 0 },
+    ]);
   });
 
   it('não pega em quem é imune pelo Elemento', () => {
     const immune = makeCatalog();
     immune.statusImmunities.set('burn', [WATER, FIRE]);
     const turn = context(idle(), sequence(), immune);
-    applyStatus(turn, 'enemy', 'burn');
+    applyStatus(turn, { side: 'enemy', position: 0 }, 'burn');
     expect(turn.state.enemy.team[0]!.statusSlug).toBeNull();
-    expect(turn.events).toEqual([{ type: 'effect_failed', side: 'enemy' }]);
+    expect(turn.events).toEqual([
+      { type: 'effect_failed', side: 'enemy', position: 0 },
+    ]);
   });
 
   it.each([
@@ -375,7 +385,7 @@ describe('applyStatus', () => {
     [0.99, 3],
   ])('Adormecido com o sorteio %f dura %i turnos', (roll, turns) => {
     const turn = context(idle(), sequence(roll));
-    applyStatus(turn, 'enemy', 'sleep');
+    applyStatus(turn, { side: 'enemy', position: 0 }, 'sleep');
     expect(turn.state.enemy.team[0]!.sleepTurns).toBe(turns);
   });
 
@@ -384,29 +394,36 @@ describe('applyStatus', () => {
     [0.99, 5],
   ])('Confuso com o sorteio %f dura %i turnos', (roll, turns) => {
     const turn = context(idle({ statusSlug: 'burn' }), sequence(roll));
-    applyStatus(turn, 'enemy', 'confusion');
+    applyStatus(turn, { side: 'enemy', position: 0 }, 'confusion');
     expect(turn.state.enemy.team[0]!.confusionTurns).toBe(turns);
     expect(turn.events).toEqual([
-      { type: 'status_applied', side: 'enemy', status: 'confusion' },
+      {
+        type: 'status_applied',
+        side: 'enemy',
+        position: 0,
+        status: 'confusion',
+      },
     ]);
   });
 
   it('não confunde quem já está Confuso', () => {
     const turn = context(idle({ confusionTurns: 2 }));
-    applyStatus(turn, 'enemy', 'confusion');
+    applyStatus(turn, { side: 'enemy', position: 0 }, 'confusion');
     expect(turn.state.enemy.team[0]!.confusionTurns).toBe(2);
-    expect(turn.events).toEqual([{ type: 'effect_failed', side: 'enemy' }]);
+    expect(turn.events).toEqual([
+      { type: 'effect_failed', side: 'enemy', position: 0 },
+    ]);
   });
 
   it('prende', () => {
     const turn = context(idle());
-    applyStatus(turn, 'enemy', 'trapped');
+    applyStatus(turn, { side: 'enemy', position: 0 }, 'trapped');
     expect(turn.state.enemy.team[0]!.isTrapped).toBe(true);
   });
 
   it('amedronta', () => {
     const turn = context(idle());
-    applyStatus(turn, 'enemy', 'fear');
+    applyStatus(turn, { side: 'enemy', position: 0 }, 'fear');
     expect(turn.state.enemy.team[0]!.isFeared).toBe(true);
   });
 });

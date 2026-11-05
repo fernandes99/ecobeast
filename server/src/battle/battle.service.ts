@@ -26,7 +26,7 @@ import {
   type NewCreature,
 } from '../domain/rules/creature-factory.js';
 import { MAX_LEVEL } from '../domain/rules/xp-curve.js';
-import { firstFreePartySlot } from '../domain/team/party.js';
+import { firstFreePartySlot, PARTY_SIZE } from '../domain/team/party.js';
 import { ExplorationStore } from '../exploration/exploration.store.js';
 import {
   type CreaturePlace,
@@ -69,6 +69,11 @@ interface Team {
   creatures: Combatant[];
   bag: BattleBagItem[];
   coins: number;
+}
+
+interface EnemyChoice {
+  speciesId: number;
+  level: number;
 }
 
 interface Enemy extends WildCreature {
@@ -151,16 +156,21 @@ export class BattleService {
     private readonly config: ConfigService<Env, true>,
   ) {}
 
+  /** A batalha de teste: a equipe inimiga e as vagas vêm do corpo. */
   async start(
     userId: string,
-    speciesId: number,
-    level: number,
+    choices: EnemyChoice[],
+    slots = 1,
   ): Promise<BattleResponseDto> {
     if (!this.config.get('ENABLE_TEST_BATTLE', { infer: true })) {
       throw new NotFoundException('Rota não encontrada.');
     }
     const team = await this.loadTeam(userId);
-    return this.begin(userId, team, await this.createEnemy(speciesId, level));
+    const enemies: Enemy[] = [];
+    for (const { speciesId, level } of choices) {
+      enemies.push(await this.createEnemy(speciesId, level));
+    }
+    return this.begin(userId, team, enemies, false, slots);
   }
 
   /** O inimigo sai do hexágono do Domador; a equipe é conferida antes de gastá-lo. */
@@ -176,7 +186,7 @@ export class BattleService {
     const godMode =
       god && this.config.get('ENABLE_TEST_BATTLE', { infer: true });
     return {
-      ...(await this.begin(userId, team, enemy, godMode)),
+      ...(await this.begin(userId, team, [enemy], godMode)),
       spawn_id: spawn.id,
     };
   }
@@ -213,13 +223,16 @@ export class BattleService {
    * Da leitura à escrita no `store` não há `await`: dois pedidos ao mesmo
    * tempo não jogam o mesmo turno, nem gravam o fim duas vezes.
    */
-  async act(userId: string, action: BattleAction): Promise<BattleResponseDto> {
+  async act(
+    userId: string,
+    actions: BattleAction[],
+  ): Promise<BattleResponseDto> {
     const battle = this.store.get(userId);
     if (!battle) throw new NotFoundException(NO_BATTLE);
 
     const outcome = applyAction(
       battle.state,
-      action,
+      actions,
       battle.catalog,
       secureRandom,
     );
@@ -237,7 +250,7 @@ export class BattleService {
     const capturedTo = await this.saveTeam(
       userId,
       outcome.state,
-      battle.wild,
+      battle.wilds,
       progressed,
     );
     if (outcome.state.result === 'victory') {
@@ -315,21 +328,31 @@ export class BattleService {
   private async begin(
     userId: string,
     team: Team,
-    { combatant, ...wild }: Enemy,
+    enemies: Enemy[],
     godMode = false,
+    slots = 1,
   ): Promise<BattleResponseDto> {
     const catalog = await loadBattleCatalog(this.prisma);
     const { state, events } = startBattle(
       team.creatures,
-      [combatant],
+      enemies.map(({ combatant }) => combatant),
       CAN_FLEE_WILD,
       catalog,
       secureRandom,
       team.bag,
-      { godMode, coins: team.coins },
+      {
+        godMode,
+        coins: team.coins,
+        slots: { player: slots, enemy: slots },
+        partyFree: PARTY_SIZE - team.creatures.length,
+      },
     );
+    const wilds = enemies.map(({ creature, statIds }) => ({
+      creature,
+      statIds,
+    }));
     // Substitui a batalha anterior, se houver, sem gravar nada dela.
-    this.store.set(userId, { state, catalog, wild });
+    this.store.set(userId, { state, catalog, wilds });
     return toResponse(state, events);
   }
 
@@ -381,12 +404,12 @@ export class BattleService {
   /**
    * Grava HP, status, PP, XP, nível, itens gastos, moedas e o capturado de uma vez. Com `updateMany`,
    * um Domador apagado no meio da luta não encontra nada, e a batalha termina
-   * sem erro. Devolve para onde foi o capturado.
+   * sem erro. Devolve para onde foi o último capturado.
    */
   private async saveTeam(
     userId: string,
     state: BattleState,
-    wild: WildCreature,
+    wilds: WildCreature[],
     progressed: ProgressedCreature[],
   ): Promise<CapturedTo | null> {
     const progressByUid = new Map(
@@ -399,9 +422,11 @@ export class BattleService {
       select: { id: true, slug: true },
     });
     const statusIds = new Map(conditions.map(({ id, slug }) => [slug, id]));
-    const place =
-      state.result === 'captured' ? await this.capturePlace(userId) : null;
-    const enemy = state.enemy.team[state.enemy.activeIndex]!;
+    // A captura vale em qualquer fim, até numa derrota depois dela.
+    const captured = state.enemy.team.flatMap((enemy, index) =>
+      enemy.captured ? [{ enemy, wild: wilds[index]! }] : [],
+    );
+    const places = await this.capturePlaces(userId, captured.length);
 
     await this.prisma.$transaction([
       ...state.player.team.flatMap((creature) => {
@@ -459,38 +484,48 @@ export class BattleService {
             }),
           ]
         : []),
-      ...(place
-        ? [
-            this.prisma.creatureInstance.create({
-              data: {
-                ...newCreatureData(
-                  userId,
-                  capturedCreature(wild, enemy),
-                  wild.statIds,
-                  place,
-                ),
-                statusConditionId: enemy.statusSlug
-                  ? statusIds.get(enemy.statusSlug)!
-                  : null,
-              },
-            }),
-          ]
-        : []),
+      ...places.map((place, index) => {
+        const { enemy, wild } = captured[index]!;
+        return this.prisma.creatureInstance.create({
+          data: {
+            ...newCreatureData(
+              userId,
+              capturedCreature(wild, enemy),
+              wild.statIds,
+              place,
+            ),
+            statusConditionId: enemy.statusSlug
+              ? statusIds.get(enemy.statusSlug)!
+              : null,
+          },
+        });
+      }),
     ]);
-    return place?.location ?? null;
+    return places.at(-1)?.location ?? null;
   }
 
-  /** A vaga do capturado. Todo Domador tem equipe: sem ela, ele foi apagado. */
-  private async capturePlace(userId: string): Promise<CreaturePlace | null> {
+  /**
+   * A vaga de cada capturado, em ordem: a equipe enquanto houver lugar, e
+   * depois o Santuário. Todo Domador tem equipe: sem ela, ele foi apagado, e
+   * ninguém é gravado.
+   */
+  private async capturePlaces(
+    userId: string,
+    count: number,
+  ): Promise<CreaturePlace[]> {
+    if (count === 0) return [];
     const party = await this.prisma.creatureInstance.findMany({
       where: { playerId: userId, location: 'party' },
       select: { partySlot: true },
     });
-    if (party.length === 0) return null;
+    if (party.length === 0) return [];
 
-    const partySlot = firstFreePartySlot(party.map((row) => row.partySlot!));
-    return partySlot === null
-      ? { location: 'storage', partySlot }
-      : { location: 'party', partySlot };
+    const occupied = party.map((row) => row.partySlot!);
+    return Array.from({ length: count }, (): CreaturePlace => {
+      const partySlot = firstFreePartySlot(occupied);
+      if (partySlot === null) return { location: 'storage', partySlot };
+      occupied.push(partySlot);
+      return { location: 'party', partySlot };
+    });
   }
 }

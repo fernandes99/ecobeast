@@ -169,7 +169,9 @@ describe('Rota do mapa de exploração (e2e)', () => {
     const { map } = body as ExplorationBody;
     const stored = app.get(ExplorationStore).get(user.id)!;
     expect(stored.position).toEqual(map.start);
-    expect([...stored.spawns.keys()]).toEqual(map.creatures.map(({ id }) => id));
+    expect([...stored.spawns.keys()]).toEqual(
+      map.creatures.map(({ id }) => id),
+    );
   });
 
   it('uma exploração nova substitui a anterior', async () => {

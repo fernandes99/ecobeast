@@ -34,6 +34,7 @@ export function makeCombatant(overrides: Partial<Combatant> = {}): Combatant {
     skills: [],
     foughtBy: [],
     xpEarned: 0,
+    captured: false,
     ...overrides,
   };
 }
@@ -123,7 +124,7 @@ export function always(value: number): Random {
 /** `applyAction` que falha o teste se a ação for recusada. */
 export function play(
   state: BattleState,
-  action: BattleAction,
+  action: BattleAction | BattleAction[],
   catalog: BattleCatalog,
   random: Random = always(0.5),
 ): BattleOutcome {
@@ -143,36 +144,55 @@ export function eventsOf<Type extends BattleEvent['type']>(
 }
 
 /**
- * Uma batalha em andamento, com a primeira criatura de cada lado em campo. O
- * inimigo em campo sem `foughtBy` começa com quem está em campo do outro lado,
- * como no `startBattle`.
+ * Uma batalha em andamento, com as primeiras criaturas de cada lado em campo,
+ * uma por vaga. Cada inimigo em campo sem `foughtBy` começa com quem está em
+ * campo do outro lado, como no `startBattle`.
  */
 export function makeState(
   player: Combatant | Combatant[],
   enemy: Combatant | Combatant[],
   overrides: Partial<BattleState> = {},
+  slots: { player: number; enemy: number } = { player: 1, enemy: 1 },
 ): BattleState {
+  const side = (team: Combatant[], count: number) => ({
+    team,
+    activeIndices: Array.from({ length: count }, (_, position) =>
+      position < team.length ? position : null,
+    ),
+  });
   const state: BattleState = {
     phase: 'choose_action',
     result: null,
     turn: 1,
     canFlee: true,
-    player: { team: [player].flat(), activeIndex: 0 },
-    enemy: { team: [enemy].flat(), activeIndex: 0 },
+    player: side([player].flat(), slots.player),
+    enemy: side([enemy].flat(), slots.enemy),
+    pendingPositions: [],
     bag: [],
     godMode: false,
     coins: 0,
     coinsChange: 0,
+    partyFree: 0,
     ...overrides,
   };
-  const index = state.enemy.activeIndex;
-  const facing = state.enemy.team[index];
-  if (facing && facing.foughtBy.length === 0) {
-    // Uma cópia: a criatura recebida pode estar em outros testes.
-    state.enemy.team[index] = {
-      ...facing,
-      foughtBy: [state.player.activeIndex],
-    };
+  if (state.phase === 'choose_next' && !overrides.pendingPositions) {
+    // Como no fim do turno: as vagas de quem desmaiou esperam quem entra.
+    state.pendingPositions = state.player.activeIndices.flatMap(
+      (index, position) =>
+        index !== null && state.player.team[index]!.currentHp === 0
+          ? [position]
+          : [],
+    );
+  }
+  const facing = state.player.activeIndices.filter(
+    (index): index is number => index !== null,
+  );
+  for (const index of state.enemy.activeIndices) {
+    const creature = index === null ? undefined : state.enemy.team[index];
+    if (creature && creature.foughtBy.length === 0) {
+      // Uma cópia: a criatura recebida pode estar em outros testes.
+      state.enemy.team[index!] = { ...creature, foughtBy: [...facing] };
+    }
   }
   return state;
 }

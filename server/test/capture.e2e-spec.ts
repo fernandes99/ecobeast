@@ -181,7 +181,13 @@ describe('Captura (e2e)', () => {
       const body = await capture(user, true);
 
       expect(body.events).toEqual([
-        { type: 'capture_attempted', item_id: sphere.id, success: true },
+        {
+          type: 'capture_attempted',
+          item_id: sphere.id,
+          success: true,
+          target: 0,
+          captured_to: 'party',
+        },
         { type: 'battle_ended', result: 'captured' },
       ]);
       expect(body.battle.result).toBe('captured');
@@ -205,7 +211,7 @@ describe('Captura (e2e)', () => {
     it('grava os Genes, o Temperamento, o Traço e o gênero do inimigo', async () => {
       const user = await strongUser();
       await user.start().expect(201);
-      const { creature } = stored(user).wild;
+      const { creature } = stored(user).wilds[0]!;
 
       await capture(user, true);
 
@@ -317,7 +323,7 @@ describe('Captura (e2e)', () => {
       const user = await strongUser();
       await user.start().expect(201);
       force(user, true);
-      const { wild } = stored(user);
+      const wild = stored(user).wilds[0]!;
       wild.statIds = { ...wild.statIds, hp: -1 };
 
       await user.act(CAPTURE()).expect(500);
@@ -338,6 +344,8 @@ describe('Captura (e2e)', () => {
         type: 'capture_attempted',
         item_id: sphere.id,
         success: false,
+        target: 0,
+        captured_to: null,
       });
       expect(body.events.map((event) => event.type)).toContain('skill_used');
       expect(body.battle.phase).toBe('choose_action');

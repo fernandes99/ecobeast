@@ -4,7 +4,7 @@ import type { NewCreature } from '../domain/rules/creature-factory.js';
 import { toPlayerDto } from '../player/player.mapper.js';
 import {
   BattleCreatureRow,
-  toBattleAction,
+  toBattleActions,
   toBattleDto,
   toCombatant,
   toEnemyCombatant,
@@ -64,18 +64,32 @@ function creature(
   };
 }
 
-describe('toBattleAction', () => {
-  it('leva a Esfera da captura', () => {
-    expect(toBattleAction({ type: 'capture', item_id: 1 })).toEqual({
-      type: 'capture',
-      item_id: 1,
-    });
+describe('toBattleActions', () => {
+  it('leva a Esfera da captura, na posição 0 sem ela', () => {
+    expect(toBattleActions({ type: 'capture', item_id: 1 })).toEqual([
+      { type: 'capture', position: 0, item_id: 1 },
+    ]);
   });
 
   it('leva o item e o alvo da ação', () => {
-    expect(toBattleAction({ type: 'item', item_id: 4, team_index: 1 })).toEqual(
-      { type: 'item', item_id: 4, team_index: 1 },
-    );
+    expect(
+      toBattleActions({ type: 'item', item_id: 4, team_index: 1 }),
+    ).toEqual([{ type: 'item', position: 0, item_id: 4, team_index: 1 }]);
+  });
+
+  it('leva uma ação por vaga, com a posição e o alvo', () => {
+    expect(
+      toBattleActions({
+        type: undefined as never,
+        actions: [
+          { type: 'skill', slot: 2, position: 0, target: 1 },
+          { type: 'emergency', position: 1 },
+        ],
+      }),
+    ).toEqual([
+      { type: 'skill', position: 0, slot: 2, target: 1 },
+      { type: 'emergency', position: 1 },
+    ]);
   });
 });
 
@@ -158,6 +172,7 @@ describe('toEnemyCombatant', () => {
       skills: [{ skillId: 3, currentPp: 25 }],
       foughtBy: [],
       xpEarned: 0,
+      captured: false,
     });
   });
 });
@@ -189,12 +204,23 @@ describe('toBattleDto', () => {
   }
 
   it('monta o JSON do que o jogador vê', () => {
+    const wild = {
+      species_id: 7,
+      level: 4,
+      hp: 9,
+      max_hp: 18,
+      status: null,
+      confused: true,
+      stages: { ...noStages(), def: -1 },
+    };
     expect(toBattleDto(state())).toEqual({
       phase: 'choose_action',
       result: null,
       turn: 3,
       can_flee: true,
       player: {
+        active_indices: [0],
+        pending_positions: [],
         active_index: 0,
         team: [
           {
@@ -212,15 +238,8 @@ describe('toBattleDto', () => {
         items: [],
       },
       enemy: {
-        active: {
-          species_id: 7,
-          level: 4,
-          hp: 9,
-          max_hp: 18,
-          status: null,
-          confused: true,
-          stages: { ...noStages(), def: -1 },
-        },
+        actives: [wild],
+        active: wild,
         team_size: 1,
         fainted: 0,
       },
@@ -251,9 +270,9 @@ describe('toBattleDto', () => {
     const active = makeCombatant({ creatureUid: null, speciesId: 7 });
     const dto = toBattleDto({
       ...state(),
-      enemy: { team: [fallen, active, bench], activeIndex: 1 },
+      enemy: { team: [fallen, active, bench], activeIndices: [1] },
     });
-    expect(dto.enemy.active.species_id).toBe(7);
+    expect(dto.enemy.active!.species_id).toBe(7);
     expect(dto.enemy.team_size).toBe(3);
     expect(dto.enemy.fainted).toBe(1);
     expect(JSON.stringify(dto)).not.toContain('55');

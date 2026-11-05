@@ -306,6 +306,7 @@ describe('Rotas da batalha (e2e)', () => {
       });
       expect(Object.keys(battle.enemy).sort()).toEqual([
         'active',
+        'actives',
         'fainted',
         'team_size',
       ]);
@@ -425,6 +426,7 @@ describe('Rotas da batalha (e2e)', () => {
         expect(events[0]).toMatchObject({
           type: 'creature_entered',
           side: 'player',
+          position: 0,
           hp: 120,
           status: null,
         });

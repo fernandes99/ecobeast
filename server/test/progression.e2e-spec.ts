@@ -699,8 +699,7 @@ describe('XP e nível depois da luta (e2e)', () => {
   describe('moedas (progression/05)', () => {
     function coinEvents(events: BattleEvent[]) {
       return events.filter(
-        (event) =>
-          event.type === 'coins_gained' || event.type === 'coins_lost',
+        (event) => event.type === 'coins_gained' || event.type === 'coins_lost',
       );
     }
 
@@ -722,7 +721,9 @@ describe('XP e nível depois da luta (e2e)', () => {
 
       expect(last.battle.result).toBe('victory');
       // Selvagem 1 contra 30: 20 × 1 ÷ 30 dá menos de 1, e o mínimo é 1.
-      expect(coinEvents(events)).toEqual([{ type: 'coins_gained', amount: 1 }]);
+      expect(coinEvents(events)).toEqual([
+        { type: 'coins_gained', amount: 1, species_id: RUVO },
+      ]);
       expect(await coinsOf(user)).toBe(before + 1);
       const me = await user.me().expect(200);
       expect(me.body.player.coins).toBe(before + 1);
@@ -758,7 +759,9 @@ describe('XP e nível depois da luta (e2e)', () => {
       const user = await newUser({ ...LEVEL_30, currentHp: 1 });
       await setCoins(user, 3);
       const { events } = await playOut(user, await user.start(STRONG_ENEMY));
-      expect(coinEvents(events)).toEqual([{ type: 'coins_lost', amount: 3 }]);
+      expect(coinEvents(events)).toEqual([
+        { type: 'coins_lost', amount: 3, species_ids: [RUVO] },
+      ]);
       expect(await coinsOf(user)).toBe(0);
     });
 

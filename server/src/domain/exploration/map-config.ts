@@ -31,13 +31,13 @@ export const DEFAULT_MAP_CONFIG: MapConfig = {
   tileCount: 10000,
   edgeRoughness: 200, // 0 = Hexagano perfeito nas bordas
   noiseScale: 0.05,
-  waterFraction: 0.20,
+  waterFraction: 0.2,
   deepFraction: 0.5,
-  wetLimit: 0.50,
+  wetLimit: 0.5,
   stoneFraction: 0.15,
-  hillFrom: 0.60,
+  hillFrom: 0.6,
   mountainFrom: 0.95,
   islandChance: 0.05,
-  detailChance: 0.20,
+  detailChance: 0.2,
   cleanupPasses: 3,
 };

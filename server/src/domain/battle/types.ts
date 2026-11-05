@@ -40,6 +40,8 @@ export interface Combatant {
   foughtBy: number[];
   /** Só no jogador: o XP somado nesta luta, gravado no fim da vitória. */
   xpEarned: number;
+  /** Só no inimigo: capturado nesta luta; ele sai dela, como um desmaiado. */
+  captured: boolean;
 }
 
 export interface BattleSkillEffect {
@@ -91,10 +93,21 @@ export interface BattleCatalog {
 export type BattlePhase = 'choose_action' | 'choose_next' | 'ended';
 export type BattleResult = 'victory' | 'defeat' | 'fled' | 'captured';
 export type SideSlug = 'player' | 'enemy';
+export type CapturedTo = 'party' | 'storage';
 
 export interface BattleSide {
   team: Combatant[];
-  activeIndex: number;
+  /**
+   * Por posição em campo, da esquerda para a direita: o índice na equipe de
+   * quem está ali, ou nulo com a vaga vazia. O tamanho é o número de vagas.
+   */
+  activeIndices: (number | null)[];
+}
+
+/** Um lugar em campo (.specs/battle-slots/architecture.md, "Vagas"). */
+export interface Spot {
+  side: SideSlug;
+  position: number;
 }
 
 /** Um item da Mochila na luta; `used` é o que o fim dela grava no banco. */
@@ -112,6 +125,8 @@ export interface BattleState {
   canFlee: boolean;
   player: BattleSide;
   enemy: BattleSide;
+  /** No `choose_next`: as vagas do jogador que esperam quem entra. */
+  pendingPositions: number[];
   bag: BattleBagItem[];
   /** Depuração: todo golpe do jogador que acerta derruba o inimigo. */
   godMode: boolean;
@@ -119,80 +134,131 @@ export interface BattleState {
   coins: number;
   /** O que o fim da luta soma às moedas; negativo na derrota. */
   coinsChange: number;
+  /** Vagas livres na equipe: cada captura ocupa uma, e depois vai para o Santuário. */
+  partyFree: number;
 }
 
-/** Ações e eventos já têm o formato da API: passam sem tradução. */
-export type BattleAction =
-  | { type: 'skill'; slot: number }
-  | { type: 'emergency' }
+/**
+ * Ações e eventos já têm o formato da API: passam sem tradução. `position` é a
+ * vaga de quem age, 0 por padrão. `target` é a posição do adversário e só é
+ * obrigatório com mais de um de pé.
+ */
+export type BattleAction = { position?: number } & (
+  | { type: 'skill'; slot: number; target?: number }
+  | { type: 'emergency'; target?: number }
   | { type: 'flee' }
   | { type: 'switch'; team_index: number }
   | { type: 'item'; item_id: number; team_index: number }
-  | { type: 'capture'; item_id: number };
+  | { type: 'capture'; item_id: number; target?: number }
+);
 
 export type CannotActReason = 'fear' | 'freeze' | 'sleep' | 'paralysis';
 
-/** `side` é sempre quem sofre o evento; em `missed`, quem errou. */
+/**
+ * `side` e `position` são sempre de quem sofre o evento; em `missed`, de quem
+ * errou.
+ */
 export type BattleEvent =
   | { type: 'battle_started' }
   | {
       type: 'creature_entered';
       side: SideSlug;
+      position: number;
+      team_index: number;
       species_id: number;
       level: number;
       max_hp: number;
       hp: number;
       status: string | null;
     }
-  | { type: 'skill_used'; side: SideSlug; skill_id: number | null }
-  | { type: 'cannot_act'; side: SideSlug; reason: CannotActReason }
-  | { type: 'woke_up'; side: SideSlug }
-  | { type: 'thawed'; side: SideSlug }
-  | { type: 'confused_hit'; side: SideSlug; damage: number; hp: number }
-  | { type: 'missed'; side: SideSlug }
-  | { type: 'blocked'; side: SideSlug }
-  | { type: 'no_effect'; side: SideSlug }
-  | { type: 'effect_failed'; side: SideSlug }
+  | {
+      type: 'skill_used';
+      side: SideSlug;
+      position: number;
+      skill_id: number | null;
+    }
+  | {
+      type: 'cannot_act';
+      side: SideSlug;
+      position: number;
+      reason: CannotActReason;
+    }
+  | { type: 'woke_up'; side: SideSlug; position: number }
+  | { type: 'thawed'; side: SideSlug; position: number }
+  | {
+      type: 'confused_hit';
+      side: SideSlug;
+      position: number;
+      damage: number;
+      hp: number;
+    }
+  | { type: 'missed'; side: SideSlug; position: number }
+  | { type: 'blocked'; side: SideSlug; position: number }
+  | { type: 'no_effect'; side: SideSlug; position: number }
+  | { type: 'effect_failed'; side: SideSlug; position: number }
   | {
       type: 'damage';
       side: SideSlug;
+      position: number;
       damage: number;
       hp: number;
       multiplier: number;
       is_critical: boolean;
     }
-  | { type: 'recoil'; side: SideSlug; damage: number; hp: number }
-  | { type: 'healed'; side: SideSlug; amount: number; hp: number }
-  | { type: 'status_applied'; side: SideSlug; status: string }
+  | {
+      type: 'recoil';
+      side: SideSlug;
+      position: number;
+      damage: number;
+      hp: number;
+    }
+  | {
+      type: 'healed';
+      side: SideSlug;
+      position: number;
+      amount: number;
+      hp: number;
+    }
+  | { type: 'status_applied'; side: SideSlug; position: number; status: string }
   | {
       type: 'status_damage';
       side: SideSlug;
+      position: number;
       status: string;
       damage: number;
       hp: number;
     }
-  | { type: 'status_ended'; side: SideSlug; status: string }
+  | { type: 'status_ended'; side: SideSlug; position: number; status: string }
   | {
       type: 'stat_changed';
       side: SideSlug;
+      position: number;
       stat: StageSlug;
       stages: number;
       value: number;
     }
-  | { type: 'fainted'; side: SideSlug }
+  | { type: 'fainted'; side: SideSlug; position: number }
   | { type: 'xp_gained'; team_index: number; amount: number }
-  | { type: 'coins_gained'; amount: number }
-  | { type: 'coins_lost'; amount: number }
+  | { type: 'coins_gained'; amount: number; species_id: number }
+  | { type: 'coins_lost'; amount: number; species_ids: number[] }
   | {
       type: 'item_used';
       side: 'player';
+      position: number;
       item_id: number;
       team_index: number;
       healed: number;
       hp: number;
       cured_status: string | null;
     }
-  | { type: 'capture_attempted'; item_id: number; success: boolean }
+  | {
+      type: 'capture_attempted';
+      item_id: number;
+      success: boolean;
+      target: number;
+      captured_to: CapturedTo | null;
+    }
+  | { type: 'creature_left'; side: SideSlug; position: number }
   | { type: 'flee_failed' }
   | { type: 'battle_ended'; result: BattleResult };
 

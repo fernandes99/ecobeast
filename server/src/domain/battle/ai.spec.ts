@@ -50,27 +50,62 @@ describe('chooseEnemyAction', () => {
     const attacker = enemy(2, 1);
     attacker.skills[0]!.currentPp = 0;
     for (const roll of [0, 0.5, 0.99]) {
-      expect(choose(attacker, 19, roll)).toEqual({ type: 'skill', slot: 2 });
+      expect(choose(attacker, 19, roll)).toEqual({
+        type: 'skill',
+        slot: 2,
+        position: 0,
+        target: 0,
+      });
     }
   });
 
   it('o peso é o dano como porcentagem do HP atual do alvo', () => {
     // Arranhão causa 5 em 100 de HP: peso 5, contra 20 do suporte.
     const attacker = enemy(1, 3);
-    expect(choose(attacker, 100, 0.19)).toEqual({ type: 'skill', slot: 1 });
-    expect(choose(attacker, 100, 0.21)).toEqual({ type: 'skill', slot: 2 });
+    expect(choose(attacker, 100, 0.19)).toEqual({
+      type: 'skill',
+      slot: 1,
+      position: 0,
+      target: 0,
+    });
+    expect(choose(attacker, 100, 0.21)).toEqual({
+      type: 'skill',
+      slot: 2,
+      position: 0,
+      target: 0,
+    });
   });
 
   it('o peso não passa de 100', () => {
     const attacker = enemy(2, 3);
-    expect(choose(attacker, 1, 0.82)).toEqual({ type: 'skill', slot: 1 });
-    expect(choose(attacker, 1, 0.84)).toEqual({ type: 'skill', slot: 2 });
+    expect(choose(attacker, 1, 0.82)).toEqual({
+      type: 'skill',
+      slot: 1,
+      position: 0,
+      target: 0,
+    });
+    expect(choose(attacker, 1, 0.84)).toEqual({
+      type: 'skill',
+      slot: 2,
+      position: 0,
+      target: 0,
+    });
   });
 
   it('o peso não fica abaixo de 1', () => {
     const attacker = enemy(1, 3);
-    expect(choose(attacker, 100000, 0.04)).toEqual({ type: 'skill', slot: 1 });
-    expect(choose(attacker, 100000, 0.05)).toEqual({ type: 'skill', slot: 2 });
+    expect(choose(attacker, 100000, 0.04)).toEqual({
+      type: 'skill',
+      slot: 1,
+      position: 0,
+      target: 0,
+    });
+    expect(choose(attacker, 100000, 0.05)).toEqual({
+      type: 'skill',
+      slot: 2,
+      position: 0,
+      target: 0,
+    });
   });
 
   it('efetividade 0 tem peso 1', () => {
@@ -79,10 +114,14 @@ describe('chooseEnemyAction', () => {
     expect(choose(attacker, 19, 0.04, immune)).toEqual({
       type: 'skill',
       slot: 1,
+      position: 0,
+      target: 0,
     });
     expect(choose(attacker, 19, 0.05, immune)).toEqual({
       type: 'skill',
       slot: 2,
+      position: 0,
+      target: 0,
     });
   });
 
@@ -95,6 +134,6 @@ describe('chooseEnemyAction', () => {
         catalog,
         sequence(),
       ),
-    ).toEqual({ type: 'emergency' });
+    ).toEqual({ type: 'emergency', position: 0, target: 0 });
   });
 });

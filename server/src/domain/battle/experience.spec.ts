@@ -70,7 +70,7 @@ describe('quem esteve em campo', () => {
       ATTACK,
       catalog,
     );
-    expect(state.enemy.activeIndex).toBe(1);
+    expect(state.enemy.activeIndices[0]).toBe(1);
     expect(state.enemy.team[1]!.foughtBy).toEqual([0]);
   });
 });
@@ -99,7 +99,7 @@ describe('XP ao derrubar o inimigo', () => {
   it('dois que entraram em campo dividem', () => {
     const { state, events } = play(
       makeState([fighter(), fighter()], weakWild({ foughtBy: [0, 1] }), {
-        player: { team: [fighter(), fighter()], activeIndex: 1 },
+        player: { team: [fighter(), fighter()], activeIndices: [1] },
       }),
       ATTACK,
       catalog,
@@ -118,7 +118,7 @@ describe('XP ao derrubar o inimigo', () => {
       makeState([fighter(), fighter()], weakWild({ foughtBy: [0, 1] }), {
         player: {
           team: [fighter({ currentHp: 0 }), fighter()],
-          activeIndex: 1,
+          activeIndices: [1],
         },
       }),
       ATTACK,
@@ -149,7 +149,7 @@ describe('XP ao derrubar o inimigo', () => {
         {
           player: {
             team: [fighter({ level: 100 }), fighter()],
-            activeIndex: 1,
+            activeIndices: [1],
           },
         },
       ),

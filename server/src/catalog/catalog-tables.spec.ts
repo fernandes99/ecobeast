@@ -51,7 +51,9 @@ describe('CATALOG_TABLES', () => {
 
 describe('carga inicial dos biomas (biome-encounters/01)', () => {
   const read = <T>(name: string) =>
-    JSON.parse(readFileSync(join(SEED_DATA_DIR, `${name}.json`), 'utf8')) as T[];
+    JSON.parse(
+      readFileSync(join(SEED_DATA_DIR, `${name}.json`), 'utf8'),
+    ) as T[];
   const biomes = read<{ id: number; slug: string }>('biomes');
   const rates = read<{ species_id: number; biome_id: number; rate: number }>(
     'species_biomes',

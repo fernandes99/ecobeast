@@ -56,6 +56,7 @@ describe('golpe de emergência', () => {
     expect(eventsOf(events, 'skill_used')[0]).toEqual({
       type: 'skill_used',
       side: 'player',
+      position: 0,
       skill_id: null,
     });
     expect(state.enemy.team[0]!.currentHp).toBe(15);
@@ -71,7 +72,7 @@ describe('golpe de emergência', () => {
     const types = events.map((event) => event.type);
     expect(types.indexOf('recoil')).toBeGreaterThan(types.indexOf('damage'));
     expect(eventsOf(events, 'recoil')).toEqual([
-      { type: 'recoil', side: 'player', damage: 2, hp: 17 },
+      { type: 'recoil', side: 'player', position: 0, damage: 2, hp: 17 },
     ]);
   });
 
@@ -140,7 +141,7 @@ describe('golpe de emergência', () => {
     );
     expect(state.result).toBe('defeat');
     expect(eventsOf(events, 'fainted')).toEqual([
-      { type: 'fainted', side: 'player' },
+      { type: 'fainted', side: 'player', position: 0 },
     ]);
   });
 
@@ -164,6 +165,7 @@ describe('golpe de emergência', () => {
     expect(eventsOf(events, 'skill_used')[0]).toEqual({
       type: 'skill_used',
       side: 'enemy',
+      position: 0,
       skill_id: null,
     });
     expect(state.enemy.team[0]!.currentHp).toBe(17);

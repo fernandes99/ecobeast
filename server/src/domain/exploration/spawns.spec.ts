@@ -372,7 +372,9 @@ describe('rollSpawns', () => {
       ...CONFIG,
       count: 5000,
     });
-    const byKey = new Map(map.tiles.map((tile) => [`${tile.q},${tile.r}`, tile]));
+    const byKey = new Map(
+      map.tiles.map((tile) => [`${tile.q},${tile.r}`, tile]),
+    );
     const eluBiomes = new Set(
       spawns
         .filter(({ speciesId }) => speciesId === ELU.speciesId)

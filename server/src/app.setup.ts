@@ -5,10 +5,19 @@ import {
 } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { apiReference } from '@scalar/nestjs-api-reference';
+import type { ValidationError } from 'class-validator';
 import type { Request, Response } from 'express';
 
 export const API_PREFIX = 'v1';
 export const OPENAPI_PATH = '/docs/openapi.json';
+
+/** As mensagens de um campo e, numa lista de objetos, as de cada item. */
+function messagesOf(error: ValidationError): string[] {
+  return [
+    ...Object.values(error.constraints ?? {}),
+    ...(error.children ?? []).flatMap(messagesOf),
+  ];
+}
 
 /**
  * O que main.ts e os testes e2e montam igual: prefixo /v1 (menos /health e as
@@ -25,11 +34,7 @@ export function configureApp(app: INestApplication): void {
       transform: true,
       // Um texto só, com as mensagens dos DTOs (já em pt-BR).
       exceptionFactory: (errors) =>
-        new BadRequestException(
-          errors
-            .flatMap((error) => Object.values(error.constraints ?? {}))
-            .join('; '),
-        ),
+        new BadRequestException(errors.flatMap(messagesOf).join('; ')),
     }),
   );
 
