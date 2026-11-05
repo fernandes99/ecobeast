@@ -22,6 +22,7 @@ Tipos usados abaixo: `int`, `float`, `string`, `bool`. `FK → tabela` indica a 
 elements ─┬─< element_efficacy (atacante × defensor)
           ├─< species_elements >── species ──< species_stats >── stats
           ├─< skills ──< skill_effects ──> effect_types, status_conditions, stats, skill_targets
+          │     └──> area_shapes, ground_effects ──> status_conditions
           └─< status_condition_immunities >── status_conditions
 
 species ──< species_traits >── traits
@@ -89,6 +90,10 @@ temperaments ──> stats (aumentado, diminuído)
 **`skill_categories`** — `id`, `slug` (`physical`, `special`, `support`), `name`.
 
 **`skill_targets`** — `id`, `slug` (`enemy`, `self`, `all`), `name`.
+
+**`area_shapes`** — `id`, `slug` (`single`, `line`), `name`: a forma da área de uma Técnica no tabuleiro ([board-battle/01](../board-battle/01-skill-areas.md)). O jogo só aceita as formas que sabe desenhar.
+
+**`ground_effects`** — `id`, `slug`, `name`, `damage_percent` (1–100, anulável: dano em % do HP máximo), `status_condition_id` (FK anulável) e `color_hex`: o que uma marca no chão do tabuleiro faz a quem está nela, depois de cada vez da fila ([board-battle/01](../board-battle/01-skill-areas.md)).
 
 **`skill_learn_methods`** — `id`, `slug` (`level_up`, `evolution`, `teachable`), `name`.
 
@@ -174,6 +179,11 @@ temperaments ──> stats (aumentado, diminuído)
 | makes_contact     | bool   |                                              |
 | min_hits          | int    | 1 normal                                     |
 | max_hits          | int    | ≥ `min_hits`                                 |
+| area_shape_id     | int    | FK → area_shapes; padrão `single`            |
+| range             | int    | 1–6; padrão 1 (com `single`, corpo a corpo)  |
+| pierces           | bool   | Só na `line`: atravessa os inimigos          |
+| ground_effect_id  | int?   | FK → ground_effects: a marca que fica no chão |
+| ground_turns      | int?   | 1–20 vezes da fila; nulo junto com a marca   |
 
 **`skill_effects`** — chave `id`; cada técnica tem zero ou mais efeitos, aplicados na ordem de `sort_order`.
 

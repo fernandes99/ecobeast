@@ -27,6 +27,7 @@ A tela do tabuleiro joga Técnicas, anda e repõe quem cai, mas Mochila, Trocar 
 - **RF-05:** As ações da Mochila, de troca e de fuga mandam o `move`, quando ele andou, menos a fuga.
 - **RF-06:** Explorar zona abre sempre a luta no tabuleiro. "Tabuleiro: ligado/desligado" sai do menu de depuração, e o "Teste 2×2" e o "Teste 3×3" ficam.
 - **RF-07:** A luta antiga não abre por nenhuma tela. A rota `&"battle"` do `Router` e as rotas `/v1/me/battle` continuam existindo. Em `/docs`, as rotas antigas ficam marcadas como legado.
+- **RF-08:** Os e2e da luta antiga (`battle`, `battle-items`, `capture` e `progression` em `server/test/`) saem do `npm run test:e2e` e passam para `npm run test:e2e:legacy`, para quem mexer no código antigo. Antes disso, os e2e da luta no tabuleiro cobrem o que eles cobriam depois da luta: HP, PP, status, captura, XP, subida de nível e Evolução. Decisão do dono, em 2026-11-04, para a suíte ficar mais rápida.
 
 ## Critérios de aceite
 
@@ -36,6 +37,7 @@ A tela do tabuleiro joga Técnicas, anda e repõe quem cai, mas Mochila, Trocar 
 - [ ] Fugir com sucesso volta para o mapa, e a falha gasta a vez.
 - [ ] Um encontro de Explorar zona abre o tabuleiro sem nada no menu de depuração.
 - [ ] Nenhuma tela abre `res://screens/battle/battle_screen.tscn`, conferido por busca no código.
+- [ ] `npm run test:e2e` não roda os e2e da luta antiga, e `npm run test:e2e:legacy` roda e passa.
 - [ ] Os testes do servidor passam, e o projeto abre sem erros nem avisos de script.
 
 ## Desenho técnico
@@ -45,6 +47,7 @@ A tela do tabuleiro joga Técnicas, anda e repõe quem cai, mas Mochila, Trocar 
 - `res://screens/board_battle/board_battle_screen.gd`, `board_action_panel.gd` e `board_view.gd`, com as ações e o alvo da Esfera.
 - `res://screens/exploration/exploration_screen.gd` e `.tscn`, com a luta no tabuleiro sempre e o menu de depuração sem o liga e desliga.
 - `server/src/battle/battle.controller.ts`, só com o texto de legado no `/docs`.
+- `server/vitest.config.e2e.ts` e `server/package.json`, com o `test:e2e:legacy`.
 
 **Specs:** `CLAUDE.md` (o escopo atual), `.specs/roadmap.md` e `.specs/battle-screen/README.md`, dizendo que a luta de Explorar zona é a do tabuleiro.
 
@@ -61,6 +64,6 @@ F5, Explorar zona e encontros jogados até o fim: um vencendo, um capturando, um
 
 - [ ] Mochila e Esfera (RF-01 e RF-02).
 - [ ] Trocar e Fugir (RF-03 a RF-05).
-- [ ] Explorar zona no tabuleiro e a luta antiga como legado (RF-06 e RF-07).
+- [ ] Explorar zona no tabuleiro e a luta antiga como legado (RF-06 a RF-08).
 - [ ] Atualizar `CLAUDE.md`, o roadmap e a battle-screen.
 - [ ] Rodar a verificação, marcar a spec e o README como `concluída` e fazer o commit `feat: Mochila, Esfera, troca e fuga no tabuleiro`.

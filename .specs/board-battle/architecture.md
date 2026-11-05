@@ -161,7 +161,7 @@ A resposta é `{battle, events}`, como hoje, e `battle` acrescenta ao DTO de hoj
 
 Em `client/`:
 
-- **Modelos:** `BoardBattleView`, `BoardTurn` e `GroundMark` em `res://domain/models/`. A `Skill` ganha `area_shape`, `range`, `pierces`, `ground_effect_id` e `ground_turns`, e o catálogo ganha `GroundEffect`.
+- **Modelos:** `BoardBattleView`, `BoardTurn` e `GroundMark` em `res://domain/models/`. A `Skill` ganha `area_shape`, `area_range` (a coluna `range`, com outro nome para não esconder o `range()` do GDScript), `pierces`, `ground_effect_id` e `ground_turns`, e o catálogo ganha `GroundEffect`.
 - **Geometria:** `res://domain/rules/board_geometry.gd`, com a distância, os vizinhos, os hexágonos alcançáveis e a área de uma Técnica, iguais aos do servidor. Ela só serve para prever o que acender. Quem decide é o servidor.
 - **Tela:** `res://screens/board_battle/`, rota `&"board_battle"` no `Router`. A luta antiga (`res://screens/battle/`) fica como está, e as peças reaproveitáveis vêm de lá: `BattleSkillButton`, `BattleItemsPanel`, `NextCreaturePanel`, `CaptureOverlay`, as telas de subir de nível, Técnica nova e Evolução, `BattleNarrator` (os textos do histórico), `BattleHud`, `IconCircle` e `BattleStyles`.
 - **Hexágonos na tela:** as proporções do hexágono do mapa ([wild-battle/architecture.md](../wild-battle/architecture.md#superfícies)), em 1,5×: 96 × 87 px, com passo de 96 e 63 e linha deslocada em 48. O tabuleiro tem 624 × 465 px e cabe nos 720 de largura. Os hexágonos são cores chapadas, como no print: o meio claro, a área do inimigo em vermelho e a do jogador em verde.

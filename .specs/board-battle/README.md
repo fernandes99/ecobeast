@@ -55,7 +55,7 @@ A luta nova substitui a de hoje em Explorar zona. A luta atual deixa de ser usad
 
 | # | Fase | Entrega | Status |
 | --- | --- | --- | --- |
-| 1 | [01-skill-areas](01-skill-areas.md) | Catálogo: alcance, forma, atravessar e marca no chão das Técnicas, com as 3 primeiras | rascunho |
+| 1 | [01-skill-areas](01-skill-areas.md) | Catálogo: alcance, forma, atravessar e marca no chão das Técnicas, com as 3 primeiras | concluída |
 | 2 | [02-board-engine](02-board-engine.md) | Servidor: o motor do tabuleiro, com fila, andar, áreas, marcas, IA, queda, troca, Esfera, fuga e fim | rascunho |
 | 3 | [03-board-api](03-board-api.md) | Servidor: as rotas da luta no tabuleiro, ao lado das antigas | rascunho |
 | 4 | [04-board-screen](04-board-screen.md) | Jogo: a tela do tabuleiro, com a vez, andar, Técnicas, os selvagens, a entrada depois de uma queda e o histórico, aberta pelo menu de depuração | rascunho |

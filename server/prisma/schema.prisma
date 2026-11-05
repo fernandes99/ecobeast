@@ -171,6 +171,19 @@ model SkillTarget {
   @@schema("ecobeasts")
 }
 
+/// Forma da área de uma Técnica no tabuleiro: um alvo ou linha reta (board-battle/01).
+model AreaShape {
+  id   Int    @id @default(autoincrement())
+  /// CHECK ^[a-z0-9_]+$ (migration board_skill_areas)
+  slug String @unique
+  name String
+
+  skills Skill[]
+
+  @@map("area_shapes")
+  @@schema("ecobeasts")
+}
+
 /// Como uma espécie aprende uma Técnica: por nível, ao evoluir, ensinável.
 model SkillLearnMethod {
   id   Int    @id @default(autoincrement())
@@ -192,11 +205,32 @@ model StatusCondition {
   name       String
   isVolatile Boolean @map("is_volatile")
 
-  immunities   StatusConditionImmunity[]
-  skillEffects SkillEffect[]
-  creatures    CreatureInstance[]
+  immunities    StatusConditionImmunity[]
+  skillEffects  SkillEffect[]
+  creatures     CreatureInstance[]
+  groundEffects GroundEffect[]
 
   @@map("status_conditions")
+  @@schema("ecobeasts")
+}
+
+/// O que uma marca no chão do tabuleiro faz a quem está nela, depois de cada vez (board-battle/01).
+model GroundEffect {
+  id                Int    @id @default(autoincrement())
+  /// CHECK ^[a-z0-9_]+$ (migration board_skill_areas)
+  slug              String @unique
+  name              String
+  /// CHECK 1–100, % do HP máximo (migration board_skill_areas)
+  damagePercent     Int?   @map("damage_percent")
+  statusConditionId Int?   @map("status_condition_id")
+  /// CHECK ^#[0-9A-Fa-f]{6}$ (migration board_skill_areas)
+  colorHex          String @map("color_hex")
+
+  statusCondition StatusCondition? @relation(fields: [statusConditionId], references: [id], onDelete: Restrict)
+  skills          Skill[]
+
+  @@index([statusConditionId])
+  @@map("ground_effects")
   @@schema("ecobeasts")
 }
 
@@ -254,7 +288,7 @@ model Species {
   /// CHECK ≥ 1 (migration init)
   baseXpYield          Int    @map("base_xp_yield")
   /// CHECK 0–100 (migration capture_rate_0_100)
-  captureRate         Int    @map("capture_rate")
+  captureRate          Int    @map("capture_rate")
   /// CHECK −1–1; −1 = sem gênero (migration init)
   genderRatio          Float  @map("gender_ratio")
   /// CHECK ≥ 0 (migration init)
@@ -432,10 +466,19 @@ model Skill {
   minHits         Int     @map("min_hits")
   /// CHECK 1–10 (migration init)
   maxHits         Int     @map("max_hits")
+  areaShapeId     Int     @default(1) @map("area_shape_id")
+  /// CHECK 1–6 (migration board_skill_areas)
+  range           Int     @default(1)
+  pierces         Boolean @default(false)
+  groundEffectId  Int?    @map("ground_effect_id")
+  /// CHECK 1–20, e nulo junto com ground_effect_id (migration board_skill_areas)
+  groundTurns     Int?    @map("ground_turns")
 
   element        Element                 @relation(fields: [elementId], references: [id], onDelete: Restrict)
   skillCategory  SkillCategory           @relation(fields: [skillCategoryId], references: [id], onDelete: Restrict)
   skillTarget    SkillTarget             @relation(fields: [skillTargetId], references: [id], onDelete: Restrict)
+  areaShape      AreaShape               @relation(fields: [areaShapeId], references: [id], onDelete: Restrict)
+  groundEffect   GroundEffect?           @relation(fields: [groundEffectId], references: [id], onDelete: Restrict)
   effects        SkillEffect[]
   learnedBy      SpeciesSkill[]
   creatureSkills CreatureInstanceSkill[]
@@ -443,6 +486,8 @@ model Skill {
   @@index([elementId])
   @@index([skillCategoryId])
   @@index([skillTargetId])
+  @@index([areaShapeId])
+  @@index([groundEffectId])
   @@map("skills")
   @@schema("ecobeasts")
 }

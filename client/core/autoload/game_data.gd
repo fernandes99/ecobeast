@@ -74,6 +74,10 @@ func get_skill(id: int) -> Skill:
 	return catalog.get_skill(id)
 
 
+func get_ground_effect(id: int) -> GroundEffect:
+	return catalog.get_ground_effect(id)
+
+
 func get_trait(id: int) -> CreatureTrait:
 	return catalog.get_trait(id)
 

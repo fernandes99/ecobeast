@@ -29,6 +29,10 @@ const EFFECT_PARAMS := {
 	"switch": {"required": [], "optional": []},
 }
 
+## As formas de área que o jogo sabe desenhar (board-battle/01). Uma forma nova
+## no banco precisa de código no jogo antes.
+const AREA_SHAPES: Array[String] = ["single", "line"]
+
 const TABLES := {
 	# --- Referência -----------------------------------------------------------
 	"elements": {
@@ -99,6 +103,10 @@ const TABLES := {
 		"key": ["id"],
 		"columns": {"id": ID, "slug": SLUG, "name": TEXT},
 	},
+	"area_shapes": {
+		"key": ["id"],
+		"columns": {"id": ID, "slug": {"type": "string", "unique": true, "values": AREA_SHAPES}, "name": TEXT},
+	},
 	"skill_learn_methods": {
 		"key": ["id"],
 		"columns": {"id": ID, "slug": SLUG, "name": TEXT},
@@ -110,6 +118,17 @@ const TABLES := {
 			"slug": SLUG,
 			"name": TEXT,
 			"is_volatile": {"type": "bool"},
+		},
+	},
+	"ground_effects": {
+		"key": ["id"],
+		"columns": {
+			"id": ID,
+			"slug": SLUG,
+			"name": TEXT,
+			"damage_percent": {"type": "int", "nullable": true, "min": 1, "max": 100},
+			"status_condition_id": {"type": "int", "nullable": true, "fk": "status_conditions"},
+			"color_hex": {"type": "string", "pattern": "^#[0-9A-Fa-f]{6}$"},
 		},
 	},
 	"status_condition_immunities": {
@@ -201,6 +220,11 @@ const TABLES := {
 			"makes_contact": {"type": "bool"},
 			"min_hits": {"type": "int", "min": 1, "max": 10},
 			"max_hits": {"type": "int", "min": 1, "max": 10},
+			"area_shape_id": {"type": "int", "fk": "area_shapes"},
+			"range": {"type": "int", "min": 1, "max": 6},
+			"pierces": {"type": "bool"},
+			"ground_effect_id": {"type": "int", "nullable": true, "fk": "ground_effects"},
+			"ground_turns": {"type": "int", "nullable": true, "min": 1, "max": 20},
 		},
 	},
 	"skill_effects": {

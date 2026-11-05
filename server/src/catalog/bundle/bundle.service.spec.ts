@@ -30,7 +30,7 @@ describe('BundleService', () => {
 
   afterEach(() => vi.useRealTimers());
 
-  it('monta as 27 tabelas em snake_case, com a versão delas', async () => {
+  it('monta as 29 tabelas em snake_case, com a versão delas', async () => {
     const { prisma } = fakePrisma();
     const bundle = await new BundleService(prisma).get();
     expect(Object.keys(bundle.tables)).toHaveLength(CATALOG_TABLES.length);

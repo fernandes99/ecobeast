@@ -23,6 +23,7 @@ var _evolutions: Dictionary = {}      # species_id -> Array[EvolutionRule]
 var _species_traits: Dictionary = {}  # species_id -> Array[Dictionary]
 var _starters: Array[CreatureSpecies] = []
 var _items: Dictionary = {}           # id -> Item
+var _ground_effects: Dictionary = {}  # id -> GroundEffect
 var _item_list: Array[Item] = []
 var _item_categories: Array[ItemCategory] = []
 
@@ -105,6 +106,10 @@ func get_evolutions(species_id: int) -> Array[EvolutionRule]:
 
 func get_skill(id: int) -> Skill:
 	return _lookup(_skills, id, "técnica")
+
+
+func get_ground_effect(id: int) -> GroundEffect:
+	return _lookup(_ground_effects, id, "marca no chão")
 
 
 func get_trait(id: int) -> CreatureTrait:
@@ -199,6 +204,7 @@ func _clear() -> void:
 	_species_traits.clear()
 	_starters.clear()
 	_items.clear()
+	_ground_effects.clear()
 	_item_list.clear()
 	_item_categories.clear()
 
@@ -279,8 +285,12 @@ func _build_species() -> void:
 
 
 func _build_skills() -> void:
+	for row: Dictionary in _rows("ground_effects"):
+		_ground_effects[row["id"]] = GroundEffect.from_row(row)
 	for row: Dictionary in _rows("skills"):
-		_skills[row["id"]] = Skill.from_row(row)
+		var skill := Skill.from_row(row)
+		skill.area_shape = _rows_by_id["area_shapes"][row["area_shape_id"]]["slug"]
+		_skills[skill.id] = skill
 	for row: Dictionary in _sorted(_rows("skill_effects"), "sort_order"):
 		var effect_slug: String = _rows_by_id["effect_types"][row["effect_type_id"]]["slug"]
 		var skill: Skill = _skills[row["skill_id"]]

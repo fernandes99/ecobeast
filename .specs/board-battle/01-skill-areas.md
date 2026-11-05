@@ -1,6 +1,6 @@
 # 01. Técnicas no tabuleiro
 
-- **Status:** rascunho
+- **Status:** concluída
 - **Depende de:** [game-data/architecture.md](../game-data/architecture.md), [architecture.md](architecture.md#técnicas-no-tabuleiro)
 
 ## Contexto
@@ -33,11 +33,11 @@ Hoje uma Técnica não sabe nada de distância: ela mira o adversário ou o pró
 
 ## Critérios de aceite
 
-- [ ] A migração aplica sobre o banco de hoje, sem apagar nada, e deixa as tabelas novas preenchidas e as colunas das 38 Técnicas com os valores do RF-04.
-- [ ] Uma Técnica com `ground_effect_id` e sem `ground_turns` é recusada pelo banco.
-- [ ] `GET /v1/catalog` traz Faísca Rápida com `area_shape_id` de `line` e `range` 3, e Chama Espiral com `ground_effect_id` de `fire` e `ground_turns` 6.
-- [ ] O jogo abre com o servidor no ar, sem erro do `CatalogValidator`.
-- [ ] Nenhuma luta muda: os testes de hoje passam sem ajuste.
+- [x] A migração aplica sobre o banco de hoje, sem apagar nada, e deixa as tabelas novas preenchidas e as colunas das 38 Técnicas com os valores do RF-04.
+- [x] Uma Técnica com `ground_effect_id` e sem `ground_turns` é recusada pelo banco.
+- [x] `GET /v1/catalog` traz Faísca Rápida com `area_shape_id` de `line` e `range` 3, e Chama Espiral com `ground_effect_id` de `fire` e `ground_turns` 6.
+- [x] O jogo abre com o servidor no ar, sem erro do `CatalogValidator`.
+- [x] Nenhuma luta muda: os testes de hoje passam sem ajuste.
 
 ## Desenho técnico
 
@@ -45,12 +45,12 @@ Hoje uma Técnica não sabe nada de distância: ela mira o adversário ou o pró
 
 **Seed:** `server/prisma/seed-data/area_shapes.json`, `ground_effects.json` e os campos novos em `skills.json`, iguais ao que a migração grava, para um banco novo.
 
-**API:** `server/src/catalog/catalog-tables.ts` com as duas tabelas, e as colunas novas onde a tabela `skills` é montada. O `server/src/battle/battle-catalog.ts` não muda nesta fase.
+**API:** `server/src/catalog/catalog-tables.ts` com as duas tabelas. O catálogo inteiro (`GET /v1/catalog`) lê as colunas do banco, então as colunas novas de `skills` chegam sem mais código. O recurso `/v1/skills` e o `server/src/battle/battle-catalog.ts` não mudam nesta fase: o jogo lê o catálogo inteiro, e a luta só usa os campos na [02](02-board-engine.md).
 
 **Jogo:**
 
 - `res://core/data/catalog_schema.gd`: `area_shapes`, `ground_effects` e os campos novos de `skills`.
-- `res://domain/models/skill.gd`: `area_shape`, `range`, `pierces`, `ground_effect_id` e `ground_turns`.
+- `res://domain/models/skill.gd`: `area_shape`, `area_range` (a coluna `range`: o nome `range` esconderia a função `range()` do GDScript), `pierces`, `ground_effect_id` e `ground_turns`.
 - `res://domain/models/ground_effect.gd` (novo), e o `GameData` com `get_ground_effect(id)`.
 
 **Specs:** `.specs/game-data/architecture.md` com as tabelas novas.
@@ -66,8 +66,8 @@ O jogo abre (F5) e chega ao Hub sem a tela "Erro nos dados do jogo".
 
 ## Tarefas
 
-- [ ] Migração, `schema.prisma` e seed (RF-01 a RF-04).
-- [ ] Catálogo da API, com um e2e dos campos novos (RF-05).
-- [ ] Catálogo do jogo e `CatalogValidator` (RF-06).
-- [ ] Atualizar `.specs/game-data/architecture.md`.
-- [ ] Rodar a verificação, marcar a spec e o README como `concluída` e fazer o commit `feat: alcance e forma das Técnicas`.
+- [x] Migração, `schema.prisma` e seed (RF-01 a RF-04).
+- [x] Catálogo da API, com um e2e dos campos novos (RF-05).
+- [x] Catálogo do jogo e `CatalogValidator` (RF-06).
+- [x] Atualizar `.specs/game-data/architecture.md`.
+- [x] Rodar a verificação, marcar a spec e o README como `concluída` e fazer o commit `feat: alcance e forma das Técnicas`.

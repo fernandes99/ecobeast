@@ -18,7 +18,22 @@ var skill_target_id: int
 var makes_contact: bool
 var min_hits: int
 var max_hits: int
+## Forma da área no tabuleiro: "single" (um hexágono a até range) ou "line".
+var area_shape: String = "single"
+## Alcance em hexágonos, de 1 a 6 (coluna range). "single" com 1 é o corpo a
+## corpo. Não se chama range para não esconder a função range() do GDScript.
+var area_range: int = 1
+## Só na "line": atravessa os inimigos em vez de parar no primeiro.
+var pierces: bool = false
+## A marca que fica no chão, ou -1 sem marca.
+var ground_effect_id: int = -1
+## Por quantas vezes da fila a marca fica; 0 sem marca.
+var ground_turns: int = 0
 var effects: Array[SkillEffect] = []
+
+
+func has_ground_effect() -> bool:
+	return ground_effect_id != -1
 
 
 static func from_row(row: Dictionary) -> Skill:
@@ -38,4 +53,9 @@ static func from_row(row: Dictionary) -> Skill:
 	skill.makes_contact = row["makes_contact"]
 	skill.min_hits = row["min_hits"]
 	skill.max_hits = row["max_hits"]
+	skill.area_range = row["range"]
+	skill.pierces = row["pierces"]
+	if row["ground_effect_id"] != null:
+		skill.ground_effect_id = row["ground_effect_id"]
+		skill.ground_turns = row["ground_turns"]
 	return skill

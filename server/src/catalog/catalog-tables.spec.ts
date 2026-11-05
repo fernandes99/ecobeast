@@ -5,9 +5,9 @@ import { CATALOG_TABLES, SEED_DATA_DIR } from './catalog-tables.js';
 describe('CATALOG_TABLES', () => {
   const names = CATALOG_TABLES.map((table) => table.name);
 
-  it('tem as 27 tabelas, sem repetição', () => {
-    expect(names).toHaveLength(27);
-    expect(new Set(names).size).toBe(27);
+  it('tem as 29 tabelas, sem repetição', () => {
+    expect(names).toHaveLength(29);
+    expect(new Set(names).size).toBe(29);
   });
 
   it('casa com os arquivos .json da pasta de dados do seed', () => {
@@ -33,6 +33,13 @@ describe('CATALOG_TABLES', () => {
     );
     expect(names.indexOf('species')).toBeLessThan(
       names.indexOf('species_biomes'),
+    );
+    expect(names.indexOf('area_shapes')).toBeLessThan(names.indexOf('skills'));
+    expect(names.indexOf('status_conditions')).toBeLessThan(
+      names.indexOf('ground_effects'),
+    );
+    expect(names.indexOf('ground_effects')).toBeLessThan(
+      names.indexOf('skills'),
     );
     expect(names.at(-1)).toBe('starter_options');
   });
@@ -96,6 +103,83 @@ describe('carga inicial dos biomas (biome-encounters/01)', () => {
     expect(rate('boreal')).toBeGreaterThan(rate('mountain')! * 10);
     expect(rate('wshallow')).toBeUndefined();
     expect(rate('wdeep')).toBeUndefined();
+  });
+});
+
+describe('carga inicial das Técnicas no tabuleiro (board-battle/01)', () => {
+  const read = <T>(name: string) =>
+    JSON.parse(
+      readFileSync(join(SEED_DATA_DIR, `${name}.json`), 'utf8'),
+    ) as T[];
+  interface SkillRow {
+    slug: string;
+    area_shape_id: number;
+    range: number;
+    pierces: boolean;
+    ground_effect_id: number | null;
+    ground_turns: number | null;
+  }
+  const shapes = read<{ id: number; slug: string }>('area_shapes');
+  const grounds = read<{
+    id: number;
+    slug: string;
+    damage_percent: number | null;
+    status_condition_id: number | null;
+  }>('ground_effects');
+  const skills = read<SkillRow>('skills');
+  const shapeId = (slug: string) => shapes.find((s) => s.slug === slug)!.id;
+  const FIRE = grounds.find((g) => g.slug === 'fire')!;
+  const SPECIAL = ['faisca_rapida', 'chama_espiral'];
+
+  const board = (row: SkillRow) => ({
+    area_shape_id: row.area_shape_id,
+    range: row.range,
+    pierces: row.pierces,
+    ground_effect_id: row.ground_effect_id,
+    ground_turns: row.ground_turns,
+  });
+  const skill = (slug: string) => skills.find((row) => row.slug === slug)!;
+
+  it('tem as formas single e line, e o chão em chamas', () => {
+    expect(shapes.map(({ slug }) => slug)).toEqual(['single', 'line']);
+    expect(FIRE).toMatchObject({
+      damage_percent: 6,
+      status_condition_id: null,
+    });
+  });
+
+  it('deixa as outras 36 Técnicas no corpo a corpo, com alcance 1', () => {
+    const others = skills.filter((row) => !SPECIAL.includes(row.slug));
+    expect(others).toHaveLength(36);
+    for (const row of others) {
+      expect(board(row), row.slug).toEqual({
+        area_shape_id: shapeId('single'),
+        range: 1,
+        pierces: false,
+        ground_effect_id: null,
+        ground_turns: null,
+      });
+    }
+  });
+
+  it('Faísca Rápida anda em linha reta por 3, sem atravessar', () => {
+    expect(board(skill('faisca_rapida'))).toEqual({
+      area_shape_id: shapeId('line'),
+      range: 3,
+      pierces: false,
+      ground_effect_id: null,
+      ground_turns: null,
+    });
+  });
+
+  it('Chama Espiral acerta a até 3 e deixa o chão em chamas por 6 vezes', () => {
+    expect(board(skill('chama_espiral'))).toEqual({
+      area_shape_id: shapeId('single'),
+      range: 3,
+      pierces: false,
+      ground_effect_id: FIRE.id,
+      ground_turns: 6,
+    });
   });
 });
 

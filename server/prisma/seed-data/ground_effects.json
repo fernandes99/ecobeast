@@ -1,0 +1,3 @@
+[
+	{ "id": 1, "slug": "fire", "name": "Chão em chamas", "damage_percent": 6, "status_condition_id": null, "color_hex": "#E8622C" }
+]

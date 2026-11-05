@@ -346,6 +346,8 @@ func _check_skills() -> void:
 	for i: int in rows.size():
 		if rows[i]["max_hits"] < rows[i]["min_hits"]:
 			_row_error("skills", lines[i], "max_hits menor que min_hits")
+		if (rows[i]["ground_effect_id"] == null) != (rows[i]["ground_turns"] == null):
+			_row_error("skills", lines[i], "ground_effect_id e ground_turns precisam vir juntos")
 
 
 func _check_skill_effects() -> void:

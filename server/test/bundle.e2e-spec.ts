@@ -46,7 +46,7 @@ describe('GET /v1/catalog (e2e)', () => {
     await prisma.$disconnect();
   });
 
-  it('devolve version e as 27 tabelas', () => {
+  it('devolve version e as 29 tabelas', () => {
     expect(Object.keys(body)).toEqual(['version', 'tables']);
     expect(body.version).toMatch(/^[0-9a-f]{64}$/);
     expect(Object.keys(body.tables).sort()).toEqual(
@@ -54,7 +54,7 @@ describe('GET /v1/catalog (e2e)', () => {
     );
   });
 
-  it('o total de linhas é a soma do count() das 27 tabelas', async () => {
+  it('o total de linhas é a soma do count() das 29 tabelas', async () => {
     let total = 0;
     for (const table of CATALOG_TABLES) {
       const count = await (prisma as unknown as Record<string, CountDelegate>)[
@@ -94,6 +94,40 @@ describe('GET /v1/catalog (e2e)', () => {
     const ruvo = body.tables['species'].find((s) => s['id'] === 1)!;
     expect(typeof ruvo['gender_ratio']).toBe('number');
     expect(ruvo['evolves_from_species_id']).toBeNull();
+  });
+
+  it('traz o alcance, a forma e a marca no chão das Técnicas (board-battle/01)', () => {
+    const shape = (slug: string) =>
+      body.tables['area_shapes'].find((row) => row['slug'] === slug)!['id'];
+    const fire = body.tables['ground_effects'].find(
+      (row) => row['slug'] === 'fire',
+    )!;
+    const skill = (slug: string) =>
+      body.tables['skills'].find((row) => row['slug'] === slug)!;
+    expect(skill('faisca_rapida')).toMatchObject({
+      area_shape_id: shape('line'),
+      range: 3,
+      pierces: false,
+    });
+    expect(skill('chama_espiral')).toMatchObject({
+      area_shape_id: shape('single'),
+      ground_effect_id: fire['id'],
+      ground_turns: 6,
+    });
+    expect(skill('arranhao')).toMatchObject({
+      area_shape_id: shape('single'),
+      range: 1,
+      ground_effect_id: null,
+    });
+  });
+
+  it('o banco recusa uma marca no chão sem duração', async () => {
+    await expect(
+      prisma.skill.update({
+        where: { slug: 'chama_espiral' },
+        data: { groundTurns: null },
+      }),
+    ).rejects.toThrow(/skills_ground_pair_check/);
   });
 
   it('o ETag é a versão entre aspas', () => {
