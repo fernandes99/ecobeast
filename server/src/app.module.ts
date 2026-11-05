@@ -4,6 +4,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AuthModule } from './auth/auth.module.js';
 import { BattleModule } from './battle/battle.module.js';
+import { BoardBattleModule } from './board-battle/board-battle.module.js';
 import { BundleModule } from './catalog/bundle/bundle.module.js';
 import { CatalogModule } from './catalog/catalog.module.js';
 import { Env, validateEnv } from './config/env.js';
@@ -34,6 +35,7 @@ import { TeamModule } from './team/team.module.js';
     AuthModule,
     PlayerModule,
     BattleModule,
+    BoardBattleModule,
     ExplorationModule,
     InventoryModule,
     TeamModule,

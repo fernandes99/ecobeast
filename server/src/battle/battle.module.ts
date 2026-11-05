@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module.js';
 import { ExplorationModule } from '../exploration/exploration.module.js';
 import { ProgressionModule } from '../progression/progression.module.js';
+import { BattleRecordsService } from './battle-records.service.js';
 import { BattleController } from './battle.controller.js';
 import { BattleService } from './battle.service.js';
 import { BattleStore } from './battle.store.js';
@@ -12,8 +13,9 @@ import { BattleStore } from './battle.store.js';
   controllers: [BattleController],
   providers: [
     BattleService,
+    BattleRecordsService,
     { provide: BattleStore, useFactory: () => new BattleStore() },
   ],
-  exports: [BattleStore],
+  exports: [BattleStore, BattleRecordsService],
 })
 export class BattleModule {}

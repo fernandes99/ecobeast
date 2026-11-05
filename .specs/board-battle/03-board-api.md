@@ -1,6 +1,6 @@
 # 03. Rotas da luta no tabuleiro
 
-- **Status:** rascunho
+- **Status:** concluída
 - **Depende de:** [02](02-board-engine.md), [architecture.md](architecture.md#api)
 
 ## Contexto
@@ -37,14 +37,14 @@ O motor do tabuleiro existe, mas nenhuma rota o usa. Esta fase cria as rotas del
 
 ## Critérios de aceite
 
-- [ ] Um e2e começa um 1×1 de teste e recebe o tabuleiro de 42 hexágonos, as duas áreas, as casas dos dois Ecobeasts e a fila.
-- [ ] Um e2e anda 3 hexágonos e usa Arranhão ao lado de um selvagem, e recebe os eventos dele e da vez do selvagem.
-- [ ] Um e2e recebe 400 com "Não dá para chegar lá." ao andar 4 hexágonos, e o estado não muda.
-- [ ] Um e2e começa um 2×2 de teste, derruba um Ecobeast do jogador com reserva e escolhe o hexágono de entrada.
-- [ ] Um e2e captura o selvagem e encontra o capturado na equipe.
-- [ ] Um e2e do encontro selvagem funciona como o de `/battle/wild`, com o Ecobeast saindo do mapa.
-- [ ] Os e2e de `/v1/me/battle` passam sem mudança.
-- [ ] `/docs` mostra as três rotas, com os corpos e os erros.
+- [x] Um e2e começa um 1×1 de teste e recebe o tabuleiro de 42 hexágonos, as duas áreas, as casas dos dois Ecobeasts e a fila.
+- [x] Um e2e anda 3 hexágonos e usa Arranhão ao lado de um selvagem, e recebe os eventos dele e da vez do selvagem.
+- [x] Um e2e recebe 400 com "Não dá para chegar lá." ao andar 4 hexágonos, e o estado não muda.
+- [x] Um e2e começa um 2×2 de teste, derruba um Ecobeast do jogador com reserva e escolhe o hexágono de entrada.
+- [x] Um e2e captura o selvagem e encontra o capturado na equipe.
+- [x] Um e2e do encontro selvagem funciona como o de `/battle/wild`, com o Ecobeast saindo do mapa.
+- [x] Os e2e de `/v1/me/battle` passam sem mudança.
+- [x] `/docs` mostra as três rotas, com os corpos e os erros.
 
 ## Desenho técnico
 
@@ -67,8 +67,18 @@ cd server && npm run typecheck && npm run lint && npm test && npm run test:e2e
 
 ## Tarefas
 
-- [ ] DTOs e mapper, com testes (RF-04 e RF-07).
-- [ ] Serviço e controller da batalha de teste e do encontro (RF-01, RF-02 e RF-05).
-- [ ] A vez do jogador e o fim da luta (RF-03 e RF-06).
-- [ ] e2e e `/docs`.
-- [ ] Rodar a verificação, marcar a spec e o README como `concluída` e fazer o commit `feat: rotas da luta no tabuleiro`.
+- [x] DTOs e mapper, com testes (RF-04 e RF-07).
+- [x] Serviço e controller da batalha de teste e do encontro (RF-01, RF-02 e RF-05).
+- [x] A vez do jogador e o fim da luta (RF-03 e RF-06).
+- [x] e2e e `/docs`.
+- [x] Rodar a verificação, marcar a spec e o README como `concluída` e fazer o commit `feat: rotas da luta no tabuleiro`.
+
+## Divergências
+
+O que a implementação fez diferente desta spec, e por quê:
+
+- **O que as duas lutas leem e gravam no banco** (a equipe, o inimigo, o encontro do hexágono e o fim da luta) saiu do `BattleService` para o `BattleRecordsService`, em `server/src/battle/battle-records.service.ts`. Os dois serviços usam o mesmo código, e os 128 e2e da luta de hoje passam sem mudança.
+- **O `StoredBattle` ganhou `kind`** (`classic` ou `board`). Cada rota só enxerga a luta do próprio tipo, e a outra responde 404 com "Nenhuma batalha em andamento.".
+- **A luta de teste no tabuleiro só aceita `enemies`**, sem o par `species_id` e `level` da luta de hoje.
+- **Um objeto aninhado ausente** (`action`, o `target` da Esfera, a `cell` de quem entra) recebe `@IsDefined`: a validação de objeto aninhado deixa passar o campo que falta, e o servidor respondia 500. O e2e pegou isso.
+- **Os testes do mapper foram escritos depois do código.** Os e2e foram escritos antes de rodar o serviço pela primeira vez.
