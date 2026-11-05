@@ -22,8 +22,6 @@ var _fought_spawn := 0
 ## Depuração: o modo God, ligado no menu do mapa. Vale para as lutas que começarem
 ## depois e some ao fechar o jogo; o servidor só aceita com a rota de teste ligada.
 var debug_god := false
-## Depuração (board-battle/04): o encontro do mapa abre a luta no tabuleiro.
-var debug_board := false
 
 
 func has_auth_session() -> bool:

@@ -18,9 +18,10 @@ const NO_PP = [
 ];
 
 describe('a vez do selvagem', () => {
-  it('longe, anda até o Ecobeast do jogador e ataca de onde chegou', () => {
+  it('a 2 hexágonos, anda 1 até o Ecobeast do jogador e ataca de onde chegou', () => {
     const scratcher = wild(30, { skills: [{ skillId: 1, currentPp: 35 }] });
     const state = makeBoardState([fighter(10)], [scratcher], {
+      cells: { enemy: [at(2, 3)] },
       queue: [ENEMY],
     });
     const vez = chooseEnemyVez(state, catalog, always(0.5), ENEMY);
@@ -44,7 +45,7 @@ describe('a vez do selvagem', () => {
     const state = makeBoardState(
       [fighter(10)],
       [onlyScratch],
-      { queue: [ENEMY] },
+      { cells: { enemy: [at(2, 3)] }, queue: [ENEMY] },
       {
         marks: [{ cell: at(2, 4), groundEffectId: FIRE_GROUND, remaining: 6 }],
       },
@@ -57,6 +58,7 @@ describe('a vez do selvagem', () => {
 
   it('sem PP, usa a emergência em quem está ao lado', () => {
     const state = makeBoardState([fighter(10)], [wild(30, { skills: NO_PP })], {
+      cells: { enemy: [at(2, 3)] },
       queue: [ENEMY],
     });
     const vez = chooseEnemyVez(state, catalog, always(0.5), ENEMY);

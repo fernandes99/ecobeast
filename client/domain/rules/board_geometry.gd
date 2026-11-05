@@ -4,7 +4,8 @@ extends RefCounted
 ## (server/src/domain/board/). Só servem para acender o que dá para fazer: quem
 ## decide e confere tudo é o servidor.
 
-const MOVE_RANGE := 3
+## Quantos hexágonos se anda por vez, como no servidor. A revisar.
+const MOVE_RANGE := 1
 const DIRECTIONS: Array[Vector2i] = [
 	Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1),
 	Vector2i(0, -1), Vector2i(1, -1), Vector2i(-1, 1),

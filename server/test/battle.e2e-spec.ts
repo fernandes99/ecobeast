@@ -834,7 +834,7 @@ describe('Rotas da batalha (e2e)', () => {
       '/v1/me/battle/action',
     ]) {
       const operation = body.paths[path].post;
-      expect(operation.tags).toEqual(['Batalha']);
+      expect(operation.tags).toEqual(['Batalha (legado)']);
       expect(operation.security).toEqual([{ bearer: [] }]);
     }
   });

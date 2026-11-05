@@ -24,7 +24,7 @@ O tabuleiro de agora tem 6 colunas × 7 linhas. A linha 0 fica em cima, e as lin
 
 As colunas são _a revisar_. Um tabuleiro futuro, sorteado ou por bioma, só muda a lista de hexágonos e as áreas, e o contrato continua o mesmo: o servidor manda as duas coisas.
 
-**Constantes** (_a revisar_), em `server/src/domain/board/board.ts`: `BOARD_COLUMNS = 6`, `BOARD_ROWS = 7`, `MOVE_RANGE = 3`.
+**Constantes** (_a revisar_), em `server/src/domain/board/board.ts`: `BOARD_COLUMNS = 6`, `BOARD_ROWS = 7`, `MOVE_RANGE = 1`. O andar começou em 3 e passou para 1 na [05](05-board-actions.md), decisão do dono em 2026-11-05, depois de jogar a tela: 3 hexágonos cobriam quase o tabuleiro todo. O jogo usa o mesmo número, em `BoardGeometry.MOVE_RANGE`.
 
 ## Estado
 

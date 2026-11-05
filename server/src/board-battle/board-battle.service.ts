@@ -147,6 +147,13 @@ export class BoardBattleService {
       creature,
       statIds,
     }));
+    // Os selvagens podem jogar antes e acabar com a luta já na abertura: o fim
+    // é gravado aqui, e não fica luta nenhuma, nem a anterior.
+    if (state.phase === 'ended') {
+      this.store.delete(userId);
+      const finish = await this.records.finish(userId, state, wilds);
+      return toResponse(state, events, finish);
+    }
     // Substitui a luta anterior, de qualquer tipo, sem gravar nada dela.
     this.store.set(userId, { kind: 'board', state, catalog, wilds });
     return toResponse(state, events);

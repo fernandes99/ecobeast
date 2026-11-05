@@ -1,6 +1,6 @@
 # 04. Tela do tabuleiro
 
-- **Status:** concluída (falta o dono jogar no editor: ver Verificação)
+- **Status:** concluída (o dono jogou no editor em 2026-11-05 e pediu o andar de 1 hexágono, feito na [05](05-board-actions.md))
 - **Depende de:** [03](03-board-api.md), [architecture.md](architecture.md#jogo)
 
 ## Contexto

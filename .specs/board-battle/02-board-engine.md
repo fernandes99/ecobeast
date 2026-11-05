@@ -38,7 +38,7 @@ Esta fase escreve o juiz do tabuleiro sobre essas peças, em `server/src/domain/
 
 **Andar**
 
-- **RF-07:** `move` é um hexágono a até `MOVE_RANGE` (3) passos por hexágonos sem Ecobeast. Um hexágono ocupado ou longe demais é recusado com "Não dá para chegar lá.", e mandar `move` com `flee` é recusado com "Fugir não combina com andar.".
+- **RF-07:** `move` é um hexágono a até `MOVE_RANGE` (3 nesta fase, 1 desde a [05](05-board-actions.md)) passos por hexágonos sem Ecobeast. Um hexágono ocupado ou longe demais é recusado com "Não dá para chegar lá.", e mandar `move` com `flee` é recusado com "Fugir não combina com andar.".
 - **RF-08:** O evento `moved` leva um dos caminhos mais curtos, sem a origem. Andar por cima de uma marca não aplica nada.
 
 **Técnicas**

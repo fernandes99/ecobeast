@@ -22,8 +22,6 @@ const DEBUG_NAME_FONT_SIZE := 18
 const DEBUG_DISABLED_ALPHA := 0.35
 const GOD_ON_TEXT := "God: ligado"
 const GOD_OFF_TEXT := "God: desligado"
-const BOARD_ON_TEXT := "Tabuleiro: ligado"
-const BOARD_OFF_TEXT := "Tabuleiro: desligado"
 ## Até onde os Ecobeasts existem como nós, em hexágonos: passa da tela com folga,
 ## para eles nascerem e saírem sem ninguém ver. A revisar.
 const CREATURE_RADIUS := 16
@@ -62,7 +60,6 @@ var _spawned := 0
 @onready var _debug_spawn_button: Button = %DebugSpawnButton
 @onready var _debug_spawn_back_button: Button = %DebugSpawnBackButton
 @onready var _debug_god_button: Button = %DebugGodButton
-@onready var _debug_board_button: Button = %DebugBoardButton
 
 
 func _ready() -> void:
@@ -77,11 +74,9 @@ func _ready() -> void:
 	_debug_spawn_button.pressed.connect(_show_debug_part.bind(true))
 	_debug_spawn_back_button.pressed.connect(_show_debug_part.bind(false))
 	_debug_god_button.pressed.connect(_toggle_god)
-	_debug_board_button.pressed.connect(_toggle_board)
 	%DebugTest2Button.pressed.connect(_open_board_test.bind(2))
 	%DebugTest3Button.pressed.connect(_open_board_test.bind(3))
 	_refresh_god_button()
-	_refresh_board_button()
 	resized.connect(_fit_view.call_deferred)
 	visibility_changed.connect(_on_visibility_changed)
 	_begin()
@@ -143,8 +138,8 @@ func _search() -> void:
 	if _walking:
 		return
 	if _map.has_creature(_player_coord):
-		var screen := &"board_battle" if Session.debug_board else &"battle"
-		Router.push(screen, {"coord": _player_coord})
+		# A luta de Explorar zona é a do tabuleiro (board-battle/05).
+		Router.push(&"board_battle", {"coord": _player_coord})
 	else:
 		_show_message(NOTHING_HERE_TEXT, &"SecondaryLabel")
 
@@ -206,16 +201,6 @@ func _toggle_god() -> void:
 
 func _refresh_god_button() -> void:
 	_debug_god_button.text = GOD_ON_TEXT if Session.debug_god else GOD_OFF_TEXT
-
-
-## Depuração (board-battle/04): ligado, o encontro do mapa abre a luta no tabuleiro.
-func _toggle_board() -> void:
-	Session.debug_board = not Session.debug_board
-	_refresh_board_button()
-
-
-func _refresh_board_button() -> void:
-	_debug_board_button.text = BOARD_ON_TEXT if Session.debug_board else BOARD_OFF_TEXT
 
 
 ## A luta de teste no tabuleiro, contra Ecobeasts sorteados; o mapa não muda.

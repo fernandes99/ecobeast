@@ -63,8 +63,18 @@ describe('andar', () => {
     cells: { player: [at(2, 5)], enemy: [at(2, 3)] },
   });
 
-  it('chega a até 3 passos, por hexágonos livres', () => {
+  it('anda 1 hexágono por vez: só os vizinhos', () => {
+    expect(MOVE_RANGE).toBe(1);
     const paths = reachable(state, at(2, 5), MOVE_RANGE);
+    const destinations = [...paths.values()].map((path) => path.at(-1)!);
+    expect(destinations).toHaveLength(6);
+    expect(
+      destinations.every((cell) => hexDistance(cell, at(2, 5)) === 1),
+    ).toBe(true);
+  });
+
+  it('com mais passos, chega a até essa distância, por hexágonos livres', () => {
+    const paths = reachable(state, at(2, 5), 3);
     const destinations = [...paths.values()].map((path) => path.at(-1)!);
     expect(destinations.every((cell) => hexDistance(cell, at(2, 5)) <= 3)).toBe(
       true,
@@ -72,7 +82,7 @@ describe('andar', () => {
   });
 
   it('não para nem passa pelo hexágono de outro Ecobeast', () => {
-    const paths = reachable(state, at(2, 5), MOVE_RANGE);
+    const paths = reachable(state, at(2, 5), 3);
     const enemyCell = at(2, 3);
     for (const path of paths.values()) {
       expect(
@@ -82,7 +92,7 @@ describe('andar', () => {
   });
 
   it('o caminho é um dos mais curtos, sem a origem', () => {
-    const paths = reachable(state, at(2, 5), MOVE_RANGE);
+    const paths = reachable(state, at(2, 5), 3);
     for (const path of paths.values()) {
       expect(path.length).toBe(hexDistance(at(2, 5), path.at(-1)!));
     }

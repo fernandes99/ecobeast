@@ -1,6 +1,6 @@
 # Battle screen
 
-> Esta tela vai ser trocada pela luta num tabuleiro de hexágonos, que está em planejamento. O motor do servidor já aceita vários Ecobeasts por lado, pela [battle-slots/01](../battle-slots/01-engine-slots.md).
+> **Legado.** Desde a [board-battle/05](../board-battle/05-board-actions.md), Explorar zona abre a luta no tabuleiro de hexágonos, e nenhuma tela abre esta. O código dela (`res://screens/battle/` e as rotas `/v1/me/battle`, marcadas como legado em `/docs`) fica no repositório até o dono pedir para apagar. Os e2e dela rodam com `npm run test:e2e:legacy`. Peças daqui, como o `BattleItemsPanel`, o `NextCreaturePanel`, o `CaptureOverlay` e as telas de subir de nível, são usadas pela luta nova.
 
 A batalha que o jogador vê. Tocar em **Explorar zona** no Hub começa uma luta contra um Ecobeast sorteado pelo servidor, e a tela mostra o turno linha a linha, a partir dos eventos do [battle-core](../battle-core/). O jogo só diz o que o jogador quer fazer: quem decide tudo é o servidor.
 

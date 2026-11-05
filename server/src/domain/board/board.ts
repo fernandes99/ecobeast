@@ -11,7 +11,7 @@ import type { Board, BoardState } from './types.js';
 /** O tabuleiro de agora, fixo (.specs/board-battle/architecture.md). A revisar. */
 export const BOARD_COLUMNS = 6;
 export const BOARD_ROWS = 7;
-export const MOVE_RANGE = 3;
+export const MOVE_RANGE = 1;
 
 /** As linhas de cada área, a da frente primeiro. */
 const ZONE_ROWS: Record<SideSlug, number[]> = {

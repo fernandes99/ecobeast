@@ -79,20 +79,19 @@ describe('andar', () => {
     return makeBoardState([fighter(30)], [wild(5, ASLEEP)]);
   }
 
-  it('andar 3 hexágonos livres funciona, com o caminho no evento', () => {
+  it('andar 1 hexágono livre funciona, com o caminho no evento', () => {
     const { state, events } = playVez(
       oneOnOne(),
-      { position: 0, move: at(2, 2), action: { type: 'wait' } },
+      { position: 0, move: at(2, 4), action: { type: 'wait' } },
       catalog,
     );
     const [moved] = eventsOf(events, 'moved');
-    expect(moved!.path).toHaveLength(3);
-    expect(moved!.path.at(-1)).toEqual(at(2, 2));
-    expect(state.cells.player[0]).toEqual(at(2, 2));
+    expect(moved!.path).toEqual([at(2, 4)]);
+    expect(state.cells.player[0]).toEqual(at(2, 4));
   });
 
   it.each([
-    ['a 4 hexágonos', at(5, 1), at(2, 1)],
+    ['a 2 hexágonos', at(5, 1), at(2, 3)],
     ['para o hexágono do selvagem', at(2, 3), at(2, 3)],
     ['para fora do tabuleiro', at(5, 1), { q: 40, r: 40 }],
   ])('recusa andar %s, sem mudar nada', (_, enemyCell, move) => {
@@ -155,17 +154,19 @@ describe('andar', () => {
 describe('Técnicas na vez', () => {
   it('andar até o selvagem e usar Arranhão atinge ele', () => {
     const { events } = playVez(
-      makeBoardState([fighter(30)], [wild(5, ASLEEP)]),
+      makeBoardState([fighter(30)], [wild(5, ASLEEP)], {
+        cells: { enemy: [at(2, 3)] },
+      }),
       {
         position: 0,
-        move: at(2, 2),
-        action: { type: 'skill', slot: SCRATCH_SLOT, target: at(2, 1) },
+        move: at(2, 4),
+        action: { type: 'skill', slot: SCRATCH_SLOT, target: at(2, 3) },
       },
       catalog,
     );
     expect(eventsOf(events, 'skill_used')[0]).toMatchObject({
       side: 'player',
-      cells: [at(2, 1)],
+      cells: [at(2, 3)],
     });
     expect(eventsOf(events, 'damage')[0]).toMatchObject({
       side: 'enemy',
@@ -176,11 +177,13 @@ describe('Técnicas na vez', () => {
   it('Arranhão a 2 hexágonos é recusado', () => {
     expect(
       applyBoardVez(
-        makeBoardState([fighter(30)], [wild(5)]),
+        makeBoardState([fighter(30)], [wild(5)], {
+          cells: { enemy: [at(2, 2)] },
+        }),
         {
           position: 0,
-          move: at(2, 3),
-          action: { type: 'skill', slot: SCRATCH_SLOT, target: at(2, 1) },
+          move: at(2, 4),
+          action: { type: 'skill', slot: SCRATCH_SLOT, target: at(2, 2) },
         },
         catalog,
         always(0.5),
@@ -268,18 +271,18 @@ describe('marca no chão', () => {
     expect(state.marks).toEqual([]);
   });
 
-  it('passar por cima da marca andando não queima', () => {
+  it('sair de cima da marca andando não queima', () => {
     const state = makeBoardState(
       [fighter(30)],
       [wild(5, ASLEEP)],
       {},
       {
-        marks: [{ cell: at(2, 4), groundEffectId: FIRE_GROUND, remaining: 6 }],
+        marks: [{ cell: at(2, 5), groundEffectId: FIRE_GROUND, remaining: 6 }],
       },
     );
     const { events } = playVez(
       state,
-      { position: 0, move: at(2, 3), action: { type: 'wait' } },
+      { position: 0, move: at(2, 4), action: { type: 'wait' } },
       catalog,
     );
     expect(

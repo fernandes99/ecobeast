@@ -13,6 +13,10 @@ const SEARCHING_TEXT := "Procurando um Ecobeast..."
 const GONE_TEXT := "Essa luta não existe mais."
 const PICK_ENTRY_TEXT := "Toque no hexágono verde onde ele entra."
 const CANNOT_ENTER_TEXT := "Esse Ecobeast não pode entrar."
+const PICK_SPHERE_TEXT := "Toque no Ecobeast selvagem."
+const FLEE_TEXT := "Fugir"
+const FLEE_CONFIRM_TEXT := "Desfazer e fugir"
+const FLEE_UNDO_TEXT := "Para fugir, o passo é desfeito. Toque de novo em Fugir."
 const RESULT_TEXTS: Dictionary[String, String] = {
 	"victory": "Você venceu!",
 	"defeat": "Você perdeu.",
@@ -65,7 +69,11 @@ var _destination := Vector2i.ZERO
 var _reach: Dictionary[Vector2i, Array] = {}
 ## 0 sem Técnica escolhida; -1 é a emergência.
 var _skill_slot := 0
+## A Esfera escolhida na Mochila, à espera do selvagem; -1 sem nenhuma.
+var _sphere_item := -1
 var _targets: Array[Vector2i] = []
+## Fugir depois de andar pede um segundo toque, que desfaz o passo.
+var _flee_armed: bool = false
 
 ## Depois de uma queda: quem entra, um por vaga pendente.
 var _entries: Array[Dictionary] = []
@@ -80,12 +88,17 @@ var _entry_team := -1
 @onready var _skills_grid: GridContainer = %SkillsGrid
 @onready var _emergency_button: Button = %EmergencyButton
 @onready var _actions_row: Control = %ActionsRow
+@onready var _bag_button: Button = %BagButton
+@onready var _switch_button: Button = %SwitchButton
+@onready var _flee_button: Button = %FleeButton
 @onready var _wait_button: Button = %WaitButton
 @onready var _result_box: VBoxContainer = %ResultBox
 @onready var _result_label: Label = %ResultLabel
 @onready var _result_message: Label = %ResultMessage
 @onready var _exit_button: Button = %ExitButton
 @onready var _next_panel: NextCreaturePanel = %NextPanel
+@onready var _items_panel: BattleItemsPanel = %ItemsPanel
+@onready var _capture_overlay: CaptureOverlay = %CaptureOverlay
 @onready var _level_up_overlay: LevelUpOverlay = %LevelUpOverlay
 @onready var _evolution_overlay: EvolutionOverlay = %EvolutionOverlay
 @onready var _skill_overlay: SkillLearnOverlay = %SkillLearnOverlay
@@ -107,18 +120,23 @@ func _ready() -> void:
 		button.pressed.connect(_choose_skill.bind(index + 1))
 		_skills_grid.add_child(button)
 	_emergency_button.pressed.connect(_choose_skill.bind(-1))
-	_wait_button.pressed.connect(_send.bind({"type": "wait"}))
+	_wait_button.pressed.connect(_wait)
+	_bag_button.pressed.connect(_open_bag)
+	_switch_button.pressed.connect(_open_switch)
+	_flee_button.pressed.connect(_flee)
+	_items_panel.chosen.connect(_use_item)
+	_items_panel.capture_chosen.connect(_aim_sphere)
 	%InfoButton.pressed.connect(_history.open)
 	_exit_button.pressed.connect(_leave)
 	_board.cell_tapped.connect(_on_cell_tapped)
 	_board_area.resized.connect(_fit_board)
-	_next_panel.chosen.connect(_on_entry_chosen)
+	_next_panel.chosen.connect(_on_creature_chosen)
 	_set_busy(true)
 	_begin()
 
 
-## Voltar do Android ou Esc: fecha painéis, desfaz a Técnica escolhida ou, com a
-## luta encerrada, volta ao mapa. Sair no meio da luta é Fugir (board-battle/05).
+## Voltar do Android ou Esc: fecha painéis, desfaz a Técnica ou a Esfera
+## escolhida ou, com a luta encerrada, volta ao mapa. Sair no meio da luta é Fugir.
 func handle_back() -> bool:
 	if _leaving:
 		return false
@@ -132,8 +150,12 @@ func handle_back() -> bool:
 		_skill_overlay.go_back()
 	elif _next_panel.visible:
 		_next_panel.go_back()
-	elif _skill_slot != 0:
+	elif _items_panel.visible:
+		_items_panel.go_back()
+	elif _skill_slot != 0 or _sphere_item >= 0:
 		_cancel_skill()
+	elif _flee_armed:
+		_disarm_flee()
 	elif _result_box.visible:
 		_leave()
 	return true
@@ -212,7 +234,14 @@ func _play_event(event: Dictionary) -> void:
 	var type := DictFields.get_string(event, "type")
 	var side := DictFields.get_string(event, "side")
 	var key := "%s:%d" % [side, DictFields.get_int(event, "position")]
+	if type == "capture_attempted":
+		# O evento não tem lado: `target` é a vaga do selvagem.
+		side = "enemy"
+		key = "enemy:%d" % DictFields.get_int(event, "target")
 	match type:
+		"capture_attempted":
+			var item := GameData.get_item(DictFields.get_id(event, "item_id"))
+			await _capture_overlay.play(item, _species.get(key, 0), DictFields.get_bool(event, "success"))
 		"creature_entered":
 			_enter(key, side, event)
 		"round_started":
@@ -375,6 +404,8 @@ func _begin_vez() -> void:
 	_origin = _view.player_cells[_actor]
 	_moved = false
 	_skill_slot = 0
+	_sphere_item = -1
+	_disarm_flee()
 	var blocked := _view.occupied_cells()
 	blocked.erase(_origin)
 	_reach = BoardGeometry.reachable(_view.board_cells, blocked, _origin)
@@ -419,6 +450,12 @@ func _on_cell_tapped(cell: Vector2i) -> void:
 		return
 	if _view.phase != "choose_action":
 		return
+	_disarm_flee()
+	if _sphere_item >= 0:
+		if _targets.has(cell):
+			_send({"type": "capture", "item_id": _sphere_item, "target": {"q": cell.x, "r": cell.y}})
+			return
+		_cancel_skill()
 	if _skill_slot != 0:
 		if _targets.has(cell):
 			var action := {"type": "emergency"} if _skill_slot == -1 else {"type": "skill", "slot": _skill_slot}
@@ -455,9 +492,12 @@ func _step_to(cell: Vector2i) -> void:
 func _choose_skill(slot: int) -> void:
 	if _busy or _walking:
 		return
+	_disarm_flee()
 	if _skill_slot == slot:
 		_cancel_skill()
 		return
+	_sphere_item = -1
+	_message.text = ""
 	var foes: Array[Vector2i] = []
 	foes.append_array(_view.enemy_cells.values())
 	if slot == -1:
@@ -477,9 +517,105 @@ func _choose_skill(slot: int) -> void:
 
 
 func _cancel_skill() -> void:
+	if _sphere_item >= 0:
+		_message.text = ""
 	_skill_slot = 0
+	_sphere_item = -1
 	_targets.clear()
 	_light_reach()
+
+
+func _wait() -> void:
+	_disarm_flee()
+	_send({"type": "wait"})
+
+
+## As ações do painel de baixo só valem na vez de um Ecobeast do jogador.
+func _can_choose() -> bool:
+	return not _busy and not _walking and _view != null and _view.phase == "choose_action" and _actor >= 0
+
+
+func _open_bag() -> void:
+	if not _can_choose():
+		return
+	_disarm_flee()
+	_cancel_skill()
+	_items_panel.open(_view.items, _view.team, _team_names(_view))
+
+
+## Um item de cura serve para qualquer um da equipe, e gasta a vez.
+func _use_item(item_id: int, team_index: int) -> void:
+	_items_panel.close()
+	_send({"type": "item", "item_id": item_id, "team_index": team_index})
+
+
+## A Esfera pede o selvagem: todos acendem, a qualquer distância.
+func _aim_sphere(item_id: int) -> void:
+	_items_panel.close()
+	_skill_slot = 0
+	_sphere_item = item_id
+	_targets.clear()
+	_targets.append_array(_view.enemy_cells.values())
+	_board.light(_targets, UiPalette.BOARD_TARGET)
+	_message.text = PICK_SPHERE_TEXT
+
+
+func _open_switch() -> void:
+	if not _can_choose():
+		return
+	_disarm_flee()
+	_cancel_skill()
+	_next_panel.open(_view.team, _team_names(_view), _view.player_actives[_actor], true)
+
+
+## O mesmo painel serve à troca e à escolha depois de uma queda.
+func _on_creature_chosen(team_index: int) -> void:
+	if _view == null:
+		return
+	if _view.phase == "choose_next":
+		_on_entry_chosen(team_index)
+		return
+	var creature := _view.team[team_index]
+	if creature.hp <= 0 or _view.player_actives.has(team_index):
+		_next_panel.show_error(CANNOT_ENTER_TEXT)
+		return
+	_next_panel.close()
+	_send({"type": "switch", "team_index": team_index})
+
+
+## O servidor recusa andar e fugir juntos: depois de andar, o primeiro toque
+## avisa, e o segundo desfaz o passo e foge.
+func _flee() -> void:
+	if not _can_choose():
+		return
+	_cancel_skill()
+	if _moved and not _flee_armed:
+		_flee_armed = true
+		_flee_button.text = FLEE_CONFIRM_TEXT
+		_message.text = FLEE_UNDO_TEXT
+		return
+	_disarm_flee()
+	if _moved:
+		_board.snap(_actor_key(), _origin)
+		_moved = false
+	_send({"type": "flee"})
+
+
+func _disarm_flee() -> void:
+	_flee_armed = false
+	_flee_button.text = FLEE_TEXT
+	if _message.text == FLEE_UNDO_TEXT:
+		_message.text = ""
+
+
+## Alguém da equipe de pé e fora do tabuleiro, para a troca.
+func _has_reserve() -> bool:
+	if _view == null:
+		return false
+	for index: int in _view.team.size():
+		if _view.team[index].hp > 0 and not _view.player_actives.has(index):
+			return true
+	return false
 
 
 ## A vez vai ao servidor; uma recusa devolve o Ecobeast para onde estava.
@@ -644,6 +780,9 @@ func _set_busy(busy: bool) -> void:
 	_busy = busy
 	_wait_button.disabled = busy
 	_emergency_button.disabled = busy
+	_bag_button.disabled = busy
+	_switch_button.disabled = busy or not _has_reserve()
+	_flee_button.disabled = busy or _view == null or not _view.can_flee
 	for button: Node in _skills_grid.get_children():
 		if busy:
 			(button as Button).disabled = true

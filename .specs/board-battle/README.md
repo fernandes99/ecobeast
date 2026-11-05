@@ -23,7 +23,7 @@ A luta nova substitui a de hoje em Explorar zona. A luta atual deixa de ser usad
 | Uma fila por Velocidade, com empate sorteado. Cada Ecobeast age sozinho na sua vez, e o jogador joga cada um dos seus quando a vez dele chega | Decisão do dono |
 | A fila é montada no começo de cada rodada. Uma mudança de Velocidade no meio da rodada só vale na próxima | Proposta aceita pelo dono: a fila na tela não fica pulando |
 | A prioridade das Técnicas não vale no tabuleiro, por enquanto | Proposta aceita pelo dono: na fila, a Técnica é escolhida quando a vez já chegou, e não há nada para a prioridade furar |
-| Na vez, o Ecobeast pode andar até 3 hexágonos e depois agir. As duas partes são opcionais, e andar vem sempre antes de agir | Proposta do planejamento, aceita pelo dono ("faz como você faria"). O 3 é _a revisar_ |
+| Na vez, o Ecobeast pode andar 1 hexágono e depois agir. As duas partes são opcionais, e andar vem sempre antes de agir | Proposta do planejamento, aceita pelo dono ("faz como você faria"), com 3 hexágonos. Em 2026-11-05, depois de jogar a tela, o dono baixou para 1 ("inicialmente vamos ter um limite de andar apenas um bloco por turno"). O número é _a revisar_ |
 | O movimento é o mesmo para todos, e não sai da Velocidade | Proposta aceita pelo dono: a Velocidade já decide a fila, e não deve contar duas vezes |
 | Cada Técnica tem alcance, forma, se atravessa os Ecobeasts e uma marca no chão opcional, com a duração. Por enquanto, as formas são um alvo a até N hexágonos e a linha reta | Decisão do dono. Áreas maiores, empurrar e puxar ficam para depois, uma de cada vez |
 | No começo, só 3 Técnicas ganham forma: Arranhão (corpo a corpo), Faísca Rápida (linha reta) e Chama Espiral (à distância, deixa o chão em chamas). As outras ficam corpo a corpo, com alcance 1 | Decisão do dono: 2 ou 3 Técnicas no início, e as outras corpo a corpo. A escolha das 3 é _a revisar_ |
@@ -58,8 +58,8 @@ A luta nova substitui a de hoje em Explorar zona. A luta atual deixa de ser usad
 | 1 | [01-skill-areas](01-skill-areas.md) | Catálogo: alcance, forma, atravessar e marca no chão das Técnicas, com as 3 primeiras | concluída |
 | 2 | [02-board-engine](02-board-engine.md) | Servidor: o motor do tabuleiro, com fila, andar, áreas, marcas, IA, queda, troca, Esfera, fuga e fim | concluída |
 | 3 | [03-board-api](03-board-api.md) | Servidor: as rotas da luta no tabuleiro, ao lado das antigas | concluída |
-| 4 | [04-board-screen](04-board-screen.md) | Jogo: a tela do tabuleiro, com a vez, andar, Técnicas, os selvagens, a entrada depois de uma queda e o histórico, aberta pelo menu de depuração | concluída (falta o teste do dono no editor) |
-| 5 | [05-board-actions](05-board-actions.md) | Jogo: Mochila, Esfera, troca e fuga. Explorar zona passa a usar o tabuleiro | rascunho |
+| 4 | [04-board-screen](04-board-screen.md) | Jogo: a tela do tabuleiro, com a vez, andar, Técnicas, os selvagens, a entrada depois de uma queda e o histórico, aberta pelo menu de depuração | concluída |
+| 5 | [05-board-actions](05-board-actions.md) | Jogo: Mochila, Esfera, troca e fuga. Explorar zona passa a usar o tabuleiro, e o andar cai para 1 hexágono | concluída (falta o teste do dono no editor) |
 
 O desenho compartilhado está no [architecture.md](architecture.md).
 

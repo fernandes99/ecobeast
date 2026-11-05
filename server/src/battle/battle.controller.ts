@@ -40,8 +40,16 @@ const NO_TEAM_RESPONSES =
   'Sem Domador ou sem equipe: "Crie seu Domador primeiro." ' +
   'Sem nenhum Ecobeast com HP: "Cure sua equipe no Refúgio."';
 
-/** A batalha do jogador (.specs/battle-core/03-battle-api.md). */
-@ApiTags('Batalha')
+const LEGACY =
+  'Legado: nenhuma tela do jogo usa esta rota. A luta de Explorar zona é a do ' +
+  'tabuleiro, em `/v1/me/board-battle`. ';
+
+/**
+ * A batalha do jogador (.specs/battle-core/03-battle-api.md). Legado: nenhuma
+ * tela abre mais esta luta, e Explorar zona usa a do tabuleiro
+ * (board-battle/05, RF-07). Fica até o dono pedir para apagar.
+ */
+@ApiTags('Batalha (legado)')
 @ApiBearerAuth()
 @ApiUnauthorizedResponse({
   description: 'Sem sessão, ou sessão inválida ou vencida.',
@@ -57,7 +65,9 @@ export class BattleController {
   @Post()
   @ApiOperation({
     summary: 'Começar uma batalha de teste',
+    deprecated: true,
     description:
+      LEGACY +
       'Começa uma batalha contra um inimigo selvagem da espécie e do nível dados, ' +
       'ou contra a equipe de `enemies`, com `slots` vagas de cada lado. ' +
       'A rota só existe com `ENABLE_TEST_BATTLE` ligada. ' +
@@ -92,7 +102,9 @@ export class BattleController {
   @Post('wild')
   @ApiOperation({
     summary: 'Começar um encontro selvagem',
+    deprecated: true,
     description:
+      LEGACY +
       'Começa uma batalha contra um Ecobeast do hexágono do Domador, escolhido ao ' +
       'acaso entre os que estão lá. O servidor confere se dava para chegar até a ' +
       'posição andando. O Ecobeast sai do mapa aqui, e `spawn_id` diz qual foi. ' +
@@ -123,7 +135,9 @@ export class BattleController {
   @HttpCode(200)
   @ApiOperation({
     summary: 'Agir na batalha',
+    deprecated: true,
     description:
+      LEGACY +
       'O jogo diz o que o jogador quer fazer, uma ação por Ecobeast de pé em ' +
       'campo, e o servidor decide o resto. ' +
       'A resposta traz o estado e os eventos deste turno. Quando `phase` é ' +

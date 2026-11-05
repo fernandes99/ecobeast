@@ -38,14 +38,21 @@ interface BoardBody {
       cells: (Cell | null)[];
       entry_cells: Cell[];
       pending_positions: number[];
-      team: { hp: number }[];
+      team: { hp: number; skills: { current_pp: number }[] }[];
     };
     enemy: { cells: (Cell | null)[] };
   };
   events: BattleEvent[];
   captured_to: string | null;
   spawn_id: number | null;
+  progression: {
+    team_index: number;
+    level_after: number;
+    evolution: { species_id: number } | null;
+  }[];
 }
+
+type Battle = BoardBody['battle'];
 
 describe('Rotas da luta no tabuleiro (e2e)', () => {
   let app: INestApplication<App>;
@@ -93,6 +100,8 @@ describe('Rotas da luta no tabuleiro (e2e)', () => {
         http().post('/v1/me/board-battle/action').set(auth).send(body),
       startClassic: (body: object) =>
         http().post('/v1/me/battle').set(auth).send(body),
+      evolve: (uid: string, body: object) =>
+        http().post(`/v1/me/creatures/${uid}/evolution`).set(auth).send(body),
     };
   }
 
@@ -158,6 +167,96 @@ describe('Rotas da luta no tabuleiro (e2e)', () => {
 
   const sameCell = (a: Cell, b: Cell) => a.q === b.q && a.r === b.r;
 
+  /**
+   * A vez de quem joga agora: ao lado de um selvagem, usa Arranhão nele; senão,
+   * anda 1 hexágono na direção do mais perto e, se ficar ao lado, usa Arranhão.
+   */
+  function attackVez(battle: Battle): object {
+    const position = battle.queue[0]!.position;
+    const me = battle.player.cells[position]!;
+    const foes = battle.enemy.cells.filter((cell) => cell !== null);
+    const nextTo = (from: Cell) =>
+      foes.find((foe) => hexDistance(from, foe) === 1);
+    const gap = (from: Cell) =>
+      Math.min(...foes.map((foe) => hexDistance(from, foe)));
+    const scratch = (target: Cell) => ({
+      type: 'skill',
+      slot: ARRANHAO_SLOT,
+      target,
+    });
+    const beside = nextTo(me);
+    if (beside) return { position, action: scratch(beside) };
+    const taken = [...battle.player.cells, ...battle.enemy.cells].filter(
+      (cell) => cell !== null,
+    );
+    const steps = hexNeighbors(me)
+      .filter(
+        (cell) =>
+          battle.board.cells.some((boardCell) => sameCell(boardCell, cell)) &&
+          !taken.some((other) => sameCell(other, cell)),
+      )
+      .sort((a, b) => gap(a) - gap(b));
+    const move = steps[0];
+    if (!move) return { position, action: { type: 'wait' } };
+    const target = nextTo(move);
+    return {
+      position,
+      move,
+      action: target ? scratch(target) : { type: 'wait' },
+    };
+  }
+
+  const waitVez = (battle: Battle) => ({
+    position: battle.queue[0]!.position,
+    action: { type: 'wait' },
+  });
+  const fleeVez = (battle: Battle) => ({
+    position: battle.queue[0]!.position,
+    action: { type: 'flee' },
+  });
+
+  /** Joga as vezes do jogador até a luta sair do `choose_action`. */
+  async function playOut(
+    user: User,
+    first: BoardBody,
+    vez: (battle: Battle) => object = attackVez,
+  ): Promise<BoardBody> {
+    let body = first;
+    for (let turn = 0; turn < MAX_VEZES; turn++) {
+      if (body.battle.phase !== 'choose_action') break;
+      body = await act(user, vez(body.battle));
+    }
+    return body;
+  }
+
+  async function team(user: User) {
+    return prisma.creatureInstance.findMany({
+      where: { playerId: user.id },
+      orderBy: { partySlot: 'asc' },
+      include: { skills: { orderBy: { slot: 'asc' } }, statusCondition: true },
+    });
+  }
+
+  /** O HP e o PP do banco são os da resposta do fim. */
+  async function expectTeamSaved(user: User, battle: Battle): Promise<void> {
+    const rows = await team(user);
+    expect(rows.map((row) => row.currentHp)).toEqual(
+      battle.player.team.map((creature) => creature.hp),
+    );
+    expect(
+      rows.map((row) => row.skills.map((skill) => skill.currentPp)),
+    ).toEqual(
+      battle.player.team.map((creature) =>
+        creature.skills.map((skill) => skill.current_pp),
+      ),
+    );
+  }
+
+  async function coinsOf(user: User): Promise<number> {
+    return (await prisma.player.findUniqueOrThrow({ where: { id: user.id } }))
+      .coins;
+  }
+
   it('um 1×1 de teste traz o tabuleiro, as áreas, onde cada um está e a fila', async () => {
     const user = await strongUser();
     const body = await start(user, { enemies: [WEAK_ENEMY] });
@@ -175,45 +274,35 @@ describe('Rotas da luta no tabuleiro (e2e)', () => {
     });
   });
 
-  it('andar 3 hexágonos e usar Arranhão ao lado do selvagem traz a vez dele junto', async () => {
+  it('chegar ao lado do selvagem e usar Arranhão traz a vez dele junto', async () => {
     const user = await strongUser();
-    const started = await start(user, { enemies: [TOUGH_ENEMY] });
-    // O selvagem pode ter jogado antes e andado: o passo sai de onde ele está.
-    const me = started.battle.player.cells[0]!;
-    const enemy = started.battle.enemy.cells[0]!;
-    const board = started.battle.board.cells;
-    const next = hexNeighbors(enemy).find(
-      (cell) =>
-        board.some((boardCell) => sameCell(boardCell, cell)) &&
-        !sameCell(cell, me) &&
-        hexDistance(me, cell) <= 3,
-    );
-    const body = await act(user, {
-      position: 0,
-      ...(hexDistance(me, enemy) > 1 && { move: next }),
-      action: { type: 'skill', slot: ARRANHAO_SLOT, target: enemy },
-    });
-    const types = body.events.map((event) => event.type);
-    expect(types).toContain('skill_used');
-    expect(types).toContain('damage');
+    let body = await start(user, { enemies: [TOUGH_ENEMY] });
+    const scratched = (events: BattleEvent[]) =>
+      events.some(
+        (event) => event.type === 'skill_used' && event.side === 'player',
+      );
+    for (let vez = 0; vez < MAX_VEZES && !scratched(body.events); vez++) {
+      body = await act(user, attackVez(body.battle));
+    }
+    expect(body.events.map((event) => event.type)).toContain('damage');
     expect(body.events).toContainEqual(
       expect.objectContaining({ type: 'vez_started', side: 'enemy' }),
     );
   });
 
-  it('andar 4 hexágonos é recusado com 400, e a luta segue igual', async () => {
+  it('andar 1 hexágono funciona; 2 é recusado com 400, e a luta segue igual', async () => {
     const user = await strongUser();
     await start(user, { enemies: [WEAK_ENEMY] });
     const res = await user
-      .act({ position: 0, move: { q: 0, r: 1 }, action: { type: 'wait' } })
+      .act({ position: 0, move: { q: 0, r: 3 }, action: { type: 'wait' } })
       .expect(400);
     expect(res.body.message).toBe(CANNOT_REACH);
     const body = await act(user, {
       position: 0,
-      move: { q: 0, r: 2 },
+      move: { q: 0, r: 4 },
       action: { type: 'wait' },
     });
-    expect(body.battle.player.cells).toEqual([{ q: 0, r: 2 }]);
+    expect(body.battle.player.cells).toEqual([{ q: 0, r: 4 }]);
   });
 
   it('corpo sem action fora do choose_next é malformado', async () => {
@@ -272,7 +361,7 @@ describe('Rotas da luta no tabuleiro (e2e)', () => {
     );
   });
 
-  it('capturar o selvagem grava o capturado na equipe', async () => {
+  it('uma Esfera no selvagem a 4 hexágonos captura, e ele entra na equipe', async () => {
     const user = await strongUser();
     await prisma.inventoryItem.create({
       data: { playerId: user.id, itemId: sphere.id, quantity: 1 },
@@ -291,6 +380,193 @@ describe('Rotas da luta no tabuleiro (e2e)', () => {
       where: { playerId: user.id },
     });
     expect(team).toHaveLength(2);
+  });
+
+  it('com a equipe cheia, o capturado vai para o Santuário, e a Esfera é gasta', async () => {
+    const user = await strongUser();
+    for (let slot = 2; slot <= 6; slot++) await addCreature(user, slot);
+    await prisma.inventoryItem.create({
+      data: { playerId: user.id, itemId: sphere.id, quantity: 1 },
+    });
+    await start(user, { enemies: [WEAK_ENEMY] });
+    const { catalog } = app.get(BattleStore).get(user.id)!;
+    catalog.captureRates.set(RUVO, 100);
+    catalog.items.get(sphere.id)!.captureBonus = 1000;
+    const body = await act(user, {
+      position: 0,
+      action: { type: 'capture', item_id: sphere.id, target: { q: 2, r: 1 } },
+    });
+    expect(body.captured_to).toBe('storage');
+    const stored = await prisma.creatureInstance.count({
+      where: { playerId: user.id, location: 'storage' },
+    });
+    expect(stored).toBe(1);
+    const spheres = await prisma.inventoryItem.findFirst({
+      where: { playerId: user.id, itemId: sphere.id },
+    });
+    expect(spheres).toBeNull();
+  });
+
+  describe('fim da luta', () => {
+    it('vencer grava o HP e o PP da resposta, dá XP e soma as moedas', async () => {
+      // No 100, o nível máximo, não há XP a ganhar.
+      const user = await userWithStarter({ level: 50 });
+      const coins = await coinsOf(user);
+      const last = await playOut(
+        user,
+        await start(user, { enemies: [WEAK_ENEMY] }),
+      );
+      expect(last.battle.result).toBe('victory');
+      await expectTeamSaved(user, last.battle);
+      expect(last.events).toContainEqual(
+        expect.objectContaining({ type: 'xp_gained', team_index: 0 }),
+      );
+      const gained = last.events.find((event) => event.type === 'coins_gained');
+      expect(gained).toBeDefined();
+      expect(await coinsOf(user)).toBe(
+        coins + (gained as { amount: number }).amount,
+      );
+    });
+
+    it('subir para o nível de evolução grava o nível, e aceitar a oferta evolui', async () => {
+      const RUVAK = 2;
+      const user = await userWithStarter({
+        level: 15,
+        currentXp: 16 ** 3 - 1,
+        currentHp: 40,
+      });
+      const last = await playOut(
+        user,
+        await start(user, { enemies: [WEAK_ENEMY] }),
+      );
+      expect(last.battle.result).toBe('victory');
+      expect(last.progression[0]).toMatchObject({
+        level_after: 16,
+        evolution: { species_id: RUVAK },
+      });
+      const [row] = await team(user);
+      expect(row!.level).toBe(16);
+      await user.evolve(row!.uid, { accept: true }).expect(200);
+      const [evolved] = await team(user);
+      expect(evolved!.speciesId).toBe(RUVAK);
+    });
+
+    it('perder grava 0 HP, limpa o status e tira as moedas do evento', async () => {
+      const poison = await prisma.statusCondition.findFirstOrThrow({
+        where: { slug: 'poison' },
+      });
+      const user = await userWithStarter({ statusConditionId: poison.id });
+      await prisma.player.update({
+        where: { id: user.id },
+        data: { coins: 500 },
+      });
+      const strong = { species_id: RUVO, level: 100 };
+      const last = await playOut(
+        user,
+        await start(user, { enemies: [strong] }),
+        waitVez,
+      );
+      expect(last.battle.result).toBe('defeat');
+      const [row] = await team(user);
+      expect(row!.currentHp).toBe(0);
+      expect(row!.statusConditionId).toBeNull();
+      const lost = last.events.find((event) => event.type === 'coins_lost');
+      expect(lost).toBeDefined();
+      expect(await coinsOf(user)).toBe(
+        500 - (lost as { amount: number }).amount,
+      );
+    });
+
+    it('uma luta que acaba antes da primeira vez do jogador também grava o fim', async () => {
+      // A 1 HP, contra um selvagem de nível 100 que joga antes e alcança de 3
+      // hexágonos, a luta quase sempre acaba já na abertura.
+      const strong = { species_id: RUVO, level: 100 };
+      let opening: BoardBody | null = null;
+      let user: User | null = null;
+      for (let attempt = 0; attempt < 10 && !opening; attempt++) {
+        user = await userWithStarter({ currentHp: 1 });
+        const body = await start(user, { enemies: [strong] });
+        if (body.battle.phase === 'ended') opening = body;
+      }
+      expect(opening?.battle.result).toBe('defeat');
+      const [row] = await team(user!);
+      expect(row!.currentHp).toBe(0);
+      await user!.act({ position: 0, action: { type: 'wait' } }).expect(404);
+    });
+
+    it('fugir grava o HP, o PP e o status daquele momento, sem XP', async () => {
+      const user = await strongUser();
+      const opening = await start(user, { enemies: [TOUGH_ENEMY] });
+      const creature = app.get(BattleStore).get(user.id)!.state.player.team[0]!;
+      creature.statusSlug = 'poison';
+      const last = await playOut(user, opening, fleeVez);
+      expect(last.battle.result).toBe('fled');
+      await expectTeamSaved(user, last.battle);
+      const [row] = await team(user);
+      expect(row!.statusCondition?.slug).toBe('poison');
+      expect(last.events.map((event) => event.type)).not.toContain('xp_gained');
+    });
+  });
+
+  describe('Mochila e troca', () => {
+    async function withTonic(user: User, quantity: number): Promise<Item> {
+      const tonic = await prisma.item.findFirstOrThrow({
+        where: { healAmount: { not: null } },
+        orderBy: { id: 'asc' },
+      });
+      await prisma.inventoryItem.create({
+        data: { playerId: user.id, itemId: tonic.id, quantity },
+      });
+      return tonic;
+    }
+
+    it('curar quem está na reserva gasta a vez, sobe o HP dele e desconta o item no fim', async () => {
+      const user = await strongUser();
+      await addCreature(user, 2, { currentHp: 1 });
+      const tonic = await withTonic(user, 2);
+      await start(user, { enemies: [WEAK_ENEMY] });
+      const body = await act(user, {
+        position: 0,
+        action: { type: 'item', item_id: tonic.id, team_index: 1 },
+      });
+      expect(body.events).toContainEqual(
+        expect.objectContaining({ type: 'item_used', team_index: 1 }),
+      );
+      expect(body.battle.player.team[1]!.hp).toBeGreaterThan(1);
+      expect(body.events).toContainEqual(
+        expect.objectContaining({ type: 'vez_started', side: 'enemy' }),
+      );
+      const last = await playOut(user, body);
+      expect(last.battle.result).toBe('victory');
+      const tonics = await prisma.inventoryItem.findFirstOrThrow({
+        where: { playerId: user.id, itemId: tonic.id },
+      });
+      expect(tonics.quantity).toBe(1);
+      await expectTeamSaved(user, last.battle);
+    });
+
+    it('trocar põe quem entra no hexágono de quem saiu, e ele só joga na rodada seguinte', async () => {
+      const user = await strongUser();
+      await addCreature(user, 2);
+      const opening = await start(user, { enemies: [WEAK_ENEMY] });
+      const from = opening.battle.player.cells[0]!;
+      const moved = { q: from.q, r: from.r - 1 };
+      const body = await act(user, {
+        position: 0,
+        move: moved,
+        action: { type: 'switch', team_index: 1 },
+      });
+      const types = body.events.map((event) => event.type);
+      const entered = body.events.findIndex(
+        (event) => event.type === 'creature_entered' && event.side === 'player',
+      );
+      expect(body.events[entered]).toMatchObject({
+        team_index: 1,
+        cell: moved,
+      });
+      expect(types.lastIndexOf('round_started')).toBeGreaterThan(entered);
+      expect(body.battle.player.cells[0]).toEqual(moved);
+    });
   });
 
   it('o encontro de Explorar zona tira o Ecobeast do mapa e começa no tabuleiro', async () => {
@@ -334,5 +610,23 @@ describe('Rotas da luta no tabuleiro (e2e)', () => {
     expect(doc.paths['/v1/me/board-battle']?.post).toBeDefined();
     expect(doc.paths['/v1/me/board-battle/wild']?.post).toBeDefined();
     expect(doc.paths['/v1/me/board-battle/action']?.post).toBeDefined();
+  });
+
+  it('o /docs marca as rotas da luta antiga como legado', async () => {
+    const { body: doc } = await request(app.getHttpServer())
+      .get('/docs/openapi.json')
+      .expect(200);
+    for (const path of [
+      '/v1/me/battle',
+      '/v1/me/battle/wild',
+      '/v1/me/battle/action',
+    ]) {
+      const operation = doc.paths[path]?.post;
+      expect(operation?.deprecated).toBe(true);
+      expect(operation?.tags).toEqual(['Batalha (legado)']);
+    }
+    expect(
+      doc.paths['/v1/me/board-battle/action']?.post?.deprecated,
+    ).toBeUndefined();
   });
 });
