@@ -1,6 +1,6 @@
 # 04. Tela do tabuleiro
 
-- **Status:** rascunho
+- **Status:** concluída (falta o dono jogar no editor: ver Verificação)
 - **Depende de:** [03](03-board-api.md), [architecture.md](architecture.md#jogo)
 
 ## Contexto
@@ -105,12 +105,31 @@ godot --headless --path client --quit-after 60
 
 Com o servidor no ar e `ENABLE_TEST_BATTLE` ligada: F5, Explorar zona, menu de depuração, "Tabuleiro: ligado", e um encontro jogado até o fim, vencendo e perdendo. Depois, "Teste 2×2" e "Teste 3×3" jogados por algumas rodadas. Quem implementa diz o que conferiu e o que ficou para o dono.
 
+**Conferido por quem implementou**, sem janela:
+
+- o projeto abre e todos os scripts e cenas novos carregam, sem erros nem avisos novos;
+- com respostas reais do servidor (um 2×2 de teste e uma vez), gravadas por um usuário de teste apagado depois, o jogo monta o `BoardBattleView`, o tabuleiro de 624 × 465 com 42 hexágonos e as áreas, acha o hexágono tocado, põe os Ecobeasts, anda pelo caminho do evento `moved` e tira quem sai;
+- o alcance de 3 passos tem só caminhos mais curtos e inclui o hexágono que o servidor aceitou; Arranhão sem ninguém ao lado não acende nada, e Faísca Rápida acende as linhas retas.
+
+**Fica para o dono, no editor (F5):** todos os critérios de aceite acima. A tela inteira (a vez, a reprodução dos eventos, o histórico, a entrada depois de uma queda e o fim da luta) não foi vista rodando.
+
 ## Tarefas
 
-- [ ] Modelos, `BoardGeometry`, `Session` e serviço (RF-01 a RF-03).
-- [ ] Tabuleiro, Ecobeasts, fila e painel (RF-04 a RF-08).
-- [ ] A vez do jogador (RF-09 a RF-12).
-- [ ] A reprodução dos eventos e o histórico (RF-13 a RF-15).
-- [ ] A entrada depois de uma queda e o fim da luta (RF-16 e RF-17).
-- [ ] Menu de depuração (RF-18 e RF-19).
-- [ ] Rodar a verificação, marcar a spec e o README como `concluída` e fazer o commit `feat: tela da luta no tabuleiro`.
+- [x] Modelos, `BoardGeometry`, `Session` e serviço (RF-01 a RF-03).
+- [x] Tabuleiro, Ecobeasts, fila e painel (RF-04 a RF-08).
+- [x] A vez do jogador (RF-09 a RF-12).
+- [x] A reprodução dos eventos e o histórico (RF-13 a RF-15).
+- [x] A entrada depois de uma queda e o fim da luta (RF-16 e RF-17).
+- [x] Menu de depuração (RF-18 e RF-19).
+- [x] Rodar a verificação, marcar a spec e o README como `concluída` e fazer o commit `feat: tela da luta no tabuleiro`.
+
+## Divergências
+
+O que a implementação fez diferente desta spec, e por quê:
+
+- **Sem `board_token`, `board_action_panel` e `board_event_player` em arquivos próprios.** O Ecobeast no tabuleiro é uma classe interna do `BoardView` (`Token`, com o sprite, o nome e a barra), o painel de ações está na cena da tela, e a reprodução dos eventos fica no script da tela, que já tem tudo o que ela usa.
+- **O `BattleNarrator` não mudou.** As linhas novas (`round_started`, `moved`, `waited`, `mark_placed` e `ground_damage`) ficam em `BOARD_LINES`, na tela. `mark_ended` e `vez_started` não têm linha.
+- **Sem a barra de XP subindo no fim:** a tela não tem o cartão da luta de hoje. O XP aparece no histórico, e subir de nível, Técnica nova e Evolução usam as telas de hoje.
+- **`BattleHud`, `IconCircle` e `BattleStyles` não foram usados.** A fila usa o `CreaturePortrait`, e o Ecobeast usa o `HpBar`.
+- **`BoardBattleView.round_number`**, e não `round`: o nome `round` esconderia a função `round()` do GDScript.
+- **A luta de teste sorteia entre todas as espécies do catálogo.** Quem não tem folha animada aparece com o `front.png`, parado.

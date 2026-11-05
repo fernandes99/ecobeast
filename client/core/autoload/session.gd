@@ -22,6 +22,8 @@ var _fought_spawn := 0
 ## Depuração: o modo God, ligado no menu do mapa. Vale para as lutas que começarem
 ## depois e some ao fechar o jogo; o servidor só aceita com a rota de teste ligada.
 var debug_god := false
+## Depuração (board-battle/04): o encontro do mapa abre a luta no tabuleiro.
+var debug_board := false
 
 
 func has_auth_session() -> bool:
@@ -165,6 +167,25 @@ func take_fought_spawn() -> int:
 func battle_action(action: Dictionary) -> Result:
 	@warning_ignore("redundant_await")
 	return await _service.battle_action(action)
+
+
+## A luta no tabuleiro (board-battle/04): como a de hoje, a tela guarda a luta.
+func start_board_wild_battle(coord: Vector2i) -> Result:
+	@warning_ignore("redundant_await")
+	var result: Result = await _service.start_board_wild_battle(coord, debug_god)
+	if result.ok:
+		_fought_spawn = (result.data as BoardTurn).spawn_id
+	return result
+
+
+func start_board_test_battle(enemies: Array[Dictionary], slots: int) -> Result:
+	@warning_ignore("redundant_await")
+	return await _service.start_board_test_battle(enemies, slots)
+
+
+func board_action(body: Dictionary) -> Result:
+	@warning_ignore("redundant_await")
+	return await _service.board_action(body)
 
 
 func debug_almost_level_up() -> Result:

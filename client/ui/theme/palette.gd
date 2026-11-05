@@ -53,6 +53,34 @@ const ITEM_CATEGORY_COLORS: Dictionary[String, Color] = {
 	"heal": HP_HIGH,
 }
 
+## Cena da batalha (battle-screen/04): painéis e caixa por cima do cenário.
+const BATTLE_PANEL := Color("#0E1C33E6")
+const BATTLE_PANEL_BORDER := Color("#3D6FB0")
+const BATTLE_LEVEL_ENEMY := Color("#C62828")
+const BATTLE_LEVEL_PLAYER := Color("#2E7D32")
+## Botões da batalha (battle-screen/04, RF-20): id -> cor. A revisar.
+const BATTLE_ACTION_COLORS: Dictionary[StringName, Color] = {
+	&"fight": Color("#E8481F"),
+	&"team": Color("#2370E0"),
+	&"bag": Color("#46A82C"),
+	&"flee": Color("#8A45E6"),
+}
+
+## Luta no tabuleiro (board-battle/04). A revisar.
+const BOARD_BACKGROUND := Color("#2F4A2A")
+const BOARD_CELL := Color("#E3D9AD")
+const BOARD_CELL_BORDER := Color("#5B5537")
+const BOARD_ZONE_PLAYER := Color("#7FC46A")
+const BOARD_ZONE_ENEMY := Color("#D9735A")
+## Onde o Ecobeast chega andando, e os alvos da Técnica escolhida.
+const BOARD_REACH := Color("#9FD3F0B3")
+const BOARD_TARGET := Color("#F2B33DB3")
+## A área da Técnica, por um instante, quando ela é usada.
+const BOARD_AREA := Color("#FFFFFF99")
+const BOARD_ACTIVE := Color("#FFD54A")
+const BOARD_PLAYER := BATTLE_LEVEL_PLAYER
+const BOARD_ENEMY := BATTLE_LEVEL_ENEMY
+
 ## Faixas da barra de HP.
 const HP_MID := WARNING
 const HP_LOW := DANGER

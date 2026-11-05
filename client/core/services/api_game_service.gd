@@ -16,6 +16,9 @@ const TEAM_STORE_PATH := "/v1/me/team/store"
 const EXPLORATION_PATH := "/v1/me/exploration"
 const WILD_BATTLE_PATH := "/v1/me/battle/wild"
 const BATTLE_ACTION_PATH := "/v1/me/battle/action"
+const BOARD_BATTLE_PATH := "/v1/me/board-battle"
+const BOARD_WILD_PATH := "/v1/me/board-battle/wild"
+const BOARD_ACTION_PATH := "/v1/me/board-battle/action"
 const DEBUG_XP_PATH := "/v1/me/debug/xp"
 const EVOLUTION_PATH := "/v1/me/creatures/%s/evolution"
 const LEARN_SKILL_PATH := "/v1/me/creatures/%s/skills"
@@ -107,6 +110,26 @@ func battle_action(action: Dictionary) -> Result:
 	return _turn_result(response)
 
 
+func start_board_wild_battle(coord: Vector2i, god: bool = false) -> Result:
+	var body := {"q": coord.x, "r": coord.y}
+	if god:
+		body["god"] = true
+	return _board_result(await Api.request(HTTPClient.METHOD_POST, BOARD_WILD_PATH, body, true))
+
+
+func start_board_test_battle(enemies: Array[Dictionary], slots: int) -> Result:
+	var body := {"enemies": enemies, "slots": slots}
+	return _board_result(await Api.request(HTTPClient.METHOD_POST, BOARD_BATTLE_PATH, body, true))
+
+
+func board_action(body: Dictionary) -> Result:
+	var response: ApiResponse = await Api.request(HTTPClient.METHOD_POST, BOARD_ACTION_PATH, body, true)
+	# A luta expirou ou o servidor reiniciou: a tela oferece a saída.
+	if response.code == HTTPClient.RESPONSE_NOT_FOUND:
+		return Result.success(null)
+	return _board_result(response)
+
+
 func debug_almost_level_up() -> Result:
 	return _player_result(await Api.request(HTTPClient.METHOD_POST, DEBUG_XP_PATH, null, true))
 
@@ -137,6 +160,13 @@ func _turn_result(response: ApiResponse) -> Result:
 	if not response.ok:
 		return Result.failure(response.error)
 	var turn: BattleTurn = BattleTurn.from_dict(response.data) if response.data is Dictionary else null
+	return Result.success(turn) if turn != null else Result.failure(ApiResponse.SERVER_ERROR)
+
+
+func _board_result(response: ApiResponse) -> Result:
+	if not response.ok:
+		return Result.failure(response.error)
+	var turn: BoardTurn = BoardTurn.from_dict(response.data) if response.data is Dictionary else null
 	return Result.success(turn) if turn != null else Result.failure(ApiResponse.SERVER_ERROR)
 
 

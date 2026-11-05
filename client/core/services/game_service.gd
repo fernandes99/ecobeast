@@ -67,6 +67,21 @@ extends RefCounted
 @abstract func battle_action(action: Dictionary) -> Result
 
 
+## data: o BoardTurn da abertura da luta no tabuleiro (board-battle/04), contra
+## um Ecobeast do hexágono do Domador.
+@abstract func start_board_wild_battle(coord: Vector2i, god: bool = false) -> Result
+
+
+## data: o BoardTurn da abertura da luta de teste no tabuleiro. `enemies`: cada
+## um com species_id e level.
+@abstract func start_board_test_battle(enemies: Array[Dictionary], slots: int) -> Result
+
+
+## data: o BoardTurn da vez, ou null se a luta não existe mais. `body`: a vez
+## ({position, move?, action}) ou quem entra ({entries}).
+@abstract func board_action(body: Dictionary) -> Result
+
+
 ## Só para testar: cada um da equipe fica a 1 XP do próximo nível.
 ## data: o Player atualizado.
 @abstract func debug_almost_level_up() -> Result
