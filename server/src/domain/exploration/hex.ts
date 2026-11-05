@@ -4,7 +4,8 @@ export interface HexCoord {
   r: number;
 }
 
-const DIRECTIONS: readonly HexCoord[] = [
+/** As 6 direções, a partir de um hexágono. */
+export const HEX_DIRECTIONS: readonly HexCoord[] = [
   { q: 1, r: 0 },
   { q: -1, r: 0 },
   { q: 0, r: 1 },
@@ -18,7 +19,7 @@ export function hexKey({ q, r }: HexCoord): string {
 }
 
 export function hexNeighbors({ q, r }: HexCoord): HexCoord[] {
-  return DIRECTIONS.map((direction) => ({
+  return HEX_DIRECTIONS.map((direction) => ({
     q: q + direction.q,
     r: r + direction.r,
   }));

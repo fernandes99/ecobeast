@@ -36,6 +36,11 @@ const CONFUSED_HIT: BattleSkill = {
   critStage: 0,
   targetSlug: 'self',
   effects: [],
+  areaShape: 'single',
+  range: 1,
+  pierces: false,
+  groundEffectId: null,
+  groundTurns: null,
 };
 
 export function rollSleepTurns(random: Random): number {
@@ -182,6 +187,14 @@ export function faintIfDown(context: TurnContext, spot: Spot): void {
 }
 
 export function applyEndOfTurn(context: TurnContext, spot: Spot): void {
+  applyStatusDamage(context, spot);
+  const creature = combatantAt(context.state, spot);
+  creature.isFeared = false;
+  creature.isProtected = false;
+}
+
+/** A perda de HP da queimadura e do veneno, com o desmaio. */
+export function applyStatusDamage(context: TurnContext, spot: Spot): void {
   const creature = combatantAt(context.state, spot);
   const status = creature.statusSlug;
   const loss = status === null ? undefined : END_OF_TURN_LOSS[status];
@@ -200,6 +213,4 @@ export function applyEndOfTurn(context: TurnContext, spot: Spot): void {
     });
     faintIfDown(context, spot);
   }
-  creature.isFeared = false;
-  creature.isProtected = false;
 }

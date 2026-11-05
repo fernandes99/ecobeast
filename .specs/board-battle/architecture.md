@@ -38,7 +38,9 @@ interface BoardState extends BattleState {
   marks: GroundMark[];
   round: number;
   /** O que falta da rodada, na ordem. O primeiro é quem joga agora. */
-  queue: Spot[];
+  queue: QueueEntry[]; // Spot e o teamIndex de quem ocupava a vaga
+  /** No `choose_next`: onde quem entra pode ficar. */
+  entryCells: HexCoord[];
 }
 
 interface Board {

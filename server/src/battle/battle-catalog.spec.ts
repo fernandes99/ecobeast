@@ -25,6 +25,7 @@ function skill(overrides: Partial<SkillRow> = {}): SkillRow {
     groundEffectId: null,
     groundTurns: null,
     element: { slug: 'instinct' },
+    areaShape: { slug: 'single' },
     skillCategory: { slug: 'support' },
     skillTarget: { slug: 'enemy' },
     effects: [],
@@ -63,6 +64,7 @@ const NO_ROWS: CatalogRows = {
   immunities: [],
   items: [],
   species: [],
+  groundEffects: [],
 };
 
 describe('toBattleCatalog', () => {
@@ -105,6 +107,52 @@ describe('toBattleCatalog', () => {
       critStage: 0,
       targetSlug: 'enemy',
       effects: [],
+      areaShape: 'single',
+      range: 1,
+      pierces: false,
+      groundEffectId: null,
+      groundTurns: null,
+    });
+  });
+
+  it('leva a forma, o alcance e a marca no chão da Técnica (board-battle/02)', () => {
+    const { skills } = toBattleCatalog({
+      ...NO_ROWS,
+      skills: [
+        skill({
+          areaShape: { slug: 'line' },
+          areaShapeId: 2,
+          range: 3,
+          pierces: true,
+          groundEffectId: 1,
+          groundTurns: 6,
+        }),
+      ],
+    });
+    expect(skills.get(2)).toMatchObject({
+      areaShape: 'line',
+      range: 3,
+      pierces: true,
+      groundEffectId: 1,
+      groundTurns: 6,
+    });
+  });
+
+  it('traz o que cada marca no chão faz', () => {
+    const { groundEffects } = toBattleCatalog({
+      ...NO_ROWS,
+      groundEffects: [
+        { id: 1, damagePercent: 6, statusCondition: null },
+        { id: 2, damagePercent: null, statusCondition: { slug: 'freeze' } },
+      ],
+    });
+    expect(groundEffects.get(1)).toEqual({
+      damagePercent: 6,
+      statusSlug: null,
+    });
+    expect(groundEffects.get(2)).toEqual({
+      damagePercent: null,
+      statusSlug: 'freeze',
     });
   });
 

@@ -58,6 +58,11 @@ export function makeSkill(overrides: Partial<BattleSkill> = {}): BattleSkill {
     critStage: 0,
     targetSlug: 'enemy',
     effects: [],
+    areaShape: 'single',
+    range: 1,
+    pierces: false,
+    groundEffectId: null,
+    groundTurns: null,
     ...overrides,
   };
 }
@@ -103,6 +108,7 @@ export function makeCatalog(
     xpYields: new Map(
       Object.entries(xpYields).map(([id, xp]) => [Number(id), xp]),
     ),
+    groundEffects: new Map(),
   };
 }
 

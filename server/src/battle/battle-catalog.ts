@@ -1,4 +1,5 @@
 import type {
+  AreaShape,
   BattleCatalog,
   BattleSkill,
   BattleSkillEffect,
@@ -11,6 +12,7 @@ const SLUG = { select: { slug: true } } as const;
 
 const SKILL_INCLUDE = {
   element: SLUG,
+  areaShape: SLUG,
   skillCategory: SLUG,
   skillTarget: SLUG,
   effects: {
@@ -42,31 +44,47 @@ export interface CatalogRows {
     captureBonus: number | null;
   }[];
   species: { id: number; captureRate: number; baseXpYield: number }[];
+  groundEffects: {
+    id: number;
+    damagePercent: number | null;
+    statusCondition: { slug: string } | null;
+  }[];
 }
 
 /** O catálogo que as regras da batalha recebem, lido do banco. */
 export async function loadBattleCatalog(
   prisma: PrismaService,
 ): Promise<BattleCatalog> {
-  const [skills, efficacy, immunities, items, species] = await Promise.all([
-    prisma.skill.findMany({ include: SKILL_INCLUDE }),
-    prisma.elementEfficacy.findMany(),
-    prisma.statusConditionImmunity.findMany({
-      select: { elementId: true, statusCondition: SLUG },
-    }),
-    prisma.item.findMany({
-      select: {
-        id: true,
-        healAmount: true,
-        curesStatus: true,
-        captureBonus: true,
-      },
-    }),
-    prisma.species.findMany({
-      select: { id: true, captureRate: true, baseXpYield: true },
-    }),
-  ]);
-  return toBattleCatalog({ skills, efficacy, immunities, items, species });
+  const [skills, efficacy, immunities, items, species, groundEffects] =
+    await Promise.all([
+      prisma.skill.findMany({ include: SKILL_INCLUDE }),
+      prisma.elementEfficacy.findMany(),
+      prisma.statusConditionImmunity.findMany({
+        select: { elementId: true, statusCondition: SLUG },
+      }),
+      prisma.item.findMany({
+        select: {
+          id: true,
+          healAmount: true,
+          curesStatus: true,
+          captureBonus: true,
+        },
+      }),
+      prisma.species.findMany({
+        select: { id: true, captureRate: true, baseXpYield: true },
+      }),
+      prisma.groundEffect.findMany({
+        select: { id: true, damagePercent: true, statusCondition: SLUG },
+      }),
+    ]);
+  return toBattleCatalog({
+    skills,
+    efficacy,
+    immunities,
+    items,
+    species,
+    groundEffects,
+  });
 }
 
 export function toBattleCatalog(rows: CatalogRows): BattleCatalog {
@@ -91,6 +109,12 @@ export function toBattleCatalog(rows: CatalogRows): BattleCatalog {
     xpYields: new Map(
       rows.species.map(({ id, baseXpYield }) => [id, baseXpYield]),
     ),
+    groundEffects: new Map(
+      rows.groundEffects.map(({ id, damagePercent, statusCondition }) => [
+        id,
+        { damagePercent, statusSlug: statusCondition?.slug ?? null },
+      ]),
+    ),
   };
 }
 
@@ -107,6 +131,11 @@ function toBattleSkill(row: SkillRow): BattleSkill {
     critStage: row.critStage,
     targetSlug: row.skillTarget.slug,
     effects: row.effects.map(toBattleEffect),
+    areaShape: row.areaShape.slug as AreaShape,
+    range: row.range,
+    pierces: row.pierces,
+    groundEffectId: row.groundEffectId,
+    groundTurns: row.groundTurns,
   };
 }
 

@@ -41,8 +41,8 @@ import type {
 } from './types.js';
 
 /** Fixa por enquanto; a regra será revista, talvez com base no inimigo. */
-const FLEE_FAIL_CHANCE = 0.2;
-const NO_CREATURE = 'Esse Ecobeast não existe.';
+export const FLEE_FAIL_CHANCE = 0.2;
+export const NO_CREATURE = 'Esse Ecobeast não existe.';
 export const EVERY_SLOT = 'Escolha uma ação para cada Ecobeast em campo.';
 export const CHOOSE_TARGET = 'Escolha o alvo.';
 export const NO_TARGET = 'Esse alvo não está na luta.';
@@ -147,7 +147,7 @@ export function applyAction(
 }
 
 /** Cada vaga recebe, em ordem, o próximo de pé da equipe; sobrando vaga, ela fica vazia. */
-function newSide(team: Combatant[], slots: number): BattleSide {
+export function newSide(team: Combatant[], slots: number): BattleSide {
   const copy = structuredClone(team);
   const standing = copy.flatMap((creature, index) =>
     isStanding(creature) ? [index] : [],
@@ -280,7 +280,7 @@ function nextRefusal(
 }
 
 /** O item da `bag`, com ao menos uma unidade; nulo sem ele. */
-function ownedItem(
+export function ownedItem(
   state: BattleState,
   itemId: number,
   catalog: BattleCatalog,
@@ -292,7 +292,7 @@ function ownedItem(
 }
 
 /** Confere o item e o alvo; não muda nada. */
-function itemEffect(
+export function itemEffect(
   state: BattleState,
   action: ItemAction,
   catalog: BattleCatalog,
@@ -328,7 +328,7 @@ function captureTarget(state: BattleState, action: CaptureAction): Combatant {
   return combatantAt(state, { side: 'enemy', position });
 }
 
-function skillRefusal(
+export function skillRefusal(
   combatant: Combatant,
   slot: number,
   catalog: BattleCatalog,
@@ -340,14 +340,20 @@ function skillRefusal(
   return learned.currentPp > 0 ? null : 'Essa Técnica está sem PP.';
 }
 
-function switchRefusal(state: BattleState, teamIndex: number): string | null {
+export function switchRefusal(
+  state: BattleState,
+  teamIndex: number,
+): string | null {
   const chosen = state.player.team[teamIndex];
   return chosen && chosen.currentHp > 0
     ? null
     : 'Esse Ecobeast não pode lutar.';
 }
 
-function inFieldRefusal(state: BattleState, teamIndex: number): string | null {
+export function inFieldRefusal(
+  state: BattleState,
+  teamIndex: number,
+): string | null {
   return state.player.activeIndices.includes(teamIndex)
     ? 'Esse Ecobeast já está em campo.'
     : null;
@@ -495,7 +501,7 @@ function tryCapture(context: TurnContext, action: CaptureAction): void {
   }
 }
 
-function spendItem(state: BattleState, itemId: number): void {
+export function spendItem(state: BattleState, itemId: number): void {
   const slot = state.bag.find((bagItem) => bagItem.itemId === itemId)!;
   slot.quantity -= 1;
   slot.used += 1;
@@ -566,7 +572,7 @@ function checkEnd(context: TurnContext): void {
 }
 
 /** Vitória se algum inimigo desmaiou; com todos capturados, captura. */
-function resultWithoutEnemies(state: BattleState): BattleResult {
+export function resultWithoutEnemies(state: BattleState): BattleResult {
   const anyFainted = state.enemy.team.some(
     (enemy) => enemy.currentHp === 0 && !enemy.captured,
   );

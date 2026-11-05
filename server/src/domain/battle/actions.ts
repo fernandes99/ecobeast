@@ -90,11 +90,8 @@ function useSkill(
   action: FieldAction,
   foe: Spot | null,
 ): void {
-  const { state, events, random } = context;
+  const { events } = context;
   const { spot, skill, learned } = action;
-  const author = combatantAt(state, spot);
-  const target = foe && combatantAt(state, foe);
-  const aimsAtTarget = skill.targetSlug !== 'self';
 
   if (learned) learned.currentPp -= 1;
   events.push({
@@ -102,6 +99,24 @@ function useSkill(
     ...spot,
     skill_id: learned ? skill.id : null,
   });
+  resolveSkill(context, spot, skill, foe);
+}
+
+/**
+ * O que a Técnica faz depois de anunciada: proteção, bloqueio, precisão, dano
+ * e efeitos, contra um adversário. `foe` é nulo numa Técnica em si mesmo sem
+ * adversário. Não gasta PP nem confere desmaio.
+ */
+export function resolveSkill(
+  context: TurnContext,
+  spot: Spot,
+  skill: BattleSkill,
+  foe: Spot | null,
+): void {
+  const { state, events, random } = context;
+  const author = combatantAt(state, spot);
+  const target = foe && combatantAt(state, foe);
+  const aimsAtTarget = skill.targetSlug !== 'self';
 
   if (skill.effects.some((effect) => effect.effectSlug === PROTECT_EFFECT)) {
     author.isProtected = true;
@@ -124,18 +139,18 @@ function useSkill(
     }
   }
 
-  const dealt = skill.power > 0 ? strike(context, action, foe!) : 0;
+  const dealt = skill.power > 0 ? strike(context, spot, skill, foe!) : 0;
   if (dealt !== null) applyEffects(context, spot, foe, skill, dealt);
 }
 
 /** Aplica o dano no alvo; devolve o HP que ele perdeu, ou nulo se for imune. */
 function strike(
   context: TurnContext,
-  action: FieldAction,
+  spot: Spot,
+  skill: BattleSkill,
   foe: Spot,
 ): number | null {
   const { state, catalog, events, random } = context;
-  const { spot, skill } = action;
   const attacker = combatantAt(state, spot);
   const defender = combatantAt(state, foe);
 

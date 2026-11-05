@@ -1,3 +1,4 @@
+import type { HexCoord } from '../exploration/hex.js';
 import type { UsableItem } from '../items/use-item.js';
 import type { StatBlock } from '../rules/types.js';
 
@@ -69,6 +70,23 @@ export interface BattleSkill {
   critStage: number;
   targetSlug: string;
   effects: BattleSkillEffect[];
+  /** No tabuleiro (board-battle/01): um hexágono a até `range`, ou linha reta. */
+  areaShape: AreaShape;
+  range: number;
+  /** Só na linha: atravessa os inimigos em vez de parar no primeiro. */
+  pierces: boolean;
+  /** A marca que fica no chão; nulos juntos sem marca. */
+  groundEffectId: number | null;
+  groundTurns: number | null;
+}
+
+export type AreaShape = 'single' | 'line';
+
+/** O que uma marca no chão faz a quem está nela, depois de cada vez da fila. */
+export interface BattleGroundEffect {
+  /** % do HP máximo; nulo sem dano. */
+  damagePercent: number | null;
+  statusSlug: string | null;
 }
 
 export interface BattleItem extends UsableItem {
@@ -88,6 +106,7 @@ export interface BattleCatalog {
   captureRates: Map<number, number>;
   /** Id da espécie → `base_xp_yield`. */
   xpYields: Map<number, number>;
+  groundEffects: Map<number, BattleGroundEffect>;
 }
 
 export type BattlePhase = 'choose_action' | 'choose_next' | 'ended';
@@ -170,12 +189,16 @@ export type BattleEvent =
       max_hp: number;
       hp: number;
       status: string | null;
+      /** Só no tabuleiro: onde ele entrou. */
+      cell?: HexCoord;
     }
   | {
       type: 'skill_used';
       side: SideSlug;
       position: number;
       skill_id: number | null;
+      /** Só no tabuleiro: os hexágonos da área. */
+      cells?: HexCoord[];
     }
   | {
       type: 'cannot_act';
@@ -260,7 +283,27 @@ export type BattleEvent =
     }
   | { type: 'creature_left'; side: SideSlug; position: number }
   | { type: 'flee_failed' }
-  | { type: 'battle_ended'; result: BattleResult };
+  | { type: 'battle_ended'; result: BattleResult }
+  // Só na luta no tabuleiro (.specs/board-battle/architecture.md, "Eventos").
+  | { type: 'round_started'; round: number; queue: Spot[] }
+  | { type: 'vez_started'; side: SideSlug; position: number }
+  | { type: 'moved'; side: SideSlug; position: number; path: HexCoord[] }
+  | { type: 'waited'; side: SideSlug; position: number }
+  | {
+      type: 'mark_placed';
+      cell: HexCoord;
+      ground_effect_id: number;
+      remaining: number;
+    }
+  | { type: 'mark_ended'; cell: HexCoord }
+  | {
+      type: 'ground_damage';
+      side: SideSlug;
+      position: number;
+      amount: number;
+      hp: number;
+      ground_effect_id: number;
+    };
 
 /** O que cada passo do turno recebe; `state` já é uma cópia. */
 export interface TurnContext {

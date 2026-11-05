@@ -12,6 +12,11 @@ export const EMERGENCY_SKILL: BattleSkill = {
   priority: 0,
   critStage: 0,
   targetSlug: 'enemy',
+  areaShape: 'single',
+  range: 1,
+  pierces: false,
+  groundEffectId: null,
+  groundTurns: null,
   effects: [
     {
       effectSlug: 'self_damage',

@@ -14,7 +14,7 @@ const SUPPORT_WEIGHT = 20;
 const MIN_WEIGHT = 1;
 const MAX_WEIGHT = 100;
 
-interface SkillOption {
+export interface SkillOption {
   slot: number;
   weight: number;
 }
@@ -50,7 +50,7 @@ export function chooseEnemyAction(
 }
 
 /** O dano estimado como porcentagem do HP atual do alvo. */
-function skillWeight(
+export function skillWeight(
   attacker: Combatant,
   defender: Combatant,
   skill: BattleSkill,
@@ -69,7 +69,7 @@ function skillWeight(
   return Math.min(MAX_WEIGHT, Math.max(MIN_WEIGHT, percent));
 }
 
-function pickSlot(options: SkillOption[], random: Random): number {
+export function pickSlot(options: SkillOption[], random: Random): number {
   const total = options.reduce((sum, option) => sum + option.weight, 0);
   let roll = random() * total;
   for (const option of options) {

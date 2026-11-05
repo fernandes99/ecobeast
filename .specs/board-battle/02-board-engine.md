@@ -1,6 +1,6 @@
 # 02. Motor do tabuleiro
 
-- **Status:** rascunho
+- **Status:** concluída
 - **Depende de:** [01](01-skill-areas.md), [battle-slots/01](../battle-slots/01-engine-slots.md), [architecture.md](architecture.md)
 
 ## Contexto
@@ -34,7 +34,7 @@ Esta fase escreve o juiz do tabuleiro sobre essas peças, em `server/src/domain/
 - **RF-03:** A fila de cada rodada tem todos os Ecobeasts de pé no tabuleiro, pela Velocidade efetiva, com empate sorteado e sem prioridade. Evento `round_started`.
 - **RF-04:** `applyBoardVez(state, vez, catalog, random)` só aceita a vez do primeiro da fila, quando ele é do jogador. Fora disso, recusa com "Não é a vez desse Ecobeast.".
 - **RF-05:** Depois da vez do jogador, o motor joga as vezes dos selvagens até a próxima vez do jogador, um `choose_next` ou o fim, e devolve todos os eventos na ordem.
-- **RF-06:** Quem não pode agir (sono, congelamento, paralisia, medo) perde a vez inteira, sem andar.
+- **RF-06:** Quem não pode agir (sono, congelamento, paralisia, medo) perde a vez inteira, sem andar. Item, troca, Esfera e fuga sem andar são do Domador e não passam por essa conferência, como na luta de hoje.
 
 **Andar**
 
@@ -70,18 +70,18 @@ Esta fase escreve o juiz do tabuleiro sobre essas peças, em `server/src/domain/
 
 ## Critérios de aceite
 
-- [ ] Num 1×1, os dois começam a 4 hexágonos, nas linhas 1 e 5, e a fila põe o mais rápido primeiro.
-- [ ] Andar 3 passos por hexágonos livres funciona. 4 passos, ou passar por um Ecobeast, é recusado sem mudar nada.
-- [ ] Arranhão atinge um inimigo ao lado e é recusado a 2 hexágonos.
-- [ ] Faísca Rápida, numa linha com dois inimigos, atinge só o primeiro. A mesma linha com `pierces` atinge os dois. Um alvo fora das 6 linhas é recusado.
-- [ ] Chama Espiral num hexágono vazio a 3 deixa a marca. Um Ecobeast que termina a vez nela toma dano depois de cada vez da fila, e a marca some depois de 6 vezes.
-- [ ] Passar por cima da marca andando não dá dano.
-- [ ] Num 2×2, um Ecobeast do jogador que cai com reserva leva ao `choose_next`. Quem entra fica num hexágono da área verde e não joga na mesma rodada.
-- [ ] A troca põe quem entra no hexágono de quem saiu.
-- [ ] Capturar um de dois selvagens, longe, mantém a luta com o outro.
-- [ ] O selvagem longe anda até o alvo mais perto, e o que já alcança fica e ataca.
-- [ ] Uma vez do jogador devolve os eventos de todos os selvagens até a próxima vez dele.
-- [ ] Os testes do motor antigo passam sem mudança.
+- [x] Num 1×1, os dois começam a 4 hexágonos, nas linhas 1 e 5, e a fila põe o mais rápido primeiro.
+- [x] Andar 3 passos por hexágonos livres funciona. 4 passos, ou passar por um Ecobeast, é recusado sem mudar nada.
+- [x] Arranhão atinge um inimigo ao lado e é recusado a 2 hexágonos.
+- [x] Faísca Rápida, numa linha com dois inimigos, atinge só o primeiro. A mesma linha com `pierces` atinge os dois. Um alvo fora das 6 linhas é recusado.
+- [x] Chama Espiral num hexágono vazio a 3 deixa a marca. Um Ecobeast que termina a vez nela toma dano depois de cada vez da fila, e a marca some depois de 6 vezes.
+- [x] Passar por cima da marca andando não dá dano.
+- [x] Num 2×2, um Ecobeast do jogador que cai com reserva leva ao `choose_next`. Quem entra fica num hexágono da área verde e não joga na mesma rodada.
+- [x] A troca põe quem entra no hexágono de quem saiu.
+- [x] Capturar um de dois selvagens, longe, mantém a luta com o outro.
+- [x] O selvagem longe anda até o alvo mais perto, e o que já alcança fica e ataca.
+- [x] Uma vez do jogador devolve os eventos de todos os selvagens até a próxima vez dele.
+- [x] Os testes do motor antigo passam sem mudança.
 
 ## Desenho técnico
 
@@ -108,9 +108,22 @@ cd server && npm run typecheck && npm run lint && npm test
 
 ## Tarefas
 
-- [ ] Tabuleiro, largada e fila, com os testes falhando primeiro (RF-01 a RF-06).
-- [ ] Andar (RF-07 e RF-08).
-- [ ] Áreas, alvo e marcas (RF-09 a RF-15).
-- [ ] Entrada, troca, item, Esfera, fuga e espera (RF-16 a RF-21).
-- [ ] IA, fim e recompensas (RF-22 e RF-23).
-- [ ] Rodar a verificação, marcar a spec e o README como `concluída` e fazer o commit `feat: motor da luta no tabuleiro`.
+- [x] Tabuleiro, largada e fila, com os testes falhando primeiro (RF-01 a RF-06).
+- [x] Andar (RF-07 e RF-08).
+- [x] Áreas, alvo e marcas (RF-09 a RF-15).
+- [x] Entrada, troca, item, Esfera, fuga e espera (RF-16 a RF-21).
+- [x] IA, fim e recompensas (RF-22 e RF-23).
+- [x] Rodar a verificação, marcar a spec e o README como `concluída` e fazer o commit `feat: motor da luta no tabuleiro`.
+
+## Divergências
+
+O que a implementação fez diferente desta spec e do [architecture.md](architecture.md), e por quê:
+
+- **Item, troca, Esfera e fuga sem andar** não passam pelo "pode agir?" (RF-06): quem age é o Domador, como na luta de hoje. Sem isso, um Ecobeast dormindo nunca poderia ser trocado.
+- **A fila guarda quem ocupava a vaga** (`QueueEntry`, com `teamIndex`). Assim, quem entra numa vaga que ainda tinha lugar na fila não herda esse lugar (RF-18).
+- **`creature_left` sai sempre que alguém deixa o tabuleiro**, desmaiado ou capturado, mesmo com reserva para entrar. Na luta de hoje, ele só sai quando a vaga fica vazia de vez.
+- **Uma marca com status** não tenta de novo em quem já tem um status principal: ela age a cada vez da fila, e repetiria o `effect_failed` sem parar.
+- **Uma Técnica em si mesmo** não aplica os efeitos que miram o adversário: no tabuleiro não há "o adversário", e a luta de hoje usava o primeiro de pé. Nenhuma Técnica do catálogo usa isso hoje.
+- **Os eventos novos** entraram no `BattleEvent` de `server/src/domain/battle/types.ts`, junto com os de hoje, porque as peças compartilhadas (dano, status, XP) empurram eventos na mesma lista. A luta de hoje nunca os gera.
+- **As peças da luta de hoje** que o tabuleiro usa foram só exportadas ou divididas, sem mudar o comportamento: `resolveSkill` em `actions.ts`, `applyStatusDamage` em `status.ts`, e as recusas e o item em `engine.ts`.
+- **Duas recusas novas:** "Ninguém está esperando para entrar." (quem entra fora do `choose_next`) e "Escolha o próximo Ecobeast." (uma vez no `choose_next`).
