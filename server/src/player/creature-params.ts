@@ -64,8 +64,8 @@ export async function loadCreatureBlueprint(
         growthRate: true,
         elements: { orderBy: { slot: 'asc' } },
         stats: { include: { stat: true } },
+        // Os normais e o oculto: a chance de nascer com o oculto (hidden-traits/01).
         traits: {
-          where: { isHidden: false },
           orderBy: { slot: 'asc' },
           include: { trait: true },
         },
@@ -104,7 +104,11 @@ export async function loadCreatureBlueprint(
       maxPpBySkill: new Map(
         species.skills.map((row) => [row.skillId, row.skill.maxPp]),
       ),
-      traitIds: species.traits.map((row) => row.traitId),
+      traitIds: species.traits
+        .filter((row) => !row.isHidden)
+        .map((row) => row.traitId),
+      hiddenTraitId:
+        species.traits.find((row) => row.isHidden)?.traitId ?? null,
       temperaments: temperaments.map((row) => ({
         id: row.id,
         increasedStat: row.increasedStat.slug as StatSlug,

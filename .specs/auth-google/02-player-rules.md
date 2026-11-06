@@ -66,7 +66,7 @@ cd server && npm test
 
 - **Slugs dos stats:** a primeira versão desta spec citava `attack`, `defense` etc. Os slugs da tabela `stats` e do JSON do cliente são `atk`, `def`, `sp_atk`, `sp_def` e `spd`, e foi o que ficou.
 - **`level` nulo:** a coluna `species_skills.level` aceita nulo (Técnicas ensináveis). Entrada sem nível nunca entra na criatura, mesmo com método `level_up`.
-- **Ordem dos sorteios:** Genes (na ordem de `STAT_SLUGS`), Temperamento, Traço e gênero. Espécie sem gênero não sorteia o gênero. É a mesma ordem do `CreatureFactory` do cliente.
+- **Ordem dos sorteios:** Genes (na ordem de `STAT_SLUGS`), Temperamento, Traço e gênero. Espécie sem gênero não sorteia o gênero. É a mesma ordem do `CreatureFactory` do cliente. Desde a [hidden-traits/01](../hidden-traits/01-hidden-trait-chance.md), a espécie com Traço oculto sorteia, antes do Traço, a chance de 1 em 20 de nascer com ele; quem ganha o oculto não sorteia o normal.
 - **`maxPpBySkill`** é um `Map` (id da Técnica → PP máximo). O learnset não é reordenado aqui: a [03](03-player-api.md) o lê do banco na ordem certa.
 - **Catálogo incompleto:** lista de Temperamentos vazia, espécie sem Traço normal ou Técnica sem PP conhecido lançam erro com mensagem clara, em vez de gravar uma criatura pela metade.
 - **Mesma Técnica duas vezes:** não acontece por nível, porque a chave de `species_skills` é espécie + Técnica + método.

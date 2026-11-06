@@ -1,6 +1,7 @@
 import {
   createCreature,
   CreateCreatureParams,
+  HIDDEN_TRAIT_CHANCE,
   LearnsetEntry,
 } from './creature-factory.js';
 
@@ -167,6 +168,49 @@ describe('createCreature', () => {
       sequence(0, 0, 0, 0, 0, 0, 0, 0.9999, 0),
     );
     expect(creature.traitId).toBe(7);
+  });
+
+  describe('Traço oculto (hidden-traits/01)', () => {
+    const WITH_HIDDEN = { ...PARAMS, hiddenTraitId: 12 };
+    const GENES_AND_TEMPERAMENT = [0, 0, 0, 0, 0, 0, 0];
+
+    it('a chance é de 1 em 20', () => {
+      expect(HIDDEN_TRAIT_CHANCE).toBe(1 / 20);
+    });
+
+    it('abaixo da chance, nasce com o oculto e não sorteia o normal', () => {
+      // Genes, Temperamento, chance do oculto e gênero: sem o sorteio do normal.
+      const creature = createCreature(
+        WITH_HIDDEN,
+        sequence(...GENES_AND_TEMPERAMENT, 0.049, 0.4),
+      );
+      expect(creature.traitId).toBe(12);
+      expect(creature.gender).toBe('male');
+    });
+
+    it('na chance ou acima, sorteia o normal como antes', () => {
+      const creature = createCreature(
+        WITH_HIDDEN,
+        sequence(...GENES_AND_TEMPERAMENT, 0.05, 0.6, 0.6),
+      );
+      expect(creature.traitId).toBe(9);
+      expect(creature.gender).toBe('female');
+    });
+
+    it('sem oculto (null), a sequência e o resultado são os de antes', () => {
+      expect(
+        createCreature({ ...PARAMS, hiddenTraitId: null }, sequence(...DRAWS)),
+      ).toEqual(createCreature(PARAMS, sequence(...DRAWS)));
+    });
+
+    it('só com o oculto, a espécie continua recusada', () => {
+      expect(() =>
+        createCreature(
+          { ...WITH_HIDDEN, traitIds: [] },
+          sequence(...GENES_AND_TEMPERAMENT, 0),
+        ),
+      ).toThrow(/Traço normal/);
+    });
   });
 
   it('recusa espécie sem Traço normal, com mensagem clara', () => {

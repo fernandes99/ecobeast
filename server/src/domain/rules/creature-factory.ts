@@ -5,6 +5,11 @@ import { totalXpForLevel } from './xp-curve.js';
 const MAX_GENE = 31;
 const MAX_SKILLS = 4;
 const START_BOND = 70;
+/**
+ * A chance de nascer com o Traço oculto da espécie (.specs/hidden-traits/01),
+ * pedida pelo dono: 1 em 20.
+ */
+export const HIDDEN_TRAIT_CHANCE = 1 / 20;
 
 export interface LearnsetEntry {
   skillId: number;
@@ -22,6 +27,8 @@ export interface CreateCreatureParams {
   maxPpBySkill: ReadonlyMap<number, number>;
   /** Só os Traços normais da espécie. */
   traitIds: number[];
+  /** O Traço oculto da espécie; sem ele (ou nulo), a chance não é sorteada. */
+  hiddenTraitId?: number | null;
   temperaments: (TemperamentEffect & { id: number })[];
   xpMultiplier: number;
 }
@@ -46,7 +53,8 @@ export interface NewCreature {
  * Cria uma criatura nova (.specs/auth-google/02-player-rules.md, RF-03).
  * `random` devolve um número em [0, 1): em produção vem do `crypto.randomInt`;
  * nos testes, de uma sequência fixa. A ordem dos sorteios é: Genes (na ordem de
- * STAT_SLUGS), Temperamento, Traço e gênero.
+ * STAT_SLUGS), Temperamento, chance do Traço oculto (só se a espécie tem um),
+ * Traço normal (só sem o oculto) e gênero.
  */
 export function createCreature(
   params: CreateCreatureParams,
@@ -67,7 +75,7 @@ export function createCreature(
     trainingPoints[slug] = 0;
   }
   const temperament = temperaments[pickInt(temperaments.length, random)]!;
-  const traitId = traitIds[pickInt(traitIds.length, random)]!;
+  const traitId = pickTrait(traitIds, params.hiddenTraitId ?? null, random);
   const gender = pickGender(species.genderRatio, random);
   const stats = calculateStats(
     species.baseStats,
@@ -92,6 +100,18 @@ export function createCreature(
     bond: START_BOND,
     isPrismatic: false,
   };
+}
+
+/** O oculto com a chance de HIDDEN_TRAIT_CHANCE; senão, um dos normais. */
+function pickTrait(
+  traitIds: number[],
+  hiddenTraitId: number | null,
+  random: () => number,
+): number {
+  if (hiddenTraitId !== null && random() < HIDDEN_TRAIT_CHANCE) {
+    return hiddenTraitId;
+  }
+  return traitIds[pickInt(traitIds.length, random)]!;
 }
 
 /** Inteiro em [0, count). */
