@@ -58,6 +58,11 @@ describe('Rota do mapa de exploração (e2e)', () => {
       starter: () =>
         http().post('/v1/me/starter').set(auth).send({ species_id: RUVO }),
       explore: () => http().post('/v1/me/exploration').set(auth),
+      spawn: (body: object) =>
+        http().post('/v1/me/exploration/spawns').set(auth).send(body),
+      clear: () => http().delete('/v1/me/exploration/spawns').set(auth),
+      wild: (body: object) =>
+        http().post('/v1/me/board-battle/wild').set(auth).send(body),
     };
   }
 
@@ -202,6 +207,146 @@ describe('Rota do mapa de exploração (e2e)', () => {
     });
 
     await user.explore().expect(201);
+  });
+
+  describe('spawn de depuração (biome-encounters/05)', () => {
+    const RUVAK = 2;
+    const INVALID_ENEMY = 'Esse inimigo não existe.';
+
+    async function explorer() {
+      const user = await userWithStarter();
+      const { body } = await user.explore().expect(201);
+      return { user, start: (body as ExplorationBody).map.start };
+    }
+
+    it('põe o Ecobeast na exploração, no formato do mapa, com o nível da equipe', async () => {
+      const { user, start } = await explorer();
+      const before = app.get(ExplorationStore).get(user.id)!.spawns.size;
+
+      const { body } = await user
+        .spawn({ species_id: RUVAK, ...start })
+        .expect(201);
+
+      const { creature } = body as {
+        creature: { id: number; species_id: number; q: number; r: number };
+      };
+      expect(Object.keys(creature).sort()).toEqual([
+        'id',
+        'q',
+        'r',
+        'species_id',
+      ]);
+      expect(creature).toMatchObject({ species_id: RUVAK, ...start });
+      const spawns = app.get(ExplorationStore).get(user.id)!.spawns;
+      expect(spawns.size).toBe(before + 1);
+      expect(spawns.get(creature.id)).toMatchObject({
+        speciesId: RUVAK,
+        level: 5,
+        debug: true,
+      });
+    });
+
+    it('aceita um nível de 1 a 100', async () => {
+      const { user, start } = await explorer();
+
+      const { body } = await user
+        .spawn({ species_id: RUVAK, level: 30, ...start })
+        .expect(201);
+
+      const { id } = (body as { creature: { id: number } }).creature;
+      expect(
+        app.get(ExplorationStore).get(user.id)!.spawns.get(id)!.level,
+      ).toBe(30);
+    });
+
+    it('Procurar no hexágono enfrenta o Ecobeast do spawn', async () => {
+      const { user, start } = await explorer();
+      const store = app.get(ExplorationStore);
+      // Só o do spawn no hexágono: os do sorteio poderiam cair no mesmo.
+      store.get(user.id)!.spawns.clear();
+      const { body } = await user
+        .spawn({ species_id: RUVAK, ...start })
+        .expect(201);
+      const { id } = (body as { creature: { id: number } }).creature;
+
+      const res = await user.wild(start).expect(201);
+
+      const battle = res.body as {
+        spawn_id: number;
+        battle: { enemy: { actives: { species_id: number }[] } };
+      };
+      expect(battle.spawn_id).toBe(id);
+      expect(battle.battle.enemy.actives[0]!.species_id).toBe(RUVAK);
+      expect(store.get(user.id)!.spawns.has(id)).toBe(false);
+    });
+
+    it('espécie que não existe ou nível fora de 1 a 100 dão 400', async () => {
+      const { user, start } = await explorer();
+
+      for (const body of [
+        { species_id: 9999, ...start },
+        { species_id: RUVAK, level: 0, ...start },
+        { species_id: RUVAK, level: 101, ...start },
+        { species_id: RUVAK, q: 'x', r: 0 },
+      ]) {
+        const res = await user.spawn(body).expect(400);
+        expect((res.body as { message: string }).message).toBe(INVALID_ENEMY);
+      }
+    });
+
+    it('sem exploração, dá 404', async () => {
+      const user = await userWithStarter();
+
+      const res = await user
+        .spawn({ species_id: RUVAK, q: 0, r: 0 })
+        .expect(404);
+      await user.clear().expect(404);
+
+      expect((res.body as { message: string }).message).toBe(
+        'Essa exploração acabou. Saia e entre de novo.',
+      );
+    });
+
+    it('remover tira só os do spawn e devolve os ids', async () => {
+      const { user, start } = await explorer();
+      const store = app.get(ExplorationStore);
+      const drawn = [...store.get(user.id)!.spawns.keys()];
+      const ids: number[] = [];
+      for (const species_id of [RUVO, RUVAK]) {
+        const { body } = await user.spawn({ species_id, ...start }).expect(201);
+        ids.push((body as { creature: { id: number } }).creature.id);
+      }
+
+      const { body } = await user.clear().expect(200);
+
+      expect((body as { removed_ids: number[] }).removed_ids.sort()).toEqual(
+        ids.sort(),
+      );
+      expect([...store.get(user.id)!.spawns.keys()]).toEqual(drawn);
+    });
+
+    it('com ENABLE_TEST_BATTLE desligada, as rotas não existem', async () => {
+      const closed = await createTestApp({
+        tokenVerifier: tokens.verifier,
+        env: { ENABLE_TEST_BATTLE: false },
+      });
+      try {
+        const id = randomUUID();
+        users.push(id);
+        const auth = { Authorization: `Bearer ${await tokens.sign(id)}` };
+        await request(closed.getHttpServer())
+          .post('/v1/me/exploration/spawns')
+          .set(auth)
+          .send({ species_id: RUVAK, q: 0, r: 0 })
+          .expect(404);
+        await request(closed.getHttpServer())
+          .delete('/v1/me/exploration/spawns')
+          .set(auth)
+          .expect(404);
+      } finally {
+        await closed.close();
+      }
+    });
   });
 
   it('aparece nos docs, com o cadeado', async () => {

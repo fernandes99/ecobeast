@@ -87,6 +87,15 @@ extends RefCounted
 @abstract func debug_almost_level_up() -> Result
 
 
+## Só para testar (biome-encounters/05): põe um Ecobeast da espécie na exploração do
+## servidor, no hexágono `coord`, para Procurar enfrentá-lo. data: o MapCreature.
+@abstract func debug_spawn(species_id: int, coord: Vector2i) -> Result
+
+
+## Só para testar: tira da exploração os Ecobeasts do spawn. data: Array[int] com os ids.
+@abstract func debug_clear_spawns() -> Result
+
+
 ## Responde à evolução oferecida na última vitória.
 ## data: o ProgressChoice, ou null se a escolha não existe mais.
 @abstract func evolve(uid: String, accept: bool) -> Result

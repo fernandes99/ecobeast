@@ -186,6 +186,16 @@ func board_action(body: Dictionary) -> Result:
 	return await _service.board_action(body)
 
 
+func debug_spawn(species_id: int, coord: Vector2i) -> Result:
+	@warning_ignore("redundant_await")
+	return await _service.debug_spawn(species_id, coord)
+
+
+func debug_clear_spawns() -> Result:
+	@warning_ignore("redundant_await")
+	return await _service.debug_clear_spawns()
+
+
 func debug_almost_level_up() -> Result:
 	@warning_ignore("redundant_await")
 	var result: Result = await _service.debug_almost_level_up()

@@ -133,3 +133,7 @@ O dono pediu, durante a [progression/04](../progression/04-evolution-and-skills-
 - **Quase subir de nível:** [progression/04](../progression/04-evolution-and-skills-screens.md), RF-14 e RF-15. Ele e o God passam pelo servidor, ao contrário do resto do menu.
 - **Conferência:** o menu foi desenhado nas duas partes em 360×640, com o catálogo de um servidor de teste. A luta com o God ligado foi conferida pelos testes do servidor, e não na tela.
 
+
+## Mudanças depois (biome-encounters/05)
+
+O dono pediu que o Ecobeast do spawn desse para enfrentar. Agora o spawn passa pelo servidor e nasce no hexágono do Domador, e não mais num vizinho. Procurar enfrenta ele, e depois da luta ele some. "Remover Ecobeasts" tira do servidor só os do spawn. Os detalhes estão na [biome-encounters/05](../biome-encounters/05-debug-spawn-battle.md).

@@ -36,6 +36,8 @@ export interface MapSpawn extends HexCoord {
   id: number;
   speciesId: number;
   level: number;
+  /** Posto pelo spawn de depuração (biome-encounters/05), e não pelo sorteio. */
+  debug?: boolean;
 }
 
 interface WeightedSpecies {

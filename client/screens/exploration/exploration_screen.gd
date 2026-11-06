@@ -9,6 +9,7 @@ const PortraitScene := preload("res://ui/components/creature_portrait.tscn")
 const LOADING_TEXT := "Gerando mapa..."
 const NOTHING_HERE_TEXT := "Nada por aqui."
 const ALMOST_LEVEL_UP_TEXT := "A equipe está a 1 XP do próximo nível."
+const SPAWNED_TEXT := "%s apareceu aqui. Toque em Procurar."
 ## Duração de um passo, em segundos: um ciclo inteiro da corrida do Domador.
 const STEP_SECONDS := TamerSprite.RUN_SECONDS
 ## Até quanto o dedo pode correr, em pontos da tela lógica, para ainda ser um toque.
@@ -37,9 +38,9 @@ var _press_position := Vector2.ZERO
 var _showing_whole_map: bool = false
 ## Os Ecobeasts do mapa que têm nó agora, pelo id deles.
 var _wild_sprites: Dictionary[int, CreatureSprite] = {}
-## Só em build de debug: os Ecobeasts do spawn, e quantos já nasceram.
-var _creatures: Array[CreatureSprite] = []
-var _spawned := 0
+## Só em build de debug: os ids dos Ecobeasts do spawn, que o servidor guarda junto
+## com os do mapa (biome-encounters/05).
+var _debug_spawn_ids: Array[int] = []
 
 @onready var _map_area: Control = %MapArea
 @onready var _map_view: HexMapView = %MapView
@@ -147,7 +148,10 @@ func _search() -> void:
 ## Depois da luta, ganhando, perdendo ou correndo, o Ecobeast já saiu do mapa.
 func _on_visibility_changed() -> void:
 	if visible and _map != null:
-		_map.creatures.erase(Session.take_fought_spawn())
+		var fought := Session.take_fought_spawn()
+		_map.creatures.erase(fought)
+		_debug_spawn_ids.erase(fought)
+		_debug_clear_button.disabled = _debug_spawn_ids.is_empty()
 		_refresh_wild_sprites()
 
 
@@ -220,7 +224,7 @@ func _fill_debug_species() -> void:
 		button.custom_minimum_size = Vector2(0.0, DEBUG_SPECIES_HEIGHT)
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		button.disabled = not CreatureSprite.has_sheets(species.slug)
-		button.pressed.connect(_spawn.bind(species.slug))
+		button.pressed.connect(_spawn.bind(species))
 		button.add_child(_species_card(species, button.disabled))
 		_debug_species.add_child(button)
 
@@ -246,20 +250,35 @@ func _species_card(species: CreatureSpecies, disabled: bool) -> Control:
 	return card
 
 
-## Cada um vai para o vizinho seguinte, para não caírem juntos.
-func _spawn(slug: String) -> void:
-	var neighbors := _map.neighbors(_player_coord)
-	var coord := neighbors[_spawned % neighbors.size()]
-	_spawned += 1
-	_creatures.append(_add_creature_sprite(slug, coord))
+## O servidor põe o Ecobeast no hexágono do Domador (biome-encounters/05): Procurar
+## enfrenta ele como um do mapa, e depois da luta ele some como os outros.
+func _spawn(species: CreatureSpecies) -> void:
+	if _walking:
+		return
+	var result: Result = await Session.debug_spawn(species.id, _player_coord)
+	if not result.ok:
+		_show_message(result.error, &"DangerLabel")
+		return
+	var creature: MapCreature = result.data
+	_map.creatures[creature.id] = creature
+	_debug_spawn_ids.append(creature.id)
+	_refresh_wild_sprites()
 	_debug_clear_button.disabled = false
+	_show_message(SPAWNED_TEXT % species.name, &"SecondaryLabel")
 
 
+## Tira do servidor e do mapa só os Ecobeasts do spawn.
 func _clear_creatures() -> void:
-	for creature: CreatureSprite in _creatures:
-		creature.queue_free()
-	_creatures.clear()
 	_debug_clear_button.disabled = true
+	var result: Result = await Session.debug_clear_spawns()
+	if not result.ok:
+		_debug_clear_button.disabled = false
+		_show_message(result.error, &"DangerLabel")
+		return
+	for id: int in result.data:
+		_map.creatures.erase(id)
+	_debug_spawn_ids.clear()
+	_refresh_wild_sprites()
 
 
 ## Só para testar a progressão (progression/04): cada um da equipe fica a 1 XP do
@@ -315,7 +334,7 @@ func _fit_view() -> void:
 		_move_map(_player_centered_position())
 	# Filhos do mapa, eles encolheriam junto com o mapa inteiro.
 	_marker.scale = _map_view.art_scale() / _map_view.pixel_scale()
-	for creature: CreatureSprite in _creatures + _wild_sprites.values():
+	for creature: CreatureSprite in _wild_sprites.values():
 		creature.scale = _marker.scale
 
 

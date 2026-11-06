@@ -20,6 +20,7 @@ const BOARD_BATTLE_PATH := "/v1/me/board-battle"
 const BOARD_WILD_PATH := "/v1/me/board-battle/wild"
 const BOARD_ACTION_PATH := "/v1/me/board-battle/action"
 const DEBUG_XP_PATH := "/v1/me/debug/xp"
+const DEBUG_SPAWNS_PATH := "/v1/me/exploration/spawns"
 const EVOLUTION_PATH := "/v1/me/creatures/%s/evolution"
 const LEARN_SKILL_PATH := "/v1/me/creatures/%s/skills"
 
@@ -132,6 +133,31 @@ func board_action(body: Dictionary) -> Result:
 
 func debug_almost_level_up() -> Result:
 	return _player_result(await Api.request(HTTPClient.METHOD_POST, DEBUG_XP_PATH, null, true))
+
+
+func debug_spawn(species_id: int, coord: Vector2i) -> Result:
+	var body := {"species_id": species_id, "q": coord.x, "r": coord.y}
+	var response: ApiResponse = await Api.request(HTTPClient.METHOD_POST, DEBUG_SPAWNS_PATH, body, true)
+	if not response.ok:
+		return Result.failure(response.error)
+	var data: Variant = response.data.get("creature") if response.data is Dictionary else null
+	if not data is Dictionary:
+		return Result.failure(ApiResponse.SERVER_ERROR)
+	var creature := MapCreature.from_dict(data)
+	return Result.success(creature) if creature != null else Result.failure(ApiResponse.SERVER_ERROR)
+
+
+func debug_clear_spawns() -> Result:
+	var response: ApiResponse = await Api.request(HTTPClient.METHOD_DELETE, DEBUG_SPAWNS_PATH, null, true)
+	if not response.ok:
+		return Result.failure(response.error)
+	var ids: Array[int] = []
+	var data: Variant = response.data.get("removed_ids") if response.data is Dictionary else null
+	if data is Array:
+		for id: Variant in data:
+			if id is float or id is int:
+				ids.append(int(id))
+	return Result.success(ids)
 
 
 func evolve(uid: String, accept: bool) -> Result:

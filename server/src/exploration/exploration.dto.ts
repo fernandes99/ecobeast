@@ -1,4 +1,6 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsInt, IsOptional, Max, Min, ValidateIf } from 'class-validator';
+import { INVALID_ENEMY } from '../battle/battle.dto.js';
 import { BIOMES, TERRAIN_SHAPES } from '../domain/exploration/map-generator.js';
 import type {
   Biome,
@@ -58,4 +60,61 @@ export class ExplorationMapDto {
 export class ExplorationResponseDto {
   @ApiProperty({ type: ExplorationMapDto })
   map: ExplorationMapDto;
+}
+
+/** O spawn de depuração (.specs/biome-encounters/05-debug-spawn-battle.md). */
+export class DebugSpawnBodyDto {
+  @ApiProperty({ description: 'Id da espécie.', example: 2 })
+  @IsInt({ message: INVALID_ENEMY })
+  species_id: number;
+
+  @ApiProperty({
+    description: 'Coluna do hexágono, em coordenadas axiais.',
+    example: 0,
+  })
+  // Um erro por vez: a validação junta as mensagens numa frase só.
+  @ValidateIf((body: DebugSpawnBodyDto) => Number.isInteger(body.species_id))
+  @IsInt({ message: INVALID_ENEMY })
+  q: number;
+
+  @ApiProperty({
+    description: 'Linha do hexágono, em coordenadas axiais.',
+    example: 0,
+  })
+  @ValidateIf(
+    (body: DebugSpawnBodyDto) =>
+      Number.isInteger(body.species_id) && Number.isInteger(body.q),
+  )
+  @IsInt({ message: INVALID_ENEMY })
+  r: number;
+
+  @ApiPropertyOptional({
+    description: 'Nível, de 1 a 100. Sem ele, a média de nível da equipe.',
+    example: 16,
+  })
+  @IsOptional()
+  @ValidateIf(
+    (body: DebugSpawnBodyDto) =>
+      Number.isInteger(body.species_id) &&
+      Number.isInteger(body.q) &&
+      Number.isInteger(body.r),
+  )
+  @IsInt({ message: INVALID_ENEMY })
+  @Min(1, { message: INVALID_ENEMY })
+  @Max(100, { message: INVALID_ENEMY })
+  level?: number;
+}
+
+export class DebugSpawnResponseDto {
+  @ApiProperty({ type: MapCreatureDto })
+  creature: MapCreatureDto;
+}
+
+export class DebugClearResponseDto {
+  @ApiProperty({
+    type: [Number],
+    description: 'Os ids que saíram da exploração.',
+    example: [501, 502],
+  })
+  removed_ids: number[];
 }

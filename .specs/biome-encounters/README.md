@@ -86,5 +86,6 @@ Tomadas no planejamento (corrigíveis; ao mudar uma, atualize aqui e nas specs a
 | [02-spawn-rules](02-spawn-rules.md) | Regras puras: sorteio do mapa, peso por nível e nível do selvagem | concluída |
 | [03-exploration-session](03-exploration-session.md) | Exploração guardada no servidor e o encontro saindo do hexágono | concluída |
 | [04-map-creatures](04-map-creatures.md) | Ecobeasts no mapa, Procurar e o sumiço depois da luta | concluída |
+| [05-debug-spawn-battle](05-debug-spawn-battle.md) | O spawn de depuração entra na exploração do servidor, e Procurar enfrenta ele | concluída (falta o teste do dono no editor) |
 
 O desenho compartilhado está em [architecture.md](architecture.md).
