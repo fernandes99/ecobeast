@@ -30,6 +30,9 @@ const BOARD_LINES: Dictionary[String, String] = {
 	"waited": "%s esperou.",
 	"ground_damage": "%s se feriu no chão.",
 }
+## Frases que vão só para o histórico, sem passar pelo log: a rodada não é uma ação, e
+## o log guarda a última ação da luta (board-battle/09).
+const HISTORY_ONLY: Array[String] = ["round_started"]
 const HP_EVENTS: Array[String] = ["damage", "recoil", "healed", "confused_hit", "status_damage", "ground_damage"]
 const LOSS_EVENTS: Array[String] = ["damage", "recoil", "confused_hit", "status_damage", "ground_damage"]
 ## A largura do tabuleiro de 6 colunas: os hexágonos ficam do tamanho que tinham nele.
@@ -68,6 +71,8 @@ var _leaving: bool = false
 var _attacker_key: String = ""
 var _attack_skill_id := -1
 var _typing: Tween = null
+## A última frase da luta no log: quando um aviso sai, ela volta (board-battle/09).
+var _last_line := ""
 ## Toca o som das Técnicas. Um AudioStreamPlayer toca um som de cada vez, sem lugar
 ## na tela, e cai no bus Master.
 var _skill_sound := AudioStreamPlayer.new()
@@ -112,6 +117,7 @@ var _entry_team := -1
 @onready var _board: BoardView = %Board
 @onready var _message: Label = %Message
 @onready var _log_box: PanelContainer = %LogBox
+@onready var _more_icon: TextureRect = %MoreIcon
 @onready var _bottom: VBoxContainer = %Bottom
 @onready var _skills_box: Control = %SkillsBox
 @onready var _skills_grid: GridContainer = %SkillsGrid
@@ -146,8 +152,10 @@ func setup(params: Dictionary) -> void:
 func _ready() -> void:
 	for index: int in SKILL_SLOTS:
 		var button: BattleSkillButton = SkillButtonScene.instantiate()
+		button.theme_type_variation = BattleTheme.BUTTON
 		button.pressed.connect(_choose_skill.bind(index + 1))
 		_skills_grid.add_child(button)
+	_style_controls()
 	_reserve_bottom()
 	add_child(_skill_sound)
 	add_child(_hit_sound)
@@ -201,13 +209,13 @@ func handle_back() -> bool:
 
 
 func _begin() -> void:
-	_message.text = SEARCHING_TEXT
+	_show_message(SEARCHING_TEXT)
 	var result: Result
 	if _test_slots > 0:
 		result = await Session.start_board_test_battle(_test_enemies(), _test_slots)
 	else:
 		result = await Session.start_board_wild_battle(_coord)
-	_message.text = ""
+	_show_message("")
 	if not result.ok:
 		_show_exit(result.error, false)
 		return
@@ -229,6 +237,37 @@ func _test_enemies() -> Array[Dictionary]:
 		var species: CreatureSpecies = all.pick_random()
 		enemies.append({"species_id": species.id, "level": level})
 	return enemies
+
+
+## O visual da luta (board-battle/10): o tema vale para a tela inteira, mas só muda
+## quem pede uma variação dele; os painéis que vêm da luta antiga ficam como estão.
+func _style_controls() -> void:
+	theme = BattleTheme.get_theme()
+	BattleTheme.action_button(_attack_button, "attack")
+	BattleTheme.action_button(_wait_button, "pass")
+	BattleTheme.action_button(_bag_button, "bag")
+	BattleTheme.action_button(_flee_button, "flee")
+	for button: Button in [_emergency_button, _exit_button, %SkillsBackButton]:
+		button.theme_type_variation = BattleTheme.BUTTON
+	var info: Button = %InfoButton
+	info.theme_type_variation = BattleTheme.ICON_BUTTON
+	info.text = ""
+	info.icon = BattleTheme.icon("help")
+	info.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_log_box.theme_type_variation = BattleTheme.LOG
+	%ChatIcon.texture = BattleTheme.icon("chat")
+	_more_icon.texture = BattleTheme.icon("more")
+
+
+## Um aviso inteiro no log, sem letra por letra e sem o triângulo de "continua".
+## Vazio tira o aviso e volta a última frase da luta: o log nunca fica em branco
+## depois que a luta começa.
+func _show_message(text: String) -> void:
+	if _typing != null:
+		_typing.kill()
+	_message.visible_characters = -1
+	_message.text = text if not text.is_empty() else _last_line
+	_more_icon.visible = false
 
 
 ## O tabuleiro fica parado (board-battle/08): o bloco de baixo guarda sempre a altura
@@ -352,6 +391,8 @@ func _play_event(event: Dictionary) -> void:
 	var line := _line_for(type, side, key, event)
 	if not line.is_empty():
 		_history.add_line(line)
+		if type in HISTORY_ONLY:
+			return
 		await _type_line(line)
 		await get_tree().create_timer(EVENT_DELAY).timeout
 
@@ -402,6 +443,8 @@ func _play_hit_sound(kind: String) -> void:
 func _type_line(text: String) -> void:
 	if _typing != null:
 		_typing.kill()
+	_more_icon.visible = false
+	_last_line = text
 	_message.text = text
 	_message.visible_characters = 0
 	var count := _message.get_total_character_count()
@@ -410,6 +453,8 @@ func _type_line(text: String) -> void:
 	_typing.tween_property(_message, ^"visible_characters", count, seconds)
 	await get_tree().create_timer(seconds).timeout
 	_message.visible_characters = -1
+	# A frase terminou: o triângulo avisa que a luta continua.
+	_more_icon.visible = true
 
 
 func _enter(key: String, side: String, event: Dictionary) -> void:
@@ -564,7 +609,7 @@ func _begin_vez() -> void:
 	_reach = BoardGeometry.reachable(_view.board_cells, blocked, _origin)
 	_fill_skills(_view.player_at(_actor))
 	_light_reach()
-	_message.text = ""
+	_show_message("")
 	_show_controls(true)
 	_set_busy(false)
 
@@ -650,7 +695,7 @@ func _choose_skill(slot: int) -> void:
 		_cancel_skill()
 		return
 	_sphere_item = -1
-	_message.text = ""
+	_show_message("")
 	var foes: Array[Vector2i] = []
 	foes.append_array(_view.enemy_cells.values())
 	if slot == -1:
@@ -671,7 +716,7 @@ func _choose_skill(slot: int) -> void:
 
 func _cancel_skill() -> void:
 	if _sphere_item >= 0:
-		_message.text = ""
+		_show_message("")
 	_skill_slot = 0
 	_sphere_item = -1
 	_targets.clear()
@@ -727,7 +772,7 @@ func _aim_sphere(item_id: int) -> void:
 	_targets.clear()
 	_targets.append_array(_view.enemy_cells.values())
 	_board.light(_targets, UiPalette.BOARD_TARGET)
-	_message.text = PICK_SPHERE_TEXT
+	_show_message(PICK_SPHERE_TEXT)
 
 
 ## A troca está sem botão: o dono tirou o Trocar do pé da tela e ainda vai decidir
@@ -764,7 +809,7 @@ func _flee() -> void:
 	if _moved and not _flee_armed:
 		_flee_armed = true
 		_flee_button.text = FLEE_CONFIRM_TEXT
-		_message.text = FLEE_UNDO_TEXT
+		_show_message(FLEE_UNDO_TEXT)
 		return
 	_disarm_flee()
 	if _moved:
@@ -777,7 +822,7 @@ func _disarm_flee() -> void:
 	_flee_armed = false
 	_flee_button.text = FLEE_TEXT
 	if _message.text == FLEE_UNDO_TEXT:
-		_message.text = ""
+		_show_message("")
 
 
 ## Alguém da equipe de pé e fora do tabuleiro, para a troca.
@@ -803,7 +848,7 @@ func _send(action: Dictionary) -> void:
 	if not result.ok:
 		_board.snap(_actor_key(), _origin)
 		_begin_vez()
-		_message.text = result.error
+		_show_message(result.error)
 		return
 	if result.data == null:
 		_show_battle_gone()
@@ -835,7 +880,7 @@ func _on_entry_chosen(team_index: int) -> void:
 		return
 	_next_panel.close()
 	_entry_team = team_index
-	_message.text = PICK_ENTRY_TEXT
+	_show_message(PICK_ENTRY_TEXT)
 	_board.light(_free_entry_cells(), UiPalette.BOARD_TARGET)
 
 
@@ -855,7 +900,7 @@ func _pick_entry_cell(cell: Vector2i) -> void:
 		"team_index": _entry_team,
 		"cell": {"q": cell.x, "r": cell.y},
 	})
-	_message.text = ""
+	_show_message("")
 	if _entries.size() < _view.pending_positions.size():
 		_ask_entry()
 		return
@@ -863,7 +908,7 @@ func _pick_entry_cell(cell: Vector2i) -> void:
 	_board.light([], Color.TRANSPARENT)
 	var result: Result = await Session.board_action({"entries": _entries})
 	if not result.ok:
-		_message.text = result.error
+		_show_message(result.error)
 		_begin_entries()
 		return
 	if result.data == null:

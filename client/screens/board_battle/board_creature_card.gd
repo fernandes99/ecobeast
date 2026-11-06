@@ -1,9 +1,9 @@
 class_name BoardCreatureCard
 extends PanelContainer
 ## O cartão de um lado da luta no tabuleiro (board-battle/06, RF-05 e RF-06): o
-## retrato, o nome, o nível, os Elementos e o HP, com o painel do tema: o visual da
-## folha do dono saiu na board-battle/08, até chegar outro. O do selvagem fica em
-## cima, e o do jogador embaixo do tabuleiro. Monta os nós no código: só exibe.
+## retrato, o nome, o nível numa pílula, os Elementos e o HP, no painel do tema da
+## luta (board-battle/10). O do selvagem fica em cima, e o do jogador embaixo do
+## tabuleiro. Monta os nós no código: só exibe.
 
 const PortraitScene := preload("res://ui/components/creature_portrait.tscn")
 const HpBarScene := preload("res://ui/components/hp_bar.tscn")
@@ -25,6 +25,7 @@ var _hp_label := Label.new()
 
 
 func _ready() -> void:
+	theme_type_variation = BattleTheme.PANEL
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override(&"separation", 12)
@@ -47,9 +48,13 @@ func _ready() -> void:
 	_name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_name_label.clip_text = true
 	title.add_child(_name_label)
+	var pill := PanelContainer.new()
+	pill.theme_type_variation = BattleTheme.PILL
+	pill.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_level_label.theme_type_variation = &"BoldLabel"
 	_level_label.add_theme_font_size_override(&"font_size", SMALL_FONT_SIZE)
-	title.add_child(_level_label)
+	pill.add_child(_level_label)
+	title.add_child(pill)
 
 	_elements.add_theme_constant_override(&"separation", 6)
 	info.add_child(_elements)

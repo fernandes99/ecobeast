@@ -92,12 +92,36 @@ unique_name_in_owner = true
 layout_mode = 2
 mouse_filter = 2
 
-[node name="Message" type="Label" parent="SafeArea/Edge/Column/Bottom/LogBox"]
+[node name="LogRow" type="HBoxContainer" parent="SafeArea/Edge/Column/Bottom/LogBox"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="ChatIcon" type="TextureRect" parent="SafeArea/Edge/Column/Bottom/LogBox/LogRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(36, 36)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Message" type="Label" parent="SafeArea/Edge/Column/Bottom/LogBox/LogRow"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_font_sizes/font_size = 22
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 24
 vertical_alignment = 1
 text_overrun_behavior = 3
+
+[node name="MoreIcon" type="TextureRect" parent="SafeArea/Edge/Column/Bottom/LogBox/LogRow"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(22, 22)
+layout_mode = 2
+size_flags_vertical = 8
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
 
 [node name="PlayerCard" type="PanelContainer" parent="SafeArea/Edge/Column/Bottom"]
 unique_name_in_owner = true
