@@ -44,7 +44,6 @@ const CHARS_PER_SECOND := 60.0
 ## O efeito e o som de cada Técnica saem do slug dela, pelos caminhos do
 ## ContentFiles; sem o arquivo, ela não tem efeito ou som (board-battle/09).
 ## O som do dano, junto com a piscada, pela efetividade: normal, super ou weak.
-const HIT_SOUND_PATH := "res://assets/sounds/hits/%s.wav"
 ## A Técnica de emergência é corpo a corpo.
 const EMERGENCY_RANGE := 1
 
@@ -430,7 +429,7 @@ func _hit_kind(type: String, event: Dictionary) -> String:
 
 
 func _play_hit_sound(kind: String) -> void:
-	var path := HIT_SOUND_PATH % kind
+	var path := ContentFiles.HIT_SOUND_PATH % kind
 	if ResourceLoader.exists(path):
 		_hit_sound.stream = load(path) as AudioStream
 		_hit_sound.play()

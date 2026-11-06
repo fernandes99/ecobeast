@@ -127,6 +127,8 @@ func _setup_frame(frame: Frame) -> void:
 			var cell := SheetSprite.CELL_SIZE
 			var frames := maxi(1, texture.get_width() / cell.x)
 			var cycle := CreatureSprite.IDLE_SECONDS if entry.sheet == CreatureSprite.IDLE else CreatureSprite.WALK_SECONDS
+			if entry.cycle > 0.0:
+				cycle = entry.cycle
 			frame.animate(cell, frames, cycle / frames, 0.0, row)
 		ContentFiles.Kind.BATTLE_SHEET:
 			# Cada linha tem os quadros até a primeira célula vazia (BattleSheets).

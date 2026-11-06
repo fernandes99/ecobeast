@@ -32,6 +32,7 @@ const TAB_ITEMS := &"items"
 const TAB_TRAITS := &"traits"
 const TAB_TEMPERAMENTS := &"temperaments"
 const TAB_STATUSES := &"statuses"
+const TAB_GENERAL := &"general"
 ## O que aparece no lugar de um valor vazio.
 const EMPTY := "—"
 
@@ -93,6 +94,7 @@ func rebuild() -> void:
 		_add_page(TAB_TRAITS, TraitsTab.new(self))
 		_add_page(TAB_TEMPERAMENTS, TemperamentsTab.new(self))
 		_add_page(TAB_STATUSES, StatusesTab.new(self))
+		_add_page(TAB_GENERAL, GeneralTab.new(self))
 	if _pages.has(current):
 		_tabs.current_tab = _pages[current].get_index()
 

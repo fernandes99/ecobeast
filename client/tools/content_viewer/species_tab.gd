@@ -45,6 +45,7 @@ func _build_detail(id: int, box: VBoxContainer) -> void:
 	side.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	side.add_theme_constant_override(&"separation", 10)
 	columns.add_child(side)
+	_progress(species, ContentViewer.block(side, "Progressão e captura"))
 	_traits(species, ContentViewer.block(side, "Traços"))
 	_biomes(species, ContentViewer.block(side, "Biomas"))
 	_files(species, ContentViewer.block(box, "Arquivos"))
@@ -68,6 +69,9 @@ func _header(species: CreatureSpecies, box: VBoxContainer) -> void:
 		facts.add_child(viewer.element_link(element_id))
 	var rarity: Dictionary = GameData.get_row("rarities", species.rarity_id)
 	facts.add_child(ContentViewer.text("%s · %s m · %s kg" % [rarity.get("name", "?"), ContentViewer.decimal(species.height_m), ContentViewer.decimal(species.weight_kg)], 0, UiPalette.TEXT_SECONDARY))
+	var starter := _starter_text(species.id)
+	if not starter.is_empty():
+		facts.add_child(ContentViewer.text(starter, 0, UiPalette.ACCENT))
 	info.add_child(facts)
 	info.add_child(ContentViewer.paragraph(species.description))
 
@@ -214,6 +218,52 @@ func _stats(species: CreatureSpecies, box: VBoxContainer) -> void:
 	var total := ContentViewer.text(str(species.base_stats.total()))
 	total.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	grid.add_child(total)
+
+
+## "inicial (1º de 3)" para um Ecobeast de `starter_options`; vazio para os outros.
+func _starter_text(species_id: int) -> String:
+	var starters := GameData.get_rows("starter_options")
+	starters.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return int(a["sort_order"]) < int(b["sort_order"]))
+	for i: int in starters.size():
+		if starters[i]["species_id"] == species_id:
+			return "inicial (%dº de %d)" % [i + 1, starters.size()]
+	return ""
+
+
+## Os dados que pesam no balanceamento (content-viewer/04, RF-01).
+func _progress(species: CreatureSpecies, box: VBoxContainer) -> void:
+	var row: Dictionary = GameData.get_row("species", species.id)
+	var growth: Dictionary = GameData.get_row("growth_rates", species.growth_rate_id)
+	var training: Array[String] = []
+	for stat_row: Dictionary in GameData.get_rows("species_stats"):
+		if stat_row["species_id"] == species.id and int(stat_row.get("training_yield", 0)) > 0:
+			training.append("%s +%d" % [ContentViewer.row_name("stats", stat_row["stat_id"]), int(stat_row["training_yield"])])
+	var lines: Array = [
+		["Curva de XP", "%s (×%s)" % [growth.get("name", "?"), ContentViewer.decimal(float(growth.get("xp_multiplier", 1.0)))]],
+		["XP ao ser derrotado", ContentViewer.value_or_dash(row.get("base_xp_yield"))],
+		["Captura", "%s de 100" % ContentViewer.value_or_dash(row.get("capture_rate"))],
+		["Gênero", gender_text(row.get("gender_ratio"))],
+		["Treino que rende", ContentViewer.EMPTY if training.is_empty() else ", ".join(training)],
+	]
+	var grid := GridContainer.new()
+	grid.columns = 2
+	grid.add_theme_constant_override(&"h_separation", 18)
+	grid.add_theme_constant_override(&"v_separation", 2)
+	for line: Array in lines:
+		grid.add_child(ContentViewer.text(line[0], 0, UiPalette.TEXT_SECONDARY))
+		grid.add_child(ContentViewer.text(line[1]))
+	box.add_child(grid)
+
+
+## `gender_ratio` é a fração de machos, de 0 a 1; −1 é sem gênero.
+static func gender_text(ratio: Variant) -> String:
+	if ratio == null:
+		return ContentViewer.EMPTY
+	var male := float(ratio)
+	if male < 0.0:
+		return "sem gênero"
+	var male_percent := roundi(male * 100.0)
+	return "%d%% macho · %d%% fêmea" % [male_percent, 100 - male_percent]
 
 
 func _traits(species: CreatureSpecies, box: VBoxContainer) -> void:

@@ -63,6 +63,7 @@ func _build() -> void:
 	_count_card(cards, "Com board", with_board, total)
 	_count_card(cards, "Com as folhas de explorar", with_explore, total)
 	_count_card(cards, "Com as folhas da luta", with_battle, total)
+	_starters_and_growth()
 
 	var slugs: Array[String] = []
 	for one: CreatureSpecies in species:
@@ -190,6 +191,39 @@ func _build_world() -> void:
 	if not empty_biomes.is_empty():
 		biome_card.add_child(ContentViewer.paragraph("Sem Ecobeast: " + ", ".join(empty_biomes), UiPalette.TEXT_SECONDARY))
 	_count_card(cards, "Itens com ícone", with_icon, items.size())
+
+
+## Os iniciais, em ordem, e as curvas de XP com quantos Ecobeasts usam cada uma
+## (content-viewer/04, RF-03).
+func _starters_and_growth() -> void:
+	var row := ContentViewer.flow(10)
+	_box.add_child(row)
+	var starters_box := ContentViewer.block(row, "Iniciais")
+	var starters := GameData.get_rows("starter_options")
+	starters.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return int(a["sort_order"]) < int(b["sort_order"]))
+	var line := ContentViewer.flow(12)
+	for starter: Dictionary in starters:
+		var species := GameData.get_species(starter["species_id"])
+		if species != null:
+			line.add_child(viewer.link(species.name, ContentViewer.TAB_SPECIES, species.id))
+	if line.get_child_count() == 0:
+		line.add_child(ContentViewer.text(ContentViewer.EMPTY))
+	starters_box.add_child(line)
+
+	var growth_box := ContentViewer.block(row, "Curvas de XP")
+	var users: Dictionary = {}
+	for species: CreatureSpecies in GameData.get_all_species():
+		users[species.growth_rate_id] = int(users.get(species.growth_rate_id, 0)) + 1
+	var grid := GridContainer.new()
+	grid.columns = 3
+	grid.add_theme_constant_override(&"h_separation", 18)
+	grid.add_theme_constant_override(&"v_separation", 2)
+	for growth: Dictionary in GameData.get_rows("growth_rates"):
+		grid.add_child(ContentViewer.text(growth["name"]))
+		grid.add_child(ContentViewer.text("×%s" % ContentViewer.decimal(float(growth["xp_multiplier"])), 0, UiPalette.TEXT_SECONDARY))
+		var count := int(users.get(growth["id"], 0))
+		grid.add_child(ContentViewer.text("%d %s" % [count, "Ecobeast" if count == 1 else "Ecobeasts"], 0, UiPalette.TEXT_SECONDARY))
+	growth_box.add_child(grid)
 
 
 func _section(title: String) -> void:

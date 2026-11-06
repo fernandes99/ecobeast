@@ -12,6 +12,11 @@ const CREATURES_DIR := "res://assets/creatures"
 const SKILL_ICON_PATH := "res://assets/skills/%s.png"
 const SKILL_EFFECT_PATH := "res://assets/effects/skills/%s.png"
 const SKILL_SOUND_PATH := "res://assets/sounds/skills/%s.wav"
+## O som do dano, pela efetividade (board-battle/09); a tela da luta o usa daqui.
+const HIT_SOUND_PATH := "res://assets/sounds/hits/%s.wav"
+## Os sons de dano, com o nome que aparece na tela.
+const HIT_SOUNDS: Dictionary[String, String] = {"normal": "normal", "super": "super efetivo", "weak": "pouco efetivo"}
+const TAMER_CREDITS_PATH := "res://assets/tamer/CREDITOS.md"
 ## As peças que o mapa usa em todos os biomas (content-viewer/03, RF-03).
 const COMMON_SURFACES: Array[String] = ["cliff", "side", "contour", "highlight"]
 ## O nome da superfície no mapa, quando é diferente do slug do bioma no catálogo: a
@@ -91,6 +96,8 @@ class Entry:
 	## Para as folhas: o slug do Ecobeast e qual folha (idle ou walk).
 	var slug: String
 	var sheet: String
+	## Um ciclo da folha, em segundos; 0 usa o ritmo dos Ecobeasts no explorar.
+	var cycle := 0.0
 
 	func _init(entry_label: String, entry_path: String, entry_kind: Kind, entry_slug := "", entry_sheet := "") -> void:
 		label = entry_label
@@ -158,6 +165,24 @@ static func skill_files(slug: String) -> Array[Entry]:
 		Entry.new("efeito", SKILL_EFFECT_PATH % slug, Kind.EFFECT),
 		Entry.new("som", SKILL_SOUND_PATH % slug, Kind.SOUND),
 	]
+	return files
+
+
+## As folhas do Domador, no mesmo formato das do explorar, com o ritmo dele.
+static func tamer_files() -> Array[Entry]:
+	var files: Array[Entry] = []
+	for sheet_name: String in [TamerSprite.IDLE, TamerSprite.RUN]:
+		var entry := Entry.new(sheet_name, TamerSprite.SHEET_PATH % sheet_name, Kind.EXPLORE_SHEET, "", sheet_name)
+		entry.cycle = TamerSprite.IDLE_SECONDS if sheet_name == TamerSprite.IDLE else TamerSprite.RUN_SECONDS
+		files.append(entry)
+	return files
+
+
+## Os sons de dano: normal, super efetivo e pouco efetivo.
+static func hit_sounds() -> Array[Entry]:
+	var files: Array[Entry] = []
+	for kind: String in HIT_SOUNDS:
+		files.append(Entry.new(HIT_SOUNDS[kind], HIT_SOUND_PATH % kind, Kind.SOUND))
 	return files
 
 

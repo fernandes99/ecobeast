@@ -67,5 +67,6 @@ Tomadas no planejamento e apresentadas ao dono (corrigíveis; ao mudar uma, atua
 | [01-viewer-window](01-viewer-window.md) | A janela com F1, as abas, o Resumo e a aba Ecobeasts | concluída (falta o dono ver) |
 | [02-skills-and-elements](02-skills-and-elements.md) | As abas Técnicas e Elementos, com o efeito tocando e o som | concluída (falta o dono ver) |
 | [03-world-and-items](03-world-and-items.md) | As abas Biomas, Itens, Traços, Temperamentos e Estados | concluída (falta o dono ver) |
+| [04-balance-and-general](04-balance-and-general.md) | Progressão e captura no Ecobeast, iniciais e curvas de XP no Resumo, e a aba Geral com o Domador e os sons de dano | concluída (falta o dono ver) |
 
-O desenho que as 3 fases compartilham está no [architecture.md](architecture.md).
+O desenho que as fases compartilham está no [architecture.md](architecture.md).
