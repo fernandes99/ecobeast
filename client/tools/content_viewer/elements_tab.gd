@@ -61,11 +61,17 @@ func _build_detail(id: int, box: VBoxContainer) -> void:
 	_relation(defense, "Resiste a", _against(id, WEAK, false))
 	_relation(defense, "Imune a", _against(id, IMMUNE, false))
 
-	var statuses: Array[String] = []
+	var immunities := ContentViewer.flow(12)
 	for row: Dictionary in GameData.get_rows("status_condition_immunities"):
 		if row["element_id"] == id:
-			statuses.append(ContentViewer.row_name("status_conditions", row["status_condition_id"]))
-	ContentViewer.block(box, "Imunidades a Estados").add_child(ContentViewer.text(ContentViewer.EMPTY if statuses.is_empty() else ", ".join(statuses)))
+			var status_id := int(row["status_condition_id"])
+			immunities.add_child(viewer.link(ContentViewer.row_name("status_conditions", status_id), ContentViewer.TAB_STATUSES, status_id))
+	var immunity_box := ContentViewer.block(box, "Imunidades a Estados")
+	if immunities.get_child_count() == 0:
+		immunities.queue_free()
+		immunity_box.add_child(ContentViewer.text(ContentViewer.EMPTY))
+	else:
+		immunity_box.add_child(immunities)
 
 	var species_box := ContentViewer.block(box, "Ecobeasts")
 	var species := _species_with(id)

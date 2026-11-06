@@ -12,6 +12,31 @@ const CREATURES_DIR := "res://assets/creatures"
 const SKILL_ICON_PATH := "res://assets/skills/%s.png"
 const SKILL_EFFECT_PATH := "res://assets/effects/skills/%s.png"
 const SKILL_SOUND_PATH := "res://assets/sounds/skills/%s.wav"
+## As peças que o mapa usa em todos os biomas (content-viewer/03, RF-03).
+const COMMON_SURFACES: Array[String] = ["cliff", "side", "contour", "highlight"]
+## O nome da superfície no mapa, quando é diferente do slug do bioma no catálogo: a
+## Montanha é "mountain" no catálogo e "mont" no gerador do mapa (HexTile.surface()).
+const SURFACE_OF_BIOME: Dictionary[String, String] = {"mountain": "mont"}
+## O nome de cada decoração (HexDecorations.KIND_ROWS) na tela.
+const DECORATION_NAMES: Dictionary[String, String] = {
+	"tree": "árvore",
+	"pine": "pinheiro",
+	"bush": "arbusto",
+	"dark_bush": "arbusto escuro",
+	"tuft": "tufo de grama",
+	"flowers": "flores",
+	"fern": "samambaia",
+	"dry_shrub": "arbusto seco",
+	"dry_tuft": "tufo seco",
+	"moss": "musgo",
+	"pebbles": "pedrinhas",
+	"rock": "pedra",
+	"mossy_rock": "pedra com musgo",
+	"brown_rock": "pedra marrom",
+	"boulder": "rochedo",
+	"rock_pile": "monte de pedras",
+	"spire": "pináculo",
+}
 
 ## Como o preview mostra cada arquivo.
 enum Kind { IMAGE, EXPLORE_SHEET, BATTLE_SHEET, EFFECT, SOUND }
@@ -134,6 +159,37 @@ static func skill_files(slug: String) -> Array[Entry]:
 		Entry.new("som", SKILL_SOUND_PATH % slug, Kind.SOUND),
 	]
 	return files
+
+
+## O ícone de um item.
+static func item_icon(slug: String) -> Entry:
+	return Entry.new("ícone", ItemIcon.SPRITE_PATH % slug, Kind.IMAGE)
+
+
+## A superfície que o mapa desenha num bioma.
+static func biome_surface(slug: String) -> Entry:
+	return Entry.new("superfície", HexMapView.SURFACE_PATH % surface_name(slug), Kind.IMAGE)
+
+
+## O nome que o mapa usa para a superfície e as decorações do bioma.
+static func surface_name(biome_slug: String) -> String:
+	return SURFACE_OF_BIOME.get(biome_slug, biome_slug)
+
+
+## A folha das decorações, com uma linha por tipo e uma coluna por variante.
+static func decorations_sheet() -> Entry:
+	return Entry.new("decorações", HexDecorations.TEXTURE_PATH, Kind.IMAGE)
+
+
+## As peças que o mapa usa em todos os biomas, com o nome do arquivo.
+static func common_pieces() -> Array[Entry]:
+	var pieces: Array[Entry] = []
+	for surface: String in COMMON_SURFACES:
+		var path := HexMapView.SURFACE_PATH % surface
+		pieces.append(Entry.new(path.get_file(), path, Kind.IMAGE))
+	for path: String in [HexTransitions.TEXTURE_PATH, HexTransitions.DRIP_TEXTURE_PATH]:
+		pieces.append(Entry.new(path.get_file(), path, Kind.IMAGE))
+	return pieces
 
 
 ## Quantos dos arquivos estão prontos: existem e têm todas as direções.

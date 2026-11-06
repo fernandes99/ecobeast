@@ -98,7 +98,7 @@ func _ground(skill: Dictionary, box: VBoxContainer) -> void:
 	swatch.custom_minimum_size = Vector2(14, 14)
 	swatch.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	line.add_child(swatch)
-	line.add_child(ContentViewer.text(ground.name))
+	line.add_child(viewer.link(ground.name, ContentViewer.TAB_STATUSES, StatusesTab.ground_row_id(ground.id)))
 	line.add_child(ContentViewer.text("%d%% de dano por turno · %s turnos" % [ground.damage_percent, ContentViewer.value_or_dash(skill.get("ground_turns"))], 0, UiPalette.TEXT_SECONDARY))
 	box.add_child(line)
 
@@ -114,9 +114,25 @@ func _effects_of(skill_id: int) -> Array[Dictionary]:
 
 ## "Alterar atributo · 100% · Inimigo · Ataque −1": o tipo, a chance, o alvo e os
 ## campos preenchidos da linha.
+## O Estado de um efeito vira link para a aba Estados (content-viewer/03, RF-08).
 func _effects(effects: Array[Dictionary], box: VBoxContainer) -> void:
 	for effect: Dictionary in effects:
-		box.add_child(ContentViewer.text(effect_text(effect)))
+		if effect.get("status_condition_id") == null:
+			box.add_child(ContentViewer.text(effect_text(effect)))
+			continue
+		var status_id := int(effect["status_condition_id"])
+		var status_name := ContentViewer.row_name("status_conditions", status_id)
+		var parts := effect_text(effect).split(" · ")
+		var line := HBoxContainer.new()
+		line.add_theme_constant_override(&"separation", 0)
+		for i: int in parts.size():
+			if i > 0:
+				line.add_child(ContentViewer.text(" · "))
+			if parts[i] == status_name:
+				line.add_child(viewer.link(status_name, ContentViewer.TAB_STATUSES, status_id))
+			else:
+				line.add_child(ContentViewer.text(parts[i]))
+		box.add_child(line)
 
 
 static func effect_text(effect: Dictionary) -> String:

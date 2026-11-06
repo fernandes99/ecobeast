@@ -86,6 +86,7 @@ func _build() -> void:
 
 	_build_skills()
 	_build_elements()
+	_build_world()
 
 
 ## As Técnicas (content-viewer/02, RF-08): quantas têm cada arquivo e a lista do que
@@ -162,6 +163,33 @@ func _build_elements() -> void:
 	var box := _count_card(cards, "Elementos com Ecobeast", elements.size() - without.size(), elements.size())
 	if not without.is_empty():
 		box.add_child(ContentViewer.paragraph("Sem nenhum: " + ", ".join(without), UiPalette.TEXT_SECONDARY))
+
+
+## Os biomas e os itens (content-viewer/03, RF-09): quantos têm o arquivo e os
+## biomas sem Ecobeast.
+func _build_world() -> void:
+	var biomes := GameData.get_rows("biomes")
+	var with_surface := 0
+	var empty_biomes: Array[String] = []
+	var spawned: Dictionary = {}
+	for row: Dictionary in GameData.get_rows("species_biomes"):
+		spawned[row["biome_id"]] = true
+	for biome: Dictionary in biomes:
+		with_surface += int(ContentFiles.biome_surface(biome["slug"]).exists())
+		if not spawned.has(biome["id"]):
+			empty_biomes.append(biome["name"])
+	var items := GameData.get_rows("items")
+	var with_icon := 0
+	for item: Dictionary in items:
+		with_icon += int(ContentFiles.item_icon(item["slug"]).exists())
+
+	_section("Biomas e itens")
+	var cards := ContentViewer.flow(10)
+	_box.add_child(cards)
+	var biome_card := _count_card(cards, "Biomas com superfície", with_surface, biomes.size())
+	if not empty_biomes.is_empty():
+		biome_card.add_child(ContentViewer.paragraph("Sem Ecobeast: " + ", ".join(empty_biomes), UiPalette.TEXT_SECONDARY))
+	_count_card(cards, "Itens com ícone", with_icon, items.size())
 
 
 func _section(title: String) -> void:

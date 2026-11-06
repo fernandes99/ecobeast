@@ -8,6 +8,7 @@ extends HSplitContainer
 const LIST_WIDTH := 320
 const ROW_HEIGHT := 30
 const DOT_SIZE := 10
+const ICON_SIZE := 22
 const ROW_HOVER := Color("#FFFFFF14")
 
 ## Uma linha da lista: o id, o texto, uma bolinha opcional (alpha 0 = sem) e um texto
@@ -17,6 +18,8 @@ class Row:
 	var id: int
 	var text: String
 	var dot := Color(0, 0, 0, 0)
+	## Um ícone pequeno à esquerda, no lugar da bolinha (os itens).
+	var icon: Texture2D = null
 	var tail := ""
 	var tail_color := UiPalette.TEXT_SECONDARY
 
@@ -151,6 +154,15 @@ func _row_button(row: Row) -> Button:
 	line.offset_left = 10
 	line.offset_right = -10
 	line.add_theme_constant_override(&"separation", 8)
+	if row.icon != null:
+		var icon := TextureRect.new()
+		icon.texture = row.icon
+		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon.custom_minimum_size = Vector2(ICON_SIZE, ICON_SIZE)
+		icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		line.add_child(icon)
 	if row.dot.a > 0.0:
 		var dot := ColorRect.new()
 		dot.color = row.dot

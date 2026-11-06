@@ -27,6 +27,11 @@ const TAB_SUMMARY := &"summary"
 const TAB_SPECIES := &"species"
 const TAB_SKILLS := &"skills"
 const TAB_ELEMENTS := &"elements"
+const TAB_BIOMES := &"biomes"
+const TAB_ITEMS := &"items"
+const TAB_TRAITS := &"traits"
+const TAB_TEMPERAMENTS := &"temperaments"
+const TAB_STATUSES := &"statuses"
 ## O que aparece no lugar de um valor vazio.
 const EMPTY := "—"
 
@@ -83,6 +88,11 @@ func rebuild() -> void:
 		_add_page(TAB_SPECIES, SpeciesTab.new(self))
 		_add_page(TAB_SKILLS, SkillsTab.new(self))
 		_add_page(TAB_ELEMENTS, ElementsTab.new(self))
+		_add_page(TAB_BIOMES, BiomesTab.new(self))
+		_add_page(TAB_ITEMS, ItemsTab.new(self))
+		_add_page(TAB_TRAITS, TraitsTab.new(self))
+		_add_page(TAB_TEMPERAMENTS, TemperamentsTab.new(self))
+		_add_page(TAB_STATUSES, StatusesTab.new(self))
 	if _pages.has(current):
 		_tabs.current_tab = _pages[current].get_index()
 

@@ -6,7 +6,7 @@ Uma janela só para o desenvolvimento, que mostra todo o conteúdo do jogo de fo
 
 Em 2026-11-06, o dono pediu um jeito mais fácil de ver o banco e o conteúdo. Ele quer saber quais Técnicas existem e quais arquivos cada uma tem (ícone, efeito, som), quais Ecobeasts existem, com as Técnicas por nível e as Evoluções, e ter "uma visão completa de conteúdo do jogo, para eu decidir o que falta terminar e o que fazer de conteúdo". O painel do Supabase mostra as tabelas, mas não os sprites andando, o efeito do golpe nem quais arquivos faltam.
 
-Em 2026-11-06, o catálogo que a API envia tem 14 Ecobeasts, 52 Técnicas, 15 Elementos, 7 biomas, 6 itens, 6 Traços, 25 Temperamentos e 8 Estados. Só Ruvo e Ruvak têm todos os sprites, e só o Arranhão tem efeito e som. A pasta `res://assets/terrain/` tem hexágonos com nomes de biomas que não existem (desert, snow, swamp e warm). Os ícones de Técnica (`res://assets/skills/`) existem para 26 das 52 (23, mais os 3 de Instinto que o dono gerou no mesmo dia), mas nenhuma tela os usa ainda.
+Em 2026-11-06, o catálogo que a API envia tem 14 Ecobeasts, 52 Técnicas, 15 Elementos, 7 biomas, 6 itens, 6 Traços, 25 Temperamentos e 8 Estados. Só Ruvo e Ruvak têm todos os sprites, e só o Arranhão tem efeito e som. Os ícones de Técnica (`res://assets/skills/`) existem para 26 das 52 (23, mais os 3 de Instinto que o dono gerou no mesmo dia), mas nenhuma tela os usa ainda.
 
 Os arquivos de `server/prisma/seed-data/` ficaram para trás: têm 9 Ecobeasts, 38 Técnicas e 14 Elementos, porque o dono edita o catálogo pelo painel do Supabase. Os números das specs desta iniciativa vêm do catálogo da API, e os critérios de aceite comparam com ele, não com o seed.
 
@@ -66,6 +66,6 @@ Tomadas no planejamento e apresentadas ao dono (corrigíveis; ao mudar uma, atua
 | --- | --- | --- |
 | [01-viewer-window](01-viewer-window.md) | A janela com F1, as abas, o Resumo e a aba Ecobeasts | concluída (falta o dono ver) |
 | [02-skills-and-elements](02-skills-and-elements.md) | As abas Técnicas e Elementos, com o efeito tocando e o som | concluída (falta o dono ver) |
-| [03-world-and-items](03-world-and-items.md) | As abas Biomas, Itens, Traços, Temperamentos e Estados | rascunho |
+| [03-world-and-items](03-world-and-items.md) | As abas Biomas, Itens, Traços, Temperamentos e Estados | concluída (falta o dono ver) |
 
 O desenho que as 3 fases compartilham está no [architecture.md](architecture.md).

@@ -223,7 +223,10 @@ func _traits(species: CreatureSpecies, box: VBoxContainer) -> void:
 	for row: Dictionary in rows:
 		var creature_trait := GameData.get_trait(row["trait_id"])
 		var line := ContentViewer.flow(6)
-		line.add_child(ContentViewer.text(creature_trait.name if creature_trait != null else "?"))
+		if creature_trait != null:
+			line.add_child(viewer.link(creature_trait.name, ContentViewer.TAB_TRAITS, creature_trait.id))
+		else:
+			line.add_child(ContentViewer.text("?"))
 		if row.get("is_hidden", false):
 			line.add_child(ContentViewer.text("(oculto)", 0, UiPalette.TEXT_MUTED))
 		box.add_child(line)
@@ -245,7 +248,9 @@ func _biomes(species: CreatureSpecies, box: VBoxContainer) -> void:
 	box.add_child(grid)
 	for row: Dictionary in rows:
 		var biome: Dictionary = GameData.get_row("biomes", row["biome_id"])
-		grid.add_child(ContentViewer.text(str(biome.get("name", "?"))))
+		var cell := HBoxContainer.new()
+		cell.add_child(viewer.link(str(biome.get("name", "?")), ContentViewer.TAB_BIOMES, row["biome_id"]))
+		grid.add_child(cell)
 		grid.add_child(ContentViewer.text(str(row["rate"]), 0, UiPalette.TEXT_SECONDARY))
 
 

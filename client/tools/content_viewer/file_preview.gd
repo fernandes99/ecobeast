@@ -23,12 +23,23 @@ const BATTLE_DIRECTION_BOX := Vector2(136, 136)
 var entry: ContentFiles.Entry
 ## Para uma folha: a direção mostrada ({label, row, mirrored}); vazia, a primeira linha.
 var direction: Dictionary = {}
+## Para uma folha de peças, como a das decorações: a célula, a linha, a coluna e o nome.
+var region: Dictionary = {}
 
 
 ## Mostra o arquivo; o tamanho do quadro é opcional.
 static func create(file: ContentFiles.Entry, box_size := BOX_SIZE) -> FilePreview:
 	var preview := FilePreview.new()
 	preview.entry = file
+	preview._build(box_size)
+	return preview
+
+
+## Uma célula de uma folha de peças (uma variante de uma decoração), parada.
+static func create_cell(file: ContentFiles.Entry, cell: Vector2i, row: int, column: int, label: String, box_size: Vector2) -> FilePreview:
+	var preview := FilePreview.new()
+	preview.entry = file
+	preview.region = {"cell": cell, "row": row, "column": column, "label": label}
 	preview._build(box_size)
 	return preview
 
@@ -76,6 +87,8 @@ func _build(box_size: Vector2) -> void:
 		add_child(frame)
 	var caption := Label.new()
 	caption.text = entry.label if found else "%s · falta" % entry.label
+	if not region.is_empty() and found:
+		caption.text = region["label"]
 	if not direction.is_empty():
 		caption.text = direction["label"] if found else "%s · falta" % direction["label"]
 	caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -104,6 +117,10 @@ func _setup_frame(frame: Frame) -> void:
 	frame.texture = texture
 	var row: int = direction.get("row", 0)
 	frame.mirrored = direction.get("mirrored", false)
+	if not region.is_empty():
+		frame.column = region["column"]
+		frame.animate(region["cell"], 1, 1.0, 0.0, region["row"])
+		return
 	match entry.kind:
 		ContentFiles.Kind.EXPLORE_SHEET:
 			# Uma linha (sem direção, a de frente), num ciclo no ritmo do jogo.
@@ -149,6 +166,8 @@ class Frame:
 	var mirrored := false
 	var _cell := Vector2i.ONE
 	var _row := 0
+	## A primeira coluna desenhada; as animações andam a partir dela.
+	var column := 0
 	var _frames := 1
 	var _frame_seconds := 1.0
 	var _pause := 0.0
@@ -183,7 +202,7 @@ class Frame:
 		if texture == null:
 			return
 		var frame := mini(int(_time / _frame_seconds), _frames - 1)
-		var source := Rect2(Vector2(frame * _cell.x, _row * _cell.y), Vector2(_cell))
+		var source := Rect2(Vector2((column + frame) * _cell.x, _row * _cell.y), Vector2(_cell))
 		var target_size := Vector2(_cell) * _scale()
 		var target := Rect2(((size - target_size) / 2.0).floor(), target_size)
 		if mirrored:
