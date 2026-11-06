@@ -2,7 +2,7 @@
 
 Um desenho é uma lista de textos, com um caractere por pixel: `.` é transparente, e os
 outros são chaves da paleta da criatura. A folha de cada criatura sai de um `sprites.py`
-ao lado do `front.png` dela, que chama `build`.
+em `<slug>/explore/`, ao lado das folhas, que chama `build`.
 """
 import struct
 import zlib
@@ -25,7 +25,11 @@ def height_in_pixels(height_m):
 
 def read_png(path):
     """(largura, altura, linhas), com cada linha em RGBA. Aceita PNG de 8 bits, RGB ou RGBA."""
-    data = Path(path).read_bytes()
+    return read_png_bytes(Path(path).read_bytes())
+
+
+def read_png_bytes(data):
+    """Como `read_png`, a partir do conteúdo do arquivo (por exemplo, de dentro de um zip)."""
     pos = 8
     idat = b""
     width = height = channels = 0

@@ -153,7 +153,7 @@ O material é um só, `_wind_material`, em todos os nós de decorações. O `str
 
 Só em build de debug, os controles do mapa mostram o botão "Debug", que abre um painel no topo da tela, por cima do mapa, deixando livres o Domador e os vizinhos dele. Ele reúne o mapa inteiro e o spawn de Ecobeasts, para validar as folhas de cada um sem depender de encontro nem de batalha.
 
-A lista tem todos os Ecobeasts do catálogo. `CreatureSprite.has_sheets(slug)` procura `assets/creatures/<slug>/idle.png` e `walk.png`, e quem não tem as duas fica desativado. Por isso um Ecobeast com folhas novas aparece ativo sem mudar código. As folhas vêm da skill `creature-sprites`.
+A lista tem todos os Ecobeasts do catálogo. `CreatureSprite.has_sheets(slug)` procura `assets/creatures/<slug>/explore/idle.png` e `walk.png` (a pasta `explore/` veio na [board-battle/07](../board-battle/07-battle-sprites.md)), e quem não tem as duas fica desativado. Por isso um Ecobeast com folhas novas aparece ativo sem mudar código. As folhas vêm da skill `creature-sprites`.
 
 `SheetSprite` é a base com as folhas e as direções, usada pelo `TamerSprite` e pelo `CreatureSprite`. O Domador vira para um vizinho do hexágono, com `face`. O Ecobeast vira para qualquer direção do mapa, com `face_toward`, que escolhe a linha da [tabela](#domador) pelo ângulo do movimento e usa `flip_h` para a esquerda.
 

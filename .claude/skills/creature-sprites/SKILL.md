@@ -5,7 +5,7 @@ description: Cria as folhas de pixel art idle.png e walk.png de um Ecobeast a pa
 
 # Folhas de pixel art dos Ecobeasts
 
-Esta skill transforma o `front.png` de um Ecobeast em duas folhas desenhadas à mão, pixel a pixel. Um `front.png` mostra um ângulo só, e reduzir a imagem borra e não cria os outros quatro. Por isso cada parte da criatura é um desenho em texto, e o código só monta as partes em cada quadro. Os exemplos estão em `client/assets/creatures/<slug>/sprites.py`: leia o mais parecido antes de começar. Nilu é o menor; Ruvo e Elu são pequenos, de quatro patas; Ruvak e Eluvin são médios; Ruvaroth e Eluvara são grandes; Nilgar e Nilgorr são caranguejos.
+Esta skill transforma o `front.png` de um Ecobeast em duas folhas desenhadas à mão, pixel a pixel. Um `front.png` mostra um ângulo só, e reduzir a imagem borra e não cria os outros quatro. Por isso cada parte da criatura é um desenho em texto, e o código só monta as partes em cada quadro. Os exemplos estão em `client/assets/creatures/<slug>/explore/sprites.py`: leia o mais parecido antes de começar. Nilu é o menor; Ruvo e Elu são pequenos, de quatro patas; Ruvak e Eluvin são médios; Ruvaroth e Eluvara são grandes; Nilgar e Nilgorr são caranguejos.
 
 O tamanho vem da altura do catálogo, na escala do Domador: um Ecobeast pequeno é pequeno de verdade. Fale com o dono em pt-BR. Ele é iniciante em Godot, então explique os conceitos do motor quando aparecerem.
 
@@ -24,9 +24,9 @@ O tamanho vem da altura do catálogo, na escala do Domador: um Ecobeast pequeno 
 
 ## Passos
 
-Os comandos rodam na raiz do repositório. `S` é `.claude/skills/creature-sprites/scripts`, `<pasta>` é `client/assets/creatures/<slug>` e `<prévias>` é uma pasta temporária, fora do projeto. Rode o Python com `-I`.
+Os comandos rodam na raiz do repositório. `S` é `.claude/skills/creature-sprites/scripts`, `<criatura>` é `client/assets/creatures/<slug>`, `<pasta>` é `<criatura>/explore` (as folhas do mapa; as da luta ficam em `<criatura>/battle`, veja a seção no fim) e `<prévias>` é uma pasta temporária, fora do projeto. Rode o Python com `-I`.
 
-1. **Olhe a criatura.** Abra `<pasta>/front.png` com a ferramenta Read e rode `python -I S/reference.py <pasta>/front.png <prévias>/referencia.png`. Abra a redução: ela mostra as proporções e lista as cores.
+1. **Olhe a criatura.** Abra `<criatura>/front.png` com a ferramenta Read e rode `python -I S/reference.py <criatura>/front.png <prévias>/referencia.png`. Abra a redução: ela mostra as proporções e lista as cores.
 2. **Calcule a altura e liste o que a torna reconhecível.** Antes de desenhar, escreva para si: a altura em pixels, a anatomia (quantas patas, como se apoia), a silhueta, os olhos, as cores e o traço marcante, como a chama do Ruvo. Quanto menor a altura, menos cabe: escolha o que precisa sobreviver. O dono quer reconhecer a criatura, não um boneco genérico recolorido.
 3. **Desenhe** `<pasta>/sprites.py`, copiando a estrutura do exemplo mais parecido: paleta tirada do `front.png`, cabeça e corpo para cada ângulo, patas e traços marcantes, tudo entregue a `rig`, que monta o idle e o walk. `recolored` tira o rosto para as vistas de costas, e `swayed` gera os 4 quadros de chama, folha ou água. Desenhe do zero o que for da criatura. Só o `spritekit` e a estrutura se repetem.
 4. **Gere e olhe.** Rode `python -I <pasta>/sprites.py <prévias>/previa` e abra `idle_quadros.png` e `walk_quadros.png`. A primeira versão quase nunca fica boa: conte com duas ou três rodadas, corrigindo o que você vê.
@@ -75,3 +75,27 @@ Confira isto nas prévias, porque são erros que os scripts não pegam. Os da li
 - Ligar a folha a uma tela, além do spawn de depuração e do mapa, é outra entrega, que nasce de uma spec em `.specs/`. Esta skill só cria as folhas.
 - Para nascer no mapa de verdade, a espécie também precisa de linhas em `species_biomes`, no banco. Sem elas, ela só aparece no spawn de depuração. Avise o dono.
 - Depois de mudar `spritekit.py`, gere as criaturas de novo e confira que as folhas não mudaram, pixel a pixel.
+
+## Folhas da luta (`battle/`)
+
+As folhas do tabuleiro da luta ficam em `<criatura>/battle/` e seguem o formato de `.specs/board-battle/07-battle-sprites.md`:
+
+- `idle.png` tem 2 linhas, de frente (south) e de costas (north);
+- `walk.png` tem 3 linhas: a diagonal descendo (south-east), o lado (east) e a diagonal subindo (north-east);
+- as células são quadradas, todas as vistas olham para a direita, e uma linha pode ter menos quadros que outra.
+
+O jogo tira tudo da imagem, então não há arquivo de dados ao lado. Elas aparecem sem ampliar. Há dois jeitos de fazer essas folhas:
+
+**1. Do PixelLab.** O dono gera o personagem no site, com a vista "low top-down", a animação de idle (south e north) e o walk (east, south-east e north-east). O zip vai para `art-source/<slug>/pixellab.zip`; para baixar pela API, a chave fica em `PIXELLAB_API_KEY` no `server/.env`. Depois, rode `python -I S/battle_sheets.py <slug>`. Um `art-source/<slug>/battle.json` troca a fonte de uma vista, por exemplo `{"idle": {"north": "rotation"}}` para usar a imagem parada. Gerar no PixelLab gasta os créditos do dono: só gere com o ok dele.
+
+**2. À mão, com o boneco de peças** (`S/puppet.py`). O Ecobeast é montado com elipsoides: cabeça, focinho, corpo, patas de dois ossos, cauda e chamas. O renderizador:
+- vira o boneco para cada vista;
+- pinta cada peça em 3 tons de uma rampa;
+- desenha o contorno, vermelho nas chamas;
+- cola por cima os carimbos dos olhos e do focinho.
+
+O exemplo é `client/assets/creatures/ruvak/battle/sprites.py`; rode `python -I <criatura>/battle/sprites.py <prévias>` e abra `idle_quadros.png` e `walk_quadros.png`. As vistas saem coerentes entre si, e as animações só movem as peças:
+- **idle:** a respiração, a cabeça e as chamas;
+- **walk:** as patas em diagonais, como na tabela de "Walk".
+
+Depois de gerar as folhas, importe no Godot (`godot --headless --path client --import`).

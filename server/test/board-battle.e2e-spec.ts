@@ -260,11 +260,11 @@ describe('Rotas da luta no tabuleiro (e2e)', () => {
   it('um 1×1 de teste traz o tabuleiro, as áreas, onde cada um está e a fila', async () => {
     const user = await strongUser();
     const body = await start(user, { enemies: [WEAK_ENEMY] });
-    expect(body.battle.board.cells).toHaveLength(42);
-    expect(body.battle.board.zones.player).toHaveLength(12);
-    expect(body.battle.board.zones.enemy).toHaveLength(12);
-    expect(body.battle.player.cells).toEqual([{ q: 0, r: 5 }]);
-    expect(body.battle.enemy.cells).toEqual([{ q: 2, r: 1 }]);
+    expect(body.battle.board.cells).toHaveLength(18);
+    expect(body.battle.board.zones.player).toHaveLength(6);
+    expect(body.battle.board.zones.enemy).toHaveLength(6);
+    expect(body.battle.player.cells).toEqual([{ q: -1, r: 4 }]);
+    expect(body.battle.enemy.cells).toEqual([{ q: 1, r: 1 }]);
     expect(body.battle.queue[0]).toEqual({ side: 'player', position: 0 });
     expect(body.battle.round).toBe(1);
     expect(body.events.at(-1)).toEqual({
@@ -294,15 +294,15 @@ describe('Rotas da luta no tabuleiro (e2e)', () => {
     const user = await strongUser();
     await start(user, { enemies: [WEAK_ENEMY] });
     const res = await user
-      .act({ position: 0, move: { q: 0, r: 3 }, action: { type: 'wait' } })
+      .act({ position: 0, move: { q: -1, r: 2 }, action: { type: 'wait' } })
       .expect(400);
     expect(res.body.message).toBe(CANNOT_REACH);
     const body = await act(user, {
       position: 0,
-      move: { q: 0, r: 4 },
+      move: { q: -1, r: 3 },
       action: { type: 'wait' },
     });
-    expect(body.battle.player.cells).toEqual([{ q: 0, r: 4 }]);
+    expect(body.battle.player.cells).toEqual([{ q: -1, r: 3 }]);
   });
 
   it('corpo sem action fora do choose_next é malformado', async () => {
@@ -361,7 +361,7 @@ describe('Rotas da luta no tabuleiro (e2e)', () => {
     );
   });
 
-  it('uma Esfera no selvagem a 4 hexágonos captura, e ele entra na equipe', async () => {
+  it('uma Esfera no selvagem a 3 hexágonos captura, e ele entra na equipe', async () => {
     const user = await strongUser();
     await prisma.inventoryItem.create({
       data: { playerId: user.id, itemId: sphere.id, quantity: 1 },
@@ -372,7 +372,7 @@ describe('Rotas da luta no tabuleiro (e2e)', () => {
     catalog.items.get(sphere.id)!.captureBonus = 1000;
     const body = await act(user, {
       position: 0,
-      action: { type: 'capture', item_id: sphere.id, target: { q: 2, r: 1 } },
+      action: { type: 'capture', item_id: sphere.id, target: { q: 1, r: 1 } },
     });
     expect(body.battle.result).toBe('captured');
     expect(body.captured_to).toBe('party');
@@ -394,7 +394,7 @@ describe('Rotas da luta no tabuleiro (e2e)', () => {
     catalog.items.get(sphere.id)!.captureBonus = 1000;
     const body = await act(user, {
       position: 0,
-      action: { type: 'capture', item_id: sphere.id, target: { q: 2, r: 1 } },
+      action: { type: 'capture', item_id: sphere.id, target: { q: 1, r: 1 } },
     });
     expect(body.captured_to).toBe('storage');
     const stored = await prisma.creatureInstance.count({
@@ -575,7 +575,7 @@ describe('Rotas da luta no tabuleiro (e2e)', () => {
     const res = await user.wild().expect(201);
     const body = res.body as BoardBody;
     expect(body.spawn_id).toBe(1);
-    expect(body.battle.board.cells).toHaveLength(42);
+    expect(body.battle.board.cells).toHaveLength(18);
     expect(app.get(ExplorationStore).get(user.id)!.spawns.has(1)).toBe(false);
   });
 

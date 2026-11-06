@@ -9,21 +9,21 @@ import {
 import type { Board, BoardState } from './types.js';
 
 /** O tabuleiro de agora, fixo (.specs/board-battle/architecture.md). A revisar. */
-export const BOARD_COLUMNS = 6;
-export const BOARD_ROWS = 7;
+export const BOARD_COLUMNS = 3;
+export const BOARD_ROWS = 6;
 export const MOVE_RANGE = 1;
 
 /** As linhas de cada área, a da frente primeiro. */
 const ZONE_ROWS: Record<SideSlug, number[]> = {
   enemy: [1, 0],
-  player: [5, 6],
+  player: [4, 5],
 };
 
 /** As colunas de largada na linha da frente, por número de vagas. A revisar. */
 const START_COLUMNS: Record<number, number[]> = {
-  1: [2],
-  2: [2, 3],
-  3: [1, 2, 3],
+  1: [1],
+  2: [0, 2],
+  3: [0, 1, 2],
 };
 
 /** A casa da coluna e da linha: as linhas ímpares ficam meio hexágono à direita. */

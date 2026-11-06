@@ -140,7 +140,7 @@ func _search() -> void:
 		return
 	if _map.has_creature(_player_coord):
 		# A luta de Explorar zona é a do tabuleiro (board-battle/05).
-		Router.push(&"board_battle", {"coord": _player_coord})
+		Router.push(&"board_battle", _battle_params({"coord": _player_coord}))
 	else:
 		_show_message(NOTHING_HERE_TEXT, &"SecondaryLabel")
 
@@ -212,7 +212,16 @@ func _open_board_test(slots: int) -> void:
 	if _walking:
 		return
 	_debug_menu.hide()
-	Router.push(&"board_battle", {"test_slots": slots})
+	Router.push(&"board_battle", _battle_params({"test_slots": slots}))
+
+
+## O terreno do hexágono do Domador vai junto: é o chão do tabuleiro (board-battle/08).
+func _battle_params(params: Dictionary) -> Dictionary:
+	var tile: HexTile = _map.tile_at(_player_coord) if _map != null else null
+	if tile != null:
+		params["biome"] = tile.biome
+		params["shape"] = tile.shape
+	return params
 
 
 ## Todos os Ecobeasts do catálogo, cada um com o retrato e o nome; quem ainda não

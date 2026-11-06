@@ -6,25 +6,25 @@ O desenho que as fases compartilham. O que não aparece aqui segue o [battle-cor
 
 O tabuleiro é uma lista de hexágonos, com a ponta para cima, em **coordenadas axiais** `{q, r}`, as mesmas do mapa de Explorar zona (`server/src/domain/exploration/hex.ts`). A distância é `hexDistance`, e os vizinhos são `hexNeighbors`.
 
-O tabuleiro de agora tem 6 colunas × 7 linhas. A linha 0 fica em cima, e as linhas ímpares ficam deslocadas meio hexágono para a direita. A casa da coluna `c` na linha `r` é `{q: c - floor(r / 2), r}`.
+O tabuleiro de agora tem 3 colunas × 6 linhas, 18 hexágonos. Começou com 6 × 7 e diminuiu na [06](06-board-look.md), decisão do dono em 2026-11-05: os hexágonos ficavam pequenos na tela. A linha 0 fica em cima, e as linhas ímpares ficam deslocadas meio hexágono para a direita. A casa da coluna `c` na linha `r` é `{q: c - floor(r / 2), r}`.
 
 | Área | Linhas | Quem começa nela |
 | --- | --- | --- |
 | Do inimigo | 0 e 1 | Os selvagens |
-| Do meio | 2 a 4 | Ninguém |
-| Do jogador | 5 e 6 | Os Ecobeasts do jogador |
+| Do meio | 2 e 3 | Ninguém |
+| Do jogador | 4 e 5 | Os Ecobeasts do jogador |
 
-**Largada:** cada lado começa na linha da frente da sua área, na linha 1 o inimigo e na 5 o jogador, nas colunas da tabela. Assim, os dois lados ficam a 4 hexágonos.
+**Largada:** cada lado começa na linha da frente da sua área, na linha 1 o inimigo e na 4 o jogador, nas colunas da tabela. Assim, os dois lados ficam a 3 hexágonos.
 
 | Vagas | Colunas |
 | --- | --- |
-| 1 | 2 |
-| 2 | 2 e 3 |
-| 3 | 1, 2 e 3 |
+| 1 | 1 |
+| 2 | 0 e 2 |
+| 3 | 0, 1 e 2 |
 
 As colunas são _a revisar_. Um tabuleiro futuro, sorteado ou por bioma, só muda a lista de hexágonos e as áreas, e o contrato continua o mesmo: o servidor manda as duas coisas.
 
-**Constantes** (_a revisar_), em `server/src/domain/board/board.ts`: `BOARD_COLUMNS = 6`, `BOARD_ROWS = 7`, `MOVE_RANGE = 1`. O andar começou em 3 e passou para 1 na [05](05-board-actions.md), decisão do dono em 2026-11-05, depois de jogar a tela: 3 hexágonos cobriam quase o tabuleiro todo. O jogo usa o mesmo número, em `BoardGeometry.MOVE_RANGE`.
+**Constantes** (_a revisar_), em `server/src/domain/board/board.ts`: `BOARD_COLUMNS = 3`, `BOARD_ROWS = 6`, `MOVE_RANGE = 1`. O andar começou em 3 e passou para 1 na [05](05-board-actions.md), decisão do dono em 2026-11-05, depois de jogar a tela: 3 hexágonos cobriam quase o tabuleiro todo. O jogo usa o mesmo número, em `BoardGeometry.MOVE_RANGE`.
 
 ## Estado
 
@@ -165,6 +165,11 @@ Em `client/`:
 
 - **Modelos:** `BoardBattleView`, `BoardTurn` e `GroundMark` em `res://domain/models/`. A `Skill` ganha `area_shape`, `area_range` (a coluna `range`, com outro nome para não esconder o `range()` do GDScript), `pierces`, `ground_effect_id` e `ground_turns`, e o catálogo ganha `GroundEffect`.
 - **Geometria:** `res://domain/rules/board_geometry.gd`, com a distância, os vizinhos, os hexágonos alcançáveis e a área de uma Técnica, iguais aos do servidor. Ela só serve para prever o que acender. Quem decide é o servidor.
-- **Tela:** `res://screens/board_battle/`, rota `&"board_battle"` no `Router`. A luta antiga (`res://screens/battle/`) fica como está, e as peças reaproveitáveis vêm de lá: `BattleSkillButton`, `BattleItemsPanel`, `NextCreaturePanel`, `CaptureOverlay`, as telas de subir de nível, Técnica nova e Evolução, `BattleNarrator` (os textos do histórico), `BattleHud`, `IconCircle` e `BattleStyles`.
-- **Hexágonos na tela:** as proporções do hexágono do mapa ([wild-battle/architecture.md](../wild-battle/architecture.md#superfícies)), em 1,5×: 96 × 87 px, com passo de 96 e 63 e linha deslocada em 48. O tabuleiro tem 624 × 465 px e cabe nos 720 de largura. Os hexágonos são cores chapadas, como no print: o meio claro, a área do inimigo em vermelho e a do jogador em verde.
-- **Ecobeasts na tela:** o `CreatureSprite`, com as folhas `idle` e `walk` ampliadas 4×, sem filtro, e a altura do catálogo, como no mapa. Os do jogador olham para cima (linha 4, costas), e os selvagens, para baixo (linha 0, frente). Ao andar, cada passo vira para o vizinho, como o Domador. Quem não tem folha aparece com o `front.png`, na mesma altura. A ampliação é _a revisar_.
+- **Tela:** `res://screens/board_battle/`, rota `&"board_battle"` no `Router`. A luta antiga (`res://screens/battle/`) fica como está, e as peças reaproveitáveis vêm de lá: `BattleSkillButton`, `BattleItemsPanel`, `NextCreaturePanel`, `CaptureOverlay`, as telas de subir de nível, Técnica nova e Evolução, `BattleNarrator` (os textos do histórico) e `BattleStyles`. Desde a [06](06-board-look.md), a tela segue o print do dono: o cartão do selvagem e a rodada em cima, o tabuleiro, o cartão de quem joga, os botões Atacar, Passar, Mochila e Fugir. A equipe e o botão Trocar ficaram no pé até a [08](08-board-ground.md), quando o dono os tirou; a troca fica sem botão até ele decidir onde. A fila de vezes não aparece. O tabuleiro fica parado: a parte de baixo guarda a altura da maior das suas formas (botões, Técnicas ou resultado), a mensagem guarda 2 linhas e os cartões sem Ecobeast ficam transparentes, guardando o lugar ([08](08-board-ground.md)).
+- **Hexágonos na tela:** as proporções do hexágono do mapa ([wild-battle/architecture.md](../wild-battle/architecture.md#superfícies)), em 1,5×: 96 × 87 px, com passo de 96 e 63 e linha deslocada em 48. O tabuleiro tem 336 × 402 px e é ampliado como era o de 6 colunas: na escala em que 624 px ocupam a largura da área, ou menos, se não couber. Desde a [08](08-board-ground.md), o chão do mapa de Explorar cobre a tela inteira, desenhado pelo próprio `HexMapView` com escala fixa de 1,5, numa camada atrás da interface: a superfície e a forma do hexágono do Domador, o contorno, só as decorações baixas no tabuleiro e em volta dele, e o chão de fora escurecido, com uma borda clara no limite do tabuleiro. O fundo de floresta saiu na 08; antes, o tabuleiro ficava sobre ele (`res://assets/backgrounds/board/temperate.jpg`, a imagem do dono, cobrindo a tela). O hexágono de quem joga agora fica em azul escuro, se for do jogador, ou vermelho escuro, se for selvagem, com borda branca. Decisão do dono em 2026-11-05, depois de jogar a [04](04-board-screen.md): antes, eram cores chapadas, com as áreas em verde e vermelho, num fundo de cor chapada, e quem jogava tinha só um anel amarelo nos pés. As áreas continuam no contrato: o servidor as usa na largada e na entrada, e a entrada acende os hexágonos livres.
+- **Ecobeasts na tela:** as folhas da luta de cada espécie, em `res://assets/creatures/<slug>/battle/` ([07](07-battle-sprites.md)). O `idle.png` tem 2 vistas, de frente e de costas, e o `walk.png` tem 3, a diagonal descendo, o lado e a diagonal subindo. A esquerda é espelhada. As folhas aparecem sem ampliar, sem filtro e com uma sombra.
+  - **Parado:** o Ecobeast toca o idle olhando para o adversário: os do jogador de costas, os selvagens de frente.
+  - **Andando:** toca o walk na vista do passo.
+  - **Quem não tem as folhas:** usa o `board.png`, a pixel art gerada do `front.png` por `res://tools/board_sprites.gd` e mostrada 2× maior. Parado, ele respira; andando, dá um pulinho por hexágono. Sem o `board.png`, usa o `front.png` reduzido.
+
+  As folhas do mapa ficam em `explore/`. Os tamanhos são _a revisar_.

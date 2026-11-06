@@ -29,8 +29,8 @@ describe('toBoardBattleDto', () => {
   it('traz a rodada, o tabuleiro, as marcas e a fila', () => {
     const dto = toBoardBattleDto(state());
     expect(dto.round).toBe(2);
-    expect(dto.board.cells).toHaveLength(42);
-    expect(dto.board.zones.player[0]).toEqual(at(0, 5));
+    expect(dto.board.cells).toHaveLength(18);
+    expect(dto.board.zones.player[0]).toEqual(at(0, 4));
     expect(dto.marks).toEqual([
       { ...at(2, 3), ground_effect_id: FIRE_GROUND, remaining: 4 },
     ]);
@@ -42,8 +42,8 @@ describe('toBoardBattleDto', () => {
 
   it('traz onde cada um está e onde quem entra pode ficar', () => {
     const dto = toBoardBattleDto(state());
-    expect(dto.player.cells).toEqual([at(2, 5)]);
-    expect(dto.enemy.cells).toEqual([at(2, 1)]);
+    expect(dto.player.cells).toEqual([at(1, 4)]);
+    expect(dto.enemy.cells).toEqual([at(1, 1)]);
     expect(dto.player.entry_cells).toEqual([at(0, 5)]);
   });
 

@@ -44,6 +44,13 @@ const FACE_TEXTURES: Array[String] = ["side", "side", "side", "cliff", "cliff"]
 const CONTOUR_TEXTURE := "contour"
 const HIGHLIGHT_TEXTURE := "highlight"
 
+## Com valor, a escala fica fixa, sem seguir a janela: o tabuleiro da luta usa o
+## chão do mapa ampliado 1,5× (board-battle/08). O mapa de Explorar deixa em 0.
+var fixed_scale := 0.0
+## Com valor, decide quais decorações aparecem: recebe a coordenada do hexágono e o
+## tipo, e devolve true para mostrar. O tabuleiro da luta usa (board-battle/08).
+var allows_decoration := Callable()
+
 var _map: ExplorationMap = null
 var _textures: Dictionary[String, Texture2D] = {}
 ## Os nós das linhas, por número da linha.
@@ -115,6 +122,14 @@ func set_map(map: ExplorationMap) -> void:
 		add_child(_rows[row_number])
 		_back_rows[row_number] = _new_decoration_row()
 		_front_rows[row_number] = _new_decoration_row()
+
+
+## Monta todas as linhas agora, sem esperar chegarem perto da tela: o tabuleiro da
+## luta é pequeno e fica dentro de outro nó, com outra escala (board-battle/08).
+func build_all_rows() -> void:
+	for row_number: int in _unbuilt_rows.keys():
+		_build_row(_rows[row_number], _back_rows[row_number], _front_rows[row_number], _unbuilt_rows[row_number])
+	_unbuilt_rows.clear()
 
 
 ## Põe um filho deste nó na profundidade de uma linha: por cima dela e das decorações
@@ -207,7 +222,7 @@ func _update_scale() -> void:
 	if _whole_map_area.has_area():
 		_fit_whole_map()
 		return
-	scale = art_scale()
+	scale = Vector2.ONE * fixed_scale if fixed_scale > 0.0 else art_scale()
 
 
 func _fit_whole_map() -> void:
@@ -358,6 +373,8 @@ func _add_decorations(back: HexRowView, front: HexRowView, tiles: Array) -> void
 	for tile: HexTile in tiles:
 		var center := Vector2i(_tile_origin(tile.coord) + SURFACE_CENTER - _rise(tile.level()))
 		for decoration: HexDecorations.Decoration in HexDecorations.decorations_of(tile, _map.map_seed):
+			if allows_decoration.is_valid() and not allows_decoration.call(tile.coord, decoration.kind):
+				continue
 			decoration.base = center + decoration.offset
 			if decoration.offset.y < 0:
 				behind.append(decoration)

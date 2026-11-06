@@ -8,7 +8,7 @@ A luta nova substitui a de hoje em Explorar zona. A luta atual deixa de ser usad
 
 ## Objetivos
 
-- Lutas de 1 contra 1, 2 contra 2 e 3 contra 3 num tabuleiro de 6 × 7 hexágonos. As lutas de Explorar zona continuam 1 contra 1, e as maiores existem na batalha de teste.
+- Lutas de 1 contra 1, 2 contra 2 e 3 contra 3 num tabuleiro de 3 × 6 hexágonos. As lutas de Explorar zona continuam 1 contra 1, e as maiores existem na batalha de teste.
 - Uma fila de vezes por Velocidade, à mostra no topo da tela. Na sua vez, o jogador anda e depois age.
 - Técnicas com alcance, forma e marca no chão, vindas do catálogo e editáveis pelo painel.
 - O servidor continua decidindo tudo: caminho, alcance, quem foi atingido, dano, marcas e a vez dos selvagens. O jogo desenha e prevê o que é só visual.
@@ -17,8 +17,8 @@ A luta nova substitui a de hoje em Explorar zona. A luta atual deixa de ser usad
 
 | Decisão | Motivo |
 | --- | --- |
-| Tabuleiro de 6 colunas × 7 linhas, fixo e sem obstáculos. No futuro ele varia com o bioma e pode ser sorteado | Decisão do dono ("pequeno e fixo por enquanto"). O servidor manda a lista de hexágonos, para o tabuleiro poder mudar sem mudar o contrato |
-| Cada lado começa numa área de 2 linhas: os selvagens nas duas de cima, os do jogador nas duas de baixo, a 4 hexágonos uns dos outros | Decisão do dono, a partir do rascunho da opção "pequeno e fixo" |
+| Tabuleiro de 3 colunas × 6 linhas, fixo e sem obstáculos. No futuro ele varia com o bioma e pode ser sorteado | Decisão do dono ("pequeno e fixo por enquanto"). Começou com 6 × 7, e o dono o diminuiu na [06](06-board-look.md) ("3 de largura e 6 de altura"), para os hexágonos ficarem maiores. O servidor manda a lista de hexágonos, para o tabuleiro poder mudar sem mudar o contrato |
+| Cada lado começa numa área de 2 linhas: os selvagens nas duas de cima, os do jogador nas duas de baixo, a 3 hexágonos uns dos outros | Decisão do dono, a partir do rascunho da opção "pequeno e fixo" |
 | Lutas de 1×1, 2×2 e 3×3 | Decisão do dono |
 | Uma fila por Velocidade, com empate sorteado. Cada Ecobeast age sozinho na sua vez, e o jogador joga cada um dos seus quando a vez dele chega | Decisão do dono |
 | A fila é montada no começo de cada rodada. Uma mudança de Velocidade no meio da rodada só vale na próxima | Proposta aceita pelo dono: a fila na tela não fica pulando |
@@ -60,6 +60,10 @@ A luta nova substitui a de hoje em Explorar zona. A luta atual deixa de ser usad
 | 3 | [03-board-api](03-board-api.md) | Servidor: as rotas da luta no tabuleiro, ao lado das antigas | concluída |
 | 4 | [04-board-screen](04-board-screen.md) | Jogo: a tela do tabuleiro, com a vez, andar, Técnicas, os selvagens, a entrada depois de uma queda e o histórico, aberta pelo menu de depuração | concluída |
 | 5 | [05-board-actions](05-board-actions.md) | Jogo: Mochila, Esfera, troca e fuga. Explorar zona passa a usar o tabuleiro, e o andar cai para 1 hexágono | concluída (falta o teste do dono no editor) |
+| 6 | [06-board-look](06-board-look.md) | Tabuleiro de 3 × 6 e a tela no estilo do print do dono, com o fundo de floresta, cartões, botões grandes e a equipe | concluída (falta o teste do dono no editor) |
+| 7 | [07-battle-sprites](07-battle-sprites.md) | As pastas `explore/` e `battle/` de cada Ecobeast, e o tabuleiro com folhas da luta em alta resolução, com idle e walk nas 6 direções | em andamento (Ruvo pronto) |
+| 8 | [08-board-ground](08-board-ground.md) | O chão do mapa de Explorar na tela inteira, com o limite do tabuleiro; o tabuleiro parado; a interface no pé, sem a equipe, o Trocar, a rodada e o visual da folha de assets | concluída (falta o teste do dono no editor) |
+| 9 | [09-hit-feedback](09-hit-feedback.md) | O golpe com tempos: o atacante treme, o efeito da Técnica (a Arranhão, do kit de efeitos), o alvo treme e pisca, o dano sobe zanzando, e o log de uma linha letra por letra | concluída (falta o teste do dono no editor) |
 
 O desenho compartilhado está no [architecture.md](architecture.md).
 

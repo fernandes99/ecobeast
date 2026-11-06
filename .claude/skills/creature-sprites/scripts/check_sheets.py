@@ -78,7 +78,9 @@ def check(path, name, height):
 
 def main():
     folder = Path(sys.argv[1]).resolve()
-    height = expected_height(folder.name)
+    # As folhas do mapa ficam em <slug>/explore/ (board-battle/07).
+    slug = folder.parent.name if folder.name == "explore" else folder.name
+    height = expected_height(slug)
     print("altura pedida pelo catálogo:", "%d pixels" % height if height is not None else "fora do catálogo, sem conferir")
     errors = []
     for name in FRAMES:

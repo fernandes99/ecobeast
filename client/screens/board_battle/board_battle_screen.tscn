@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://screens/board_battle/board_battle_screen.gd" id="1_script"]
 [ext_resource type="PackedScene" path="res://ui/components/safe_area.tscn" id="2_safe_area"]
 [ext_resource type="Script" path="res://screens/board_battle/board_view.gd" id="3_board"]
-[ext_resource type="Script" path="res://screens/board_battle/turn_queue_bar.gd" id="4_queue"]
+[ext_resource type="Script" path="res://screens/board_battle/board_creature_card.gd" id="4_card"]
 [ext_resource type="PackedScene" path="res://screens/battle/next_creature_panel.tscn" id="5_next"]
 [ext_resource type="PackedScene" path="res://screens/battle/level_up_overlay.tscn" id="6_level_up"]
 [ext_resource type="PackedScene" path="res://screens/battle/evolution_overlay.tscn" id="7_evolution"]
@@ -21,7 +21,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_script")
 
-[node name="Background" type="ColorRect" parent="."]
+[node name="BoardLayer" type="Control" parent="."]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 15
@@ -31,75 +31,136 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="SafeArea" parent="." instance=ExtResource("2_safe_area")]
-layout_mode = 1
-
-[node name="Column" type="VBoxContainer" parent="SafeArea"]
-layout_mode = 2
-theme_override_constants/separation = 10
-
-[node name="TopBar" type="HBoxContainer" parent="SafeArea/Column"]
-layout_mode = 2
-theme_override_constants/separation = 12
-
-[node name="TamerLabel" type="Label" parent="SafeArea/Column/TopBar"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-theme_type_variation = &"BoldLabel"
-theme_override_font_sizes/font_size = 24
-clip_text = true
-
-[node name="InfoButton" type="Button" parent="SafeArea/Column/TopBar"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(64, 64)
-layout_mode = 2
-theme_type_variation = &"OutlineButton"
-theme_override_font_sizes/font_size = 30
-text = "i"
-
-[node name="QueueBar" type="HBoxContainer" parent="SafeArea/Column"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 76)
-layout_mode = 2
-theme_override_constants/separation = 8
-alignment = 1
-script = ExtResource("4_queue")
-
-[node name="BoardArea" type="Control" parent="SafeArea/Column"]
-unique_name_in_owner = true
-clip_contents = true
-layout_mode = 2
-size_flags_vertical = 3
-mouse_filter = 2
-
-[node name="Board" type="Control" parent="SafeArea/Column/BoardArea"]
+[node name="Board" type="Control" parent="BoardLayer"]
 unique_name_in_owner = true
 layout_mode = 0
 script = ExtResource("3_board")
 
-[node name="Message" type="Label" parent="SafeArea/Column"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_type_variation = &"SecondaryLabel"
-theme_override_font_sizes/font_size = 22
-horizontal_alignment = 1
-autowrap_mode = 3
+[node name="SafeArea" parent="." instance=ExtResource("2_safe_area")]
+layout_mode = 1
+mouse_filter = 2
 
-[node name="Controls" type="VBoxContainer" parent="SafeArea/Column"]
-custom_minimum_size = Vector2(0, 300)
+[node name="Edge" type="MarginContainer" parent="SafeArea"]
 layout_mode = 2
+mouse_filter = 2
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="Column" type="VBoxContainer" parent="SafeArea/Edge"]
+layout_mode = 2
+mouse_filter = 2
 theme_override_constants/separation = 10
 
-[node name="SkillsGrid" type="GridContainer" parent="SafeArea/Column/Controls"]
+[node name="TopRow" type="HBoxContainer" parent="SafeArea/Edge/Column"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="EnemyCard" type="PanelContainer" parent="SafeArea/Edge/Column/TopRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+script = ExtResource("4_card")
+is_enemy = true
+
+[node name="TopRight" type="VBoxContainer" parent="SafeArea/Edge/Column/TopRow"]
+layout_mode = 2
+size_flags_horizontal = 10
+theme_override_constants/separation = 8
+
+[node name="InfoButton" type="Button" parent="SafeArea/Edge/Column/TopRow/TopRight"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(64, 64)
+layout_mode = 2
+size_flags_horizontal = 8
+theme_override_font_sizes/font_size = 30
+text = "?"
+
+[node name="BoardArea" type="Control" parent="SafeArea/Edge/Column"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
+mouse_filter = 2
+
+[node name="Bottom" type="VBoxContainer" parent="SafeArea/Edge/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 10
+alignment = 2
+
+[node name="LogBox" type="PanelContainer" parent="SafeArea/Edge/Column/Bottom"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Message" type="Label" parent="SafeArea/Edge/Column/Bottom/LogBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+vertical_alignment = 1
+text_overrun_behavior = 3
+
+[node name="PlayerCard" type="PanelContainer" parent="SafeArea/Edge/Column/Bottom"]
+unique_name_in_owner = true
+layout_mode = 2
+script = ExtResource("4_card")
+
+[node name="Controls" type="VBoxContainer" parent="SafeArea/Edge/Column/Bottom"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 10
+alignment = 2
+
+[node name="ActionsRow" type="HBoxContainer" parent="SafeArea/Edge/Column/Bottom/Controls"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="AttackButton" type="Button" parent="SafeArea/Edge/Column/Bottom/Controls/ActionsRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 128)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 24
+text = "Atacar"
+
+[node name="WaitButton" type="Button" parent="SafeArea/Edge/Column/Bottom/Controls/ActionsRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 128)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 24
+text = "Passar"
+
+[node name="BagButton" type="Button" parent="SafeArea/Edge/Column/Bottom/Controls/ActionsRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 128)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 24
+text = "Mochila"
+
+[node name="FleeButton" type="Button" parent="SafeArea/Edge/Column/Bottom/Controls/ActionsRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 128)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 24
+text = "Fugir"
+
+[node name="SkillsBox" type="VBoxContainer" parent="SafeArea/Edge/Column/Bottom/Controls"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="SkillsGrid" type="GridContainer" parent="SafeArea/Edge/Column/Bottom/Controls/SkillsBox"]
+unique_name_in_owner = true
+layout_mode = 2
 theme_override_constants/h_separation = 10
 theme_override_constants/v_separation = 10
 columns = 2
 
-[node name="EmergencyButton" type="Button" parent="SafeArea/Column/Controls"]
+[node name="EmergencyButton" type="Button" parent="SafeArea/Edge/Column/Bottom/Controls/SkillsBox"]
 unique_name_in_owner = true
 visible = false
 custom_minimum_size = Vector2(0, 96)
@@ -107,59 +168,31 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 28
 text = "Golpe de Esforço"
 
-[node name="ActionsRow" type="HBoxContainer" parent="SafeArea/Column/Controls"]
+[node name="SkillsBackButton" type="Button" parent="SafeArea/Edge/Column/Bottom/Controls/SkillsBox"]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
-theme_override_constants/separation = 10
-
-[node name="BagButton" type="Button" parent="SafeArea/Column/Controls/ActionsRow"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 72)
-layout_mode = 2
-size_flags_horizontal = 3
 theme_type_variation = &"OutlineButton"
-text = "Mochila"
+text = "Voltar"
 
-[node name="SwitchButton" type="Button" parent="SafeArea/Column/Controls/ActionsRow"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 72)
-layout_mode = 2
-size_flags_horizontal = 3
-theme_type_variation = &"OutlineButton"
-text = "Trocar"
-
-[node name="FleeButton" type="Button" parent="SafeArea/Column/Controls/ActionsRow"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 72)
-layout_mode = 2
-size_flags_horizontal = 3
-theme_type_variation = &"DangerButton"
-text = "Fugir"
-
-[node name="WaitButton" type="Button" parent="SafeArea/Column/Controls/ActionsRow"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 72)
-layout_mode = 2
-size_flags_horizontal = 3
-text = "Passar a vez"
-
-[node name="ResultBox" type="VBoxContainer" parent="SafeArea/Column/Controls"]
+[node name="ResultBox" type="VBoxContainer" parent="SafeArea/Edge/Column/Bottom/Controls"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
-size_flags_vertical = 3
 theme_override_constants/separation = 16
 alignment = 1
 
-[node name="ResultLabel" type="Label" parent="SafeArea/Column/Controls/ResultBox"]
+[node name="ResultLabel" type="Label" parent="SafeArea/Edge/Column/Bottom/Controls/ResultBox"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"TitleLabel"
+theme_override_colors/font_outline_color = Color(0.07, 0.1, 0.06, 1)
+theme_override_constants/outline_size = 10
 theme_override_font_sizes/font_size = 36
 horizontal_alignment = 1
 autowrap_mode = 3
 
-[node name="ResultMessage" type="Label" parent="SafeArea/Column/Controls/ResultBox"]
+[node name="ResultMessage" type="Label" parent="SafeArea/Edge/Column/Bottom/Controls/ResultBox"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
@@ -168,7 +201,7 @@ theme_override_font_sizes/font_size = 20
 horizontal_alignment = 1
 autowrap_mode = 3
 
-[node name="ExitButton" type="Button" parent="SafeArea/Column/Controls/ResultBox"]
+[node name="ExitButton" type="Button" parent="SafeArea/Edge/Column/Bottom/Controls/ResultBox"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 96)
 layout_mode = 2

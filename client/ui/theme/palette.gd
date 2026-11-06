@@ -66,17 +66,22 @@ const BATTLE_ACTION_COLORS: Dictionary[StringName, Color] = {
 	&"flee": Color("#8A45E6"),
 }
 
-## Luta no tabuleiro (board-battle/04). A revisar.
-const BOARD_BACKGROUND := Color("#2F4A2A")
-const BOARD_CELL := Color("#E3D9AD")
-const BOARD_CELL_BORDER := Color("#5B5537")
-const BOARD_ZONE_PLAYER := Color("#7FC46A")
-const BOARD_ZONE_ENEMY := Color("#D9735A")
+## Luta no tabuleiro (board-battle/06, no estilo do print do dono). A revisar.
+## O chão dos hexágonos é o do mapa de Explorar e cobre a tela (board-battle/08):
+## o que fica fora do tabuleiro escurece, e a borda dele fica clara.
+const BOARD_OUTSIDE := Color("#0000004D")
+const BOARD_EDGE := Color("#FFFFFFB3")
+## O hexágono de quem joga agora: a cor do lado por dentro e o brilho em volta.
+const BOARD_ACTIVE_CELL := Color("#1F6FE08C")
+const BOARD_ACTIVE_GLOW := Color("#7FD8FF")
+const BOARD_ACTIVE_ENEMY_CELL := Color("#E0402A8C")
+const BOARD_ACTIVE_ENEMY_GLOW := Color("#FF8A5C")
 ## Onde o Ecobeast chega andando, e os alvos da Técnica escolhida.
-const BOARD_REACH := Color("#9FD3F0B3")
-const BOARD_TARGET := Color("#F2B33DB3")
+const BOARD_REACH := Color("#C8F5D447")
+const BOARD_TARGET := Color("#F2B33D80")
 ## A área da Técnica, por um instante, quando ela é usada.
 const BOARD_AREA := Color("#FFFFFF99")
+## A borda de quem joga agora, na fila.
 const BOARD_ACTIVE := Color("#FFD54A")
 const BOARD_PLAYER := BATTLE_LEVEL_PLAYER
 const BOARD_ENEMY := BATTLE_LEVEL_ENEMY

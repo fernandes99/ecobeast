@@ -21,13 +21,13 @@ describe('a vez do selvagem', () => {
   it('a 2 hexágonos, anda 1 até o Ecobeast do jogador e ataca de onde chegou', () => {
     const scratcher = wild(30, { skills: [{ skillId: 1, currentPp: 35 }] });
     const state = makeBoardState([fighter(10)], [scratcher], {
-      cells: { enemy: [at(2, 3)] },
+      cells: { enemy: [at(1, 2)] },
       queue: [ENEMY],
     });
     const vez = chooseEnemyVez(state, catalog, always(0.5), ENEMY);
     expect(vez.move).toBeDefined();
-    expect(hexDistance(vez.move!, at(2, 5))).toBe(1);
-    expect(vez.action).toMatchObject({ type: 'skill', target: at(2, 5) });
+    expect(hexDistance(vez.move!, at(1, 4))).toBe(1);
+    expect(vez.action).toMatchObject({ type: 'skill', target: at(1, 4) });
   });
 
   it('se já alcança alguém, fica onde está e ataca', () => {
@@ -45,29 +45,29 @@ describe('a vez do selvagem', () => {
     const state = makeBoardState(
       [fighter(10)],
       [onlyScratch],
-      { cells: { enemy: [at(2, 3)] }, queue: [ENEMY] },
+      { cells: { enemy: [at(1, 2)] }, queue: [ENEMY] },
       {
-        marks: [{ cell: at(2, 4), groundEffectId: FIRE_GROUND, remaining: 6 }],
+        marks: [{ cell: at(1, 3), groundEffectId: FIRE_GROUND, remaining: 6 }],
       },
     );
     for (const roll of [0.1, 0.9]) {
       const vez = chooseEnemyVez(state, catalog, always(roll), ENEMY);
-      expect(vez.move).toEqual(at(3, 4));
+      expect(vez.move).toEqual(at(0, 3));
     }
   });
 
   it('sem PP, usa a emergência em quem está ao lado', () => {
     const state = makeBoardState([fighter(10)], [wild(30, { skills: NO_PP })], {
-      cells: { enemy: [at(2, 3)] },
+      cells: { enemy: [at(1, 2)] },
       queue: [ENEMY],
     });
     const vez = chooseEnemyVez(state, catalog, always(0.5), ENEMY);
-    expect(vez.action).toEqual({ type: 'emergency', target: at(2, 5) });
+    expect(vez.action).toEqual({ type: 'emergency', target: at(1, 4) });
   });
 
   it('sem nada que alcance depois de andar, só se aproxima e espera', () => {
     const state = makeBoardState([fighter(10)], [wild(30, { skills: NO_PP })], {
-      cells: { player: [at(2, 6)] },
+      cells: { player: [at(1, 5)] },
       queue: [ENEMY],
     });
     const vez = chooseEnemyVez(state, catalog, always(0.5), ENEMY);

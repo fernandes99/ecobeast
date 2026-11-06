@@ -46,24 +46,21 @@ describe('começo da luta no tabuleiro', () => {
       'vez_started',
     ]);
     expect(eventsOf(events, 'creature_entered').map((e) => e.cell)).toEqual([
-      at(2, 5),
-      at(2, 1),
+      at(1, 4),
+      at(1, 1),
     ]);
     expect(state.phase).toBe('choose_action');
     expect(state.queue[0]).toMatchObject({ side: 'player', position: 0 });
   });
 
-  it('com o selvagem mais rápido, ele anda e ataca antes da vez do jogador', () => {
+  it('com o selvagem mais rápido, ele ataca antes da vez do jogador', () => {
+    // A 3 hexágonos, a Chama Espiral dele já alcança: ele nem precisa andar.
     const { state, events } = startBoardBattle(
       [fighter(5)],
       [wild(30)],
       catalog,
       always(0.5),
     );
-    const enemyMoves = eventsOf(events, 'moved').filter(
-      (event) => event.side === 'enemy',
-    );
-    expect(enemyMoves).toHaveLength(1);
     expect(eventsOf(events, 'skill_used')[0]).toMatchObject({ side: 'enemy' });
     expect(events.at(-1)).toEqual({
       type: 'vez_started',
@@ -91,9 +88,9 @@ describe('andar', () => {
   });
 
   it.each([
-    ['a 2 hexágonos', at(5, 1), at(2, 3)],
-    ['para o hexágono do selvagem', at(2, 3), at(2, 3)],
-    ['para fora do tabuleiro', at(5, 1), { q: 40, r: 40 }],
+    ['a 2 hexágonos', at(0, 0), at(1, 2)],
+    ['para o hexágono do selvagem', at(1, 3), at(1, 3)],
+    ['para fora do tabuleiro', at(0, 0), { q: 40, r: 40 }],
   ])('recusa andar %s, sem mudar nada', (_, enemyCell, move) => {
     const state = makeBoardState([fighter(30)], [wild(5, ASLEEP)], {
       cells: { enemy: [enemyCell] },
@@ -139,7 +136,7 @@ describe('andar', () => {
     const state = makeBoardState([fighter(30, ASLEEP)], [wild(5, ASLEEP)]);
     const { state: after, events } = playVez(
       state,
-      { position: 0, move: at(2, 4), action: { type: 'wait' } },
+      { position: 0, move: at(1, 3), action: { type: 'wait' } },
       catalog,
     );
     expect(eventsOf(events, 'cannot_act')[0]).toMatchObject({
@@ -147,7 +144,7 @@ describe('andar', () => {
       reason: 'sleep',
     });
     expect(eventsOf(events, 'moved')).toEqual([]);
-    expect(after.cells.player[0]).toEqual(at(2, 5));
+    expect(after.cells.player[0]).toEqual(at(1, 4));
   });
 });
 
@@ -215,7 +212,7 @@ describe('Técnicas na vez', () => {
   it('uma linha que não atinge ninguém gasta o PP e a vez', () => {
     const { state } = playVez(
       makeBoardState([fighter(30)], [wild(5, ASLEEP)], {
-        cells: { enemy: [at(5, 1)] },
+        cells: { enemy: [at(0, 0)] },
       }),
       {
         position: 0,
@@ -306,7 +303,7 @@ describe('queda e entrada', () => {
         ],
       },
       {
-        marks: [{ cell: at(2, 5), groundEffectId: FIRE_GROUND, remaining: 6 }],
+        marks: [{ cell: at(0, 4), groundEffectId: FIRE_GROUND, remaining: 6 }],
       },
     );
   }
@@ -322,8 +319,8 @@ describe('queda e entrada', () => {
     ]);
     expect(state.phase).toBe('choose_next');
     expect(state.pendingPositions).toEqual([0]);
-    expect(state.entryCells).toContainEqual(at(2, 5));
-    expect(state.entryCells).not.toContainEqual(at(3, 5));
+    expect(state.entryCells).toContainEqual(at(0, 4));
+    expect(state.entryCells).not.toContainEqual(at(2, 4));
   });
 
   it('quem entra fica no hexágono escolhido da área verde e não joga na mesma rodada', () => {
@@ -334,14 +331,14 @@ describe('queda e entrada', () => {
     );
     const { state, events } = playVez(
       fainted.state,
-      { entries: [{ position: 0, team_index: 2, cell: at(0, 6) }] },
+      { entries: [{ position: 0, team_index: 2, cell: at(1, 5) }] },
       catalog,
     );
     expect(eventsOf(events, 'creature_entered')[0]).toMatchObject({
       side: 'player',
       position: 0,
       team_index: 2,
-      cell: at(0, 6),
+      cell: at(1, 5),
     });
     const roundStart = events.findIndex((e) => e.type === 'round_started');
     const playsBefore = events
@@ -363,7 +360,7 @@ describe('queda e entrada', () => {
     expect(
       applyBoardVez(
         fainted.state,
-        { entries: [{ position: 0, team_index: 2, cell: at(3, 5) }] },
+        { entries: [{ position: 0, team_index: 2, cell: at(2, 4) }] },
         catalog,
         always(0.5),
       ),
@@ -374,7 +371,7 @@ describe('queda e entrada', () => {
     const state = makeBoardState(
       [fighter(30), fighter(10)],
       [wild(5, ASLEEP)],
-      { cells: { player: [at(4, 4)] } },
+      { cells: { player: [at(1, 3)] } },
     );
     const { state: after, events } = playVez(
       state,
@@ -384,10 +381,10 @@ describe('queda e entrada', () => {
     expect(eventsOf(events, 'creature_entered')[0]).toMatchObject({
       position: 0,
       team_index: 1,
-      cell: at(4, 4),
+      cell: at(1, 3),
     });
     expect(after.player.activeIndices).toEqual([1]);
-    expect(after.cells.player[0]).toEqual(at(4, 4));
+    expect(after.cells.player[0]).toEqual(at(1, 3));
   });
 });
 
@@ -581,7 +578,7 @@ describe('item e marca com status', () => {
       [wild(5, ASLEEP)],
       {},
       {
-        marks: [{ cell: at(2, 5), groundEffectId: ICE, remaining: 6 }],
+        marks: [{ cell: at(1, 4), groundEffectId: ICE, remaining: 6 }],
       },
     );
     const { state: after, events } = playVez(

@@ -5,6 +5,11 @@ extends RefCounted
 ## vale o padrão.
 
 
+static func get_float(d: Dictionary, key: String, default: float = 0.0) -> float:
+	var value: Variant = d.get(key)
+	return float(value) if value is int or value is float else default
+
+
 static func get_int(d: Dictionary, key: String, default: int = 0) -> int:
 	var value: Variant = d.get(key)
 	return int(value) if value is int or value is float else default

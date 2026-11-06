@@ -3,7 +3,8 @@ extends SheetSprite
 ## Um Ecobeast no mapa (wild-battle/13 e biome-encounters/04): para um pouco e anda até
 ## um ponto sorteado do mesmo hexágono. Quem sabe onde ele está é o servidor.
 
-const SHEET_PATH := "res://assets/creatures/%s/%s.png"
+## As folhas do mapa ficam em explore/; as da luta, em battle/ (board-battle/07).
+const SHEET_PATH := "res://assets/creatures/%s/explore/%s.png"
 const IDLE := "idle"
 const WALK := "walk"
 ## Um ciclo de cada folha, em segundos. A revisar.
@@ -32,6 +33,9 @@ var _center := Vector2.ZERO
 var _exact := Vector2.ZERO
 var _target := Vector2.ZERO
 var _pause_left := 0.0
+## Só passeia no mapa, depois do `wander_in`. O Godot liga o `_process` sozinho
+## quando o nó entra na árvore, e o `set_process(false)` do `_init` não basta.
+var _wandering: bool = false
 
 
 ## Quem ainda não tem as duas folhas não pode entrar no mapa.
@@ -47,10 +51,11 @@ func _init(slug: String) -> void:
 		_frames_by_slug[slug] = sprite_frames
 	sprite_frames = _frames_by_slug[slug]
 	play_idle()
-	set_process(false)
 
 
 func _process(delta: float) -> void:
+	if not _wandering:
+		return
 	if _pause_left > 0.0:
 		_pause_left -= delta
 		if _pause_left <= 0.0:
@@ -69,7 +74,7 @@ func wander_in(coord: Vector2i, center: Vector2) -> void:
 	_exact = random_spot(center)
 	position = _exact.round()
 	_rest()
-	set_process(true)
+	_wandering = true
 
 
 ## Um ponto do hexágono, no mesmo limite das decorações: longe da borda.

@@ -1,6 +1,7 @@
 extends Control
-## Luta no tabuleiro (board-battle/04): a fila em cima, o tabuleiro no meio e as
-## Técnicas embaixo. Na vez de um Ecobeast do jogador, ele anda (sem pedir nada
+## Luta no tabuleiro (board-battle/04 a 08): o cartão do selvagem e a rodada em
+## cima, o tabuleiro no meio, parado, e embaixo o cartão de quem joga e os botões.
+## Na vez de um Ecobeast do jogador, ele anda (sem pedir nada
 ## ao servidor) e depois escolhe a Técnica e o alvo; a vez vai ao servidor no
 ## toque final, e a resposta traz as vezes dos selvagens, mostradas em ordem.
 ## O servidor decide tudo: a tela só acende o que dá para fazer e mostra o que
@@ -31,16 +32,27 @@ const BOARD_LINES: Dictionary[String, String] = {
 }
 const HP_EVENTS: Array[String] = ["damage", "recoil", "healed", "confused_hit", "status_damage", "ground_damage"]
 const LOSS_EVENTS: Array[String] = ["damage", "recoil", "confused_hit", "status_damage", "ground_damage"]
-## Espera depois de cada evento com linha, em segundos. A revisar.
+## A largura do tabuleiro de 6 colunas: os hexágonos ficam do tamanho que tinham nele.
+const REFERENCE_BOARD_WIDTH := 624.0
+## Espera depois de cada frase completa no log, em segundos. A revisar.
 const EVENT_DELAY := 0.35
-## Quanto a área de uma Técnica fica acesa quando ela é usada.
-const AREA_SECONDS := 0.4
+## As frases aparecem no log letra por letra (board-battle/09). A revisar.
+const CHARS_PER_SECOND := 60.0
+## O efeito de cada Técnica, pelo slug dela; sem o arquivo, ela não tem efeito.
+const SKILL_EFFECT_PATH := "res://assets/effects/skills/%s.png"
+## O som de cada Técnica, pelo slug dela, tocado junto com o efeito (board-battle/09).
+const SKILL_SOUND_PATH := "res://assets/sounds/skills/%s.wav"
+## O som do dano, junto com a piscada, pela efetividade: normal, super ou weak.
+const HIT_SOUND_PATH := "res://assets/sounds/hits/%s.wav"
 ## A Técnica de emergência é corpo a corpo.
 const EMERGENCY_RANGE := 1
 
 ## O hexágono do Domador, de onde sai o selvagem; ou as vagas da luta de teste.
 var _coord := Vector2i.ZERO
 var _test_slots := 0
+## O bioma e a forma do hexágono do Domador, para o chão do tabuleiro (board-battle/08).
+var _biome := BoardView.DEFAULT_BIOME
+var _shape := BoardView.DEFAULT_SHAPE
 ## O último estado do servidor; null até a abertura terminar.
 var _view: BoardBattleView = null
 ## O estado da resposta que está sendo mostrada: dá os nomes de quem entra.
@@ -51,14 +63,28 @@ var _busy: bool = false
 var _walking: bool = false
 var _needs_reload: bool = false
 var _leaving: bool = false
+## O golpe que está sendo mostrado: quem usou a Técnica e qual (board-battle/09).
+## Vazio e -1 fora de um golpe; -1 também na Técnica de emergência.
+var _attacker_key: String = ""
+var _attack_skill_id := -1
+var _typing: Tween = null
+## Toca o som das Técnicas. Um AudioStreamPlayer toca um som de cada vez, sem lugar
+## na tela, e cai no bus Master.
+var _skill_sound := AudioStreamPlayer.new()
+## Um segundo tocador, para o som do dano não cortar o da Técnica.
+var _hit_sound := AudioStreamPlayer.new()
 
 ## Quem está no tabuleiro agora, pela chave da vaga ("player:0").
 var _names: Dictionary[String, String] = {}
 var _species: Dictionary[String, int] = {}
 var _max_hp: Dictionary[String, int] = {}
 var _team_index: Dictionary[String, int] = {}
-## A fila que aparece na barra, e as marcas no chão, como estão na tela.
-var _queue: Array[String] = []
+var _level: Dictionary[String, int] = {}
+var _hp: Dictionary[String, int] = {}
+## Quem aparece nos cartões: o selvagem e o Ecobeast do jogador em foco.
+var _enemy_focus: String = ""
+var _player_focus: String = ""
+## As marcas no chão, como estão na tela.
 var _marks: Dictionary[Vector2i, int] = {}
 
 ## A vez do jogador: a vaga, de onde ele saiu e para onde andou.
@@ -79,17 +105,20 @@ var _flee_armed: bool = false
 var _entries: Array[Dictionary] = []
 var _entry_team := -1
 
-@onready var _background: ColorRect = %Background
-@onready var _tamer_label: Label = %TamerLabel
-@onready var _queue_bar: TurnQueueBar = %QueueBar
+@onready var _enemy_card: BoardCreatureCard = %EnemyCard
+@onready var _player_card: BoardCreatureCard = %PlayerCard
 @onready var _board_area: Control = %BoardArea
+@onready var _board_layer: Control = %BoardLayer
 @onready var _board: BoardView = %Board
 @onready var _message: Label = %Message
+@onready var _log_box: PanelContainer = %LogBox
+@onready var _bottom: VBoxContainer = %Bottom
+@onready var _skills_box: Control = %SkillsBox
 @onready var _skills_grid: GridContainer = %SkillsGrid
+@onready var _attack_button: Button = %AttackButton
 @onready var _emergency_button: Button = %EmergencyButton
 @onready var _actions_row: Control = %ActionsRow
 @onready var _bag_button: Button = %BagButton
-@onready var _switch_button: Button = %SwitchButton
 @onready var _flee_button: Button = %FleeButton
 @onready var _wait_button: Button = %WaitButton
 @onready var _result_box: VBoxContainer = %ResultBox
@@ -106,30 +135,38 @@ var _entry_team := -1
 
 
 ## `coord`: o encontro do mapa. `test_slots`: a luta de teste, com 2 ou 3 vagas.
+## `biome` e `shape`: o terreno do hexágono do Domador, para o chão do tabuleiro.
 func setup(params: Dictionary) -> void:
 	_coord = params.get("coord", Vector2i.ZERO)
 	_test_slots = params.get("test_slots", 0)
+	_biome = params.get("biome", BoardView.DEFAULT_BIOME)
+	_shape = params.get("shape", BoardView.DEFAULT_SHAPE)
 
 
 func _ready() -> void:
-	_background.color = UiPalette.BOARD_BACKGROUND
-	var player := Session.player
-	_tamer_label.text = "%s · Domador Nv. %d" % [player.name, player.level] if player != null else ""
 	for index: int in SKILL_SLOTS:
 		var button: BattleSkillButton = SkillButtonScene.instantiate()
 		button.pressed.connect(_choose_skill.bind(index + 1))
 		_skills_grid.add_child(button)
+	_reserve_bottom()
+	add_child(_skill_sound)
+	add_child(_hit_sound)
+	_enemy_card.clear()
+	_player_card.clear()
 	_emergency_button.pressed.connect(_choose_skill.bind(-1))
 	_wait_button.pressed.connect(_wait)
+	_attack_button.pressed.connect(_open_skills)
+	%SkillsBackButton.pressed.connect(_close_skills)
 	_bag_button.pressed.connect(_open_bag)
-	_switch_button.pressed.connect(_open_switch)
 	_flee_button.pressed.connect(_flee)
 	_items_panel.chosen.connect(_use_item)
 	_items_panel.capture_chosen.connect(_aim_sphere)
 	%InfoButton.pressed.connect(_history.open)
 	_exit_button.pressed.connect(_leave)
 	_board.cell_tapped.connect(_on_cell_tapped)
-	_board_area.resized.connect(_fit_board)
+	# O tabuleiro mora numa camada atrás da interface (board-battle/08): a área na
+	# coluna só diz onde ele fica.
+	_board_area.item_rect_changed.connect(_fit_board)
 	_next_panel.chosen.connect(_on_creature_chosen)
 	_set_busy(true)
 	_begin()
@@ -156,6 +193,8 @@ func handle_back() -> bool:
 		_cancel_skill()
 	elif _flee_armed:
 		_disarm_flee()
+	elif _skills_box.visible:
+		_close_skills()
 	elif _result_box.visible:
 		_leave()
 	return true
@@ -173,7 +212,7 @@ func _begin() -> void:
 		_show_exit(result.error, false)
 		return
 	var turn: BoardTurn = result.data
-	_board.set_board(turn.view.board_cells, turn.view.player_zone, turn.view.enemy_zone)
+	_board.set_board(turn.view.board_cells, _biome, _shape)
 	_fit_board()
 	await _show_turn(turn)
 	_narrator.begin_turns()
@@ -192,16 +231,35 @@ func _test_enemies() -> Array[Dictionary]:
 	return enemies
 
 
-## O tabuleiro inteiro cabe na área, centrado.
+## O tabuleiro fica parado (board-battle/08): o bloco de baixo guarda sempre a altura
+## da mais alta das suas formas (os botões, as Técnicas ou o resultado), e a mensagem,
+## 2 linhas. Assim a área do tabuleiro só muda com a janela.
+func _reserve_bottom() -> void:
+	var tallest := 0.0
+	for form: Control in [_actions_row, _skills_box, _result_box]:
+		tallest = maxf(tallest, form.get_combined_minimum_size().y)
+	# A reserva fica no bloco todo, alinhado no pé: o cartão desce junto com os botões.
+	# O log tem sempre uma linha (board-battle/09).
+	var gap := _bottom.get_theme_constant(&"separation")
+	_bottom.custom_minimum_size.y = _log_box.get_combined_minimum_size().y + _player_card.get_combined_minimum_size().y + tallest + gap * 2
+
+
+## O tabuleiro inteiro cabe na área, centrado, sem passar do tamanho dos
+## hexágonos do tabuleiro antigo, de 6 colunas: o dono achou maior grande demais.
 func _fit_board() -> void:
 	var board_size := _board.board_size()
 	if board_size == Vector2.ZERO:
 		return
 	var area := _board_area.size
-	var ratio := minf(area.x / board_size.x, area.y / board_size.y)
+	var ratio := minf(minf(area.x / board_size.x, area.y / board_size.y), area.x / REFERENCE_BOARD_WIDTH)
+	# Antes de a coluna ter tamanho, não há onde pôr o tabuleiro.
+	if ratio <= 0.0:
+		return
+	var slot := _board_layer.get_global_transform().affine_inverse() * _board_area.get_global_rect()
 	_board.scale = Vector2.ONE * ratio
 	_board.size = board_size
-	_board.position = (area - board_size * ratio) / 2.0
+	_board.position = slot.position + (area - board_size * ratio) / 2.0
+	_board.cover_screen()
 
 
 # --- Mostrar a resposta --------------------------------------------------------
@@ -244,34 +302,30 @@ func _play_event(event: Dictionary) -> void:
 			await _capture_overlay.play(item, _species.get(key, 0), DictFields.get_bool(event, "success"))
 		"creature_entered":
 			_enter(key, side, event)
-		"round_started":
-			_queue.clear()
-			for spot: Variant in DictFields.get_array(event, "queue"):
-				if spot is Dictionary:
-					_queue.append(BoardSpot.from_dict(spot).key())
-			_refresh_queue()
 		"vez_started":
-			while not _queue.is_empty() and _queue[0] != key:
-				_queue.remove_at(0)
-			_refresh_queue()
+			_attacker_key = ""
+			_attack_skill_id = -1
 			_board.set_active(key)
+			_focus(side, key)
 		"moved":
 			var path := _path_of(event)
 			if not path.is_empty() and _board.has_token(key) and _board.token_cell(key) != path[-1]:
 				await _board.walk(key, path)
 		"skill_used":
+			# Quem ataca treme, com a área acesa (board-battle/09).
+			_attacker_key = key
+			_attack_skill_id = DictFields.get_id(event, "skill_id")
 			var area := _cells_of(DictFields.get_array(event, "cells"))
-			if not area.is_empty():
-				_board.light(area, UiPalette.BOARD_AREA)
-				await get_tree().create_timer(AREA_SECONDS).timeout
-				_board.light([], Color.TRANSPARENT)
+			_board.light(area, UiPalette.BOARD_AREA)
+			await _board.attack_shake(key)
+			_board.light([], Color.TRANSPARENT)
 		"fainted":
 			_board.fade(key)
 		"creature_left":
-			_board.remove(key)
-			if not _queue.is_empty():
-				_queue.erase(key)
-				_refresh_queue()
+			# O selvagem derrotado deixa uma moeda; o capturado já entrou na Esfera.
+			var defeated: bool = side == "enemy" and _hp.get(key, 1) <= 0
+			await _board.vanish(key, defeated)
+			_refresh_cards()
 		"mark_placed":
 			_marks[BoardBattleView.cell_of(DictFields.get_dict(event, "cell"))] = DictFields.get_int(event, "ground_effect_id")
 			_refresh_marks()
@@ -281,16 +335,81 @@ func _play_event(event: Dictionary) -> void:
 		"item_used":
 			_update_team_hp(DictFields.get_int(event, "team_index"), DictFields.get_int(event, "hp"))
 	if type in HP_EVENTS and _board.has_token(key):
-		_board.set_hp(key, DictFields.get_int(event, "hp"), _max_hp.get(key, 0))
+		# O golpe (board-battle/09): o efeito da Técnica no alvo, o alvo treme e pisca
+		# com a barra caindo, e o número sobe sem a sequência esperar por ele.
+		if type == "damage":
+			await _play_skill_effect(key)
+		_hp[key] = DictFields.get_int(event, "hp")
+		_board.set_hp(key, _hp[key], _max_hp.get(key, 0))
+		_focus(side, key)
 		var amount := DictFields.get_int(event, "amount") if type == "ground_damage" or type == "healed" else DictFields.get_int(event, "damage")
 		if type in LOSS_EVENTS:
+			_play_hit_sound(_hit_kind(type, event))
+			await _board.hit(key)
 			_board.float_number(key, "-%d" % amount, UiPalette.DANGER)
 		else:
 			_board.float_number(key, "+%d" % amount, UiPalette.HP_HIGH)
 	var line := _line_for(type, side, key, event)
 	if not line.is_empty():
 		_history.add_line(line)
+		await _type_line(line)
 		await get_tree().create_timer(EVENT_DELAY).timeout
+
+
+## O som e o efeito da Técnica do golpe atual sobre o alvo, com o efeito espelhado
+## se o atacante estiver à direita. Cada um só existe se o arquivo dele existir.
+func _play_skill_effect(target_key: String) -> void:
+	if _attack_skill_id < 0:
+		return
+	var skill := GameData.get_skill(_attack_skill_id)
+	if skill == null:
+		return
+	var sound_path := SKILL_SOUND_PATH % skill.slug
+	if ResourceLoader.exists(sound_path):
+		_skill_sound.stream = load(sound_path) as AudioStream
+		_skill_sound.play()
+	var path := SKILL_EFFECT_PATH % skill.slug
+	if not ResourceLoader.exists(path):
+		return
+	var from: Variant = _board.token_position(_attacker_key)
+	var to: Variant = _board.token_position(target_key)
+	var mirrored: bool = from != null and to != null and (from as Vector2).x > (to as Vector2).x
+	await _board.play_effect(target_key, load(path) as Texture2D, mirrored)
+
+
+## O tipo do som de dano: a efetividade da Técnica, ou normal para o dano que não
+## vem de uma (recuo, estado, chão e confusão).
+func _hit_kind(type: String, event: Dictionary) -> String:
+	if type != "damage":
+		return "normal"
+	var multiplier := DictFields.get_float(event, "multiplier", 1.0)
+	if multiplier > 1.0:
+		return "super"
+	if multiplier < 1.0:
+		return "weak"
+	return "normal"
+
+
+func _play_hit_sound(kind: String) -> void:
+	var path := HIT_SOUND_PATH % kind
+	if ResourceLoader.exists(path):
+		_hit_sound.stream = load(path) as AudioStream
+		_hit_sound.play()
+
+
+## Escreve a frase no log letra por letra; termina com ela inteira (board-battle/09).
+## Espera um timer, e não o Tween, para nunca ficar presa se o Tween for trocado.
+func _type_line(text: String) -> void:
+	if _typing != null:
+		_typing.kill()
+	_message.text = text
+	_message.visible_characters = 0
+	var count := _message.get_total_character_count()
+	var seconds := count / CHARS_PER_SECOND
+	_typing = create_tween()
+	_typing.tween_property(_message, ^"visible_characters", count, seconds)
+	await get_tree().create_timer(seconds).timeout
+	_message.visible_characters = -1
 
 
 func _enter(key: String, side: String, event: Dictionary) -> void:
@@ -302,9 +421,12 @@ func _enter(key: String, side: String, event: Dictionary) -> void:
 	_names[key] = display_name
 	_species[key] = species_id
 	_max_hp[key] = DictFields.get_int(event, "max_hp")
+	_level[key] = DictFields.get_int(event, "level")
+	_hp[key] = DictFields.get_int(event, "hp")
 	_team_index[key] = team_index
 	var cell := BoardBattleView.cell_of(DictFields.get_dict(event, "cell"))
-	_board.place(key, side, species_id, display_name, DictFields.get_int(event, "level"), DictFields.get_int(event, "hp"), _max_hp[key], cell)
+	_board.place(key, side, species_id, _hp[key], _max_hp[key], cell)
+	_refresh_cards()
 
 
 ## O texto do evento, com o nome de quem o sofre; vazio sem linha.
@@ -349,12 +471,11 @@ func _sync_board() -> void:
 	for mark: GroundMark in _view.marks:
 		_marks[mark.cell] = mark.ground_effect_id
 	_refresh_marks()
-	_queue.clear()
-	for spot: BoardSpot in _view.queue:
-		_queue.append(spot.key())
-	_refresh_queue()
 	var current := _view.current()
 	_board.set_active(current.key() if current != null else "")
+	if current != null:
+		_player_focus = current.key()
+	_refresh_cards()
 
 
 func _sync_token(key: String, side: String, creature: BattleCreature, cell: Vector2i, team_index: int) -> void:
@@ -364,19 +485,47 @@ func _sync_token(key: String, side: String, creature: BattleCreature, cell: Vect
 		_names[key] = display_name
 		_species[key] = creature.species_id
 		_team_index[key] = team_index
-		_board.place(key, side, creature.species_id, display_name, creature.level, creature.hp, creature.max_hp, cell)
+		_board.place(key, side, creature.species_id, creature.hp, creature.max_hp, cell)
 	elif _board.token_cell(key) != cell:
 		_board.snap(key, cell)
 	_max_hp[key] = creature.max_hp
+	_level[key] = creature.level
+	_hp[key] = creature.hp
 	_board.set_hp(key, creature.hp, creature.max_hp)
 
 
-func _refresh_queue() -> void:
-	var entries: Array[Dictionary] = []
-	for key: String in _queue:
-		if _species.has(key):
-			entries.append({"species_id": _species[key], "side": key.get_slice(":", 0)})
-	_queue_bar.set_queue(entries)
+## Quem joga ou sofre algo passa a aparecer no cartão do lado dele.
+func _focus(side: String, key: String) -> void:
+	if side == "enemy":
+		_enemy_focus = key
+	elif side == "player":
+		_player_focus = key
+	_refresh_cards()
+
+
+## Cada cartão mostra quem está em foco; sem ele no tabuleiro, o primeiro do lado.
+func _refresh_cards() -> void:
+	_enemy_focus = _focus_or_first(_enemy_focus, "enemy:")
+	_player_focus = _focus_or_first(_player_focus, "player:")
+	_show_card(_enemy_card, _enemy_focus)
+	_show_card(_player_card, _player_focus)
+
+
+func _focus_or_first(focus: String, prefix: String) -> String:
+	if _board.has_token(focus):
+		return focus
+	var found := ""
+	for key: String in _names:
+		if key.begins_with(prefix) and _board.has_token(key) and (found.is_empty() or key < found):
+			found = key
+	return found
+
+
+func _show_card(card: BoardCreatureCard, key: String) -> void:
+	if key.is_empty() or not _species.has(key):
+		card.clear()
+		return
+	card.set_creature(_species[key], _names[key], _level.get(key, 1), _hp.get(key, 0), _max_hp.get(key, 0))
 
 
 func _refresh_marks() -> void:
@@ -391,7 +540,9 @@ func _refresh_marks() -> void:
 func _update_team_hp(team_index: int, hp: int) -> void:
 	for key: String in _team_index:
 		if key.begins_with("player:") and _team_index[key] == team_index:
+			_hp[key] = hp
 			_board.set_hp(key, hp, _max_hp.get(key, 0))
+	_refresh_cards()
 
 
 # --- A vez do jogador ----------------------------------------------------------
@@ -401,6 +552,8 @@ func _begin_vez() -> void:
 	if current == null or not current.is_player() or not _view.player_cells.has(current.position):
 		return
 	_actor = current.position
+	_player_focus = current.key()
+	_refresh_cards()
 	_origin = _view.player_cells[_actor]
 	_moved = false
 	_skill_slot = 0
@@ -525,6 +678,23 @@ func _cancel_skill() -> void:
 	_light_reach()
 
 
+## Atacar troca os botões pelas Técnicas; Voltar desfaz.
+func _open_skills() -> void:
+	if not _can_choose():
+		return
+	_disarm_flee()
+	_cancel_skill()
+	_actions_row.hide()
+	_skills_box.show()
+
+
+func _close_skills() -> void:
+	if _skill_slot != 0:
+		_cancel_skill()
+	_skills_box.hide()
+	_actions_row.show()
+
+
 func _wait() -> void:
 	_disarm_flee()
 	_send({"type": "wait"})
@@ -560,6 +730,8 @@ func _aim_sphere(item_id: int) -> void:
 	_message.text = PICK_SPHERE_TEXT
 
 
+## A troca está sem botão: o dono tirou o Trocar do pé da tela e ainda vai decidir
+## onde ele fica (board-battle/08).
 func _open_switch() -> void:
 	if not _can_choose():
 		return
@@ -778,10 +950,10 @@ func _leave() -> void:
 
 func _set_busy(busy: bool) -> void:
 	_busy = busy
+	_attack_button.disabled = busy
 	_wait_button.disabled = busy
 	_emergency_button.disabled = busy
 	_bag_button.disabled = busy
-	_switch_button.disabled = busy or not _has_reserve()
 	_flee_button.disabled = busy or _view == null or not _view.can_flee
 	for button: Node in _skills_grid.get_children():
 		if busy:
@@ -791,9 +963,8 @@ func _set_busy(busy: bool) -> void:
 
 
 func _show_controls(playing: bool) -> void:
-	_skills_grid.visible = playing and _skills_grid.visible
-	_emergency_button.visible = playing and _emergency_button.visible
 	_actions_row.visible = playing
+	_skills_box.visible = false
 	_result_box.visible = false
 
 
