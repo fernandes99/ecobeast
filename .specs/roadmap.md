@@ -30,6 +30,7 @@ O que vem depois do MVP de estrutura (entrada, escolha do inicial e Hub). Cada l
 | 16  | `content`           | 60–90 espécies, ~80 técnicas, ~20 traços, balanceamento                                                   | progression                | planejada |
 | 17  | `release-pipeline`  | Export Android/iOS, ícones, assinatura, envio às lojas                                                    | —                          | planejada |
 | 18  | `audio`             | Introdução dos sons do jogo, com o som de cura do Refúgio entre os primeiros                              | heal-station               | planejada |
+| 19  | [`content-viewer`](content-viewer/) | Janela só de desenvolvimento, aberta com F1 pelo editor, com Ecobeasts, Técnicas, Elementos, biomas, itens, Traços, Temperamentos e Estados, e os arquivos que faltam de cada um | board-battle | em andamento |
 
 ## Pós-lançamento (do GDD)
 

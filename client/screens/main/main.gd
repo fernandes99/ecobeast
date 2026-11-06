@@ -9,6 +9,8 @@ const OLD_SAVE_FILES: Array[String] = ["user://save.json", "user://save.tmp.json
 
 ## O "Tentar de novo" refaz só a etapa que falhou.
 var _catalog_loaded := false
+## O visualizador de conteúdo (content-viewer/01), criado no primeiro F1.
+var _content_viewer: ContentViewer = null
 
 
 func _ready() -> void:
@@ -45,10 +47,32 @@ func _notification(what: int) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if _is_content_viewer_key(event):
+		get_viewport().set_input_as_handled()
+		_toggle_content_viewer()
+		return
 	# Esc no editor faz o papel do voltar do Android.
 	if event.is_action_pressed(&"ui_cancel"):
 		get_viewport().set_input_as_handled()
 		Router.back()
+
+
+## F1, só com o jogo rodando pelo editor: a tag "editor" não existe em nenhum jogo
+## exportado, nem no de depuração. A tecla fica fora do Input Map para não aparecer
+## nas configurações do jogo.
+func _is_content_viewer_key(event: InputEvent) -> bool:
+	var key := event as InputEventKey
+	return key != null and key.pressed and not key.echo and key.keycode == KEY_F1 and OS.has_feature("editor")
+
+
+## A janela é criada uma vez e depois só aparece e some, guardando a aba escolhida.
+func _toggle_content_viewer() -> void:
+	if _content_viewer == null:
+		_content_viewer = ContentViewer.new()
+		add_child(_content_viewer)
+		_content_viewer.show()
+	else:
+		_content_viewer.visible = not _content_viewer.visible
 
 
 ## Catálogo (do servidor), login e jogador; a etapa que falha mostra o erro.

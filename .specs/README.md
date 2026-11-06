@@ -35,6 +35,7 @@ O Ecobeast é um jogo mobile (Android/iOS, retrato): o cliente em **Godot 4.7 co
 | [progression](progression/) | XP e moedas depois da luta, subir de nível, Técnicas novas e Evolução                   |
 | [battle-slots](battle-slots/) | Vários Ecobeasts por lado no motor da luta (substituída pela board-battle)           |
 | [board-battle](board-battle/) | A luta num tabuleiro de hexágonos, com fila, andar, alcance e marcas no chão         |
+| [content-viewer](content-viewer/) | Janela de desenvolvimento (F1) com todo o conteúdo do jogo e os arquivos que faltam |
 
 As próximas iniciativas estão no [roadmap.md](roadmap.md).
 

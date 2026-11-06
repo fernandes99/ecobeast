@@ -66,6 +66,9 @@ res://
     starter_select/            tela, starter_card, confirm_panel                      (onboarding/02)
     hub/                       tela, profile_debug_panel                              (hub/01)
     creature_details/          tela, skill_row, gene_row, nickname_panel              (creature-details/02, 03)
+  tools/                       ferramentas só de desenvolvimento, fora das telas do jogo
+    board_sprites.gd           gera o board.png de cada Ecobeast                      (board-battle/06)
+    content_viewer/            a janela do F1 com o conteúdo do jogo                  (content-viewer/01)
   assets/
     creatures/<slug>/front.png sprites (quando houver arte)
 ```

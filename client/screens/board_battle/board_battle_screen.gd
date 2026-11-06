@@ -41,10 +41,8 @@ const REFERENCE_BOARD_WIDTH := 624.0
 const EVENT_DELAY := 0.35
 ## As frases aparecem no log letra por letra (board-battle/09). A revisar.
 const CHARS_PER_SECOND := 60.0
-## O efeito de cada Técnica, pelo slug dela; sem o arquivo, ela não tem efeito.
-const SKILL_EFFECT_PATH := "res://assets/effects/skills/%s.png"
-## O som de cada Técnica, pelo slug dela, tocado junto com o efeito (board-battle/09).
-const SKILL_SOUND_PATH := "res://assets/sounds/skills/%s.wav"
+## O efeito e o som de cada Técnica saem do slug dela, pelos caminhos do
+## ContentFiles; sem o arquivo, ela não tem efeito ou som (board-battle/09).
 ## O som do dano, junto com a piscada, pela efetividade: normal, super ou weak.
 const HIT_SOUND_PATH := "res://assets/sounds/hits/%s.wav"
 ## A Técnica de emergência é corpo a corpo.
@@ -405,11 +403,11 @@ func _play_skill_effect(target_key: String) -> void:
 	var skill := GameData.get_skill(_attack_skill_id)
 	if skill == null:
 		return
-	var sound_path := SKILL_SOUND_PATH % skill.slug
+	var sound_path := ContentFiles.SKILL_SOUND_PATH % skill.slug
 	if ResourceLoader.exists(sound_path):
 		_skill_sound.stream = load(sound_path) as AudioStream
 		_skill_sound.play()
-	var path := SKILL_EFFECT_PATH % skill.slug
+	var path := ContentFiles.SKILL_EFFECT_PATH % skill.slug
 	if not ResourceLoader.exists(path):
 		return
 	var from: Variant = _board.token_position(_attacker_key)

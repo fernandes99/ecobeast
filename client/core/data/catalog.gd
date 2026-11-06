@@ -174,6 +174,18 @@ func get_row(table_name: String, id: int) -> Dictionary:
 	return by_id[id]
 
 
+## Cópia das linhas de uma tabela, na ordem do `id` quando ela tem a coluna. Para
+## quem só mostra o catálogo, como o visualizador de conteúdo (content-viewer/01).
+## Uma tabela que não existe volta vazia.
+func get_rows(table_name: String) -> Array[Dictionary]:
+	var rows: Array[Dictionary] = []
+	for row: Dictionary in _rows(table_name):
+		rows.append(row.duplicate(true))
+	if not rows.is_empty() and rows[0].has("id"):
+		return _sorted(rows, "id")
+	return rows
+
+
 func _name_by_slug(table_name: String, slug: String) -> String:
 	for row: Dictionary in _rows(table_name):
 		if row["slug"] == slug:
