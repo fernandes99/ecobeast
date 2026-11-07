@@ -50,6 +50,7 @@ As telas são montadas no código, sem `.tscn`, como o `BoardCreatureCard`. São
 | Ecobeast | tabuleiro | `res://assets/creatures/<slug>/board.png` | `BoardView.BOARD_SPRITE_PATH` |
 | Ecobeast | explorar, parado e andando | `res://assets/creatures/<slug>/explore/idle.png` e `walk.png` | `CreatureSprite.SHEET_PATH` |
 | Ecobeast | luta, parado e andando | `res://assets/creatures/<slug>/battle/idle.png` e `walk.png` | `BattleSheets.PATH` |
+| Ecobeast | som característico (`call`) | `res://assets/creatures/<slug>/call.wav` | `CREATURE_CALL_PATH`, nova em `ContentFiles` ([creature-sounds/01](../creature-sounds/01-call-files.md)) |
 | Técnica | ícone | `res://assets/skills/<slug>.png` | nova, em `ContentFiles` |
 | Técnica | efeito | `res://assets/effects/skills/<slug>.png` | `SKILL_EFFECT_PATH`, que sai de `board_battle_screen.gd` |
 | Técnica | som | `res://assets/sounds/skills/<slug>.wav` | `SKILL_SOUND_PATH`, que sai de `board_battle_screen.gd` |

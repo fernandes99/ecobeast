@@ -304,14 +304,14 @@ func _biomes(species: CreatureSpecies, box: VBoxContainer) -> void:
 		grid.add_child(ContentViewer.text(str(row["rate"]), 0, UiPalette.TEXT_SECONDARY))
 
 
-## As imagens paradas numa linha, cada folha na sua, com todas as direções, e por
-## último os tracejados do que falta.
+## As imagens paradas e o som numa linha, cada folha na sua, com todas as direções,
+## e por último os tracejados das folhas que faltam.
 func _files(species: CreatureSpecies, box: VBoxContainer) -> void:
 	var images := ContentViewer.flow(14)
 	box.add_child(images)
 	var missing := ContentViewer.flow(14)
 	for entry: ContentFiles.Entry in ContentFiles.creature_files(species.slug):
-		if entry.kind == ContentFiles.Kind.IMAGE:
+		if entry.kind == ContentFiles.Kind.IMAGE or entry.kind == ContentFiles.Kind.SOUND:
 			images.add_child(FilePreview.create(entry))
 		elif entry.exists():
 			box.add_child(FilePreview.create_sheet(entry))

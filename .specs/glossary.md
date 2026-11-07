@@ -41,6 +41,7 @@ O jogador nunca vê a coluna "Referência": ela só existe para quem implementa 
 - **Catálogo:** todos os dados de design (espécies, técnicas, elementos…), iguais para todos os jogadores. Ver [game-data](game-data/).
 - **Estado do jogador:** tudo que é de um Domador (nome, moedas, criaturas). Ver [onboarding/architecture.md](onboarding/architecture.md).
 - **Hub:** a tela principal do jogo (TELAS.md chama de Home).
+- **Som do Ecobeast:** o som característico de cada espécie, no arquivo `call.wav` da pasta dela. Não se chama `cry`, o termo do Pokémon. Ver [creature-sounds](creature-sounds/).
 - **Mapa de exploração:** a região hexagonal gerada a cada Explorar zona (`ExplorationMap`). Ver [wild-battle](wild-battle/).
 - **Bioma:** o tipo de terreno de um hexágono (`biome`), como `temperate` ou `boreal`. Mais tarde, ele decide o Campo.
 - **Bioma de encontro:** um dos 7 da tabela `biomes`, que recebem as taxas de `species_biomes`. São os 5 biomas de terreno, em hexágono plano, mais `hill` e `mountain`, que valem para qualquer colina ou montanha.

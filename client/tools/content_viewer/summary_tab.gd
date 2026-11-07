@@ -41,6 +41,7 @@ func _build() -> void:
 	var with_board := 0
 	var with_explore := 0
 	var with_battle := 0
+	var with_call := 0
 	var incomplete: Array[Dictionary] = []
 	for one: CreatureSpecies in species:
 		var files := ContentFiles.creature_files(one.slug)
@@ -51,6 +52,7 @@ func _build() -> void:
 		with_board += int(found[1])
 		with_explore += int(found[2] and found[3])
 		with_battle += int(found[4] and found[5])
+		with_call += int(found[6])
 		var missing := ContentFiles.missing_labels(files)
 		if not missing.is_empty():
 			incomplete.append({"species": one, "missing": missing})
@@ -63,6 +65,7 @@ func _build() -> void:
 	_count_card(cards, "Com board", with_board, total)
 	_count_card(cards, "Com as folhas de explorar", with_explore, total)
 	_count_card(cards, "Com as folhas da luta", with_battle, total)
+	_count_card(cards, "Com call", with_call, total)
 	_starters_and_growth()
 
 	var slugs: Array[String] = []

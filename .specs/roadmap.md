@@ -32,6 +32,7 @@ O que vem depois do MVP de estrutura (entrada, escolha do inicial e Hub). Cada l
 | 18  | `audio`             | Introdução dos sons do jogo, com o som de cura do Refúgio entre os primeiros                              | heal-station               | planejada |
 | 19  | [`content-viewer`](content-viewer/) | Janela só de desenvolvimento, aberta com F1 pelo editor, com Ecobeasts, Técnicas, Elementos, biomas, itens, Traços, Temperamentos e Estados, e os arquivos que faltam de cada um | board-battle | concluída |
 | 20  | [`hidden-traits`](hidden-traits/) | 1 chance em 20 de um Ecobeast (inicial ou selvagem) nascer com o Traço oculto da espécie | auth-google | concluída |
+| 21  | [`creature-sounds`](creature-sounds/) | O som característico de cada Ecobeast: o lugar do `call.wav` e o visualizador; tocar no jogo fica para depois | content-viewer | concluída |
 
 ## Pós-lançamento (do GDD)
 

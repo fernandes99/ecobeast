@@ -12,6 +12,8 @@ const CREATURES_DIR := "res://assets/creatures"
 const SKILL_ICON_PATH := "res://assets/skills/%s.png"
 const SKILL_EFFECT_PATH := "res://assets/effects/skills/%s.png"
 const SKILL_SOUND_PATH := "res://assets/sounds/skills/%s.wav"
+## O som característico do Ecobeast (creature-sounds/01). Nenhuma tela o toca ainda.
+const CREATURE_CALL_PATH := "res://assets/creatures/%s/call.wav"
 ## O som do dano, pela efetividade (board-battle/09); a tela da luta o usa daqui.
 const HIT_SOUND_PATH := "res://assets/sounds/hits/%s.wav"
 ## Os sons de dano, com o nome que aparece na tela.
@@ -143,7 +145,7 @@ static func exists(path: String) -> bool:
 	return ResourceLoader.exists(path)
 
 
-## Os 6 arquivos de um Ecobeast, na ordem em que aparecem.
+## Os 7 arquivos de um Ecobeast, na ordem em que aparecem.
 static func creature_files(slug: String) -> Array[Entry]:
 	var idle := CreatureSprite.IDLE
 	var walk := CreatureSprite.WALK
@@ -154,6 +156,7 @@ static func creature_files(slug: String) -> Array[Entry]:
 		Entry.new("explore walk", CreatureSprite.SHEET_PATH % [slug, walk], Kind.EXPLORE_SHEET, slug, walk),
 		Entry.new("battle idle", BattleSheets.PATH % [slug, BattleSheets.IDLE], Kind.BATTLE_SHEET, slug, BattleSheets.IDLE),
 		Entry.new("battle walk", BattleSheets.PATH % [slug, BattleSheets.WALK], Kind.BATTLE_SHEET, slug, BattleSheets.WALK),
+		Entry.new("call", CREATURE_CALL_PATH % slug, Kind.SOUND),
 	]
 	return files
 
