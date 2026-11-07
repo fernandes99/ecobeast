@@ -65,6 +65,7 @@ A luta nova substitui a de hoje em Explorar zona. A luta atual deixa de ser usad
 | 8 | [08-board-ground](08-board-ground.md) | O chão do mapa de Explorar na tela inteira, com o limite do tabuleiro; o tabuleiro parado; a interface no pé, sem a equipe, o Trocar, a rodada e o visual da folha de assets | concluída (falta o teste do dono no editor) |
 | 9 | [09-hit-feedback](09-hit-feedback.md) | O golpe com tempos: o atacante treme, o efeito da Técnica (a Arranhão, do kit de efeitos), o alvo treme e pisca, o dano sobe zanzando, e o log de uma linha letra por letra | concluída (falta o teste do dono no editor) |
 | 10 | [10-battle-ui](10-battle-ui.md) | O visual da tela da luta desenhado pelo Godot (painéis, log e botões com relevo), com os ícones do dono | concluída (falta o dono ver no editor) |
+| 11 | [11-support-skill-effects](11-support-skill-effects.md) | O efeito e o som das Técnicas sem dano, começando pela Rugido Feroz (a explosão marrom da 398 do kit e um rugido gerado) | concluída (falta o dono ver e ouvir no editor) |
 
 O desenho compartilhado está no [architecture.md](architecture.md).
 

@@ -27,7 +27,7 @@ A folha 447 tem 576 × 576 pixels, em células de 64: 9 linhas de cor, com os me
 ## Requisitos
 
 - **RF-01:** Quando um Ecobeast usa uma Técnica, ele treme um pouco no lugar, de um lado para o outro, por 0,25 s, enquanto a área da Técnica acende. Depois a frase "X usou Y." aparece no log.
-- **RF-02:** Uma Técnica com efeito mostra a animação dele sobre o corpo do alvo, 1,5× maior que a arte, para cobrir o Ecobeast, um quadro a cada 0,05 s. Com o atacante à direita do alvo, o efeito aparece espelhado. Hoje só a Arranhão tem efeito.
+- **RF-02:** Uma Técnica com efeito mostra a animação dele sobre o corpo do alvo, 1,5× maior que a arte, para cobrir o Ecobeast, um quadro a cada 0,05 s. Com o atacante à direita do alvo, o efeito aparece espelhado. Hoje só a Arranhão tem efeito com dano; a Rugido Feroz, sem dano, toca o dela pela [11](11-support-skill-effects.md).
 - **RF-03:** Depois do efeito, o alvo treme e pisca por 0,35 s, e a barra de HP dele cai nesse momento.
 - **RF-04:** Depois disso, o número do dano aparece logo acima da barra de HP do alvo, em letra maior que antes (34), sobe uns 50 pixels em 2 s ondulando de um lado para o outro e, da metade do caminho em diante, some aos poucos. Começou com 1,2 s, e o dono achou rápido demais. A sequência não espera o número sumir: a frase do dano já começa a aparecer no log.
 - **RF-05:** O dano que não vem de uma Técnica (recuo, estado, chão e confusão) tem só o RF-03 e o RF-04. A cura tem só o número, em verde, sem tremer.

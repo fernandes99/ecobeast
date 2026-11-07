@@ -67,6 +67,8 @@ var _leaving: bool = false
 ## Vazio e -1 fora de um golpe; -1 também na Técnica de emergência.
 var _attacker_key: String = ""
 var _attack_skill_id := -1
+## Se a Técnica deste uso já tocou o efeito: a sem dano toca uma vez só (board-battle/11).
+var _effect_played := false
 var _typing: Tween = null
 ## A última frase da luta no log: quando um aviso sai, ela volta (board-battle/09).
 var _last_line := ""
@@ -351,6 +353,7 @@ func _play_event(event: Dictionary) -> void:
 			# Quem ataca treme, com a área acesa (board-battle/09).
 			_attacker_key = key
 			_attack_skill_id = DictFields.get_id(event, "skill_id")
+			_effect_played = false
 			var area := _cells_of(DictFields.get_array(event, "cells"))
 			_board.light(area, UiPalette.BOARD_AREA)
 			await _board.attack_shake(key)
@@ -370,6 +373,11 @@ func _play_event(event: Dictionary) -> void:
 			_refresh_marks()
 		"item_used":
 			_update_team_hp(DictFields.get_int(event, "team_index"), DictFields.get_int(event, "hp"))
+		"stat_changed", "status_applied":
+			# A Técnica sem dano, como a Rugido Feroz, toca o efeito no primeiro
+			# evento que causa (board-battle/11).
+			if not _effect_played and _board.has_token(key):
+				await _play_skill_effect(key)
 	if type in HP_EVENTS and _board.has_token(key):
 		# O golpe (board-battle/09): o efeito da Técnica no alvo, o alvo treme e pisca
 		# com a barra caindo, e o número sobe sem a sequência esperar por ele.
@@ -399,6 +407,7 @@ func _play_event(event: Dictionary) -> void:
 func _play_skill_effect(target_key: String) -> void:
 	if _attack_skill_id < 0:
 		return
+	_effect_played = true
 	var skill := GameData.get_skill(_attack_skill_id)
 	if skill == null:
 		return
