@@ -9,7 +9,7 @@ Na [08](08-board-ground.md), o golpe no tabuleiro é só um número que sobe ret
 
 A sequência que ele pediu: o Ecobeast anda; na hora de atacar, ele treme um pouco ("como se fosse de ataque, no futuro vamos colocar animação de ataque"); o arranhão aparece no alvo; o alvo treme e pisca; e o dano aparece e some aos poucos, subindo "zanzando". Ele também pediu de volta uma linha de texto com o log, escrita letra por letra, rápido. Depois, pediu que o selvagem derrotado, ao sumir, deixasse uma moeda girando que sobe e vai sumindo, como nos jogos de plataforma clássicos. Por fim, pediu um som para a Arranhão ("consegue gerar ou buscar algum som para ele?"): o som foi gerado por síntese, sem arquivo de terceiros, e por isso sem licença para conferir. Depois, pediu um som de dano junto com a piscada, em todo dano, com três versões: normal, super efetivo e pouco efetivo. Ele mandou o som de super efetivo de outro jogo como referência; o arquivo não entra no projeto, e dele só se tirou o jeito: um impacto largo de 1,7 s, que começa forte e fica assim por uns 0,3 s, com um grave entre 130 e 300 Hz, um ruído médio entre 1 e 2 kHz, uma leve trepidação no volume e um ronco que some até 1,2 s.
 
-A folha 447 tem 576 × 576 pixels, em células de 64: 9 linhas de cor, com os mesmos 9 quadros do arranhão em cada uma. A Arranhão é do Elemento Fera, marrom (#B08B6E). A primeira versão usou a 5ª linha, a marrom, mas num print ela quase sumia sobre um Ecobeast laranja, cor de boa parte dos Ecobeasts de Fogo. Por isso ela usa a 6ª linha, a cinza-clara, que aparece sobre qualquer cor. _A revisar._
+A folha 447 tem 576 × 576 pixels, em células de 64: 9 linhas de cor, com os mesmos 9 quadros do arranhão em cada uma. A Arranhão é do Elemento Fera, marrom (#B08B6E). A primeira versão usou a 5ª linha, a marrom, mas num print ela quase sumia sobre um Ecobeast laranja, cor de boa parte dos Ecobeasts de Fogo. Por isso ela passou para a 6ª linha, a cinza-clara, que aparece sobre qualquer cor. Em 2026-11-06, o dono pediu de volta a forma marrom: "na skill de arranhão usa a forma de cor marrom". Hoje ela usa a 5ª linha.
 
 ## Escopo
 
@@ -45,7 +45,7 @@ A folha 447 tem 576 × 576 pixels, em células de 64: 9 linhas de cor, com os me
 
 ## Desenho técnico
 
-- **Efeitos das Técnicas:** `res://assets/effects/skills/<slug da Técnica>.png`, uma tira de quadros quadrados da esquerda para a direita. O número de quadros é a largura dividida pela altura. Sem o arquivo, a Técnica não tem efeito. `arranhao.png` é a 6ª linha (a cinza-clara) da `Part 9/447.png` do kit: 576 × 64, com 9 quadros de 64, sem mudança nos pixels. O kit não traz arquivo de licença na pasta.
+- **Efeitos das Técnicas:** `res://assets/effects/skills/<slug da Técnica>.png`, uma tira de quadros quadrados da esquerda para a direita. O número de quadros é a largura dividida pela altura. Sem o arquivo, a Técnica não tem efeito. `arranhao.png` é a 5ª linha (a marrom) da `Part 9/447.png` do kit: 576 × 64, com 9 quadros de 64, sem mudança nos pixels. O kit não traz arquivo de licença na pasta.
 - **`BoardView`** ganha:
   - `attack_shake(key)`: o corpo treme de lado e volta ao lugar. Pode ser esperado com `await`.
   - `play_effect(key, texture, mirrored)`: um `Sprite2D` sobre o meio do corpo do alvo, que troca de quadro e some no fim.
