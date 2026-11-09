@@ -15,7 +15,7 @@ O jogo não tinha nenhum som de Ecobeast: só os de dano (`res://assets/sounds/h
 | O arquivo é `res://assets/creatures/<slug>/call.wav`, ao lado do `front.png` | O nome em inglês, como os outros arquivos da pasta, a pedido do dono. `call`, e não `cry`, porque "cry" é o termo do Pokémon para isso (decisão de Claude, aceita pelo dono) |
 | `.wav`, como os sons das Técnicas e de dano | Um formato só para os sons do jogo |
 | Na fase 01, o som não toca em nenhum lugar do jogo | Pedido do dono: "por enquanto fica em silencio" |
-| O dono manda os sons; nenhum é gerado | Como os ícones das Técnicas |
+| O dono manda os sons; nenhum é gerado. Desde a [02](02-ruvo-call.md), Claude também gera, quando o dono pede: sons de chip de videogame antigo, que não imitam um bicho de verdade | Como os ícones das Técnicas. O dono pediu o do Ruvo "característico mas não animalesco" e "que lembre um jogo retro" |
 
 ## Fora do escopo
 
@@ -28,3 +28,4 @@ O jogo não tinha nenhum som de Ecobeast: só os de dano (`res://assets/sounds/h
 | Fase | Entrega | Status |
 | --- | --- | --- |
 | [01-call-files](01-call-files.md) | O lugar do `call.wav` e a linha "call" no visualizador de conteúdo | concluída (falta o dono ver) |
+| [02-ruvo-call](02-ruvo-call.md) | O som do Ruvo, um "ru-vo" rápido de chip, gerado por `art-source/ruvo/call.py` | concluída (falta o dono ouvir) |
