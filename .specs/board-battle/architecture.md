@@ -2,6 +2,8 @@
 
 O desenho que as fases compartilham. O que não aparece aqui segue o [battle-core/architecture.md](../battle-core/architecture.md) e a [battle-slots/architecture.md](../battle-slots/architecture.md): dano, precisão, status, Traços, itens, captura, XP e moedas não mudam.
 
+A luta contra um Domador NPC é a mesma, com `opponent: 'tamer'`: sem Esfera, sem fuga, e XP e moedas maiores ([npc-tamers/architecture.md](../npc-tamers/architecture.md#luta-contra-domador)). As moedas do fim contam quem estava em campo na última vez, inclusive quem acabou de cair: até a [npc-tamers/02](../npc-tamers/02-tamer-rules.md), a derrota no tabuleiro contava a vaga já vazia como nível 1 e tirava moedas demais.
+
 ## Tabuleiro
 
 O tabuleiro é uma lista de hexágonos, com a ponta para cima, em **coordenadas axiais** `{q, r}`, as mesmas do mapa de Explorar zona (`server/src/domain/exploration/hex.ts`). A distância é `hexDistance`, e os vizinhos são `hexNeighbors`.

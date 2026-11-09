@@ -1,5 +1,12 @@
-import { lostCoins, winCoins } from '../progression/coins.js';
-import { splitXp, xpYield } from '../progression/xp.js';
+import {
+  COINS_LOSS_BASE,
+  COINS_WIN_BASE,
+  lostCoins,
+  TAMER_COINS_LOSS_BASE,
+  TAMER_COINS_WIN_BASE,
+  winCoins,
+} from '../progression/coins.js';
+import { splitXp, TAMER_XP_MULTIPLIER, xpYield } from '../progression/xp.js';
 import { MAX_LEVEL } from '../rules/xp-curve.js';
 import {
   activeAt,
@@ -50,10 +57,14 @@ export function awardXp(context: TurnContext, enemy: Combatant): void {
     });
   if (receivers.length === 0) return;
 
-  const total = xpYield(
+  const wildTotal = xpYield(
     catalog.xpYields.get(enemy.speciesId) ?? 0,
     enemy.level,
   );
+  const total =
+    state.opponent === 'tamer'
+      ? Math.floor(wildTotal * TAMER_XP_MULTIPLIER)
+      : wildTotal;
   const amount = splitXp(total, receivers.length);
   for (const index of receivers) {
     state.player.team[index]!.xpEarned += amount;
@@ -66,13 +77,23 @@ export function awardXp(context: TurnContext, enemy: Combatant): void {
  * entre os níveis de quem está em campo no fim (progression/05 e
  * battle-slots/architecture.md, "XP e moedas"). Fuga e captura não mexem.
  */
-export function settleCoins(context: TurnContext, result: BattleResult): void {
+export function settleCoins(
+  context: TurnContext,
+  result: BattleResult,
+  fielders: Combatant[] = fieldCreatures(context.state, 'player'),
+): void {
   const { state, events, random } = context;
-  const fielderLevel = fieldLevel(state, 'player');
+  const fielderLevel = averageLevel(fielders);
+  const tamer = state.opponent === 'tamer';
   if (result === 'victory') {
     for (const enemy of state.enemy.team) {
       if (enemy.currentHp > 0 || enemy.captured) continue;
-      const amount = winCoins(enemy.level, fielderLevel, random);
+      const amount = winCoins(
+        enemy.level,
+        fielderLevel,
+        random,
+        tamer ? TAMER_COINS_WIN_BASE : COINS_WIN_BASE,
+      );
       state.coinsChange += amount;
       events.push({
         type: 'coins_gained',
@@ -87,6 +108,7 @@ export function settleCoins(context: TurnContext, result: BattleResult): void {
       fielderLevel,
       state.coins,
       random,
+      tamer ? TAMER_COINS_LOSS_BASE : COINS_LOSS_BASE,
     );
     if (amount === 0) return;
     state.coinsChange = -amount;
@@ -103,10 +125,6 @@ function fieldCreatures(state: BattleState, side: SideSlug): Combatant[] {
   return occupiedSpots(state, side)
     .map((spot) => activeAt(state, spot)!)
     .filter((creature) => !creature.captured);
-}
-
-function fieldLevel(state: BattleState, side: SideSlug): number {
-  return averageLevel(fieldCreatures(state, side));
 }
 
 /** A média dos níveis, arredondada para baixo; 1 sem ninguém, para não dividir por 0. */

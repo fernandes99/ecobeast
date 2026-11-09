@@ -5,6 +5,7 @@ O desenho que as quatro fases compartilham. As regras moram em funções puras e
 ## Quem recebe XP
 
 - O XP nasce quando um Ecobeast inimigo desmaia. Hoje há um inimigo só, então isso acontece uma vez, no fim da luta. A regra já vale por inimigo para a `npc-tamers`, que terá vários.
+- Contra um Domador NPC, o XP de cada Ecobeast derrubado vale 1,5× antes da divisão, e as moedas usam as bases 60 e 15 no lugar de 20 e 5 ([npc-tamers/02](../npc-tamers/02-tamer-rules.md)).
 - Cada inimigo guarda `foughtBy: number[]`, os índices da equipe do jogador que estiveram em campo contra ele. Quando um inimigo entra, a lista começa com o Ecobeast do jogador que está em campo. Quando um Ecobeast do jogador entra, seja no começo, numa troca ou depois de um desmaio, o índice dele entra na lista do inimigo em campo. Não há repetição.
 - Quando o inimigo desmaia, recebem XP os índices de `foughtBy` com `currentHp > 0` e nível menor que 100. Quem desmaiou antes ou está no nível 100 fica de fora e não conta na divisão.
 - Total: `xpYield(xp_base, nível do inimigo) = floor(xp_base × nível ÷ 7)`, em que `xp_base` é o `species.base_xp_yield` do inimigo. A parte de cada um é `max(1, floor(total ÷ quantidade))`.

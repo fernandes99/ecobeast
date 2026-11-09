@@ -1,5 +1,9 @@
 import { resolveSkill } from '../battle/actions.js';
-import { captureChance, NOT_CAPTURABLE } from '../battle/capture.js';
+import {
+  captureChance,
+  NOT_CAPTURABLE,
+  TAMER_CREATURE,
+} from '../battle/capture.js';
 import { EMERGENCY_SKILL, hasPp } from '../battle/emergency.js';
 import {
   CHOOSE_TARGET,
@@ -39,6 +43,7 @@ import type {
   BattleResult,
   BattleSkill,
   Combatant,
+  Opponent,
   Random,
   SideSlug,
   Spot,
@@ -94,6 +99,8 @@ export interface BoardOptions {
   slots?: { player: number; enemy: number };
   partyFree?: number;
   canFlee?: boolean;
+  /** Contra Domador, a fuga fica sempre desligada (npc-tamers/02). */
+  opponent?: Opponent;
 }
 
 export function startBoardBattle(
@@ -108,6 +115,7 @@ export function startBoardBattle(
     slots = { player: 1, enemy: 1 },
     partyFree = 0,
     canFlee = true,
+    opponent = 'wild',
   }: BoardOptions = {},
 ): BoardOutcome {
   const playerSide = newSide(player, slots.player);
@@ -116,7 +124,8 @@ export function startBoardBattle(
     phase: 'choose_action',
     result: null,
     turn: 0,
-    canFlee,
+    canFlee: canFlee && opponent !== 'tamer',
+    opponent,
     player: playerSide,
     enemy: enemySide,
     pendingPositions: [],
@@ -279,6 +288,7 @@ function captureRefusal(
   action: Extract<BoardAction, { type: 'capture' }>,
   catalog: BattleCatalog,
 ): string | null {
+  if (state.opponent === 'tamer') return TAMER_CREATURE;
   const item = ownedItem(state, action.item_id, catalog);
   if (!item) return NO_ITEM;
   if (item.captureBonus === null) return CANNOT_USE;
@@ -548,13 +558,16 @@ function endVez(context: BoardContext, actor: Spot): void {
   applyMarks(context);
   ageMarks(context);
 
+  // As moedas contam quem estava em campo no fim, inclusive quem acabou de cair
+  // e já vai sair do tabuleiro (progression/05, RF-01).
+  const fielders = fieldedCreatures(state, 'player');
   const vacated = leaveFallen(context);
   if (!hasCreatureStanding(state, 'enemy')) {
-    endBattle(context, resultWithoutEnemies(state));
+    endBattle(context, resultWithoutEnemies(state), fielders);
     return;
   }
   if (!hasCreatureStanding(state, 'player')) {
-    endBattle(context, 'defeat');
+    endBattle(context, 'defeat', fielders);
     return;
   }
   refillEnemy(context, vacated.enemy);
@@ -613,7 +626,17 @@ function sendEntries(context: BoardContext, entries: BoardEntry[]): void {
   }
 }
 
-function endBattle(context: BoardContext, result: BattleResult): void {
+/** Quem ocupa as vagas de um lado agora, de pé ou não. */
+function fieldedCreatures(state: BoardState, side: SideSlug): Combatant[] {
+  return occupiedSpots(state, side).map((spot) => combatantAt(state, spot));
+}
+
+/** `fielders`: quem estava em campo no fim da última vez, para as moedas. */
+function endBattle(
+  context: BoardContext,
+  result: BattleResult,
+  fielders?: Combatant[],
+): void {
   const { state, events } = context;
   state.phase = 'ended';
   state.result = result;
@@ -625,7 +648,7 @@ function endBattle(context: BoardContext, result: BattleResult): void {
       clearVolatile(combatantAt(state, spot));
     }
   }
-  settleCoins(context, result);
+  settleCoins(context, result, fielders);
   events.push({ type: 'battle_ended', result });
 }
 

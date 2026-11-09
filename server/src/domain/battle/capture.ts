@@ -1,4 +1,6 @@
 export const NOT_CAPTURABLE = 'Esse Ecobeast não pode ser capturado.';
+export const TAMER_CREATURE =
+  'Não dá para capturar o Ecobeast de outro Domador.';
 
 /** Provisórios, a revisar (.specs/capture/architecture.md, "Fórmula"). */
 const STATUS_BONUS: Record<string, number> = {

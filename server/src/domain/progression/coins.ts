@@ -3,6 +3,9 @@ import type { Random } from '../battle/types.js';
 /** As bases das moedas contra um selvagem, _a revisar_ (progression/05). */
 export const COINS_WIN_BASE = 20;
 export const COINS_LOSS_BASE = 5;
+/** As bases contra um Domador NPC, _a revisar_ (npc-tamers/02). */
+export const TAMER_COINS_WIN_BASE = 60;
+export const TAMER_COINS_LOSS_BASE = 15;
 
 /**
  * Um sorteio de 50% a 150% de `base × (nível do selvagem ÷ nível de quem
@@ -25,11 +28,9 @@ export function winCoins(
   enemyLevel: number,
   fielderLevel: number,
   random: Random,
+  base = COINS_WIN_BASE,
 ): number {
-  return Math.max(
-    1,
-    rollCoins(COINS_WIN_BASE, enemyLevel, fielderLevel, random),
-  );
+  return Math.max(1, rollCoins(base, enemyLevel, fielderLevel, random));
 }
 
 /** As moedas da derrota, sem passar do que o Domador tem; sem moedas, nem sorteia. */
@@ -38,10 +39,8 @@ export function lostCoins(
   fielderLevel: number,
   coins: number,
   random: Random,
+  base = COINS_LOSS_BASE,
 ): number {
   if (coins <= 0) return 0;
-  return Math.min(
-    coins,
-    rollCoins(COINS_LOSS_BASE, enemyLevel, fielderLevel, random),
-  );
+  return Math.min(coins, rollCoins(base, enemyLevel, fielderLevel, random));
 }

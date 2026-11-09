@@ -112,8 +112,8 @@ export function wildLevel(
   return Math.min(MAX_LEVEL, Math.max(MIN_LEVEL, level));
 }
 
-/** Com um arredondamento azarado, fica com o último, que também tem peso. */
-function pickWeighted<T extends { weight: number }>(
+/** Um sorteio por peso. Com um arredondamento azarado, fica com o último, que também tem peso. */
+export function pickWeighted<T extends { weight: number }>(
   items: T[],
   random: Random,
 ): T {

@@ -116,6 +116,7 @@ export function makeBoardState(
     result: null,
     turn: 1,
     canFlee: true,
+    opponent: 'wild',
     player: side(player, slots.player),
     enemy: side(enemy, slots.enemy),
     pendingPositions: [],

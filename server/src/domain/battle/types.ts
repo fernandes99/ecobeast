@@ -136,12 +136,17 @@ export interface BattleBagItem {
   used: number;
 }
 
+/** Contra quem é a luta: um selvagem ou um Domador NPC (npc-tamers/02). */
+export type Opponent = 'wild' | 'tamer';
+
 export interface BattleState {
   phase: BattlePhase;
   result: BattleResult | null;
   turn: number;
   /** Falso contra Domadores. */
   canFlee: boolean;
+  /** Contra Domador: sem Esfera, sem fuga, XP e moedas maiores. */
+  opponent: Opponent;
   player: BattleSide;
   enemy: BattleSide;
   /** No `choose_next`: as vagas do jogador que esperam quem entra. */

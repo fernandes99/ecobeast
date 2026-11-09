@@ -92,6 +92,8 @@ export function startBattle(
       result: null,
       turn: 1,
       canFlee,
+      // A luta antiga não tem tela, e continua só contra selvagens.
+      opponent: 'wild',
       player: newSide(player, slots.player),
       enemy: newSide(enemy, slots.enemy),
       pendingPositions: [],

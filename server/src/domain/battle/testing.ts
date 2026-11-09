@@ -171,6 +171,7 @@ export function makeState(
     result: null,
     turn: 1,
     canFlee: true,
+    opponent: 'wild',
     player: side([player].flat(), slots.player),
     enemy: side([enemy].flat(), slots.enemy),
     pendingPositions: [],
