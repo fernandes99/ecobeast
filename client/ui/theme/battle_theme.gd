@@ -14,7 +14,6 @@ const PANEL := &"BattlePanel"
 const LOG := &"BattleLog"
 const PILL := &"BattlePill"
 const BUTTON := &"BattleButton"
-const ICON_BUTTON := &"BattleIconButton"
 
 const ICONS_DIR := "res://assets/ui/battle/icons/%s.png"
 
@@ -44,7 +43,6 @@ const FOCUS_WIDTH := 4
 const FOCUS_GLOW := 10
 const BUTTON_FONT_SIZE := 28
 const ICON_SIZE := 60
-const ICON_BUTTON_SIZE := 38
 
 static var _theme: Theme = null
 
@@ -89,11 +87,6 @@ static func _build() -> Theme:
 	theme.set_constant(&"icon_max_width", BUTTON, ICON_SIZE)
 	theme.set_constant(&"h_separation", BUTTON, 2)
 	_button_text(theme, BUTTON)
-
-	theme.set_type_variation(ICON_BUTTON, &"Button")
-	_button_styles(theme, ICON_BUTTON, 8)
-	theme.set_constant(&"icon_max_width", ICON_BUTTON, ICON_BUTTON_SIZE)
-	_button_text(theme, ICON_BUTTON)
 	return theme
 
 

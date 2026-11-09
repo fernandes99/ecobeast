@@ -5,7 +5,8 @@ Uso, na raiz do repositório: python -I .claude/skills/creature-sprites/scripts/
 Lê `art-source/<slug>/pixellab.zip` (o zip do personagem, como o PixelLab exporta) e
 escreve em `client/assets/creatures/<slug>/battle/`:
 
-- `idle.png`: as linhas south (de frente) e north (de costas);
+- `idle.png`: as linhas south (de frente) e north (de costas) e, quando o zip tem o
+  idle de lado (board-battle/17), mais south-east, east e north-east;
 - `walk.png`: as linhas south-east, east e north-east.
 
 Células quadradas, do maior canvas do PixelLab; uma linha pode ter menos quadros que
@@ -32,6 +33,8 @@ SHEETS = {
     "idle": ("south", "north"),
     "walk": ("south-east", "east", "north-east"),
 }
+# As vistas de lado do idle (board-battle/17): entram as três juntas, ou nenhuma.
+IDLE_SIDES = ("south-east", "east", "north-east")
 ROTATION = "rotation"
 
 
@@ -123,8 +126,22 @@ def build(slug):
     archive = zipfile.ZipFile(archive_path)
     animations, rotations = load_sources(archive)
 
+    directions_of = dict(SHEETS)
+    present = []
+    for direction in IDLE_SIDES:
+        try:
+            pick("idle", direction, animations, rotations, overrides)
+            present.append(direction)
+        except Problem:
+            pass
+    if len(present) == len(IDLE_SIDES):
+        directions_of["idle"] = SHEETS["idle"] + IDLE_SIDES
+    elif present:
+        missing = [d for d in IDLE_SIDES if d not in present]
+        raise Problem("o idle de lado precisa de %s; falta %s" % (", ".join(IDLE_SIDES), ", ".join(missing)))
+
     chosen = {}
-    for sheet, directions in SHEETS.items():
+    for sheet, directions in directions_of.items():
         chosen[sheet] = [read_frames(archive, pick(sheet, d, animations, rotations, overrides)) for d in directions]
     cell = max(size for lines in chosen.values() for frames in lines for size, _ in frames)
     cells = {
@@ -138,13 +155,13 @@ def build(slug):
     meta = {"cell": cell, "feet": feet}
     # Um quadro vazio confundiria o jogo, que conta os quadros pelas células preenchidas.
     for sheet, lines in cells.items():
-        for direction, frames in zip(SHEETS[sheet], lines):
+        for direction, frames in zip(directions_of[sheet], lines):
             if any(not any(row[x] for row in frame for x in range(3, len(row), 4)) for frame in frames):
                 raise Problem("o %s %s tem um quadro vazio" % (sheet, direction))
     for sheet, lines in cells.items():
         columns = max(len(frames) for frames in lines)
         write_png(out / (sheet + ".png"), cell * columns, cell * len(lines), sheet_rows(lines, cell, columns))
-        meta[sheet] = dict(zip(SHEETS[sheet], (len(frames) for frames in lines)))
+        meta[sheet] = dict(zip(directions_of[sheet], (len(frames) for frames in lines)))
     return out, meta
 
 

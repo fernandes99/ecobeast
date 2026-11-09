@@ -46,7 +46,8 @@ func _build_detail(id: int, box: VBoxContainer) -> void:
 		_effects(effects, ContentViewer.block(box, "Efeitos"))
 	_learners(id, ContentViewer.block(box, "Quem aprende"))
 	var row := ContentViewer.flow(14)
-	for entry: ContentFiles.Entry in files:
+	# Os opcionais, como o projétil, vêm depois e não contam no que falta (content-viewer/05).
+	for entry: ContentFiles.Entry in files + ContentFiles.skill_optional_files(skill["slug"]):
 		row.add_child(FilePreview.create(entry))
 	ContentViewer.block(box, "Arquivos").add_child(row)
 

@@ -62,19 +62,6 @@ size_flags_horizontal = 3
 script = ExtResource("4_card")
 is_enemy = true
 
-[node name="TopRight" type="VBoxContainer" parent="SafeArea/Edge/Column/TopRow"]
-layout_mode = 2
-size_flags_horizontal = 10
-theme_override_constants/separation = 8
-
-[node name="InfoButton" type="Button" parent="SafeArea/Edge/Column/TopRow/TopRight"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(64, 64)
-layout_mode = 2
-size_flags_horizontal = 8
-theme_override_font_sizes/font_size = 30
-text = "?"
-
 [node name="BoardArea" type="Control" parent="SafeArea/Edge/Column"]
 unique_name_in_owner = true
 layout_mode = 2
@@ -90,7 +77,7 @@ alignment = 2
 [node name="LogBox" type="PanelContainer" parent="SafeArea/Edge/Column/Bottom"]
 unique_name_in_owner = true
 layout_mode = 2
-mouse_filter = 2
+mouse_default_cursor_shape = 2
 
 [node name="LogRow" type="HBoxContainer" parent="SafeArea/Edge/Column/Bottom/LogBox"]
 layout_mode = 2

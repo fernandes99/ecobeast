@@ -16,7 +16,7 @@ A folha 398 tem 576 × 576 pixels, em células de 64: 9 linhas de cor com os mes
 
 ## Fora do escopo
 
-- O sinal de stat sobre o alvo ("Ataque ↓"): oferecido, o dono não pediu.
+- O sinal de stat sobre o alvo ("Ataque ↓"): oferecido, o dono não pediu nesta fase; veio depois, na [12](12-battle-signs.md).
 - O alvo encolher de susto.
 - O efeito e o som das outras Técnicas de apoio: cada uma chega com os arquivos dela, sem mudar código.
 

@@ -80,13 +80,13 @@ Confira isto nas prévias, porque são erros que os scripts não pegam. Os da li
 
 As folhas do tabuleiro da luta ficam em `<criatura>/battle/` e seguem o formato de `.specs/board-battle/07-battle-sprites.md`:
 
-- `idle.png` tem 2 linhas, de frente (south) e de costas (north);
+- `idle.png` tem 2 linhas, de frente (south) e de costas (north), ou 5, com mais south-east, east e north-east (board-battle/17): parado, o Ecobeast olha para o último passo;
 - `walk.png` tem 3 linhas: a diagonal descendo (south-east), o lado (east) e a diagonal subindo (north-east);
 - as células são quadradas, todas as vistas olham para a direita, e uma linha pode ter menos quadros que outra.
 
 O jogo tira tudo da imagem, então não há arquivo de dados ao lado. Elas aparecem sem ampliar. Há dois jeitos de fazer essas folhas:
 
-**1. Do PixelLab.** O dono gera o personagem no site, com a vista "low top-down", a animação de idle (south e north) e o walk (east, south-east e north-east). O zip vai para `art-source/<slug>/pixellab.zip`; para baixar pela API, a chave fica em `PIXELLAB_API_KEY` no `server/.env`. Depois, rode `python -I S/battle_sheets.py <slug>`. Um `art-source/<slug>/battle.json` troca a fonte de uma vista, por exemplo `{"idle": {"north": "rotation"}}` para usar a imagem parada. Gerar no PixelLab gasta os créditos do dono: só gere com o ok dele.
+**1. Do PixelLab.** O dono gera o personagem no site, com a vista "low top-down", a animação de idle (south e north, e de preferência também east, south-east e north-east) e o walk (east, south-east e north-east). A ferramenta põe o idle de lado quando o zip tem as 3 vistas. O zip vai para `art-source/<slug>/pixellab.zip`; para baixar pela API, a chave fica em `PIXELLAB_API_KEY` no `server/.env`. Depois, rode `python -I S/battle_sheets.py <slug>`. Um `art-source/<slug>/battle.json` troca a fonte de uma vista, por exemplo `{"idle": {"north": "rotation"}}` para usar a imagem parada. Gerar no PixelLab gasta os créditos do dono: só gere com o ok dele.
 
 **2. À mão, com o boneco de peças** (`S/puppet.py`). O Ecobeast é montado com elipsoides: cabeça, focinho, corpo, patas de dois ossos, cauda e chamas. O renderizador:
 - vira o boneco para cada vista;

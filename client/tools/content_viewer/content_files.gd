@@ -11,6 +11,9 @@ extends RefCounted
 const CREATURES_DIR := "res://assets/creatures"
 const SKILL_ICON_PATH := "res://assets/skills/%s.png"
 const SKILL_EFFECT_PATH := "res://assets/effects/skills/%s.png"
+## A folha que voa de quem ataca até o fim da área (board-battle/15). Só as Técnicas
+## que cruzam o campo têm: no visualizador, é um arquivo opcional (content-viewer/05).
+const SKILL_PROJECTILE_PATH := "res://assets/effects/skills/%s_projectile.png"
 const SKILL_SOUND_PATH := "res://assets/sounds/skills/%s.wav"
 ## O som característico do Ecobeast (creature-sounds/01). Nenhuma tela o toca ainda.
 const CREATURE_CALL_PATH := "res://assets/creatures/%s/call.wav"
@@ -64,18 +67,18 @@ const EXPLORE_DIRECTIONS: Array[Dictionary] = [
 ## Uma direção que a folha ainda não tem: aparece tracejada, como um arquivo que falta.
 const NO_ROW := -1
 ## As folhas da luta vão ter as mesmas 8 direções do explorar (pedido do dono em
-## 2026-11-06), mas hoje a parada só tem frente e costas, e a andando só os 3 passos
-## de lado. As que faltam ficam com NO_ROW; quando a folha ganhar a linha, ela entra
-## aqui com a constante do BattleSheets.
+## 2026-11-06). A parada tem frente e costas e, no idle de 5 linhas (board-battle/17),
+## os 3 lados; a andando, só os 3 passos de lado. As que nenhuma folha tem ficam com
+## NO_ROW; as de lado só valem para a espécie cuja folha tem a linha (`has_direction`).
 const BATTLE_IDLE_DIRECTIONS: Array[Dictionary] = [
 	{"label": "frente", "row": BattleSheets.IDLE_SOUTH, "mirrored": false},
-	{"label": "desce à direita", "row": NO_ROW, "mirrored": false},
-	{"label": "direita", "row": NO_ROW, "mirrored": false},
-	{"label": "sobe à direita", "row": NO_ROW, "mirrored": false},
+	{"label": "desce à direita", "row": BattleSheets.IDLE_DOWN, "mirrored": false},
+	{"label": "direita", "row": BattleSheets.IDLE_SIDE, "mirrored": false},
+	{"label": "sobe à direita", "row": BattleSheets.IDLE_UP, "mirrored": false},
 	{"label": "costas", "row": BattleSheets.IDLE_NORTH, "mirrored": false},
-	{"label": "sobe à esquerda", "row": NO_ROW, "mirrored": true},
-	{"label": "esquerda", "row": NO_ROW, "mirrored": true},
-	{"label": "desce à esquerda", "row": NO_ROW, "mirrored": true},
+	{"label": "sobe à esquerda", "row": BattleSheets.IDLE_UP, "mirrored": true},
+	{"label": "esquerda", "row": BattleSheets.IDLE_SIDE, "mirrored": true},
+	{"label": "desce à esquerda", "row": BattleSheets.IDLE_DOWN, "mirrored": true},
 ]
 const BATTLE_WALK_DIRECTIONS: Array[Dictionary] = [
 	{"label": "frente", "row": NO_ROW, "mirrored": false},
@@ -100,6 +103,8 @@ class Entry:
 	var sheet: String
 	## Um ciclo da folha, em segundos; 0 usa o ritmo dos Ecobeasts no explorar.
 	var cycle := 0.0
+	## Um arquivo que só algumas Técnicas têm (content-viewer/05): sem ele, nada falta.
+	var optional := false
 
 	func _init(entry_label: String, entry_path: String, entry_kind: Kind, entry_slug := "", entry_sheet := "") -> void:
 		label = entry_label
@@ -121,11 +126,22 @@ class Entry:
 				return ContentFiles.BATTLE_IDLE_DIRECTIONS if sheet == BattleSheets.IDLE else ContentFiles.BATTLE_WALK_DIRECTIONS
 		return empty
 
+	## Se a folha tem a linha da direção. Uma folha da luta que o jogo não consegue
+	## ler não tem nenhuma.
+	func has_direction(direction: Dictionary) -> bool:
+		var row: int = direction["row"]
+		if row == NO_ROW:
+			return false
+		if kind != Kind.BATTLE_SHEET:
+			return true
+		var sheets := BattleSheets.for_slug(slug)
+		return sheets != null and sheets.has_row(sheet, row)
+
 	## As direções desenhadas (não espelhadas) que a folha ainda não tem.
 	func missing_directions() -> Array[String]:
 		var labels: Array[String] = []
 		for direction: Dictionary in directions():
-			if not direction["mirrored"] and direction["row"] == NO_ROW:
+			if not direction["mirrored"] and not has_direction(direction):
 				labels.append(direction["label"])
 		return labels
 
@@ -168,6 +184,15 @@ static func skill_files(slug: String) -> Array[Entry]:
 		Entry.new("efeito", SKILL_EFFECT_PATH % slug, Kind.EFFECT),
 		Entry.new("som", SKILL_SOUND_PATH % slug, Kind.SOUND),
 	]
+	return files
+
+
+## Os arquivos que só algumas Técnicas têm (content-viewer/05): o projétil. Eles não
+## entram nas contagens do que falta.
+static func skill_optional_files(slug: String) -> Array[Entry]:
+	var projectile := Entry.new("projétil", SKILL_PROJECTILE_PATH % slug, Kind.EFFECT)
+	projectile.optional = true
+	var files: Array[Entry] = [projectile]
 	return files
 
 

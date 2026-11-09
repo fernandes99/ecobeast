@@ -69,6 +69,10 @@ var _attacker_key: String = ""
 var _attack_skill_id := -1
 ## Se a Técnica deste uso já tocou o efeito: a sem dano toca uma vez só (board-battle/11).
 var _effect_played := false
+## Se a Técnica deste uso voou (board-battle/15): o som já tocou no lançamento.
+var _projectile_flown := false
+## Os estados de cada Ecobeast, para os ícones em cima da vida (board-battle/16).
+var _statuses := BattleStatuses.new()
 var _typing: Tween = null
 ## A última frase da luta no log: quando um aviso sai, ela volta (board-battle/09).
 var _last_line := ""
@@ -168,7 +172,7 @@ func _ready() -> void:
 	_flee_button.pressed.connect(_flee)
 	_items_panel.chosen.connect(_use_item)
 	_items_panel.capture_chosen.connect(_aim_sphere)
-	%InfoButton.pressed.connect(_history.open)
+	_log_box.gui_input.connect(_on_log_input)
 	_exit_button.pressed.connect(_leave)
 	_board.cell_tapped.connect(_on_cell_tapped)
 	# O tabuleiro mora numa camada atrás da interface (board-battle/08): a área na
@@ -248,14 +252,17 @@ func _style_controls() -> void:
 	BattleTheme.action_button(_flee_button, "flee")
 	for button: Button in [_emergency_button, _exit_button, %SkillsBackButton]:
 		button.theme_type_variation = BattleTheme.BUTTON
-	var info: Button = %InfoButton
-	info.theme_type_variation = BattleTheme.ICON_BUTTON
-	info.text = ""
-	info.icon = BattleTheme.icon("help")
-	info.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_log_box.theme_type_variation = BattleTheme.LOG
 	%ChatIcon.texture = BattleTheme.icon("chat")
 	_more_icon.texture = BattleTheme.icon("more")
+
+
+## Tocar no log abre o histórico da luta (board-battle/13), quando o dedo sai,
+## como num botão.
+func _on_log_input(event: InputEvent) -> void:
+	var click := event as InputEventMouseButton
+	if click != null and click.button_index == MOUSE_BUTTON_LEFT and not click.pressed:
+		_history.open()
 
 
 ## Um aviso inteiro no log, sem letra por letra e sem o triângulo de "continua".
@@ -354,9 +361,18 @@ func _play_event(event: Dictionary) -> void:
 			_attacker_key = key
 			_attack_skill_id = DictFields.get_id(event, "skill_id")
 			_effect_played = false
+			_projectile_flown = false
 			var area := _cells_of(DictFields.get_array(event, "cells"))
 			_board.light(area, UiPalette.BOARD_AREA)
 			await _board.attack_shake(key)
+			var projectile := _projectile_texture()
+			if projectile != null:
+				# A Técnica que voa (board-battle/15): a frase vem antes do voo, pela área
+				# ainda acesa, para o impacto do próximo evento vir junto da chegada.
+				await _say(type, side, key, event)
+				await _fly_projectile(area, projectile)
+				_board.light([], Color.TRANSPARENT)
+				return
 			_board.light([], Color.TRANSPARENT)
 		"fainted":
 			_board.fade(key)
@@ -373,11 +389,21 @@ func _play_event(event: Dictionary) -> void:
 			_refresh_marks()
 		"item_used":
 			_update_team_hp(DictFields.get_int(event, "team_index"), DictFields.get_int(event, "hp"))
+			if not DictFields.get_string(event, "cured_status").is_empty():
+				_cure_team(DictFields.get_int(event, "team_index"))
 		"stat_changed", "status_applied":
 			# A Técnica sem dano, como a Rugido Feroz, toca o efeito no primeiro
 			# evento que causa (board-battle/11).
 			if not _effect_played and _board.has_token(key):
 				await _play_skill_effect(key)
+			# O sinal sobe depois do efeito, também sem Técnica (board-battle/12), e o
+			# ícone do estado aparece com ele (board-battle/16).
+			_board.float_sign(key, BattleSign.from_event(event))
+			_show_statuses(_statuses.apply(event, key))
+	# Os ícones de estado acompanham os eventos (board-battle/16); o do estado novo já
+	# apareceu com o sinal.
+	if type != "status_applied":
+		_show_statuses(_statuses.apply(event, key))
 	if type in HP_EVENTS and _board.has_token(key):
 		# O golpe (board-battle/09): o efeito da Técnica no alvo, o alvo treme e pisca
 		# com a barra caindo, e o número sobe sem a sequência esperar por ele.
@@ -393,13 +419,20 @@ func _play_event(event: Dictionary) -> void:
 			_board.float_number(key, "-%d" % amount, UiPalette.DANGER)
 		else:
 			_board.float_number(key, "+%d" % amount, UiPalette.HP_HIGH)
+	await _say(type, side, key, event)
+
+
+## A frase do evento: vai para o histórico e, menos as que são só dele, aparece no
+## log letra por letra e fica um pouco.
+func _say(type: String, side: String, key: String, event: Dictionary) -> void:
 	var line := _line_for(type, side, key, event)
-	if not line.is_empty():
-		_history.add_line(line)
-		if type in HISTORY_ONLY:
-			return
-		await _type_line(line)
-		await get_tree().create_timer(EVENT_DELAY).timeout
+	if line.is_empty():
+		return
+	_history.add_line(line)
+	if type in HISTORY_ONLY:
+		return
+	await _type_line(line)
+	await get_tree().create_timer(EVENT_DELAY).timeout
 
 
 ## O som e o efeito da Técnica do golpe atual sobre o alvo, com o efeito espelhado
@@ -411,17 +444,43 @@ func _play_skill_effect(target_key: String) -> void:
 	var skill := GameData.get_skill(_attack_skill_id)
 	if skill == null:
 		return
-	var sound_path := ContentFiles.SKILL_SOUND_PATH % skill.slug
-	if ResourceLoader.exists(sound_path):
-		_skill_sound.stream = load(sound_path) as AudioStream
-		_skill_sound.play()
+	# Com projétil, o som tocou no lançamento; o impacto fica com o som de dano.
+	if not _projectile_flown:
+		_play_skill_sound(skill)
 	var path := ContentFiles.SKILL_EFFECT_PATH % skill.slug
 	if not ResourceLoader.exists(path):
 		return
 	var from: Variant = _board.token_position(_attacker_key)
 	var to: Variant = _board.token_position(target_key)
 	var mirrored: bool = from != null and to != null and (from as Vector2).x > (to as Vector2).x
-	await _board.play_effect(target_key, load(path) as Texture2D, mirrored)
+	# O impacto do projétil que vem de cima vira, para seguir o golpe (board-battle/15).
+	var flipped: bool = _projectile_flown and from != null and to != null and (from as Vector2).y < (to as Vector2).y
+	await _board.play_effect(target_key, load(path) as Texture2D, mirrored, flipped)
+
+
+## O som da Técnica, se o arquivo existir.
+func _play_skill_sound(skill: Skill) -> void:
+	var path := ContentFiles.SKILL_SOUND_PATH % skill.slug
+	if ResourceLoader.exists(path):
+		_skill_sound.stream = load(path) as AudioStream
+		_skill_sound.play()
+
+
+## A folha do projétil da Técnica do golpe atual (board-battle/15), ou null sem ela.
+func _projectile_texture() -> Texture2D:
+	var skill := GameData.get_skill(_attack_skill_id) if _attack_skill_id >= 0 else null
+	if skill == null:
+		return null
+	var path := ContentFiles.SKILL_PROJECTILE_PATH % skill.slug
+	return load(path) as Texture2D if ResourceLoader.exists(path) else null
+
+
+## A Técnica com projétil (board-battle/15): o som toca no lançamento, e a folha voa
+## de quem ataca até o fim da área.
+func _fly_projectile(area: Array[Vector2i], texture: Texture2D) -> void:
+	_projectile_flown = true
+	_play_skill_sound(GameData.get_skill(_attack_skill_id))
+	await _board.fly_projectile(_attacker_key, area, texture)
 
 
 ## O tipo do som de dano: a efetividade da Técnica, ou normal para o dano que não
@@ -518,6 +577,7 @@ func _sync_board() -> void:
 		if not present.has(key):
 			_board.remove(key)
 			_names.erase(key)
+			_statuses.erase(key)
 	_marks.clear()
 	for mark: GroundMark in _view.marks:
 		_marks[mark.cell] = mark.ground_effect_id
@@ -543,6 +603,9 @@ func _sync_token(key: String, side: String, creature: BattleCreature, cell: Vect
 	_level[key] = creature.level
 	_hp[key] = creature.hp
 	_board.set_hp(key, creature.hp, creature.max_hp)
+	# O principal e a confusão ficam iguais aos do servidor (board-battle/16).
+	_statuses.sync(key, creature.status, creature.confused)
+	_board.set_statuses(key, _statuses.of(key))
 
 
 ## Quem joga ou sofre algo passa a aparecer no cartão do lado dele.
@@ -586,6 +649,20 @@ func _refresh_marks() -> void:
 		color.a = 0.55
 		colors[cell] = color
 	_board.set_marks(colors)
+
+
+## Redesenha os ícones de estado das vagas que mudaram (board-battle/16).
+func _show_statuses(keys: Array[String]) -> void:
+	for changed: String in keys:
+		_board.set_statuses(changed, _statuses.of(changed))
+
+
+## O item que cura o estado tira o principal de quem o recebeu, se estiver no tabuleiro.
+func _cure_team(team_index: int) -> void:
+	for key: String in _team_index:
+		if key.begins_with("player:") and _team_index[key] == team_index:
+			_statuses.cure(key)
+			_board.set_statuses(key, _statuses.of(key))
 
 
 func _update_team_hp(team_index: int, hp: int) -> void:

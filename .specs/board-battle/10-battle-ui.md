@@ -25,7 +25,7 @@ A imagem de ícones tem 9 ícones com fundo transparente. A bola de captura repe
 
 - **RF-01:** Os dois cartões são painéis azul-escuros, com cantos arredondados, borda azul e uma sombra suave. O nível fica numa pílula escura com borda.
 - **RF-02:** Atacar, Passar, Mochila e Fugir são botões azuis com cantos arredondados, borda azul-clara e relevo (uma borda mais escura embaixo), com o ícone em cima e o nome embaixo, em branco com contorno escuro. Apertado, o botão fica mais escuro e mais baixo. Desativado, apaga. O último botão tocado ganha um anel laranja com brilho. As Técnicas, a Técnica de emergência, Voltar e o botão de sair usam o mesmo botão, sem ícone.
-- **RF-03:** O "?" é um botão quadrado com o ícone de interrogação.
+- **RF-03:** O "?" é um botão quadrado com o ícone de interrogação. Na [13](13-log-opens-history.md), o dono tirou o "?": tocar no log abre o histórico.
 - **RF-04:** O log é um painel de uma linha com o balão de conversa à esquerda. Quando uma frase termina de aparecer letra por letra, um triângulo à direita avisa que a luta continua; os avisos da vez do jogador aparecem sem ele.
 - **RF-05:** Nada disso usa imagem de moldura: só os ícones são imagens. O tabuleiro continua parado ([08](08-board-ground.md)).
 

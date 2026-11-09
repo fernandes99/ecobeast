@@ -6,19 +6,26 @@ extends RefCounted
 ## direita: a esquerda é a mesma arte espelhada.
 ##
 ## Tudo sai da própria imagem, sem arquivo de dados ao lado: a célula é quadrada, da
-## altura da folha dividida pelas linhas; uma linha tem os quadros até a primeira
+## altura do walk dividida pelas 3 linhas dele; o idle tem 2 ou 5 linhas
+## (board-battle/17), conforme a altura; uma linha tem os quadros até a primeira
 ## célula vazia; e os pés ficam na última linha de pixels de todas as células.
 
 const PATH := "res://assets/creatures/%s/battle/%s.png"
 const IDLE := "idle"
 const WALK := "walk"
-## As linhas de cada folha, de cima para baixo.
+## As linhas de cada folha, de cima para baixo. As 3 últimas do idle (de lado, na
+## ordem do walk) só existem no idle de 5 linhas (board-battle/17).
 const IDLE_SOUTH := 0
 const IDLE_NORTH := 1
+const IDLE_DOWN := 2
+const IDLE_SIDE := 3
+const IDLE_UP := 4
 const WALK_DOWN := 0
 const WALK_SIDE := 1
 const WALK_UP := 2
-const ROW_COUNTS: Dictionary[String, int] = {IDLE: 2, WALK: 3}
+const WALK_ROWS := 3
+## As alturas que o idle pode ter, em linhas: só de frente e de costas, ou também de lado.
+const IDLE_ROWS: PackedInt32Array = [2, 5]
 ## Segundos por quadro. O idle usa o tempo dos GIFs do PixelLab; o walk é mais
 ## rápido, para um ciclo caber num passo de hexágono. A revisar.
 const FRAME_SECONDS: Dictionary[String, float] = {IDLE: 0.2, WALK: 0.15}
@@ -27,6 +34,8 @@ const FRAME_SECONDS: Dictionary[String, float] = {IDLE: 0.2, WALK: 0.15}
 static var _by_slug: Dictionary[String, BattleSheets] = {}
 
 var textures: Dictionary[String, Texture2D] = {}
+## Quantas linhas cada folha tem.
+var rows: Dictionary[String, int] = {}
 ## Quantos quadros cada linha tem, por folha.
 var frames: Dictionary[String, PackedInt32Array] = {}
 var cell := 0
@@ -53,18 +62,21 @@ static func _read(slug: String) -> BattleSheets:
 	var sheets := BattleSheets.new()
 	var bottom := 0
 	var highest := INF
-	for sheet: String in ROW_COUNTS:
+	# O walk primeiro: as 3 linhas dele dão a célula, e a célula dá as linhas do idle.
+	for sheet: String in [WALK, IDLE]:
 		var texture: Texture2D = load(PATH % [slug, sheet])
 		var image := texture.get_image()
-		var rows := ROW_COUNTS[sheet]
-		var size := image.get_height() / rows
-		if sheets.cell != 0 and sheets.cell != size:
-			push_error("As folhas de %s têm células de tamanhos diferentes." % slug)
+		if sheet == WALK:
+			sheets.cell = image.get_height() / WALK_ROWS
+		var size := sheets.cell
+		var count_rows := image.get_height() / size
+		if image.get_height() % size != 0 or (sheet == WALK and count_rows != WALK_ROWS) 				or (sheet == IDLE and not count_rows in IDLE_ROWS):
+			push_error("A folha %s de %s não tem as linhas que a luta espera." % [sheet, slug])
 			return null
-		sheets.cell = size
+		sheets.rows[sheet] = count_rows
 		sheets.textures[sheet] = texture
 		var counts := PackedInt32Array()
-		for row: int in rows:
+		for row: int in count_rows:
 			var count := 0
 			while (count + 1) * size <= image.get_width():
 				var used := image.get_region(Rect2i(count * size, row * size, size, size)).get_used_rect()
@@ -91,6 +103,11 @@ func columns(sheet: String) -> int:
 
 func frame_count(sheet: String, row: int) -> int:
 	return frames[sheet][row]
+
+
+## Se a folha tem a linha: o idle de 2 linhas não tem as vistas de lado.
+func has_row(sheet: String, row: int) -> bool:
+	return row >= 0 and row < rows[sheet]
 
 
 ## A altura do Ecobeast em pixels da arte, dos pés ao ponto mais alto.

@@ -54,6 +54,7 @@ As telas são montadas no código, sem `.tscn`, como o `BoardCreatureCard`. São
 | Técnica | ícone | `res://assets/skills/<slug>.png` | nova, em `ContentFiles` |
 | Técnica | efeito | `res://assets/effects/skills/<slug>.png` | `SKILL_EFFECT_PATH`, que sai de `board_battle_screen.gd` |
 | Técnica | som | `res://assets/sounds/skills/<slug>.wav` | `SKILL_SOUND_PATH`, que sai de `board_battle_screen.gd` |
+| Técnica | projétil (opcional) | `res://assets/effects/skills/<slug>_projectile.png` | `SKILL_PROJECTILE_PATH`, nova em `ContentFiles` ([board-battle/15](../board-battle/15-projectile-effects.md)); opcional desde a [05](05-skill-projectile.md): não conta no que falta |
 | Item | ícone | `res://assets/items/<slug>.png` | `ItemIcon.SPRITE_PATH` |
 | Bioma | superfície | `res://assets/terrain/surfaces/<slug>.png` | `HexMapView.SURFACE_PATH` |
 

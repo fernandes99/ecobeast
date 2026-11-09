@@ -30,7 +30,7 @@ A luta nova substitui a de hoje em Explorar zona. A luta atual deixa de ser usad
 | A marca no chão age sobre quem estiver no hexágono **depois de cada vez da fila**, de qualquer Ecobeast, e a duração conta vezes da fila. Passar pelo hexágono andando não aplica nada | Decisão do dono |
 | Quem entra depois de uma queda entra num hexágono livre da área de largada do próprio lado, que o jogador escolhe. Quem entra numa troca entra no hexágono de quem saiu. Quem entra só age na rodada seguinte | Proposta aceita pelo dono: entrar em qualquer lugar seria roubado, e entrar onde o outro caiu é quase sempre no meio da briga |
 | Item, troca, Esfera e fuga gastam a vez de quem está jogando. A Esfera vale contra qualquer selvagem do tabuleiro, a qualquer distância. A fuga vale para a equipe toda | Decisão do dono, para a Esfera. O resto é a regra de hoje |
-| Sem caixa de mensagens: um botão de informação abre o histórico da luta | Decisão do dono |
+| Sem caixa de mensagens: um botão de informação abre o histórico da luta. Na [09](09-hit-feedback.md), veio o log de uma linha, e na [13](13-log-opens-history.md) o botão saiu: tocar no log abre o histórico | Decisão do dono |
 | Fim, XP e moedas como hoje: o XP vai para quem esteve no tabuleiro contra o selvagem, e cada selvagem derrubado paga moedas | Regra de hoje, da [progression](../progression/) e da [battle-slots/01](../battle-slots/01-engine-slots.md) |
 | As regras ficam no servidor, e o jogo prevê o que é só visual: onde dá para andar e a área de cada Técnica. Um pedido por vez do jogador, e a resposta traz a vez de todos os selvagens até a próxima vez dele | Decisão do dono, depois de comparar com regras no jogo. A captura, o XP e as moedas ficam gravados, e regras no jogo deixariam trapacear neles |
 | Pedidos HTTP, como hoje. A luta é desenhada como troca de mensagens (a vez vai, os acontecimentos voltam), para trocar por socket quando houver luta contra outro jogador | Decisão do dono |
@@ -66,6 +66,12 @@ A luta nova substitui a de hoje em Explorar zona. A luta atual deixa de ser usad
 | 9 | [09-hit-feedback](09-hit-feedback.md) | O golpe com tempos: o atacante treme, o efeito da Técnica (a Arranhão, do kit de efeitos), o alvo treme e pisca, o dano sobe zanzando, e o log de uma linha letra por letra | concluída (falta o teste do dono no editor) |
 | 10 | [10-battle-ui](10-battle-ui.md) | O visual da tela da luta desenhado pelo Godot (painéis, log e botões com relevo), com os ícones do dono | concluída (falta o dono ver no editor) |
 | 11 | [11-support-skill-effects](11-support-skill-effects.md) | O efeito e o som das Técnicas sem dano, começando pela Rugido Feroz (a explosão marrom da 398 do kit e um rugido gerado) | concluída (falta o dono ver e ouvir no editor) |
+| 12 | [12-battle-signs](12-battle-signs.md) | O sinal que sobe sobre o Ecobeast: o stat com setas desenhadas ("Ataque" ↓) e o estado novo na cor dele | concluída (falta o dono ver no editor) |
+| 13 | [13-log-opens-history](13-log-opens-history.md) | O "?" sai do topo, e tocar no log abre o histórico | concluída (falta o dono ver no editor) |
+| 14 | [14-quick-dash-effect](14-quick-dash-effect.md) | O efeito e o som da Investida Veloz (o risco marrom da 333 do kit e um zunido com baque gerado) | concluída (falta o dono ver e ouvir no editor) |
+| 15 | [15-projectile-effects](15-projectile-effects.md) | A Técnica que voa: a Faísca Rápida, com a faísca vermelha da 579 do kit cruzando o tabuleiro, o estouro da 397 no alvo e um chiado gerado | concluída (falta o dono ver e ouvir no editor) |
+| 16 | [16-status-icons](16-status-icons.md) | O ícone de cada estado em cima da vida do Ecobeast, desenhado pelo Godot, nas cores do dono (queimado vermelho, envenenado verde, confuso rosa) | concluída (falta o dono ver no editor) |
+| 17 | [17-idle-facing](17-idle-facing.md) | O idle do Ruvo nas vistas de lado, do PixelLab: parado, o Ecobeast olha para onde andou | concluída (falta o dono ver no editor) |
 
 O desenho compartilhado está no [architecture.md](architecture.md).
 

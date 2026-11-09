@@ -90,6 +90,21 @@ const BOARD_ENEMY := BATTLE_LEVEL_ENEMY
 const HP_MID := WARNING
 const HP_LOW := DANGER
 
+## O sinal de stat sobre o Ecobeast na luta (board-battle/12).
+const STAT_UP := HP_HIGH
+const STAT_DOWN := DANGER
+## A cor do sinal de cada estado, pelo slug de `status_conditions` (board-battle/12). A revisar.
+const STATUS_COLORS: Dictionary[String, Color] = {
+	"burn": Color("#F04438"),
+	"poison": Color("#5CCB4A"),
+	"paralysis": Color("#F2D13D"),
+	"sleep": Color("#9DB7D2"),
+	"freeze": Color("#7FD8FF"),
+	"confusion": Color("#F28AD0"),
+	"fear": Color("#8C7AE6"),
+	"trapped": Color("#C9A66B"),
+}
+
 ## Modulate de um painel tocável enquanto o dedo está nele: clareia, porque
 ## escurecer não aparece no fundo escuro.
 const PRESSED_TINT := Color(1.25, 1.25, 1.25)

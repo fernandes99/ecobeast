@@ -30,7 +30,7 @@ const SHADE_FADE := 0.10
 ## cores ficam em UiPalette.ACTION_COLORS.
 const ACTIONS: Array[Dictionary] = [
 	{"id": &"explore", "title": "Explorar zona", "subtitle": "Conheça novas áreas e capture criaturas."},
-	{"id": &"challenge", "title": "Desafiar Domador", "subtitle": "Enfrente outros Domadores."},
+	{"id": &"challenge", "title": "Desafiar", "subtitle": "Enfrente outros Domadores."},
 	{"id": &"arenas", "title": "Arenas", "subtitle": "Derrote os 8 Mestres e conquiste a Liga."},
 	{"id": &"shop", "title": "Loja", "subtitle": "Compre itens, Esferas de Vínculo e mais."},
 	{"id": &"heal", "title": "Refúgio", "subtitle": "Cure sua equipe."},
@@ -51,7 +51,7 @@ const TABS: Array[Dictionary] = [
 ## abre nada; a ação e a aba com o mesmo rótulo abrem a mesma tela.
 const DESTINATIONS: Dictionary[String, Dictionary] = {
 	"Explorar zona": {"id": &"exploration", "params": {}},
-	"Desafiar Domador": {"id": &"placeholder", "params": {"title": "Desafiar Domador"}},
+	"Desafiar": {"id": &"placeholder", "params": {"title": "Desafiar"}},
 	"Arenas": {"id": &"placeholder", "params": {"title": "Arenas"}},
 	"Loja": {"id": &"shop", "params": {}},
 	"Refúgio": {"id": &"heal_station", "params": {}},

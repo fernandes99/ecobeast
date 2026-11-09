@@ -27,7 +27,7 @@ O jogador termina o onboarding num placeholder "Hub", e o boot também abre esse
 
 - **RF-01:** Topo (`PanelContainer`): à esquerda, um círculo de 72 px na cor primária com a inicial do nome do Domador em branco; ao lado, o nome (Bold, 28, cortado com "…" se não couber) e, embaixo, "Domador · Nível <nível>" (texto secundário, 20). À direita, um círculo de 24 px na cor de aviso (a moeda) e o número de moedas com separador de milhar em ponto ("1.000").
 - **RF-02:** Seção "Sua equipe" (título Bold, 28) com uma grade de 3 colunas e 2 linhas de `CreatureSlot`, na ordem da equipe; posições sem criatura mostram o slot vazio.
-- **RF-03:** Seção "Ações" (título Bold, 28) com uma grade de 2 colunas destes botões, nesta ordem: Explorar zona, Desafiar Domador, Arenas, Loja, Refúgio, Santuário, Bestiário, Mochila. Variação de tema `ActionButton`: fundo na cor de superfície, borda de 2 px na cor de borda, texto na cor de texto em Bold, altura de 88 px.
+- **RF-03:** Seção "Ações" (título Bold, 28) com uma grade de 2 colunas destes botões, nesta ordem: Explorar zona, Desafiar, Arenas, Loja, Refúgio, Santuário, Bestiário, Mochila. Variação de tema `ActionButton`: fundo na cor de superfície, borda de 2 px na cor de borda, texto na cor de texto em Bold, altura de 88 px.
 - **RF-04:** Barra inferior com 5 abas de largura igual: Home, Equipe, Bestiário, Loja, Perfil. Variação de tema `TabButton`: sem fundo, texto 18; a aba atual (Home) fica com o texto na cor primária e uma linha de 4 px na cor primária em cima.
 - **RF-05:** A tela é atualizada quando `Session.player_changed` é emitido.
 

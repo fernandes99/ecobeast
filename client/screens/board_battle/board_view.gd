@@ -19,6 +19,8 @@ const HEX_HEIGHT := 87.0
 const STEP_X := 96.0
 const STEP_Y := 63.0
 const ROW_SHIFT := 48.0
+## O Ecobeast que ainda não andou: parado, olha para o adversário (board-battle/17).
+const NO_FACING := -1
 ## Cantos a partir do canto de cima à esquerda, no sentido do relógio.
 const CORNERS: Array[Vector2] = [
 	Vector2(48, 0), Vector2(96, 24), Vector2(96, 63),
@@ -67,6 +69,8 @@ const BREATH_STRETCH := 0.035
 const STEP_SECONDS := 0.34
 const HOP_HEIGHT := 12.0
 const BAR_HEIGHT := 8
+## O espaço entre os ícones de estado e a barra de vida (board-battle/16).
+const STATUS_GAP := 3.0
 const BAR_WIDTH := HEX_WIDTH * 0.7
 const NUMBER_FONT_SIZE := 34
 ## O número do dano sobe e ondula de um lado para o outro enquanto some (board-battle/09).
@@ -77,6 +81,13 @@ const NUMBER_SECONDS := 2.0
 const NUMBER_FADE_FROM := 0.5
 const NUMBER_SWAY := 8.0
 const NUMBER_SWAYS := 2.0
+## O sinal de stat ou de estado (board-battle/12): o texto menor que o número, por ser
+## mais longo, e as setas desenhadas, porque a fonte não tem nenhuma.
+const SIGN_FONT_SIZE := 26
+const SIGN_ARROW_WIDTH := 16.0
+const SIGN_ARROW_HEIGHT := 14.0
+const SIGN_ARROW_GAP := 2.0
+const SIGN_OUTLINE := 6
 ## Quem ataca treme de lado, como se tomasse impulso (board-battle/09). A revisar.
 const ATTACK_SHAKE_SECONDS := 0.25
 const ATTACK_SHAKE := 3.0
@@ -101,6 +112,46 @@ const COIN_FADE_FROM := 0.55
 ## para cobrir o Ecobeast. A revisar.
 const EFFECT_FRAME_SECONDS := 0.05
 const EFFECT_SCALE := 1.5
+## O projétil (board-battle/15): quanto ele leva por hexágono, e onde fica a ponta
+## na folha, que aponta para a direita: a fração do quadro à direita do meio. A revisar.
+const PROJECTILE_SECONDS_PER_CELL := 0.09
+const PROJECTILE_TIP := 27.0 / 64.0
+
+
+## As setas do sinal de stat, desenhadas: triângulos com contorno escuro, para cima
+## com `arrows` positivo e para baixo com negativo.
+class Arrows:
+	extends Control
+
+	var arrows: int = 0
+	var color: Color = Color.WHITE
+
+	func _init(count: int, arrow_color: Color) -> void:
+		arrows = count
+		color = arrow_color
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var total := absi(count)
+		custom_minimum_size = Vector2(
+			total * SIGN_ARROW_WIDTH + (total - 1) * SIGN_ARROW_GAP + SIGN_OUTLINE,
+			SIGN_ARROW_HEIGHT + SIGN_OUTLINE)
+		size_flags_vertical = Control.SIZE_SHRINK_CENTER
+
+	func _draw() -> void:
+		var margin := SIGN_OUTLINE / 2.0
+		for index: int in absi(arrows):
+			var left := margin + index * (SIGN_ARROW_WIDTH + SIGN_ARROW_GAP)
+			var top := margin
+			var bottom := margin + SIGN_ARROW_HEIGHT
+			var middle := left + SIGN_ARROW_WIDTH / 2.0
+			var points: PackedVector2Array
+			if arrows > 0:
+				points = [Vector2(middle, top), Vector2(left + SIGN_ARROW_WIDTH, bottom), Vector2(left, bottom)]
+			else:
+				points = [Vector2(left, top), Vector2(left + SIGN_ARROW_WIDTH, top), Vector2(middle, bottom)]
+			var outline := points.duplicate()
+			outline.append(points[0])
+			draw_polyline(outline, UiPalette.BACKGROUND_DEEP, SIGN_OUTLINE, true)
+			draw_colored_polygon(points, color)
 
 
 ## Um Ecobeast no tabuleiro: a sombra no chão, o corpo (que respira e pula) com o
@@ -116,9 +167,14 @@ class Token:
 	var body := Node2D.new()
 	var sprite := Sprite2D.new()
 	var bar: HpBar = null
+	## Os ícones de estado em cima da barra (board-battle/16); null sem nenhum ainda.
+	var statuses: StatusIcons = null
 	var breath: Tween = null
 	## As folhas da luta; null para quem usa o board.png ou o front.png.
 	var sheets: BattleSheets = null
+	## A linha do idle do último passo (board-battle/17), com o espelho do sprite;
+	## NO_FACING enquanto ele não andou.
+	var facing := BoardView.NO_FACING
 	var _sheet := ""
 	var _row := 0
 	var _elapsed := 0.0
@@ -132,7 +188,7 @@ class Token:
 		_elapsed = 0.0
 		sprite.texture = sheets.textures[sheet]
 		sprite.hframes = sheets.columns(sheet)
-		sprite.vframes = BattleSheets.ROW_COUNTS[sheet]
+		sprite.vframes = sheets.rows[sheet]
 		sprite.frame_coords = Vector2i(0, row)
 
 	# O Godot liga o `_process` sozinho para todo nó com ele; sem folhas, não faz nada.
@@ -385,16 +441,41 @@ func float_number(key: String, text: String, color: Color) -> void:
 	number.add_theme_color_override(&"font_outline_color", UiPalette.BACKGROUND_DEEP)
 	number.add_theme_constant_override(&"outline_size", 6)
 	number.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(number)
-	# O meio do número fica sobre o Ecobeast, logo acima da barra de HP.
-	var text_size := number.get_combined_minimum_size()
+	_rise(number, token)
+
+
+## O sinal de stat ou de estado sobe sobre o Ecobeast, como o número do dano
+## (board-battle/12): o texto e, ao lado, as setas.
+func float_sign(key: String, battle_sign: BattleSign) -> void:
+	if not _tokens.has(key) or battle_sign == null:
+		return
+	var line := HBoxContainer.new()
+	line.add_theme_constant_override(&"separation", 4)
+	line.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var label := Label.new()
+	label.text = battle_sign.text
+	label.add_theme_font_size_override(&"font_size", SIGN_FONT_SIZE)
+	label.add_theme_color_override(&"font_color", battle_sign.color)
+	label.add_theme_color_override(&"font_outline_color", UiPalette.BACKGROUND_DEEP)
+	label.add_theme_constant_override(&"outline_size", SIGN_OUTLINE)
+	line.add_child(label)
+	if battle_sign.arrows != 0:
+		line.add_child(Arrows.new(battle_sign.arrows, battle_sign.color))
+	_rise(line, _tokens[key])
+
+
+## Põe o texto com o meio sobre o Ecobeast, logo acima da barra de HP, e o faz subir
+## ondulando e sumir aos poucos.
+func _rise(node: Control, token: Token) -> void:
+	add_child(node)
+	var text_size := node.get_combined_minimum_size()
 	var start := token.position + Vector2(-text_size.x / 2.0, token.bar.position.y - text_size.y)
-	number.position = start
+	node.position = start
 	var rise := create_tween()
 	rise.tween_method(func(t: float) -> void:
-		number.position = start + Vector2(sin(t * TAU * NUMBER_SWAYS) * NUMBER_SWAY, -t * NUMBER_RISE)
-		number.modulate.a = 1.0 - clampf((t - NUMBER_FADE_FROM) / (1.0 - NUMBER_FADE_FROM), 0.0, 1.0), 0.0, 1.0, NUMBER_SECONDS)
-	rise.finished.connect(number.queue_free)
+		node.position = start + Vector2(sin(t * TAU * NUMBER_SWAYS) * NUMBER_SWAY, -t * NUMBER_RISE)
+		node.modulate.a = 1.0 - clampf((t - NUMBER_FADE_FROM) / (1.0 - NUMBER_FADE_FROM), 0.0, 1.0), 0.0, 1.0, NUMBER_SECONDS)
+	rise.finished.connect(node.queue_free)
 
 
 ## Quem ataca treme de lado e volta ao lugar. Pode ser esperado.
@@ -421,8 +502,9 @@ func hit(key: String) -> void:
 
 ## Toca o efeito de uma Técnica sobre o meio do corpo do alvo: uma tira de quadros
 ## quadrados, da esquerda para a direita. `mirrored`: o atacante está à direita.
-## Pode ser esperado; o efeito some no fim.
-func play_effect(key: String, texture: Texture2D, mirrored: bool) -> void:
+## `flipped`: virado na vertical, para o impacto de um projétil que vem de cima
+## (board-battle/15). Pode ser esperado; o efeito some no fim.
+func play_effect(key: String, texture: Texture2D, mirrored: bool, flipped: bool = false) -> void:
 	if not _tokens.has(key) or texture == null:
 		return
 	var token: Token = _tokens[key]
@@ -431,13 +513,73 @@ func play_effect(key: String, texture: Texture2D, mirrored: bool) -> void:
 	effect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	effect.hframes = maxi(1, roundi(texture.get_width() / float(texture.get_height())))
 	effect.flip_h = mirrored
+	effect.flip_v = flipped
 	effect.scale = Vector2.ONE * EFFECT_SCALE
-	effect.position = token.position + Vector2(0.0, FEET_Y - token.height / 2.0)
+	effect.position = _body_middle(token)
 	add_child(effect)
 	for frame: int in effect.hframes:
 		effect.frame = frame
 		await get_tree().create_timer(EFFECT_FRAME_SECONDS).timeout
 	effect.queue_free()
+
+
+## A folha que voa (board-battle/15): sai do meio do corpo de quem está em
+## `from_key` e vai em linha reta até o último hexágono de `cells`, a
+## `PROJECTILE_SECONDS_PER_CELL` por hexágono, girada na direção do voo, com os quadros
+## em loop. Termina no meio do corpo de quem estiver lá ou, com o hexágono vazio, no
+## meio dele, na altura do corpo de quem ataca. Pode ser esperado; some no fim.
+func fly_projectile(from_key: String, cells: Array[Vector2i], texture: Texture2D) -> void:
+	if not _tokens.has(from_key) or cells.is_empty() or texture == null:
+		return
+	var shooter: Token = _tokens[from_key]
+	var start := _body_middle(shooter)
+	var end := cell_center(cells[-1]) + Vector2(0.0, FEET_Y - shooter.height / 2.0)
+	for token: Token in _tokens.values():
+		if token.cell == cells[-1]:
+			end = _body_middle(token)
+	var spark := Sprite2D.new()
+	spark.texture = texture
+	spark.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	spark.hframes = maxi(1, roundi(texture.get_width() / float(texture.get_height())))
+	# A ponta da folha fica no ponto que voa.
+	spark.offset = Vector2(-texture.get_height() * PROJECTILE_TIP, 0.0)
+	spark.scale = Vector2.ONE * EFFECT_SCALE
+	spark.rotation = (end - start).angle()
+	spark.position = start
+	add_child(spark)
+	var seconds := PROJECTILE_SECONDS_PER_CELL * cells.size()
+	create_tween().tween_property(spark, ^"position", end, seconds)
+	# Os quadros contam o tempo com um timer, como o efeito: o voo nunca fica preso.
+	var elapsed := 0.0
+	var frame := 0
+	while elapsed < seconds:
+		spark.frame = frame % spark.hframes
+		frame += 1
+		var step := minf(EFFECT_FRAME_SECONDS, seconds - elapsed)
+		await get_tree().create_timer(step).timeout
+		elapsed += step
+	spark.queue_free()
+
+
+## O meio do corpo de um Ecobeast, onde os efeitos e o projétil acertam.
+func _body_middle(token: Token) -> Vector2:
+	return token.position + Vector2(0.0, FEET_Y - token.height / 2.0)
+
+
+## Os ícones dos estados da vaga (board-battle/16), em cima da barra de vida e
+## centrados nela; vazio tira todos.
+func set_statuses(key: String, slugs: Array[String]) -> void:
+	if not _tokens.has(key):
+		return
+	var token: Token = _tokens[key]
+	if token.statuses == null:
+		token.statuses = StatusIcons.new()
+		token.add_child(token.statuses)
+	token.statuses.position = Vector2(
+		token.bar.position.x + token.bar.size.x / 2.0,
+		token.bar.position.y - StatusIcons.RADIUS - StatusIcons.OUTLINE - STATUS_GAP,
+	)
+	token.statuses.slugs = slugs.duplicate()
 
 
 ## O centro do hexágono de quem está na vaga, ou null sem ninguém.
@@ -467,7 +609,7 @@ func vanish(key: String, coin: bool) -> void:
 	var token: Token = _tokens[key]
 	create_tween().tween_property(token, ^"modulate:a", 0.0, VANISH_SECONDS)
 	await get_tree().create_timer(VANISH_SECONDS).timeout
-	var middle := token.position + Vector2(0.0, FEET_Y - token.height / 2.0)
+	var middle := _body_middle(token)
 	remove(key)
 	if coin:
 		_pop_coin(middle)
@@ -613,9 +755,13 @@ func _breathe(token: Token) -> void:
 
 ## Parado, cada um olha para o adversário. Com as folhas da luta, os do jogador, que
 ## estão embaixo, ficam de costas, e os selvagens, em cima, de frente. Sem elas, os do
-## jogador olham para a direita e os selvagens para a esquerda.
+## jogador olham para a direita e os selvagens para a esquerda. Quem tem o idle de lado
+## (board-battle/17) e já andou fica olhando para o último passo, com o mesmo espelho.
 func _rest(token: Token) -> void:
 	if token.sheets != null:
+		if token.sheets.has_row(BattleSheets.IDLE, token.facing):
+			token.play(BattleSheets.IDLE, token.facing)
+			return
 		token.sprite.flip_h = false
 		token.play(BattleSheets.IDLE, _rest_row(token.side))
 		return
@@ -634,8 +780,11 @@ func _face(token: Token, direction: Vector2) -> void:
 	if token.sheets == null:
 		return
 	var row := BattleSheets.WALK_SIDE
+	token.facing = BattleSheets.IDLE_SIDE
 	if direction.y > STEP_Y / 2.0:
 		row = BattleSheets.WALK_DOWN
+		token.facing = BattleSheets.IDLE_DOWN
 	elif direction.y < -STEP_Y / 2.0:
 		row = BattleSheets.WALK_UP
+		token.facing = BattleSheets.IDLE_UP
 	token.play(BattleSheets.WALK, row)

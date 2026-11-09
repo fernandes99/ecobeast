@@ -99,12 +99,14 @@ func _build_skills() -> void:
 	var skills := GameData.get_rows("skills")
 	var total := skills.size()
 	var with_file: Array[int] = [0, 0, 0]
+	var with_projectile := 0
 	var incomplete: Array[Dictionary] = []
 	var first_level := _first_levels()
 	for skill: Dictionary in skills:
 		var files := ContentFiles.skill_files(skill["slug"])
 		for i: int in files.size():
 			with_file[i] += int(files[i].complete())
+		with_projectile += int(ContentFiles.skill_optional_files(skill["slug"])[0].exists())
 		var missing := ContentFiles.missing_labels(files)
 		if not missing.is_empty():
 			incomplete.append({"skill": skill, "missing": missing, "level": first_level.get(skill["id"], NO_LEVEL)})
@@ -116,6 +118,8 @@ func _build_skills() -> void:
 	_count_card(cards, "Com ícone", with_file[0], total)
 	_count_card(cards, "Com efeito", with_file[1], total)
 	_count_card(cards, "Com som", with_file[2], total)
+	# Opcional (content-viewer/05): a cor do texto, porque não ter não é faltar.
+	_card(cards, "Com projétil (opcional)", "%d de %d" % [with_projectile, total], UiPalette.TEXT)
 
 	if incomplete.is_empty():
 		return

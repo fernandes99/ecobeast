@@ -55,7 +55,7 @@ Depois da [01](01-dark-theme.md), o Hub já está na paleta escura, mas ainda no
 | id          | Título             | Subtítulo                                   | Cor da arte | Cor do corpo |
 | ----------- | ------------------ | ------------------------------------------- | ----------- | ------------ |
 | `explore`   | Explorar zona      | Conheça novas áreas e capture criaturas.    | `#3E9B4F`   | `#0B4436`    |
-| `challenge` | Desafiar Domador   | Enfrente outros Domadores.                  | `#B9473F`   | `#3A2433`    |
+| `challenge` | Desafiar   | Enfrente outros Domadores.                  | `#B9473F`   | `#3A2433`    |
 | `arenas`    | Arenas             | Derrote os 8 Mestres e conquiste a Liga.    | `#4A52C8`   | `#1D335F`    |
 | `shop`      | Loja               | Compre itens, Esferas de Vínculo e mais.    | `#D08A22`   | `#4D3C28`    |
 | `heal`      | Refúgio            | Cure sua equipe.                            | `#159080`   | `#044247`    |

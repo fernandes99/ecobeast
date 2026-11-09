@@ -3,7 +3,8 @@ extends VBoxContainer
 ## Um arquivo de conteúdo no visualizador (content-viewer/architecture.md, "O preview
 ## de um arquivo"): o quadro com fundo xadrez e o arquivo dentro, parado ou animado
 ## como no jogo, e o nome embaixo. O que falta aparece tracejado em vermelho, com o
-## caminho onde o jogo o procura. Um som vira o botão "▶ Ouvir".
+## caminho onde o jogo o procura; o opcional que falta, tracejado em cinza
+## (content-viewer/05). Um som vira o botão "▶ Ouvir".
 
 const BOX_SIZE := Vector2(104, 104)
 const CHECKER := 8.0
@@ -73,7 +74,7 @@ static func create_sheet(file: ContentFiles.Entry) -> Control:
 func _build(box_size: Vector2) -> void:
 	add_theme_constant_override(&"separation", 2)
 	var found := entry.exists()
-	if not direction.is_empty() and direction["row"] == ContentFiles.NO_ROW:
+	if found and not direction.is_empty() and not entry.has_direction(direction):
 		# A folha existe, mas ainda não tem esta direção.
 		found = false
 	if entry.kind == ContentFiles.Kind.SOUND and found:
@@ -82,11 +83,12 @@ func _build(box_size: Vector2) -> void:
 		var frame := Frame.new()
 		frame.custom_minimum_size = box_size
 		frame.missing = not found
+		frame.optional = entry.optional
 		if found:
 			_setup_frame(frame)
 		add_child(frame)
 	var caption := Label.new()
-	caption.text = entry.label if found else "%s · falta" % entry.label
+	caption.text = entry.label if found else "%s · %s" % [entry.label, "opcional" if entry.optional else "falta"]
 	if not region.is_empty() and found:
 		caption.text = region["label"]
 	if not direction.is_empty():
@@ -94,7 +96,7 @@ func _build(box_size: Vector2) -> void:
 	caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	caption.add_theme_font_size_override(&"font_size", LABEL_SIZE)
 	if not found:
-		caption.add_theme_color_override(&"font_color", MISSING_BORDER)
+		caption.add_theme_color_override(&"font_color", UiPalette.TEXT_SECONDARY if entry.optional else MISSING_BORDER)
 	add_child(caption)
 	if direction.get("mirrored", false):
 		var mirror := ContentViewer.text("(espelho)", PATH_SIZE, UiPalette.TEXT_SECONDARY)
@@ -164,6 +166,8 @@ class Frame:
 
 	var texture: Texture2D = null
 	var missing := false
+	## O que falta é opcional: o tracejado sai cinza, sem o fundo vermelho.
+	var optional := false
 	## Desenha a linha virada para o outro lado, como o flip_h do jogo.
 	var mirrored := false
 	var _cell := Vector2i.ONE
@@ -197,7 +201,8 @@ class Frame:
 	func _draw() -> void:
 		var rect := Rect2(Vector2.ZERO, size)
 		if missing:
-			draw_rect(rect, FilePreview.MISSING_FILL)
+			if not optional:
+				draw_rect(rect, FilePreview.MISSING_FILL)
 			_dashed_border(rect)
 			return
 		_checker(rect)
@@ -234,4 +239,5 @@ class Frame:
 	func _dashed_border(rect: Rect2) -> void:
 		var corners: Array[Vector2] = [rect.position, Vector2(rect.end.x, rect.position.y), rect.end, Vector2(rect.position.x, rect.end.y)]
 		for i: int in corners.size():
-			draw_dashed_line(corners[i], corners[(i + 1) % corners.size()], FilePreview.MISSING_BORDER, 2.0, FilePreview.DASH)
+			var color := UiPalette.TEXT_SECONDARY if optional else FilePreview.MISSING_BORDER
+			draw_dashed_line(corners[i], corners[(i + 1) % corners.size()], color, 2.0, FilePreview.DASH)

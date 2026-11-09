@@ -186,12 +186,16 @@ func _level_of(row: Dictionary) -> int:
 	return int(level) if level != null else NO_LEVEL
 
 
-## "ícone ✓ · efeito ✗ · som ✗", na cor de quanto está pronto.
+## "ícone ✓ · efeito ✗ · som ✗", na cor de quanto está pronto. Um opcional, como o
+## projétil, só aparece quando existe (content-viewer/05).
 func _skill_files_label(slug: String) -> Label:
 	var files := ContentFiles.skill_files(slug)
 	var parts: Array[String] = []
 	for entry: ContentFiles.Entry in files:
 		parts.append("%s %s" % [entry.label, "✓" if entry.exists() else "✗"])
+	for entry: ContentFiles.Entry in ContentFiles.skill_optional_files(slug):
+		if entry.exists():
+			parts.append("%s ✓" % entry.label)
 	var done := ContentFiles.count_complete(files)
 	return ContentViewer.text(" · ".join(parts), ContentViewer.SMALL_SIZE, ContentViewer.status_color(done, files.size()))
 
