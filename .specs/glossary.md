@@ -8,7 +8,7 @@ O jogador nunca vê a coluna "Referência": ela só existe para quem implementa 
 | ------------------- | -------------------------------- | -------------------------------------- | ------------------------------------------------- |
 | Pokémon             | Ecobeast                         | `CreatureSpecies` / `CreatureInstance` | `species` / `creature_instances`                  |
 | Treinador           | Domador (Tamer)                  | `Player`\*                             | `players`                                         |
-| Treinador NPC       | Domador (NPC)                    | `NpcTamer`\*                           | `npc_tamers`                                      |
+| Treinador NPC       | Domador (NPC)                    | `NpcTamer`\*                           | `npc_tamer_names`, `npc_tamer_greetings`; `npc_tamers` na equipe fixa |
 | Pokébola            | Esfera de Vínculo (Bond Sphere)  | `CaptureItem`                          | `items` (categoria captura)                       |
 | Poção               | Tônico                           | `Item`\*                               | `items` (categoria cura)                          |
 | Mochila             | Mochila                          | `InventorySlot`\*                      | `inventory_items`                                 |

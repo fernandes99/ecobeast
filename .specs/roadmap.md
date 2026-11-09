@@ -20,7 +20,8 @@ O que vem depois do MVP de estrutura (entrada, escolha do inicial e Hub). Cada l
 | 7   | [`progression`](progression/) | XP dividido entre quem lutou, subir de nível, aprender/esquecer Técnica e Evolução por nível, que pode ser cancelada (TELAS.md #7), e moedas contra o selvagem | battle-core, team-and-storage | concluída |
 | 7b  | [`battle-slots`](battle-slots/) | Lutas de até 3 contra 3 no motor e na tela (por enquanto, toda luta de verdade é 1 contra 1), e a cena da batalha dos mockups do dono. Substituída pela luta no tabuleiro; só o motor foi feito | progression | substituída |
 | 7c  | [`board-battle`](board-battle/) | A luta num tabuleiro de hexágonos: fila por Velocidade, andar e agir na vez, Técnicas com alcance, forma e marca no chão; substitui a luta de Explorar zona | progression, battle-slots | concluída |
-| 8   | `npc-tamers`        | Domadores NPC com equipe fixa e recompensa em moedas; tabela `npc_tamers`                                 | battle-screen              | planejada |
+| 8   | [`npc-tamers`](npc-tamers/) | Domadores NPC sorteados no mapa de Explorar zona, com fala, luta obrigatória de 1×1, 2×2 ou 3×3 e recompensa maior, e o Desafiar do Hub contra um Domador sorteado | board-battle, biome-encounters, progression | planejada |
+| 8b  | `npc-fixed-teams`   | Domadores NPC com nome e equipe fixa, montados à mão na tabela `npc_tamers`                               | npc-tamers                 | planejada |
 | 9   | [`team-and-storage`](team-and-storage/) | Equipe com 6 vagas reorganizáveis, Santuário com busca e filtro (TELAS.md #9 e #10) e troca de Ecobeast durante a luta | capture                    | concluída |
 | 10  | [`creature-details`](creature-details/) | Tela de detalhes da criatura (TELAS.md #8); vem antes do `battle-core`, por decisão do dono | auth-google                | concluída |
 | 11  | [`inventory-shop`](inventory-shop/) | Mochila e Loja (TELAS.md #12 e #13); tabelas `items`, `item_categories`, `inventory_items`; usar itens no mapa e na luta | backend-api, battle-screen, wild-battle | concluída |
@@ -60,7 +61,7 @@ Evoluções por item, vínculo, horário, zona e troca; criação (breeding) e h
 - **Fuga:** a chance fixa de 20% de falhar é provisória. Rever, talvez com um cálculo a partir do inimigo ([battle-core](battle-core/README.md)).
 - **Abandonar batalha:** fechar o app no meio da luta escapa de uma derrota e devolve a Esfera de uma captura que falhou. Aceito por enquanto; rever quando a batalha for guardada no banco.
 - **Preço do Refúgio:** a cura é de graça por enquanto, e o dono quer cobrar moedas depois. Falta definir o valor e o que acontece com quem não tem moedas, para não prender o jogador depois de uma derrota.
-- **Renda de moedas:** o selvagem paga pouco ao ser derrotado e tira um pouco ao vencer ([progression/05](progression/05-wild-coins.md)), e quem vai pagar bem são os Domadores NPC. Faltam os valores deles e os outros cenários de ganho.
+- **Renda de moedas:** o selvagem paga pouco ao ser derrotado e tira um pouco ao vencer ([progression/05](progression/05-wild-coins.md)), e os Domadores NPC pagam três vezes mais ([npc-tamers](npc-tamers/architecture.md#luta-contra-domador)). Faltam os outros cenários de ganho.
 - **Nomes dos próximos itens:** os itens do GDD que ainda não entraram no catálogo passam pela mesma revisão de nomes da [inventory-shop](inventory-shop/) antes de serem criados.
 - **Nível do Domador:** o Hub mostra o nível, mas o GDD não diz como ele sobe. No MVP fica fixo em 1.
 - **Curva Erratic:** citada no GDD sem fórmula. Fora do catálogo até ser definida.

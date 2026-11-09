@@ -38,6 +38,7 @@ O Ecobeast é um jogo mobile (Android/iOS, retrato): o cliente em **Godot 4.7 co
 | [content-viewer](content-viewer/) | Janela de desenvolvimento (F1) com todo o conteúdo do jogo e os arquivos que faltam |
 | [hidden-traits](hidden-traits/) | 1 chance em 20 de um Ecobeast nascer com o Traço oculto da espécie |
 | [creature-sounds](creature-sounds/) | O som característico de cada Ecobeast (`call.wav`), por enquanto só no visualizador |
+| [npc-tamers](npc-tamers/) | Domadores NPC sorteados no mapa e no Desafiar do Hub, com fala e luta obrigatória |
 
 As próximas iniciativas estão no [roadmap.md](roadmap.md).
 
