@@ -7,7 +7,8 @@ escreve em `client/assets/creatures/<slug>/battle/`:
 
 - `idle.png`: as linhas south (de frente) e north (de costas) e, quando o zip tem o
   idle de lado (board-battle/17), mais south-east, east e north-east;
-- `walk.png`: as linhas south-east, east e north-east.
+- `walk.png`: as linhas south-east, east e north-east e, quando o zip tem o walk de
+  frente e de costas (board-battle/17), mais south e north.
 
 Células quadradas, do maior canvas do PixelLab; uma linha pode ter menos quadros que
 outra, e o resto dela fica vazio. O jogo tira da própria imagem o tamanho da célula, os
@@ -33,8 +34,12 @@ SHEETS = {
     "idle": ("south", "north"),
     "walk": ("south-east", "east", "north-east"),
 }
-# As vistas de lado do idle (board-battle/17): entram as três juntas, ou nenhuma.
-IDLE_SIDES = ("south-east", "east", "north-east")
+# As vistas a mais de cada folha (board-battle/17), depois das de sempre: entram todas
+# juntas, ou nenhuma. O idle de lado e o walk de frente e de costas.
+EXTRA = {
+    "idle": ("south-east", "east", "north-east"),
+    "walk": ("south", "north"),
+}
 ROTATION = "rotation"
 
 
@@ -127,18 +132,19 @@ def build(slug):
     animations, rotations = load_sources(archive)
 
     directions_of = dict(SHEETS)
-    present = []
-    for direction in IDLE_SIDES:
-        try:
-            pick("idle", direction, animations, rotations, overrides)
-            present.append(direction)
-        except Problem:
-            pass
-    if len(present) == len(IDLE_SIDES):
-        directions_of["idle"] = SHEETS["idle"] + IDLE_SIDES
-    elif present:
-        missing = [d for d in IDLE_SIDES if d not in present]
-        raise Problem("o idle de lado precisa de %s; falta %s" % (", ".join(IDLE_SIDES), ", ".join(missing)))
+    for sheet, extra in EXTRA.items():
+        present = []
+        for direction in extra:
+            try:
+                pick(sheet, direction, animations, rotations, overrides)
+                present.append(direction)
+            except Problem:
+                pass
+        if len(present) == len(extra):
+            directions_of[sheet] = SHEETS[sheet] + extra
+        elif present:
+            missing = [d for d in extra if d not in present]
+            raise Problem("o %s precisa de %s juntas; falta %s" % (sheet, ", ".join(extra), ", ".join(missing)))
 
     chosen = {}
     for sheet, directions in directions_of.items():

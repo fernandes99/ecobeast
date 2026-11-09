@@ -68,8 +68,9 @@ const EXPLORE_DIRECTIONS: Array[Dictionary] = [
 const NO_ROW := -1
 ## As folhas da luta vão ter as mesmas 8 direções do explorar (pedido do dono em
 ## 2026-11-06). A parada tem frente e costas e, no idle de 5 linhas (board-battle/17),
-## os 3 lados; a andando, só os 3 passos de lado. As que nenhuma folha tem ficam com
-## NO_ROW; as de lado só valem para a espécie cuja folha tem a linha (`has_direction`).
+## os 3 lados; a andando tem os 3 passos de lado e, no walk de 5 linhas, frente e
+## costas. As que nenhuma folha tem ficam com NO_ROW; as a mais só valem para a espécie
+## cuja folha tem a linha (`has_direction`).
 const BATTLE_IDLE_DIRECTIONS: Array[Dictionary] = [
 	{"label": "frente", "row": BattleSheets.IDLE_SOUTH, "mirrored": false},
 	{"label": "desce à direita", "row": BattleSheets.IDLE_DOWN, "mirrored": false},
@@ -81,11 +82,11 @@ const BATTLE_IDLE_DIRECTIONS: Array[Dictionary] = [
 	{"label": "desce à esquerda", "row": BattleSheets.IDLE_DOWN, "mirrored": true},
 ]
 const BATTLE_WALK_DIRECTIONS: Array[Dictionary] = [
-	{"label": "frente", "row": NO_ROW, "mirrored": false},
+	{"label": "frente", "row": BattleSheets.WALK_SOUTH, "mirrored": false},
 	{"label": "desce à direita", "row": BattleSheets.WALK_DOWN, "mirrored": false},
 	{"label": "direita", "row": BattleSheets.WALK_SIDE, "mirrored": false},
 	{"label": "sobe à direita", "row": BattleSheets.WALK_UP, "mirrored": false},
-	{"label": "costas", "row": NO_ROW, "mirrored": false},
+	{"label": "costas", "row": BattleSheets.WALK_NORTH, "mirrored": false},
 	{"label": "sobe à esquerda", "row": BattleSheets.WALK_UP, "mirrored": true},
 	{"label": "esquerda", "row": BattleSheets.WALK_SIDE, "mirrored": true},
 	{"label": "desce à esquerda", "row": BattleSheets.WALK_DOWN, "mirrored": true},

@@ -5,16 +5,17 @@ extends RefCounted
 ## creature-sprites. Uma linha por vista e uma coluna por quadro, todas olhando para a
 ## direita: a esquerda é a mesma arte espelhada.
 ##
-## Tudo sai da própria imagem, sem arquivo de dados ao lado: a célula é quadrada, da
-## altura do walk dividida pelas 3 linhas dele; o idle tem 2 ou 5 linhas
-## (board-battle/17), conforme a altura; uma linha tem os quadros até a primeira
+## Tudo sai da própria imagem, sem arquivo de dados ao lado: a célula é quadrada e a
+## mesma nas duas folhas; o idle tem 2 ou 5 linhas, e o walk 3 ou 5 (board-battle/17),
+## o que a proporção entre as alturas diz; uma linha tem os quadros até a primeira
 ## célula vazia; e os pés ficam na última linha de pixels de todas as células.
 
 const PATH := "res://assets/creatures/%s/battle/%s.png"
 const IDLE := "idle"
 const WALK := "walk"
 ## As linhas de cada folha, de cima para baixo. As 3 últimas do idle (de lado, na
-## ordem do walk) só existem no idle de 5 linhas (board-battle/17).
+## ordem do walk) só existem no idle de 5 linhas, e as 2 últimas do walk (de frente e
+## de costas, que o tabuleiro não usa) só no walk de 5 linhas (board-battle/17).
 const IDLE_SOUTH := 0
 const IDLE_NORTH := 1
 const IDLE_DOWN := 2
@@ -23,9 +24,11 @@ const IDLE_UP := 4
 const WALK_DOWN := 0
 const WALK_SIDE := 1
 const WALK_UP := 2
-const WALK_ROWS := 3
-## As alturas que o idle pode ter, em linhas: só de frente e de costas, ou também de lado.
+const WALK_SOUTH := 3
+const WALK_NORTH := 4
+## As alturas que cada folha pode ter, em linhas: as vistas de sempre, ou com as a mais.
 const IDLE_ROWS: PackedInt32Array = [2, 5]
+const WALK_ROWS: PackedInt32Array = [3, 5]
 ## Segundos por quadro. O idle usa o tempo dos GIFs do PixelLab; o walk é mais
 ## rápido, para um ciclo caber num passo de hexágono. A revisar.
 const FRAME_SECONDS: Dictionary[String, float] = {IDLE: 0.2, WALK: 0.15}
@@ -62,19 +65,18 @@ static func _read(slug: String) -> BattleSheets:
 	var sheets := BattleSheets.new()
 	var bottom := 0
 	var highest := INF
-	# O walk primeiro: as 3 linhas dele dão a célula, e a célula dá as linhas do idle.
-	for sheet: String in [WALK, IDLE]:
+	var images: Dictionary[String, Image] = {}
+	for sheet: String in [IDLE, WALK]:
 		var texture: Texture2D = load(PATH % [slug, sheet])
-		var image := texture.get_image()
-		if sheet == WALK:
-			sheets.cell = image.get_height() / WALK_ROWS
-		var size := sheets.cell
-		var count_rows := image.get_height() / size
-		if image.get_height() % size != 0 or (sheet == WALK and count_rows != WALK_ROWS) 				or (sheet == IDLE and not count_rows in IDLE_ROWS):
-			push_error("A folha %s de %s não tem as linhas que a luta espera." % [sheet, slug])
-			return null
-		sheets.rows[sheet] = count_rows
 		sheets.textures[sheet] = texture
+		images[sheet] = texture.get_image()
+	if not _find_rows(sheets, images[IDLE].get_height(), images[WALK].get_height()):
+		push_error("As folhas de %s não têm as linhas que a luta espera." % slug)
+		return null
+	var size := sheets.cell
+	for sheet: String in [IDLE, WALK]:
+		var image := images[sheet]
+		var count_rows := sheets.rows[sheet]
 		var counts := PackedInt32Array()
 		for row: int in count_rows:
 			var count := 0
@@ -95,6 +97,23 @@ static func _read(slug: String) -> BattleSheets:
 	sheets.feet = bottom
 	sheets.top = int(highest)
 	return sheets
+
+
+## Acha quantas linhas cada folha tem e a célula, que é a mesma nas duas. Cada
+## combinação de linhas dá uma proporção diferente entre as alturas, então no máximo
+## uma serve.
+static func _find_rows(sheets: BattleSheets, idle_height: int, walk_height: int) -> bool:
+	for idle_rows: int in IDLE_ROWS:
+		for walk_rows: int in WALK_ROWS:
+			# Sem resto e com a mesma célula: idle / idle_rows == walk / walk_rows.
+			if idle_height % idle_rows != 0 or idle_height * walk_rows != walk_height * idle_rows:
+				continue
+			@warning_ignore("integer_division")
+			sheets.cell = idle_height / idle_rows
+			sheets.rows[IDLE] = idle_rows
+			sheets.rows[WALK] = walk_rows
+			return true
+	return false
 
 
 func columns(sheet: String) -> int:

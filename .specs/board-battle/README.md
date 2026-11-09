@@ -71,7 +71,7 @@ A luta nova substitui a de hoje em Explorar zona. A luta atual deixa de ser usad
 | 14 | [14-quick-dash-effect](14-quick-dash-effect.md) | O efeito e o som da Investida Veloz (o risco marrom da 333 do kit e um zunido com baque gerado) | concluída (falta o dono ver e ouvir no editor) |
 | 15 | [15-projectile-effects](15-projectile-effects.md) | A Técnica que voa: a Faísca Rápida, com a faísca vermelha da 579 do kit cruzando o tabuleiro, o estouro da 397 no alvo e um chiado gerado | concluída (falta o dono ver e ouvir no editor) |
 | 16 | [16-status-icons](16-status-icons.md) | O ícone de cada estado em cima da vida do Ecobeast, desenhado pelo Godot, nas cores do dono (queimado vermelho, envenenado verde, confuso rosa) | concluída (falta o dono ver no editor) |
-| 17 | [17-idle-facing](17-idle-facing.md) | O idle do Ruvo nas vistas de lado, do PixelLab: parado, o Ecobeast olha para onde andou | concluída (falta o dono ver no editor) |
+| 17 | [17-idle-facing](17-idle-facing.md) | O idle do Ruvo nas vistas de lado e o walk de frente e de costas, do PixelLab: parado, o Ecobeast olha para onde andou | concluída (falta o dono ver no editor) |
 
 O desenho compartilhado está no [architecture.md](architecture.md).
 

@@ -44,7 +44,7 @@ O mapa de Explorar continua com as folhas desenhadas à mão pela skill `creatur
 
 - **RF-04:** Uma linha por vista e uma coluna por quadro, em células quadradas.
   - O `idle.png` tem 2 linhas: 0, de frente (south); 1, de costas (north). Na [17](17-idle-facing.md), ele pode ter mais 3, de lado.
-  - O `walk.png` tem 3 linhas: 0, diagonal descendo (south-east); 1, de lado (east); 2, diagonal subindo (north-east).
+  - O `walk.png` tem 3 linhas: 0, diagonal descendo (south-east); 1, de lado (east); 2, diagonal subindo (north-east). Na [17](17-idle-facing.md), ele pode ter mais 2, de frente e de costas.
   - Todas olham para a direita. A esquerda é a mesma arte espelhada.
 - **RF-05:** O número de quadros pode mudar de linha para linha. O resto de uma linha mais curta fica vazio, e nenhum quadro pode ser vazio. Cada quadro dura 0,2 s no idle (o tempo dos GIFs do PixelLab) e 0,15 s no walk. O zip não traz o tempo, então esses valores são _a revisar_.
 - **RF-06:** O jogo tira da própria imagem tudo o que precisa saber. A célula é a altura da folha dividida pelas linhas. Cada linha tem os quadros até a primeira célula vazia. Os pés ficam na última linha de pixels de todas as células. Não há arquivo de dados ao lado das folhas: não temos configuração de export no repositório que garanta que um `.json` solto vá para o Android.
