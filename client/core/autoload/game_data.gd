@@ -122,6 +122,14 @@ func get_stat_name(slug: String) -> String:
 	return catalog.get_stat_name(slug)
 
 
+func get_npc_tamer_name(id: int) -> String:
+	return catalog.get_npc_tamer_name(id)
+
+
+func get_npc_tamer_greeting(id: int) -> String:
+	return catalog.get_npc_tamer_greeting(id)
+
+
 ## Todas as linhas de uma tabela, copiadas (content-viewer/01).
 func get_rows(table_name: String) -> Array[Dictionary]:
 	return catalog.get_rows(table_name)

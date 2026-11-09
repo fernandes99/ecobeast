@@ -5,9 +5,9 @@ import { CATALOG_TABLES, SEED_DATA_DIR } from './catalog-tables.js';
 describe('CATALOG_TABLES', () => {
   const names = CATALOG_TABLES.map((table) => table.name);
 
-  it('tem as 29 tabelas, sem repetição', () => {
-    expect(names).toHaveLength(29);
-    expect(new Set(names).size).toBe(29);
+  it('tem as 31 tabelas, sem repetição', () => {
+    expect(names).toHaveLength(31);
+    expect(new Set(names).size).toBe(31);
   });
 
   it('casa com os arquivos .json da pasta de dados do seed', () => {
@@ -200,5 +200,32 @@ describe('CATALOG_TABLES e o cliente do Prisma', () => {
         ]?.findMany !== 'function',
     ).map((table) => `${table.name} → ${table.model}`);
     expect(missing).toEqual([]);
+  });
+});
+
+describe('carga inicial dos nomes e falas dos Domadores (npc-tamers/01)', () => {
+  const read = <T>(name: string) =>
+    JSON.parse(
+      readFileSync(join(SEED_DATA_DIR, `${name}.json`), 'utf8'),
+    ) as T[];
+  const names = read<{ id: number; name: string }>('npc_tamer_names');
+  const greetings = read<{ id: number; text: string }>('npc_tamer_greetings');
+
+  it('tem 12 nomes, de 1 a 20 caracteres, começando por Lia', () => {
+    expect(names).toHaveLength(12);
+    expect(names[0]).toEqual({ id: 1, name: 'Lia' });
+    expect(
+      names.every(({ name }) => name.length >= 1 && name.length <= 20),
+    ).toBe(true);
+  });
+
+  it('tem as 3 falas, de 1 a 120 caracteres, sem o nome na frente', () => {
+    expect(greetings.map(({ id }) => id)).toEqual([1, 2, 3]);
+    expect(greetings[0]!.text).toBe(
+      'O que está fazendo aqui? Vamos nos enfrentar!',
+    );
+    expect(
+      greetings.every(({ text }) => text.length >= 1 && text.length <= 120),
+    ).toBe(true);
   });
 });

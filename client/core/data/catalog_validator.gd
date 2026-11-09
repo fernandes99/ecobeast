@@ -40,6 +40,7 @@ func _run(tables: Dictionary) -> Array[String]:
 	_check_skill_effects()
 	_check_evolutions()
 	_check_starter_options()
+	_check_npc_tamer_texts()
 	return _errors
 
 
@@ -401,6 +402,14 @@ func _check_starter_options() -> void:
 	var rows: Array[Dictionary] = _rows["starter_options"]
 	if rows.is_empty():
 		_table_error("starter_options", "deve ter pelo menos 1 linha")
+
+
+## Um Domador NPC sorteado precisa de um nome e de uma fala (npc-tamers/01).
+func _check_npc_tamer_texts() -> void:
+	for table_name: String in ["npc_tamer_names", "npc_tamer_greetings"]:
+		var rows: Array[Dictionary] = _rows[table_name]
+		if rows.is_empty():
+			_table_error(table_name, "deve ter pelo menos 1 linha")
 
 
 func _for_each_species(callback: Callable) -> void:

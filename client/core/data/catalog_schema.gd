@@ -146,6 +146,15 @@ const TABLES := {
 		"key": ["id"],
 		"columns": {"id": ID, "slug": SLUG, "name": TEXT},
 	},
+	# Os nomes e as falas dos Domadores NPC sorteados (npc-tamers/01).
+	"npc_tamer_names": {
+		"key": ["id"],
+		"columns": {"id": ID, "name": TEXT},
+	},
+	"npc_tamer_greetings": {
+		"key": ["id"],
+		"columns": {"id": ID, "text": TEXT},
+	},
 	# --- Conteúdo -------------------------------------------------------------
 	"species": {
 		"key": ["id"],

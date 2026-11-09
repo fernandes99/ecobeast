@@ -31,7 +31,7 @@ Duas tabelas novas no schema `ecobeasts`, editáveis pelo painel ([01](01-tamer-
 | `npc_tamer_names` | `id`, `name` | Os nomes que um Domador sorteado pode ter |
 | `npc_tamer_greetings` | `id`, `text` | As falas do desafio, sem o nome na frente |
 
-Elas entram no `GET /v1/catalog`, como as outras, e o jogo monta a linha `"{name}: {text}"`. O nome `npc_tamers` fica reservado para a equipe fixa, numa iniciativa futura.
+Elas entram no `GET /v1/catalog`, como as outras, o `GameData` as lê com `get_npc_tamer_name(id)` e `get_npc_tamer_greeting(id)`, e o jogo monta a linha `"{name}: {text}"`. O nome `npc_tamers` fica reservado para a equipe fixa, numa iniciativa futura.
 
 ## Domador sorteado
 
@@ -155,7 +155,7 @@ A resposta das lutas é a de hoje, `{battle, events, captured_to, spawn_id, prog
 
 ## Jogo
 
-- **Modelos:** `MapTamer` em `res://domain/models/` (id, `coord`, `name_id`, `greeting_id`), e o `ExplorationMap` ganha `tamers: Dictionary[int, MapTamer]` e `tamer_at(coord)`. O catálogo ganha `NpcTamerName` e `NpcTamerGreeting`, lidos pelo `GameData`. O `BoardBattleView` ganha `tamer_name_id` (0 sem Domador).
+- **Modelos:** `MapTamer` em `res://domain/models/` (id, `coord`, `name_id`, `greeting_id`), e o `ExplorationMap` ganha `tamers: Dictionary[int, MapTamer]` e `tamer_at(coord)`. O `BoardBattleView` ganha `tamer_name_id` (0 sem Domador).
 - **No mapa:** cada Domador perto do jogador é um `NpcTamerSprite`, com as folhas do `TamerSprite`, passeando no hexágono como o `CreatureSprite`. O passeio, que hoje só o `CreatureSprite` tem, sai para uma peça que os dois usam, sem mudar o comportamento dos Ecobeasts.
 - **A fala:** ao chegar num hexágono com Domador, o mapa trava, e um painel no estilo do log da luta (`BattleTheme.LOG`) escreve a fala letra por letra. Tocar nele abre a luta.
 - **A luta:** a tela `board_battle` recebe `tamer_coord` (mapa) ou `challenge: true` (Hub). Contra Domador, ela não mostra Fugir nem Esferas, e o narrador troca "Um Ruvo selvagem apareceu!" por "Lia enviou Ruvo!".

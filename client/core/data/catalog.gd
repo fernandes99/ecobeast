@@ -160,6 +160,16 @@ func get_status_name(slug: String) -> String:
 	return _name_by_slug("status_conditions", slug)
 
 
+## O nome de um Domador NPC (npc-tamers/01); vazio com um id que não existe.
+func get_npc_tamer_name(id: int) -> String:
+	return _text_by_id("npc_tamer_names", id, "name")
+
+
+## A fala do desafio de um Domador NPC, sem o nome; vazia com um id que não existe.
+func get_npc_tamer_greeting(id: int) -> String:
+	return _text_by_id("npc_tamer_greetings", id, "text")
+
+
 ## O nome de um stat; slug desconhecido volta como veio.
 func get_stat_name(slug: String) -> String:
 	return _name_by_slug("stats", slug)
@@ -172,6 +182,11 @@ func get_row(table_name: String, id: int) -> Dictionary:
 		push_error("Catálogo: %s.json não tem id %d" % [table_name, id])
 		return {}
 	return by_id[id]
+
+
+func _text_by_id(table_name: String, id: int, column: String) -> String:
+	var row: Dictionary = _rows_by_id.get(table_name, {}).get(id, {})
+	return row.get(column, "")
 
 
 ## Cópia das linhas de uma tabela, na ordem do `id` quando ela tem a coluna. Para

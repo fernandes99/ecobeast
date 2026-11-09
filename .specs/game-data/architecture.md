@@ -251,13 +251,15 @@ Colunas que o tipo do efeito não usa ficam `null`.
 
 Como elas viram Ecobeasts no mapa está em [biome-encounters/architecture.md](../biome-encounters/architecture.md).
 
+**`npc_tamer_names`** — os nomes que um Domador NPC sorteado pode ter (`id`, `name`, de 1 a 20 caracteres). **`npc_tamer_greetings`** — as falas do desafio (`id`, `text`, de 1 a 120 caracteres), escritas sem o nome na frente: o jogo monta `"{name}: {text}"`. As duas não têm FK, e o catálogo é recusado com alguma delas vazia. Como elas são sorteadas está em [npc-tamers/architecture.md](../npc-tamers/architecture.md).
+
 ## Tabelas futuras (só documentadas)
 
 Entram com as iniciativas do [roadmap](../roadmap.md); não têm arquivo no MVP.
 
 - `weathers`.
 - `zones` não vai existir como seleção de zonas: a [wild-battle](../wild-battle/) trocou isso pelo mapa hexagonal, e `biomes` e `species_biomes` substituem `zone_encounters`. As colunas `evolutions.zone_id` e `creature_instances.caught_zone_id` seguem nulas até uma iniciativa decidir o que guardam.
-- `npc_tamers`, `npc_tamer_creatures`, `arenas` (`id`, `slug`, `name`, `element_id`, `npc_tamer_id`, `badge_name`, `sort_order`).
+- `npc_tamers` e `npc_tamer_creatures` (a equipe fixa, `npc-fixed-teams` no roadmap), `arenas` (`id`, `slug`, `name`, `element_id`, `npc_tamer_id`, `badge_name`, `sort_order`).
 
 ### Estado do jogador (no servidor)
 

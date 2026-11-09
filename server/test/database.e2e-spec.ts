@@ -38,10 +38,10 @@ describe('restrições do banco (e2e)', () => {
     expect(rows.map((row) => row.table_name)).toEqual([]);
   });
 
-  it('as 35 tabelas e o histórico de migrations ficam no schema ecobeasts', async () => {
+  it('as 37 tabelas e o histórico de migrations ficam no schema ecobeasts', async () => {
     const rows = await prisma.$queryRaw<{ n: number }[]>`
       SELECT count(*)::int AS n FROM information_schema.tables WHERE table_schema = 'ecobeasts'`;
-    expect(rows[0].n).toBe(36);
+    expect(rows[0].n).toBe(38);
   });
 
   it('recusa Técnica com precisão 150', async () => {
@@ -160,6 +160,34 @@ describe('restrições do banco (e2e)', () => {
       });
     });
     expectRejected(result, 'species_biomes_species_id_fkey');
+  });
+
+  it.each(['', 'x'.repeat(21)])(
+    'recusa nome de Domador "%s" fora de 1 a 20 caracteres',
+    async (name) => {
+      const result = await attempt(prisma, (tx) =>
+        tx.npcTamerName.create({ data: { name } }),
+      );
+      expectRejected(result, 'npc_tamer_names_name_check');
+    },
+  );
+
+  it.each(['', 'x'.repeat(121)])(
+    'recusa fala de Domador fora de 1 a 120 caracteres (%#)',
+    async (text) => {
+      const result = await attempt(prisma, (tx) =>
+        tx.npcTamerGreeting.create({ data: { text } }),
+      );
+      expectRejected(result, 'npc_tamer_greetings_text_check');
+    },
+  );
+
+  it('aceita nome de 20 e fala de 120 caracteres', async () => {
+    const result = await attempt(prisma, async (tx) => {
+      await tx.npcTamerName.create({ data: { name: 'x'.repeat(20) } });
+      await tx.npcTamerGreeting.create({ data: { text: 'x'.repeat(120) } });
+    });
+    expect(result).toBe('accepted');
   });
 
   it('recusa item com preço 0', async () => {

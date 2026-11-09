@@ -125,6 +125,26 @@ model Biome {
   @@schema("ecobeasts")
 }
 
+/// Os nomes que um Domador NPC sorteado pode ter (npc-tamers/01).
+model NpcTamerName {
+  id   Int    @id @default(autoincrement())
+  /// CHECK 1–20 caracteres (migration npc_tamer_texts)
+  name String
+
+  @@map("npc_tamer_names")
+  @@schema("ecobeasts")
+}
+
+/// As falas do desafio de um Domador NPC, sem o nome na frente (npc-tamers/01).
+model NpcTamerGreeting {
+  id   Int    @id @default(autoincrement())
+  /// CHECK 1–120 caracteres (migration npc_tamer_texts)
+  text String
+
+  @@map("npc_tamer_greetings")
+  @@schema("ecobeasts")
+}
+
 /// Os 25 Temperamentos: um stat aumentado e um diminuído.
 model Temperament {
   id              Int    @id @default(autoincrement())

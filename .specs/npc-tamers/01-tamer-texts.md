@@ -1,6 +1,6 @@
 # 01. Nomes e falas dos Domadores
 
-- **Status:** rascunho
+- **Status:** concluída
 - **Depende de:** [biome-encounters/01](../biome-encounters/01-biome-tables.md) (o mesmo caminho de tabela nova no catálogo), [architecture.md](architecture.md)
 
 ## Contexto
@@ -28,10 +28,10 @@ Um Domador sorteado precisa de um nome e de uma fala para o desafio. Os dois sã
 
 ## Critérios de aceite
 
-- [ ] As duas tabelas existem no banco, com os `CHECK`, e o seed as preenche com a carga abaixo.
-- [ ] `GET /v1/catalog` traz as duas, com `id` e `name` ou `text`.
-- [ ] O jogo abre sem erro, e o `GameData` devolve "Lia" para o id 1 e a fala 1 para o id 1.
-- [ ] Apagar todas as falas pelo painel faz o jogo abrir na tela "Erro nos dados do jogo".
+- [x] As duas tabelas existem no banco, com os `CHECK`, e o seed as preenche com a carga abaixo.
+- [x] `GET /v1/catalog` traz as duas, com `id` e `name` ou `text`.
+- [x] O jogo abre sem erro, e o `GameData` devolve "Lia" para o id 1 e a fala 1 para o id 1.
+- [x] Apagar todas as falas pelo painel faz o jogo abrir na tela "Erro nos dados do jogo".
 
 ## Desenho técnico
 
@@ -67,17 +67,21 @@ Todos os textos são _a revisar_. Os nomes são curtos e fáceis de ler em qualq
 ### Arquivos
 
 - `server/prisma/schema.prisma`: modelos `NpcTamerName` e `NpcTamerGreeting`, com `@@map` e `@@schema("ecobeasts")`, e os comentários `/// CHECK`.
-- `server/prisma/migrations/<data>_npc_tamer_texts/migration.sql`: criada com `--create-only`, com os `CHECK` escritos à mão (`char_length` entre os limites dos RF).
+- `server/prisma/migrations/20261109221920_npc_tamer_texts/migration.sql`: criada com `--create-only`, com os `CHECK` escritos à mão (`char_length` entre os limites dos RF).
 - `server/prisma/seed-data/npc_tamer_names.json` e `npc_tamer_greetings.json`.
 - `server/src/catalog/catalog-tables.ts`: as duas entradas, e o comentário passa de 29 para 31 tabelas.
 - `client/core/data/catalog_schema.gd`: as colunas das duas.
-- `client/domain/models/`: `NpcTamerName` e `NpcTamerGreeting`, seguindo os modelos de catálogo que já existem, como o `Biome`.
-- `client/core/autoload/game_data.gd`: guarda as duas tabelas e os dois `get_*`.
+- `client/core/data/catalog.gd`: `get_npc_tamer_name` e `get_npc_tamer_greeting`, lidos do índice por id que o `Catalog` já monta para toda tabela.
+- `client/core/autoload/game_data.gd`: os dois `get_*`, repassando ao `Catalog`.
+
+Na implementação, as classes de modelo `NpcTamerName` e `NpcTamerGreeting` saíram do desenho: cada tabela tem um texto só, e o jogo não tinha modelo nem para `biomes`. O `Catalog` devolve o texto direto.
 - `client/core/data/catalog_validator.gd`: as tabelas não podem chegar vazias.
 - `.specs/game-data/architecture.md`: documenta as duas tabelas.
 - `.specs/glossary.md`: a linha do Domador NPC cita as duas tabelas, e `npc_tamers` fica para a equipe fixa.
 
 ## Verificação
+
+Feita em 2026-11-09: migration aplicada e seed com as 2 tabelas (15 linhas); `GET /v1/catalog` com 31 tabelas; testes unitários e e2e, `typecheck` e `lint` sem erros. No jogo, um script descartável baixou o catálogo e leu "Lia" e a fala 1, um id inexistente devolveu texto vazio, e um catálogo sem falas foi recusado com "npc_tamer_greetings.json: deve ter pelo menos 1 linha". O jogo abre sem erro de script; os avisos que aparecem com `-d` são de arquivos que esta fase não tocou.
 
 ```bash
 cd server && npm run db:migrate && npm run db:seed
@@ -90,8 +94,8 @@ godot --headless --path client --quit-after 60
 
 ## Tarefas
 
-- [ ] Modelos, migration com `CHECK` e seed-data.
-- [ ] `CATALOG_TABLES` e o teste dele.
-- [ ] `catalog_schema.gd`, modelos, `GameData` e `CatalogValidator`.
-- [ ] Atualizar `game-data/architecture.md` e o glossário.
-- [ ] Rodar a verificação e mudar o status aqui e no README da iniciativa.
+- [x] Modelos, migration com `CHECK` e seed-data.
+- [x] `CATALOG_TABLES` e o teste dele.
+- [x] `catalog_schema.gd`, modelos, `GameData` e `CatalogValidator`.
+- [x] Atualizar `game-data/architecture.md` e o glossário.
+- [x] Rodar a verificação e mudar o status aqui e no README da iniciativa.

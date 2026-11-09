@@ -46,7 +46,7 @@ describe('GET /v1/catalog (e2e)', () => {
     await prisma.$disconnect();
   });
 
-  it('devolve version e as 29 tabelas', () => {
+  it('devolve version e as 31 tabelas', () => {
     expect(Object.keys(body)).toEqual(['version', 'tables']);
     expect(body.version).toMatch(/^[0-9a-f]{64}$/);
     expect(Object.keys(body.tables).sort()).toEqual(
@@ -54,7 +54,7 @@ describe('GET /v1/catalog (e2e)', () => {
     );
   });
 
-  it('o total de linhas é a soma do count() das 29 tabelas', async () => {
+  it('o total de linhas é a soma do count() das 31 tabelas', async () => {
     let total = 0;
     for (const table of CATALOG_TABLES) {
       const count = await (prisma as unknown as Record<string, CountDelegate>)[
