@@ -12,6 +12,7 @@ import type {
 } from '../domain/battle/types.js';
 import { type HexCoord, hexDistance } from '../domain/exploration/hex.js';
 import type { MapSpawn } from '../domain/exploration/spawns.js';
+import type { MapTamer } from '../domain/tamers/tamers.js';
 import {
   type CreatureProgress,
   progressCreature,
@@ -22,7 +23,10 @@ import {
 } from '../domain/rules/creature-factory.js';
 import { MAX_LEVEL } from '../domain/rules/xp-curve.js';
 import { firstFreePartySlot } from '../domain/team/party.js';
-import { ExplorationStore } from '../exploration/exploration.store.js';
+import {
+  ExplorationStore,
+  type StoredExploration,
+} from '../exploration/exploration.store.js';
 import {
   type CreaturePlace,
   loadCreatureBlueprint,
@@ -40,7 +44,9 @@ import {
   type CreatureProgressDto,
   INVALID_ENEMY,
   NO_EXPLORATION,
+  NO_TAMER_HERE,
   NOTHING_HERE,
+  TAMER_WAITING,
   UNREACHABLE,
 } from './battle.dto.js';
 import {
@@ -111,6 +117,10 @@ function toProgressDto({
     learned_skill_ids: plan?.learned.map((skill) => skill.skillId) ?? [],
     pending_skill_ids: plan?.pending ?? [],
   };
+}
+
+function isAt({ q, r }: HexCoord, position: HexCoord): boolean {
+  return q === position.q && r === position.r;
 }
 
 /** O inimigo como o fim da luta o deixou. */
@@ -195,8 +205,48 @@ export class BattleRecordsService {
   /**
    * Da leitura à remoção não há `await`: dois pedidos ao mesmo tempo não
    * enfrentam o mesmo Ecobeast. Quem mente a posição não chega antes de quem anda.
+   * Com um Domador no hexágono, a luta contra ele vem primeiro (npc-tamers/03).
    */
   takeSpawn(userId: string, position: HexCoord): MapSpawn {
+    const exploration = this.confirmPosition(userId, position);
+    if (
+      [...exploration.tamers.values()].some((tamer) => isAt(tamer, position))
+    ) {
+      throw new ConflictException(TAMER_WAITING);
+    }
+    const here = [...exploration.spawns.values()].filter((spawn) =>
+      isAt(spawn, position),
+    );
+    if (here.length === 0) throw new ConflictException(NOTHING_HERE);
+    const spawn = here[Math.floor(secureRandom() * here.length)]!;
+    exploration.spawns.delete(spawn.id);
+    return spawn;
+  }
+
+  /** Tira do mapa o Domador do hexágono do jogador, como o `takeSpawn` (npc-tamers/03). */
+  takeTamer(userId: string, position: HexCoord): MapTamer {
+    const exploration = this.confirmPosition(userId, position);
+    const tamer = [...exploration.tamers.values()].find((candidate) =>
+      isAt(candidate, position),
+    );
+    if (!tamer) throw new ConflictException(NO_TAMER_HERE);
+    exploration.tamers.delete(tamer.id);
+    return tamer;
+  }
+
+  /** A derrota contra um Domador do mapa leva ao Hub: o mapa não volta (npc-tamers/03). */
+  endExploration(userId: string): void {
+    this.explorations.delete(userId);
+  }
+
+  /**
+   * Aceita a posição se o Domador podia ter andado até ela desde a última
+   * confirmação, e a grava (biome-encounters/architecture.md, "Conferir a posição").
+   */
+  private confirmPosition(
+    userId: string,
+    position: HexCoord,
+  ): StoredExploration {
     const exploration = this.explorations.get(userId);
     if (!exploration) throw new NotFoundException(NO_EXPLORATION);
 
@@ -210,14 +260,7 @@ export class BattleRecordsService {
       position,
       positionAt: now,
     });
-
-    const here = [...exploration.spawns.values()].filter(
-      ({ q, r }) => q === position.q && r === position.r,
-    );
-    if (here.length === 0) throw new ConflictException(NOTHING_HERE);
-    const spawn = here[Math.floor(secureRandom() * here.length)]!;
-    exploration.spawns.delete(spawn.id);
-    return spawn;
+    return exploration;
   }
 
   /**

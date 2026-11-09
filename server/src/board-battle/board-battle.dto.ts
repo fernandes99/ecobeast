@@ -257,6 +257,24 @@ export class BoardEnemySideDto extends EnemySideDto {
   cells: (HexCoordDto | null)[];
 }
 
+/** O Domador NPC da luta (.specs/npc-tamers/03-tamer-api.md). */
+export class BattleTamerDto {
+  @ApiProperty({
+    description: 'Id do nome, em `npc_tamer_names`.',
+    example: 4,
+  })
+  name_id: number;
+
+  @ApiProperty({
+    description:
+      'De onde o Domador veio: `map`, do hexágono do jogador, ou `challenge`, ' +
+      'do Desafiar do Hub.',
+    enum: ['map', 'challenge'],
+    example: 'map',
+  })
+  source: 'map' | 'challenge';
+}
+
 export class BoardBattleDto extends BattleDto {
   @ApiProperty({ example: 1 })
   round: number;
@@ -279,6 +297,13 @@ export class BoardBattleDto extends BattleDto {
 
   @ApiProperty({ type: () => BoardEnemySideDto })
   declare enemy: BoardEnemySideDto;
+
+  @ApiProperty({
+    description: 'O Domador NPC adversário; nulo contra selvagem.',
+    type: () => BattleTamerDto,
+    nullable: true,
+  })
+  tamer: BattleTamerDto | null;
 }
 
 export class BoardBattleResponseDto {
@@ -315,6 +340,15 @@ export class BoardBattleResponseDto {
     example: null,
   })
   spawn_id: number | null;
+
+  @ApiProperty({
+    description:
+      'No começo de uma luta contra Domador do mapa, o Domador que saiu do mapa.',
+    type: 'integer',
+    nullable: true,
+    example: null,
+  })
+  tamer_id: number | null;
 
   @ApiProperty({
     description: 'Na vitória, quem recebeu XP. Vazio nas outras respostas.',

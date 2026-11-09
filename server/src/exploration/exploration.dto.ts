@@ -1,6 +1,8 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsInt, IsOptional, Max, Min, ValidateIf } from 'class-validator';
 import { INVALID_ENEMY } from '../battle/battle.dto.js';
+
+export const INVALID_TAMER = 'Domador de depuração inválido.';
 import { BIOMES, TERRAIN_SHAPES } from '../domain/exploration/map-generator.js';
 import type {
   Biome,
@@ -37,6 +39,23 @@ export class MapCreatureDto extends HexCoordDto {
   species_id: number;
 }
 
+export class MapTamerDto extends HexCoordDto {
+  @ApiProperty({ description: 'Este Domador no mapa.', example: 1 })
+  id: number;
+
+  @ApiProperty({
+    description: 'Id do nome, em `npc_tamer_names`.',
+    example: 4,
+  })
+  name_id: number;
+
+  @ApiProperty({
+    description: 'Id da fala do desafio, em `npc_tamer_greetings`.',
+    example: 2,
+  })
+  greeting_id: number;
+}
+
 export class ExplorationMapDto {
   @ApiProperty({ description: 'Reproduz o terreno.', example: 1234567 })
   seed: number;
@@ -55,6 +74,14 @@ export class ExplorationMapDto {
     description: 'Os Ecobeasts do mapa. O nível só aparece na luta.',
   })
   creatures: MapCreatureDto[];
+
+  @ApiProperty({
+    type: [MapTamerDto],
+    description:
+      'Os Domadores NPC do mapa, um por hexágono. A equipe e o tamanho da ' +
+      'luta só aparecem nela.',
+  })
+  tamers: MapTamerDto[];
 }
 
 export class ExplorationResponseDto {
@@ -117,4 +144,45 @@ export class DebugClearResponseDto {
     example: [501, 502],
   })
   removed_ids: number[];
+
+  @ApiProperty({
+    type: [Number],
+    description: 'Os ids dos Domadores da depuração que saíram da exploração.',
+    example: [26],
+  })
+  removed_tamer_ids: number[];
+}
+
+/** O Domador de depuração (.specs/npc-tamers/03-tamer-api.md, RF-10). */
+export class DebugTamerBodyDto {
+  @ApiProperty({
+    description: 'Coluna do hexágono, em coordenadas axiais.',
+    example: 0,
+  })
+  @IsInt({ message: INVALID_TAMER })
+  q: number;
+
+  @ApiProperty({
+    description: 'Linha do hexágono, em coordenadas axiais.',
+    example: 0,
+  })
+  // Um erro por vez: a validação junta as mensagens numa frase só.
+  @ValidateIf((body: DebugTamerBodyDto) => Number.isInteger(body.q))
+  @IsInt({ message: INVALID_TAMER })
+  r: number;
+
+  @ApiProperty({ description: 'O tamanho da luta: 1, 2 ou 3.', example: 3 })
+  @ValidateIf(
+    (body: DebugTamerBodyDto) =>
+      Number.isInteger(body.q) && Number.isInteger(body.r),
+  )
+  @IsInt({ message: INVALID_TAMER })
+  @Min(1, { message: INVALID_TAMER })
+  @Max(3, { message: INVALID_TAMER })
+  size: number;
+}
+
+export class DebugTamerResponseDto {
+  @ApiProperty({ type: MapTamerDto })
+  tamer: MapTamerDto;
 }

@@ -16,7 +16,7 @@ server/
   src/auth/              login com Google (Supabase Auth), AuthGuard e @CurrentUser()
   src/player/            o Domador do usuário logado (/v1/me)
   src/battle/            a batalha do usuário logado (/v1/me/battle), guardada na memória
-  src/exploration/       o mapa de exploração do usuário logado (/v1/me/exploration), sem guardar nada
+  src/exploration/       o mapa de exploração do usuário logado (/v1/me/exploration), com os Ecobeasts e os Domadores NPC guardados na memória
   src/inventory/         a Loja e a Mochila do usuário logado (/v1/me/shop e /v1/me/items)
   src/team/              a equipe e o Santuário do usuário logado (/v1/me/team e /v1/me/storage)
   src/common/            peças compartilhadas pelas rotas

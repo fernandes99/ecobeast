@@ -122,6 +122,8 @@ Uma tela mostra cerca de 60 hexágonos, conta aproximada. Com média 10, isso d�
 interface StoredExploration {
   /** Por id. Sai daqui quando a luta começa. */
   spawns: Map<number, MapSpawn>;
+  /** Os Domadores NPC (npc-tamers/03). Também saem quando a luta começa. */
+  tamers: Map<number, MapTamer>;
   /** A última posição confirmada, e quando. */
   position: HexCoord;
   positionAt: number;

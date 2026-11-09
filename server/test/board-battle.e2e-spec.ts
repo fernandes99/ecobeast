@@ -4,10 +4,15 @@ import request from 'supertest';
 import type { App } from 'supertest/types.js';
 import { BattleStore } from '../src/battle/battle.store.js';
 import type { BattleEvent } from '../src/domain/battle/types.js';
-import { hexDistance, hexNeighbors } from '../src/domain/exploration/hex.js';
 import { ExplorationStore } from '../src/exploration/exploration.store.js';
 import { Item, Prisma, PrismaClient } from '../src/generated/prisma/client.js';
 import { createTestApp } from './support/app.js';
+import {
+  attackVez,
+  fleeVez,
+  playOut as playBoard,
+  waitVez,
+} from './support/board-play.js';
 import { createTestPrisma } from './support/db.js';
 import { createTestTokens, TestTokens } from './support/tokens.js';
 import { HERE, placeWild } from './support/wild.js';
@@ -15,7 +20,6 @@ import { HERE, placeWild } from './support/wild.js';
 // As rotas da luta no tabuleiro (.specs/board-battle/03-board-api.md).
 
 const RUVO = 1;
-const ARRANHAO_SLOT = 1;
 const NO_BATTLE = 'Nenhuma batalha em andamento.';
 const CANNOT_REACH = 'Não dá para chegar lá.';
 /** Bem mais vezes do que uma luta precisa; só evita um teste sem fim. */
@@ -165,69 +169,12 @@ describe('Rotas da luta no tabuleiro (e2e)', () => {
   /** Aguenta um Arranhão de nível 100, até crítico; pode jogar antes do jogador. */
   const TOUGH_ENEMY = { species_id: RUVO, level: 70 };
 
-  const sameCell = (a: Cell, b: Cell) => a.q === b.q && a.r === b.r;
-
-  /**
-   * A vez de quem joga agora: ao lado de um selvagem, usa Arranhão nele; senão,
-   * anda 1 hexágono na direção do mais perto e, se ficar ao lado, usa Arranhão.
-   */
-  function attackVez(battle: Battle): object {
-    const position = battle.queue[0]!.position;
-    const me = battle.player.cells[position]!;
-    const foes = battle.enemy.cells.filter((cell) => cell !== null);
-    const nextTo = (from: Cell) =>
-      foes.find((foe) => hexDistance(from, foe) === 1);
-    const gap = (from: Cell) =>
-      Math.min(...foes.map((foe) => hexDistance(from, foe)));
-    const scratch = (target: Cell) => ({
-      type: 'skill',
-      slot: ARRANHAO_SLOT,
-      target,
-    });
-    const beside = nextTo(me);
-    if (beside) return { position, action: scratch(beside) };
-    const taken = [...battle.player.cells, ...battle.enemy.cells].filter(
-      (cell) => cell !== null,
-    );
-    const steps = hexNeighbors(me)
-      .filter(
-        (cell) =>
-          battle.board.cells.some((boardCell) => sameCell(boardCell, cell)) &&
-          !taken.some((other) => sameCell(other, cell)),
-      )
-      .sort((a, b) => gap(a) - gap(b));
-    const move = steps[0];
-    if (!move) return { position, action: { type: 'wait' } };
-    const target = nextTo(move);
-    return {
-      position,
-      move,
-      action: target ? scratch(target) : { type: 'wait' },
-    };
-  }
-
-  const waitVez = (battle: Battle) => ({
-    position: battle.queue[0]!.position,
-    action: { type: 'wait' },
-  });
-  const fleeVez = (battle: Battle) => ({
-    position: battle.queue[0]!.position,
-    action: { type: 'flee' },
-  });
-
   /** Joga as vezes do jogador até a luta sair do `choose_action`. */
-  async function playOut(
+  const playOut = (
     user: User,
     first: BoardBody,
-    vez: (battle: Battle) => object = attackVez,
-  ): Promise<BoardBody> {
-    let body = first;
-    for (let turn = 0; turn < MAX_VEZES; turn++) {
-      if (body.battle.phase !== 'choose_action') break;
-      body = await act(user, vez(body.battle));
-    }
-    return body;
-  }
+    vez?: (battle: Battle) => object,
+  ): Promise<BoardBody> => playBoard((body) => act(user, body), first, vez);
 
   async function team(user: User) {
     return prisma.creatureInstance.findMany({

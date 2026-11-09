@@ -1,4 +1,5 @@
 import { toBattleDto } from '../battle/battle.mapper.js';
+import type { BattleTamer } from '../battle/battle.store.js';
 import type {
   BoardAction,
   BoardInput,
@@ -11,7 +12,10 @@ import type {
 } from './board-battle.dto.js';
 
 /** O que o jogador vê da luta no tabuleiro: a luta de hoje, mais o tabuleiro. */
-export function toBoardBattleDto(state: BoardState): BoardBattleDto {
+export function toBoardBattleDto(
+  state: BoardState,
+  tamer: BattleTamer | null = null,
+): BoardBattleDto {
   const dto = toBattleDto(state);
   return {
     ...dto,
@@ -29,6 +33,7 @@ export function toBoardBattleDto(state: BoardState): BoardBattleDto {
       entry_cells: state.entryCells,
     },
     enemy: { ...dto.enemy, cells: state.cells.enemy },
+    tamer: tamer && { name_id: tamer.nameId, source: tamer.source },
   };
 }
 

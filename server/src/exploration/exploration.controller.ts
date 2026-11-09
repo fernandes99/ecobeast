@@ -13,12 +13,19 @@ import {
 } from '@nestjs/swagger';
 import { AuthGuard } from '../auth/auth.guard.js';
 import { CurrentUser } from '../auth/current-user.decorator.js';
-import { INVALID_ENEMY, NO_EXPLORATION } from '../battle/battle.dto.js';
+import {
+  INVALID_ENEMY,
+  NO_CHALLENGER,
+  NO_EXPLORATION,
+} from '../battle/battle.dto.js';
 import {
   DebugClearResponseDto,
   DebugSpawnBodyDto,
   DebugSpawnResponseDto,
+  DebugTamerBodyDto,
+  DebugTamerResponseDto,
   ExplorationResponseDto,
+  INVALID_TAMER,
 } from './exploration.dto.js';
 import { ExplorationService, NO_PLAYER } from './exploration.service.js';
 
@@ -47,9 +54,9 @@ export class ExplorationController {
     summary: 'Começar uma exploração',
     description:
       'Gera um mapa hexagonal novo, com seed sorteada pelo servidor, e sorteia os ' +
-      'Ecobeasts dele pelas taxas de cada bioma e pela média de nível da equipe. ' +
-      'O servidor guarda os Ecobeasts e a posição do Domador até a próxima ' +
-      'exploração. Cada chamada devolve outro mapa.',
+      'Ecobeasts e os Domadores NPC dele pelas taxas de cada bioma e pela média ' +
+      'de nível da equipe. O servidor guarda os Ecobeasts, os Domadores e a ' +
+      'posição do Domador até a próxima exploração. Cada chamada devolve outro mapa.',
   })
   @ApiCreatedResponse({ type: ExplorationResponseDto })
   @ApiConflictResponse({
@@ -79,12 +86,37 @@ export class ExplorationController {
     return this.exploration.debugSpawn(userId, body);
   }
 
+  @Post('tamers')
+  @ApiOperation({
+    summary: 'Domador de depuração',
+    description:
+      'Põe um Domador NPC do tamanho pedido (1, 2 ou 3) num hexágono da ' +
+      'exploração guardada, no lugar do que houver ali. A equipe é sorteada com ' +
+      'as taxas de todos os biomas, como a do Desafiar. A rota só existe com ' +
+      '`ENABLE_TEST_BATTLE` ligada.',
+  })
+  @ApiCreatedResponse({ type: DebugTamerResponseDto })
+  @ApiBadRequestResponse({
+    description: `Posição ou tamanho inválidos: "${INVALID_TAMER}"`,
+  })
+  @ApiNotFoundResponse({ description: CLOSED })
+  @ApiConflictResponse({
+    description: `Nenhuma espécie com taxa, ou sem nomes ou falas: "${NO_CHALLENGER}"`,
+  })
+  debugTamer(
+    @CurrentUser() userId: string,
+    @Body() body: DebugTamerBodyDto,
+  ): Promise<DebugTamerResponseDto> {
+    return this.exploration.debugTamer(userId, body);
+  }
+
   @Delete('spawns')
   @ApiOperation({
-    summary: 'Remover os Ecobeasts do spawn de depuração',
+    summary: 'Remover os Ecobeasts e os Domadores da depuração',
     description:
-      'Tira da exploração todos os Ecobeasts postos pelo spawn de depuração, e só ' +
-      'eles. A rota só existe com `ENABLE_TEST_BATTLE` ligada.',
+      'Tira da exploração todos os Ecobeasts postos pelo spawn de depuração e ' +
+      'todos os Domadores postos pela rota de Domador de depuração, e só eles. A ' +
+      'rota só existe com `ENABLE_TEST_BATTLE` ligada.',
   })
   @ApiOkResponse({ type: DebugClearResponseDto })
   @ApiNotFoundResponse({ description: CLOSED })

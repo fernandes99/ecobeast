@@ -3,7 +3,12 @@ import { ExplorationStore, StoredExploration } from './exploration.store.js';
 const TWO_HOURS = 2 * 60 * 60 * 1000;
 
 function exploration(q = 0): StoredExploration {
-  return { spawns: new Map(), position: { q, r: 0 }, positionAt: 0 };
+  return {
+    spawns: new Map(),
+    tamers: new Map(),
+    position: { q, r: 0 },
+    positionAt: 0,
+  };
 }
 
 describe('ExplorationStore', () => {
@@ -63,5 +68,13 @@ describe('ExplorationStore', () => {
     store.set('bia', exploration());
 
     expect(store.get('ana')).toBeUndefined();
+  });
+
+  it('delete encerra a exploração do jogador, e só a dele', () => {
+    store.set('ana', exploration(1));
+    store.set('bia', exploration(2));
+    store.delete('ana');
+    expect(store.get('ana')).toBeUndefined();
+    expect(store.get('bia')?.position.q).toBe(2);
   });
 });

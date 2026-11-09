@@ -10,6 +10,12 @@ export interface WildCreature {
   statIds: Record<StatSlug, number>;
 }
 
+/** O Domador NPC da luta: o nome e de onde ele veio, o mapa ou o Desafiar (npc-tamers/03). */
+export interface BattleTamer {
+  nameId: number;
+  source: 'map' | 'challenge';
+}
+
 /** O catálogo fica junto: uma edição no painel não muda uma luta em andamento. */
 export interface StoredBattle {
   /** A luta de hoje (`classic`) ou a do tabuleiro (`board`); cada rota só vê a sua. */
@@ -18,6 +24,8 @@ export interface StoredBattle {
   catalog: BattleCatalog;
   /** Um por Ecobeast da equipe inimiga, na mesma ordem. */
   wilds: WildCreature[];
+  /** Contra um Domador NPC; nulo ou ausente contra selvagem. */
+  tamer?: BattleTamer | null;
 }
 
 interface Entry {

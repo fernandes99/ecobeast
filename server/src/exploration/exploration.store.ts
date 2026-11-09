@@ -1,5 +1,6 @@
 import type { HexCoord } from '../domain/exploration/hex.js';
 import type { MapSpawn } from '../domain/exploration/spawns.js';
+import type { MapTamer } from '../domain/tamers/tamers.js';
 
 const MAX_IDLE_MS = 2 * 60 * 60 * 1000;
 
@@ -7,6 +8,8 @@ const MAX_IDLE_MS = 2 * 60 * 60 * 1000;
 export interface StoredExploration {
   /** Por id. Um Ecobeast sai daqui quando a luta contra ele começa. */
   spawns: Map<number, MapSpawn>;
+  /** Os Domadores NPC, por id. Um sai daqui quando a luta contra ele começa. */
+  tamers: Map<number, MapTamer>;
   /** A última posição confirmada, e quando. */
   position: HexCoord;
   positionAt: number;
@@ -34,6 +37,11 @@ export class ExplorationStore {
   set(userId: string, exploration: StoredExploration): void {
     this.removeExpired();
     this.entries.set(userId, { exploration, lastUsedAt: this.now() });
+  }
+
+  /** A derrota contra um Domador do mapa encerra a exploração (npc-tamers/03). */
+  delete(userId: string): void {
+    this.entries.delete(userId);
   }
 
   private removeExpired(): void {

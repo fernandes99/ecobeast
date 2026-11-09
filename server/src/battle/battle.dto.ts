@@ -35,6 +35,9 @@ export const INVALID_POSITION = 'Posição inválida.';
 export const NO_EXPLORATION = 'Essa exploração acabou. Saia e entre de novo.';
 export const UNREACHABLE = 'Você não chegou até aí.';
 export const NOTHING_HERE = 'Nada por aqui.';
+export const NO_TAMER_HERE = 'Nenhum Domador por aqui.';
+export const TAMER_WAITING = 'Um Domador está esperando você aqui.';
+export const NO_CHALLENGER = 'Nenhum Domador quer lutar agora.';
 export const ENEMIES_OR_SPECIES = 'Use species_id ou enemies.';
 /** No máximo, a equipe inteira de um Domador. */
 export const MAX_TEST_ENEMIES = 6;

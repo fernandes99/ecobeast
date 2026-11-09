@@ -17,9 +17,12 @@ import {
   INVALID_ACTION,
   INVALID_ENEMY,
   INVALID_POSITION,
+  NO_CHALLENGER,
   NO_EXPLORATION,
+  NO_TAMER_HERE,
   NOTHING_HERE,
   StartWildBodyDto,
+  TAMER_WAITING,
   UNREACHABLE,
 } from '../battle/battle.dto.js';
 import { NO_BATTLE } from '../battle/battle.service.js';
@@ -93,7 +96,8 @@ export class BoardBattleController {
   @ApiConflictResponse({
     description:
       `${NO_TEAM_RESPONSES} Longe demais para o tempo que passou: "${UNREACHABLE}" ` +
-      `Nenhum Ecobeast no hexágono: "${NOTHING_HERE}"`,
+      `Nenhum Ecobeast no hexágono: "${NOTHING_HERE}" ` +
+      `Um Domador NPC no hexágono, que vem primeiro: "${TAMER_WAITING}"`,
   })
   startWild(
     @CurrentUser() userId: string,
@@ -104,6 +108,58 @@ export class BoardBattleController {
       { q: body.q, r: body.r },
       body.god === true,
     );
+  }
+
+  @Post('tamer')
+  @ApiOperation({
+    summary: 'Começar a luta contra o Domador NPC do hexágono',
+    description:
+      'A luta obrigatória contra o Domador NPC do hexágono do Domador, de 1×1, ' +
+      '2×2 ou 3×3, sem fuga nem Esfera. O Domador sai do mapa, e `tamer_id` diz ' +
+      'qual foi. A posição é conferida como em `/board-battle/wild`. Perder ' +
+      'encerra a exploração. Uma luta em andamento, de qualquer tipo, é ' +
+      'descartada, sem gravar nada.',
+  })
+  @ApiCreatedResponse({ type: BoardBattleResponseDto })
+  @ApiBadRequestResponse({
+    description: `Corpo malformado: "${INVALID_POSITION}"`,
+  })
+  @ApiNotFoundResponse({ description: `Sem exploração: "${NO_EXPLORATION}"` })
+  @ApiConflictResponse({
+    description:
+      `${NO_TEAM_RESPONSES} Longe demais para o tempo que passou: "${UNREACHABLE}" ` +
+      `Nenhum Domador no hexágono: "${NO_TAMER_HERE}"`,
+  })
+  startTamer(
+    @CurrentUser() userId: string,
+    @Body() body: StartWildBodyDto,
+  ): Promise<BoardBattleResponseDto> {
+    return this.battles.startTamer(
+      userId,
+      { q: body.q, r: body.r },
+      body.god === true,
+    );
+  }
+
+  @Post('challenge')
+  @ApiOperation({
+    summary: 'Desafiar um Domador NPC sorteado',
+    description:
+      'O Desafiar do Hub: sorteia um Domador NPC na hora, pelas taxas de todos ' +
+      'os biomas e pela média de nível da equipe, e começa a luta contra ele, ' +
+      'sem fuga nem Esfera. Não lê nem muda a exploração. Uma luta em ' +
+      'andamento, de qualquer tipo, é descartada, sem gravar nada.',
+  })
+  @ApiCreatedResponse({ type: BoardBattleResponseDto })
+  @ApiConflictResponse({
+    description:
+      `${NO_TEAM_RESPONSES} Nenhuma espécie com taxa, ou sem nomes ou falas: ` +
+      `"${NO_CHALLENGER}"`,
+  })
+  startChallenge(
+    @CurrentUser() userId: string,
+  ): Promise<BoardBattleResponseDto> {
+    return this.battles.startChallenge(userId);
   }
 
   @Post('action')

@@ -1,6 +1,6 @@
 # 03. Rotas dos Domadores
 
-- **Status:** rascunho
+- **Status:** concluída
 - **Depende de:** [02-tamer-rules](02-tamer-rules.md), [architecture.md](architecture.md)
 
 ## Contexto
@@ -42,28 +42,29 @@ Com as regras prontas, o servidor passa a pôr Domadores em cada exploração e 
 
 ## Critérios de aceite
 
-- [ ] `POST /v1/me/exploration` traz `tamers`, sem `size` nem `team`.
-- [ ] Um e2e com o Domador posto por `POST /exploration/tamers` de tamanho 3 abre a luta com 3 vagas inimigas, sem fuga (`can_flee: false`) e com `tamer.source` `"map"`.
-- [ ] Um jogador com só 1 Ecobeast de pé contra um Domador de 3 começa com 1 vaga do seu lado.
-- [ ] Pedir a mesma luta duas vezes: a segunda responde "Nenhum Domador por aqui.".
-- [ ] `/board-battle/wild` num hexágono com Domador e selvagem responde "Um Domador está esperando você aqui.", e o selvagem continua na exploração.
-- [ ] Depois de uma derrota contra Domador do mapa, `/board-battle/wild` responde `404`.
-- [ ] `/board-battle/challenge` abre uma luta com `tamer.source` `"challenge"` e `tamer_id` `null`, mesmo sem exploração.
-- [ ] `POST /exploration/tamers` responde `404` com `ENABLE_TEST_BATTLE` desligada.
-- [ ] `typecheck`, `lint`, `npm test` e `npm run test:e2e` sem erros.
+- [x] `POST /v1/me/exploration` traz `tamers`, sem `size` nem `team`.
+- [x] Um e2e com o Domador posto por `POST /exploration/tamers` de tamanho 3 abre a luta com 3 vagas inimigas, sem fuga (`can_flee: false`) e com `tamer.source` `"map"`.
+- [x] Um jogador com só 1 Ecobeast de pé contra um Domador de 3 começa com 1 vaga do seu lado.
+- [x] Pedir a mesma luta duas vezes: a segunda responde "Nenhum Domador por aqui.".
+- [x] `/board-battle/wild` num hexágono com Domador e selvagem responde "Um Domador está esperando você aqui.", e o selvagem continua na exploração.
+- [x] Depois de uma derrota contra Domador do mapa, `/board-battle/wild` responde `404`.
+- [x] `/board-battle/challenge` abre uma luta com `tamer.source` `"challenge"` e `tamer_id` `null`, mesmo sem exploração.
+- [x] `POST /exploration/tamers` responde `404` com `ENABLE_TEST_BATTLE` desligada.
+- [x] `typecheck`, `lint`, `npm test` e `npm run test:e2e` sem erros.
 
 ## Desenho técnico
 
+- `server/src/exploration/spawn-data.ts`: `loadSpawnSpecies`, `loadTamerTexts` e `partyAverageLevel`, as leituras do banco que a exploração e o Desafiar fazem. O `loadSpawnSpecies` saiu de dentro do `ExplorationService`.
 - `server/src/exploration/exploration.store.ts`: `tamers` no `StoredExploration` e `delete(userId)`.
-- `server/src/exploration/exploration.service.ts`: o sorteio dos Domadores no `start` (lendo os ids de `npc_tamer_names` e `npc_tamer_greetings`), o `debugTamer` e o `debugClear` com Domadores. O `loadSpawnSpecies` passa a servir as duas coisas.
-- `server/src/exploration/exploration.dto.ts`: `MapTamerDto`, `tamers` no `ExplorationMapDto`, `DebugTamerBodyDto` e `DebugTamerResponseDto`.
+- `server/src/exploration/exploration.service.ts`: o sorteio dos Domadores no `start`, o `debugTamer` e o `debugClear` com Domadores.
+- `server/src/exploration/exploration.dto.ts`: `MapTamerDto`, `tamers` no `ExplorationMapDto`, `DebugTamerBodyDto` (com a mensagem "Domador de depuração inválido."), `DebugTamerResponseDto` e `removed_tamer_ids`.
 - `server/src/exploration/exploration.controller.ts`: a rota `POST tamers`.
-- `server/src/battle/battle-records.service.ts`: a conferência de posição sai do `takeSpawn` para uma função que o `takeTamer` também usa. `takeTamer(userId, position)` tira o Domador. O `finish` recebe de onde veio o Domador, para apagar a exploração na derrota.
-- `server/src/battle/battle.store.ts`: o `tamer` (`{nameId, source}`) na entrada da luta.
-- `server/src/board-battle/board-battle.service.ts`: `startTamer` e `startChallenge`, e o `begin` com `opponent`, as vagas dos dois lados e o `tamer`.
-- `server/src/board-battle/board-battle.controller.ts` e `board-battle.dto.ts`: as duas rotas, `tamer_id` na resposta e `tamer` no `BoardBattleDto`.
-- `server/src/board-battle/board-battle.mapper.ts`: o `tamer` no DTO.
-- `server/test/`: os e2e de cada critério. Eles não conferem os valores sorteados.
+- `server/src/battle/battle.dto.ts`: as mensagens `NO_TAMER_HERE`, `TAMER_WAITING` e `NO_CHALLENGER`.
+- `server/src/battle/battle-records.service.ts`: a conferência de posição saiu do `takeSpawn` para o `confirmPosition`, que o `takeTamer` também usa. O `takeSpawn` recusa o hexágono com Domador, e o `endExploration` apaga a exploração.
+- `server/src/battle/battle.store.ts`: `BattleTamer` (`{nameId, source}`) e o `tamer` na entrada da luta.
+- `server/src/board-battle/board-battle.service.ts`: `startTamer` e `startChallenge`. O `begin` recebe as opções num objeto (`godMode`, `slots`, `opponent`, `tamer`) e dá ao jogador `min(slots, Ecobeasts de pé)` vagas. O fim passa por um `finish` do próprio serviço, que grava como antes e, na derrota contra Domador do mapa, chama o `endExploration`. O desenho pedia isso dentro do `BattleRecordsService.finish`, mas quem sabe de onde veio o Domador é a luta guardada, e o `finish` continua igual para a luta antiga.
+- `server/src/board-battle/board-battle.controller.ts`, `board-battle.dto.ts` e `board-battle.mapper.ts`: as duas rotas, `tamer_id` na resposta, `BattleTamerDto` e o `tamer` no `BoardBattleDto`.
+- `server/test/tamers.e2e-spec.ts`: os e2e de cada critério. As jogadas que levam uma luta até o fim (`attackVez`, `waitVez`, `fleeVez`, `playOut`) saíram do e2e do tabuleiro para `server/test/support/board-play.ts`, e os dois arquivos as usam. O `placeWild` de `test/support/wild.ts` também põe Domadores.
 - `.specs/biome-encounters/architecture.md`: a seção "Exploração no servidor" cita os Domadores.
 
 ## Verificação
@@ -72,14 +73,16 @@ Com as regras prontas, o servidor passa a pôr Domadores em cada exploração e 
 cd server && npm run lint && npm run typecheck && npm test && npm run test:e2e
 ```
 
+Feita em 2026-11-09: `typecheck` e `lint` sem erros, 718 testes unitários e a suíte e2e inteira, com os 13 novos de `tamers.e2e-spec.ts`. O critério da derrota cura a equipe antes de Procurar: sem HP, o servidor responde "Cure sua equipe no Refúgio." antes de conferir a exploração.
+
 - Em `/docs`, chamar as rotas e conferir os exemplos.
 
 ## Tarefas
 
-- [ ] e2e das rotas, primeiro falhando.
-- [ ] Store, exploração e DTOs do mapa.
-- [ ] `takeTamer` e a conferência da posição compartilhada.
-- [ ] As rotas da luta e o `tamer` no DTO.
-- [ ] A exploração apagada na derrota.
-- [ ] `POST /exploration/tamers` e o `DELETE /exploration/spawns`.
-- [ ] Atualizar a arquitetura da biome-encounters, rodar a verificação e mudar o status aqui e no README.
+- [x] e2e das rotas, primeiro falhando.
+- [x] Store, exploração e DTOs do mapa.
+- [x] `takeTamer` e a conferência da posição compartilhada.
+- [x] As rotas da luta e o `tamer` no DTO.
+- [x] A exploração apagada na derrota.
+- [x] `POST /exploration/tamers` e o `DELETE /exploration/spawns`.
+- [x] Atualizar a arquitetura da biome-encounters, rodar a verificação e mudar o status aqui e no README.

@@ -5,30 +5,56 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { INVALID_ENEMY, NO_EXPLORATION } from '../battle/battle.dto.js';
+import {
+  INVALID_ENEMY,
+  NO_CHALLENGER,
+  NO_EXPLORATION,
+} from '../battle/battle.dto.js';
 import { secureRandom } from '../common/secure-random.js';
 import { generateMap } from '../domain/exploration/map-generator.js';
-import { DEFAULT_SPAWN_CONFIG } from '../domain/exploration/spawn-config.js';
+import { rollSpawns } from '../domain/exploration/spawns.js';
+import type { TamerSize } from '../domain/tamers/tamer-config.js';
 import {
-  type EncounterBiome,
-  naturalLevel,
-  rollSpawns,
-  type SpawnSpecies,
-} from '../domain/exploration/spawns.js';
+  type MapTamer,
+  rollChallenger,
+  rollMapTamers,
+} from '../domain/tamers/tamers.js';
 import type { Env } from '../config/env.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import {
   DebugClearResponseDto,
   DebugSpawnBodyDto,
   DebugSpawnResponseDto,
+  DebugTamerBodyDto,
+  DebugTamerResponseDto,
   ExplorationResponseDto,
+  MapTamerDto,
 } from './exploration.dto.js';
 import { ExplorationStore } from './exploration.store.js';
+import {
+  loadSpawnSpecies,
+  loadTamerTexts,
+  partyAverageLevel,
+} from './spawn-data.js';
 
 export const NO_PLAYER = 'Crie seu Domador primeiro.';
 const SEED_RANGE = 2 ** 32;
 
-/** Gera um mapa por exploração, com os Ecobeasts dele (biome-encounters/03). */
+/** O Domador como o mapa o mostra: sem a equipe nem o tamanho da luta. */
+function toMapTamerDto({
+  id,
+  q,
+  r,
+  nameId,
+  greetingId,
+}: MapTamer): MapTamerDto {
+  return { id, q, r, name_id: nameId, greeting_id: greetingId };
+}
+
+/**
+ * Gera um mapa por exploração, com os Ecobeasts (biome-encounters/03) e os
+ * Domadores NPC dele (npc-tamers/03).
+ */
 @Injectable()
 export class ExplorationService {
   constructor(
@@ -38,23 +64,26 @@ export class ExplorationService {
   ) {}
 
   async start(userId: string): Promise<ExplorationResponseDto> {
-    const team = await this.prisma.creatureInstance.findMany({
-      where: { playerId: userId, location: 'party' },
-      select: { level: true },
-    });
-    if (team.length === 0) throw new ConflictException(NO_PLAYER);
+    const teamAverage = await partyAverageLevel(this.prisma, userId);
+    if (teamAverage === null) throw new ConflictException(NO_PLAYER);
 
     const map = generateMap(Math.floor(secureRandom() * SEED_RANGE));
-    const teamAverage =
-      team.reduce((sum, { level }) => sum + level, 0) / team.length;
-    const spawns = rollSpawns(
+    const [species, texts] = await Promise.all([
+      loadSpawnSpecies(this.prisma),
+      loadTamerTexts(this.prisma),
+    ]);
+    const spawns = rollSpawns(map.tiles, species, teamAverage, secureRandom);
+    const tamers = rollMapTamers(
       map.tiles,
-      await this.loadSpawnSpecies(),
+      map.start,
+      species,
       teamAverage,
+      texts,
       secureRandom,
     );
     this.store.set(userId, {
       spawns: new Map(spawns.map((spawn) => [spawn.id, spawn])),
+      tamers: new Map(tamers.map((tamer) => [tamer.id, tamer])),
       position: map.start,
       positionAt: Date.now(),
     });
@@ -67,6 +96,7 @@ export class ExplorationService {
           q,
           r,
         })),
+        tamers: tamers.map(toMapTamerDto),
       },
     };
   }
@@ -106,7 +136,52 @@ export class ExplorationService {
     };
   }
 
-  /** Tira da exploração todos os Ecobeasts do spawn de depuração, e só eles. */
+  /**
+   * Põe um Domador do tamanho pedido num hexágono da exploração guardada, no
+   * lugar do que houver ali (npc-tamers/03, RF-10). A equipe usa as taxas de
+   * todos os biomas, como a do Desafiar: o servidor não guarda os hexágonos e
+   * não sabe o bioma.
+   */
+  async debugTamer(
+    userId: string,
+    body: DebugTamerBodyDto,
+  ): Promise<DebugTamerResponseDto> {
+    this.requireTestRoutes();
+    if (!this.store.get(userId)) throw new NotFoundException(NO_EXPLORATION);
+    const [species, texts, teamAverage] = await Promise.all([
+      loadSpawnSpecies(this.prisma),
+      loadTamerTexts(this.prisma),
+      partyAverageLevel(this.prisma, userId),
+    ]);
+    const rolled = rollChallenger(
+      species,
+      teamAverage ?? 1,
+      texts,
+      secureRandom,
+      { size: body.size as TamerSize },
+    );
+    if (!rolled) throw new ConflictException(NO_CHALLENGER);
+
+    // Lido de novo depois dos `await`: uma exploração nova pode ter chegado.
+    const exploration = this.store.get(userId);
+    if (!exploration) throw new NotFoundException(NO_EXPLORATION);
+    for (const tamer of exploration.tamers.values()) {
+      if (tamer.q === body.q && tamer.r === body.r) {
+        exploration.tamers.delete(tamer.id);
+      }
+    }
+    const tamer: MapTamer = {
+      ...rolled,
+      id: Math.max(0, ...exploration.tamers.keys()) + 1,
+      q: body.q,
+      r: body.r,
+      debug: true,
+    };
+    exploration.tamers.set(tamer.id, tamer);
+    return { tamer: toMapTamerDto(tamer) };
+  }
+
+  /** Tira da exploração todos os Ecobeasts e Domadores da depuração, e só eles. */
   debugClear(userId: string): DebugClearResponseDto {
     this.requireTestRoutes();
     const exploration = this.store.get(userId);
@@ -115,7 +190,11 @@ export class ExplorationService {
       .filter((spawn) => spawn.debug)
       .map((spawn) => spawn.id);
     for (const id of removed) exploration.spawns.delete(id);
-    return { removed_ids: removed };
+    const removedTamers = [...exploration.tamers.values()]
+      .filter((tamer) => tamer.debug)
+      .map((tamer) => tamer.id);
+    for (const id of removedTamers) exploration.tamers.delete(id);
+    return { removed_ids: removed, removed_tamer_ids: removedTamers };
   }
 
   private requireTestRoutes(): void {
@@ -126,33 +205,8 @@ export class ExplorationService {
 
   /** A média de nível da equipe principal, arredondada, de 1 a 100. */
   private async teamAverageLevel(userId: string): Promise<number> {
-    const team = await this.prisma.creatureInstance.findMany({
-      where: { playerId: userId, location: 'party' },
-      select: { level: true },
-    });
-    if (team.length === 0) return 1;
-    const average =
-      team.reduce((sum, { level }) => sum + level, 0) / team.length;
+    const average = await partyAverageLevel(this.prisma, userId);
+    if (average === null) return 1;
     return Math.min(100, Math.max(1, Math.round(average)));
-  }
-
-  private async loadSpawnSpecies(): Promise<SpawnSpecies[]> {
-    const [rows, evolutions] = await Promise.all([
-      this.prisma.speciesBiome.findMany({ include: { biome: true } }),
-      this.prisma.evolution.findMany({
-        select: { speciesId: true, evolvedSpeciesId: true, minLevel: true },
-      }),
-    ]);
-    const bySpecies = new Map<number, SpawnSpecies>();
-    for (const { speciesId, biome, rate } of rows) {
-      const species = bySpecies.get(speciesId) ?? {
-        speciesId,
-        naturalLevel: naturalLevel(speciesId, evolutions, DEFAULT_SPAWN_CONFIG),
-        rates: {},
-      };
-      species.rates[biome.slug as EncounterBiome] = rate;
-      bySpecies.set(speciesId, species);
-    }
-    return [...bySpecies.values()];
   }
 }
