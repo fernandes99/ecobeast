@@ -82,11 +82,11 @@ Os arquivos ficam em `res://assets/music/`:
 
 | Arquivo | O que é | Duração |
 | --- | --- | --- |
-| `battle_wild.ogg` | A luta contra selvagem: animada, em tom maior | loop de 30 a 45 s |
-| `battle_tamer.ogg` | A luta contra Domador: mais rápida e mais tensa, em tom menor | loop de 30 a 45 s |
+| `battle_wild.ogg` | A luta contra selvagem: animada, em tom maior | abertura de 1,6 s e loop de 38,4 s |
+| `battle_tamer.ogg` | A luta contra Domador: mais rápida e mais tensa, em tom menor | abertura de 1,43 s e loop de 34,3 s |
 | `victory.ogg` | O toque de vitória | 3 a 5 s, sem loop |
 
-O loop vem do import do Godot (`loop = true` no `.import` das duas lutas), e cada música termina exatamente onde começa.
+Cada luta começa com uma **abertura** que toca uma vez só, logo na transição: três batidas fortes de acorde com bumbo ("tun tun tun", pedido do dono em 2026-11-10) e uma subida (selvagem) ou descida cromática (Domador) com um rufar de caixa, que entra na música. O loop vem do import do Godot: `loop=true` e `loop_offset` no fim da abertura, que o `compose.py` escreve no `.import`. Cada música termina exatamente onde o loop recomeça.
 
 ## O compositor
 

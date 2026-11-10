@@ -11,6 +11,10 @@ Gera, ao lado deste arquivo, battle_wild.ogg, battle_tamer.ogg e victory.ogg.
 Só usa a biblioteca padrão do Python e o ffmpeg (com libvorbis) no PATH. Rodar
 de novo dá os mesmos arquivos.
 
+Cada música de luta começa com uma abertura que toca uma vez só, as batidas
+fortes ("tun tun tun") e uma subida que entra na música; depois, o loop volta
+para o fim da abertura. O ponto de volta vai para o `loop_offset` do `.import`.
+
 Quatro canais, como os videogames de bolso:
 - pulso 1: a melodia, numa onda quadrada;
 - pulso 2: os acordes em arpejo, numa onda quadrada mais fina e mais baixa;
@@ -57,6 +61,18 @@ def frequency(note: str) -> float:
 
 
 @dataclass
+class IntroBar:
+    """Um compasso da abertura: batidas de acorde, uma melodia e a percussão."""
+
+    # (semicolcheia de início, duração, notas): a mais grave vai no baixo, as
+    # outras nas quadradas, e cada batida tem bumbo.
+    stabs: list[tuple[int, int, list[str]]]
+    melody: list[tuple[str, int]]
+    # Como em DRUM_PATTERNS, mais "r", uma caixa curta para o rufar.
+    drums: str
+
+
+@dataclass
 class Song:
     name: str
     bpm: float
@@ -71,6 +87,8 @@ class Song:
     # Tempo de sobra no fim, para a última nota soar (só sem loop).
     tail: float = 0.0
     volumes: dict[str, float] = field(default_factory=dict)
+    # A abertura, tocada uma vez antes dos compassos que repetem.
+    intro: list[IntroBar] = field(default_factory=list)
 
 
 # --- Partituras ----------------------------------------------------------------
@@ -100,7 +118,14 @@ def wild_battle() -> Song:
     # O último compasso fica no lá, que puxa de volta para o ré do começo.
     back_to_start = (["A"], [("A5", 8), ("G5", 4), ("E5", 4)])
     bars = section_a + [resolve] + section_b + section_a + [back_to_start]
-    return Song("battle_wild", 150, bars, loop=True, melody_duty=0.5, drums="wild")
+    # Três batidas de ré e uma subida que cai no lá do começo da melodia.
+    intro = [IntroBar(
+        stabs=[(0, 3, ["D2", "D4", "A4"]), (4, 3, ["D2", "D4", "A4"]), (8, 3, ["D2", "D4", "A4"])],
+        melody=[("D5", 3), ("R", 1), ("D5", 3), ("R", 1), ("D5", 3), ("R", 1),
+                ("F#4", 1), ("G4", 1), ("A4", 1), ("C#5", 1)],
+        drums="............rrrr",
+    )]
+    return Song("battle_wild", 150, bars, loop=True, melody_duty=0.5, drums="wild", intro=intro)
 
 
 def tamer_battle() -> Song:
@@ -127,7 +152,14 @@ def tamer_battle() -> Song:
         (["E"], [("E5", 2), ("G#5", 2), ("B5", 2), ("D6", 2), ("E6", 8)]),
     ]
     bars = section_a + section_b + section_a
-    return Song("battle_tamer", 168, bars, loop=True, melody_duty=0.25, drums="tamer")
+    # Três batidas de lá, fora do tempo, e uma descida cromática até o lá do começo.
+    intro = [IntroBar(
+        stabs=[(0, 2, ["A1", "A4", "E5"]), (3, 2, ["A1", "A4", "E5"]), (6, 2, ["A1", "A4", "E5"])],
+        melody=[("A5", 2), ("R", 1), ("A5", 2), ("R", 1), ("A5", 2),
+                ("E5", 1), ("D#5", 1), ("D5", 1), ("C#5", 1), ("C5", 1), ("B4", 1), ("A#4", 1), ("G#4", 1)],
+        drums="............rrrr",
+    )]
+    return Song("battle_tamer", 168, bars, loop=True, melody_duty=0.25, drums="tamer", intro=intro)
 
 
 def victory() -> Song:
@@ -142,20 +174,23 @@ def victory() -> Song:
 # --- Síntese -------------------------------------------------------------------
 
 class Track:
-    """Um buffer da música inteira. Com loop, o que passa do fim volta ao começo."""
+    """Um buffer da música inteira. Com loop, o que passa do fim volta ao ponto
+    de volta (`loop_start`, o fim da abertura), como o Godot vai tocar."""
 
-    def __init__(self, length: int, loop: bool) -> None:
+    def __init__(self, length: int, loop: bool, loop_start: int = 0) -> None:
         self.data = array("f", [0.0]) * length
         self.length = length
         self.loop = loop
+        self.loop_start = loop_start
 
     def add(self, start: int, samples: list[float]) -> None:
+        span = self.length - self.loop_start
         for offset, value in enumerate(samples):
             index = start + offset
             if index >= self.length:
                 if not self.loop:
                     return
-                index %= self.length
+                index = self.loop_start + (index - self.length) % span
             self.data[index] += value
 
 
@@ -236,19 +271,34 @@ DRUM_PATTERNS = {
 }
 
 
-def render(song: Song) -> array:
+def play_drums(track: Track, pattern: str, bar_start: int, step, volumes: dict[str, float], seed: int) -> None:
+    for at, hit in enumerate(pattern):
+        start = bar_start + step(at)
+        if hit == "k":
+            track.add(start, kick(volumes["kick"]))
+        elif hit == "s":
+            track.add(start, noise(0.12, volumes["snare"], period=2, seed=seed))
+        elif hit == "r":
+            # O rufar cresce até a música entrar.
+            track.add(start, noise(0.06, volumes["snare"] * (0.6 + 0.15 * (at % 4)), period=2, seed=seed + at))
+        elif hit == "h":
+            track.add(start, noise(0.03, volumes["hat"], period=1, seed=at))
+
+
+def render(song: Song) -> tuple[array, int]:
+    """A música e o ponto de volta do loop, em amostras (o fim da abertura)."""
     sixteenth = 60.0 / song.bpm / 4.0
     bar_samples = round(16 * sixteenth * RATE)
-    music = len(song.bars) * bar_samples
+    intro = len(song.intro) * bar_samples
+    music = intro + len(song.bars) * bar_samples
     total = music if song.loop else music + int(song.tail * RATE)
-    volumes = {"melody": 0.30, "harmony": 0.10, "bass": 0.34, "kick": 0.55, "snare": 0.22, "hat": 0.07}
+    volumes = {"melody": 0.30, "harmony": 0.10, "bass": 0.34, "kick": 0.55, "snare": 0.22, "hat": 0.07, "stab": 0.16}
     volumes.update(song.volumes)
-    track = Track(total, song.loop)
+    track = Track(total, song.loop, intro)
     step = lambda count: round(count * sixteenth * RATE)  # noqa: E731
 
-    for index, (chords, melody) in enumerate(song.bars):
-        bar_start = index * bar_samples
-        # Melodia: cada nota soa 90% da duração, para respirar entre elas.
+    def play_melody(melody: list[tuple[str, int]], bar_start: int, where: str) -> None:
+        # Cada nota soa 90% da duração, para respirar entre elas.
         position = 0
         for note, length in melody:
             if note != "R":
@@ -256,7 +306,23 @@ def render(song: Song) -> array:
                 track.add(bar_start + step(position), pulse(frequency(note), gate, song.melody_duty, volumes["melody"]))
             position += length
         if position != 16:
-            raise ValueError(f"{song.name}: o compasso {index + 1} tem {position} semicolcheias")
+            raise ValueError(f"{song.name}: {where} tem {position} semicolcheias")
+
+    for index, bar in enumerate(song.intro):
+        bar_start = index * bar_samples
+        play_melody(bar.melody, bar_start, f"o compasso {index + 1} da abertura")
+        for start, length, notes in bar.stabs:
+            gate = int(step(length) * 0.9)
+            at = bar_start + step(start)
+            track.add(at, triangle(frequency(notes[0]), gate, volumes["bass"] * 1.2))
+            for note in notes[1:]:
+                track.add(at, pulse(frequency(note), gate, 0.5, volumes["stab"]))
+            track.add(at, kick(volumes["kick"]))
+        play_drums(track, bar.drums, bar_start, step, volumes, seed=index)
+
+    for index, (chords, melody) in enumerate(song.bars):
+        bar_start = intro + index * bar_samples
+        play_melody(melody, bar_start, f"o compasso {index + 1}")
 
         # Acordes: arpejo em semicolcheias; baixo em colcheias, fundamental e oitava.
         span = 16 // len(chords)
@@ -273,16 +339,8 @@ def render(song: Song) -> array:
                 gate = int(step(2) * 0.85)
                 track.add(bar_start + step(at), triangle(frequency(f"{tones[0]}{octave}"), gate, volumes["bass"]))
 
-        # Percussão.
-        for at, hit in enumerate(DRUM_PATTERNS[song.drums]):
-            start = bar_start + step(at)
-            if hit == "k":
-                track.add(start, kick(volumes["kick"]))
-            elif hit == "s":
-                track.add(start, noise(0.12, volumes["snare"], period=2, seed=index))
-            elif hit == "h":
-                track.add(start, noise(0.03, volumes["hat"], period=1, seed=at))
-    return track.data
+        play_drums(track, DRUM_PATTERNS[song.drums], bar_start, step, volumes, seed=index)
+    return track.data, intro
 
 
 def normalize(samples: array) -> array:
@@ -311,11 +369,29 @@ def write_ogg(song: Song, samples: array) -> str:
     return target
 
 
+def set_loop_offset(song: Song, loop_start: int) -> None:
+    """Põe o ponto de volta no `.import` que o Godot criou, se ele já existir."""
+    path = os.path.join(HERE, f"{song.name}.ogg.import")
+    if not os.path.exists(path):
+        print(f"  abra o editor do Godot e rode de novo: falta {os.path.basename(path)}")
+        return
+    with open(path, encoding="utf-8") as file:
+        lines = file.read().splitlines()
+    # O mesmo formato que o Godot escreve: "1.6", e não "1.600000".
+    offset = "loop_offset=" + f"{loop_start / RATE:.6f}".rstrip("0").rstrip(".")
+    lines = [offset if line.startswith("loop_offset=") else line for line in lines]
+    with open(path, "w", encoding="utf-8", newline="\n") as file:
+        file.write("\n".join(lines) + "\n")
+
+
 def main() -> None:
     for song in (wild_battle(), tamer_battle(), victory()):
-        samples = normalize(render(song))
-        path = write_ogg(song, samples)
-        print(f"{os.path.basename(path)}: {len(samples) / RATE:.1f} s")
+        samples, loop_start = render(song)
+        path = write_ogg(song, normalize(samples))
+        if song.loop:
+            set_loop_offset(song, loop_start)
+        intro = f", abertura de {loop_start / RATE:.2f} s" if loop_start else ""
+        print(f"{os.path.basename(path)}: {len(samples) / RATE:.1f} s{intro}")
 
 
 if __name__ == "__main__":

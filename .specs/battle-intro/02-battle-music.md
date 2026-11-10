@@ -28,6 +28,7 @@ Godot, para quem está começando: um **canal de áudio** (bus) é um caminho po
 - **RF-02:** `battle_wild` é animada, em tom maior, e `battle_tamer` é mais rápida e tensa, em tom menor. As duas têm de 30 a 45 s e terminam no mesmo compasso em que começam, para o loop não ter emenda. `victory` tem de 3 a 5 s e termina numa nota longa.
 - **RF-03:** as melodias são originais. O cabeçalho do script diz isso, e nenhuma frase copia música de jogo.
 - **RF-04:** o `.import` das duas lutas tem `loop = true`, e o do `victory`, `loop = false`.
+- **RF-04b:** pedido do dono depois do primeiro teste (2026-11-10): cada luta começa com uma abertura de um compasso, tocada uma vez só, com três batidas fortes ("tun tun tun") e uma passagem que entra na música. O `loop_offset` do `.import` aponta o fim da abertura, e o `compose.py` o escreve sozinho.
 
 ### Tocar
 
@@ -76,6 +77,8 @@ No editor (F5), em 360×640, com som:
 
 - Lutar contra um selvagem e vencer; lutar contra um Domador e perder; fugir de um selvagem; capturar um selvagem.
 - Ouvir o loop inteiro de cada música pelo menos uma vez.
+
+Depois, a abertura de um compasso entrou nas duas lutas (RF-04b): a selvagem passou a ter 40,0 s, com o loop voltando em 1,6 s, e a de Domador 35,7 s, voltando em 1,43 s. O Godot leu o `loop_offset` das duas, e o `compose.py` continuou dando os mesmos arquivos a cada execução.
 
 O que foi conferido em 2026-11-10: o `compose.py` gera `battle_wild.ogg` (38,4 s, 24 compassos a 150 batidas por minuto, em ré maior), `battle_tamer.ogg` (34,3 s, 24 compassos a 168, em lá menor) e `victory.ogg` (4,2 s, em dó maior), e duas execuções seguidas deram arquivos idênticos. A fanfarra começou com 5,9 s e foi encurtada para dois compassos. O loop não tem emenda porque as notas que passam do fim voltam para o começo do buffer. O projeto abre sem erro de script, e os avisos com `-d` são de arquivos que esta fase não tocou. Uma cena temporária, que roda com os autoloads e já foi apagada, conferiu: o canal `Music` a −6 dB, ligado ao Master; o loop das duas lutas e a vitória sem loop; o player no canal certo; a música de selvagem, a de Domador e a vitória; a mesma música sem recomeçar; o sumir aos poucos parando e voltando o volume; o `cover` começando a música do Domador; e outra tela aberta no meio da transição fazendo a música sumir. Ouvir as músicas e os fins de luta no editor fica para o dono.
 
