@@ -1,6 +1,6 @@
 # 03. Música de explorar
 
-- **Status:** concluída (falta o teste do dono no editor)
+- **Status:** concluída
 - **Depende de:** [02-battle-music](02-battle-music.md), [architecture.md](architecture.md)
 
 ## Contexto
@@ -30,11 +30,11 @@ Proposta aceita pelo dono ("pode seguir"): uma música calma e de aventura, que 
 
 ## Critérios de aceite
 
-- [ ] Abrir Explorar zona toca a música de explorar, em loop sem emenda.
-- [ ] Procurar ou tocar no log de um Domador troca para a música da luta, com a transição.
-- [ ] Voltar da luta para o mapa traz a música de explorar de novo, entrando aos poucos.
-- [ ] Abrir e fechar a Mochila não recomeça a música.
-- [ ] Voltar ao Hub faz a música sumir aos poucos, e o Hub fica sem música.
+- [x] Abrir Explorar zona toca a música de explorar, em loop sem emenda.
+- [x] Procurar ou tocar no log de um Domador troca para a música da luta, com a transição.
+- [x] Voltar da luta para o mapa traz a música de explorar de novo, entrando aos poucos.
+- [x] Abrir e fechar a Mochila não recomeça a música.
+- [x] Voltar ao Hub faz a música sumir aos poucos, e o Hub fica sem música.
 - [x] Rodar o `compose.py` de novo gera os mesmos arquivos.
 - [x] O projeto abre sem erros nem avisos de script.
 
@@ -60,7 +60,7 @@ godot --headless -d --path client --quit-after 60
 
 No editor (F5), com som: abrir Explorar zona, lutar e voltar, abrir a Mochila e voltar, e voltar ao Hub.
 
-O que foi conferido em 2026-11-10: o `compose.py` gera `explore.ogg` com 48 s (24 compassos a 120 batidas por minuto), e duas execuções seguidas deram os mesmos quatro arquivos. O projeto abre sem erro de script, e os avisos com `-d` da tela de exploração são os de antes (a variável `size`). Uma cena temporária, que roda com os autoloads e já foi apagada, conferiu: a música em loop desde o começo; tocar, e não recomeçar ao voltar da Mochila; a luta trocando a música; a volta da luta recomeçando a de explorar em silêncio e subindo aos poucos; uma segunda chamada no meio da entrada sem recomeçar; sair no meio da entrada fazendo sumir e parar; e a música da luta entrando mesmo com a de explorar sumindo. Ouvir no editor fica para o dono.
+O que foi conferido em 2026-11-10: o `compose.py` gera `explore.ogg` com 48 s (24 compassos a 120 batidas por minuto), e duas execuções seguidas deram os mesmos quatro arquivos. O projeto abre sem erro de script, e os avisos com `-d` da tela de exploração são os de antes (a variável `size`). Uma cena temporária, que roda com os autoloads e já foi apagada, conferiu: a música em loop desde o começo; tocar, e não recomeçar ao voltar da Mochila; a luta trocando a música; a volta da luta recomeçando a de explorar em silêncio e subindo aos poucos; uma segunda chamada no meio da entrada sem recomeçar; sair no meio da entrada fazendo sumir e parar; e a música da luta entrando mesmo com a de explorar sumindo. O dono ouviu no jogo e aprovou em 2026-11-10.
 
 ## Tarefas
 
