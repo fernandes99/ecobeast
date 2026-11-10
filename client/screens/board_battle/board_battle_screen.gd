@@ -154,6 +154,7 @@ var _entry_team := -1
 @onready var _capture_overlay: CaptureOverlay = %CaptureOverlay
 @onready var _level_up_overlay: LevelUpOverlay = %LevelUpOverlay
 @onready var _evolution_overlay: EvolutionOverlay = %EvolutionOverlay
+@onready var _codex_overlay: CodexRegisteredOverlay = %CodexRegisteredOverlay
 @onready var _skill_overlay: SkillLearnOverlay = %SkillLearnOverlay
 @onready var _history: BattleHistoryPanel = %HistoryPanel
 
@@ -209,6 +210,8 @@ func handle_back() -> bool:
 		return false
 	if _history.visible:
 		_history.close()
+	elif _codex_overlay.visible:
+		_codex_overlay.close()
 	elif _level_up_overlay.visible:
 		_level_up_overlay.close()
 	elif _evolution_overlay.visible:
@@ -353,6 +356,9 @@ func _show_turn(turn: BoardTurn) -> void:
 	var destination := _narrator.describe_captured_to(turn.captured_to)
 	if not destination.is_empty():
 		_history.add_line(destination)
+	# A primeira captura da espécie (codex/03), antes da subida de nível.
+	for species_id: int in turn.registered_species_ids:
+		await _codex_overlay.play(species_id)
 	_view = turn.view
 	_sync_board()
 	match _view.phase:
@@ -1054,6 +1060,9 @@ func _celebrate(progression: Array[CreatureProgress]) -> void:
 			)
 			if evolved == null:
 				continue
+			# A espécie nova entrou no Bestiário agora (codex/03).
+			for species_id: int in evolved.registered_species_ids:
+				await _codex_overlay.play(species_id)
 			var species := GameData.get_species(evolved.creature.species_id)
 			display_name = evolved.creature.display_name(species)
 			learned = evolved.learned_skill_ids

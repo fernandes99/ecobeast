@@ -1,6 +1,6 @@
 # 03. Aviso de registro
 
-- **Status:** rascunho
+- **Status:** concluída (falta o teste do dono no editor)
 - **Depende de:** [01-codex-records](01-codex-records.md), [02-codex-screen](02-codex-screen.md), [architecture.md](architecture.md)
 
 ## Contexto
@@ -37,7 +37,7 @@ As respostas da luta e da Evolução já trazem `registered_species_ids`. No jog
 - [ ] Aceitar uma Evolução para uma espécie nova mostra o aviso com ela, e cancelar não mostra.
 - [ ] Depois do aviso, a luta segue como antes, com XP, níveis e a saída.
 - [ ] O voltar do aparelho fecha o aviso.
-- [ ] O projeto abre sem erros nem avisos de script.
+- [x] O projeto abre sem erros nem avisos de script.
 
 ## Desenho técnico
 
@@ -49,7 +49,6 @@ Arquivos alterados:
 
 - `res://domain/models/board_turn.gd` e `progress_choice.gd`: `registered_species_ids`.
 - `res://screens/board_battle/board_battle_screen.gd` e `.tscn`: o aviso depois da captura e da Evolução, e o `handle_back`.
-- `res://screens/battle/evolution_overlay.gd`, se o `ProgressChoice` precisar sair dele com a lista.
 
 ## Verificação
 
@@ -64,9 +63,13 @@ No editor (F5), em 360×640, com `ENABLE_TEST_BATTLE` ligada no servidor:
 - Capturar outro da mesma espécie e conferir que o aviso não aparece.
 - Com um Ecobeast a um nível da Evolução (o "Quase subir de nível" do menu Debug do mapa leva ao último XP), vencer uma luta, aceitar a Evolução e conferir o aviso.
 
+O `EvolutionOverlay` não mudou: ele já devolve o `ProgressChoice`, que agora traz a lista.
+
+O que foi conferido em 2026-11-10: o projeto abre sem erro de script, e os avisos com `-d` são de arquivos que esta fase não tocou. Um aviso da fase 02 (a variável `material` do `CreaturePortrait` encobrindo a do nó) foi corrigido aqui. Uma cena temporária, que roda com os autoloads e o catálogo do servidor e já foi apagada, compilou a tela da luta e o aviso e conferiu: o `BoardTurn` e o `ProgressChoice` leem `registered_species_ids`, com lista vazia quando falta; o aviso começa escondido, mostra "#004 Nilu" com um Elemento, espera o toque e fecha no "Continuar" e no voltar; e o aviso está na cena da luta. Os passos no editor ficam para o dono.
+
 ## Tarefas
 
-- [ ] Os modelos.
-- [ ] O `CodexRegisteredOverlay`.
-- [ ] O aviso depois da captura e da Evolução.
-- [ ] Rodar a verificação, dizer o que ficou para o dono e mudar o status aqui e no README.
+- [x] Os modelos.
+- [x] O `CodexRegisteredOverlay`.
+- [x] O aviso depois da captura e da Evolução.
+- [x] Rodar a verificação, dizer o que ficou para o dono e mudar o status aqui e no README.

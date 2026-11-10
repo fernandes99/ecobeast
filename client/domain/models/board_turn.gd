@@ -13,6 +13,9 @@ var spawn_id: int = 0
 var tamer_id: int = 0
 ## Na vitória, quem recebeu XP, na ordem da equipe; vazio nas outras chamadas.
 var progression: Array[CreatureProgress] = []
+## As espécies capturadas pela primeira vez no Bestiário nesta chamada (codex/03);
+## vazio nas outras.
+var registered_species_ids: Array[int] = []
 
 
 ## null se a resposta não tiver `battle` ou `events`.
@@ -30,4 +33,7 @@ static func from_dict(d: Dictionary) -> BoardTurn:
 	for item: Variant in DictFields.get_array(d, "progression"):
 		if item is Dictionary:
 			turn.progression.append(CreatureProgress.from_dict(item))
+	for value: Variant in DictFields.get_array(d, "registered_species_ids"):
+		if value is int or value is float:
+			turn.registered_species_ids.append(int(value))
 	return turn

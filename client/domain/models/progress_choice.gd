@@ -9,6 +9,8 @@ var creature: CreatureInstance = null
 var learned_skill_ids: Array[int] = []
 ## As Técnicas que ainda esperam a escolha do jogador.
 var pending_skill_ids: Array[int] = []
+## Na evolução, a espécie nova, se ela entrou capturada no Bestiário agora (codex/03).
+var registered_species_ids: Array[int] = []
 
 
 ## null se a resposta não tiver `creature`.
@@ -20,6 +22,7 @@ static func from_dict(d: Dictionary) -> ProgressChoice:
 	choice.creature = CreatureInstance.from_dict(row)
 	choice.learned_skill_ids = _ids(DictFields.get_array(d, "learned_skill_ids"))
 	choice.pending_skill_ids = _ids(DictFields.get_array(d, "pending_skill_ids"))
+	choice.registered_species_ids = _ids(DictFields.get_array(d, "registered_species_ids"))
 	return choice
 
 

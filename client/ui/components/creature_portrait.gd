@@ -83,10 +83,10 @@ func _paint_silhouette() -> void:
 	if not _silhouette:
 		_sprite.material = null
 		return
-	var material := ShaderMaterial.new()
-	material.shader = SilhouetteShader
-	material.set_shader_parameter(&"color", UiPalette.SILHOUETTE)
-	_sprite.material = material
+	var shadow := ShaderMaterial.new()
+	shadow.shader = SilhouetteShader
+	shadow.set_shader_parameter(&"color", UiPalette.SILHOUETTE)
+	_sprite.material = shadow
 
 
 func _show_placeholder(species: CreatureSpecies) -> void:
