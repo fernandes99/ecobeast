@@ -1,12 +1,13 @@
 import { Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module.js';
+import { CodexModule } from '../codex/codex.module.js';
 import { ProgressionController } from './progression.controller.js';
 import { ProgressionService } from './progression.service.js';
 import { ProgressionStore } from './progression.store.js';
 
 /** Técnicas novas, evolução e as escolhas do jogador depois da vitória. */
 @Module({
-  imports: [AuthModule],
+  imports: [AuthModule, CodexModule],
   controllers: [ProgressionController],
   providers: [
     ProgressionService,

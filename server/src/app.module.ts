@@ -7,6 +7,7 @@ import { BattleModule } from './battle/battle.module.js';
 import { BoardBattleModule } from './board-battle/board-battle.module.js';
 import { BundleModule } from './catalog/bundle/bundle.module.js';
 import { CatalogModule } from './catalog/catalog.module.js';
+import { CodexModule } from './codex/codex.module.js';
 import { Env, validateEnv } from './config/env.js';
 import { ExplorationModule } from './exploration/exploration.module.js';
 import { HealthModule } from './health/health.module.js';
@@ -40,6 +41,7 @@ import { TeamModule } from './team/team.module.js';
     InventoryModule,
     TeamModule,
     ProgressionModule,
+    CodexModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

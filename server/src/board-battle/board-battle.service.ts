@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -20,9 +21,11 @@ import {
   type BattleTamer,
   type WildCreature,
 } from '../battle/battle.store.js';
+import { CodexService } from '../codex/codex.service.js';
 import { secureRandom } from '../common/secure-random.js';
 import { Env } from '../config/env.js';
 import type { BattleEvent, Opponent } from '../domain/battle/types.js';
+import { enemySpeciesEntered } from '../domain/codex/codex.js';
 import {
   applyBoardVez,
   startBoardBattle,
@@ -40,13 +43,21 @@ import { PrismaService } from '../prisma/prisma.service.js';
 import type { BoardBattleResponseDto } from './board-battle.dto.js';
 import { toBoardBattleDto } from './board-battle.mapper.js';
 
-const NOT_FINISHED: BattleFinish = { capturedTo: null, progression: [] };
+const NOT_FINISHED: BattleFinish = {
+  capturedTo: null,
+  progression: [],
+  registeredSpeciesIds: [],
+};
 
 function toResponse(
   state: BoardState,
   events: BattleEvent[],
   tamer: BattleTamer | null,
-  { capturedTo, progression }: BattleFinish = NOT_FINISHED,
+  {
+    capturedTo,
+    progression,
+    registeredSpeciesIds,
+  }: BattleFinish = NOT_FINISHED,
 ): BoardBattleResponseDto {
   return {
     battle: toBoardBattleDto(state, tamer),
@@ -55,6 +66,7 @@ function toResponse(
     spawn_id: null,
     tamer_id: null,
     progression,
+    registered_species_ids: registeredSpeciesIds,
   };
 }
 
@@ -74,10 +86,13 @@ interface BeginOptions {
  */
 @Injectable()
 export class BoardBattleService {
+  private readonly logger = new Logger(BoardBattleService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly store: BattleStore,
     private readonly records: BattleRecordsService,
+    private readonly codex: CodexService,
     private readonly config: ConfigService<Env, true>,
   ) {}
 
@@ -178,9 +193,11 @@ export class BoardBattleService {
 
     if (outcome.state.phase !== 'ended') {
       this.store.set(userId, { ...battle, state: outcome.state });
+      await this.recordSeen(userId, outcome.events);
       return toResponse(outcome.state, outcome.events, tamer);
     }
     this.store.delete(userId);
+    await this.recordSeen(userId, outcome.events);
     const finish = await this.finish(
       userId,
       outcome.state,
@@ -188,6 +205,22 @@ export class BoardBattleService {
       tamer,
     );
     return toResponse(outcome.state, outcome.events, tamer, finish);
+  }
+
+  /**
+   * O Bestiário (.specs/codex/01-codex-records.md, RF-04): quem do lado inimigo
+   * entrou em campo nesta resposta fica visto. Vem depois de a luta ser
+   * guardada, e uma falha aqui não atrapalha a luta.
+   */
+  private async recordSeen(
+    userId: string,
+    events: BattleEvent[],
+  ): Promise<void> {
+    try {
+      await this.codex.recordSeen(userId, enemySpeciesEntered(events));
+    } catch (error) {
+      this.logger.error('Não deu para gravar o visto no Bestiário.', error);
+    }
   }
 
   private godMode(requested: boolean): boolean {
@@ -252,11 +285,13 @@ export class BoardBattleService {
     // é gravado aqui, e não fica luta nenhuma, nem a anterior.
     if (state.phase === 'ended') {
       this.store.delete(userId);
+      await this.recordSeen(userId, events);
       const finish = await this.finish(userId, state, wilds, tamer);
       return toResponse(state, events, tamer, finish);
     }
     // Substitui a luta anterior, de qualquer tipo, sem gravar nada dela.
     this.store.set(userId, { kind: 'board', state, catalog, wilds, tamer });
+    await this.recordSeen(userId, events);
     return toResponse(state, events, tamer);
   }
 }

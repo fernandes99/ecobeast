@@ -48,6 +48,15 @@ export class EvolutionResponseDto {
     example: [],
   })
   pending_skill_ids: number[];
+
+  @ApiProperty({
+    description:
+      'A espécie nova, se ela ficou capturada pela primeira vez no Bestiário. ' +
+      'Vazio quando ela já estava capturada ou a Evolução foi cancelada.',
+    type: [Number],
+    example: [2],
+  })
+  registered_species_ids: number[];
 }
 
 export class LearnSkillResponseDto {

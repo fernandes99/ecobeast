@@ -30,7 +30,11 @@ import { BattleStore } from './battle.store.js';
 export { MIN_STEP_MS } from './battle-records.service.js';
 export const NO_BATTLE = 'Nenhuma batalha em andamento.';
 const CAN_FLEE_WILD = true;
-const NOT_FINISHED: BattleFinish = { capturedTo: null, progression: [] };
+const NOT_FINISHED: BattleFinish = {
+  capturedTo: null,
+  progression: [],
+  registeredSpeciesIds: [],
+};
 
 function toResponse(
   state: BattleState,

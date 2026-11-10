@@ -22,6 +22,7 @@ import {
   creatureStats,
   toCreatureDto,
 } from '../player/player.mapper.js';
+import { CodexService } from '../codex/codex.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import type {
   EvolutionResponseDto,
@@ -91,6 +92,7 @@ export class ProgressionService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly store: ProgressionStore,
+    private readonly codex: CodexService,
   ) {}
 
   /**
@@ -273,7 +275,11 @@ export class ProgressionService {
     const evolved = accept
       ? await this.evolvedData(row, targetId, learning)
       : null;
-    await this.prisma.$transaction([
+    // A espécie nova entra no Bestiário junto com a troca (.specs/codex).
+    const codexWrite = evolved
+      ? this.codex.caughtWrite(userId, [targetId])
+      : null;
+    const results = await this.prisma.$transaction([
       ...(evolved
         ? [
             this.prisma.creatureInstance.update({
@@ -285,6 +291,7 @@ export class ProgressionService {
       this.prisma.creatureInstanceSkill.createMany({
         data: learned.map((skill) => ({ creatureUid: uid, ...skill })),
       }),
+      ...(codexWrite ? [codexWrite] : []),
     ]);
     this.store.update(
       userId,
@@ -297,6 +304,12 @@ export class ProgressionService {
       creature: toCreatureDto(await this.loadCreature(userId, uid)),
       learned_skill_ids: learned.map((skill) => skill.skillId),
       pending_skill_ids: pending,
+      registered_species_ids: codexWrite
+        ? this.codex.newlyCaught(
+            [targetId],
+            results.at(-1) as { species_id: number }[],
+          )
+        : [],
     };
   }
 

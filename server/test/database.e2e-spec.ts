@@ -38,10 +38,10 @@ describe('restrições do banco (e2e)', () => {
     expect(rows.map((row) => row.table_name)).toEqual([]);
   });
 
-  it('as 37 tabelas e o histórico de migrations ficam no schema ecobeasts', async () => {
+  it('as 38 tabelas e o histórico de migrations ficam no schema ecobeasts', async () => {
     const rows = await prisma.$queryRaw<{ n: number }[]>`
       SELECT count(*)::int AS n FROM information_schema.tables WHERE table_schema = 'ecobeasts'`;
-    expect(rows[0].n).toBe(38);
+    expect(rows[0].n).toBe(39);
   });
 
   it('recusa Técnica com precisão 150', async () => {
@@ -304,6 +304,41 @@ describe('restrições do banco (e2e)', () => {
       });
     });
     expectRejected(result, 'creature_instances_location_check');
+  });
+
+  it('recusa Bestiário capturado antes de visto', async () => {
+    const result = await attempt(prisma, async (tx) => {
+      const { player, ids } = await createPlayerWithCreature(tx);
+      await tx.codexEntry.create({
+        data: {
+          playerId: player.id,
+          speciesId: ids.speciesId,
+          seenAt: new Date('2026-11-09T12:00:00Z'),
+          caughtAt: new Date('2026-11-09T11:00:00Z'),
+        },
+      });
+    });
+    expectRejected(result, 'codex_entries_caught_at_check');
+  });
+
+  it('aceita Bestiário só visto, e capturado na mesma hora em que foi visto', async () => {
+    const result = await attempt(prisma, async (tx) => {
+      const { player, ids } = await createPlayerWithCreature(tx);
+      const other = await createSpecies(tx);
+      const at = new Date('2026-11-09T12:00:00Z');
+      await tx.codexEntry.createMany({
+        data: [
+          { playerId: player.id, speciesId: ids.speciesId, seenAt: at },
+          {
+            playerId: player.id,
+            speciesId: other.id,
+            seenAt: at,
+            caughtAt: at,
+          },
+        ],
+      });
+    });
+    expect(result).toBe('accepted');
   });
 
   it('não deixa apagar uma espécie usada em species_elements (Restrict)', async () => {

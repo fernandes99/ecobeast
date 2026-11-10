@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { BattleStore } from '../battle/battle.store.js';
+import { CodexService } from '../codex/codex.service.js';
 import { secureRandom } from '../common/secure-random.js';
 import { Env } from '../config/env.js';
 import { createCreature } from '../domain/rules/creature-factory.js';
@@ -55,6 +56,7 @@ export class PlayerService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly battles: BattleStore,
+    private readonly codex: CodexService,
     private readonly config: ConfigService<Env, true>,
   ) {}
 
@@ -102,15 +104,28 @@ export class PlayerService {
       STARTER_LEVEL,
     ))!;
     const creature = createCreature(params, secureRandom);
+    // O Bestiário (.specs/codex): o escolhido fica capturado, e os outros
+    // iniciais da escolha, vistos.
+    const others = (
+      await this.prisma.starterOption.findMany({
+        where: { speciesId: { not: speciesId } },
+        select: { speciesId: true },
+      })
+    ).map((row) => row.speciesId);
     try {
-      // A escrita aninhada é uma transação só; a chave única de
-      // player_id + party_slot barra o segundo pedido simultâneo.
-      await this.prisma.creatureInstance.create({
-        data: newCreatureData(userId, creature, statIds, {
-          location: 'party',
-          partySlot: STARTER_SLOT,
+      // Uma transação só; a chave única de player_id + party_slot barra o
+      // segundo pedido simultâneo. O Bestiário não briga com ele: as duas
+      // escritas dele ignoram a linha que já existe.
+      await this.prisma.$transaction([
+        this.prisma.creatureInstance.create({
+          data: newCreatureData(userId, creature, statIds, {
+            location: 'party',
+            partySlot: STARTER_SLOT,
+          }),
         }),
-      });
+        this.codex.caughtWrite(userId, [speciesId]),
+        this.codex.seenWrite(userId, others),
+      ]);
     } catch (error) {
       if (isUniqueViolation(error)) throw new ConflictException(STARTER_TAKEN);
       throw error;

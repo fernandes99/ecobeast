@@ -355,4 +355,13 @@ export class BoardBattleResponseDto {
     type: () => [CreatureProgressDto],
   })
   progression: CreatureProgressDto[];
+
+  @ApiProperty({
+    description:
+      'As espécies que ficaram capturadas pela primeira vez no Bestiário nesta ' +
+      'resposta: só no fim de uma luta com captura. Vazio nas outras.',
+    type: [Number],
+    example: [],
+  })
+  registered_species_ids: number[];
 }

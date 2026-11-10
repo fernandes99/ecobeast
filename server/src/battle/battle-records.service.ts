@@ -4,6 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { CodexService } from '../codex/codex.service.js';
 import { secureRandom } from '../common/secure-random.js';
 import type {
   BattleBagItem,
@@ -80,6 +81,8 @@ export interface Enemy extends WildCreature {
 export interface BattleFinish {
   capturedTo: CapturedTo | null;
   progression: CreatureProgressDto[];
+  /** As espécies que ficaram capturadas pela primeira vez no Bestiário. */
+  registeredSpeciesIds: number[];
 }
 
 /** Quem ganhou XP na luta, já com o nível, o XP e o HP que vão para o banco. */
@@ -147,6 +150,7 @@ export class BattleRecordsService {
     private readonly prisma: PrismaService,
     private readonly explorations: ExplorationStore,
     private readonly progression: ProgressionService,
+    private readonly codex: CodexService,
   ) {}
 
   async loadTeam(userId: string): Promise<Team> {
@@ -273,14 +277,23 @@ export class BattleRecordsService {
     wilds: WildCreature[],
   ): Promise<BattleFinish> {
     const { progressed, leveled } = await this.progressTeam(userId, state);
-    const capturedTo = await this.saveTeam(userId, state, wilds, progressed);
+    const { capturedTo, registeredSpeciesIds } = await this.saveTeam(
+      userId,
+      state,
+      wilds,
+      progressed,
+    );
     if (state.result === 'victory') {
       const plans = new Map(
         progressed.flatMap(({ uid, plan }) => (plan ? [[uid, plan]] : [])),
       );
       this.progression.remember(userId, leveled, plans);
     }
-    return { capturedTo, progression: progressed.map(toProgressDto) };
+    return {
+      capturedTo,
+      progression: progressed.map(toProgressDto),
+      registeredSpeciesIds,
+    };
   }
 
   /**
@@ -349,14 +362,18 @@ export class BattleRecordsService {
   /**
    * Grava HP, status, PP, XP, nível, itens gastos, moedas e o capturado de uma vez. Com `updateMany`,
    * um Domador apagado no meio da luta não encontra nada, e a batalha termina
-   * sem erro. Devolve para onde foi o último capturado.
+   * sem erro. Devolve para onde foi o último capturado e as espécies que ele
+   * registrou no Bestiário.
    */
   private async saveTeam(
     userId: string,
     state: BattleState,
     wilds: WildCreature[],
     progressed: ProgressedCreature[],
-  ): Promise<CapturedTo | null> {
+  ): Promise<{
+    capturedTo: CapturedTo | null;
+    registeredSpeciesIds: number[];
+  }> {
     const progressByUid = new Map(
       progressed.map(({ uid, progress }) => [uid, progress]),
     );
@@ -372,8 +389,16 @@ export class BattleRecordsService {
       enemy.captured ? [{ enemy, wild: wilds[index]! }] : [],
     );
     const places = await this.capturePlaces(userId, captured.length);
+    // O Bestiário registra só quem foi gravado: sem equipe, ninguém é.
+    const caughtSpecies = places.map(
+      (_, index) => captured[index]!.enemy.speciesId,
+    );
+    const codexWrite =
+      caughtSpecies.length > 0
+        ? this.codex.caughtWrite(userId, caughtSpecies)
+        : null;
 
-    await this.prisma.$transaction([
+    const results = await this.prisma.$transaction([
       ...state.player.team.flatMap((creature) => {
         const uid = creature.creatureUid!;
         const statusSlug = creature.statusSlug;
@@ -445,8 +470,17 @@ export class BattleRecordsService {
           },
         });
       }),
+      ...(codexWrite ? [codexWrite] : []),
     ]);
-    return places.at(-1)?.location ?? null;
+    return {
+      capturedTo: places.at(-1)?.location ?? null,
+      registeredSpeciesIds: codexWrite
+        ? this.codex.newlyCaught(
+            caughtSpecies,
+            results.at(-1) as { species_id: number }[],
+          )
+        : [],
+    };
   }
 
   /**

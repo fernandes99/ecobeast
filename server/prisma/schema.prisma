@@ -330,6 +330,7 @@ model Species {
   starterOption  StarterOption?
   creatures      CreatureInstance[]
   biomes         SpeciesBiome[]
+  codexEntries   CodexEntry[]
 
   @@index([growthRateId])
   @@index([rarityId])
@@ -645,6 +646,7 @@ model Player {
 
   creatures CreatureInstance[]
   inventory InventoryItem[]
+  codex     CodexEntry[]
 
   @@map("players")
   @@schema("ecobeasts")
@@ -747,6 +749,23 @@ model InventoryItem {
   @@id([playerId, itemId])
   @@index([itemId])
   @@map("inventory_items")
+  @@schema("ecobeasts")
+}
+
+/// O Bestiário: uma linha por espécie que o Domador já viu numa luta (.specs/codex/architecture.md).
+model CodexEntry {
+  playerId  String    @map("player_id") @db.Uuid
+  speciesId Int       @map("species_id")
+  seenAt    DateTime  @map("seen_at") @db.Timestamptz(3)
+  /// Nulo enquanto só foi visto. CHECK ≥ seen_at (migration codex_entries)
+  caughtAt  DateTime? @map("caught_at") @db.Timestamptz(3)
+
+  player  Player  @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  species Species @relation(fields: [speciesId], references: [id], onDelete: Restrict)
+
+  @@id([playerId, speciesId])
+  @@index([speciesId])
+  @@map("codex_entries")
   @@schema("ecobeasts")
 }
 

@@ -47,7 +47,7 @@ Escolhas do planejamento (corrigíveis; ao mudar uma, atualize aqui e nas specs 
 | A migração registra como capturadas as espécies que cada jogador já tem hoje, na equipe ou no Santuário, e como vistos os iniciais (`starter_options`) que ele não tem. As espécies anteriores dos Ecobeasts que já evoluíram não são recuperadas | É a regra da escolha do inicial aplicada a quem já jogava. O banco não guarda a espécie de antes da Evolução |
 | O visto é gravado na hora em que o Ecobeast inimigo entra em campo, na resposta que traz o `creature_entered`, e não no fim da luta | Fechar o app no meio da luta não apaga o que o jogador viu. Um inimigo da reserva que nunca entrou não conta |
 | A luta de teste do menu Debug também registra | É como o dono testa o Bestiário sem procurar pelo mapa. Só existe com `ENABLE_TEST_BATTLE` |
-| A luta antiga (legado da `battle-core`) não registra | Nenhuma tela a abre |
+| A luta antiga (legado da `battle-core`) não registra o visto. Uma captura nela registra, porque o fim da luta é o mesmo, mas a resposta dela não avisa | Nenhuma tela a abre |
 | As respostas da luta e da Evolução dizem quais espécies foram registradas como capturadas pela primeira vez (`registered_species_ids`), e o jogo mostra o aviso só com elas | O servidor é a autoridade; o jogo não compara listas |
 | O número é o `id` da espécie, com 3 dígitos (`#004`) | O `GDD.md` já usa o id como número. Ids nunca mudam |
 | O detalhe abre por cima da grade e fecha no voltar | O Bestiário é lido uma vez ao abrir, e a linha evolutiva troca o detalhe sem sair da tela |
@@ -73,7 +73,7 @@ Escolhas do planejamento (corrigíveis; ao mudar uma, atualize aqui e nas specs 
 
 | # | Fase | Entrega | Status |
 | --- | --- | --- | --- |
-| 1 | [01-codex-records](01-codex-records.md) | Servidor: a tabela `codex_entries` com a carga de quem já joga, o registro do visto e do capturado nas lutas, na Evolução e no inicial, e as rotas do Bestiário | rascunho |
+| 1 | [01-codex-records](01-codex-records.md) | Servidor: a tabela `codex_entries` com a carga de quem já joga, o registro do visto e do capturado nas lutas, na Evolução e no inicial, e as rotas do Bestiário | concluída |
 | 2 | [02-codex-screen](02-codex-screen.md) | Jogo: a tela do Bestiário, com a grade, a contagem e o detalhe, aberta pelo Hub | rascunho |
 | 3 | [03-codex-registered](03-codex-registered.md) | Jogo: o aviso "Novo registro no Bestiário!" depois da captura e da Evolução | rascunho |
 
