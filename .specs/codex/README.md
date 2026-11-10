@@ -74,7 +74,7 @@ Escolhas do planejamento (corrigíveis; ao mudar uma, atualize aqui e nas specs 
 | # | Fase | Entrega | Status |
 | --- | --- | --- | --- |
 | 1 | [01-codex-records](01-codex-records.md) | Servidor: a tabela `codex_entries` com a carga de quem já joga, o registro do visto e do capturado nas lutas, na Evolução e no inicial, e as rotas do Bestiário | concluída |
-| 2 | [02-codex-screen](02-codex-screen.md) | Jogo: a tela do Bestiário, com a grade, a contagem e o detalhe, aberta pelo Hub | concluída (falta o teste do dono no editor) |
-| 3 | [03-codex-registered](03-codex-registered.md) | Jogo: o aviso "Novo registro no Bestiário!" depois da captura e da Evolução | concluída (falta o teste do dono no editor) |
+| 2 | [02-codex-screen](02-codex-screen.md) | Jogo: a tela do Bestiário, com a grade, a contagem e o detalhe, aberta pelo Hub | concluída |
+| 3 | [03-codex-registered](03-codex-registered.md) | Jogo: o aviso "Novo registro no Bestiário!" depois da captura e da Evolução | concluída |
 
 O desenho compartilhado está no [architecture.md](architecture.md).

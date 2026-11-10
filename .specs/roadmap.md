@@ -25,7 +25,7 @@ O que vem depois do MVP de estrutura (entrada, escolha do inicial e Hub). Cada l
 | 9   | [`team-and-storage`](team-and-storage/) | Equipe com 6 vagas reorganizáveis, Santuário com busca e filtro (TELAS.md #9 e #10) e troca de Ecobeast durante a luta | capture                    | concluída |
 | 10  | [`creature-details`](creature-details/) | Tela de detalhes da criatura (TELAS.md #8); vem antes do `battle-core`, por decisão do dono | auth-google                | concluída |
 | 11  | [`inventory-shop`](inventory-shop/) | Mochila e Loja (TELAS.md #12 e #13); tabelas `items`, `item_categories`, `inventory_items`; usar itens no mapa e na luta | backend-api, battle-screen, wild-battle | concluída |
-| 13  | [`codex`](codex/) | Bestiário com visto/capturado, detalhe e linha evolutiva (TELAS.md #11), e o aviso de registro na primeira captura e na Evolução | npc-tamers, progression, capture | concluída (falta o teste do dono no editor) |
+| 13  | [`codex`](codex/) | Bestiário com visto/capturado, detalhe e linha evolutiva (TELAS.md #11), e o aviso de registro na primeira captura e na Evolução | npc-tamers, progression, capture | concluída |
 | 14  | `arenas-league`     | 8 Arenas, emblemas, Liga final e desbloqueio secreto do Ancestral (TELAS.md #15)                          | npc-tamers                 | planejada |
 | 15  | `profile-settings`  | Perfil com estatísticas e configurações (TELAS.md #16)                                                    | auth-google                | planejada |
 | 16  | `content`           | 60–90 espécies, ~80 técnicas, ~20 traços, balanceamento                                                   | progression                | planejada |

@@ -1,6 +1,6 @@
 # 03. Aviso de registro
 
-- **Status:** concluída (falta o teste do dono no editor)
+- **Status:** concluída
 - **Depende de:** [01-codex-records](01-codex-records.md), [02-codex-screen](02-codex-screen.md), [architecture.md](architecture.md)
 
 ## Contexto
@@ -32,11 +32,11 @@ As respostas da luta e da Evolução já trazem `registered_species_ids`. No jog
 
 ## Critérios de aceite
 
-- [ ] Capturar um Ecobeast de uma espécie que nunca foi capturada mostra o aviso com ele, depois da linha da Esfera.
-- [ ] Capturar outro da mesma espécie não mostra o aviso.
-- [ ] Aceitar uma Evolução para uma espécie nova mostra o aviso com ela, e cancelar não mostra.
-- [ ] Depois do aviso, a luta segue como antes, com XP, níveis e a saída.
-- [ ] O voltar do aparelho fecha o aviso.
+- [x] Capturar um Ecobeast de uma espécie que nunca foi capturada mostra o aviso com ele, depois da linha da Esfera.
+- [x] Capturar outro da mesma espécie não mostra o aviso.
+- [x] Aceitar uma Evolução para uma espécie nova mostra o aviso com ela, e cancelar não mostra.
+- [x] Depois do aviso, a luta segue como antes, com XP, níveis e a saída.
+- [x] O voltar do aparelho fecha o aviso.
 - [x] O projeto abre sem erros nem avisos de script.
 
 ## Desenho técnico
@@ -65,7 +65,7 @@ No editor (F5), em 360×640, com `ENABLE_TEST_BATTLE` ligada no servidor:
 
 O `EvolutionOverlay` não mudou: ele já devolve o `ProgressChoice`, que agora traz a lista.
 
-O que foi conferido em 2026-11-10: o projeto abre sem erro de script, e os avisos com `-d` são de arquivos que esta fase não tocou. Um aviso da fase 02 (a variável `material` do `CreaturePortrait` encobrindo a do nó) foi corrigido aqui. Uma cena temporária, que roda com os autoloads e o catálogo do servidor e já foi apagada, compilou a tela da luta e o aviso e conferiu: o `BoardTurn` e o `ProgressChoice` leem `registered_species_ids`, com lista vazia quando falta; o aviso começa escondido, mostra "#004 Nilu" com um Elemento, espera o toque e fecha no "Continuar" e no voltar; e o aviso está na cena da luta. Os passos no editor ficam para o dono.
+O que foi conferido em 2026-11-10: o projeto abre sem erro de script, e os avisos com `-d` são de arquivos que esta fase não tocou. Um aviso da fase 02 (a variável `material` do `CreaturePortrait` encobrindo a do nó) foi corrigido aqui. Uma cena temporária, que roda com os autoloads e o catálogo do servidor e já foi apagada, compilou a tela da luta e o aviso e conferiu: o `BoardTurn` e o `ProgressChoice` leem `registered_species_ids`, com lista vazia quando falta; o aviso começa escondido, mostra "#004 Nilu" com um Elemento, espera o toque e fecha no "Continuar" e no voltar; e o aviso está na cena da luta. O dono jogou todos os passos no editor e aprovou em 2026-11-10.
 
 ## Tarefas
 
