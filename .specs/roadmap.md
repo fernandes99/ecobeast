@@ -22,6 +22,7 @@ O que vem depois do MVP de estrutura (entrada, escolha do inicial e Hub). Cada l
 | 7c  | [`board-battle`](board-battle/) | A luta num tabuleiro de hexágonos: fila por Velocidade, andar e agir na vez, Técnicas com alcance, forma e marca no chão; substitui a luta de Explorar zona | progression, battle-slots | concluída |
 | 8   | [`npc-tamers`](npc-tamers/) | Domadores NPC sorteados no mapa de Explorar zona, com fala, luta obrigatória de 1×1, 2×2 ou 3×3 e recompensa maior, e o Desafiar do Hub contra um Domador sorteado | board-battle, biome-encounters, progression | concluída |
 | 8b  | `npc-fixed-teams`   | Domadores NPC com nome e equipe fixa, montados à mão na tabela `npc_tamers`                               | npc-tamers                 | planejada |
+| 8c  | [`battle-intro`](battle-intro/) | A abertura da luta: transição de zoom pixelado e música retrô original, uma para selvagem e outra para Domador, com toque de vitória | board-battle, npc-tamers | em andamento |
 | 9   | [`team-and-storage`](team-and-storage/) | Equipe com 6 vagas reorganizáveis, Santuário com busca e filtro (TELAS.md #9 e #10) e troca de Ecobeast durante a luta | capture                    | concluída |
 | 10  | [`creature-details`](creature-details/) | Tela de detalhes da criatura (TELAS.md #8); vem antes do `battle-core`, por decisão do dono | auth-google                | concluída |
 | 11  | [`inventory-shop`](inventory-shop/) | Mochila e Loja (TELAS.md #12 e #13); tabelas `items`, `item_categories`, `inventory_items`; usar itens no mapa e na luta | backend-api, battle-screen, wild-battle | concluída |
@@ -30,7 +31,7 @@ O que vem depois do MVP de estrutura (entrada, escolha do inicial e Hub). Cada l
 | 15  | `profile-settings`  | Perfil com estatísticas e configurações (TELAS.md #16)                                                    | auth-google                | planejada |
 | 16  | `content`           | 60–90 espécies, ~80 técnicas, ~20 traços, balanceamento                                                   | progression                | planejada |
 | 17  | `release-pipeline`  | Export Android/iOS, ícones, assinatura, envio às lojas                                                    | —                          | planejada |
-| 18  | `audio`             | Introdução dos sons do jogo, com o som de cura do Refúgio entre os primeiros                              | heal-station               | planejada |
+| 18  | `audio`             | Introdução dos sons do jogo, com o som de cura do Refúgio entre os primeiros. A música da luta veio antes, na `battle-intro` | heal-station               | planejada |
 | 19  | [`content-viewer`](content-viewer/) | Janela só de desenvolvimento, aberta com F1 pelo editor, com Ecobeasts, Técnicas, Elementos, biomas, itens, Traços, Temperamentos e Estados, e os arquivos que faltam de cada um | board-battle | concluída |
 | 20  | [`hidden-traits`](hidden-traits/) | 1 chance em 20 de um Ecobeast (inicial ou selvagem) nascer com o Traço oculto da espécie | auth-google | concluída |
 | 21  | [`creature-sounds`](creature-sounds/) | O som característico de cada Ecobeast: o lugar do `call.wav` e o visualizador; tocar no jogo fica para depois | content-viewer | concluída |

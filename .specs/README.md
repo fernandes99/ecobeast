@@ -40,6 +40,7 @@ O Ecobeast é um jogo mobile (Android/iOS, retrato): o cliente em **Godot 4.7 co
 | [creature-sounds](creature-sounds/) | O som característico de cada Ecobeast (`call.wav`), por enquanto só no visualizador |
 | [npc-tamers](npc-tamers/) | Domadores NPC sorteados no mapa e no Desafiar do Hub, com fala e luta obrigatória |
 | [codex](codex/) | Bestiário: espécies vistas em luta e capturadas, detalhe com linha evolutiva e o aviso de registro |
+| [battle-intro](battle-intro/) | A abertura da luta: zoom pixelado e música retrô de selvagem, de Domador e de vitória |
 
 As próximas iniciativas estão no [roadmap.md](roadmap.md).
 
