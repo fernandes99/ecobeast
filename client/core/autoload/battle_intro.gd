@@ -30,8 +30,6 @@ var _state := State.IDLE
 var _tween: Tween = null
 ## Muda a cada `cover`: o texto de espera de uma transição velha não aparece na nova.
 var _cover_count: int = 0
-## O adversário da luta que está abrindo: a música dele vem na battle-intro/02.
-var _opponent: StringName = &""
 
 @onready var _effect: ColorRect = %Effect
 @onready var _waiting: Label = %Waiting
@@ -52,17 +50,17 @@ func is_covering() -> bool:
 ## Chame com await. `focus` é um ponto da tela do projeto (o
 ## `get_global_transform_with_canvas().origin` de quem está no centro). Devolve
 ## false, sem fazer nada, se outra transição já está correndo: aí não abra a luta.
-## `opponent` (`&"wild"` ou `&"tamer"`) escolhe a música, que vem na battle-intro/02.
+## `opponent` (`&"wild"` ou `&"tamer"`) escolhe a música da luta, que começa junto.
 func cover(focus: Vector2, opponent: StringName) -> bool:
 	if _state != State.IDLE:
 		return false
 	_state = State.COVERING
-	_opponent = opponent
 	_cover_count += 1
 	_shader.set_shader_parameter(&"focus", focus / _visible_size())
 	_apply(1.0, 1.0, 0.0, 0.0)
 	_effect.show()
 	visible = true
+	Music.play_battle(opponent)
 	_tween = create_tween()
 	_tween.tween_method(_flash_step, 0.0, 1.0, FLASH_SECONDS)
 	_tween.tween_method(_zoom_step, 0.0, 1.0, ZOOM_SECONDS)
@@ -135,3 +133,4 @@ func _hide_layer() -> void:
 func _on_screen_changed(id: StringName) -> void:
 	if is_covering() and id != BATTLE_SCREEN:
 		reveal()
+		Music.fade_out()

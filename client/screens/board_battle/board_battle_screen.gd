@@ -248,6 +248,7 @@ func _begin() -> void:
 	if not result.ok:
 		# A transição não deixa a tela preta sobre o erro (battle-intro/01).
 		BattleIntro.reveal()
+		Music.fade_out()
 		_show_exit(result.error, false)
 		return
 	var turn: BoardTurn = result.data
@@ -357,6 +358,8 @@ func _show_turn(turn: BoardTurn) -> void:
 	_narrator.set_team_names(_team_names(turn.view))
 	for event: Dictionary in turn.events:
 		await _play_event(event)
+	if turn.view.phase == "ended":
+		_play_end_music(turn.view.result)
 	var destination := _narrator.describe_captured_to(turn.captured_to)
 	if not destination.is_empty():
 		_history.add_line(destination)
@@ -1091,8 +1094,18 @@ func _known_skills(uid: String, learned: Array[int]) -> Array[SkillSlot]:
 
 
 func _show_battle_gone() -> void:
+	Music.fade_out()
 	_history.add_line(GONE_TEXT)
 	_show_exit(GONE_TEXT, true)
+
+
+## O fim da luta muda a música (battle-intro/02): vencer ou capturar toca o toque de
+## vitória, e perder ou fugir faz a música sumir aos poucos.
+func _play_end_music(result: String) -> void:
+	if result == "victory" or result == "captured":
+		Music.play_victory()
+	else:
+		Music.fade_out()
 
 
 ## Só a saída. `needs_reload`: a luta chegou a existir, e o jogador é relido.
@@ -1119,6 +1132,7 @@ func _leave() -> void:
 			_result_message.show()
 			return
 	_leaving = true
+	Music.fade_out()
 	if _exits_to_hub():
 		# A exploração acabou no servidor: o mapa fecha junto (npc-tamers/04).
 		Router.go_to(&"hub")

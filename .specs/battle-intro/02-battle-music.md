@@ -1,6 +1,6 @@
 # 02. Música da luta
 
-- **Status:** rascunho
+- **Status:** concluída (falta o teste do dono no editor)
 - **Depende de:** [01-battle-transition](01-battle-transition.md), [architecture.md](architecture.md)
 
 ## Contexto
@@ -45,8 +45,8 @@ Godot, para quem está começando: um **canal de áudio** (bus) é um caminho po
 - [ ] Perder ou fugir faz a música sumir aos poucos.
 - [ ] Voltar ao mapa ou ao Hub não deixa música tocando.
 - [ ] Os sons das Técnicas e dos golpes continuam tocando por cima da música.
-- [ ] Rodar o `compose.py` de novo gera os mesmos três arquivos.
-- [ ] O projeto abre sem erros nem avisos de script.
+- [x] Rodar o `compose.py` de novo gera os mesmos três arquivos.
+- [x] O projeto abre sem erros nem avisos de script.
 
 ## Desenho técnico
 
@@ -77,9 +77,11 @@ No editor (F5), em 360×640, com som:
 - Lutar contra um selvagem e vencer; lutar contra um Domador e perder; fugir de um selvagem; capturar um selvagem.
 - Ouvir o loop inteiro de cada música pelo menos uma vez.
 
+O que foi conferido em 2026-11-10: o `compose.py` gera `battle_wild.ogg` (38,4 s, 24 compassos a 150 batidas por minuto, em ré maior), `battle_tamer.ogg` (34,3 s, 24 compassos a 168, em lá menor) e `victory.ogg` (4,2 s, em dó maior), e duas execuções seguidas deram arquivos idênticos. A fanfarra começou com 5,9 s e foi encurtada para dois compassos. O loop não tem emenda porque as notas que passam do fim voltam para o começo do buffer. O projeto abre sem erro de script, e os avisos com `-d` são de arquivos que esta fase não tocou. Uma cena temporária, que roda com os autoloads e já foi apagada, conferiu: o canal `Music` a −6 dB, ligado ao Master; o loop das duas lutas e a vitória sem loop; o player no canal certo; a música de selvagem, a de Domador e a vitória; a mesma música sem recomeçar; o sumir aos poucos parando e voltando o volume; o `cover` começando a música do Domador; e outra tela aberta no meio da transição fazendo a música sumir. Ouvir as músicas e os fins de luta no editor fica para o dono.
+
 ## Tarefas
 
-- [ ] O compositor e as três músicas.
-- [ ] O canal `Music` e o autoload.
-- [ ] A música no `cover` e no fim da luta.
-- [ ] Atualizar o `client/CLAUDE.md`, rodar a verificação, dizer o que ficou para o dono e mudar o status aqui e no README.
+- [x] O compositor e as três músicas.
+- [x] O canal `Music` e o autoload.
+- [x] A música no `cover` e no fim da luta.
+- [x] Atualizar o `client/CLAUDE.md`, rodar a verificação, dizer o que ficou para o dono e mudar o status aqui e no README.
