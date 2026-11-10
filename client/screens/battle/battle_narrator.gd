@@ -33,10 +33,17 @@ const SIMPLE_LINES: Dictionary[String, String] = {
 var _names: Dictionary[String, String] = {"player": "", "enemy": ""}
 var _team_names: Array[String] = []
 var _is_opening := true
+## O Domador NPC adversário (npc-tamers/04); vazio contra selvagem.
+var _tamer_name := ""
 
 
 func set_side_name(side: String, display_name: String) -> void:
 	_names[side] = display_name
+
+
+## Contra um Domador NPC, quem entra do lado dele é enviado por ele.
+func set_tamer_name(tamer_name: String) -> void:
+	_tamer_name = tamer_name
 
 
 ## O nome de cada criatura da equipe, para o item usado em um reserva.
@@ -103,6 +110,8 @@ func describe_captured_to(captured_to: String) -> String:
 
 
 func _entered(side: String, who: String) -> String:
+	if side == "enemy" and not _tamer_name.is_empty():
+		return "%s enviou %s!" % [_tamer_name, who]
 	if not _is_opening:
 		return "%s entrou na luta." % who
 	return "Um %s selvagem apareceu!" % who if side == "enemy" else ""

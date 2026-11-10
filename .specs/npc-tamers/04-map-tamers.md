@@ -1,6 +1,6 @@
 # 04. Domadores no mapa
 
-- **Status:** rascunho
+- **Status:** concluída (falta o teste do dono no editor)
 - **Depende de:** [03-tamer-api](03-tamer-api.md), [architecture.md](architecture.md)
 
 ## Contexto
@@ -31,8 +31,8 @@ Godot, para quem está começando: uma **cena** (`.tscn`) é uma árvore de **n�
 ### Mapa
 
 - **RF-01:** `ExplorationMap` lê `tamers` do `map` em `MapTamer` (`id`, `coord`, `name_id`, `greeting_id`), com `tamer_at(coord) -> MapTamer` (nulo sem Domador).
-- **RF-02:** cada Domador a até `CREATURE_RADIUS` hexágonos do jogador é um nó `NpcTamerSprite`, com as folhas do `TamerSprite`, na mesma escala do jogador, passeando dentro do hexágono dele como um `CreatureSprite`: para um pouco, anda até um ponto sorteado do hexágono com a folha `run`, olhando para onde anda, e para de novo com a `idle`.
-- **RF-03:** o passeio sai do `CreatureSprite` para uma peça que ele e o `NpcTamerSprite` usam. Os Ecobeasts do mapa passeiam como hoje.
+- **RF-02:** cada Domador a até `CREATURE_RADIUS` hexágonos do jogador é um nó `TamerSprite`, com as folhas do template, na mesma escala do jogador, passeando dentro do hexágono dele como um `CreatureSprite`: para um pouco, anda até um ponto sorteado do hexágono com a folha `run`, olhando para onde anda, e para de novo com a `idle`.
+- **RF-03:** o passeio sai do `CreatureSprite` para o `WanderingSprite`, que ele e o `TamerSprite` estendem. Os Ecobeasts do mapa passeiam como hoje, e o Domador do jogador, que nunca chama `wander_in`, não passeia.
 - **RF-04:** quando o jogador termina um passo num hexágono com Domador, o mapa trava: tocar no mapa, Procurar, Mochila, Voltar, Debug e o voltar do aparelho não fazem nada (`handle_back` devolve `true`).
 - **RF-05:** com o mapa travado, um painel no estilo `BattleTheme.LOG` aparece sobre o mapa, acima dos botões, e escreve `"{nome}: {fala}"` letra por letra, na velocidade do log da luta, com o triângulo de "continua" no fim. Nome e fala vêm do `GameData` pelos ids do Domador.
 - **RF-06:** tocar no painel enquanto a fala é escrita mostra a frase inteira. Tocar com a frase inteira abre a tela `board_battle` com `tamer_coord` e o terreno do hexágono, como o Procurar faz.
@@ -50,7 +50,7 @@ Godot, para quem está começando: uma **cena** (`.tscn`) é uma árvore de **n�
 ### Depuração
 
 - **RF-14:** só em build de debug, o menu Debug do mapa ganha "Domador 1×1", "Domador 2×2" e "Domador 3×3". Cada um chama `POST /v1/me/exploration/tamers` no hexágono do jogador, põe o Domador no mapa e trava o mapa com a fala, como se o jogador tivesse acabado de chegar.
-- **RF-15:** "Limpar spawn" também tira do mapa os Domadores da depuração (`removed_tamer_ids`).
+- **RF-15:** o botão de limpar o spawn, que passa a se chamar "Remover spawns", também tira do mapa os Domadores da depuração (`removed_tamer_ids`).
 
 ## Critérios de aceite
 
@@ -63,28 +63,29 @@ Godot, para quem está começando: uma **cena** (`.tscn`) é uma árvore de **n�
 - [ ] Com a equipe toda sem HP, a luta mostra "Cure sua equipe no Refúgio.", e de volta ao mapa o jogador consegue sair do hexágono.
 - [ ] Os três botões de Domador no Debug abrem lutas de 1×1, 2×2 e 3×3.
 - [ ] Os selvagens continuam passeando e sendo enfrentados como antes.
-- [ ] O projeto abre sem erros nem avisos de script.
+- [x] O projeto abre sem erros nem avisos de script.
 
 ## Desenho técnico
 
 Arquivos novos:
 
-- `res://domain/models/map_tamer.gd`: `MapTamer`, com `from_dict`, como o `MapCreature`.
-- `res://ui/components/npc_tamer_sprite.gd`: `NpcTamerSprite`, que estende `TamerSprite` e passeia.
-- A peça do passeio, em `res://ui/components/`. A forma (uma classe que os dois sprites usam, um nó filho ou o passeio no `SheetSprite`) fica para quem implementa, contanto que o `CreatureSprite` e o `NpcTamerSprite` não repitam o código e o `TamerSprite` do jogador continue sem passear.
-- `res://screens/exploration/tamer_greeting_panel.tscn` e `.gd`: o painel da fala, com o sinal `tapped` quando a frase inteira é tocada.
+- `res://domain/models/map_tamer.gd`: `MapTamer`, com `from_dict`, como o `MapCreature`. O modelo guarda só os ids, porque `domain/` não usa o `GameData`: quem mostra a fala monta `"{nome}: {fala}"`.
+- `res://ui/components/wandering_sprite.gd`: `WanderingSprite`, que estende `SheetSprite` e tem o passeio que morava no `CreatureSprite` (`wander_in`, `random_spot`, `face_toward`). Quem estende diz que animação toca parado e andando, em `_play_still` e `_play_moving`.
+- `res://screens/exploration/tamer_greeting_panel.gd`: `TamerGreetingPanel`, o painel da fala, montado em código no estilo `BattleTheme.LOG`, com o sinal `tapped` quando a frase inteira é tocada. Ele é um nó `TamerGreeting` na cena do mapa, acima dos botões.
 
 Arquivos alterados:
 
+- `res://ui/components/creature_sprite.gd`: estende `WanderingSprite` e só escolhe as folhas.
+- `res://ui/components/tamer_sprite.gd`: estende `WanderingSprite`, monta as folhas uma vez para todos os Domadores e toca `run` andando. O desenho pedia um `NpcTamerSprite` à parte, mas ele não teria nada além do `TamerSprite`: o Domador NPC é um `TamerSprite` com `wander_in`.
 - `res://domain/models/exploration_map.gd`: `tamers` e `tamer_at`.
-- `res://domain/models/board_battle_view.gd`: `tamer_name_id` e `tamer_source`.
-- `res://core/services/game_service.gd` e `api_game_service.gd`: `start_board_tamer_battle`, `debug_tamer` e o `debug_clear_spawns` com Domadores.
-- `res://core/autoload/session.gd`: `start_board_tamer_battle`, `take_fought_tamer` (como o `take_fought_spawn`) e `debug_tamer`.
-- `res://screens/exploration/exploration_screen.gd` e `.tscn`: os sprites dos Domadores, o travamento, o painel, os botões de Debug.
-- `res://screens/board_battle/board_battle_screen.gd`: `tamer_coord` no `setup`, Fugir escondido, a saída para o Hub.
-- `res://screens/battle/battle_items_panel.gd`: esconder as Esferas quando a tela pedir.
-- `res://screens/battle/battle_narrator.gd`: o nome do Domador e as linhas de entrada e de fim.
-- `client/CLAUDE.md`: uma linha sobre os Domadores do mapa, ao lado da dos Ecobeasts do mapa.
+- `res://domain/models/board_battle_view.gd` e `board_turn.gd`: `tamer_name_id`, `tamer_source` e `tamer_id`.
+- `res://core/services/game_service.gd` e `api_game_service.gd`: `start_board_tamer_battle` e `debug_tamer`. O `debug_clear_spawns` passa a devolver `{"creature_ids", "tamer_ids"}`.
+- `res://core/autoload/session.gd`: `start_board_tamer_battle`, `take_fought_tamer` e `debug_tamer`.
+- `res://screens/exploration/exploration_screen.gd` e `.tscn`: os sprites dos Domadores (`_place_wanderer` serve aos dois tipos de sprite), o desafio ao terminar um passo, o travamento (`_challenger`), o painel e a linha "Domador 1×1 / 2×2 / 3×3" no menu Debug.
+- `res://screens/board_battle/board_battle_screen.gd`: `tamer_coord` no `setup`, o nome do Domador (`_meet_tamer`), Fugir escondido, as frases do fim e a saída para o Hub (`_exits_to_hub`).
+- `res://screens/battle/battle_items_panel.gd`: o `open` recebe `allow_capture`, e com ele falso as Esferas não aparecem.
+- `res://screens/battle/battle_narrator.gd`: `set_tamer_name` e a linha "{nome} enviou {Ecobeast}!".
+- `client/CLAUDE.md`: uma linha sobre os Domadores do mapa.
 
 ## Verificação
 
@@ -100,12 +101,14 @@ No editor (F5), em 360×640, com `ENABLE_TEST_BATTLE` ligada no servidor:
 - Perder uma luta contra Domador (God desligado, equipe fraca) e conferir a volta ao Hub.
 - Conferir que o Domador some depois da vitória e que os selvagens continuam iguais.
 
+O que foi conferido em 2026-11-09: o projeto abre sem erro de script, e os avisos com `-d` são todos de arquivos que esta fase não tocou. Uma cena temporária, que roda com os autoloads e já foi apagada, carregou as cenas do mapa e da luta, compilou os scripts delas e conferiu: o mapa lê os Domadores e ignora um incompleto; o `tamer_at`; o `tamer_id` e o Domador na luta, e a falta deles contra selvagem; "Um Ruvo selvagem apareceu!" e "Lia enviou Ruvo!"; o Domador NPC passeia e o do jogador não; e o painel, em que o primeiro toque completa a frase e o segundo abre a luta. Os passos no editor, com o jogo de verdade, ficam para o dono.
+
 ## Tarefas
 
-- [ ] Modelos e serviços.
-- [ ] O passeio compartilhado e o `NpcTamerSprite`.
-- [ ] Os Domadores no mapa, o travamento e o painel da fala.
-- [ ] A luta contra Domador na tela e no narrador.
-- [ ] A volta ao Hub na derrota.
-- [ ] Os botões de Debug.
-- [ ] Atualizar o `client/CLAUDE.md`, rodar a verificação, dizer o que ficou para o dono e mudar o status aqui e no README.
+- [x] Modelos e serviços.
+- [x] O passeio compartilhado (`WanderingSprite`).
+- [x] Os Domadores no mapa, o travamento e o painel da fala.
+- [x] A luta contra Domador na tela e no narrador.
+- [x] A volta ao Hub na derrota.
+- [x] Os botões de Debug.
+- [x] Atualizar o `client/CLAUDE.md`, rodar a verificação, dizer o que ficou para o dono e mudar o status aqui e no README.

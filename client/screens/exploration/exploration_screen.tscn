@@ -4,6 +4,7 @@
 [ext_resource type="Script" path="res://ui/components/hex_map_view.gd" id="2_map_view"]
 [ext_resource type="Script" path="res://ui/components/tamer_sprite.gd" id="3_tamer"]
 [ext_resource type="PackedScene" path="res://ui/components/safe_area.tscn" id="4_safe_area"]
+[ext_resource type="Script" path="res://screens/exploration/tamer_greeting_panel.gd" id="5_greeting"]
 
 [node name="ExplorationScreen" type="Control"]
 layout_mode = 3
@@ -99,6 +100,34 @@ size_flags_horizontal = 3
 theme_type_variation = &"OutlineButton"
 text = "Teste 3×3"
 
+[node name="DebugTamerRow" type="HBoxContainer" parent="SafeArea/Column/DebugMenu/Items/DebugMain"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="DebugTamer1Button" type="Button" parent="SafeArea/Column/DebugMenu/Items/DebugMain/DebugTamerRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"OutlineButton"
+text = "Domador 1×1"
+
+[node name="DebugTamer2Button" type="Button" parent="SafeArea/Column/DebugMenu/Items/DebugMain/DebugTamerRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"OutlineButton"
+text = "Domador 2×2"
+
+[node name="DebugTamer3Button" type="Button" parent="SafeArea/Column/DebugMenu/Items/DebugMain/DebugTamerRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"OutlineButton"
+text = "Domador 3×3"
+
 [node name="DebugXpButton" type="Button" parent="SafeArea/Column/DebugMenu/Items/DebugMain"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 56)
@@ -141,7 +170,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_type_variation = &"OutlineButton"
 disabled = true
-text = "Remover Ecobeasts"
+text = "Remover spawns"
 
 [node name="DebugSpawnBackButton" type="Button" parent="SafeArea/Column/DebugMenu/Items/DebugSpawn/SpawnActions"]
 unique_name_in_owner = true
@@ -155,6 +184,12 @@ text = "Voltar"
 layout_mode = 2
 size_flags_vertical = 3
 mouse_filter = 2
+
+[node name="TamerGreeting" type="PanelContainer" parent="SafeArea/Column"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+script = ExtResource("5_greeting")
 
 [node name="ControlsPanel" type="PanelContainer" parent="SafeArea/Column"]
 unique_name_in_owner = true

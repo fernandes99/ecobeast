@@ -156,7 +156,7 @@ A resposta das lutas é a de hoje, `{battle, events, captured_to, spawn_id, prog
 ## Jogo
 
 - **Modelos:** `MapTamer` em `res://domain/models/` (id, `coord`, `name_id`, `greeting_id`), e o `ExplorationMap` ganha `tamers: Dictionary[int, MapTamer]` e `tamer_at(coord)`. O `BoardBattleView` ganha `tamer_name_id` (0 sem Domador).
-- **No mapa:** cada Domador perto do jogador é um `NpcTamerSprite`, com as folhas do `TamerSprite`, passeando no hexágono como o `CreatureSprite`. O passeio, que hoje só o `CreatureSprite` tem, sai para uma peça que os dois usam, sem mudar o comportamento dos Ecobeasts.
-- **A fala:** ao chegar num hexágono com Domador, o mapa trava, e um painel no estilo do log da luta (`BattleTheme.LOG`) escreve a fala letra por letra. Tocar nele abre a luta.
+- **No mapa:** cada Domador perto do jogador é um `TamerSprite`, com as folhas do template, passeando no hexágono como o `CreatureSprite`. O passeio mora no `WanderingSprite`, que os dois estendem; o Domador do jogador não passeia.
+- **A fala:** ao chegar num hexágono com Domador, o mapa trava, e o `TamerGreetingPanel`, no estilo do log da luta (`BattleTheme.LOG`), escreve a fala letra por letra. Tocar nele abre a luta.
 - **A luta:** a tela `board_battle` recebe `tamer_coord` (mapa) ou `challenge: true` (Hub). Contra Domador, ela não mostra Fugir nem Esferas, e o narrador troca "Um Ruvo selvagem apareceu!" por "Lia enviou Ruvo!".
 - **A volta:** derrota contra Domador do mapa leva ao Hub com `Router.go_to(&"hub")`. As outras voltas são o `Router.back()` de hoje.

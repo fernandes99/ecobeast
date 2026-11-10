@@ -10,6 +10,10 @@ var phase: String = ""
 var result: String = ""
 var round_number: int = 1
 var can_flee: bool = false
+## O Domador NPC adversário (npc-tamers/04): o id do nome, ou 0 contra selvagem.
+var tamer_name_id: int = 0
+## De onde ele veio: "map" ou "challenge"; vazio contra selvagem.
+var tamer_source: String = ""
 var team: Array[BattleCreature] = []
 ## O que resta na Mochila, descontando o que já foi usado na luta.
 var items: Array[InventorySlot] = []
@@ -62,6 +66,9 @@ static func from_dict(d: Dictionary) -> BoardBattleView:
 	view.result = DictFields.get_string(d, "result")
 	view.round_number = DictFields.get_int(d, "round", 1)
 	view.can_flee = DictFields.get_bool(d, "can_flee")
+	var tamer := DictFields.get_dict(d, "tamer")
+	view.tamer_name_id = DictFields.get_int(tamer, "name_id")
+	view.tamer_source = DictFields.get_string(tamer, "source")
 
 	var board := DictFields.get_dict(d, "board")
 	view.board_cells = _cells(DictFields.get_array(board, "cells"))

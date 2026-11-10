@@ -18,9 +18,11 @@ const WILD_BATTLE_PATH := "/v1/me/battle/wild"
 const BATTLE_ACTION_PATH := "/v1/me/battle/action"
 const BOARD_BATTLE_PATH := "/v1/me/board-battle"
 const BOARD_WILD_PATH := "/v1/me/board-battle/wild"
+const BOARD_TAMER_PATH := "/v1/me/board-battle/tamer"
 const BOARD_ACTION_PATH := "/v1/me/board-battle/action"
 const DEBUG_XP_PATH := "/v1/me/debug/xp"
 const DEBUG_SPAWNS_PATH := "/v1/me/exploration/spawns"
+const DEBUG_TAMERS_PATH := "/v1/me/exploration/tamers"
 const EVOLUTION_PATH := "/v1/me/creatures/%s/evolution"
 const LEARN_SKILL_PATH := "/v1/me/creatures/%s/skills"
 
@@ -118,6 +120,13 @@ func start_board_wild_battle(coord: Vector2i, god: bool = false) -> Result:
 	return _board_result(await Api.request(HTTPClient.METHOD_POST, BOARD_WILD_PATH, body, true))
 
 
+func start_board_tamer_battle(coord: Vector2i, god: bool = false) -> Result:
+	var body := {"q": coord.x, "r": coord.y}
+	if god:
+		body["god"] = true
+	return _board_result(await Api.request(HTTPClient.METHOD_POST, BOARD_TAMER_PATH, body, true))
+
+
 func start_board_test_battle(enemies: Array[Dictionary], slots: int) -> Result:
 	var body := {"enemies": enemies, "slots": slots}
 	return _board_result(await Api.request(HTTPClient.METHOD_POST, BOARD_BATTLE_PATH, body, true))
@@ -151,13 +160,29 @@ func debug_clear_spawns() -> Result:
 	var response: ApiResponse = await Api.request(HTTPClient.METHOD_DELETE, DEBUG_SPAWNS_PATH, null, true)
 	if not response.ok:
 		return Result.failure(response.error)
+	var data: Dictionary = response.data if response.data is Dictionary else {}
+	return Result.success({
+		"creature_ids": _ids(DictFields.get_array(data, "removed_ids")),
+		"tamer_ids": _ids(DictFields.get_array(data, "removed_tamer_ids")),
+	})
+
+
+func debug_tamer(coord: Vector2i, size: int) -> Result:
+	var body := {"q": coord.x, "r": coord.y, "size": size}
+	var response: ApiResponse = await Api.request(HTTPClient.METHOD_POST, DEBUG_TAMERS_PATH, body, true)
+	if not response.ok:
+		return Result.failure(response.error)
+	var data: Variant = response.data.get("tamer") if response.data is Dictionary else null
+	var tamer: MapTamer = MapTamer.from_dict(data) if data is Dictionary else null
+	return Result.success(tamer) if tamer != null else Result.failure(ApiResponse.SERVER_ERROR)
+
+
+func _ids(items: Array) -> Array[int]:
 	var ids: Array[int] = []
-	var data: Variant = response.data.get("removed_ids") if response.data is Dictionary else null
-	if data is Array:
-		for id: Variant in data:
-			if id is float or id is int:
-				ids.append(int(id))
-	return Result.success(ids)
+	for id: Variant in items:
+		if id is float or id is int:
+			ids.append(int(id))
+	return ids
 
 
 func evolve(uid: String, accept: bool) -> Result:

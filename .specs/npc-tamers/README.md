@@ -92,7 +92,7 @@ Escolhas do planejamento (corrigíveis; ao mudar uma, atualize aqui e nas specs 
 | 1 | [01-tamer-texts](01-tamer-texts.md) | Catálogo: as tabelas `npc_tamer_names` e `npc_tamer_greetings`, com os nomes e as 3 falas | concluída |
 | 2 | [02-tamer-rules](02-tamer-rules.md) | Servidor, regras puras: os Domadores do mapa, o desafiante do Hub e a luta contra Domador (sem Esfera, sem fuga, XP e moedas maiores) | concluída |
 | 3 | [03-tamer-api](03-tamer-api.md) | Servidor: os Domadores no mapa, as rotas da luta do mapa, do Desafiar e de depuração, e a exploração encerrada na derrota | concluída |
-| 4 | [04-map-tamers](04-map-tamers.md) | Jogo: os Domadores passeando no mapa, a fala que trava o mapa, a luta contra eles e a volta ao Hub na derrota | rascunho |
+| 4 | [04-map-tamers](04-map-tamers.md) | Jogo: os Domadores passeando no mapa, a fala que trava o mapa, a luta contra eles e a volta ao Hub na derrota | concluída (falta o teste do dono no editor) |
 | 5 | [05-hub-challenge](05-hub-challenge.md) | Jogo: Desafiar, no Hub, abre a luta contra um Domador sorteado | rascunho |
 
 O desenho compartilhado está no [architecture.md](architecture.md).

@@ -2,7 +2,9 @@ extends Control
 ## Mapa de exploração (wild-battle/03, TELAS.md #4): o jogador fica parado no
 ## centro da tela, e quem se move é o mapa. Ele anda um hexágono por vez, por
 ## toque, sem zoom nem arrastar. Quem gera o mapa e os Ecobeasts é o servidor, e ele
-## confere a posição do Domador ao Procurar (biome-encounters/04).
+## confere a posição do Domador ao Procurar (biome-encounters/04). Os Domadores NPC
+## passeiam no hexágono deles, e quem chega num deles é desafiado: a fala aparece, o
+## mapa trava e tocar na fala abre a luta (npc-tamers/04).
 
 const PortraitScene := preload("res://ui/components/creature_portrait.tscn")
 
@@ -38,9 +40,14 @@ var _press_position := Vector2.ZERO
 var _showing_whole_map: bool = false
 ## Os Ecobeasts do mapa que têm nó agora, pelo id deles.
 var _wild_sprites: Dictionary[int, CreatureSprite] = {}
+## Os Domadores NPC do mapa que têm nó agora, pelo id deles.
+var _tamer_sprites: Dictionary[int, TamerSprite] = {}
+## O Domador NPC que desafiou o jogador: com ele, o mapa fica travado até a luta.
+var _challenger: MapTamer = null
 ## Só em build de debug: os ids dos Ecobeasts do spawn, que o servidor guarda junto
-## com os do mapa (biome-encounters/05).
+## com os do mapa (biome-encounters/05), e os dos Domadores da depuração.
 var _debug_spawn_ids: Array[int] = []
+var _debug_tamer_ids: Array[int] = []
 
 @onready var _map_area: Control = %MapArea
 @onready var _map_view: HexMapView = %MapView
@@ -61,6 +68,7 @@ var _debug_spawn_ids: Array[int] = []
 @onready var _debug_spawn_button: Button = %DebugSpawnButton
 @onready var _debug_spawn_back_button: Button = %DebugSpawnBackButton
 @onready var _debug_god_button: Button = %DebugGodButton
+@onready var _greeting: TamerGreetingPanel = %TamerGreeting
 
 
 func _ready() -> void:
@@ -77,15 +85,19 @@ func _ready() -> void:
 	_debug_god_button.pressed.connect(_toggle_god)
 	%DebugTest2Button.pressed.connect(_open_board_test.bind(2))
 	%DebugTest3Button.pressed.connect(_open_board_test.bind(3))
+	for size: int in [1, 2, 3]:
+		(get_node("%%DebugTamer%dButton" % size) as Button).pressed.connect(_debug_tamer.bind(size))
+	_greeting.tapped.connect(_fight_challenger)
 	_refresh_god_button()
 	resized.connect(_fit_view.call_deferred)
 	visibility_changed.connect(_on_visibility_changed)
 	_begin()
 
 
-## A resposta do servidor volta para esta tela: ela não fecha antes disso.
+## A resposta do servidor volta para esta tela: ela não fecha antes disso. Com um
+## Domador desafiando, a luta é obrigatória, e o voltar não faz nada.
 func handle_back() -> bool:
-	return _loading
+	return _loading or _challenger != null
 
 
 func _begin() -> void:
@@ -125,7 +137,7 @@ func _on_map_input(event: InputEvent) -> void:
 
 
 func _tap(point: Vector2) -> void:
-	if _map == null or _walking or _showing_whole_map:
+	if _map == null or _walking or _showing_whole_map or _challenger != null:
 		return
 	var art_point := (point - _map_view.position) / _map_view.pixel_scale()
 	var target := _map_view.coord_at(art_point)
@@ -136,7 +148,7 @@ func _tap(point: Vector2) -> void:
 ## O servidor recusaria quem chegou agora, e o hexágono já é o de destino no meio
 ## do passo: enquanto o Domador anda, Procurar não faz nada.
 func _search() -> void:
-	if _walking:
+	if _walking or _challenger != null:
 		return
 	if _map.has_creature(_player_coord):
 		# A luta de Explorar zona é a do tabuleiro (board-battle/05).
@@ -145,13 +157,19 @@ func _search() -> void:
 		_show_message(NOTHING_HERE_TEXT, &"SecondaryLabel")
 
 
-## Depois da luta, ganhando, perdendo ou correndo, o Ecobeast já saiu do mapa.
+## Depois da luta, ganhando, perdendo ou correndo, o Ecobeast já saiu do mapa, e o
+## Domador também. Se a luta contra o Domador nem começou, ele fica, e o mapa destrava
+## até o jogador sair do hexágono e entrar de novo.
 func _on_visibility_changed() -> void:
 	if visible and _map != null:
 		var fought := Session.take_fought_spawn()
 		_map.creatures.erase(fought)
 		_debug_spawn_ids.erase(fought)
-		_debug_clear_button.disabled = _debug_spawn_ids.is_empty()
+		var fought_tamer := Session.take_fought_tamer()
+		_map.tamers.erase(fought_tamer)
+		_debug_tamer_ids.erase(fought_tamer)
+		_refresh_debug_clear()
+		_release_challenge()
 		_refresh_wild_sprites()
 
 
@@ -173,10 +191,44 @@ func _step_to(target: Vector2i) -> void:
 	_map_view.set_actor_row(_marker, target.y)
 	_marker.play_idle()
 	_walking = false
+	var tamer := _map.tamer_at(target)
+	if tamer != null:
+		_challenge(tamer)
+
+
+## Um Domador desafiou: o mapa trava, e a fala dele aparece. A luta é obrigatória.
+func _challenge(tamer: MapTamer) -> void:
+	_challenger = tamer
+	_debug_menu.hide()
+	_message.hide()
+	_set_controls_enabled(false)
+	_greeting.say("%s: %s" % [GameData.get_npc_tamer_name(tamer.name_id), GameData.get_npc_tamer_greeting(tamer.greeting_id)])
+
+
+## O terreno vai junto, como no Procurar: é o chão do tabuleiro.
+func _fight_challenger() -> void:
+	if _challenger == null:
+		return
+	Router.push(&"board_battle", _battle_params({"tamer_coord": _challenger.coord}))
+
+
+func _release_challenge() -> void:
+	if _challenger == null:
+		return
+	_challenger = null
+	_greeting.close()
+	_set_controls_enabled(true)
+
+
+func _set_controls_enabled(enabled: bool) -> void:
+	_encounter_button.disabled = not enabled
+	_bag_button.disabled = not enabled
+	_back_button.disabled = not enabled
+	_debug_button.disabled = not enabled
 
 
 func _toggle_whole_map() -> void:
-	if _walking:
+	if _walking or _challenger != null:
 		return
 	_debug_menu.hide()
 	_showing_whole_map = not _showing_whole_map
@@ -209,7 +261,7 @@ func _refresh_god_button() -> void:
 
 ## A luta de teste no tabuleiro, contra Ecobeasts sorteados; o mapa não muda.
 func _open_board_test(slots: int) -> void:
-	if _walking:
+	if _walking or _challenger != null:
 		return
 	_debug_menu.hide()
 	Router.push(&"board_battle", _battle_params({"test_slots": slots}))
@@ -262,7 +314,7 @@ func _species_card(species: CreatureSpecies, disabled: bool) -> Control:
 ## O servidor põe o Ecobeast no hexágono do Domador (biome-encounters/05): Procurar
 ## enfrenta ele como um do mapa, e depois da luta ele some como os outros.
 func _spawn(species: CreatureSpecies) -> void:
-	if _walking:
+	if _walking or _challenger != null:
 		return
 	var result: Result = await Session.debug_spawn(species.id, _player_coord)
 	if not result.ok:
@@ -272,22 +324,52 @@ func _spawn(species: CreatureSpecies) -> void:
 	_map.creatures[creature.id] = creature
 	_debug_spawn_ids.append(creature.id)
 	_refresh_wild_sprites()
-	_debug_clear_button.disabled = false
+	_refresh_debug_clear()
 	_show_message(SPAWNED_TEXT % species.name, &"SecondaryLabel")
 
 
-## Tira do servidor e do mapa só os Ecobeasts do spawn.
+## O servidor põe um Domador de `size` no hexágono do jogador, no lugar do que houver
+## ali (npc-tamers/04), e ele desafia na hora, como se o jogador tivesse chegado.
+func _debug_tamer(size: int) -> void:
+	if _walking or _challenger != null:
+		return
+	_debug_menu.hide()
+	var result: Result = await Session.debug_tamer(_player_coord, size)
+	if not result.ok:
+		_show_message(result.error, &"DangerLabel")
+		return
+	var replaced := _map.tamer_at(_player_coord)
+	if replaced != null:
+		_map.tamers.erase(replaced.id)
+		_debug_tamer_ids.erase(replaced.id)
+	var tamer: MapTamer = result.data
+	_map.tamers[tamer.id] = tamer
+	_debug_tamer_ids.append(tamer.id)
+	_refresh_wild_sprites()
+	_refresh_debug_clear()
+	_challenge(tamer)
+
+
+## Tira do servidor e do mapa só os Ecobeasts e os Domadores da depuração.
 func _clear_creatures() -> void:
 	_debug_clear_button.disabled = true
 	var result: Result = await Session.debug_clear_spawns()
 	if not result.ok:
-		_debug_clear_button.disabled = false
+		_refresh_debug_clear()
 		_show_message(result.error, &"DangerLabel")
 		return
-	for id: int in result.data:
+	var removed: Dictionary = result.data
+	for id: int in removed["creature_ids"]:
 		_map.creatures.erase(id)
+	for id: int in removed["tamer_ids"]:
+		_map.tamers.erase(id)
 	_debug_spawn_ids.clear()
+	_debug_tamer_ids.clear()
 	_refresh_wild_sprites()
+
+
+func _refresh_debug_clear() -> void:
+	_debug_clear_button.disabled = _debug_spawn_ids.is_empty() and _debug_tamer_ids.is_empty()
 
 
 ## Só para testar a progressão (progression/04): cada um da equipe fica a 1 XP do
@@ -304,9 +386,10 @@ func _almost_level_up() -> void:
 		_show_message(result.error, &"DangerLabel")
 
 
-## Deixa com nó só os Ecobeasts perto do Domador. Quem sai e volta fica no mesmo
-## hexágono, porque o lugar dele mora no mapa, e não no nó.
+## Deixa com nó só os Ecobeasts e os Domadores NPC perto do Domador. Quem sai e volta
+## fica no mesmo hexágono, porque o lugar dele mora no mapa, e não no nó.
 func _refresh_wild_sprites() -> void:
+	_refresh_tamer_sprites()
 	for id: int in _wild_sprites.keys():
 		if not _map.creatures.has(id) or not _is_near(_map.creatures[id]):
 			_wild_sprites[id].queue_free()
@@ -318,17 +401,38 @@ func _refresh_wild_sprites() -> void:
 				_wild_sprites[creature.id] = _add_creature_sprite(species.slug, creature.coord)
 
 
+func _refresh_tamer_sprites() -> void:
+	for id: int in _tamer_sprites.keys():
+		if not _map.tamers.has(id) or not _is_near_coord(_map.tamers[id].coord):
+			_tamer_sprites[id].queue_free()
+			_tamer_sprites.erase(id)
+	for tamer: MapTamer in _map.tamers.values():
+		if not _tamer_sprites.has(tamer.id) and _is_near_coord(tamer.coord):
+			var sprite := TamerSprite.new()
+			_place_wanderer(sprite, tamer.coord)
+			_tamer_sprites[tamer.id] = sprite
+
+
 func _is_near(creature: MapCreature) -> bool:
-	return _showing_whole_map or ExplorationMap.distance(creature.coord, _player_coord) <= CREATURE_RADIUS
+	return _is_near_coord(creature.coord)
+
+
+func _is_near_coord(coord: Vector2i) -> bool:
+	return _showing_whole_map or ExplorationMap.distance(coord, _player_coord) <= CREATURE_RADIUS
 
 
 func _add_creature_sprite(slug: String, coord: Vector2i) -> CreatureSprite:
 	var creature := CreatureSprite.new(slug)
-	_map_view.add_child(creature)
-	_map_view.set_actor_row(creature, coord.y)
-	creature.wander_in(coord, _map_view.surface_center(coord))
-	creature.scale = _marker.scale
+	_place_wanderer(creature, coord)
 	return creature
+
+
+## Põe no mapa quem passeia num hexágono, na escala do Domador do jogador.
+func _place_wanderer(sprite: WanderingSprite, coord: Vector2i) -> void:
+	_map_view.add_child(sprite)
+	_map_view.set_actor_row(sprite, coord.y)
+	sprite.wander_in(coord, _map_view.surface_center(coord))
+	sprite.scale = _marker.scale
 
 
 func _fit_view() -> void:
@@ -345,6 +449,8 @@ func _fit_view() -> void:
 	_marker.scale = _map_view.art_scale() / _map_view.pixel_scale()
 	for creature: CreatureSprite in _wild_sprites.values():
 		creature.scale = _marker.scale
+	for tamer: TamerSprite in _tamer_sprites.values():
+		tamer.scale = _marker.scale
 
 
 ## Parte do centro já arredondado: em uma tela de tamanho ímpar, ele cai no meio de

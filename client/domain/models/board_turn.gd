@@ -9,6 +9,8 @@ var events: Array[Dictionary] = []
 var captured_to: String = ""
 ## O Ecobeast que saiu do mapa para esta luta; 0 nas outras chamadas.
 var spawn_id: int = 0
+## O Domador NPC que saiu do mapa para esta luta; 0 nas outras chamadas.
+var tamer_id: int = 0
 ## Na vitória, quem recebeu XP, na ordem da equipe; vazio nas outras chamadas.
 var progression: Array[CreatureProgress] = []
 
@@ -21,6 +23,7 @@ static func from_dict(d: Dictionary) -> BoardTurn:
 	turn.view = BoardBattleView.from_dict(d["battle"])
 	turn.captured_to = DictFields.get_string(d, "captured_to")
 	turn.spawn_id = DictFields.get_int(d, "spawn_id")
+	turn.tamer_id = DictFields.get_int(d, "tamer_id")
 	for event: Variant in d["events"]:
 		if event is Dictionary:
 			turn.events.append(event)

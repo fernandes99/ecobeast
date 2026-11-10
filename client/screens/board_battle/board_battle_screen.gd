@@ -24,6 +24,14 @@ const RESULT_TEXTS: Dictionary[String, String] = {
 	"fled": "Você fugiu.",
 	"captured": "Capturado!",
 }
+## O fim contra um Domador NPC, com o nome dele (npc-tamers/04).
+const TAMER_RESULT_TEXTS: Dictionary[String, String] = {
+	"victory": "Você venceu %s!",
+	"defeat": "%s venceu a luta.",
+}
+const EXIT_TEXT := "Voltar"
+## Perder para um Domador do mapa encerra a exploração: a saída é o Hub.
+const EXIT_TO_HUB_TEXT := "Voltar ao Hub"
 ## Linhas dos eventos do tabuleiro, que o BattleNarrator não conhece. A revisar.
 const BOARD_LINES: Dictionary[String, String] = {
 	"moved": "%s andou.",
@@ -47,9 +55,14 @@ const CHARS_PER_SECOND := 60.0
 ## A Técnica de emergência é corpo a corpo.
 const EMERGENCY_RANGE := 1
 
-## O hexágono do Domador, de onde sai o selvagem; ou as vagas da luta de teste.
+## O hexágono do Domador, de onde sai o selvagem ou o Domador NPC; ou as vagas da
+## luta de teste.
 var _coord := Vector2i.ZERO
 var _test_slots := 0
+## A luta é contra o Domador NPC do hexágono (npc-tamers/04).
+var _against_tamer: bool = false
+## O nome do Domador NPC adversário; vazio contra selvagem.
+var _tamer_name := ""
 ## O bioma e a forma do hexágono do Domador, para o chão do tabuleiro (board-battle/08).
 var _biome := BoardView.DEFAULT_BIOME
 var _shape := BoardView.DEFAULT_SHAPE
@@ -143,10 +156,12 @@ var _entry_team := -1
 @onready var _history: BattleHistoryPanel = %HistoryPanel
 
 
-## `coord`: o encontro do mapa. `test_slots`: a luta de teste, com 2 ou 3 vagas.
-## `biome` e `shape`: o terreno do hexágono do Domador, para o chão do tabuleiro.
+## `coord`: o encontro do mapa. `tamer_coord`: a luta contra o Domador NPC desse
+## hexágono. `test_slots`: a luta de teste, com 2 ou 3 vagas. `biome` e `shape`: o
+## terreno do hexágono do Domador, para o chão do tabuleiro.
 func setup(params: Dictionary) -> void:
-	_coord = params.get("coord", Vector2i.ZERO)
+	_against_tamer = params.has("tamer_coord")
+	_coord = params.get("tamer_coord", params.get("coord", Vector2i.ZERO))
 	_test_slots = params.get("test_slots", 0)
 	_biome = params.get("biome", BoardView.DEFAULT_BIOME)
 	_shape = params.get("shape", BoardView.DEFAULT_SHAPE)
@@ -216,6 +231,8 @@ func _begin() -> void:
 	var result: Result
 	if _test_slots > 0:
 		result = await Session.start_board_test_battle(_test_enemies(), _test_slots)
+	elif _against_tamer:
+		result = await Session.start_board_tamer_battle(_coord)
 	else:
 		result = await Session.start_board_wild_battle(_coord)
 	_show_message("")
@@ -223,10 +240,20 @@ func _begin() -> void:
 		_show_exit(result.error, false)
 		return
 	var turn: BoardTurn = result.data
+	_meet_tamer(turn.view)
 	_board.set_board(turn.view.board_cells, _biome, _shape)
 	_fit_board()
 	await _show_turn(turn)
 	_narrator.begin_turns()
+
+
+## Contra um Domador NPC, ele dá nome à luta, e não há Fugir (npc-tamers/04).
+func _meet_tamer(view: BoardBattleView) -> void:
+	if view.tamer_name_id <= 0:
+		return
+	_tamer_name = GameData.get_npc_tamer_name(view.tamer_name_id)
+	_narrator.set_tamer_name(_tamer_name)
+	_flee_button.hide()
 
 
 ## A luta de teste: Ecobeasts sorteados do catálogo, no nível do primeiro da equipe.
@@ -330,7 +357,7 @@ func _show_turn(turn: BoardTurn) -> void:
 		"ended":
 			_show_controls(false)
 			await _celebrate(turn.progression)
-			_show_exit(RESULT_TEXTS.get(_view.result, ""), true)
+			_show_exit(_result_text(), true)
 
 
 func _play_event(event: Dictionary) -> void:
@@ -833,12 +860,13 @@ func _can_choose() -> bool:
 	return not _busy and not _walking and _view != null and _view.phase == "choose_action" and _actor >= 0
 
 
+## Contra um Domador NPC, a Mochila não oferece Esferas.
 func _open_bag() -> void:
 	if not _can_choose():
 		return
 	_disarm_flee()
 	_cancel_skill()
-	_items_panel.open(_view.items, _view.team, _team_names(_view))
+	_items_panel.open(_view.items, _view.team, _team_names(_view), _tamer_name.is_empty())
 
 
 ## Um item de cura serve para qualquer um da equipe, e gasta a vez.
@@ -1051,6 +1079,7 @@ func _show_battle_gone() -> void:
 ## Só a saída. `needs_reload`: a luta chegou a existir, e o jogador é relido.
 func _show_exit(text: String, needs_reload: bool) -> void:
 	_needs_reload = needs_reload
+	_exit_button.text = EXIT_TO_HUB_TEXT if _exits_to_hub() else EXIT_TEXT
 	_board.light([], Color.TRANSPARENT)
 	_result_label.text = text
 	_result_label.visible = not text.is_empty()
@@ -1071,7 +1100,22 @@ func _leave() -> void:
 			_result_message.show()
 			return
 	_leaving = true
-	Router.back()
+	if _exits_to_hub():
+		# A exploração acabou no servidor: o mapa fecha junto (npc-tamers/04).
+		Router.go_to(&"hub")
+	else:
+		Router.back()
+
+
+func _result_text() -> String:
+	if not _tamer_name.is_empty() and TAMER_RESULT_TEXTS.has(_view.result):
+		return TAMER_RESULT_TEXTS[_view.result] % _tamer_name
+	return RESULT_TEXTS.get(_view.result, "")
+
+
+## Perder para um Domador do mapa leva ao Hub.
+func _exits_to_hub() -> bool:
+	return _view != null and _view.phase == "ended" and _view.result == "defeat" and _view.tamer_source == "map"
 
 
 # --- Ajudantes -----------------------------------------------------------------

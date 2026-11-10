@@ -16,6 +16,8 @@ const TARGET_TITLE := "Usar %s em:"
 var _slots: Array[InventorySlot] = []
 var _team: Array[BattleCreature] = []
 var _names: Array[String] = []
+## Falso contra um Domador NPC: as Esferas não aparecem (npc-tamers/04).
+var _allow_capture: bool = true
 
 @onready var _dim: ColorRect = %Dim
 @onready var _title: Label = %Title
@@ -32,7 +34,9 @@ func _ready() -> void:
 
 
 ## `names`: o nome de exibição de cada criatura de `team`, na mesma ordem.
-func open(slots: Array[InventorySlot], team: Array[BattleCreature], names: Array[String]) -> void:
+## `allow_capture`: falso esconde as Esferas.
+func open(slots: Array[InventorySlot], team: Array[BattleCreature], names: Array[String], allow_capture: bool = true) -> void:
+	_allow_capture = allow_capture
 	_slots = slots.duplicate()
 	_slots.sort_custom(func(first: InventorySlot, second: InventorySlot) -> bool:
 		return GameData.get_item(first.item_id).sort_order < GameData.get_item(second.item_id).sort_order)
@@ -60,7 +64,7 @@ func _show_items() -> void:
 	_clear(_item_list)
 	for slot: InventorySlot in _slots:
 		var item := GameData.get_item(slot.item_id)
-		if item.can_be_used() or item.can_capture():
+		if item.can_be_used() or (item.can_capture() and _allow_capture):
 			var row: BagItemRow = ItemRowScene.instantiate()
 			row.item = item
 			row.quantity = slot.quantity

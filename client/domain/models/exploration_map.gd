@@ -18,6 +18,8 @@ var start := Vector2i.ZERO
 var tiles: Dictionary[Vector2i, HexTile] = {}
 ## Os Ecobeasts ainda no mapa, por id.
 var creatures: Dictionary[int, MapCreature] = {}
+## Os Domadores NPC ainda no mapa, por id (npc-tamers/04). Um por hexágono.
+var tamers: Dictionary[int, MapTamer] = {}
 
 
 ## Quantos passos pela grade separam duas posições.
@@ -49,6 +51,14 @@ func has_creature(coord: Vector2i) -> bool:
 	return creatures.values().any(func(creature: MapCreature) -> bool: return creature.coord == coord)
 
 
+## O Domador NPC do hexágono, ou null.
+func tamer_at(coord: Vector2i) -> MapTamer:
+	for tamer: MapTamer in tamers.values():
+		if tamer.coord == coord:
+			return tamer
+	return null
+
+
 static func from_dict(d: Dictionary) -> ExplorationMap:
 	var map := ExplorationMap.new()
 	map.map_seed = DictFields.get_int(d, "seed")
@@ -62,4 +72,8 @@ static func from_dict(d: Dictionary) -> ExplorationMap:
 		var creature: MapCreature = MapCreature.from_dict(creature_dict) if creature_dict is Dictionary else null
 		if creature != null:
 			map.creatures[creature.id] = creature
+	for tamer_dict: Variant in DictFields.get_array(d, "tamers"):
+		var tamer: MapTamer = MapTamer.from_dict(tamer_dict) if tamer_dict is Dictionary else null
+		if tamer != null:
+			map.tamers[tamer.id] = tamer
 	return map

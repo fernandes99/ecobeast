@@ -72,6 +72,11 @@ extends RefCounted
 @abstract func start_board_wild_battle(coord: Vector2i, god: bool = false) -> Result
 
 
+## data: o BoardTurn da abertura da luta contra o Domador NPC do hexágono do
+## Domador (npc-tamers/04).
+@abstract func start_board_tamer_battle(coord: Vector2i, god: bool = false) -> Result
+
+
 ## data: o BoardTurn da abertura da luta de teste no tabuleiro. `enemies`: cada
 ## um com species_id e level.
 @abstract func start_board_test_battle(enemies: Array[Dictionary], slots: int) -> Result
@@ -92,8 +97,14 @@ extends RefCounted
 @abstract func debug_spawn(species_id: int, coord: Vector2i) -> Result
 
 
-## Só para testar: tira da exploração os Ecobeasts do spawn. data: Array[int] com os ids.
+## Só para testar: tira da exploração os Ecobeasts e os Domadores da depuração.
+## data: {"creature_ids": Array[int], "tamer_ids": Array[int]}.
 @abstract func debug_clear_spawns() -> Result
+
+
+## Só para testar (npc-tamers/04): põe um Domador NPC de `size` (1 a 3) na
+## exploração do servidor, no hexágono `coord`. data: o MapTamer.
+@abstract func debug_tamer(coord: Vector2i, size: int) -> Result
 
 
 ## Responde à evolução oferecida na última vitória.

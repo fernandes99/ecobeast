@@ -1,6 +1,8 @@
 class_name TamerSprite
-extends SheetSprite
-## O Domador no mapa (wild-battle/10).
+extends WanderingSprite
+## Um Domador no mapa (wild-battle/10): o do jogador, que anda de hexágono em
+## hexágono pela tela de exploração, e os Domadores NPC (npc-tamers/04), que passeiam
+## dentro do próprio hexágono depois do `wander_in`. Os dois usam as folhas do template.
 
 const SHEET_PATH := "res://assets/tamer/%s.png"
 const IDLE := "idle"
@@ -19,11 +21,18 @@ const LEFT_NEIGHBORS: Array[Vector2i] = [Vector2i(-1, 1), Vector2i(-1, 0), Vecto
 const IDLE_SECONDS := 0.8
 const RUN_SECONDS := 0.36
 
+## As animações, montadas uma vez: o jogador e os Domadores NPC perto dele usam as
+## mesmas folhas.
+static var _frames: SpriteFrames = null
+
 
 func _init() -> void:
 	super()
-	_add_sheet(IDLE, SHEET_PATH % IDLE, IDLE_SECONDS)
-	_add_sheet(RUN, SHEET_PATH % RUN, RUN_SECONDS)
+	if _frames == null:
+		_add_sheet(IDLE, SHEET_PATH % IDLE, IDLE_SECONDS)
+		_add_sheet(RUN, SHEET_PATH % RUN, RUN_SECONDS)
+		_frames = sprite_frames
+	sprite_frames = _frames
 	play_idle()
 
 
@@ -39,3 +48,11 @@ func play_idle() -> void:
 
 func play_run() -> void:
 	play_sheet(RUN)
+
+
+func _play_still() -> void:
+	play_idle()
+
+
+func _play_moving() -> void:
+	play_run()

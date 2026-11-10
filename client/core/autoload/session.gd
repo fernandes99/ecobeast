@@ -19,6 +19,7 @@ var storage: Array[CreatureInstance] = []
 var _service: GameService = ApiGameService.new()
 var _auth := AuthService.new()
 var _fought_spawn := 0
+var _fought_tamer := 0
 ## Depuração: o modo God, ligado no menu do mapa. Vale para as lutas que começarem
 ## depois e some ao fechar o jogo; o servidor só aceita com a rota de teste ligada.
 var debug_god := false
@@ -176,6 +177,23 @@ func start_board_wild_battle(coord: Vector2i) -> Result:
 	return result
 
 
+## A luta contra o Domador NPC do hexágono (npc-tamers/04); ele sai do mapa.
+func start_board_tamer_battle(coord: Vector2i) -> Result:
+	@warning_ignore("redundant_await")
+	var result: Result = await _service.start_board_tamer_battle(coord, debug_god)
+	if result.ok:
+		_fought_tamer = (result.data as BoardTurn).tamer_id
+	return result
+
+
+## O Domador NPC que saiu do mapa desde a última leitura, ou 0, como o
+## `take_fought_spawn`.
+func take_fought_tamer() -> int:
+	var tamer_id := _fought_tamer
+	_fought_tamer = 0
+	return tamer_id
+
+
 func start_board_test_battle(enemies: Array[Dictionary], slots: int) -> Result:
 	@warning_ignore("redundant_await")
 	return await _service.start_board_test_battle(enemies, slots)
@@ -194,6 +212,11 @@ func debug_spawn(species_id: int, coord: Vector2i) -> Result:
 func debug_clear_spawns() -> Result:
 	@warning_ignore("redundant_await")
 	return await _service.debug_clear_spawns()
+
+
+func debug_tamer(coord: Vector2i, size: int) -> Result:
+	@warning_ignore("redundant_await")
+	return await _service.debug_tamer(coord, size)
 
 
 func debug_almost_level_up() -> Result:
