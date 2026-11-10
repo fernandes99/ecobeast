@@ -70,6 +70,14 @@ func get_evolutions(species_id: int) -> Array[EvolutionRule]:
 	return catalog.get_evolutions(species_id)
 
 
+func get_evolution_line(species_id: int) -> Array[Dictionary]:
+	return catalog.get_evolution_line(species_id)
+
+
+func get_habitat_names(species_id: int) -> Array[String]:
+	return catalog.get_habitat_names(species_id)
+
+
 func get_skill(id: int) -> Skill:
 	return catalog.get_skill(id)
 

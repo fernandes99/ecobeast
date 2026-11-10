@@ -12,7 +12,7 @@ Celular, orientação retrato. Estilo fantasia leve, colorido e amigável. 15 el
 8. **Detalhes da criatura** — sprite grande, nome/apelido, nível, elementos, temperamento, traço, item; gráfico de atributos (HP, Atk, Def, SpAtk, SpDef, Spd); 4 técnicas.
 9. **Equipe** — 6 vagas: segurar e arrastar muda a ordem, e o primeiro com HP começa a luta. Mostra HP e status, e cada Ecobeast abre detalhes e a troca com o Santuário.
 10. **Santuário** — grade com busca, filtro por Elemento e ordem por nível; o filtro de raridade fica para quando houver espécies de raridades diferentes. Cada Ecobeast abre detalhes e a ação de mover para a equipe.
-11. **Bestiário** — grade numerada (visto, capturado, silhueta); detalhe com descrição, elementos, habitat e linha evolutiva.
+11. **Bestiário** — grade numerada (visto, capturado, silhueta); detalhe com descrição, elementos, habitat e linha evolutiva. Visto conta só em luta, e a primeira captura de uma espécie, ou a Evolução para ela, mostra o aviso de registro (`.specs/codex/`).
 12. **Loja** — uma aba por categoria (hoje Esferas e Cura; depois Itens de batalha e Evolução); cards com preço e comprar.
 13. **Mochila** — itens por categoria com quantidade; escolher alvo ao usar. Abre pelo Hub e pelo mapa.
 14. **Refúgio** — a equipe, com HP, PP e status, e o botão "Curar todos".

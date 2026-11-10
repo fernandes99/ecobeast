@@ -1,6 +1,6 @@
 # 02. Tela do Bestiário
 
-- **Status:** rascunho
+- **Status:** concluída (falta o teste do dono no editor)
 - **Depende de:** [01-codex-records](01-codex-records.md), [architecture.md](architecture.md)
 
 ## Contexto
@@ -64,7 +64,7 @@ Godot, para quem está começando: um **`GridContainer`** arruma os filhos em co
 - [ ] Uma espécie sem arte aparece com a forma do Elemento, colorida ou em sombra.
 - [ ] Voltar fecha o detalhe e, depois, a tela.
 - [ ] "Limpar Bestiário" deixa tudo "???" na build de debug.
-- [ ] O projeto abre sem erros nem avisos de script.
+- [x] O projeto abre sem erros nem avisos de script.
 
 ## Desenho técnico
 
@@ -100,11 +100,13 @@ No editor (F5), em 360×640:
 - Abrir o detalhe de um capturado e de um visto, e andar pela linha evolutiva.
 - Na build de debug, limpar o Bestiário, lutar contra um selvagem e conferir que ele aparece como sombra.
 
+O que foi conferido em 2026-11-10: o projeto abre sem erro de script, e os avisos com `-d` são de arquivos que esta fase não tocou (o "resources still in use" no fim já aparecia antes). Uma cena temporária, que roda com os autoloads e o catálogo do servidor e já foi apagada, compilou os scripts da tela e conferiu: o `Codex` lê as entradas e ignora as inválidas, com as contagens; a linha do Ruvak é Ruvo, Ruvak e Ruvaroth, com "nv. 16" na primeira seta; o habitat do Ruvak tem 5 biomas, do mais comum para o mais raro; a célula colorida tem a marca da Esfera, a vista tem a sombra e a nunca vista não tem nome; o detalhe de um capturado mostra "1,0 m", o Ruvaroth nunca visto como "???", e tocar no Ruvo troca o detalhe; o detalhe de um visto mostra só a dica. Os passos no editor ficam para o dono.
+
 ## Tarefas
 
-- [ ] Modelo e serviços.
-- [ ] A sombra no `CreaturePortrait`.
-- [ ] A grade e a contagem.
-- [ ] O detalhe e a linha evolutiva.
-- [ ] O Hub e o botão de depuração.
-- [ ] Atualizar o `client/CLAUDE.md` e o `TELAS.md`, rodar a verificação, dizer o que ficou para o dono e mudar o status aqui e no README.
+- [x] Modelo e serviços.
+- [x] A sombra no `CreaturePortrait`.
+- [x] A grade e a contagem.
+- [x] O detalhe e a linha evolutiva.
+- [x] O Hub e o botão de depuração.
+- [x] Atualizar o `client/CLAUDE.md` e o `TELAS.md`, rodar a verificação, dizer o que ficou para o dono e mudar o status aqui e no README.

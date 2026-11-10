@@ -104,6 +104,46 @@ func get_evolutions(species_id: int) -> Array[EvolutionRule]:
 	return _evolutions.get(species_id, empty)
 
 
+## A família evolutiva da espécie (codex/02, RF-10): da primeira forma até as últimas,
+## em largura. Cada passo é {"species_id": int, "rule": EvolutionRule}, com a regra que
+## leva até ele; a primeira forma tem "rule" nulo.
+func get_evolution_line(species_id: int) -> Array[Dictionary]:
+	var root := species_id
+	# A guarda impede um laço sem fim num catálogo errado.
+	for _step: int in _species.size():
+		var species: CreatureSpecies = _species.get(root)
+		if species == null or species.evolves_from_species_id <= 0:
+			break
+		root = species.evolves_from_species_id
+	var line: Array[Dictionary] = [{"species_id": root, "rule": null}]
+	var known: Dictionary[int, bool] = {root: true}
+	var index := 0
+	while index < line.size():
+		for rule: EvolutionRule in get_evolutions(line[index]["species_id"]):
+			if not known.has(rule.evolved_species_id):
+				known[rule.evolved_species_id] = true
+				line.append({"species_id": rule.evolved_species_id, "rule": rule})
+		index += 1
+	return line
+
+
+## Os nomes dos biomas onde a espécie aparece selvagem (taxa acima de 0), do mais
+## comum para o mais raro (codex/02, RF-09).
+func get_habitat_names(species_id: int) -> Array[String]:
+	var found: Array[Dictionary] = []
+	for row: Dictionary in _rows("species_biomes"):
+		if row["species_id"] == species_id and row["rate"] > 0:
+			found.append(row)
+	found.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		if a["rate"] != b["rate"]:
+			return a["rate"] > b["rate"]
+		return a["biome_id"] < b["biome_id"])
+	var names: Array[String] = []
+	for row: Dictionary in found:
+		names.append(String(get_row("biomes", row["biome_id"]).get("name", "")))
+	return names
+
+
 func get_skill(id: int) -> Skill:
 	return _lookup(_skills, id, "técnica")
 

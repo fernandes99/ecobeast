@@ -3,8 +3,11 @@ extends Control
 ## Retrato de uma espécie (foundation/02, RF-12): o sprite, se existir em
 ## res://assets/creatures/<slug>/front.png, ou um placeholder desenhado — círculo
 ## na cor do primeiro Elemento, borda na cor do segundo e a inicial do nome.
+## Com set_silhouette(true), vira a sombra do Bestiário (codex/02): a arte numa cor
+## só, ou o círculo sem a inicial e sem as cores do Elemento.
 
 const SPRITE_PATH := "res://assets/creatures/%s/front.png"
+const SilhouetteShader := preload("res://ui/components/silhouette.gdshader")
 const BORDER_WIDTH := 6.0
 ## Tamanho da inicial em relação ao retrato.
 const INITIAL_SCALE := 0.45
@@ -20,6 +23,7 @@ const SINGLE_ELEMENT_BORDER_DARKEN := 0.25
 			_sprite.flip_h = value
 
 var _species_id: int = -1
+var _silhouette: bool = false
 var _fill_color := Color.TRANSPARENT
 var _border_color := Color.TRANSPARENT
 
@@ -50,6 +54,13 @@ func set_species(species_id: int) -> void:
 		_refresh()
 
 
+## Pode ser chamado antes ou depois de o componente entrar na árvore.
+func set_silhouette(on: bool) -> void:
+	_silhouette = on
+	if is_node_ready():
+		_refresh()
+
+
 func _refresh() -> void:
 	_fill_color = Color.TRANSPARENT
 	_sprite.visible = false
@@ -62,12 +73,27 @@ func _refresh() -> void:
 		if ResourceLoader.exists(path):
 			_sprite.texture = load(path) as Texture2D
 			_sprite.visible = true
+			_paint_silhouette()
 		else:
 			_show_placeholder(species)
 	queue_redraw()
 
 
+func _paint_silhouette() -> void:
+	if not _silhouette:
+		_sprite.material = null
+		return
+	var material := ShaderMaterial.new()
+	material.shader = SilhouetteShader
+	material.set_shader_parameter(&"color", UiPalette.SILHOUETTE)
+	_sprite.material = material
+
+
 func _show_placeholder(species: CreatureSpecies) -> void:
+	if _silhouette:
+		_fill_color = UiPalette.SILHOUETTE
+		_border_color = UiPalette.SILHOUETTE
+		return
 	var first := GameData.get_element(species.element_ids[0])
 	_fill_color = first.color
 	if species.element_ids.size() > 1:

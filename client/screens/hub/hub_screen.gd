@@ -57,7 +57,7 @@ const DESTINATIONS: Dictionary[String, Dictionary] = {
 	"Loja": {"id": &"shop", "params": {}},
 	"Refúgio": {"id": &"heal_station", "params": {}},
 	"Santuário": {"id": &"storage", "params": {}},
-	"Bestiário": {"id": &"placeholder", "params": {"title": "Bestiário"}},
+	"Bestiário": {"id": &"codex", "params": {}},
 	"Mochila": {"id": &"bag", "params": {}},
 	"Equipe": {"id": &"team", "params": {}},
 	"Perfil": {"id": &"placeholder", "params": {"title": "Perfil", "extra": ProfileDebugPanelScene}},

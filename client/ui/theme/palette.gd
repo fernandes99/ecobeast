@@ -22,6 +22,8 @@ const DANGER := Color("#E5534B")
 const DANGER_PRESSED := Color("#C0433C")
 const HP_HIGH := Color("#68C661")
 const OVERLAY := Color(0.0, 0.0, 0.0, 0.6)
+## A sombra de um Ecobeast só visto no Bestiário (codex/02).
+const SILHOUETTE := Color("#060E18")
 
 ## Céu do cenário do Hub quando não há res://assets/backgrounds/hub.png.
 const SKY := Color("#52C4F5")

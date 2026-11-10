@@ -24,6 +24,7 @@ const BOARD_ACTION_PATH := "/v1/me/board-battle/action"
 const DEBUG_XP_PATH := "/v1/me/debug/xp"
 const DEBUG_SPAWNS_PATH := "/v1/me/exploration/spawns"
 const DEBUG_TAMERS_PATH := "/v1/me/exploration/tamers"
+const CODEX_PATH := "/v1/me/codex"
 const EVOLUTION_PATH := "/v1/me/creatures/%s/evolution"
 const LEARN_SKILL_PATH := "/v1/me/creatures/%s/skills"
 
@@ -159,6 +160,22 @@ func debug_spawn(species_id: int, coord: Vector2i) -> Result:
 		return Result.failure(ApiResponse.SERVER_ERROR)
 	var creature := MapCreature.from_dict(data)
 	return Result.success(creature) if creature != null else Result.failure(ApiResponse.SERVER_ERROR)
+
+
+func load_codex() -> Result:
+	var response: ApiResponse = await Api.request(HTTPClient.METHOD_GET, CODEX_PATH, null, true)
+	if not response.ok:
+		return Result.failure(response.error)
+	if not response.data is Dictionary:
+		return Result.failure(ApiResponse.SERVER_ERROR)
+	return Result.success(Codex.from_dict(response.data))
+
+
+func debug_clear_codex() -> Result:
+	var response: ApiResponse = await Api.request(HTTPClient.METHOD_DELETE, CODEX_PATH, null, true)
+	if not response.ok:
+		return Result.failure(response.error)
+	return Result.success(null)
 
 
 func debug_clear_spawns() -> Result:

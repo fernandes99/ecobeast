@@ -113,6 +113,18 @@ func load_storage() -> Result:
 	return result
 
 
+## O Bestiário (codex/02): lido a cada abertura da tela, sem guardar aqui.
+func load_codex() -> Result:
+	@warning_ignore("redundant_await")
+	return await _service.load_codex()
+
+
+## Só para testar o aviso de registro (codex/02, RF-13).
+func debug_clear_codex() -> Result:
+	@warning_ignore("redundant_await")
+	return await _service.debug_clear_codex()
+
+
 func reorder_team(uids: Array[String]) -> Result:
 	@warning_ignore("redundant_await")
 	var result: Result = await _service.reorder_team(uids)

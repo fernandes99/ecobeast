@@ -102,6 +102,14 @@ extends RefCounted
 @abstract func debug_spawn(species_id: int, coord: Vector2i) -> Result
 
 
+## data: o Codex do jogador (codex/02).
+@abstract func load_codex() -> Result
+
+
+## Só para testar o aviso de registro: apaga o Bestiário do jogador. data: null.
+@abstract func debug_clear_codex() -> Result
+
+
 ## Só para testar: tira da exploração os Ecobeasts e os Domadores da depuração.
 ## data: {"creature_ids": Array[int], "tamer_ids": Array[int]}.
 @abstract func debug_clear_spawns() -> Result
