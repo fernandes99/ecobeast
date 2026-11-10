@@ -1,6 +1,6 @@
 # 01. Transição de zoom pixelado
 
-- **Status:** concluída (falta o teste do dono no editor)
+- **Status:** concluída
 - **Depende de:** [architecture.md](architecture.md)
 
 ## Contexto
@@ -35,13 +35,13 @@ Hoje a luta abre de uma vez, sem transição:
 
 ## Critérios de aceite
 
-- [ ] Procurar um selvagem mostra os dois clarões, o zoom pixelado no Domador e a tela preta, e a luta aparece desfazendo o pixelado.
-- [ ] Tocar no log de um Domador do mapa e no Desafiar do Hub mostra a mesma transição.
-- [ ] Os botões de teste do Debug mostram a transição.
-- [ ] Com a equipe toda sem HP, a transição termina e a luta mostra "Cure sua equipe no Refúgio.".
-- [ ] Tocar na tela ou no voltar durante a transição não faz nada.
-- [ ] Com o servidor lento, a tela preta mostra "Procurando...".
-- [ ] A volta da luta para o mapa e para o Hub continua como antes.
+- [x] Procurar um selvagem mostra os dois clarões, o zoom pixelado no Domador e a tela preta, e a luta aparece desfazendo o pixelado.
+- [x] Tocar no log de um Domador do mapa e no Desafiar do Hub mostra a mesma transição.
+- [x] Os botões de teste do Debug mostram a transição.
+- [x] Com a equipe toda sem HP, a transição termina e a luta mostra "Cure sua equipe no Refúgio.".
+- [x] Tocar na tela ou no voltar durante a transição não faz nada.
+- [x] Com o servidor lento, a tela preta mostra "Procurando...".
+- [x] A volta da luta para o mapa e para o Hub continua como antes.
 - [x] O projeto abre sem erros nem avisos de script.
 
 ## Desenho técnico
@@ -72,7 +72,7 @@ No editor (F5), em 360×640, com `ENABLE_TEST_BATTLE` ligada no servidor:
 - Procurar um selvagem, tocar no log de um Domador do mapa, usar o Desafiar e um botão de teste do Debug, e conferir a transição nos quatro.
 - Com a equipe sem HP, conferir que a tela não fica preta.
 
-O que foi conferido em 2026-11-10: o projeto abre sem erro de script, e os avisos com `-d` são de arquivos que esta fase não tocou. Uma cena temporária, que roda com os autoloads e já foi apagada, conferiu: a camada começa escondida; o `cover` cobre, devolve `false` numa segunda chamada e `true` no fim, com a tela preta e o zoom máximo; o voltar fica travado; "Procurando..." aparece depois de 0,4 s; abrir a luta mantém a tela coberta, e a luta de teste (no servidor local) revelou ao chegar a resposta; abrir outra tela revela sozinho; e o `reveal` sem `cover` não faz nada. Uma gravação do Movie Maker do Godot, com imagens de exemplo, mostrou os clarões, o zoom pixelado, a tela preta e a luta aparecendo. Ela mostrou também que os blocos estavam pequenos demais: os valores da prévia eram de uma tela de 180 pixels, e o bloco máximo passou de 31 para 120 e o do revelar de 25 para 96. Os passos no editor ficam para o dono.
+O que foi conferido em 2026-11-10: o projeto abre sem erro de script, e os avisos com `-d` são de arquivos que esta fase não tocou. Uma cena temporária, que roda com os autoloads e já foi apagada, conferiu: a camada começa escondida; o `cover` cobre, devolve `false` numa segunda chamada e `true` no fim, com a tela preta e o zoom máximo; o voltar fica travado; "Procurando..." aparece depois de 0,4 s; abrir a luta mantém a tela coberta, e a luta de teste (no servidor local) revelou ao chegar a resposta; abrir outra tela revela sozinho; e o `reveal` sem `cover` não faz nada. Uma gravação do Movie Maker do Godot, com imagens de exemplo, mostrou os clarões, o zoom pixelado, a tela preta e a luta aparecendo. Ela mostrou também que os blocos estavam pequenos demais: os valores da prévia eram de uma tela de 180 pixels, e o bloco máximo passou de 31 para 120 e o do revelar de 25 para 96. O dono testou no jogo e aprovou em 2026-11-10.
 
 ## Tarefas
 
