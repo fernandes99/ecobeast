@@ -61,6 +61,8 @@ var _coord := Vector2i.ZERO
 var _test_slots := 0
 ## A luta é contra o Domador NPC do hexágono (npc-tamers/04).
 var _against_tamer: bool = false
+## A luta é o Desafiar do Hub, contra um Domador NPC sorteado (npc-tamers/05).
+var _challenge: bool = false
 ## O nome do Domador NPC adversário; vazio contra selvagem.
 var _tamer_name := ""
 ## O bioma e a forma do hexágono do Domador, para o chão do tabuleiro (board-battle/08).
@@ -157,10 +159,12 @@ var _entry_team := -1
 
 
 ## `coord`: o encontro do mapa. `tamer_coord`: a luta contra o Domador NPC desse
-## hexágono. `test_slots`: a luta de teste, com 2 ou 3 vagas. `biome` e `shape`: o
-## terreno do hexágono do Domador, para o chão do tabuleiro.
+## hexágono. `challenge`: o Desafiar do Hub, no chão padrão. `test_slots`: a luta de
+## teste, com 2 ou 3 vagas. `biome` e `shape`: o terreno do hexágono do Domador, para o
+## chão do tabuleiro.
 func setup(params: Dictionary) -> void:
 	_against_tamer = params.has("tamer_coord")
+	_challenge = params.get("challenge", false)
 	_coord = params.get("tamer_coord", params.get("coord", Vector2i.ZERO))
 	_test_slots = params.get("test_slots", 0)
 	_biome = params.get("biome", BoardView.DEFAULT_BIOME)
@@ -233,6 +237,8 @@ func _begin() -> void:
 		result = await Session.start_board_test_battle(_test_enemies(), _test_slots)
 	elif _against_tamer:
 		result = await Session.start_board_tamer_battle(_coord)
+	elif _challenge:
+		result = await Session.start_board_challenge()
 	else:
 		result = await Session.start_board_wild_battle(_coord)
 	_show_message("")

@@ -19,6 +19,7 @@ const BATTLE_ACTION_PATH := "/v1/me/battle/action"
 const BOARD_BATTLE_PATH := "/v1/me/board-battle"
 const BOARD_WILD_PATH := "/v1/me/board-battle/wild"
 const BOARD_TAMER_PATH := "/v1/me/board-battle/tamer"
+const BOARD_CHALLENGE_PATH := "/v1/me/board-battle/challenge"
 const BOARD_ACTION_PATH := "/v1/me/board-battle/action"
 const DEBUG_XP_PATH := "/v1/me/debug/xp"
 const DEBUG_SPAWNS_PATH := "/v1/me/exploration/spawns"
@@ -125,6 +126,10 @@ func start_board_tamer_battle(coord: Vector2i, god: bool = false) -> Result:
 	if god:
 		body["god"] = true
 	return _board_result(await Api.request(HTTPClient.METHOD_POST, BOARD_TAMER_PATH, body, true))
+
+
+func start_board_challenge() -> Result:
+	return _board_result(await Api.request(HTTPClient.METHOD_POST, BOARD_CHALLENGE_PATH, null, true))
 
 
 func start_board_test_battle(enemies: Array[Dictionary], slots: int) -> Result:

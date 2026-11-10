@@ -77,6 +77,11 @@ extends RefCounted
 @abstract func start_board_tamer_battle(coord: Vector2i, god: bool = false) -> Result
 
 
+## data: o BoardTurn da abertura do Desafiar do Hub, contra um Domador NPC sorteado
+## na hora (npc-tamers/05).
+@abstract func start_board_challenge() -> Result
+
+
 ## data: o BoardTurn da abertura da luta de teste no tabuleiro. `enemies`: cada
 ## um com species_id e level.
 @abstract func start_board_test_battle(enemies: Array[Dictionary], slots: int) -> Result

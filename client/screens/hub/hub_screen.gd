@@ -51,7 +51,8 @@ const TABS: Array[Dictionary] = [
 ## abre nada; a ação e a aba com o mesmo rótulo abrem a mesma tela.
 const DESTINATIONS: Dictionary[String, Dictionary] = {
 	"Explorar zona": {"id": &"exploration", "params": {}},
-	"Desafiar": {"id": &"placeholder", "params": {"title": "Desafiar"}},
+	# Um Domador NPC sorteado na hora (npc-tamers/05).
+	"Desafiar": {"id": &"board_battle", "params": {"challenge": true}},
 	"Arenas": {"id": &"placeholder", "params": {"title": "Arenas"}},
 	"Loja": {"id": &"shop", "params": {}},
 	"Refúgio": {"id": &"heal_station", "params": {}},

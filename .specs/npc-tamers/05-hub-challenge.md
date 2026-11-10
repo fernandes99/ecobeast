@@ -1,6 +1,6 @@
 # 05. Desafiar no Hub
 
-- **Status:** rascunho
+- **Status:** concluída (falta o teste do dono no editor)
 - **Depende de:** [04-map-tamers](04-map-tamers.md), [architecture.md](architecture.md)
 
 ## Contexto
@@ -33,7 +33,7 @@ O Hub (`res://screens/hub/hub_screen.gd`) já tem o card "Desafiar" ("Enfrente o
 - [ ] Vencer e perder voltam ao Hub com as moedas atualizadas no topo.
 - [ ] Com a equipe toda sem HP, aparece "Cure sua equipe no Refúgio." e a saída volta ao Hub.
 - [ ] Desafiar não mexe numa exploração aberta: o Hub não tem mapa, e a próxima entrada em Explorar zona gera outro, como hoje.
-- [ ] O projeto abre sem erros nem avisos de script.
+- [x] O projeto abre sem erros nem avisos de script.
 
 ## Desenho técnico
 
@@ -55,9 +55,11 @@ No editor (F5), em 360×640:
 - Vencer e perder, conferindo as moedas no Hub.
 - Com a equipe sem HP, conferir a mensagem e a volta.
 
+Conferido em 2026-11-09: o projeto abre sem erro de script, e os avisos com `-d` são todos de arquivos que esta fase não tocou. Uma cena temporária, que já foi apagada, compilou o Hub, a tela da luta, o `Session` e o `ApiGameService`, conferiu que o card Desafiar abre a `board_battle` com `challenge` e que o `setup` usa o chão padrão. A rota do servidor tem os e2e da [03](03-tamer-api.md). As lutas de verdade no editor ficam para o dono.
+
 ## Tarefas
 
-- [ ] Serviço e `Session`.
-- [ ] `challenge` na tela da luta.
-- [ ] O card do Hub.
-- [ ] Atualizar o `TELAS.md`, rodar a verificação, dizer o que ficou para o dono e mudar o status aqui, no README da iniciativa e no roadmap.
+- [x] Serviço e `Session`.
+- [x] `challenge` na tela da luta.
+- [x] O card do Hub.
+- [x] Atualizar o `TELAS.md`, rodar a verificação, dizer o que ficou para o dono e mudar o status aqui, no README da iniciativa e no roadmap.

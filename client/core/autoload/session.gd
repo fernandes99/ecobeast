@@ -194,6 +194,12 @@ func take_fought_tamer() -> int:
 	return tamer_id
 
 
+## O Desafiar do Hub (npc-tamers/05): não mexe em mapa nenhum.
+func start_board_challenge() -> Result:
+	@warning_ignore("redundant_await")
+	return await _service.start_board_challenge()
+
+
 func start_board_test_battle(enemies: Array[Dictionary], slots: int) -> Result:
 	@warning_ignore("redundant_await")
 	return await _service.start_board_test_battle(enemies, slots)
