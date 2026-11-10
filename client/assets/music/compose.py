@@ -7,7 +7,8 @@ ou os volumes aqui e rode de novo.
 
     python client/assets/music/compose.py
 
-Gera, ao lado deste arquivo, battle_wild.ogg, battle_tamer.ogg e victory.ogg.
+Gera, ao lado deste arquivo, battle_wild.ogg, battle_tamer.ogg, victory.ogg e
+explore.ogg (a música de fundo de Explorar zona, battle-intro/03).
 Só usa a biblioteca padrão do Python e o ffmpeg (com libvorbis) no PATH. Rodar
 de novo dá os mesmos arquivos.
 
@@ -162,6 +163,37 @@ def tamer_battle() -> Song:
     return Song("battle_tamer", 168, bars, loop=True, melody_duty=0.25, drums="tamer", intro=intro)
 
 
+def explore() -> Song:
+    """O mapa de Explorar zona: calma e de aventura, em sol maior, 120 batidas por minuto."""
+    section_a = [
+        (["G"], [("B4", 4), ("D5", 4), ("G5", 6), ("F#5", 2)]),
+        (["D"], [("A5", 4), ("F#5", 4), ("D5", 8)]),
+        (["Em"], [("E5", 4), ("G5", 4), ("B5", 4), ("A5", 4)]),
+        (["C"], [("G5", 8), ("E5", 4), ("C5", 4)]),
+        (["G"], [("B4", 4), ("D5", 4), ("G5", 4), ("B5", 4)]),
+        (["D"], [("A5", 6), ("G5", 2), ("F#5", 4), ("D5", 4)]),
+        (["C"], [("E5", 4), ("G5", 4), ("C6", 4), ("B5", 4)]),
+    ]
+    rest = (["D"], [("A5", 12), ("R", 4)])
+    section_b = [
+        (["Em"], [("G5", 4), ("F#5", 4), ("E5", 4), ("B4", 4)]),
+        (["C"], [("C5", 4), ("E5", 4), ("G5", 8)]),
+        (["G"], [("D5", 4), ("G5", 4), ("B5", 6), ("A5", 2)]),
+        (["D"], [("F#5", 8), ("A5", 4), ("D6", 4)]),
+        (["Em"], [("E6", 6), ("D6", 2), ("B5", 4), ("G5", 4)]),
+        (["C"], [("C6", 6), ("B5", 2), ("G5", 4), ("E5", 4)]),
+        (["Am"], [("A5", 4), ("C6", 4), ("E6", 4), ("D6", 4)]),
+        (["D"], [("D6", 8), ("C6", 4), ("A5", 4)]),
+    ]
+    # O último compasso desce pelo ré até o si do começo.
+    back_to_start = (["D"], [("A5", 8), ("F#5", 4), ("D5", 4)])
+    bars = section_a + [rest] + section_b + section_a + [back_to_start]
+    return Song(
+        "explore", 120, bars, loop=True, melody_duty=0.25, drums="explore",
+        volumes={"melody": 0.26, "kick": 0.35, "snare": 0.14, "hat": 0.05},
+    )
+
+
 def victory() -> Song:
     """O toque de vitória: uma fanfarra curta em dó maior."""
     bars = [
@@ -267,6 +299,7 @@ DRUM_PATTERNS = {
     # Por semicolcheia de um compasso: "k" bumbo, "s" caixa, "h" chimbal, "." nada.
     "wild": "k.h.s.h.k.h.s.hh",
     "tamer": "k.hhs.hkk.hhs.hh",
+    "explore": "k...h...s...h...",
     "none": "................",
 }
 
@@ -385,7 +418,7 @@ def set_loop_offset(song: Song, loop_start: int) -> None:
 
 
 def main() -> None:
-    for song in (wild_battle(), tamer_battle(), victory()):
+    for song in (wild_battle(), tamer_battle(), victory(), explore()):
         samples, loop_start = render(song)
         path = write_ogg(song, normalize(samples))
         if song.loop:

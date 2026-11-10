@@ -75,6 +75,7 @@ Autoload de script (`res://core/autoload/music.gd`) com um `AudioStreamPlayer` n
 | --- | --- |
 | `play_battle(opponent: StringName)` | Toca em loop a música de `wild` ou de `tamer`. Se a mesma já toca, não recomeça |
 | `play_victory()` | Para a música e toca o toque de vitória uma vez |
+| `play_explore(fade_in := 0.0)` | Toca em loop a música de Explorar zona ([03](03-explore-music.md)). Se ela já toca, segue. Com `fade_in`, entra aos poucos |
 | `fade_out(seconds := 1.0)` | Baixa o volume até sumir e para |
 | `stop()` | Para na hora |
 
@@ -85,6 +86,7 @@ Os arquivos ficam em `res://assets/music/`:
 | `battle_wild.ogg` | A luta contra selvagem: animada, em tom maior | abertura de 1,6 s e loop de 38,4 s |
 | `battle_tamer.ogg` | A luta contra Domador: mais rápida e mais tensa, em tom menor | abertura de 1,43 s e loop de 34,3 s |
 | `victory.ogg` | O toque de vitória | 3 a 5 s, sem loop |
+| `explore.ogg` | O mapa de Explorar zona: calma e de aventura, em sol maior | loop de 40 a 50 s, sem abertura |
 
 Cada luta começa com uma **abertura** que toca uma vez só, logo na transição: três batidas fortes de acorde com bumbo ("tun tun tun", pedido do dono em 2026-11-10) e uma subida (selvagem) ou descida cromática (Domador) com um rufar de caixa, que entra na música. O loop vem do import do Godot: `loop=true` e `loop_offset` no fim da abertura, que o `compose.py` escreve no `.import`. Cada música termina exatamente onde o loop recomeça.
 

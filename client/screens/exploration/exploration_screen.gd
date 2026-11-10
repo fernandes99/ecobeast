@@ -12,6 +12,8 @@ const LOADING_TEXT := "Gerando mapa..."
 const NOTHING_HERE_TEXT := "Nada por aqui."
 const ALMOST_LEVEL_UP_TEXT := "A equipe está a 1 XP do próximo nível."
 const SPAWNED_TEXT := "%s apareceu aqui. Toque em Procurar."
+## Quanto a música de explorar leva para entrar de novo na volta da luta, em segundos.
+const EXPLORE_MUSIC_FADE_IN := 1.0
 ## Duração de um passo, em segundos: um ciclo inteiro da corrida do Domador.
 const STEP_SECONDS := TamerSprite.RUN_SECONDS
 ## Até quanto o dedo pode correr, em pontos da tela lógica, para ainda ser um toque.
@@ -100,6 +102,11 @@ func handle_back() -> bool:
 	return _loading or _challenger != null
 
 
+## Fora do mapa (o Hub), a música dele some (battle-intro/03).
+func _exit_tree() -> void:
+	Music.fade_out()
+
+
 func _begin() -> void:
 	_show_message(LOADING_TEXT, &"SecondaryLabel")
 	var result: Result = await Session.start_exploration()
@@ -117,6 +124,7 @@ func _begin() -> void:
 	_map_view.show()
 	_marker.show()
 	_message.hide()
+	Music.play_explore()
 	_encounter_button.disabled = false
 	_bag_button.disabled = false
 	if OS.is_debug_build():
@@ -162,6 +170,8 @@ func _search() -> void:
 ## até o jogador sair do hexágono e entrar de novo.
 func _on_visibility_changed() -> void:
 	if visible and _map != null:
+		# A música do mapa volta depois da luta, entrando aos poucos (battle-intro/03).
+		Music.play_explore(EXPLORE_MUSIC_FADE_IN)
 		var fought := Session.take_fought_spawn()
 		_map.creatures.erase(fought)
 		_debug_spawn_ids.erase(fought)
