@@ -152,7 +152,7 @@ func _search() -> void:
 		return
 	if _map.has_creature(_player_coord):
 		# A luta de Explorar zona é a do tabuleiro (board-battle/05).
-		Router.push(&"board_battle", _battle_params({"coord": _player_coord}))
+		_open_battle({"coord": _player_coord}, &"wild")
 	else:
 		_show_message(NOTHING_HERE_TEXT, &"SecondaryLabel")
 
@@ -209,7 +209,7 @@ func _challenge(tamer: MapTamer) -> void:
 func _fight_challenger() -> void:
 	if _challenger == null:
 		return
-	Router.push(&"board_battle", _battle_params({"tamer_coord": _challenger.coord}))
+	_open_battle({"tamer_coord": _challenger.coord}, &"tamer")
 
 
 func _release_challenge() -> void:
@@ -264,7 +264,15 @@ func _open_board_test(slots: int) -> void:
 	if _walking or _challenger != null:
 		return
 	_debug_menu.hide()
-	Router.push(&"board_battle", _battle_params({"test_slots": slots}))
+	_open_battle({"test_slots": slots}, &"wild")
+
+
+## A transição de zoom pixelado no Domador do jogador (battle-intro/01), e a luta
+## abre por baixo da tela preta. Com outra transição correndo, nada acontece.
+func _open_battle(params: Dictionary, opponent: StringName) -> void:
+	if not await BattleIntro.cover(_marker.get_global_transform_with_canvas().origin, opponent):
+		return
+	Router.push(&"board_battle", _battle_params(params))
 
 
 ## O terreno do hexágono do Domador vai junto: é o chão do tabuleiro (board-battle/08).

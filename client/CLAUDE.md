@@ -6,7 +6,7 @@ O jogo, em **Godot 4.7 com GDScript**. Esta pasta é o projeto Godot: `res://` a
 
 ```
 res://
-  core/autoload/   GameData (catálogo), Router (telas), Api (HTTP e sessão), Session (jogador e login)
+  core/autoload/   GameData (catálogo), Router (telas), Api (HTTP e sessão), Session (jogador e login), BattleIntro (transição da luta)
   core/auth/       AuthSession (a sessão no aparelho) e AuthService (login pelo navegador)
   core/data/       leitura do catálogo (da API) e validação
   core/net/        ApiResponse
@@ -35,6 +35,7 @@ Detalhes em `.specs/foundation/architecture.md`.
 - **Ecobeasts do mapa:** o servidor sorteia e manda só `id`, `species_id` e a posição (`MapCreature`). A tela de exploração mantém nós só para quem está a até `CREATURE_RADIUS` hexágonos do Domador, e o `CreatureSprite` reaproveita as animações por espécie. O inimigo sai do hexágono do Domador, e a tela tira o enfrentado do mapa ao voltar da luta (`.specs/biome-encounters/`).
 - **Domadores NPC do mapa:** o servidor manda `id`, posição, `name_id` e `greeting_id` (`MapTamer`); o nome e a fala vêm do `GameData`. Cada um perto do jogador é um `TamerSprite` passeando no hexágono; o passeio dos Ecobeasts e dos Domadores mora no `WanderingSprite`. Chegar no hexágono de um trava o mapa e mostra a fala no `TamerGreetingPanel`, e tocar nela abre a luta contra ele, sem Fugir nem Esferas; perder leva ao Hub (`.specs/npc-tamers/`).
 - **Bestiário:** o servidor manda só as espécies conhecidas, com capturado ou não (`Codex`), e a tela `codex` cruza com o catálogo: capturada colorida, vista em sombra (`CreaturePortrait.set_silhouette`, com o shader `ui/components/silhouette.gdshader`) e nunca vista como "???". O habitat e a linha evolutiva vêm do `GameData` (`get_habitat_names`, `get_evolution_line`). Na luta, o `CodexRegisteredOverlay` mostra "Novo registro no Bestiário!" para cada espécie de `registered_species_ids`, depois da captura e da Evolução (`.specs/codex/`).
+- **Entrar na luta:** toda abertura da tela `board_battle` passa antes por `await BattleIntro.cover(foco, opponent)`, o zoom pixelado (shader `ui/components/pixel_zoom.gdshader` sobre a tela, numa camada acima de tudo). Se ele devolver `false`, não abra a luta. A tela da luta chama `BattleIntro.reveal()` quando o tabuleiro está montado ou quando mostra um erro. Com a tela coberta, o `Router.back` não faz nada, e abrir outra tela revela sozinho (sinal `Router.screen_changed`) (`.specs/battle-intro/`).
 - Versione os arquivos `.uid` que o Godot cria ao lado dos scripts; `.godot/` fica fora do git.
 
 ## Editando dados do catálogo

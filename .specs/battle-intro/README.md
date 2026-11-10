@@ -71,7 +71,7 @@ Escolhas do planejamento (corrigíveis; ao mudar uma, atualize aqui e nas specs 
 
 | # | Fase | Entrega | Status |
 | --- | --- | --- | --- |
-| 1 | [01-battle-transition](01-battle-transition.md) | Jogo: o zoom pixelado ao entrar na luta, em todas as entradas | rascunho |
+| 1 | [01-battle-transition](01-battle-transition.md) | Jogo: o zoom pixelado ao entrar na luta, em todas as entradas | concluída (falta o teste do dono no editor) |
 | 2 | [02-battle-music](02-battle-music.md) | As músicas e o toque de vitória, o script que as gera e o autoload `Music` tocando na luta | rascunho |
 
 O desenho compartilhado está no [architecture.md](architecture.md).

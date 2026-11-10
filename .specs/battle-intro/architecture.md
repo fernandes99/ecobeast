@@ -62,8 +62,8 @@ Em `BattleIntro`, _a revisar_, iguais aos da prévia aprovada:
 | Etapa | Tempo | O que muda |
 | --- | ---: | --- |
 | Clarões | 0,45 s | `flash` sobe e desce duas vezes, até 0,9 |
-| Zoom | 0,8 s | `zoom` de 1 a 3,5 e `block` de 1 a 31 pixels, acelerando. `darken` de 0 a 1 nos últimos 40% |
-| Revelar | 0,65 s | `zoom` 1, `darken` 0 e `block` de 25 a 1 pixel, desacelerando |
+| Zoom | 0,8 s | `zoom` de 1 a 3,5 e `block` de 1 a 120 pixels (um sexto da largura), acelerando. `darken` de 0 a 1 nos últimos 40% |
+| Revelar | 0,65 s | `zoom` 1, `darken` 0 e `block` de 96 a 1 pixel, desacelerando |
 
 Os pixels são medidos na tela de 720 × 1280 do projeto e acompanham a escala da janela.
 

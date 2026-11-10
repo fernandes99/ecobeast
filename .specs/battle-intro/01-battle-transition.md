@@ -1,6 +1,6 @@
 # 01. Transição de zoom pixelado
 
-- **Status:** rascunho
+- **Status:** concluída (falta o teste do dono no editor)
 - **Depende de:** [architecture.md](architecture.md)
 
 ## Contexto
@@ -42,7 +42,7 @@ Hoje a luta abre de uma vez, sem transição:
 - [ ] Tocar na tela ou no voltar durante a transição não faz nada.
 - [ ] Com o servidor lento, a tela preta mostra "Procurando...".
 - [ ] A volta da luta para o mapa e para o Hub continua como antes.
-- [ ] O projeto abre sem erros nem avisos de script.
+- [x] O projeto abre sem erros nem avisos de script.
 
 ## Desenho técnico
 
@@ -72,9 +72,11 @@ No editor (F5), em 360×640, com `ENABLE_TEST_BATTLE` ligada no servidor:
 - Procurar um selvagem, tocar no log de um Domador do mapa, usar o Desafiar e um botão de teste do Debug, e conferir a transição nos quatro.
 - Com a equipe sem HP, conferir que a tela não fica preta.
 
+O que foi conferido em 2026-11-10: o projeto abre sem erro de script, e os avisos com `-d` são de arquivos que esta fase não tocou. Uma cena temporária, que roda com os autoloads e já foi apagada, conferiu: a camada começa escondida; o `cover` cobre, devolve `false` numa segunda chamada e `true` no fim, com a tela preta e o zoom máximo; o voltar fica travado; "Procurando..." aparece depois de 0,4 s; abrir a luta mantém a tela coberta, e a luta de teste (no servidor local) revelou ao chegar a resposta; abrir outra tela revela sozinho; e o `reveal` sem `cover` não faz nada. Uma gravação do Movie Maker do Godot, com imagens de exemplo, mostrou os clarões, o zoom pixelado, a tela preta e a luta aparecendo. Ela mostrou também que os blocos estavam pequenos demais: os valores da prévia eram de uma tela de 180 pixels, e o bloco máximo passou de 31 para 120 e o do revelar de 25 para 96. Os passos no editor ficam para o dono.
+
 ## Tarefas
 
-- [ ] O shader e o autoload.
-- [ ] A transição nas entradas do mapa e do Hub.
-- [ ] O revelar na tela da luta.
-- [ ] Atualizar o `client/CLAUDE.md`, rodar a verificação, dizer o que ficou para o dono e mudar o status aqui e no README.
+- [x] O shader e o autoload.
+- [x] A transição nas entradas do mapa e do Hub.
+- [x] O revelar na tela da luta.
+- [x] Atualizar o `client/CLAUDE.md`, rodar a verificação, dizer o que ficou para o dono e mudar o status aqui e no README.

@@ -246,12 +246,16 @@ func _begin() -> void:
 		result = await Session.start_board_wild_battle(_coord)
 	_show_message("")
 	if not result.ok:
+		# A transição não deixa a tela preta sobre o erro (battle-intro/01).
+		BattleIntro.reveal()
 		_show_exit(result.error, false)
 		return
 	var turn: BoardTurn = result.data
 	_meet_tamer(turn.view)
 	_board.set_board(turn.view.board_cells, _biome, _shape)
 	_fit_board()
+	# O pixelado se desfaz sobre o tabuleiro já montado, e a abertura começa junto.
+	BattleIntro.reveal()
 	await _show_turn(turn)
 	_narrator.begin_turns()
 

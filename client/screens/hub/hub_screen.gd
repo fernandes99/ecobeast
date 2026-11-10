@@ -189,6 +189,11 @@ func _open(label: String) -> void:
 	if not DESTINATIONS.has(label):
 		return
 	var destination := DESTINATIONS[label]
+	# O Desafiar entra na luta com a transição, do centro da tela (battle-intro/01).
+	if destination["id"] == &"board_battle":
+		var center := get_viewport().get_visible_rect().size / 2.0
+		if not await BattleIntro.cover(center, &"tamer"):
+			return
 	Router.push(destination["id"], destination["params"])
 
 

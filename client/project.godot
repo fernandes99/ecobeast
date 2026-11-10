@@ -22,6 +22,7 @@ GameData="*res://core/autoload/game_data.gd"
 Router="*res://core/autoload/router.gd"
 Api="*res://core/autoload/api.gd"
 Session="*res://core/autoload/session.gd"
+BattleIntro="*res://core/autoload/battle_intro.tscn"
 
 [debug]
 

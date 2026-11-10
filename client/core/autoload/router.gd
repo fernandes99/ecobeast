@@ -4,6 +4,12 @@ extends Node
 ## Se a tela tiver setup(params: Dictionary), ele é chamado antes de a tela
 ## entrar na árvore, ou seja, antes do _ready dela.
 
+## A tela visível mudou: abriu uma nova ou voltou para a anterior. `id` é o dela.
+signal screen_changed(id: StringName)
+
+## Onde cada tela guarda o id com que foi aberta.
+const SCREEN_ID_META := &"screen_id"
+
 ## Telas registradas: id -> cena. Cada fase acrescenta a sua.
 const SCREENS: Dictionary[StringName, String] = {
 	&"bag": "res://screens/bag/bag_screen.tscn",
@@ -58,6 +64,9 @@ func push(id: StringName, params: Dictionary = {}) -> void:
 ## Se a tela do topo tiver handle_back() -> bool e ele devolver true, ela
 ## tratou o voltar sozinha (ex.: fechou um painel) e continua aberta.
 func back() -> void:
+	# Com a transição da luta cobrindo a tela, o voltar espera (battle-intro/01).
+	if BattleIntro.is_covering():
+		return
 	if not _stack.is_empty():
 		var current := _stack.back() as Control
 		if current.has_method(&"handle_back") and current.call(&"handle_back"):
@@ -67,6 +76,7 @@ func back() -> void:
 	var top: Control = _stack.pop_back()
 	top.queue_free()
 	_stack.back().show()
+	screen_changed.emit(_stack.back().get_meta(SCREEN_ID_META, &""))
 
 
 func can_go_back() -> bool:
@@ -82,6 +92,7 @@ func _instantiate(id: StringName, params: Dictionary) -> Control:
 		return null
 	var scene: PackedScene = load(SCREENS[id])
 	var screen: Control = scene.instantiate()
+	screen.set_meta(SCREEN_ID_META, id)
 	if screen.has_method(&"setup"):
 		screen.call(&"setup", params)
 	return screen
@@ -91,3 +102,4 @@ func _open(screen: Control) -> void:
 	# Entra na pilha antes da árvore, para can_go_back() já valer no _ready da tela.
 	_stack.append(screen)
 	_host.add_child(screen)
+	screen_changed.emit(screen.get_meta(SCREEN_ID_META))
