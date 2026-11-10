@@ -1,6 +1,6 @@
 # 04. Domadores no mapa
 
-- **Status:** concluída (falta o teste do dono no editor)
+- **Status:** concluída
 - **Depende de:** [03-tamer-api](03-tamer-api.md), [architecture.md](architecture.md)
 
 ## Contexto
@@ -54,15 +54,15 @@ Godot, para quem está começando: uma **cena** (`.tscn`) é uma árvore de **n�
 
 ## Critérios de aceite
 
-- [ ] Ao andar pelo mapa, aparecem Domadores com o sprite do template, passeando dentro do hexágono deles, e nunca na água.
-- [ ] Entrar no hexágono de um Domador escreve "{nome}: {fala}" no painel, e nada mais responde até tocar no painel.
-- [ ] Tocar no painel abre a luta, com 1, 2 ou 3 Ecobeasts do NPC, sem Fugir e sem Esferas na Mochila.
-- [ ] O log mostra "{nome} enviou {Ecobeast}!" para cada Ecobeast do NPC.
-- [ ] Vencer volta ao mapa, sem o Domador, e com as moedas e o XP do Domador no log.
-- [ ] Perder mostra "Voltar ao Hub", e o Hub abre com as moedas atualizadas. Entrar em Explorar zona de novo gera outro mapa.
-- [ ] Com a equipe toda sem HP, a luta mostra "Cure sua equipe no Refúgio.", e de volta ao mapa o jogador consegue sair do hexágono.
-- [ ] Os três botões de Domador no Debug abrem lutas de 1×1, 2×2 e 3×3.
-- [ ] Os selvagens continuam passeando e sendo enfrentados como antes.
+- [x] Ao andar pelo mapa, aparecem Domadores com o sprite do template, passeando dentro do hexágono deles, e nunca na água.
+- [x] Entrar no hexágono de um Domador escreve "{nome}: {fala}" no painel, e nada mais responde até tocar no painel.
+- [x] Tocar no painel abre a luta, com 1, 2 ou 3 Ecobeasts do NPC, sem Fugir e sem Esferas na Mochila.
+- [x] O log mostra "{nome} enviou {Ecobeast}!" para cada Ecobeast do NPC.
+- [x] Vencer volta ao mapa, sem o Domador, e com as moedas e o XP do Domador no log.
+- [x] Perder mostra "Voltar ao Hub", e o Hub abre com as moedas atualizadas. Entrar em Explorar zona de novo gera outro mapa.
+- [x] Com a equipe toda sem HP, a luta mostra "Cure sua equipe no Refúgio.", e de volta ao mapa o jogador consegue sair do hexágono.
+- [x] Os três botões de Domador no Debug abrem lutas de 1×1, 2×2 e 3×3.
+- [x] Os selvagens continuam passeando e sendo enfrentados como antes.
 - [x] O projeto abre sem erros nem avisos de script.
 
 ## Desenho técnico
@@ -101,7 +101,7 @@ No editor (F5), em 360×640, com `ENABLE_TEST_BATTLE` ligada no servidor:
 - Perder uma luta contra Domador (God desligado, equipe fraca) e conferir a volta ao Hub.
 - Conferir que o Domador some depois da vitória e que os selvagens continuam iguais.
 
-O que foi conferido em 2026-11-09: o projeto abre sem erro de script, e os avisos com `-d` são todos de arquivos que esta fase não tocou. Uma cena temporária, que roda com os autoloads e já foi apagada, carregou as cenas do mapa e da luta, compilou os scripts delas e conferiu: o mapa lê os Domadores e ignora um incompleto; o `tamer_at`; o `tamer_id` e o Domador na luta, e a falta deles contra selvagem; "Um Ruvo selvagem apareceu!" e "Lia enviou Ruvo!"; o Domador NPC passeia e o do jogador não; e o painel, em que o primeiro toque completa a frase e o segundo abre a luta. Os passos no editor, com o jogo de verdade, ficam para o dono.
+O que foi conferido em 2026-11-09: o projeto abre sem erro de script, e os avisos com `-d` são todos de arquivos que esta fase não tocou. Uma cena temporária, que roda com os autoloads e já foi apagada, carregou as cenas do mapa e da luta, compilou os scripts delas e conferiu: o mapa lê os Domadores e ignora um incompleto; o `tamer_at`; o `tamer_id` e o Domador na luta, e a falta deles contra selvagem; "Um Ruvo selvagem apareceu!" e "Lia enviou Ruvo!"; o Domador NPC passeia e o do jogador não; e o painel, em que o primeiro toque completa a frase e o segundo abre a luta. O dono jogou todos os passos no editor e aprovou em 2026-11-09.
 
 ## Tarefas
 
