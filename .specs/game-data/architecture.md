@@ -270,6 +270,7 @@ O cliente nunca lê essas tabelas: recebe o jogador pronto, no formato do contra
 - `creature_instance_stats` (`creature_uid`, `stat_id`, `genes` 0–31, `training_points` 0–252).
 - `creature_instance_skills` (`creature_uid`, `slot` 1–4, `skill_id`, `current_pp`).
 - `inventory_items` (`player_id`, `item_id`, `quantity`).
+- `codex_entries` (`player_id`, `species_id`, `seen_at`, `caught_at?`): o Bestiário, uma linha por espécie que o jogador já viu numa luta ([codex](../codex/architecture.md#tabela)).
 
 ## Como o jogo lê o catálogo
 

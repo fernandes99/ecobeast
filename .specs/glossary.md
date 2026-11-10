@@ -12,7 +12,7 @@ O jogador nunca vê a coluna "Referência": ela só existe para quem implementa 
 | Pokébola            | Esfera de Vínculo (Bond Sphere)  | `CaptureItem`                          | `items` (categoria captura)                       |
 | Poção               | Tônico                           | `Item`\*                               | `items` (categoria cura)                          |
 | Mochila             | Mochila                          | `InventorySlot`\*                      | `inventory_items`                                 |
-| Pokédex             | Bestiário (Codex)                | `Codex`                                | derivado de `species` + estado do jogador         |
+| Pokédex             | Bestiário (Codex)                | `Codex`                                | `codex_entries` (estado do jogador) + `species`   |
 | Tipo                | Afinidade / Elemento             | `Element`\*                            | `elements`, `element_efficacy`                    |
 | Golpe / Move        | Técnica                          | `Skill`                                | `skills`, `skill_effects`, `species_skills`       |
 | Habilidade          | Traço                            | `CreatureTrait`\*                      | `traits`, `species_traits`                        |
