@@ -45,8 +45,13 @@ const CONTOUR_TEXTURE := "contour"
 const HIGHLIGHT_TEXTURE := "highlight"
 
 ## Com valor, a escala fica fixa, sem seguir a janela: o tabuleiro da luta usa o
-## chão do mapa ampliado 1,5× (board-battle/08). O mapa de Explorar deixa em 0.
-var fixed_scale := 0.0
+## chão do mapa ampliado 1,5× (board-battle/08), e o editor de ilhas, o zoom dele
+## (map-editor/02). O mapa de Explorar deixa em 0. Mudar a escala já na árvore vale na hora.
+var fixed_scale := 0.0:
+	set(value):
+		fixed_scale = value
+		if is_inside_tree():
+			_update_scale()
 ## Com valor, decide quais decorações aparecem: recebe a coordenada do hexágono e o
 ## tipo, e devolve true para mostrar. O tabuleiro da luta usa (board-battle/08).
 var allows_decoration := Callable()
@@ -174,10 +179,10 @@ func surface_center(coord: Vector2i) -> Vector2:
 ## o contém ou, em um paredão, o dono dele. Não confere se ele existe no mapa.
 func coord_at(point: Vector2) -> Vector2i:
 	for level: int in range(LEVEL_HEIGHTS.size() - 1, -1, -1):
-		var coord := _grid_coord(point + _rise(level))
+		var coord := grid_coord(point + _rise(level))
 		if _map != null and _map.has(coord) and _level_at(coord) == level:
 			return coord
-	return _grid_coord(point)
+	return grid_coord(point)
 
 
 ## A escala do nó na tela lógica, que dá um número inteiro de pixels reais.
@@ -196,10 +201,16 @@ func snapped_to_pixels(value: Vector2) -> Vector2:
 	return (value * _window_scale).round() / _window_scale
 
 
+## O centro da superfície de um hexágono sem a altura, em pixels da arte: onde ele
+## fica num desenho plano do mapa, como a visão de cima do editor de ilhas.
+static func flat_center(coord: Vector2i) -> Vector2:
+	return _tile_origin(coord) + SURFACE_CENTER
+
+
 ## O hexágono da grade que contém um ponto, sem contar a altura. Cada linha é uma
 ## faixa de STEP_Y: embaixo, a parte reta; em cima, as pontas, que a linha de trás
 ## divide com ela.
-func _grid_coord(point: Vector2) -> Vector2i:
+static func grid_coord(point: Vector2) -> Vector2i:
 	var r := floori(point.y / STEP_Y)
 	var inside_row := point.y - r * STEP_Y
 	var x := point.x - ROW_SHIFT * r

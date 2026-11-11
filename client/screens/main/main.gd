@@ -11,6 +11,8 @@ const OLD_SAVE_FILES: Array[String] = ["user://save.json", "user://save.tmp.json
 var _catalog_loaded := false
 ## O visualizador de conteúdo (content-viewer/01), criado no primeiro F1.
 var _content_viewer: ContentViewer = null
+## O editor de ilhas (map-editor/02), criado no primeiro F2.
+var _map_editor: MapEditor = null
 
 
 func _ready() -> void:
@@ -51,6 +53,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 		_toggle_content_viewer()
 		return
+	if _is_dev_key(event, KEY_F2):
+		get_viewport().set_input_as_handled()
+		_toggle_map_editor()
+		return
 	# Esc no editor faz o papel do voltar do Android.
 	if event.is_action_pressed(&"ui_cancel"):
 		get_viewport().set_input_as_handled()
@@ -61,8 +67,13 @@ func _unhandled_input(event: InputEvent) -> void:
 ## exportado, nem no de depuração. A tecla fica fora do Input Map para não aparecer
 ## nas configurações do jogo.
 func _is_content_viewer_key(event: InputEvent) -> bool:
+	return _is_dev_key(event, KEY_F1)
+
+
+## Uma tecla das ferramentas de desenvolvimento (F1 e F2), só pelo editor do Godot.
+func _is_dev_key(event: InputEvent, keycode: Key) -> bool:
 	var key := event as InputEventKey
-	return key != null and key.pressed and not key.echo and key.keycode == KEY_F1 and OS.has_feature("editor")
+	return key != null and key.pressed and not key.echo and key.keycode == keycode and OS.has_feature("editor")
 
 
 ## A janela é criada uma vez e depois só aparece e some, guardando a aba escolhida.
@@ -73,6 +84,19 @@ func _toggle_content_viewer() -> void:
 		_content_viewer.show()
 	else:
 		_content_viewer.visible = not _content_viewer.visible
+
+
+## Como o visualizador: criado uma vez, depois só aparece. Fechar com mudanças não
+## salvas pergunta antes (MapEditor.close).
+func _toggle_map_editor() -> void:
+	if _map_editor == null:
+		_map_editor = MapEditor.new()
+		add_child(_map_editor)
+		_map_editor.show()
+	elif _map_editor.visible:
+		_map_editor.close()
+	else:
+		_map_editor.show()
 
 
 ## Catálogo (do servidor), login e jogador; a etapa que falha mostra o erro.

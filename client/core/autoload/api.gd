@@ -25,23 +25,24 @@ func _ready() -> void:
 
 
 ## Faz a chamada e devolve a resposta. Assíncrono: chame com await.
-## Com authenticated, leva a sessão e cuida de renová-la.
-func request(method: HTTPClient.Method, path: String, body: Variant = null, authenticated: bool = false) -> ApiResponse:
+## Com authenticated, leva a sessão e cuida de renová-la. `timeout` muda o prazo
+## de TIMEOUT_SECONDS, para chamadas que demoram (salvar uma ilha, map-editor/02).
+func request(method: HTTPClient.Method, path: String, body: Variant = null, authenticated: bool = false, timeout: float = TIMEOUT_SECONDS) -> ApiResponse:
 	if not authenticated:
-		return await _send(method, path, body)
+		return await _send(method, path, body, "", timeout)
 	if session == null:
 		return ApiResponse.from_http(UNAUTHORIZED, PackedByteArray())
 	if session.expires_within(RENEW_MARGIN_S):
 		var renewed: ApiResponse = await _renew()
 		if not renewed.ok:
 			return renewed
-	var response: ApiResponse = await _send(method, path, body, session.access_token)
+	var response: ApiResponse = await _send(method, path, body, session.access_token, timeout)
 	if response.code != UNAUTHORIZED or session == null:
 		return response
 	var retry: ApiResponse = await _renew()
 	if not retry.ok:
 		return retry
-	response = await _send(method, path, body, session.access_token)
+	response = await _send(method, path, body, session.access_token, timeout)
 	if response.code == UNAUTHORIZED:
 		_lose_session()
 	return response
@@ -86,7 +87,7 @@ func _lose_session() -> void:
 	session_lost.emit()
 
 
-func _send(method: HTTPClient.Method, path: String, body: Variant, token: String = "") -> ApiResponse:
+func _send(method: HTTPClient.Method, path: String, body: Variant, token: String = "", timeout: float = TIMEOUT_SECONDS) -> ApiResponse:
 	var headers := PackedStringArray()
 	var payload := ""
 	if body != null:
@@ -96,7 +97,7 @@ func _send(method: HTTPClient.Method, path: String, body: Variant, token: String
 		headers.append("Authorization: Bearer %s" % token)
 
 	var http := HTTPRequest.new()
-	http.timeout = TIMEOUT_SECONDS
+	http.timeout = timeout
 	add_child(http)
 	# Os argumentos do sinal request_completed: resultado, código, cabeçalhos e corpo.
 	var completed: Array = [HTTPRequest.RESULT_CANT_CONNECT, 0, PackedStringArray(), PackedByteArray()]
