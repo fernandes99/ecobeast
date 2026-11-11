@@ -81,6 +81,76 @@ func to_dict() -> Dictionary:
 	}
 
 
+## Um hexágono para o desfazer: `[bioma, forma, variante, área]`, com área 0 quando
+## ele não tem; vazio quando o hexágono não existe.
+func snapshot(coord: Vector2i) -> Array:
+	var tile: HexTile = tiles.get(coord)
+	if tile == null:
+		return []
+	return [tile.biome, tile.shape, tile.variant, tile_areas.get(coord, 0)]
+
+
+## Volta um hexágono ao que `snapshot` guardou.
+func restore(coord: Vector2i, state: Array) -> void:
+	if state.is_empty():
+		tiles.erase(coord)
+		tile_areas.erase(coord)
+		return
+	var tile: HexTile = tiles.get(coord)
+	if tile == null:
+		tile = HexTile.new()
+		tile.coord = coord
+		tiles[coord] = tile
+	tile.biome = state[0]
+	tile.shape = state[1]
+	tile.variant = state[2]
+	if int(state[3]) > 0:
+		tile_areas[coord] = int(state[3])
+	else:
+		tile_areas.erase(coord)
+
+
+## Um hexágono novo, se ainda não existe e a ilha não está cheia. Devolve se entrou.
+func add_tile(coord: Vector2i, biome: String, shape: String, variant: int) -> bool:
+	if tiles.has(coord) or tiles.size() >= MAX_TILES:
+		return false
+	var tile := HexTile.new()
+	tile.coord = coord
+	tile.biome = biome
+	tile.shape = shape
+	tile.variant = variant
+	tiles[coord] = tile
+	return true
+
+
+## Tira um hexágono, e com ele a área e o lugar dele numa construção; a construção
+## que fica sem hexágonos sai. Devolve se alguma construção mudou.
+func remove_tile(coord: Vector2i) -> bool:
+	tiles.erase(coord)
+	tile_areas.erase(coord)
+	var changed := false
+	for index: int in range(buildings.size() - 1, -1, -1):
+		var building: Dictionary = buildings[index]
+		var occupied: Array = building.get("tiles", [])
+		for spot: int in range(occupied.size() - 1, -1, -1):
+			var at: Dictionary = occupied[spot]
+			if int(at.get("q", 0)) == coord.x and int(at.get("r", 0)) == coord.y:
+				occupied.remove_at(spot)
+				changed = true
+		if occupied.is_empty():
+			buildings.remove_at(index)
+	return changed
+
+
+## Algum hexágono de construção está entre estes.
+func touches_buildings(coords: Array[Vector2i]) -> bool:
+	for building: Variant in buildings:
+		for at: Variant in (building as Dictionary).get("tiles", []):
+			if coords.has(Vector2i(int(at.get("q", 0)), int(at.get("r", 0)))):
+				return true
+	return false
+
+
 ## O terreno como o `HexMapView` desenha. A seed só escolhe os escorridos dos
 ## paredões; com o id, cada ilha fica sempre igual.
 func to_map() -> ExplorationMap:

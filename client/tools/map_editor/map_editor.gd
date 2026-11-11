@@ -31,6 +31,8 @@ var _save_button: Button
 var _side: VBoxContainer
 var _list: IslandList
 var _new_panel: NewIslandPanel
+var _tools: EditorTools
+var _history: EditorHistory
 var _canvas: EditorCanvas
 var _hover_label: Label
 var _unsaved_dialog: ConfirmationDialog
@@ -39,6 +41,8 @@ var _confirm_dialog: ConfirmationDialog
 var _draft: IslandDraft = null
 var _status := ""
 var _dirty := false
+## A posição do histórico no último salvar: voltar até ela tira o "*".
+var _saved_version := 0
 var _generator_loaded := false
 var _busy := false
 
@@ -97,6 +101,7 @@ func _refresh_list() -> void:
 		var params: ApiResponse = await EditorApi.generator_params()
 		if params.ok:
 			_new_panel.set_generator_params(params.data)
+			_tools.detail_chance = _new_panel.detail_chance()
 			_generator_loaded = true
 
 
@@ -121,7 +126,8 @@ func _show_island(draft: IslandDraft, status: String) -> void:
 	_name_edit.text = draft.name if draft != null else ""
 	_name_edit.editable = draft != null
 	_canvas.show_draft(draft)
-	_set_dirty(false)
+	_history.reset(draft)
+	_mark_saved()
 	_update_header()
 
 
@@ -130,12 +136,14 @@ func _start_new_island() -> void:
 		return
 	_new_panel.reset()
 	_list.visible = false
+	_tools.visible = false
 	_new_panel.visible = true
 
 
 func _leave_new_island() -> void:
 	_new_panel.visible = false
 	_list.visible = true
+	_tools.visible = true
 	# Volta para a ilha de antes, ou para o mapa vazio.
 	_canvas.show_draft(_draft)
 
@@ -155,6 +163,7 @@ func _on_create(preview: IslandDraft) -> void:
 	preview.id = DictFields.get_int(response.data, "id")
 	_new_panel.visible = false
 	_list.visible = true
+	_tools.visible = true
 	_show_island(preview, "draft")
 	_refresh_list()
 
@@ -191,7 +200,7 @@ func save() -> bool:
 		return false
 	_set_message("Salvo.")
 	_status = DictFields.get_string(response.data, "status")
-	_set_dirty(false)
+	_mark_saved()
 	_update_header()
 	_refresh_list()
 	return true
@@ -212,16 +221,71 @@ func _resolve_unsaved() -> bool:
 	return false
 
 
-func _set_dirty(dirty: bool) -> void:
-	_dirty = dirty
-	title = TITLE + (" *" if dirty else "")
+func _mark_saved() -> void:
+	_saved_version = _history.version()
+	_update_dirty()
+
+
+func _update_dirty() -> void:
+	_dirty = _draft != null and _history.version() != _saved_version
+	title = TITLE + (" *" if _dirty else "")
 
 
 func _on_name_changed(text: String) -> void:
 	if _draft == null:
 		return
+	var before := _draft.name
 	_draft.name = text.strip_edges()
-	_set_dirty(true)
+	_history.record_rename(before, _draft.name)
+	_update_dirty()
+
+
+# --- Pincéis -------------------------------------------------------------------
+
+## Só a ilha aberta se pinta: a prévia de uma ilha nova, não.
+func _can_paint() -> bool:
+	return _draft != null and not _new_panel.visible
+
+
+func _on_stroke_started(coord: Vector2i) -> void:
+	if not _can_paint():
+		return
+	_tools.begin_stroke(_draft)
+	_paint(coord)
+
+
+func _paint(coord: Vector2i) -> void:
+	if not _can_paint():
+		return
+	var changed := _tools.paint(_draft, coord)
+	if not changed.is_empty():
+		_canvas.update_tiles(changed)
+		title = TITLE + " *"
+
+
+func _on_stroke_ended() -> void:
+	if not _can_paint():
+		return
+	_history.record(_tools.end_stroke(_draft))
+	_update_dirty()
+
+
+## O desfazer e o refazer mudaram o rascunho.
+func _on_history_applied(coords: Array[Vector2i]) -> void:
+	_canvas.update_tiles(coords)
+	if _name_edit.text.strip_edges() != _draft.name:
+		_name_edit.text = _draft.name
+	_update_dirty()
+
+
+func _undo() -> void:
+	if _draft != null:
+		_history.undo()
+
+
+func _redo() -> void:
+	if _draft != null:
+		_history.redo()
 
 
 # --- Tela ----------------------------------------------------------------------
@@ -270,9 +334,27 @@ func _on_window_input(event: InputEvent) -> void:
 	elif key.keycode == KEY_S and key.ctrl_pressed:
 		set_input_as_handled()
 		save()
-	elif key.keycode == KEY_TAB and not _typing():
+	elif _typing():
+		# O campo de texto tem o seu próprio Tab, Ctrl+Z e números.
+		return
+	elif key.keycode == KEY_TAB:
 		set_input_as_handled()
 		_canvas.toggle_overview()
+	elif key.ctrl_pressed and (key.keycode == KEY_Y or (key.keycode == KEY_Z and key.shift_pressed)):
+		set_input_as_handled()
+		_redo()
+	elif key.ctrl_pressed and key.keycode == KEY_Z:
+		set_input_as_handled()
+		_undo()
+	elif key.keycode >= KEY_1 and key.keycode <= KEY_5 and not key.ctrl_pressed:
+		set_input_as_handled()
+		_tools.set_tool(key.keycode - KEY_1)
+	elif key.keycode == KEY_BRACKETLEFT:
+		set_input_as_handled()
+		_tools.set_radius(_tools.radius - 1)
+	elif key.keycode == KEY_BRACKETRIGHT:
+		set_input_as_handled()
+		_tools.set_radius(_tools.radius + 1)
 
 
 ## Um campo de texto tem o foco: o Tab é dele.
@@ -345,6 +427,10 @@ func _build() -> void:
 	_side = VBoxContainer.new()
 	_side.custom_minimum_size.x = SIDE_WIDTH
 	body.add_child(_side)
+	_tools = EditorTools.new()
+	_tools.message.connect(func(text: String) -> void: _set_message(text, true))
+	_side.add_child(_tools)
+	_side.add_child(HSeparator.new())
 	_list = IslandList.new()
 	_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_list.open_requested.connect(_open_island)
@@ -363,11 +449,20 @@ func _build() -> void:
 	_canvas.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_canvas.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_canvas.hovered.connect(_on_hovered)
+	_canvas.brush = _tools.brush_coords
+	_canvas.stroke_started.connect(_on_stroke_started)
+	_canvas.stroke_moved.connect(_paint)
+	_canvas.stroke_ended.connect(_on_stroke_ended)
+	_tools.brush_changed.connect(_canvas.refresh_brush)
 	body.add_child(_canvas)
+
+	_history = EditorHistory.new()
+	_history.applied.connect(_on_history_applied)
+	add_child(_history)
 
 	_hover_label = Label.new()
 	_hover_label.theme_type_variation = &"SecondaryLabel"
-	_hover_label.text = "Roda do mouse: zoom. Botão do meio, ou espaço e o botão esquerdo: arrastar. Tab: visão de cima."
+	_hover_label.text = "Botão esquerdo: pintar. Roda do mouse: zoom. Botão do meio, ou espaço e o botão esquerdo: arrastar. Tab: visão de cima. Ctrl+Z e Ctrl+Y: desfazer e refazer."
 	_editor.add_child(_hover_label)
 
 	_unsaved_dialog = ConfirmationDialog.new()

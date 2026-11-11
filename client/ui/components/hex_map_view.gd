@@ -56,20 +56,30 @@ var fixed_scale := 0.0:
 ## tipo, e devolve true para mostrar. O tabuleiro da luta usa (board-battle/08).
 var allows_decoration := Callable()
 
+## Com valor, cada linha é dividida em pedaços dessa largura, em colunas (q), e
+## `update_tiles` refaz só os pedaços que mudaram: o editor de ilhas pinta numa
+## ilha de até 163 hexágonos de largura (map-editor/03). Em 0, cada linha é um
+## pedaço só, como no mapa de Explorar e no tabuleiro.
+var chunk_columns := 0
+
 var _map: ExplorationMap = null
 var _textures: Dictionary[String, Texture2D] = {}
-## Os nós das linhas, por número da linha.
-var _rows: Dictionary[int, HexRowView] = {}
-## As decorações de cada linha, em nós próprios, porque o vento é um material e vale
+## Os nós de cada pedaço de linha, por Vector2i(pedaço, linha).
+var _rows: Dictionary[Vector2i, HexRowView] = {}
+## As decorações de cada pedaço, em nós próprios, porque o vento é um material e vale
 ## para o nó inteiro. As da metade de cima dos hexágonos e as da metade de baixo, com
 ## o ator entre as duas.
-var _back_rows: Dictionary[int, HexRowView] = {}
-var _front_rows: Dictionary[int, HexRowView] = {}
+var _back_rows: Dictionary[Vector2i, HexRowView] = {}
+var _front_rows: Dictionary[Vector2i, HexRowView] = {}
+## Os pedaços de cada linha. Na árvore, uma linha tem primeiro o chão de todos os
+## pedaços, depois as decorações de trás e por último as da frente: uma árvore que
+## passa da borda do hexágono fica por cima do chão do pedaço ao lado.
+var _row_chunks: Dictionary[int, Array] = {}
 ## Um só para todas as linhas.
 var _wind_material := ShaderMaterial.new()
-## Os hexágonos das linhas que ainda não foram montadas.
-var _unbuilt_rows: Dictionary[int, Array] = {}
-## A linha com o destaque; null até o primeiro set_current.
+## Os hexágonos dos pedaços que ainda não foram montados.
+var _unbuilt_rows: Dictionary[Vector2i, Array] = {}
+## O pedaço com o destaque; null até o primeiro set_current.
 var _highlighted_row: HexRowView = null
 ## Os triângulos de um hexágono, a partir do canto dele.
 var _hex_triangles := PackedVector2Array()
@@ -98,10 +108,9 @@ func _process(_delta: float) -> void:
 	var height := get_viewport_rect().size.y
 	var first_row := floori(-position.y / scale.y / STEP_Y) - ROW_MARGIN
 	var last_row := ceili((height - position.y) / scale.y / STEP_Y) + ROW_MARGIN
-	for row_number: int in _unbuilt_rows.keys():
-		if row_number >= first_row and row_number <= last_row:
-			_build_row(_rows[row_number], _back_rows[row_number], _front_rows[row_number], _unbuilt_rows[row_number])
-			_unbuilt_rows.erase(row_number)
+	for key: Vector2i in _unbuilt_rows.keys():
+		if key.y >= first_row and key.y <= last_row:
+			_build_chunk(key)
 
 
 ## Pode ser chamado antes ou depois de o nó entrar na árvore.
@@ -113,46 +122,161 @@ func set_map(map: ExplorationMap) -> void:
 	_rows.clear()
 	_back_rows.clear()
 	_front_rows.clear()
+	_row_chunks.clear()
 	_unbuilt_rows.clear()
 	_highlighted_row = null
 	for tile: HexTile in map.tiles.values():
-		if not _unbuilt_rows.has(tile.coord.y):
-			_unbuilt_rows[tile.coord.y] = []
-		_unbuilt_rows[tile.coord.y].append(tile)
-	var row_numbers: Array = _unbuilt_rows.keys()
+		var key := _chunk_of(tile.coord)
+		if not _unbuilt_rows.has(key):
+			_unbuilt_rows[key] = []
+		_unbuilt_rows[key].append(tile)
+	for key: Vector2i in _unbuilt_rows:
+		if not _row_chunks.has(key.y):
+			_row_chunks[key.y] = []
+		_row_chunks[key.y].append(key.x)
+	var row_numbers: Array = _row_chunks.keys()
 	row_numbers.sort()
 	# Os nós nascem na ordem certa, mesmo que as malhas venham fora de ordem.
 	for row_number: int in row_numbers:
-		_rows[row_number] = HexRowView.new()
-		add_child(_rows[row_number])
-		_back_rows[row_number] = _new_decoration_row()
-		_front_rows[row_number] = _new_decoration_row()
+		var chunks: Array = _row_chunks[row_number]
+		chunks.sort()
+		for chunk: int in chunks:
+			_rows[Vector2i(chunk, row_number)] = HexRowView.new()
+			add_child(_rows[Vector2i(chunk, row_number)])
+		for chunk: int in chunks:
+			_back_rows[Vector2i(chunk, row_number)] = _new_decoration_row()
+		for chunk: int in chunks:
+			_front_rows[Vector2i(chunk, row_number)] = _new_decoration_row()
+
+
+## Os hexágonos mudaram no mapa (o editor de ilhas pinta, põe e tira, map-editor/03):
+## refaz os pedaços deles e os vizinhos, porque os paredões, os arremates e os
+## escorridos de um hexágono dependem dos seis vizinhos. Um pedaço que ainda não foi
+## montado só troca a lista; ele é montado ao chegar perto da tela.
+func update_tiles(coords: Array[Vector2i]) -> void:
+	if _map == null or coords.is_empty():
+		return
+	# Com pedaços, o vizinho de uma ponta pode estar no pedaço ao lado.
+	var spread: Array[int] = [0]
+	if chunk_columns > 0:
+		spread = [-1, 0, 1]
+	var by_chunk: Dictionary[Vector2i, Array] = {}
+	for coord: Vector2i in coords:
+		for dr: int in [-1, 0, 1]:
+			for dq: int in spread:
+				by_chunk[_chunk_of(coord + Vector2i(dq, dr))] = []
+	if chunk_columns > 0:
+		for key: Vector2i in by_chunk:
+			for q: int in range(key.x * chunk_columns, (key.x + 1) * chunk_columns):
+				var tile := _map.tile_at(Vector2i(q, key.y))
+				if tile != null:
+					by_chunk[key].append(tile)
+	else:
+		for tile: HexTile in _map.tiles.values():
+			var key := _chunk_of(tile.coord)
+			if by_chunk.has(key):
+				by_chunk[key].append(tile)
+	for key: Vector2i in by_chunk:
+		var tiles: Array = by_chunk[key]
+		if not _rows.has(key):
+			if tiles.is_empty():
+				continue
+			_add_chunk_nodes(key)
+			_unbuilt_rows[key] = tiles
+			continue
+		if _unbuilt_rows.has(key):
+			_unbuilt_rows[key] = tiles
+			continue
+		var row := _rows[key]
+		var back := _back_rows[key]
+		var front := _front_rows[key]
+		for view: HexRowView in [row, back, front]:
+			view.meshes.clear()
+			view.textures.clear()
+			view.queue_redraw()
+		if not tiles.is_empty():
+			_build_row(row, back, front, tiles)
 
 
 ## Monta todas as linhas agora, sem esperar chegarem perto da tela: o tabuleiro da
 ## luta é pequeno e fica dentro de outro nó, com outra escala (board-battle/08).
 func build_all_rows() -> void:
-	for row_number: int in _unbuilt_rows.keys():
-		_build_row(_rows[row_number], _back_rows[row_number], _front_rows[row_number], _unbuilt_rows[row_number])
-	_unbuilt_rows.clear()
+	for key: Vector2i in _unbuilt_rows.keys():
+		_build_chunk(key)
 
 
 ## Põe um filho deste nó na profundidade de uma linha: por cima dela e das decorações
 ## de trás, e por baixo das decorações da frente e das linhas seguintes.
 func set_actor_row(actor: Node2D, row: int) -> void:
-	var front := _front_rows[row].get_index()
+	var front := _first_index(_front_rows, row)
 	move_child(actor, front if actor.get_index() > front else front - 1)
 
 
-## Põe o destaque em um hexágono. Só a linha redesenha: nenhuma malha é remontada.
+## Põe o destaque em um hexágono. Só o pedaço redesenha: nenhuma malha é remontada.
 func set_current(coord: Vector2i) -> void:
 	if _highlighted_row != null:
 		_highlighted_row.highlight = null
 		_highlighted_row.queue_redraw()
-	_highlighted_row = _rows[coord.y]
+	_highlighted_row = _rows[_chunk_of(coord)]
 	_highlighted_row.highlight = _texture(SURFACE_PATH % HIGHLIGHT_TEXTURE)
 	_highlighted_row.highlight_position = _tile_origin(coord) - _rise(_level_at(coord))
 	_highlighted_row.queue_redraw()
+
+
+## O pedaço de um hexágono: Vector2i(pedaço, linha).
+func _chunk_of(coord: Vector2i) -> Vector2i:
+	if chunk_columns <= 0:
+		return Vector2i(0, coord.y)
+	return Vector2i(floori(float(coord.x) / chunk_columns), coord.y)
+
+
+func _build_chunk(key: Vector2i) -> void:
+	_build_row(_rows[key], _back_rows[key], _front_rows[key], _unbuilt_rows[key])
+	_unbuilt_rows.erase(key)
+
+
+## O menor índice, entre os filhos, dos nós de uma linha em `views`.
+func _first_index(views: Dictionary[Vector2i, HexRowView], row: int) -> int:
+	var first := get_child_count()
+	for chunk: int in _row_chunks[row]:
+		first = mini(first, views[Vector2i(chunk, row)].get_index())
+	return first
+
+
+func _last_index(views: Dictionary[Vector2i, HexRowView], row: int) -> int:
+	var last := -1
+	for chunk: int in _row_chunks[row]:
+		last = maxi(last, views[Vector2i(chunk, row)].get_index())
+	return last
+
+
+## Os três nós de um pedaço novo, cada um junto dos da mesma linha, ou antes da
+## primeira linha que vem depois dela.
+func _add_chunk_nodes(key: Vector2i) -> void:
+	var row := key.y
+	var terrain := HexRowView.new()
+	add_child(terrain)
+	var back := _new_decoration_row()
+	var front := _new_decoration_row()
+	if _row_chunks.has(row):
+		move_child(terrain, _first_index(_back_rows, row))
+		move_child(back, _first_index(_front_rows, row))
+		move_child(front, _last_index(_front_rows, row) + 1)
+		_row_chunks[row].append(key.x)
+	else:
+		var next_row := 2147483647
+		for existing: int in _row_chunks:
+			if existing > row and existing < next_row:
+				next_row = existing
+		if _row_chunks.has(next_row):
+			var at := _first_index(_rows, next_row)
+			move_child(terrain, at)
+			move_child(back, at + 1)
+			move_child(front, at + 2)
+		_row_chunks[row] = [key.x]
+	_rows[key] = terrain
+	_back_rows[key] = back
+	_front_rows[key] = front
 
 
 ## Só para depuração: cabe o mapa inteiro em `area`, da tela lógica. Reduzido
