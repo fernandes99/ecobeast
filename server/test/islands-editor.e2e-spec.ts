@@ -30,6 +30,7 @@ interface Draft {
     key: number;
     name: string;
     color_hex: string;
+    spawn_count: number;
     species: {
       species_id: number;
       weight: number;
@@ -75,6 +76,7 @@ describe('Editor de ilhas (e2e)', () => {
           key: 1,
           name: 'Campo',
           color_hex: '#5B8C3A',
+          spawn_count: 10,
           species: [
             { species_id: RUVO, weight: 10, min_level: 2, max_level: 4 },
           ],
@@ -220,6 +222,52 @@ describe('Editor de ilhas (e2e)', () => {
         .send(body)
         .expect(400);
       expect(response.body.message).toContain(message);
+    });
+
+    it.each([0, 201])(
+      'recusa a quantidade %d de Ecobeasts na área (400)',
+      async (count) => {
+        const id = await create();
+        const body = draft();
+        body.areas[0]!.spawn_count = count;
+        const response = await call('put', `/islands/${id}/draft`)
+          .send(body)
+          .expect(400);
+        expect(response.body.message).toBe(
+          'Na área 1, a quantidade de Ecobeasts precisa ir de 1 a 200.',
+        );
+      },
+    );
+
+    it.each([
+      ['2,5', 2.5],
+      ['sem o campo', undefined],
+    ])('recusa a quantidade de Ecobeasts %s (400)', async (_label, count) => {
+      const id = await create();
+      const body = draft() as unknown as {
+        areas: Record<string, unknown>[];
+      };
+      if (count === undefined) delete body.areas[0]!.spawn_count;
+      else body.areas[0]!.spawn_count = count;
+      const response = await call('put', `/islands/${id}/draft`)
+        .send(body)
+        .expect(400);
+      expect(response.body.message).toBe(
+        'spawn_count precisa ser um número inteiro.',
+      );
+    });
+
+    it('guarda a quantidade de Ecobeasts e a copia ao publicar', async () => {
+      const body = draft();
+      body.areas[0]!.spawn_count = 25;
+      const id = await create(body);
+      const read = await call('get', `/islands/${id}`).expect(200);
+      expect((read.body as Draft).areas[0]!.spawn_count).toBe(25);
+      await call('post', `/islands/${id}/publish`).expect(200);
+      const published = await prisma.islandArea.findFirstOrThrow({
+        where: { islandMap: { islandId: id, kind: 'published' } },
+      });
+      expect(published.spawnCount).toBe(25);
     });
 
     it('publica, marca mudança e volta a publicada com o mesmo rascunho', async () => {

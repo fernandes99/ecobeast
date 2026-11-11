@@ -64,7 +64,7 @@ A tela que cada tipo abre não fica no banco: é a `islands` que liga o `slug` �
 | `island_tiles` | `island_map_id` (FK `CASCADE`), `q`, `r`, `biome_id` (FK `biomes`, `RESTRICT`), `shape`, `variant`, `area_id` (FK `island_areas`, nulo, `SET NULL`) | Chave `(island_map_id, q, r)`. `shape` em `flat`, `hill`, `mont` (`CHECK`). `variant` de 1 a 6 em `flat` e de 1 a 3 nas outras (`CHECK`). O bioma é um dos 5 de terreno (`temperate`, `boreal`, `stone`, `wshallow`, `wdeep`), conferido na rota: `hill` e `mountain` são biomas de encontro, não de terreno |
 | `island_buildings` | `id`, `island_map_id` (FK `CASCADE`), `building_type_id` (FK `RESTRICT`) | |
 | `island_building_tiles` | `building_id` (FK `CASCADE`), `island_map_id`, `q`, `r` | Chave `(building_id, q, r)` e único `(island_map_id, q, r)`: dois prédios nunca dividem um hexágono |
-| `island_areas` | `id`, `island_map_id` (FK `CASCADE`), `name` (1 a 40), `color_hex` (`#RRGGBB`) | A cor serve só ao editor |
+| `island_areas` | `id`, `island_map_id` (FK `CASCADE`), `name` (1 a 40), `color_hex` (`#RRGGBB`), `spawn_count` (1 a 200, padrão 10) | A cor serve só ao editor. `spawn_count` é quantos Ecobeasts nascem na área a cada entrada ([islands/01](../islands/01-area-spawn-count.md)) |
 | `island_area_species` | `area_id` (FK `CASCADE`), `species_id` (FK `RESTRICT`), `weight` (> 0), `min_level`, `max_level` (1 a 100, `min_level <= max_level`) | Chave `(area_id, species_id)` |
 
 Um hexágono sem área não tem Ecobeasts selvagens. Salvar apaga as linhas do rascunho e grava de novo, numa transação só. Publicar faz o mesmo com a versão publicada, copiando do rascunho, e grava `published_at`.
@@ -94,6 +94,7 @@ O mesmo formato vai e volta (ler, criar, salvar):
       "key": 1,
       "name": "Bosque do norte",
       "color_hex": "#5B8C3A",
+      "spawn_count": 10,
       "species": [{ "species_id": 4, "weight": 60, "min_level": 3, "max_level": 6 }]
     }
   ]
@@ -109,7 +110,7 @@ O mesmo formato vai e volta (ler, criar, salvar):
 2. De 1 a 20.000 hexágonos, sem `(q, r)` repetido. `biome`, `shape` e `variant` válidos.
 3. A chegada é um hexágono da ilha.
 4. Cada construção tem um tipo que existe e pelo menos 1 hexágono. Todos os hexágonos dela existem na ilha, e nenhum é de outra construção.
-5. `key` sem repetição; todo `area` de hexágono aponta para uma `key` que existe. Espécies que existem, sem repetir na mesma área, com peso inteiro maior que 0 e níveis de 1 a 100, mínimo até o máximo.
+5. `key` sem repetição; todo `area` de hexágono aponta para uma `key` que existe. `spawn_count` de 1 a 200 ([islands/01](../islands/01-area-spawn-count.md)). Espécies que existem, sem repetir na mesma área, com peso inteiro maior que 0 e níveis de 1 a 100, mínimo até o máximo.
 
 Uma ilha pela metade pode ser salva: as conferências acima só garantem que os dados fazem sentido.
 

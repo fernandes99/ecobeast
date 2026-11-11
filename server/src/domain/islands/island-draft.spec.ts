@@ -32,6 +32,7 @@ function island(): IslandDraft {
         key: 1,
         name: 'Bosque do norte',
         colorHex: '#5B8C3A',
+        spawnCount: 10,
         species: [{ speciesId: RUVO, weight: 60, minLevel: 3, maxLevel: 6 }],
       },
     ],
@@ -192,6 +193,20 @@ describe('draftError', () => {
     );
   });
 
+  it.each([0, 201, -1, 2.5])('recusa a quantidade %d de Ecobeasts', (count) => {
+    const draft = island();
+    draft.areas[0]!.spawnCount = count;
+    expect(draftError(draft, known)).toBe(
+      'Na área 1, a quantidade de Ecobeasts precisa ir de 1 a 200.',
+    );
+  });
+
+  it.each([1, 200])('aceita a quantidade %d de Ecobeasts', (count) => {
+    const draft = island();
+    draft.areas[0]!.spawnCount = count;
+    expect(draftError(draft, known)).toBeNull();
+  });
+
   it('recusa uma espécie que não existe', () => {
     const draft = island();
     draft.areas[0]!.species[0]!.speciesId = 999;
@@ -302,6 +317,13 @@ describe('canonicalDraft e draftHash', () => {
     const changed = island();
     changed.tiles[0]!.variant = 3;
     expect(draftHash(changed)).not.toBe(draftHash(island()));
+  });
+
+  it('muda quando a quantidade de Ecobeasts de uma área muda', () => {
+    const changed = island();
+    changed.areas[0]!.spawnCount = 11;
+    expect(draftHash(changed)).not.toBe(draftHash(island()));
+    expect(canonicalDraft(changed)).toContain('"spawnCount":11');
   });
 
   it('é um sha-256 em hexadecimal', () => {

@@ -1,6 +1,6 @@
 # 01. A quantidade de Ecobeasts de cada área
 
-- **Status:** rascunho
+- **Status:** concluída
 - **Depende de:** [map-editor](../map-editor/) concluída, [architecture.md](architecture.md)
 
 ## Contexto
@@ -35,12 +35,12 @@ Na [map-editor/04](../map-editor/04-buildings-and-areas.md), cada área de Ecobe
 
 ## Critérios de aceite
 
-- [ ] Salvar uma área com `spawn_count` 0 ou 201 responde `400` com a mensagem da área, e com 2,5, ou sem o campo, com a mensagem de número inteiro.
-- [ ] Salvar e ler de volta traz o `spawn_count` de cada área; publicar copia o número.
-- [ ] Uma ilha publicada antes da migração fica com 10 em todas as áreas.
-- [ ] No editor, uma área nova mostra 10; mudar para 25, salvar, fechar o jogo e abrir a ilha mostra 25.
-- [ ] Desfazer volta o número anterior.
-- [ ] Os testes do servidor passam, e o projeto abre sem erros nem avisos de script.
+- [x] Salvar uma área com `spawn_count` 0 ou 201 responde `400` com a mensagem da área, e com 2,5, ou sem o campo, com a mensagem de número inteiro.
+- [x] Salvar e ler de volta traz o `spawn_count` de cada área; publicar copia o número.
+- [x] Uma ilha publicada antes da migração fica com 10 em todas as áreas.
+- [x] No editor, uma área nova mostra 10; mudar para 25, salvar, fechar o jogo e abrir a ilha mostra 25.
+- [x] Desfazer volta o número anterior.
+- [x] Os testes do servidor passam, e o projeto abre sem erros nem avisos de script.
 
 ## Desenho técnico
 
@@ -72,9 +72,17 @@ godot --headless -d --path client --quit-after 60
 
 No editor (F5, depois F2), com o servidor local: criar uma área, ver o 10, mudar para 25, desfazer e refazer, salvar, fechar o jogo, abrir de novo e conferir o 25. Pôr 0 e ver o campo vermelho.
 
+Feita em 2026-11-11:
+- **Servidor:** lint e tipos limpos; 793 testes de unidade, 453 e2e e 128 e2e legados passando. Os novos conferem a faixa e o hash no domínio, o `400` das duas mensagens, a leitura e a cópia ao publicar, e o `CHECK` do banco.
+- **Migração:** aplicada no banco. As áreas da ilha que já existia (id 85), no rascunho e na publicada, ficaram com 10.
+- **Projeto:** abre sem erro de script. Com `-d`, os avisos são os de antes.
+- **Cena temporária, já apagada:** a área nova com 10; digitar 2 e 25 muda o rascunho num passo só; 0 e 201 deixam o campo vermelho sem mudar o rascunho; desfazer volta o 10 e refazer o 25; o `to_dict` e o `from_dict` levam o número.
+- **Quadro do Movie Maker:** o painel da área com "Ecobeasts nesta área" logo abaixo do nome.
+- **Para o dono:** no F5, abrir a ilha, conferir o 10 nas áreas, mudar um número, salvar e reabrir. A ilha vai aparecer como "Publicada, com mudanças" na primeira vez que for salva (RF-04).
+
 ## Tarefas
 
-- [ ] A coluna, a migração e o `CHECK`.
-- [ ] O campo no rascunho, na conferência, no hash e nas rotas, com os testes.
-- [ ] O campo no painel da área.
-- [ ] Rodar a verificação, dizer o que ficou para o dono e mudar o status aqui e no README da iniciativa.
+- [x] A coluna, a migração e o `CHECK`.
+- [x] O campo no rascunho, na conferência, no hash e nas rotas, com os testes.
+- [x] O campo no painel da área.
+- [x] Rodar a verificação, dizer o que ficou para o dono e mudar o status aqui e no README da iniciativa.

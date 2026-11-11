@@ -71,10 +71,11 @@ export function toDraft(dto: IslandDraftDto): IslandDraft {
       buildingTypeId: building_type_id,
       tiles: tiles.map(({ q, r }) => ({ q, r })),
     })),
-    areas: dto.areas.map(({ key, name, color_hex, species }) => ({
+    areas: dto.areas.map(({ key, name, color_hex, spawn_count, species }) => ({
       key,
       name,
       colorHex: color_hex,
+      spawnCount: spawn_count,
       species: species.map((entry) => ({
         speciesId: entry.species_id,
         weight: entry.weight,
@@ -95,10 +96,11 @@ function toDto(draft: IslandDraft): IslandDraftDto {
       building_type_id: buildingTypeId,
       tiles,
     })),
-    areas: draft.areas.map(({ key, name, colorHex, species }) => ({
+    areas: draft.areas.map(({ key, name, colorHex, spawnCount, species }) => ({
       key,
       name,
       color_hex: colorHex,
+      spawn_count: spawnCount,
       species: species.map((entry) => ({
         species_id: entry.speciesId,
         weight: entry.weight,
@@ -287,6 +289,7 @@ export class IslandsEditorService {
           islandMapId: map.id,
           name: area.name,
           colorHex: area.colorHex,
+          spawnCount: area.spawnCount,
           species: { createMany: { data: area.species } },
         },
       });
@@ -368,10 +371,11 @@ export class IslandsEditorService {
         buildingTypeId,
         tiles: occupied.map(({ q, r }) => ({ q, r })),
       })),
-      areas: areas.map(({ id, name, colorHex, species }) => ({
+      areas: areas.map(({ id, name, colorHex, spawnCount, species }) => ({
         key: keys.get(id)!,
         name,
         colorHex,
+        spawnCount,
         species: species.map(({ speciesId, weight, minLevel, maxLevel }) => ({
           speciesId,
           weight,

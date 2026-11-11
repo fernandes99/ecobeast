@@ -888,6 +888,8 @@ model IslandArea {
   name        String
   /// Só para o editor. CHECK ^#[0-9A-Fa-f]{6}$ (migration islands)
   colorHex    String @map("color_hex")
+  /// Quantos Ecobeasts nascem nela a cada entrada. CHECK 1–200 (migration island_area_spawn_count)
+  spawnCount  Int    @default(10) @map("spawn_count")
 
   islandMap IslandMap           @relation(fields: [islandMapId], references: [id], onDelete: Cascade)
   species   IslandAreaSpecies[]

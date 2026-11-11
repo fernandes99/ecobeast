@@ -21,6 +21,11 @@ const MAX_LEVEL := 100
 const MAX_WEIGHT := 1000
 const NUMBER_WIDTH := 52.0
 const MAX_RESULTS := 6
+## Quantos Ecobeasts nascem na área a cada entrada (islands/01): a faixa do servidor
+## e o número de uma área nova (_a revisar_).
+const MIN_SPAWNS := 1
+const MAX_SPAWNS := 200
+const DEFAULT_SPAWNS := 10
 
 ## A área escolhida, pela `key`; 0 sem nenhuma.
 var selected_key := 0
@@ -32,6 +37,7 @@ var _selected_box: VBoxContainer
 var _name_edit: LineEdit
 var _color_button: Button
 var _color_popup: PopupPanel
+var _spawn_field: EditorNumberField
 var _count_label: Label
 var _species_box: VBoxContainer
 var _search: LineEdit
@@ -86,6 +92,18 @@ func _init() -> void:
 			_on_color_changed(color))
 		colors.add_child(choice)
 	add_child(_color_popup)
+	var spawn_row := HBoxContainer.new()
+	spawn_row.add_theme_constant_override(&"separation", 6)
+	_selected_box.add_child(spawn_row)
+	var spawn_caption := Label.new()
+	spawn_caption.text = "Ecobeasts nesta área"
+	spawn_caption.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	spawn_row.add_child(spawn_caption)
+	_spawn_field = EditorNumberField.new(MIN_SPAWNS, MAX_SPAWNS, true, false)
+	_spawn_field.set_field_width(NUMBER_WIDTH)
+	_spawn_field.tooltip_text = "Quantos Ecobeasts nascem nela a cada entrada na ilha, de %d a %d" % [MIN_SPAWNS, MAX_SPAWNS]
+	_spawn_field.changed.connect(_on_spawn_count_changed)
+	spawn_row.add_child(_spawn_field)
 	_count_label = Label.new()
 	_count_label.add_theme_color_override(&"font_color", UiPalette.TEXT_SECONDARY)
 	_selected_box.add_child(_count_label)
@@ -158,6 +176,10 @@ func refresh() -> void:
 	if _name_edit.text != str(area.get("name", "")):
 		_name_edit.text = str(area.get("name", ""))
 	_paint_color_button(Color.from_string(str(area.get("color_hex", "")), UiPalette.TEXT))
+	var spawn_count := int(area.get("spawn_count", DEFAULT_SPAWNS))
+	if is_nan(_spawn_field.value()) or int(_spawn_field.value()) != spawn_count:
+		_spawn_field.set_value(spawn_count)
+	_spawn_field.mark_invalid(false)
 	var species: Array = area.get("species", [])
 	_count_label.text = "%d hexágonos  ·  %d espécies%s" % [counts.get(selected_key, 0), species.size(), "  ·  falta pôr espécies" if species.is_empty() else ""]
 	_count_label.add_theme_color_override(&"font_color", UiPalette.WARNING if species.is_empty() else UiPalette.TEXT_SECONDARY)
@@ -187,7 +209,7 @@ func _new_area() -> void:
 	var key := _draft.next_area_key()
 	var colors := UiPalette.MAP_AREA_COLORS
 	var color: Color = colors[(key - 1) % colors.size()]
-	_draft.areas.append({"key": key, "name": "Área %d" % key, "color_hex": "#" + color.to_html(false), "species": []})
+	_draft.areas.append({"key": key, "name": "Área %d" % key, "color_hex": "#" + color.to_html(false), "spawn_count": DEFAULT_SPAWNS, "species": []})
 	step.areas_after = _draft.areas.duplicate(true)
 	select(key)
 	edited.emit(step, false)
@@ -284,6 +306,20 @@ func _remove_species(species_id: int) -> void:
 	step.areas_after = _draft.areas.duplicate(true)
 	refresh()
 	edited.emit(step, false)
+
+
+## A quantidade de Ecobeasts da área. Fora da faixa, o campo fica vermelho e o
+## rascunho não muda, como os números das espécies.
+func _on_spawn_count_changed() -> void:
+	var value := _spawn_field.value()
+	_spawn_field.mark_invalid(is_nan(value))
+	var area := _selected_area()
+	if is_nan(value) or area.is_empty() or int(area.get("spawn_count", DEFAULT_SPAWNS)) == int(value):
+		return
+	var step := _step("Ecobeasts da área %d" % selected_key)
+	area["spawn_count"] = int(value)
+	step.areas_after = _draft.areas.duplicate(true)
+	edited.emit(step, true)
 
 
 ## Um número de uma espécie da área: o peso ou um dos níveis. Fora da faixa, o

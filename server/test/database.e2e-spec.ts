@@ -449,6 +449,23 @@ describe('restrições do banco (e2e)', () => {
       expectRejected(result, 'island_area_species_level_check');
     });
 
+    it('recusa área com a quantidade de Ecobeasts fora de 1 a 200', async () => {
+      for (const spawnCount of [0, 201]) {
+        const result = await attempt(prisma, async (tx) => {
+          const map = await draftMap(tx);
+          await tx.islandArea.create({
+            data: {
+              islandMapId: map.id,
+              name: 'Área',
+              colorHex: '#123456',
+              spawnCount,
+            },
+          });
+        });
+        expectRejected(result, 'island_areas_spawn_count_check');
+      }
+    });
+
     it('não deixa duas construções no mesmo hexágono', async () => {
       const result = await attempt(prisma, async (tx) => {
         const map = await draftMap(tx);

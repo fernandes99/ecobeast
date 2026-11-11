@@ -125,6 +125,14 @@ export class DraftAreaDto {
   @IsString(text('color_hex'))
   color_hex: string;
 
+  @ApiProperty({
+    description:
+      'Quantos Ecobeasts nascem na área a cada entrada na ilha, de 1 a 200.',
+    example: 10,
+  })
+  @IsInt(integer('spawn_count'))
+  spawn_count: number;
+
   @ApiProperty({ type: [DraftAreaSpeciesDto] })
   @IsArray(list('species'))
   @ValidateNested({ each: true })

@@ -18,6 +18,9 @@ const MAX_NAME_LENGTH = 40;
 const MIN_LEVEL = 1;
 const MAX_LEVEL = 100;
 const COLOR_HEX = /^#[0-9A-Fa-f]{6}$/;
+/** Quantos Ecobeasts uma área pode ter (islands/01). */
+export const MIN_AREA_SPAWNS = 1;
+export const MAX_AREA_SPAWNS = 200;
 
 export interface DraftTile extends HexCoord {
   biome: Biome;
@@ -44,6 +47,8 @@ export interface DraftArea {
   key: number;
   name: string;
   colorHex: string;
+  /** Quantos Ecobeasts nascem nela a cada entrada na ilha (islands/01). */
+  spawnCount: number;
   species: DraftAreaSpecies[];
 }
 
@@ -122,6 +127,13 @@ function areaError(area: DraftArea, known: KnownIds): string | null {
   }
   if (!COLOR_HEX.test(area.colorHex)) {
     return `A cor da área ${area.key} precisa ser #RRGGBB.`;
+  }
+  if (
+    !Number.isInteger(area.spawnCount) ||
+    area.spawnCount < MIN_AREA_SPAWNS ||
+    area.spawnCount > MAX_AREA_SPAWNS
+  ) {
+    return `Na área ${area.key}, a quantidade de Ecobeasts precisa ir de ${MIN_AREA_SPAWNS} a ${MAX_AREA_SPAWNS}.`;
   }
   const seen = new Set<number>();
   for (const entry of area.species) {
@@ -237,10 +249,11 @@ export function canonicalDraft(draft: IslandDraft): string {
       buildingTypeId,
       tiles: [...tiles].sort(byRowThenColumn).map(({ q, r }) => ({ q, r })),
     })),
-    areas: areas.map(({ key, name, colorHex, species }) => ({
+    areas: areas.map(({ key, name, colorHex, spawnCount, species }) => ({
       key: renumber.get(key),
       name,
       colorHex,
+      spawnCount,
       species: [...species]
         .sort((a, b) => a.speciesId - b.speciesId)
         .map(({ speciesId, weight, minLevel, maxLevel }) => ({
