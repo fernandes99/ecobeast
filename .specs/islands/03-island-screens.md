@@ -1,6 +1,6 @@
 # 03. As telas das ilhas
 
-- **Status:** concluída
+- **Status:** aprovada
 - **Depende de:** [02-island-exploration](02-island-exploration.md), [architecture.md](architecture.md)
 
 ## Contexto
