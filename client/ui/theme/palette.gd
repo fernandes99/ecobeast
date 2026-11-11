@@ -27,6 +27,18 @@ const SILHOUETTE := Color("#060E18")
 
 ## Céu do cenário do Hub quando não há res://assets/backgrounds/hub.png.
 const SKY := Color("#52C4F5")
+## As cores das áreas de Ecobeasts no editor de ilhas, na ordem em que as áreas
+## novas as recebem (map-editor/04). Só o editor as usa.
+const MAP_AREA_COLORS: Array[Color] = [
+	Color("#E8C547"),
+	Color("#E0607E"),
+	Color("#4FC3F7"),
+	Color("#9C6ADE"),
+	Color("#F28C38"),
+	Color("#5BD38A"),
+	Color("#F25F5C"),
+	Color("#B0BEC5"),
+]
 
 ## Cards de ação do Hub (visual-theme/02, RF-12): id -> [cor da arte, cor do corpo].
 const ACTION_COLORS: Dictionary[StringName, Array] = {

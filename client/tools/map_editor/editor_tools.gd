@@ -1,18 +1,21 @@
 class_name EditorTools
 extends VBoxContainer
-## Os pincéis de terreno do editor de ilhas (map-editor/03): o painel com as
-## ferramentas, o bioma, a forma e o tamanho, e o que cada pincelada muda no
-## rascunho. Uma pincelada vai do apertar ao soltar do botão e vira um passo do
-## desfazer (`EditorHistory.Step`).
+## Os pincéis do editor de ilhas (map-editor/03 e 04): o painel com as
+## ferramentas, o bioma, a forma, as construções, as áreas e o tamanho, e o que
+## cada pincelada muda no rascunho. Uma pincelada vai do apertar ao soltar do
+## botão e vira um passo do desfazer (`EditorHistory.Step`). O botão direito faz a
+## ação secundária: escolher uma construção, ou tirar hexágonos de uma área.
 
 ## Algo para a barra de cima, como o limite de hexágonos.
 signal message(text: String)
 ## A ferramenta ou o tamanho mudou: o contorno do pincel muda junto.
 signal brush_changed
+## Os painéis de construção e de área mudaram o rascunho, fora de uma pincelada.
+signal edited(step: EditorHistory.Step, merge: bool)
 
-enum Tool { BIOME, SHAPE, ADD, REMOVE, START }
+enum Tool { BIOME, SHAPE, ADD, REMOVE, START, BUILDING, AREA }
 
-const TOOL_NAMES: Array[String] = ["Bioma", "Forma", "Pôr hexágono", "Tirar hexágono", "Chegada"]
+const TOOL_NAMES: Array[String] = ["Bioma", "Forma", "Pôr hexágono", "Tirar hexágono", "Chegada", "Construção", "Área"]
 ## O que cada ferramenta faz, embaixo dos botões.
 const TOOL_HINTS: Array[String] = [
 	"Troca o bioma dos hexágonos que já existem.",
@@ -20,7 +23,10 @@ const TOOL_HINTS: Array[String] = [
 	"Cria hexágonos onde não há, com o bioma e a forma escolhidos abaixo.",
 	"Apaga hexágonos. A chegada nunca sai.",
 	"Move a chegada (a bandeira) para o hexágono clicado.",
+	"Pinta uma construção nova, ou aumenta a escolhida. Botão direito escolhe uma construção.",
+	"Pinta a área escolhida. Botão direito tira os hexágonos de qualquer área.",
 ]
+const NO_AREA_MESSAGE := "Crie ou escolha uma área no painel antes de pintar."
 ## Os biomas de terreno, na ordem do painel; o nome vem do catálogo.
 const BIOMES: Array[String] = ["temperate", "boreal", "stone", "wshallow", "wdeep"]
 const SHAPES: Array[String] = ["flat", "hill", "mont"]
@@ -57,16 +63,25 @@ var _shape_buttons: Dictionary[String, TerrainSwatch] = {}
 var _radius_value: Label
 var _radius_slider: HSlider
 var _rng := RandomNumberGenerator.new()
+var _terrain_sections: Array[Control] = []
+var _brush_section: Control
+var _building_section: Control
+var _area_section: Control
+var building_panel: BuildingPanel
+var area_panel: AreaPanel
 
 ## A pincelada em andamento.
 var _step: EditorHistory.Step = null
 var _full_warned := false
+var _secondary := false
+## A construção que a pincelada pinta ou tira; -2 até o primeiro hexágono.
+var _stroke_building := -2
 
 
 func _init() -> void:
 	add_theme_constant_override(&"separation", 10)
 
-	var tools_box := _section("Ferramenta  ·  teclas 1 a 5")
+	var tools_box := _section("Ferramenta  ·  teclas 1 a 7")
 	var tools_group := ButtonGroup.new()
 	var grid := GridContainer.new()
 	grid.columns = 2
@@ -74,7 +89,7 @@ func _init() -> void:
 	grid.add_theme_constant_override(&"v_separation", 6)
 	tools_box.add_child(grid)
 	for index: int in TOOL_NAMES.size():
-		var button := _tool_button("%d   %s" % [index + 1, TOOL_NAMES[index]], tools_group)
+		var button := tool_button("%d   %s" % [index + 1, TOOL_NAMES[index]], tools_group)
 		button.tooltip_text = TOOL_HINTS[index]
 		button.pressed.connect(set_tool.bind(index))
 		grid.add_child(button)
@@ -86,6 +101,7 @@ func _init() -> void:
 	tools_box.add_child(_tool_hint)
 
 	var biomes_box := _section("Bioma")
+	_terrain_sections.append(biomes_box.get_parent())
 	var biomes_grid := _swatch_grid(biomes_box)
 	var biome_group := ButtonGroup.new()
 	for slug: String in BIOMES:
@@ -96,6 +112,7 @@ func _init() -> void:
 		_biome_buttons[slug] = swatch
 
 	var shapes_box := _section("Forma")
+	_terrain_sections.append(shapes_box.get_parent())
 	var shapes_grid := _swatch_grid(shapes_box)
 	var shape_group := ButtonGroup.new()
 	for slug: String in SHAPES:
@@ -104,7 +121,19 @@ func _init() -> void:
 		shapes_grid.add_child(swatch)
 		_shape_buttons[slug] = swatch
 
+	var buildings_box := _section("Construção")
+	_building_section = buildings_box.get_parent()
+	building_panel = BuildingPanel.new()
+	building_panel.edited.connect(func(step: EditorHistory.Step) -> void: edited.emit(step, false))
+	buildings_box.add_child(building_panel)
+	var areas_box := _section("Área de Ecobeasts")
+	_area_section = areas_box.get_parent()
+	area_panel = AreaPanel.new()
+	area_panel.edited.connect(func(step: EditorHistory.Step, merge: bool) -> void: edited.emit(step, merge))
+	areas_box.add_child(area_panel)
+
 	var brush_box := _section("Pincel  ·  teclas [ e ]")
+	_brush_section = brush_box.get_parent()
 	var brush_row := HBoxContainer.new()
 	brush_box.add_child(brush_row)
 	var brush_label := Label.new()
@@ -153,11 +182,31 @@ func brush_coords(center: Vector2i) -> Array[Vector2i]:
 	return coords
 
 
-func begin_stroke(draft: IslandDraft) -> void:
+## A ilha aberta, para os painéis de construção e de área.
+func set_draft(draft: IslandDraft) -> void:
+	building_panel.set_draft(draft)
+	area_panel.set_draft(draft)
+
+
+## As construções e as áreas mudaram por fora (desfazer, refazer): os painéis
+## mostram o rascunho de novo.
+func refresh_panels() -> void:
+	building_panel.refresh()
+	area_panel.refresh()
+
+
+## A construção e a área mudam a camada de cor, e não o terreno.
+func paints_marks() -> bool:
+	return tool == Tool.BUILDING or tool == Tool.AREA
+
+
+func begin_stroke(draft: IslandDraft, secondary: bool = false) -> void:
 	_step = EditorHistory.Step.new()
 	_step.label = TOOL_NAMES[tool]
 	_full_warned = false
-	if draft.buildings.size() > 0:
+	_secondary = secondary
+	_stroke_building = -2
+	if draft.buildings.size() > 0 or tool == Tool.BUILDING:
 		_step.buildings_before = draft.buildings.duplicate(true)
 
 
@@ -166,6 +215,10 @@ func paint(draft: IslandDraft, center: Vector2i) -> Array[Vector2i]:
 	if _step == null:
 		begin_stroke(draft)
 	var changed: Array[Vector2i] = []
+	if tool == Tool.BUILDING:
+		return _paint_building(draft, center)
+	if _secondary and tool != Tool.AREA:
+		return changed
 	if tool == Tool.START:
 		if draft.tiles.has(center) and draft.start != center:
 			if _step.start_before == null:
@@ -192,6 +245,13 @@ func end_stroke(draft: IslandDraft) -> EditorHistory.Step:
 	_step = null
 	if step == null:
 		return null
+	if tool == Tool.BUILDING:
+		for index: int in range(draft.buildings.size() - 1, -1, -1):
+			if (draft.buildings[index]["tiles"] as Array).is_empty():
+				draft.buildings.remove_at(index)
+		building_panel.refresh()
+	elif tool == Tool.AREA:
+		area_panel.refresh()
 	if step.buildings_before != null and step.buildings_before != draft.buildings:
 		step.buildings_after = draft.buildings.duplicate(true)
 	else:
@@ -236,7 +296,75 @@ func _change(draft: IslandDraft, coord: Vector2i) -> bool:
 				return false
 			draft.remove_tile(coord)
 			return true
+		Tool.AREA:
+			if tile == null:
+				return false
+			if _secondary:
+				return draft.tile_areas.erase(coord)
+			var key := area_panel.selected_key
+			if key == 0:
+				if not _full_warned:
+					_full_warned = true
+					message.emit(NO_AREA_MESSAGE)
+				return false
+			if draft.tile_areas.get(coord, 0) == key:
+				return false
+			draft.tile_areas[coord] = key
+			return true
 	return false
+
+
+## A construção: o botão direito escolhe; o esquerdo cria uma nova num hexágono
+## livre, ou aumenta a construção de onde a pincelada começou. Com "Tirar
+## hexágonos", o pincel tira só da construção escolhida.
+func _paint_building(draft: IslandDraft, center: Vector2i) -> Array[Vector2i]:
+	var changed: Array[Vector2i] = []
+	if _secondary:
+		if _stroke_building == -2:
+			_stroke_building = -1
+			building_panel.select(draft.building_at(center))
+		return changed
+	if _stroke_building == -2:
+		_stroke_building = _stroke_target(draft, center)
+	var target := _stroke_building
+	if target < 0 or target >= draft.buildings.size():
+		return changed
+	var occupied: Array = draft.buildings[target]["tiles"]
+	for coord: Vector2i in brush_coords(center):
+		if not draft.tiles.has(coord):
+			continue
+		var holder := draft.building_at(coord)
+		if building_panel.removing:
+			if holder != target:
+				continue
+			for spot: int in range(occupied.size() - 1, -1, -1):
+				if int(occupied[spot]["q"]) == coord.x and int(occupied[spot]["r"]) == coord.y:
+					occupied.remove_at(spot)
+			changed.append(coord)
+		elif holder == -1:
+			occupied.append({"q": coord.x, "r": coord.y})
+			changed.append(coord)
+	if building_panel.removing and occupied.is_empty():
+		draft.buildings.remove_at(target)
+		_stroke_building = -1
+		building_panel.select(-1)
+	return changed
+
+
+## Onde a pincelada de construção começa: na escolhida, tirando; numa construção,
+## aumentando-a; num hexágono livre, uma construção nova.
+func _stroke_target(draft: IslandDraft, center: Vector2i) -> int:
+	if building_panel.removing:
+		return building_panel.selected
+	if not draft.tiles.has(center):
+		return -1
+	var holder := draft.building_at(center)
+	if holder >= 0:
+		building_panel.select(holder)
+		return holder
+	draft.buildings.append({"building_type_id": building_panel.type_id, "tiles": []})
+	building_panel.select(draft.buildings.size() - 1)
+	return draft.buildings.size() - 1
 
 
 func _pick_biome(slug: String) -> void:
@@ -255,6 +383,12 @@ func _refresh() -> void:
 	for index: int in _tool_buttons.size():
 		_tool_buttons[index].set_pressed_no_signal(index == tool)
 	_tool_hint.text = TOOL_HINTS[tool]
+	var terrain := tool == Tool.BIOME or tool == Tool.SHAPE or tool == Tool.ADD
+	for section: Control in _terrain_sections:
+		section.visible = terrain
+	_building_section.visible = tool == Tool.BUILDING
+	_area_section.visible = tool == Tool.AREA
+	_brush_section.visible = tool != Tool.START
 	for slug: String in _biome_buttons:
 		_biome_buttons[slug].set_pressed_no_signal(slug == biome)
 		_biome_buttons[slug].queue_redraw()
@@ -319,8 +453,9 @@ func _swatch(group: ButtonGroup) -> TerrainSwatch:
 	return swatch
 
 
-## Um botão de ferramenta: escuro, e azul com borda clara quando escolhido.
-func _tool_button(text: String, group: ButtonGroup) -> Button:
+## Um botão de ferramenta: escuro, e azul com borda clara quando escolhido. Sem
+## grupo, ele liga e desliga sozinho.
+static func tool_button(text: String, group: ButtonGroup) -> Button:
 	var button := Button.new()
 	button.text = text
 	button.toggle_mode = true
@@ -344,7 +479,7 @@ func _tool_button(text: String, group: ButtonGroup) -> Button:
 	return button
 
 
-func _tool_style(background: Color, border: Color, border_width: int) -> StyleBoxFlat:
+static func _tool_style(background: Color, border: Color, border_width: int) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
 	style.bg_color = background
 	style.border_color = border

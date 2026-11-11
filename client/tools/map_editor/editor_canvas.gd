@@ -1,15 +1,17 @@
 class_name EditorCanvas
 extends Control
-## O mapa do editor de ilhas (map-editor/02 e 03): a ilha no `HexMapView`, como no
+## O mapa do editor de ilhas (map-editor/02 a 04): a ilha no `HexMapView`, como no
 ## jogo, ou na visão de cima (`IslandOverview`), com o zoom na roda do mouse e o
 ## arrastar com o botão do meio (ou espaço e o botão esquerdo). O botão esquerdo
-## pinta. Por cima, a bandeira da chegada e o contorno do pincel sob o ponteiro.
+## pinta e o direito faz a ação secundária da ferramenta. Por cima, as cores das
+## áreas e das construções (`HexTintLayer`), a bandeira da chegada, o nome das
+## construções e o contorno do pincel sob o ponteiro.
 
 ## O hexágono sob o ponteiro mudou; `tile` é null fora da ilha.
 signal hovered(coord: Vector2i, tile: HexTile)
 ## Uma pincelada: começa ao apertar o botão esquerdo, passa por cada hexágono sob
 ## o ponteiro e acaba ao soltar.
-signal stroke_started(coord: Vector2i)
+signal stroke_started(coord: Vector2i, secondary: bool)
 signal stroke_moved(coord: Vector2i)
 signal stroke_ended
 
@@ -32,13 +34,27 @@ const OUTLINE_WIDTH := 2.0
 const CHUNK_COLUMNS := 16
 ## Numa pincelada rápida, um ponto a cada tanto da arte, para não pular hexágonos.
 const STROKE_SPACING := 16.0
+## A transparência das cores das áreas e das construções por cima do terreno.
+const AREA_ALPHA := 0.38
+const BUILDING_ALPHA := 0.62
+const NAME_SIZE := 14
 
 ## Os hexágonos que o pincel pega em volta de um centro; sem ele, só o centro.
 var brush: Callable = Callable()
+## A cor e o nome de cada tipo de construção, por id (do catálogo).
+var building_colors: Dictionary[int, Color] = {}
+var building_names: Dictionary[int, String] = {}
+## A construção escolhida no painel, com o contorno de destaque; -1 sem nenhuma.
+var selected_building := -1
 
 var _map_view: HexMapView
 var _overview: IslandOverview
 var _overlay: Overlay
+var _area_layer: HexTintLayer
+var _area_stripes: HexTintLayer
+var _building_layer: HexTintLayer
+var _show_areas := true
+var _show_buildings := true
 var _draft: IslandDraft = null
 var _map: ExplorationMap = null
 ## Pixels da tela por pixel da arte.
@@ -76,6 +92,12 @@ func _init() -> void:
 	add_child(_map_view)
 	_overview = IslandOverview.new()
 	add_child(_overview)
+	_area_layer = HexTintLayer.new()
+	add_child(_area_layer)
+	_area_stripes = HexTintLayer.new(true)
+	add_child(_area_stripes)
+	_building_layer = HexTintLayer.new()
+	add_child(_building_layer)
 	_overlay = Overlay.new()
 	_overlay.canvas = self
 	add_child(_overlay)
@@ -89,6 +111,7 @@ func show_draft(draft: IslandDraft, fit: bool = true) -> void:
 	_map = draft.to_map() if draft != null else ExplorationMap.new()
 	_map_view.set_map(_map)
 	_overview.set_map(_map)
+	refresh_marks()
 	if fit and draft != null:
 		fit_whole_island()
 	_apply_view()
@@ -104,6 +127,60 @@ func update_tiles(coords: Array[Vector2i]) -> void:
 ## O contorno do pincel mudou (outra ferramenta ou outro tamanho).
 func refresh_brush() -> void:
 	_overlay.queue_redraw()
+
+
+## As cores das áreas e das construções: de todos os hexágonos, ou só destes.
+func refresh_marks(coords: Array[Vector2i] = []) -> void:
+	if _draft == null:
+		for layer: HexTintLayer in [_area_layer, _area_stripes, _building_layer]:
+			layer.clear_all()
+		_overlay.queue_redraw()
+		return
+	var building_of := _building_index()
+	var area_color: Dictionary[int, Color] = {}
+	var area_empty: Dictionary[int, bool] = {}
+	for area: Variant in _draft.areas:
+		var key := int((area as Dictionary).get("key", 0))
+		area_color[key] = Color.from_string(str(area.get("color_hex", "")), UiPalette.TEXT_MUTED)
+		area_empty[key] = (area.get("species", []) as Array).is_empty()
+	var targets: Array[Vector2i] = coords
+	if targets.is_empty():
+		for layer: HexTintLayer in [_area_layer, _area_stripes, _building_layer]:
+			layer.clear_all()
+		targets = []
+		targets.assign(_draft.tile_areas.keys())
+		targets.append_array(building_of.keys())
+	for coord: Vector2i in targets:
+		var tile: HexTile = _draft.tiles.get(coord)
+		var key: int = _draft.tile_areas.get(coord, 0) if tile != null else 0
+		_area_layer.clear_hex(coord)
+		_area_stripes.clear_hex(coord)
+		if area_color.has(key):
+			var layer := _area_stripes if area_empty[key] else _area_layer
+			layer.set_hex(coord, Color(area_color[key], AREA_ALPHA), tile.level())
+		var building: int = building_of.get(coord, -1) if tile != null else -1
+		if building >= 0:
+			var type_id := int(_draft.buildings[building].get("building_type_id", 0))
+			_building_layer.set_hex(coord, Color(building_colors.get(type_id, UiPalette.TEXT), BUILDING_ALPHA), tile.level())
+		else:
+			_building_layer.clear_hex(coord)
+	_overlay.queue_redraw()
+
+
+## As camadas de cor que aparecem; desligar não muda o rascunho.
+func set_layers(areas: bool, buildings: bool) -> void:
+	_show_areas = areas
+	_show_buildings = buildings
+	_apply_view()
+
+
+## O índice da construção de cada hexágono ocupado.
+func _building_index() -> Dictionary[Vector2i, int]:
+	var building_of: Dictionary[Vector2i, int] = {}
+	for index: int in _draft.buildings.size():
+		for coord: Vector2i in _draft.building_tiles(index):
+			building_of[coord] = index
+	return building_of
 
 
 func fit_whole_island() -> void:
@@ -140,6 +217,7 @@ func _process(_delta: float) -> void:
 	_pending.clear()
 	_map_view.update_tiles(coords)
 	_overview.update_tiles(coords, _map)
+	refresh_marks(coords)
 
 
 func _gui_input(event: InputEvent) -> void:
@@ -154,7 +232,7 @@ func _gui_input(event: InputEvent) -> void:
 		elif button.button_index == MOUSE_BUTTON_MIDDLE or (button.button_index == MOUSE_BUTTON_LEFT and (Input.is_key_pressed(KEY_SPACE) or _dragging)):
 			_dragging = button.pressed
 			accept_event()
-		elif button.button_index == MOUSE_BUTTON_LEFT:
+		elif button.button_index == MOUSE_BUTTON_LEFT or button.button_index == MOUSE_BUTTON_RIGHT:
 			_paint_button(button)
 			accept_event()
 		return
@@ -182,7 +260,7 @@ func _paint_button(button: InputEventMouseButton) -> void:
 		_painting = true
 		_last_art_point = _art_point(button.position)
 		_last_coord = _coord_at_art(_last_art_point)
-		stroke_started.emit(_last_coord)
+		stroke_started.emit(_last_coord, button.button_index == MOUSE_BUTTON_RIGHT)
 	elif not button.pressed and _painting:
 		_painting = false
 		stroke_ended.emit()
@@ -253,6 +331,13 @@ func _apply_view() -> void:
 	if not overview:
 		_map_view.fixed_scale = _zoom
 		_map_view.position = _origin.round()
+	for layer: HexTintLayer in [_area_layer, _area_stripes, _building_layer]:
+		layer.position = _overview.position if overview else _map_view.position
+		layer.scale = Vector2.ONE * _zoom
+		layer.set_raised(not overview)
+	_area_layer.visible = _show_areas
+	_area_stripes.visible = _show_areas
+	_building_layer.visible = _show_buildings
 	_overlay.queue_redraw()
 
 
@@ -297,6 +382,8 @@ func _outline(node: Node2D, coord: Vector2i, color: Color) -> void:
 func draw_overlay(node: Node2D) -> void:
 	if _draft == null:
 		return
+	if _show_buildings:
+		_draw_buildings(node)
 	if _has_hover:
 		var under: Array[Vector2i] = [_hovered]
 		if brush.is_valid():
@@ -309,3 +396,30 @@ func draw_overlay(node: Node2D) -> void:
 		var top := foot - Vector2(0.0, FLAG_HEIGHT)
 		node.draw_line(foot, top, UiPalette.TEXT, 2.0)
 		node.draw_colored_polygon(PackedVector2Array([top, top + Vector2(FLAG_WIDTH, FLAG_HEIGHT * 0.25), top + Vector2(0.0, FLAG_HEIGHT * 0.5)]), UiPalette.WARNING)
+
+
+## O contorno da construção escolhida e o nome de cada uma, no hexágono do meio dela.
+func _draw_buildings(node: Node2D) -> void:
+	var font := get_theme_font(&"font")
+	for index: int in _draft.buildings.size():
+		var coords := _draft.building_tiles(index)
+		if coords.is_empty():
+			continue
+		if index == selected_building:
+			for coord: Vector2i in coords:
+				_outline(node, coord, UiPalette.ACCENT)
+		var center := Vector2.ZERO
+		for coord: Vector2i in coords:
+			center += HexMapView.flat_center(coord)
+		center /= coords.size()
+		var middle := coords[0]
+		for coord: Vector2i in coords:
+			if HexMapView.flat_center(coord).distance_to(center) < HexMapView.flat_center(middle).distance_to(center):
+				middle = coord
+		var type_id := int(_draft.buildings[index].get("building_type_id", 0))
+		var label: String = building_names.get(type_id, "?")
+		var at := _screen_origin(middle) + HexMapView.SURFACE_CENTER * _zoom
+		var width := font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, NAME_SIZE).x
+		var baseline := at + Vector2(-width / 2.0, NAME_SIZE / 2.0)
+		node.draw_string_outline(font, baseline, label, HORIZONTAL_ALIGNMENT_LEFT, -1, NAME_SIZE, 4, UiPalette.BACKGROUND_DEEP)
+		node.draw_string(font, baseline, label, HORIZONTAL_ALIGNMENT_LEFT, -1, NAME_SIZE, UiPalette.TEXT)

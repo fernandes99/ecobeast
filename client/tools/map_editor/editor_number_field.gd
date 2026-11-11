@@ -10,6 +10,8 @@ signal changed
 const DECIMALS := 3
 const FIELD_WIDTH := 96.0
 const SLIDER_WIDTH := 120.0
+## A margem interna de um campo estreito (`set_field_width`).
+const COMPACT_MARGIN := 6.0
 
 var min_value: float
 var max_value: float
@@ -59,6 +61,33 @@ static func format(number: float, is_integer: bool) -> String:
 	if text.contains("."):
 		text = text.rstrip("0").trim_suffix(".")
 	return text.replace(".", ",")
+
+
+## Um campo estreito, que não cresce: os números de uma linha da tabela de espécies.
+func set_field_width(width: float) -> void:
+	_edit.custom_minimum_size.x = width
+	_edit.size_flags_horizontal = Control.SIZE_FILL
+	size_flags_horizontal = Control.SIZE_FILL
+	# O campo do tema é feito para o celular, com margem grande: aqui ela encolhe.
+	var project_theme := ThemeDB.get_project_theme()
+	for state: StringName in [&"normal", &"focus", &"read_only"]:
+		var base: StyleBox = project_theme.get_stylebox(state, &"LineEdit") if project_theme != null else null
+		if base == null:
+			continue
+		var compact := base.duplicate() as StyleBox
+		compact.content_margin_left = COMPACT_MARGIN
+		compact.content_margin_right = COMPACT_MARGIN
+		compact.content_margin_top = COMPACT_MARGIN / 2.0
+		compact.content_margin_bottom = COMPACT_MARGIN / 2.0
+		_edit.add_theme_stylebox_override(state, compact)
+
+
+## O texto em vermelho, quando o número escrito não serve.
+func mark_invalid(invalid: bool) -> void:
+	if invalid:
+		_edit.add_theme_color_override(&"font_color", UiPalette.DANGER)
+	else:
+		_edit.remove_theme_color_override(&"font_color")
 
 
 func set_value(number: float) -> void:

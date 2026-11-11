@@ -151,6 +151,49 @@ func touches_buildings(coords: Array[Vector2i]) -> bool:
 	return false
 
 
+## O índice da construção que ocupa um hexágono, ou -1.
+func building_at(coord: Vector2i) -> int:
+	for index: int in buildings.size():
+		for at: Variant in (buildings[index] as Dictionary).get("tiles", []):
+			if int(at.get("q", 0)) == coord.x and int(at.get("r", 0)) == coord.y:
+				return index
+	return -1
+
+
+## Os hexágonos de uma construção.
+func building_tiles(index: int) -> Array[Vector2i]:
+	var coords: Array[Vector2i] = []
+	if index < 0 or index >= buildings.size():
+		return coords
+	for at: Variant in (buildings[index] as Dictionary).get("tiles", []):
+		coords.append(Vector2i(int(at.get("q", 0)), int(at.get("r", 0))))
+	return coords
+
+
+## A área com esta `key`, ou um dicionário vazio.
+func area_by_key(key: int) -> Dictionary:
+	for area: Variant in areas:
+		if int((area as Dictionary).get("key", 0)) == key:
+			return area
+	return {}
+
+
+## A próxima `key` livre, para uma área nova.
+func next_area_key() -> int:
+	var highest := 0
+	for area: Variant in areas:
+		highest = maxi(highest, int((area as Dictionary).get("key", 0)))
+	return highest + 1
+
+
+## Quantos hexágonos estão em cada área, por `key`.
+func area_tile_counts() -> Dictionary[int, int]:
+	var counts: Dictionary[int, int] = {}
+	for key: int in tile_areas.values():
+		counts[key] = counts.get(key, 0) + 1
+	return counts
+
+
 ## O terreno como o `HexMapView` desenha. A seed só escolhe os escorridos dos
 ## paredões; com o id, cada ilha fica sempre igual.
 func to_map() -> ExplorationMap:

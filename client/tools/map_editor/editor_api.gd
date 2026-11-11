@@ -29,6 +29,10 @@ static func save_island(id: int, draft: Dictionary) -> ApiResponse:
 	return await _call(HTTPClient.METHOD_PUT, "%s/%d/draft" % [ISLANDS_PATH, id], draft)
 
 
+static func publish_island(id: int) -> ApiResponse:
+	return await _call(HTTPClient.METHOD_POST, "%s/%d/publish" % [ISLANDS_PATH, id])
+
+
 static func delete_island(id: int) -> ApiResponse:
 	return await _call(HTTPClient.METHOD_DELETE, "%s/%d" % [ISLANDS_PATH, id])
 

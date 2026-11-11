@@ -1,6 +1,6 @@
 class_name MapEditor
 extends Window
-## O editor de ilhas (map-editor/02): uma janela só de desenvolvimento, aberta com
+## O editor de ilhas (map-editor/02 a 04): uma janela só de desenvolvimento, aberta com
 ## F2 quando o jogo roda pelo editor do Godot, para criar no PC as ilhas fixas e
 ## guardá-las no banco pelas rotas de `/v1/editor`. Como o visualizador do F1, é
 ## uma janela do sistema (`force_native`) por cima do jogo, que usa a sessão de
@@ -11,6 +11,8 @@ const WINDOW_SIZE := Vector2i(1600, 900)
 const MIN_SIZE := Vector2i(1280, 720)
 const FONT_SIZE := 16
 const SIDE_WIDTH := 380.0
+## A lista de ilhas fica embaixo, com esta altura; as ferramentas rolam em cima.
+const LIST_HEIGHT := 210.0
 const NO_SESSION := "Entre no jogo para usar o editor."
 const EDITOR_OFF := "O editor está desligado neste servidor. Ponha o seu id em MAP_EDITOR_USER_IDS no .env do servidor."
 const UNSAVED_QUESTION := "Salvar as mudanças?"
@@ -20,6 +22,8 @@ const DISCARD := &"discard"
 signal _unsaved_answered(answer: String)
 ## A resposta à pergunta de apagar.
 signal _delete_answered(confirmed: bool)
+## A resposta à pergunta de publicar.
+signal _publish_answered(confirmed: bool)
 
 var _blocked: VBoxContainer
 var _blocked_label: Label
@@ -28,6 +32,10 @@ var _name_edit: LineEdit
 var _status_label: Label
 var _message_label: Label
 var _save_button: Button
+var _publish_button: Button
+var _areas_check: CheckButton
+var _buildings_check: CheckButton
+var _publish_dialog: ConfirmationDialog
 var _side: VBoxContainer
 var _list: IslandList
 var _new_panel: NewIslandPanel
@@ -125,7 +133,9 @@ func _show_island(draft: IslandDraft, status: String) -> void:
 	_status = status
 	_name_edit.text = draft.name if draft != null else ""
 	_name_edit.editable = draft != null
+	_canvas.selected_building = -1
 	_canvas.show_draft(draft)
+	_tools.set_draft(draft)
 	_history.reset(draft)
 	_mark_saved()
 	_update_header()
@@ -229,6 +239,34 @@ func _mark_saved() -> void:
 func _update_dirty() -> void:
 	_dirty = _draft != null and _history.version() != _saved_version
 	title = TITLE + (" *" if _dirty else "")
+	_update_header()
+
+
+## Publica a ilha salva: o servidor confere e copia o rascunho para a publicada.
+func publish() -> void:
+	if _draft == null or _busy:
+		return
+	if _dirty:
+		_set_message("Salve antes de publicar.", true)
+		return
+	_publish_dialog.dialog_text = "Publicar a ilha %s?\nEla passa a valer para o jogo quando a islands existir." % _draft.name
+	_publish_dialog.popup_centered()
+	var confirmed: bool = await _publish_answered
+	if not confirmed:
+		return
+	_busy = true
+	_update_header()
+	_set_message("Publicando...")
+	var response: ApiResponse = await EditorApi.publish_island(_draft.id)
+	_busy = false
+	if not response.ok:
+		_set_message(response.error, true)
+		_update_header()
+		return
+	_set_message("Publicada.")
+	_status = DictFields.get_string(response.data, "status")
+	_update_header()
+	_refresh_list()
 
 
 func _on_name_changed(text: String) -> void:
@@ -247,10 +285,10 @@ func _can_paint() -> bool:
 	return _draft != null and not _new_panel.visible
 
 
-func _on_stroke_started(coord: Vector2i) -> void:
+func _on_stroke_started(coord: Vector2i, secondary: bool) -> void:
 	if not _can_paint():
 		return
-	_tools.begin_stroke(_draft)
+	_tools.begin_stroke(_draft, secondary)
 	_paint(coord)
 
 
@@ -258,9 +296,41 @@ func _paint(coord: Vector2i) -> void:
 	if not _can_paint():
 		return
 	var changed := _tools.paint(_draft, coord)
-	if not changed.is_empty():
+	if changed.is_empty():
+		return
+	if _tools.paints_marks():
+		_canvas.refresh_marks(changed)
+	else:
 		_canvas.update_tiles(changed)
-		title = TITLE + " *"
+	title = TITLE + " *"
+
+
+## Os painéis de construção e de área mudaram o rascunho.
+func _on_tools_edited(step: EditorHistory.Step, merge: bool) -> void:
+	_history.record(step, merge)
+	_canvas.refresh_marks()
+	_update_dirty()
+
+
+func _on_area_delete(key: int, area_name: String) -> void:
+	_confirm_dialog.dialog_text = "Apagar a área %s? Os hexágonos dela ficam sem área." % area_name
+	_confirm_dialog.popup_centered()
+	var confirmed: bool = await _delete_answered
+	if confirmed:
+		_tools.area_panel.delete_area(key)
+
+
+## Outra ferramenta ou outro tamanho. Escolher Construção ou Área liga a camada dela.
+func _on_brush_changed() -> void:
+	_canvas.refresh_brush()
+	if _tools.tool == EditorTools.Tool.BUILDING and not _buildings_check.button_pressed:
+		_buildings_check.button_pressed = true
+	elif _tools.tool == EditorTools.Tool.AREA and not _areas_check.button_pressed:
+		_areas_check.button_pressed = true
+
+
+func _on_layers_toggled(_on: bool) -> void:
+	_canvas.set_layers(_areas_check.button_pressed, _buildings_check.button_pressed)
 
 
 func _on_stroke_ended() -> void:
@@ -273,6 +343,8 @@ func _on_stroke_ended() -> void:
 ## O desfazer e o refazer mudaram o rascunho.
 func _on_history_applied(coords: Array[Vector2i]) -> void:
 	_canvas.update_tiles(coords)
+	_canvas.refresh_marks()
+	_tools.refresh_panels()
 	if _name_edit.text.strip_edges() != _draft.name:
 		_name_edit.text = _draft.name
 	_update_dirty()
@@ -292,7 +364,9 @@ func _redo() -> void:
 
 func _update_header() -> void:
 	_status_label.text = IslandList.status_name(_status) if _draft != null else "Nenhuma ilha aberta"
-	_save_button.disabled = _draft == null
+	_save_button.disabled = _draft == null or _busy
+	_publish_button.disabled = _draft == null or _busy or _dirty or _status == "published"
+	_publish_button.tooltip_text = "Salve antes de publicar." if _dirty else "Confere a ilha e a deixa pronta para o jogo."
 
 
 func _set_message(text: String, error: bool = false) -> void:
@@ -346,7 +420,7 @@ func _on_window_input(event: InputEvent) -> void:
 	elif key.ctrl_pressed and key.keycode == KEY_Z:
 		set_input_as_handled()
 		_undo()
-	elif key.keycode >= KEY_1 and key.keycode <= KEY_5 and not key.ctrl_pressed:
+	elif key.keycode >= KEY_1 and key.keycode <= KEY_7 and not key.ctrl_pressed:
 		set_input_as_handled()
 		_tools.set_tool(key.keycode - KEY_1)
 	elif key.keycode == KEY_BRACKETLEFT:
@@ -415,10 +489,27 @@ func _build() -> void:
 	_message_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_message_label.clip_text = true
 	header.add_child(_message_label)
+	_areas_check = CheckButton.new()
+	_areas_check.text = "Áreas"
+	_areas_check.button_pressed = true
+	_areas_check.focus_mode = Control.FOCUS_NONE
+	_areas_check.toggled.connect(_on_layers_toggled)
+	header.add_child(_areas_check)
+	_buildings_check = CheckButton.new()
+	_buildings_check.text = "Construções"
+	_buildings_check.button_pressed = true
+	_buildings_check.focus_mode = Control.FOCUS_NONE
+	_buildings_check.toggled.connect(_on_layers_toggled)
+	header.add_child(_buildings_check)
 	_save_button = Button.new()
 	_save_button.text = "Salvar (Ctrl+S)"
 	_save_button.pressed.connect(save)
 	header.add_child(_save_button)
+	_publish_button = Button.new()
+	_publish_button.text = "Publicar"
+	_publish_button.theme_type_variation = &"OutlineButton"
+	_publish_button.pressed.connect(publish)
+	header.add_child(_publish_button)
 
 	var body := HBoxContainer.new()
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -427,9 +518,20 @@ func _build() -> void:
 	_side = VBoxContainer.new()
 	_side.custom_minimum_size.x = SIDE_WIDTH
 	body.add_child(_side)
+	# As ferramentas rolam: o bloco de área, com as espécies, pode ser alto.
+	var tools_scroll := ScrollContainer.new()
+	tools_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	tools_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_side.add_child(tools_scroll)
 	_tools = EditorTools.new()
+	_tools.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_tools.message.connect(func(text: String) -> void: _set_message(text, true))
-	_side.add_child(_tools)
+	_tools.edited.connect(_on_tools_edited)
+	_tools.area_panel.delete_requested.connect(_on_area_delete)
+	_tools.building_panel.selection_changed.connect(func(index: int) -> void:
+		_canvas.selected_building = index
+		_canvas.refresh_brush())
+	tools_scroll.add_child(_tools)
 	_list = IslandList.new()
 	_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_list.open_requested.connect(_open_island)
@@ -438,7 +540,7 @@ func _build() -> void:
 	# A lista num bloco igual aos das ferramentas.
 	var list_panel := PanelContainer.new()
 	list_panel.theme_type_variation = &"SectionPanel"
-	list_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	list_panel.custom_minimum_size.y = LIST_HEIGHT
 	list_panel.add_child(_list)
 	_side.add_child(list_panel)
 	_new_panel = NewIslandPanel.new()
@@ -454,10 +556,14 @@ func _build() -> void:
 	_canvas.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_canvas.hovered.connect(_on_hovered)
 	_canvas.brush = _tools.brush_coords
+	for row: Dictionary in GameData.get_rows("building_types"):
+		var type_id := int(row.get("id", 0))
+		_canvas.building_colors[type_id] = Color.from_string(str(row.get("color_hex", "")), UiPalette.TEXT)
+		_canvas.building_names[type_id] = str(row.get("name", ""))
 	_canvas.stroke_started.connect(_on_stroke_started)
 	_canvas.stroke_moved.connect(_paint)
 	_canvas.stroke_ended.connect(_on_stroke_ended)
-	_tools.brush_changed.connect(_canvas.refresh_brush)
+	_tools.brush_changed.connect(_on_brush_changed)
 	body.add_child(_canvas)
 
 	_history = EditorHistory.new()
@@ -466,7 +572,7 @@ func _build() -> void:
 
 	_hover_label = Label.new()
 	_hover_label.theme_type_variation = &"SecondaryLabel"
-	_hover_label.text = "Botão esquerdo: pintar. Roda do mouse: zoom. Botão do meio, ou espaço e o botão esquerdo: arrastar. Tab: visão de cima. Ctrl+Z e Ctrl+Y: desfazer e refazer."
+	_hover_label.text = "Botão esquerdo: pintar. Botão direito: escolher construção ou tirar área. Roda: zoom. Botão do meio, ou espaço e o botão esquerdo: arrastar. Tab: visão de cima. Ctrl+Z e Ctrl+Y: desfazer e refazer."
 	_editor.add_child(_hover_label)
 
 	_unsaved_dialog = ConfirmationDialog.new()
@@ -490,4 +596,12 @@ func _build() -> void:
 	_confirm_dialog.confirmed.connect(func() -> void: _delete_answered.emit(true))
 	_confirm_dialog.canceled.connect(func() -> void: _delete_answered.emit(false))
 	add_child(_confirm_dialog)
+
+	_publish_dialog = ConfirmationDialog.new()
+	_publish_dialog.title = TITLE
+	_publish_dialog.ok_button_text = "Publicar"
+	_publish_dialog.cancel_button_text = "Cancelar"
+	_publish_dialog.confirmed.connect(func() -> void: _publish_answered.emit(true))
+	_publish_dialog.canceled.connect(func() -> void: _publish_answered.emit(false))
+	add_child(_publish_dialog)
 	_update_header()
