@@ -155,6 +155,16 @@ const TABLES := {
 		"key": ["id"],
 		"columns": {"id": ID, "text": TEXT},
 	},
+	# Os tipos de construção que o editor de ilhas põe no mapa (map-editor/01).
+	"building_types": {
+		"key": ["id"],
+		"columns": {
+			"id": ID,
+			"slug": SLUG,
+			"name": TEXT,
+			"color_hex": {"type": "string", "pattern": "^#[0-9A-Fa-f]{6}$"},
+		},
+	},
 	# --- Conteúdo -------------------------------------------------------------
 	"species": {
 		"key": ["id"],

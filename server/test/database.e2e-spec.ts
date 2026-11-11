@@ -38,10 +38,10 @@ describe('restrições do banco (e2e)', () => {
     expect(rows.map((row) => row.table_name)).toEqual([]);
   });
 
-  it('as 38 tabelas e o histórico de migrations ficam no schema ecobeasts', async () => {
+  it('as 46 tabelas e o histórico de migrations ficam no schema ecobeasts', async () => {
     const rows = await prisma.$queryRaw<{ n: number }[]>`
       SELECT count(*)::int AS n FROM information_schema.tables WHERE table_schema = 'ecobeasts'`;
-    expect(rows[0].n).toBe(39);
+    expect(rows[0].n).toBe(47);
   });
 
   it('recusa Técnica com precisão 150', async () => {
@@ -364,5 +364,106 @@ describe('restrições do banco (e2e)', () => {
     });
     expect(result).toBe('accepted');
     expect(remaining).toBe(0);
+  });
+
+  describe('ilhas do editor (map-editor/01)', () => {
+    /** Uma ilha com o rascunho vazio, só para pendurar linhas nele. */
+    async function draftMap(tx: Tx) {
+      const island = await tx.island.create({ data: {} });
+      return tx.islandMap.create({
+        data: {
+          islandId: island.id,
+          kind: 'draft',
+          name: 'Ilha',
+          startQ: 0,
+          startR: 0,
+          contentHash: 'x',
+          updatedAt: new Date(),
+        },
+      });
+    }
+
+    it('recusa versão de ilha que não é draft nem published', async () => {
+      const result = await attempt(prisma, async (tx) => {
+        const map = await draftMap(tx);
+        await tx.islandMap.update({
+          where: { id: map.id },
+          data: { kind: 'old' },
+        });
+      });
+      expectRejected(result, 'island_maps_kind_check');
+    });
+
+    it('recusa variante 4 em colina e aceita 6 no plano', async () => {
+      const biome = await prisma.biome.findFirstOrThrow();
+      const hill = await attempt(prisma, async (tx) => {
+        const map = await draftMap(tx);
+        await tx.islandTile.create({
+          data: {
+            islandMapId: map.id,
+            q: 0,
+            r: 0,
+            biomeId: biome.id,
+            shape: 'hill',
+            variant: 4,
+          },
+        });
+      });
+      expectRejected(hill, 'island_tiles_variant_check');
+      const flat = await attempt(prisma, async (tx) => {
+        const map = await draftMap(tx);
+        await tx.islandTile.create({
+          data: {
+            islandMapId: map.id,
+            q: 0,
+            r: 0,
+            biomeId: biome.id,
+            shape: 'flat',
+            variant: 6,
+          },
+        });
+      });
+      expect(flat).toBe('accepted');
+    });
+
+    it('recusa espécie de área com mínimo acima do máximo', async () => {
+      const result = await attempt(prisma, async (tx) => {
+        const map = await draftMap(tx);
+        const species = await createSpecies(tx);
+        await tx.islandArea.create({
+          data: {
+            islandMapId: map.id,
+            name: 'Área',
+            colorHex: '#123456',
+            species: {
+              create: {
+                speciesId: species.id,
+                weight: 1,
+                minLevel: 9,
+                maxLevel: 3,
+              },
+            },
+          },
+        });
+      });
+      expectRejected(result, 'island_area_species_level_check');
+    });
+
+    it('não deixa duas construções no mesmo hexágono', async () => {
+      const result = await attempt(prisma, async (tx) => {
+        const map = await draftMap(tx);
+        const type = await tx.buildingType.findFirstOrThrow();
+        for (let i = 0; i < 2; i++) {
+          await tx.islandBuilding.create({
+            data: {
+              islandMapId: map.id,
+              buildingTypeId: type.id,
+              tiles: { create: { islandMapId: map.id, q: 1, r: 1 } },
+            },
+          });
+        }
+      });
+      expectRejected(result, 'island_building_tiles_island_map_id_q_r_key');
+    });
   });
 });

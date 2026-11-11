@@ -5,9 +5,9 @@ import { CATALOG_TABLES, SEED_DATA_DIR } from './catalog-tables.js';
 describe('CATALOG_TABLES', () => {
   const names = CATALOG_TABLES.map((table) => table.name);
 
-  it('tem as 31 tabelas, sem repetição', () => {
-    expect(names).toHaveLength(31);
-    expect(new Set(names).size).toBe(31);
+  it('tem as 32 tabelas, sem repetição', () => {
+    expect(names).toHaveLength(32);
+    expect(new Set(names).size).toBe(32);
   });
 
   it('casa com os arquivos .json da pasta de dados do seed', () => {
@@ -227,5 +227,26 @@ describe('carga inicial dos nomes e falas dos Domadores (npc-tamers/01)', () => 
     expect(
       greetings.every(({ text }) => text.length >= 1 && text.length <= 120),
     ).toBe(true);
+  });
+});
+
+describe('carga inicial dos tipos de construção (map-editor/01)', () => {
+  const types = JSON.parse(
+    readFileSync(join(SEED_DATA_DIR, 'building_types.json'), 'utf8'),
+  ) as { id: number; slug: string; name: string; color_hex: string }[];
+
+  it('tem Refúgio, Loja, Arena e Casa, nessa ordem', () => {
+    expect(types.map(({ slug, name }) => [slug, name])).toEqual([
+      ['refuge', 'Refúgio'],
+      ['shop', 'Loja'],
+      ['arena', 'Arena'],
+      ['house', 'Casa'],
+    ]);
+  });
+
+  it('cada um tem uma cor #RRGGBB', () => {
+    for (const { color_hex } of types) {
+      expect(color_hex).toMatch(/^#[0-9A-Fa-f]{6}$/);
+    }
   });
 });

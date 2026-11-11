@@ -119,7 +119,8 @@ model Biome {
   name        String
   description String
 
-  species SpeciesBiome[]
+  species     SpeciesBiome[]
+  islandTiles IslandTile[]
 
   @@map("biomes")
   @@schema("ecobeasts")
@@ -132,6 +133,21 @@ model NpcTamerName {
   name String
 
   @@map("npc_tamer_names")
+  @@schema("ecobeasts")
+}
+
+/// Os tipos de construção que o editor põe nas ilhas (map-editor/01).
+model BuildingType {
+  id       Int    @id @default(autoincrement())
+  /// CHECK ^[a-z0-9_]+$ (migration islands)
+  slug     String @unique
+  name     String
+  /// A cor dos hexágonos dela no editor. CHECK ^#[0-9A-Fa-f]{6}$ (migration islands)
+  colorHex String @map("color_hex")
+
+  buildings IslandBuilding[]
+
+  @@map("building_types")
   @@schema("ecobeasts")
 }
 
@@ -317,20 +333,21 @@ model Species {
   weightKg             Float  @map("weight_kg")
   evolvesFromSpeciesId Int?   @map("evolves_from_species_id")
 
-  growthRate     GrowthRate         @relation(fields: [growthRateId], references: [id], onDelete: Restrict)
-  rarity         Rarity             @relation(fields: [rarityId], references: [id], onDelete: Restrict)
-  evolvesFrom    Species?           @relation("SpeciesEvolvesFrom", fields: [evolvesFromSpeciesId], references: [id], onDelete: Restrict)
-  evolvesTo      Species[]          @relation("SpeciesEvolvesFrom")
+  growthRate     GrowthRate          @relation(fields: [growthRateId], references: [id], onDelete: Restrict)
+  rarity         Rarity              @relation(fields: [rarityId], references: [id], onDelete: Restrict)
+  evolvesFrom    Species?            @relation("SpeciesEvolvesFrom", fields: [evolvesFromSpeciesId], references: [id], onDelete: Restrict)
+  evolvesTo      Species[]           @relation("SpeciesEvolvesFrom")
   elements       SpeciesElement[]
   stats          SpeciesStat[]
   traits         SpeciesTrait[]
   skills         SpeciesSkill[]
-  evolutionsFrom Evolution[]        @relation("EvolutionFrom")
-  evolutionsTo   Evolution[]        @relation("EvolutionTo")
+  evolutionsFrom Evolution[]         @relation("EvolutionFrom")
+  evolutionsTo   Evolution[]         @relation("EvolutionTo")
   starterOption  StarterOption?
   creatures      CreatureInstance[]
   biomes         SpeciesBiome[]
   codexEntries   CodexEntry[]
+  islandAreas    IslandAreaSpecies[]
 
   @@index([growthRateId])
   @@index([rarityId])
@@ -766,6 +783,138 @@ model CodexEntry {
   @@id([playerId, speciesId])
   @@index([speciesId])
   @@map("codex_entries")
+  @@schema("ecobeasts")
+}
+
+/// Uma ilha feita no editor (.specs/map-editor/architecture.md, "Tabelas").
+model Island {
+  id          Int       @id @default(autoincrement())
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  /// A última publicação; nula se a ilha nunca foi publicada.
+  publishedAt DateTime? @map("published_at") @db.Timestamptz(3)
+
+  maps IslandMap[]
+
+  @@map("islands")
+  @@schema("ecobeasts")
+}
+
+/// Uma versão de uma ilha: o rascunho (`draft`) ou a publicada (`published`).
+model IslandMap {
+  id          Int      @id @default(autoincrement())
+  islandId    Int      @map("island_id")
+  /// CHECK draft ou published (migration islands)
+  kind        String
+  /// CHECK 1–40 caracteres (migration islands)
+  name        String
+  startQ      Int      @map("start_q")
+  startR      Int      @map("start_r")
+  /// sha-256 desta versão em JSON canônico: compara o rascunho com a publicada.
+  contentHash String   @map("content_hash")
+  updatedAt   DateTime @map("updated_at") @db.Timestamptz(3)
+
+  island        Island               @relation(fields: [islandId], references: [id], onDelete: Cascade)
+  tiles         IslandTile[]
+  buildings     IslandBuilding[]
+  buildingTiles IslandBuildingTile[]
+  areas         IslandArea[]
+
+  @@unique([islandId, kind])
+  @@map("island_maps")
+  @@schema("ecobeasts")
+}
+
+/// Um hexágono de uma versão de ilha.
+model IslandTile {
+  islandMapId Int    @map("island_map_id")
+  q           Int
+  r           Int
+  /// Um dos 5 biomas de terreno, conferido pela rota.
+  biomeId     Int    @map("biome_id")
+  /// CHECK flat, hill ou mont (migration islands)
+  shape       String
+  /// CHECK 1–6 em flat, 1–3 nas outras formas (migration islands)
+  variant     Int
+  areaId      Int?   @map("area_id")
+
+  islandMap IslandMap   @relation(fields: [islandMapId], references: [id], onDelete: Cascade)
+  biome     Biome       @relation(fields: [biomeId], references: [id], onDelete: Restrict)
+  area      IslandArea? @relation(fields: [areaId], references: [id], onDelete: SetNull)
+
+  @@id([islandMapId, q, r])
+  @@index([biomeId])
+  @@index([areaId])
+  @@map("island_tiles")
+  @@schema("ecobeasts")
+}
+
+/// Uma construção de uma versão de ilha; os hexágonos dela ficam em `island_building_tiles`.
+model IslandBuilding {
+  id             Int @id @default(autoincrement())
+  islandMapId    Int @map("island_map_id")
+  buildingTypeId Int @map("building_type_id")
+
+  islandMap    IslandMap            @relation(fields: [islandMapId], references: [id], onDelete: Cascade)
+  buildingType BuildingType         @relation(fields: [buildingTypeId], references: [id], onDelete: Restrict)
+  tiles        IslandBuildingTile[]
+
+  @@index([islandMapId])
+  @@index([buildingTypeId])
+  @@map("island_buildings")
+  @@schema("ecobeasts")
+}
+
+/// Um hexágono ocupado por uma construção; dois prédios nunca dividem um hexágono.
+model IslandBuildingTile {
+  buildingId  Int @map("building_id")
+  islandMapId Int @map("island_map_id")
+  q           Int
+  r           Int
+
+  building  IslandBuilding @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+  islandMap IslandMap      @relation(fields: [islandMapId], references: [id], onDelete: Cascade)
+
+  @@id([buildingId, q, r])
+  @@unique([islandMapId, q, r])
+  @@map("island_building_tiles")
+  @@schema("ecobeasts")
+}
+
+/// Uma área de Ecobeasts de uma versão de ilha: os hexágonos dela dizem onde, a lista diz quem.
+model IslandArea {
+  id          Int    @id @default(autoincrement())
+  islandMapId Int    @map("island_map_id")
+  /// CHECK 1–40 caracteres (migration islands)
+  name        String
+  /// Só para o editor. CHECK ^#[0-9A-Fa-f]{6}$ (migration islands)
+  colorHex    String @map("color_hex")
+
+  islandMap IslandMap           @relation(fields: [islandMapId], references: [id], onDelete: Cascade)
+  species   IslandAreaSpecies[]
+  tiles     IslandTile[]
+
+  @@index([islandMapId])
+  @@map("island_areas")
+  @@schema("ecobeasts")
+}
+
+/// Uma espécie de uma área, com o peso no sorteio e o nível fixo.
+model IslandAreaSpecies {
+  areaId    Int @map("area_id")
+  speciesId Int @map("species_id")
+  /// CHECK > 0 (migration islands)
+  weight    Int
+  /// CHECK 1–100 e ≤ max_level (migration islands)
+  minLevel  Int @map("min_level")
+  /// CHECK 1–100 (migration islands)
+  maxLevel  Int @map("max_level")
+
+  area    IslandArea @relation(fields: [areaId], references: [id], onDelete: Cascade)
+  species Species    @relation(fields: [speciesId], references: [id], onDelete: Restrict)
+
+  @@id([areaId, speciesId])
+  @@index([speciesId])
+  @@map("island_area_species")
   @@schema("ecobeasts")
 }
 

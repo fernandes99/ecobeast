@@ -9,6 +9,7 @@ import { BundleModule } from './catalog/bundle/bundle.module.js';
 import { CatalogModule } from './catalog/catalog.module.js';
 import { CodexModule } from './codex/codex.module.js';
 import { Env, validateEnv } from './config/env.js';
+import { EditorModule } from './editor/editor.module.js';
 import { ExplorationModule } from './exploration/exploration.module.js';
 import { HealthModule } from './health/health.module.js';
 import { InventoryModule } from './inventory/inventory.module.js';
@@ -42,6 +43,7 @@ import { TeamModule } from './team/team.module.js';
     TeamModule,
     ProgressionModule,
     CodexModule,
+    EditorModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

@@ -28,6 +28,20 @@ const envSchema = z.object({
    * POST /v1/me/debug/xp (progression/04) e o `god` da luta no mapa.
    */
   ENABLE_TEST_BATTLE: z.stringbool().default(false),
+  /**
+   * Quem pode usar as rotas do editor de ilhas (map-editor/01): ids de usuário
+   * do Supabase Auth, separados por vírgula. Vazia, as rotas respondem 404.
+   */
+  MAP_EDITOR_USER_IDS: z
+    .string()
+    .default('')
+    .transform((raw) =>
+      raw
+        .split(',')
+        .map((id) => id.trim())
+        .filter((id) => id !== ''),
+    )
+    .pipe(z.array(z.uuid())),
 });
 
 export type Env = Omit<z.infer<typeof envSchema>, 'PUBLIC_BASE_URL'> & {

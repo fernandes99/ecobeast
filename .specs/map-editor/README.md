@@ -70,7 +70,7 @@ Escolhas do planejamento (corrigíveis; ao mudar uma, atualize aqui e no [archit
 
 | # | Fase | Entrega | Status |
 | --- | --- | --- | --- |
-| 1 | [01-island-records](01-island-records.md) | Servidor: as tabelas das ilhas, o tipo de construção no catálogo, a regra de quem edita e as rotas do editor (listar, criar, ler, salvar, publicar, apagar e gerar) | aprovada |
+| 1 | [01-island-records](01-island-records.md) | Servidor: as tabelas das ilhas, o tipo de construção no catálogo, a regra de quem edita e as rotas do editor (listar, criar, ler, salvar, publicar, apagar e gerar) | concluída |
 | 2 | [02-editor-window](02-editor-window.md) | Jogo: a janela F2, a lista de ilhas, ilha nova do zero ou pelo gerador, ver com zoom e arrastar, salvar | aprovada |
 | 3 | [03-terrain-tools](03-terrain-tools.md) | Jogo: os pincéis de bioma e forma, pôr e tirar hexágonos, o tamanho do pincel, a chegada, desfazer e refazer | aprovada |
 | 4 | [04-buildings-and-areas](04-buildings-and-areas.md) | Jogo: as construções, as áreas de Ecobeasts e o publicar | aprovada |

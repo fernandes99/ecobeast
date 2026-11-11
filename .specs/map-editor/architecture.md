@@ -31,7 +31,7 @@ Todas no schema `ecobeasts`. `building_types` é catálogo, editado pelo painel 
 | `id` | int | |
 | `slug` | text, único | `refuge`, `shop`, `arena`, `house`. `CHECK ^[a-z0-9_]+$` |
 | `name` | text | Refúgio, Loja, Arena, Casa |
-| `color` | text | A cor dos hexágonos dela no editor, `#RRGGBB` (`CHECK`) |
+| `color_hex` | text | A cor dos hexágonos dela no editor, `#RRGGBB` (`CHECK`), como a dos Elementos |
 
 A tela que cada tipo abre não fica no banco: é a `islands` que liga o `slug` à tela do jogo (`refuge` → `heal_station`, `shop` → `shop`). Arena e Casa não abrem nada por enquanto. Os nomes e as cores são _a revisar_.
 
@@ -64,7 +64,7 @@ A tela que cada tipo abre não fica no banco: é a `islands` que liga o `slug` �
 | `island_tiles` | `island_map_id` (FK `CASCADE`), `q`, `r`, `biome_id` (FK `biomes`, `RESTRICT`), `shape`, `variant`, `area_id` (FK `island_areas`, nulo, `SET NULL`) | Chave `(island_map_id, q, r)`. `shape` em `flat`, `hill`, `mont` (`CHECK`). `variant` de 1 a 6 em `flat` e de 1 a 3 nas outras (`CHECK`). O bioma é um dos 5 de terreno (`temperate`, `boreal`, `stone`, `wshallow`, `wdeep`), conferido na rota: `hill` e `mountain` são biomas de encontro, não de terreno |
 | `island_buildings` | `id`, `island_map_id` (FK `CASCADE`), `building_type_id` (FK `RESTRICT`) | |
 | `island_building_tiles` | `building_id` (FK `CASCADE`), `island_map_id`, `q`, `r` | Chave `(building_id, q, r)` e único `(island_map_id, q, r)`: dois prédios nunca dividem um hexágono |
-| `island_areas` | `id`, `island_map_id` (FK `CASCADE`), `name` (1 a 40), `color` (`#RRGGBB`) | A cor serve só ao editor |
+| `island_areas` | `id`, `island_map_id` (FK `CASCADE`), `name` (1 a 40), `color_hex` (`#RRGGBB`) | A cor serve só ao editor |
 | `island_area_species` | `area_id` (FK `CASCADE`), `species_id` (FK `RESTRICT`), `weight` (> 0), `min_level`, `max_level` (1 a 100, `min_level <= max_level`) | Chave `(area_id, species_id)` |
 
 Um hexágono sem área não tem Ecobeasts selvagens. Salvar apaga as linhas do rascunho e grava de novo, numa transação só. Publicar faz o mesmo com a versão publicada, copiando do rascunho, e grava `published_at`.
@@ -93,7 +93,7 @@ O mesmo formato vai e volta (ler, criar, salvar):
     {
       "key": 1,
       "name": "Bosque do norte",
-      "color": "#5B8C3A",
+      "color_hex": "#5B8C3A",
       "species": [{ "species_id": 4, "weight": 60, "min_level": 3, "max_level": 6 }]
     }
   ]

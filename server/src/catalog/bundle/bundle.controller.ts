@@ -21,7 +21,7 @@ export class CatalogBundleDto {
 
   @ApiProperty({
     description:
-      'As 31 tabelas, pelo nome. Cada linha tem as colunas da tabela em snake_case, em ordem crescente da chave.',
+      'As 32 tabelas, pelo nome. Cada linha tem as colunas da tabela em snake_case, em ordem crescente da chave.',
     type: 'object',
     additionalProperties: { type: 'array', items: { type: 'object' } },
     example: {

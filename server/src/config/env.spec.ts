@@ -97,3 +97,31 @@ describe('ENABLE_TEST_BATTLE', () => {
     ).toThrow(/ENABLE_TEST_BATTLE/);
   });
 });
+
+describe('MAP_EDITOR_USER_IDS (map-editor/01)', () => {
+  const A = '11111111-1111-4111-8111-111111111111';
+  const B = '22222222-2222-4222-8222-222222222222';
+
+  it('é uma lista vazia por padrão', () => {
+    expect(validateEnv({ ...urls }).MAP_EDITOR_USER_IDS).toEqual([]);
+  });
+
+  it('vazia continua vazia', () => {
+    expect(
+      validateEnv({ ...urls, MAP_EDITOR_USER_IDS: '' }).MAP_EDITOR_USER_IDS,
+    ).toEqual([]);
+  });
+
+  it('separa por vírgula e ignora os espaços em volta', () => {
+    expect(
+      validateEnv({ ...urls, MAP_EDITOR_USER_IDS: ` ${A} , ${B} ` })
+        .MAP_EDITOR_USER_IDS,
+    ).toEqual([A, B]);
+  });
+
+  it('recusa um id que não é uuid, citando a variável', () => {
+    expect(() =>
+      validateEnv({ ...urls, MAP_EDITOR_USER_IDS: `${A},fulano` }),
+    ).toThrow(/MAP_EDITOR_USER_IDS/);
+  });
+});

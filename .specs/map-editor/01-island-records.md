@@ -1,6 +1,6 @@
 # 01. Ilhas no servidor
 
-- **Status:** aprovada
+- **Status:** concluída
 - **Depende de:** [architecture.md](architecture.md)
 
 ## Contexto
@@ -32,12 +32,12 @@ O que esta fase reaproveita:
 ### Banco
 
 - **RF-01:** o `schema.prisma` ganha os modelos das 8 tabelas, com as colunas, as chaves, os únicos e as FKs da [arquitetura](architecture.md#tabelas), cada um com `@@schema("ecobeasts")`.
-- **RF-02:** a migração cria as tabelas e escreve à mão os `CHECK` da arquitetura: `slug` e `color` de `building_types`; `kind`, o tamanho de `name` de `island_maps`; `shape` e `variant` de `island_tiles`; o `name` e o `color` de `island_areas`; o `weight` e os níveis de `island_area_species`. Cada um fica comentado no campo com `/// CHECK <faixa> (migration <nome>)`.
-- **RF-03:** a migração insere os 4 tipos de construção (Refúgio, Loja, Arena, Casa, com as cores _a revisar_), e `server/prisma/seed-data/building_types.json` traz os mesmos.
+- **RF-02:** a migração cria as tabelas e escreve à mão os `CHECK` da arquitetura: `slug` e `color_hex` de `building_types`; `kind`, o tamanho de `name` de `island_maps`; `shape` e `variant` de `island_tiles`; o `name` e o `color_hex` de `island_areas`; o `weight` e os níveis de `island_area_species`. Cada um fica comentado no campo com `/// CHECK <faixa> (migration <nome>)`.
+- **RF-03:** `server/prisma/seed-data/building_types.json` traz os 4 tipos de construção (Refúgio, Loja, Arena, Casa, com as cores _a revisar_), e o `npm run db:seed` os carrega na tabela vazia. É o caminho que `biomes` e `npc_tamer_names` fizeram; a spec dizia que a migração os inseria, mas o seed só carrega tabelas vazias e o teste do catálogo exige o arquivo, então o seed basta.
 
 ### Catálogo
 
-- **RF-04:** `building_types` entra no `GET /v1/catalog` (`catalog-tables.ts`) e no `CatalogSchema` e no `CatalogValidator` do jogo, que conferem `slug`, `name` e `color`. O jogo continua abrindo sem erro nos dados.
+- **RF-04:** `building_types` entra no `GET /v1/catalog` (`catalog-tables.ts`) e no `CatalogSchema` e no `CatalogValidator` do jogo, que conferem `slug`, `name` e `color_hex`. O jogo continua abrindo sem erro nos dados.
 
 ### Quem edita
 
@@ -55,25 +55,27 @@ O que esta fase reaproveita:
 
 ## Critérios de aceite
 
-- [ ] A migração roda no banco do `.env`, e o `GET /v1/catalog` traz os 4 tipos de construção.
-- [ ] Com `MAP_EDITOR_USER_IDS` vazia, toda rota do editor responde 404. Com outro usuário, 403.
-- [ ] Criar uma ilha e ler de volta devolve o mesmo rascunho, com `status` `draft`.
-- [ ] Publicar uma ilha válida muda o `status` para `published`. Salvar uma mudança muda para `changed`, e salvar o rascunho igual ao publicado volta para `published`.
-- [ ] Salvar com hexágono repetido, chegada fora da ilha, construção sobre outra ou área inexistente responde 400 com a mensagem certa.
-- [ ] Publicar com a chegada na água responde 409.
-- [ ] Uma ilha publicada não pode ser apagada; uma que nunca foi, pode.
-- [ ] O gerador com a mesma seed e os mesmos parâmetros devolve os mesmos hexágonos, e mudar `waterFraction` muda a quantidade de água.
-- [ ] Um rascunho de 20.000 hexágonos é salvo e lido.
-- [ ] O jogo abre sem erro nos dados.
-- [ ] Testes, lint e typecheck passam.
+- [x] A migração roda no banco do `.env`, e o `GET /v1/catalog` traz os 4 tipos de construção.
+- [x] Com `MAP_EDITOR_USER_IDS` vazia, toda rota do editor responde 404. Com outro usuário, 403.
+- [x] Criar uma ilha e ler de volta devolve o mesmo rascunho, com `status` `draft`.
+- [x] Publicar uma ilha válida muda o `status` para `published`. Salvar uma mudança muda para `changed`, e salvar o rascunho igual ao publicado volta para `published`.
+- [x] Salvar com hexágono repetido, chegada fora da ilha, construção sobre outra ou área inexistente responde 400 com a mensagem certa.
+- [x] Publicar com a chegada na água responde 409.
+- [x] Uma ilha publicada não pode ser apagada; uma que nunca foi, pode.
+- [x] O gerador com a mesma seed e os mesmos parâmetros devolve os mesmos hexágonos, e mudar `water_fraction` muda a quantidade de água.
+- [x] Um rascunho de 20.000 hexágonos é salvo e lido.
+- [x] O jogo abre sem erro nos dados.
+- [x] Testes, lint e typecheck passam.
 
 ## Desenho técnico
 
 Arquivos novos:
 
-- `server/prisma/migrations/<data>_islands/migration.sql`: as tabelas, os `CHECK` e os 4 tipos.
+- `server/prisma/migrations/<data>_islands/migration.sql`: as tabelas e os `CHECK`.
 - `server/prisma/seed-data/building_types.json`.
 - `server/src/domain/islands/island-draft.ts` e `.spec.ts`: as conferências de salvar e de publicar, e o JSON canônico do hash.
+- `server/src/domain/exploration/map-config.spec.ts`: as faixas dos parâmetros (`MAP_CONFIG_RANGES`, `mapConfigError` e `withDefaults`, em `map-config.ts`).
+- `server/src/editor/editor.guard.spec.ts`.
 - `server/src/editor/`: `editor.module.ts`, `editor.guard.ts`, `islands-editor.controller.ts`, `islands-editor.service.ts`, `islands-editor.dto.ts` e `map-generator.controller.ts`.
 - `server/test/islands-editor.e2e-spec.ts`: os e2e apagam as ilhas que criam, e o que publicam (pelo banco, no fim do teste).
 
@@ -82,9 +84,10 @@ Arquivos alterados:
 - `server/prisma/schema.prisma`: os 8 modelos e as relações em `Biome` e `Species`.
 - `server/src/config/env.ts` e `server/.env.example`: `MAP_EDITOR_USER_IDS`.
 - `server/src/catalog/catalog-tables.ts` e os testes do catálogo: `building_types`.
-- `server/src/app.module.ts` e `server/src/app.setup.ts` (o limite do corpo das rotas do editor; o `app.setup` também vale nos testes).
+- `server/src/app.module.ts` e `server/src/app.setup.ts` (o limite do corpo das rotas do editor; o `app.setup` também vale nos testes). O leitor do editor precisa de um nome próprio (`editorBodyParser`): o Nest não põe o leitor de JSON dele quando já existe um middleware chamado `jsonParser`, e as outras rotas ficariam sem corpo.
+- `server/package.json`: `express` vira dependência direta (já vinha com o `@nestjs/platform-express`), para o `json()` do limite.
 - `server/test/database.e2e-spec.ts`: as tabelas a mais e os `CHECK`.
-- `res://core/data/catalog_schema.gd` e `res://core/data/catalog_validator.gd`: `building_types`.
+- `res://core/data/catalog_schema.gd`: `building_types`, com o formato do `slug` e da cor. O `CatalogValidator` confere pelo schema; não precisou de regra própria.
 - `server/CLAUDE.md`: a linha de `src/editor/`.
 
 ## Verificação
@@ -97,11 +100,17 @@ godot --headless --path client --quit-after 60
 
 No `.env` local, `MAP_EDITOR_USER_IDS` com o id do dono, e o `/docs` mostra a tag "Editor de ilhas".
 
+Feita em 2026-11-10:
+- **Banco:** a migração `islands` foi aplicada no banco do `.env`, e o `db:seed` carregou os 4 tipos de construção (1 tabela, 4 linhas). O `GET /v1/catalog` do servidor local traz 32 tabelas, com `building_types`.
+- **Servidor:** `lint` e `typecheck` sem erros. Passaram 786 testes unitários (92 nos arquivos desta fase) e a suíte e2e inteira (447 testes). Entre os e2e estão os 18 de `islands-editor.e2e-spec.ts`, com uma ilha de 19.927 hexágonos, e os 4 novos de `database.e2e-spec.ts` (os `CHECK` e o hexágono de duas construções). A suíte da luta antiga (`test:e2e:legacy`, 128 testes) também passou, porque o `app.setup` vale para todas as rotas.
+- **Jogo:** uma cena temporária, já apagada, baixou o catálogo sem erros e leu os 4 tipos.
+- **Falta, com o dono:** pôr o próprio id em `MAP_EDITOR_USER_IDS` no `.env` local, antes da [02](02-editor-window.md).
+
 ## Tarefas
 
-- [ ] Modelos, migração com os `CHECK` e os tipos de construção.
-- [ ] `building_types` no catálogo e no jogo.
-- [ ] `MAP_EDITOR_USER_IDS` e o `EditorGuard`.
-- [ ] As conferências puras, com testes.
-- [ ] As rotas, com os e2e.
-- [ ] Rodar a verificação, atualizar o `server/CLAUDE.md` e mudar o status aqui e no README.
+- [x] Modelos, migração com os `CHECK` e os tipos de construção.
+- [x] `building_types` no catálogo e no jogo.
+- [x] `MAP_EDITOR_USER_IDS` e o `EditorGuard`.
+- [x] As conferências puras, com testes.
+- [x] As rotas, com os e2e.
+- [x] Rodar a verificação, atualizar o `server/CLAUDE.md` e mudar o status aqui e no README.

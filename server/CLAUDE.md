@@ -20,6 +20,7 @@ server/
   src/inventory/         a Loja e a Mochila do usuário logado (/v1/me/shop e /v1/me/items)
   src/team/              a equipe e o Santuário do usuário logado (/v1/me/team e /v1/me/storage)
   src/codex/             o Bestiário do usuário logado (/v1/me/codex) e o CodexService, que as lutas, a Evolução e o inicial usam para registrar visto e capturado
+  src/editor/            o editor de ilhas (/v1/editor): ilhas em rascunho e publicadas e o gerador de mapas, só para quem está em MAP_EDITOR_USER_IDS
   src/common/            peças compartilhadas pelas rotas
   src/catalog/           um módulo por recurso do catálogo
   src/domain/            regras puras de jogo (sem Nest nem Prisma)
