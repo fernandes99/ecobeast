@@ -105,7 +105,7 @@ Feita em 2026-11-10:
   - pelo servidor: os parâmetros do gerador, gerar 2.000 hexágonos, criar, ler de volta, renomear e salvar, criar a ilha de 19.441 hexágonos dentro do prazo, a lista com o nome novo e apagar as duas;
   - o servidor de sempre, sem a variável, respondendo 404.
 - **Quadros gravados com o Movie Maker:** mostraram a visão de cima com as cores do terreno e a bandeira, e o mapa do jogo de perto, com o contorno do hexágono sob o ponteiro.
-- **Falta, com o dono:** pôr o próprio id em `MAP_EDITOR_USER_IDS` no `.env` e fazer os passos acima no F5. A janela do sistema (F2), os diálogos e o arrastar com o mouse só aparecem com a janela de verdade.
+- **Com o dono, em 2026-11-10:** o id dele entrou em `MAP_EDITOR_USER_IDS` no `.env` local. No F5, ele achou a água aparecendo com a parte de água zerada, o que foi corrigido com o `EditorNumberField`. Depois disso, ele testou de novo e aprovou ("Ficou certo").
 
 ## Tarefas
 
