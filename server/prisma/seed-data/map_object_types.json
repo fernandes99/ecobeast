@@ -1,0 +1,104 @@
+[
+	{
+		"id": 1,
+		"slug": "house",
+		"name": "Casa",
+		"variants": 4
+	},
+	{
+		"id": 2,
+		"slug": "farmhouse",
+		"name": "Casa com horta",
+		"variants": 4
+	},
+	{
+		"id": 3,
+		"slug": "windmill",
+		"name": "Moinho",
+		"variants": 3
+	},
+	{
+		"id": 4,
+		"slug": "castle",
+		"name": "Castelo",
+		"variants": 1
+	},
+	{
+		"id": 5,
+		"slug": "big_tree",
+		"name": "Árvore grande",
+		"variants": 2
+	},
+	{
+		"id": 6,
+		"slug": "big_rock",
+		"name": "Pedra grande",
+		"variants": 1
+	},
+	{
+		"id": 7,
+		"slug": "garden",
+		"name": "Horta",
+		"variants": 2
+	},
+	{
+		"id": 8,
+		"slug": "fence",
+		"name": "Cerca",
+		"variants": 2
+	},
+	{
+		"id": 9,
+		"slug": "well",
+		"name": "Poço",
+		"variants": 1
+	},
+	{
+		"id": 10,
+		"slug": "market_stall",
+		"name": "Barraca de feira",
+		"variants": 3
+	},
+	{
+		"id": 11,
+		"slug": "cart",
+		"name": "Carroça",
+		"variants": 1
+	},
+	{
+		"id": 12,
+		"slug": "bridge",
+		"name": "Ponte",
+		"variants": 1
+	},
+	{
+		"id": 13,
+		"slug": "beast_stable",
+		"name": "Estábulo de Ecobeasts",
+		"variants": 2
+	},
+	{
+		"id": 14,
+		"slug": "treehouse",
+		"name": "Casa na árvore",
+		"variants": 1
+	},
+	{
+		"id": 15,
+		"slug": "nest",
+		"name": "Ninho grande",
+		"variants": 1
+	},
+	{
+		"id": 16,
+		"slug": "trough",
+		"name": "Bebedouro",
+		"variants": 1
+	},
+	{
+		"id": 17,
+		"slug": "rune_shrine",
+		"name": "Santuário de runas",
+		"variants": 1
+	}
+]

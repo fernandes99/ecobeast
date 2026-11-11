@@ -9,24 +9,44 @@ import {
 } from './island-draft.js';
 
 const REFUGE = 1;
+const HOUSE = 1;
 const RUVO = 1;
 const NILU = 4;
 const known: KnownIds = {
-  buildingTypeIds: new Set([REFUGE, 2]),
+  actionTypeIds: new Set([REFUGE, 2]),
+  objectTypeIds: new Set([HOUSE, 2]),
+  groundSlugs: new Set(['dirt_trail', 'cobble_floor']),
   speciesIds: new Set([RUVO, NILU]),
 };
 
-/** Uma ilha pequena e válida: 3 hexágonos, um Refúgio e uma área. */
+/** Uma ilha pequena e válida: 3 hexágonos, um Refúgio, uma casa e uma área. */
 function island(): IslandDraft {
   return {
     name: 'Ilha das Brumas',
     start: { q: 0, r: 0 },
     tiles: [
-      { q: 0, r: 0, biome: 'temperate', height: 1, variant: 2 },
+      {
+        q: 0,
+        r: 0,
+        biome: 'temperate',
+        height: 1,
+        variant: 2,
+        ground: 'dirt_trail',
+      },
       { q: 1, r: 0, biome: 'hill', height: 2, variant: 3, area: 1 },
       { q: 0, r: 1, biome: 'wshallow', height: 0, variant: 6 },
     ],
-    buildings: [{ buildingTypeId: REFUGE, tiles: [{ q: 0, r: 1 }] }],
+    actions: [{ actionTypeId: REFUGE, tiles: [{ q: 0, r: 1 }] }],
+    objects: [
+      {
+        objectTypeId: HOUSE,
+        q: 0,
+        r: 1,
+        variant: 2,
+        mirrored: false,
+        tiles: [{ q: 0, r: 1, blocks: true }],
+      },
+    ],
     areas: [
       {
         key: 1,
@@ -59,7 +79,7 @@ describe('draftError', () => {
   });
 
   it('recusa uma ilha sem hexágonos', () => {
-    const draft = { ...island(), tiles: [], buildings: [] };
+    const draft = { ...island(), tiles: [], actions: [], objects: [] };
     expect(draftError(draft, known)).toBe(
       'A ilha precisa ter de 1 a 20.000 hexágonos.',
     );
@@ -73,7 +93,7 @@ describe('draftError', () => {
       height: 1,
       variant: 1,
     }));
-    const draft = { ...island(), tiles, buildings: [], areas: [] };
+    const draft = { ...island(), tiles, actions: [], objects: [], areas: [] };
     expect(draftError(draft, known)).toBe(
       'A ilha precisa ter de 1 a 20.000 hexágonos.',
     );
@@ -130,44 +150,108 @@ describe('draftError', () => {
     );
   });
 
-  it('recusa um tipo de construção que não existe', () => {
+  it('recusa um tipo de ação que não existe', () => {
     const draft = island();
-    draft.buildings[0]!.buildingTypeId = 99;
+    draft.actions[0]!.actionTypeId = 99;
     expect(draftError(draft, known)).toBe(
-      'A construção 1 tem um tipo que não existe.',
+      'A ação 1 tem um tipo que não existe.',
     );
   });
 
-  it('recusa uma construção sem hexágonos', () => {
+  it('recusa uma ação sem hexágonos', () => {
     const draft = island();
-    draft.buildings[0]!.tiles = [];
+    draft.actions[0]!.tiles = [];
     expect(draftError(draft, known)).toBe(
-      'A construção 1 precisa de pelo menos 1 hexágono.',
+      'A ação 1 precisa de pelo menos 1 hexágono.',
     );
   });
 
-  it('recusa uma construção num hexágono que não é da ilha', () => {
+  it('recusa uma ação num hexágono que não é da ilha', () => {
     const draft = island();
-    draft.buildings[0]!.tiles.push({ q: 5, r: 5 });
+    draft.actions[0]!.tiles.push({ q: 5, r: 5 });
     expect(draftError(draft, known)).toBe(
-      'A construção 1 ocupa (5, 5), que não é da ilha.',
+      'A ação 1 ocupa (5, 5), que não é da ilha.',
     );
   });
 
-  it('recusa duas construções no mesmo hexágono', () => {
+  it('recusa duas ações no mesmo hexágono', () => {
     const draft = island();
-    draft.buildings.push({ buildingTypeId: 2, tiles: [{ q: 0, r: 1 }] });
+    draft.actions.push({ actionTypeId: 2, tiles: [{ q: 0, r: 1 }] });
+    expect(draftError(draft, known)).toBe('O hexágono (0, 1) é de duas ações.');
+  });
+
+  it('recusa a mesma ação duas vezes no mesmo hexágono', () => {
+    const draft = island();
+    draft.actions[0]!.tiles.push({ q: 0, r: 1 });
+    expect(draftError(draft, known)).toBe('O hexágono (0, 1) é de duas ações.');
+  });
+
+  it('recusa um chão que não existe', () => {
+    const draft = island();
+    draft.tiles[1]!.ground = 'lava_trail';
     expect(draftError(draft, known)).toBe(
-      'O hexágono (0, 1) é de duas construções.',
+      'O hexágono (1, 0) tem um chão que não existe.',
     );
   });
 
-  it('recusa a mesma construção duas vezes no mesmo hexágono', () => {
+  it('recusa um tipo de objeto que não existe', () => {
     const draft = island();
-    draft.buildings[0]!.tiles.push({ q: 0, r: 1 });
+    draft.objects[0]!.objectTypeId = 99;
     expect(draftError(draft, known)).toBe(
-      'O hexágono (0, 1) é de duas construções.',
+      'O objeto 1 tem um tipo que não existe.',
     );
+  });
+
+  it.each([0, -1, 1.5])('recusa a variante de objeto %d', (variant) => {
+    const draft = island();
+    draft.objects[0]!.variant = variant;
+    expect(draftError(draft, known)).toBe(
+      `O objeto 1 tem a variante ${variant}: começa em 1.`,
+    );
+  });
+
+  it('aceita qualquer variante a partir de 1, porque o painel pode diminuir as variantes', () => {
+    const draft = island();
+    draft.objects[0]!.variant = 40;
+    expect(draftError(draft, known)).toBeNull();
+  });
+
+  it('recusa um objeto sem o hexágono de apoio', () => {
+    const draft = island();
+    draft.objects[0]!.tiles = [{ q: 1, r: 0, blocks: true }];
+    expect(draftError(draft, known)).toBe(
+      'O objeto 1 precisa ocupar o hexágono de apoio (0, 1).',
+    );
+  });
+
+  it('recusa um objeto fora da ilha', () => {
+    const draft = island();
+    draft.objects[0]!.tiles.push({ q: 7, r: 7, blocks: false });
+    expect(draftError(draft, known)).toBe(
+      'O objeto 1 ocupa (7, 7), que não é da ilha.',
+    );
+  });
+
+  it('recusa dois objetos no mesmo hexágono', () => {
+    const draft = island();
+    draft.objects.push({
+      objectTypeId: 2,
+      q: 1,
+      r: 0,
+      variant: 1,
+      mirrored: true,
+      tiles: [
+        { q: 1, r: 0, blocks: true },
+        { q: 0, r: 1, blocks: false },
+      ],
+    });
+    expect(draftError(draft, known)).toBe(
+      'O hexágono (0, 1) é de dois objetos.',
+    );
+  });
+
+  it('aceita ação e objeto no mesmo hexágono', () => {
+    expect(draftError(island(), known)).toBeNull();
   });
 
   it('recusa duas áreas com a mesma key', () => {
@@ -275,12 +359,30 @@ describe('publishError', () => {
     );
   });
 
-  it('recusa a chegada numa construção', () => {
+  it('recusa a chegada numa ação', () => {
     const draft = island();
-    draft.buildings[0]!.tiles = [{ q: 0, r: 0 }];
+    draft.actions[0]!.tiles = [{ q: 0, r: 0 }];
     expect(publishError(draft, known)).toBe(
-      'A chegada não pode ficar numa construção.',
+      'A chegada não pode ficar numa ação.',
     );
+  });
+
+  it('recusa a chegada num hexágono bloqueado', () => {
+    const draft = island();
+    draft.objects[0]!.q = 0;
+    draft.objects[0]!.r = 0;
+    draft.objects[0]!.tiles = [{ q: 0, r: 0, blocks: true }];
+    expect(publishError(draft, known)).toBe(
+      'A chegada não pode ficar num hexágono bloqueado.',
+    );
+  });
+
+  it('aceita a chegada num hexágono de objeto livre', () => {
+    const draft = island();
+    draft.objects[0]!.q = 0;
+    draft.objects[0]!.r = 0;
+    draft.objects[0]!.tiles = [{ q: 0, r: 0, blocks: false }];
+    expect(publishError(draft, known)).toBeNull();
   });
 
   it('recusa uma área sem espécies', () => {
@@ -318,6 +420,37 @@ describe('canonicalDraft e draftHash', () => {
     renumbered.areas[0]!.key = 7;
     renumbered.tiles[1]!.area = 7;
     expect(draftHash(renumbered)).toBe(draftHash(island()));
+  });
+
+  it('não depende da ordem dos objetos nem dos hexágonos deles', () => {
+    const second = {
+      objectTypeId: 2,
+      q: 1,
+      r: 0,
+      variant: 1,
+      mirrored: false,
+      tiles: [
+        { q: 1, r: 0, blocks: true },
+        { q: 1, r: -1, blocks: false },
+      ],
+    };
+    const one = island();
+    one.objects.push(second);
+    const other = island();
+    other.objects.unshift({ ...second, tiles: [...second.tiles].reverse() });
+    expect(draftHash(one)).toBe(draftHash(other));
+  });
+
+  it('muda quando o chão, o bloqueio ou o espelho mudam', () => {
+    const ground = island();
+    ground.tiles[0]!.ground = 'cobble_floor';
+    const blocks = island();
+    blocks.objects[0]!.tiles[0]!.blocks = false;
+    const mirrored = island();
+    mirrored.objects[0]!.mirrored = true;
+    for (const changed of [ground, blocks, mirrored]) {
+      expect(draftHash(changed)).not.toBe(draftHash(island()));
+    }
   });
 
   it('muda quando o terreno muda', () => {

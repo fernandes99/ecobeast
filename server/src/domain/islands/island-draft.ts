@@ -26,13 +26,27 @@ export interface DraftTile extends HexCoord {
   biome: Biome;
   height: number;
   variant: number;
+  /** O slug do tipo de chão; sem ele, o hexágono não tem chão (island-villages/01). */
+  ground?: string;
   /** A `key` da área do hexágono; sem ela, o hexágono não tem área. */
   area?: number;
 }
 
-export interface DraftBuilding {
-  buildingTypeId: number;
+export interface DraftAction {
+  actionTypeId: number;
   tiles: HexCoord[];
+}
+
+export interface DraftObjectTile extends HexCoord {
+  blocks: boolean;
+}
+
+/** Um objeto posto: `(q, r)` é o hexágono de apoio, e os hexágonos são os dele. */
+export interface DraftObject extends HexCoord {
+  objectTypeId: number;
+  variant: number;
+  mirrored: boolean;
+  tiles: DraftObjectTile[];
 }
 
 export interface DraftAreaSpecies {
@@ -56,13 +70,16 @@ export interface IslandDraft {
   name: string;
   start: HexCoord;
   tiles: DraftTile[];
-  buildings: DraftBuilding[];
+  actions: DraftAction[];
+  objects: DraftObject[];
   areas: DraftArea[];
 }
 
-/** Os ids do catálogo que o rascunho pode usar. */
+/** Os ids e slugs do catálogo que o rascunho pode usar. */
 export interface KnownIds {
-  buildingTypeIds: ReadonlySet<number>;
+  actionTypeIds: ReadonlySet<number>;
+  objectTypeIds: ReadonlySet<number>;
+  groundSlugs: ReadonlySet<string>;
   speciesIds: ReadonlySet<number>;
 }
 
@@ -86,7 +103,7 @@ function validLevel(level: number): boolean {
   return Number.isInteger(level) && level >= MIN_LEVEL && level <= MAX_LEVEL;
 }
 
-function tileError(tile: DraftTile): string | null {
+function tileError(tile: DraftTile, known: KnownIds): string | null {
   if (!(BIOMES as readonly string[]).includes(tile.biome)) {
     return `O hexágono ${at(tile)} tem um bioma que não é de terreno.`;
   }
@@ -96,34 +113,76 @@ function tileError(tile: DraftTile): string | null {
   if (!validVariant(tile)) {
     return `O hexágono ${at(tile)} tem a variante ${tile.variant}: vai de 1 a 3 na Colina e na Montanha, e de 1 a 6 nos outros biomas.`;
   }
+  if (tile.ground !== undefined && !known.groundSlugs.has(tile.ground)) {
+    return `O hexágono ${at(tile)} tem um chão que não existe.`;
+  }
   return null;
 }
 
-function buildingsError(
-  buildings: DraftBuilding[],
+function actionsError(
+  actions: DraftAction[],
   tiles: ReadonlySet<string>,
   known: KnownIds,
 ): string | null {
   const taken = new Set<string>();
-  for (const [index, building] of buildings.entries()) {
+  for (const [index, action] of actions.entries()) {
     const number = index + 1;
-    if (!known.buildingTypeIds.has(building.buildingTypeId)) {
-      return `A construção ${number} tem um tipo que não existe.`;
+    if (!known.actionTypeIds.has(action.actionTypeId)) {
+      return `A ação ${number} tem um tipo que não existe.`;
     }
-    if (building.tiles.length === 0) {
-      return `A construção ${number} precisa de pelo menos 1 hexágono.`;
+    if (action.tiles.length === 0) {
+      return `A ação ${number} precisa de pelo menos 1 hexágono.`;
     }
-    for (const coord of building.tiles) {
+    for (const coord of action.tiles) {
       const key = hexKey(coord);
       if (!tiles.has(key)) {
-        return `A construção ${number} ocupa ${at(coord)}, que não é da ilha.`;
+        return `A ação ${number} ocupa ${at(coord)}, que não é da ilha.`;
       }
-      if (taken.has(key))
-        return `O hexágono ${at(coord)} é de duas construções.`;
+      if (taken.has(key)) return `O hexágono ${at(coord)} é de duas ações.`;
       taken.add(key);
     }
   }
   return null;
+}
+
+function objectsError(
+  objects: DraftObject[],
+  tiles: ReadonlySet<string>,
+  known: KnownIds,
+): string | null {
+  const taken = new Set<string>();
+  for (const [index, object] of objects.entries()) {
+    const number = index + 1;
+    if (!known.objectTypeIds.has(object.objectTypeId)) {
+      return `O objeto ${number} tem um tipo que não existe.`;
+    }
+    if (!Number.isInteger(object.variant) || object.variant < 1) {
+      return `O objeto ${number} tem a variante ${object.variant}: começa em 1.`;
+    }
+    if (!object.tiles.some((tile) => hexKey(tile) === hexKey(object))) {
+      return `O objeto ${number} precisa ocupar o hexágono de apoio ${at(object)}.`;
+    }
+    for (const coord of object.tiles) {
+      const key = hexKey(coord);
+      if (!tiles.has(key)) {
+        return `O objeto ${number} ocupa ${at(coord)}, que não é da ilha.`;
+      }
+      if (taken.has(key)) return `O hexágono ${at(coord)} é de dois objetos.`;
+      taken.add(key);
+    }
+  }
+  return null;
+}
+
+/** Os hexágonos que o Domador não atravessa: os de objeto com `blocks`. */
+export function blockedKeys(
+  draft: Pick<IslandDraft, 'objects'>,
+): ReadonlySet<string> {
+  return new Set(
+    draft.objects.flatMap(({ tiles }) =>
+      tiles.filter(({ blocks }) => blocks).map(hexKey),
+    ),
+  );
 }
 
 function areaError(area: DraftArea, known: KnownIds): string | null {
@@ -180,14 +239,16 @@ export function draftError(draft: IslandDraft, known: KnownIds): string | null {
     const key = hexKey(tile);
     if (tiles.has(key)) return `O hexágono ${at(tile)} aparece duas vezes.`;
     tiles.add(key);
-    const error = tileError(tile);
+    const error = tileError(tile, known);
     if (error) return error;
   }
   if (!tiles.has(hexKey(draft.start))) {
     return 'A chegada precisa ser um hexágono da ilha.';
   }
-  const buildings = buildingsError(draft.buildings, tiles, known);
-  if (buildings) return buildings;
+  const actions = actionsError(draft.actions, tiles, known);
+  if (actions) return actions;
+  const objects = objectsError(draft.objects, tiles, known);
+  if (objects) return objects;
 
   const keys = new Set<number>();
   for (const { key } of draft.areas) {
@@ -216,10 +277,13 @@ export function publishError(
   const startKey = hexKey(draft.start);
   const start = draft.tiles.find((tile) => hexKey(tile) === startKey)!;
   if (isWater(start.biome)) return 'A chegada não pode ficar na água.';
-  const inBuilding = draft.buildings.some((building) =>
-    building.tiles.some((coord) => hexKey(coord) === startKey),
+  const inAction = draft.actions.some((action) =>
+    action.tiles.some((coord) => hexKey(coord) === startKey),
   );
-  if (inBuilding) return 'A chegada não pode ficar numa construção.';
+  if (inAction) return 'A chegada não pode ficar numa ação.';
+  if (blockedKeys(draft).has(startKey)) {
+    return 'A chegada não pode ficar num hexágono bloqueado.';
+  }
   const empty = draft.areas.find((area) => area.species.length === 0);
   if (empty) return `A área "${empty.name}" não tem nenhuma espécie.`;
   return null;
@@ -230,7 +294,8 @@ const byRowThenColumn = (a: HexCoord, b: HexCoord): number =>
 
 /**
  * O rascunho em JSON, sempre igual para o mesmo conteúdo: hexágonos em ordem de
- * (r, q), construções na ordem da lista (cada uma com os hexágonos em (r, q)),
+ * (r, q), ações na ordem da lista (cada uma com os hexágonos em (r, q)),
+ * objetos em ordem de (r, q) do apoio (cada um com os hexágonos em (r, q)),
  * áreas na ordem da `key`, numeradas de novo de 1 em diante, e espécies em
  * ordem de id. É o que o `content_hash` resume.
  */
@@ -242,18 +307,31 @@ export function canonicalDraft(draft: IslandDraft): string {
     start: { q: draft.start.q, r: draft.start.r },
     tiles: [...draft.tiles]
       .sort(byRowThenColumn)
-      .map(({ q, r, biome, height, variant, area }) => ({
+      .map(({ q, r, biome, height, variant, ground, area }) => ({
         q,
         r,
         biome,
         height,
         variant,
+        ground: ground ?? null,
         area: area === undefined ? null : renumber.get(area),
       })),
-    buildings: draft.buildings.map(({ buildingTypeId, tiles }) => ({
-      buildingTypeId,
+    actions: draft.actions.map(({ actionTypeId, tiles }) => ({
+      actionTypeId,
       tiles: [...tiles].sort(byRowThenColumn).map(({ q, r }) => ({ q, r })),
     })),
+    objects: [...draft.objects]
+      .sort(byRowThenColumn)
+      .map(({ objectTypeId, q, r, variant, mirrored, tiles }) => ({
+        objectTypeId,
+        q,
+        r,
+        variant,
+        mirrored,
+        tiles: [...tiles]
+          .sort(byRowThenColumn)
+          .map(({ q: tq, r: tr, blocks }) => ({ q: tq, r: tr, blocks })),
+      })),
     areas: areas.map(({ key, name, colorHex, spawnCount, species }) => ({
       key: renumber.get(key),
       name,

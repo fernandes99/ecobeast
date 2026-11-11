@@ -1,5 +1,7 @@
 # Arquitetura
 
+> **Depois da [island-villages](../island-villages/architecture.md):** as construções viraram ações (`actions`, com `action_type_id`, e `ACTION_SCREENS` no lugar de `BUILDING_SCREENS`). O mapa da ilha também traz o `ground` de cada hexágono e os `objects`, e o Domador não entra num hexágono bloqueado. Tocar num bloqueado com ação, ao lado dele, executa a ação. O texto abaixo é o da época da islands.
+
 O desenho que as fases da [islands](README.md) compartilham. As decisões e o motivo de cada uma estão no README.
 
 ## Fluxo

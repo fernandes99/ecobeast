@@ -51,14 +51,22 @@ export class IslandsService {
     client: Tx | PrismaService,
     islandMapId: number,
   ): Promise<IslandDraft> {
-    const [map, tiles, buildings, areas] = await Promise.all([
+    const [map, tiles, actions, objects, areas] = await Promise.all([
       client.islandMap.findUniqueOrThrow({ where: { id: islandMapId } }),
       client.islandTile.findMany({
         where: { islandMapId },
         orderBy: [{ r: 'asc' }, { q: 'asc' }],
-        include: { biome: { select: { slug: true } } },
+        include: {
+          biome: { select: { slug: true } },
+          groundType: { select: { slug: true } },
+        },
       }),
-      client.islandBuilding.findMany({
+      client.islandAction.findMany({
+        where: { islandMapId },
+        orderBy: { id: 'asc' },
+        include: { tiles: { orderBy: [{ r: 'asc' }, { q: 'asc' }] } },
+      }),
+      client.islandObject.findMany({
         where: { islandMapId },
         orderBy: { id: 'asc' },
         include: { tiles: { orderBy: [{ r: 'asc' }, { q: 'asc' }] } },
@@ -73,17 +81,28 @@ export class IslandsService {
     return {
       name: map.name,
       start: { q: map.startQ, r: map.startR },
-      tiles: tiles.map(({ q, r, biome, height, variant, areaId }) => ({
-        q,
-        r,
-        biome: biome.slug as Biome,
-        height,
-        variant,
-        ...(areaId === null ? {} : { area: keys.get(areaId)! }),
-      })),
-      buildings: buildings.map(({ buildingTypeId, tiles: occupied }) => ({
-        buildingTypeId,
+      tiles: tiles.map(
+        ({ q, r, biome, height, variant, groundType, areaId }) => ({
+          q,
+          r,
+          biome: biome.slug as Biome,
+          height,
+          variant,
+          ...(groundType === null ? {} : { ground: groundType.slug }),
+          ...(areaId === null ? {} : { area: keys.get(areaId)! }),
+        }),
+      ),
+      actions: actions.map(({ actionTypeId, tiles: occupied }) => ({
+        actionTypeId,
         tiles: occupied.map(({ q, r }) => ({ q, r })),
+      })),
+      objects: objects.map((object) => ({
+        objectTypeId: object.objectTypeId,
+        q: object.q,
+        r: object.r,
+        variant: object.variant,
+        mirrored: object.mirrored,
+        tiles: object.tiles.map(({ q, r, blocks }) => ({ q, r, blocks })),
       })),
       areas: areas.map(({ id, name, colorHex, spawnCount, species }) => ({
         key: keys.get(id)!,

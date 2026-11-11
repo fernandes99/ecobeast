@@ -72,7 +72,7 @@ func _init() -> void:
 	_color_popup.add_child(colors)
 	for color: Color in UiPalette.MAP_AREA_COLORS:
 		var choice := Button.new()
-		choice.icon = BuildingPanel.color_chip(color, Vector2i(28, 28))
+		choice.icon = ActionPanel.color_chip(color, Vector2i(28, 28))
 		choice.focus_mode = Control.FOCUS_NONE
 		choice.pressed.connect(func() -> void:
 			_color_popup.hide()
@@ -151,7 +151,7 @@ func refresh() -> void:
 		var empty := (area.get("species", []) as Array).is_empty()
 		var color := Color.from_string(str(area.get("color_hex", "")), UiPalette.TEXT)
 		var text := "%s  ·  %d hex%s" % [str(area.get("name", "")), counts.get(key, 0), "  ·  sem espécies" if empty else ""]
-		var index := _list.add_item(text, BuildingPanel.color_chip(color))
+		var index := _list.add_item(text, ActionPanel.color_chip(color))
 		_keys.append(key)
 		if key == selected_key:
 			_list.select(index)
@@ -367,7 +367,7 @@ func _refresh_list_only() -> void:
 		var area := _draft.area_by_key(_keys[index])
 		var empty := (area.get("species", []) as Array).is_empty()
 		_list.set_item_text(index, "%s  ·  %d hex%s" % [str(area.get("name", "")), counts.get(_keys[index], 0), "  ·  sem espécies" if empty else ""])
-		_list.set_item_icon(index, BuildingPanel.color_chip(Color.from_string(str(area.get("color_hex", "")), UiPalette.TEXT)))
+		_list.set_item_icon(index, ActionPanel.color_chip(Color.from_string(str(area.get("color_hex", "")), UiPalette.TEXT)))
 
 
 func _selected_area() -> Dictionary:

@@ -8,6 +8,7 @@ var coord: Vector2i
 var biome: String
 var height: int
 var variant: int
+var ground: String = ""
 
 
 func is_water() -> bool:
@@ -26,4 +27,5 @@ static func from_dict(d: Dictionary) -> HexTile:
 	tile.biome = biome_slug
 	tile.height = tile_height
 	tile.variant = DictFields.get_int(d, "variant", 1)
+	tile.ground = DictFields.get_string(d, "ground")
 	return tile

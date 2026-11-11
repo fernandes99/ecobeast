@@ -32,6 +32,9 @@ const EFFECT_PARAMS := {
 ## As formas de área que o jogo sabe desenhar (board-battle/01). Uma forma nova
 ## no banco precisa de código no jogo antes.
 const AREA_SHAPES: Array[String] = ["single", "line"]
+## O que uma ação faz e os tipos de chão que o jogo sabe desenhar (island-villages/01).
+const ACTION_KINDS: Array[String] = ["open_screen"]
+const GROUND_KINDS: Array[String] = ["trail", "floor"]
 
 const TABLES := {
 	"elements": {
@@ -153,13 +156,31 @@ const TABLES := {
 		"key": ["id"],
 		"columns": {"id": ID, "text": TEXT},
 	},
-	"building_types": {
+	"action_types": {
 		"key": ["id"],
 		"columns": {
 			"id": ID,
 			"slug": SLUG,
 			"name": TEXT,
 			"color_hex": {"type": "string", "pattern": "^#[0-9A-Fa-f]{6}$"},
+			"kind": {"type": "string", "values": ACTION_KINDS},
+		},
+	},
+	"ground_types": {
+		"key": ["id"],
+		"columns": {"id": ID, "slug": SLUG, "name": TEXT, "kind": {"type": "string", "values": GROUND_KINDS}},
+	},
+	"map_object_types": {
+		"key": ["id"],
+		"columns": {"id": ID, "slug": SLUG, "name": TEXT, "variants": {"type": "int", "min": 1}},
+	},
+	"map_object_type_tiles": {
+		"key": ["object_type_id", "dq", "dr"],
+		"columns": {
+			"object_type_id": {"type": "int", "fk": "map_object_types"},
+			"dq": {"type": "int"},
+			"dr": {"type": "int"},
+			"blocks": {"type": "bool"},
 		},
 	},
 	"species": {

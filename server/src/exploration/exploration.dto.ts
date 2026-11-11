@@ -13,6 +13,7 @@ import { ISLAND_NOT_FOUND } from '../islands/islands.service.js';
 export const INVALID_TAMER = 'Domador de depuração inválido.';
 import { BIOMES, MAX_HEIGHT } from '../domain/exploration/map-generator.js';
 import type { Biome } from '../domain/exploration/map-generator.js';
+import type { DraftObject } from '../domain/islands/island-draft.js';
 
 export class HexCoordDto {
   @ApiProperty({ description: 'Coluna, em coordenadas axiais.', example: 0 })
@@ -38,6 +39,13 @@ export class MapTileDto extends HexCoordDto {
     example: 4,
   })
   variant: number;
+
+  @ApiPropertyOptional({
+    description:
+      'O slug de um `ground_types` (trilha ou piso). Só aparece nas ilhas, no hexágono com chão.',
+    example: 'dirt_trail',
+  })
+  ground?: string;
 }
 
 export class MapCreatureDto extends HexCoordDto {
@@ -77,13 +85,39 @@ export class MapIslandDto {
   name: string;
 }
 
-/** Uma construção da ilha: o tipo do catálogo e os hexágonos dela (islands/02). */
-export class MapBuildingDto {
-  @ApiProperty({ description: 'Id em `building_types`.', example: 1 })
-  building_type_id: number;
+/** Uma ação da ilha: o tipo do catálogo e os hexágonos dela (island-villages/01). */
+export class MapActionDto {
+  @ApiProperty({ description: 'Id em `action_types`.', example: 1 })
+  action_type_id: number;
 
   @ApiProperty({ type: [HexCoordDto] })
   tiles: HexCoordDto[];
+}
+
+export class MapObjectTileDto extends HexCoordDto {
+  @ApiProperty({
+    description: 'Se o Domador não atravessa este hexágono.',
+    example: true,
+  })
+  blocks: boolean;
+}
+
+/** Um objeto da ilha, como uma casa ou uma árvore grande (island-villages/01). */
+export class MapObjectDto extends HexCoordDto {
+  @ApiProperty({ description: 'Id em `map_object_types`.', example: 1 })
+  object_type_id: number;
+
+  @ApiProperty({
+    description: 'A variante da arte, de 1 em diante.',
+    example: 1,
+  })
+  variant: number;
+
+  @ApiProperty({ description: 'Se a arte está espelhada.', example: false })
+  mirrored: boolean;
+
+  @ApiProperty({ type: [MapObjectTileDto] })
+  tiles: MapObjectTileDto[];
 }
 
 export class ExplorationMapDto {
@@ -121,10 +155,16 @@ export class ExplorationMapDto {
   island: MapIslandDto | null;
 
   @ApiProperty({
-    type: [MapBuildingDto],
-    description: 'As construções da ilha; vazio no mapa sorteado.',
+    type: [MapActionDto],
+    description: 'As ações da ilha; vazio no mapa sorteado.',
   })
-  buildings: MapBuildingDto[];
+  actions: MapActionDto[];
+
+  @ApiProperty({
+    type: [MapObjectDto],
+    description: 'Os objetos da ilha; vazio no mapa sorteado.',
+  })
+  objects: MapObjectDto[];
 }
 
 /** O corpo de começar uma exploração (islands/02): sem ilha, o mapa sorteado. */
@@ -251,4 +291,16 @@ export class DebugTamerBodyDto {
 export class DebugTamerResponseDto {
   @ApiProperty({ type: MapTamerDto })
   tamer: MapTamerDto;
+}
+
+/** Um objeto do rascunho no formato da resposta, para o editor e para o jogador. */
+export function toObjectDto(object: DraftObject): MapObjectDto {
+  return {
+    object_type_id: object.objectTypeId,
+    q: object.q,
+    r: object.r,
+    variant: object.variant,
+    mirrored: object.mirrored,
+    tiles: object.tiles.map(({ q, r, blocks }) => ({ q, r, blocks })),
+  };
 }

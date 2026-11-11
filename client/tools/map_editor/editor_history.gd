@@ -10,8 +10,10 @@ class Step:
 	var label := ""
 	var before: Dictionary[Vector2i, Array] = {}
 	var after: Dictionary[Vector2i, Array] = {}
-	var buildings_before: Variant = null
-	var buildings_after: Variant = null
+	var actions_before: Variant = null
+	var actions_after: Variant = null
+	var objects_before: Variant = null
+	var objects_after: Variant = null
 	var areas_before: Variant = null
 	var areas_after: Variant = null
 	var start_before: Variant = null
@@ -20,7 +22,7 @@ class Step:
 	var name_after: Variant = null
 
 	func is_empty() -> bool:
-		return after.is_empty() and buildings_after == null and areas_after == null and start_after == null and name_after == null
+		return after.is_empty() and actions_after == null and objects_after == null and areas_after == null and start_after == null and name_after == null
 
 
 var _undo_redo := UndoRedo.new()
@@ -76,9 +78,12 @@ func _apply(step: Step, forward: bool) -> void:
 	for coord: Vector2i in tiles:
 		_draft.restore(coord, tiles[coord])
 		coords.append(coord)
-	var buildings: Variant = step.buildings_after if forward else step.buildings_before
-	if buildings != null:
-		_draft.buildings = (buildings as Array).duplicate(true)
+	var actions: Variant = step.actions_after if forward else step.actions_before
+	if actions != null:
+		_draft.actions = (actions as Array).duplicate(true)
+	var objects: Variant = step.objects_after if forward else step.objects_before
+	if objects != null:
+		_draft.objects = (objects as Array).duplicate(true)
 	var areas: Variant = step.areas_after if forward else step.areas_before
 	if areas != null:
 		_draft.areas = (areas as Array).duplicate(true)

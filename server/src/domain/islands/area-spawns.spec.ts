@@ -18,7 +18,8 @@ function island(): IslandDraft {
       { q: 2, r: 0, biome: 'hill', height: 2, variant: 1, area: 1 },
       { q: 0, r: 1, biome: 'wshallow', height: 0, variant: 1, area: 2 },
     ],
-    buildings: [{ buildingTypeId: 1, tiles: [{ q: 2, r: 0 }] }],
+    actions: [{ actionTypeId: 1, tiles: [{ q: 2, r: 0 }] }],
+    objects: [],
     areas: [
       {
         key: 2,
@@ -48,7 +49,7 @@ function area(overrides: Partial<SpawnArea> = {}): SpawnArea {
 }
 
 describe('spawnAreas', () => {
-  it('dá a cada área os hexágonos dela, sem os de construção, na ordem da key', () => {
+  it('dá a cada área os hexágonos dela, sem os de ação, na ordem da key', () => {
     const areas = spawnAreas(island());
     expect(areas.map(({ tiles }) => tiles)).toEqual([
       [{ q: 1, r: 0 }],
@@ -58,10 +59,29 @@ describe('spawnAreas', () => {
     expect(areas[0]!.species[0]!.speciesId).toBe(RUVO);
   });
 
-  it('deixa sem hexágonos a área que só tem construção', () => {
+  it('deixa sem hexágonos a área que só tem ação', () => {
     const draft = island();
-    draft.buildings[0]!.tiles.push({ q: 1, r: 0 });
+    draft.actions[0]!.tiles.push({ q: 1, r: 0 });
     expect(spawnAreas(draft)[0]!.tiles).toEqual([]);
+  });
+
+  it('tira os hexágonos bloqueados, e não os de objeto livre', () => {
+    const draft = island();
+    draft.objects.push({
+      objectTypeId: 1,
+      q: 1,
+      r: 0,
+      variant: 1,
+      mirrored: false,
+      tiles: [
+        { q: 1, r: 0, blocks: true },
+        { q: 0, r: 1, blocks: false },
+      ],
+    });
+    expect(spawnAreas(draft).map(({ tiles }) => tiles)).toEqual([
+      [],
+      [{ q: 0, r: 1 }],
+    ]);
   });
 });
 

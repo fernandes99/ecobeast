@@ -50,9 +50,10 @@ func update_tiles(coords: Array[Vector2i], map: ExplorationMap) -> void:
 
 
 static func surface_color(tile: HexTile) -> Color:
-	if not _surface_colors.has(tile.biome):
-		_surface_colors[tile.biome] = _average_color(HexMapView.SURFACE_PATH % tile.biome)
-	return _surface_colors[tile.biome]
+	var path := HexMapView.SURFACE_PATH % tile.biome if tile.ground.is_empty() else HexGrounds.TEXTURE_PATH % tile.ground
+	if not _surface_colors.has(path):
+		_surface_colors[path] = _average_color(path)
+	return _surface_colors[path]
 
 
 func _add(tile: HexTile) -> void:

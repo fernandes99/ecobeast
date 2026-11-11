@@ -18,14 +18,25 @@ interface Tile {
   biome: string;
   height: number;
   variant: number;
+  ground?: string;
   area?: number;
+}
+
+interface DraftObject {
+  object_type_id: number;
+  q: number;
+  r: number;
+  variant: number;
+  mirrored: boolean;
+  tiles: { q: number; r: number; blocks: boolean }[];
 }
 
 interface Draft {
   name: string;
   start: { q: number; r: number };
   tiles: Tile[];
-  buildings: { building_type_id: number; tiles: { q: number; r: number }[] }[];
+  actions: { action_type_id: number; tiles: { q: number; r: number }[] }[];
+  objects: DraftObject[];
   areas: {
     key: number;
     name: string;
@@ -59,18 +70,30 @@ describe('Editor de ilhas (e2e)', () => {
   let tokens: TestTokens;
   let owner: string;
   let refuge: number;
+  let house: number;
   const editor = randomUUID();
   const islands: number[] = [];
 
-  /** Uma ilha válida e pequena: 7 hexágonos, um Refúgio e uma área. */
+  /** Uma ilha válida e pequena: 7 hexágonos, uma trilha, um Refúgio numa casa espelhada e uma área. */
   function draft(name = 'Ilha de teste'): Draft {
     const tiles = hexagon(1);
     tiles.find((tile) => tile.q === 1 && tile.r === 0)!.area = 1;
+    tiles.find((tile) => tile.q === 0 && tile.r === 0)!.ground = 'dirt_trail';
     return {
       name,
       start: { q: 0, r: 0 },
       tiles,
-      buildings: [{ building_type_id: refuge, tiles: [{ q: 0, r: 1 }] }],
+      actions: [{ action_type_id: refuge, tiles: [{ q: 0, r: 1 }] }],
+      objects: [
+        {
+          object_type_id: house,
+          q: 0,
+          r: 1,
+          variant: 2,
+          mirrored: true,
+          tiles: [{ q: 0, r: 1, blocks: false }],
+        },
+      ],
       areas: [
         {
           key: 1,
@@ -110,8 +133,13 @@ describe('Editor de ilhas (e2e)', () => {
     });
     owner = await tokens.sign(editor);
     refuge = (
-      await prisma.buildingType.findUniqueOrThrow({
+      await prisma.actionType.findUniqueOrThrow({
         where: { slug: 'refuge' },
+      })
+    ).id;
+    house = (
+      await prisma.mapObjectType.findUniqueOrThrow({
+        where: { slug: 'house' },
       })
     ).id;
   });
@@ -163,7 +191,8 @@ describe('Editor de ilhas (e2e)', () => {
         published_at: null,
         name: 'Ilha das Brumas',
         start: { q: 0, r: 0 },
-        buildings: body.buildings,
+        actions: body.actions,
+        objects: body.objects,
         areas: body.areas,
       });
       const byCoord = (a: Tile, b: Tile) => a.r - b.r || a.q - b.q;
@@ -196,13 +225,43 @@ describe('Editor de ilhas (e2e)', () => {
         'A chegada precisa ser um hexágono da ilha.',
       ],
       [
-        'construção sobre outra',
+        'ação sobre outra',
         (d: Draft) =>
-          d.buildings.push({
-            building_type_id: refuge,
+          d.actions.push({
+            action_type_id: refuge,
             tiles: [{ q: 0, r: 1 }],
           }),
-        'O hexágono (0, 1) é de duas construções.',
+        'O hexágono (0, 1) é de duas ações.',
+      ],
+      [
+        'chão que não existe',
+        (d: Draft) => (d.tiles[0]!.ground = 'lava_trail'),
+        'tem um chão que não existe.',
+      ],
+      [
+        'objeto sem o hexágono de apoio',
+        (d: Draft) => (d.objects[0]!.tiles = [{ q: 1, r: 0, blocks: true }]),
+        'O objeto 1 precisa ocupar o hexágono de apoio (0, 1).',
+      ],
+      [
+        'objeto sobre outro',
+        (d: Draft) => d.objects.push({ ...d.objects[0]! }),
+        'O hexágono (0, 1) é de dois objetos.',
+      ],
+      [
+        'objeto fora da ilha',
+        (d: Draft) => d.objects[0]!.tiles.push({ q: 5, r: 5, blocks: true }),
+        'O objeto 1 ocupa (5, 5), que não é da ilha.',
+      ],
+      [
+        'variante 0 de objeto',
+        (d: Draft) => (d.objects[0]!.variant = 0),
+        'O objeto 1 tem a variante 0: começa em 1.',
+      ],
+      [
+        'corpo sem ações',
+        (d: Draft) => delete (d as { actions?: unknown }).actions,
+        'actions precisa ser uma lista.',
       ],
       [
         'área que não existe',
@@ -318,6 +377,21 @@ describe('Editor de ilhas (e2e)', () => {
       expect(response.body.message).toBe('A chegada não pode ficar na água.');
     });
 
+    it('recusa publicar com a chegada num hexágono bloqueado (409)', async () => {
+      const body = draft();
+      body.objects[0] = {
+        ...body.objects[0]!,
+        q: 0,
+        r: 0,
+        tiles: [{ q: 0, r: 0, blocks: true }],
+      };
+      const id = await create(body);
+      const response = await call('post', `/islands/${id}/publish`).expect(409);
+      expect(response.body.message).toBe(
+        'A chegada não pode ficar num hexágono bloqueado.',
+      );
+    });
+
     it('apaga só a ilha que nunca foi publicada', async () => {
       const kept = await create();
       await call('post', `/islands/${kept}/publish`).expect(200);
@@ -332,7 +406,13 @@ describe('Editor de ilhas (e2e)', () => {
     });
 
     it('salva e lê uma ilha de quase 20.000 hexágonos', async () => {
-      const body = { ...draft(), tiles: hexagon(81), buildings: [], areas: [] };
+      const body = {
+        ...draft(),
+        tiles: hexagon(81),
+        actions: [],
+        objects: [],
+        areas: [],
+      };
       expect(body.tiles).toHaveLength(19_927);
       const id = await create(body);
       const response = await call('get', `/islands/${id}`).expect(200);

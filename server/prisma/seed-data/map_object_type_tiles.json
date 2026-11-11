@@ -1,0 +1,164 @@
+[
+	{
+		"object_type_id": 1,
+		"dq": 0,
+		"dr": 0,
+		"blocks": true
+	},
+	{
+		"object_type_id": 2,
+		"dq": 0,
+		"dr": 0,
+		"blocks": true
+	},
+	{
+		"object_type_id": 2,
+		"dq": 1,
+		"dr": 0,
+		"blocks": true
+	},
+	{
+		"object_type_id": 3,
+		"dq": 0,
+		"dr": 0,
+		"blocks": true
+	},
+	{
+		"object_type_id": 3,
+		"dq": 1,
+		"dr": 0,
+		"blocks": true
+	},
+	{
+		"object_type_id": 4,
+		"dq": 0,
+		"dr": 0,
+		"blocks": false
+	},
+	{
+		"object_type_id": 4,
+		"dq": 0,
+		"dr": -1,
+		"blocks": true
+	},
+	{
+		"object_type_id": 4,
+		"dq": 1,
+		"dr": -1,
+		"blocks": true
+	},
+	{
+		"object_type_id": 4,
+		"dq": 1,
+		"dr": -2,
+		"blocks": true
+	},
+	{
+		"object_type_id": 5,
+		"dq": 0,
+		"dr": 0,
+		"blocks": true
+	},
+	{
+		"object_type_id": 5,
+		"dq": 1,
+		"dr": 0,
+		"blocks": true
+	},
+	{
+		"object_type_id": 5,
+		"dq": 1,
+		"dr": -1,
+		"blocks": true
+	},
+	{
+		"object_type_id": 6,
+		"dq": 0,
+		"dr": 0,
+		"blocks": true
+	},
+	{
+		"object_type_id": 6,
+		"dq": 1,
+		"dr": 0,
+		"blocks": true
+	},
+	{
+		"object_type_id": 7,
+		"dq": 0,
+		"dr": 0,
+		"blocks": true
+	},
+	{
+		"object_type_id": 8,
+		"dq": 0,
+		"dr": 0,
+		"blocks": true
+	},
+	{
+		"object_type_id": 9,
+		"dq": 0,
+		"dr": 0,
+		"blocks": true
+	},
+	{
+		"object_type_id": 10,
+		"dq": 0,
+		"dr": 0,
+		"blocks": true
+	},
+	{
+		"object_type_id": 11,
+		"dq": 0,
+		"dr": 0,
+		"blocks": true
+	},
+	{
+		"object_type_id": 12,
+		"dq": 0,
+		"dr": 0,
+		"blocks": false
+	},
+	{
+		"object_type_id": 13,
+		"dq": 0,
+		"dr": 0,
+		"blocks": true
+	},
+	{
+		"object_type_id": 13,
+		"dq": 1,
+		"dr": 0,
+		"blocks": true
+	},
+	{
+		"object_type_id": 14,
+		"dq": 0,
+		"dr": 0,
+		"blocks": true
+	},
+	{
+		"object_type_id": 14,
+		"dq": 1,
+		"dr": 0,
+		"blocks": true
+	},
+	{
+		"object_type_id": 15,
+		"dq": 0,
+		"dr": 0,
+		"blocks": true
+	},
+	{
+		"object_type_id": 16,
+		"dq": 0,
+		"dr": 0,
+		"blocks": true
+	},
+	{
+		"object_type_id": 17,
+		"dq": 0,
+		"dr": 0,
+		"blocks": true
+	}
+]

@@ -35,6 +35,7 @@ import {
   ExplorationResponseDto,
   MapCreatureDto,
   MapTamerDto,
+  toObjectDto,
 } from './exploration.dto.js';
 import { ExplorationStore } from './exploration.store.js';
 import {
@@ -110,7 +111,8 @@ export class ExplorationService {
         creatures: spawns.map(toMapCreatureDto),
         tamers: tamers.map(toMapTamerDto),
         island: null,
-        buildings: [],
+        actions: [],
+        objects: [],
       },
     };
   }
@@ -141,20 +143,22 @@ export class ExplorationService {
         seed: island.id,
         start: draft.start,
         // A área de cada hexágono fica no servidor.
-        tiles: draft.tiles.map(({ q, r, biome, height, variant }) => ({
+        tiles: draft.tiles.map(({ q, r, biome, height, variant, ground }) => ({
           q,
           r,
           biome,
           height,
           variant,
+          ...(ground === undefined ? {} : { ground }),
         })),
         creatures: spawns.map(toMapCreatureDto),
         tamers: [],
         island: { id: island.id, name: island.name },
-        buildings: draft.buildings.map(({ buildingTypeId, tiles }) => ({
-          building_type_id: buildingTypeId,
+        actions: draft.actions.map(({ actionTypeId, tiles }) => ({
+          action_type_id: actionTypeId,
           tiles,
         })),
+        objects: draft.objects.map(toObjectDto),
       },
     };
   }

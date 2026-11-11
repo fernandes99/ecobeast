@@ -1,0 +1,26 @@
+[
+	{
+		"id": 1,
+		"slug": "dirt_trail",
+		"name": "Trilha de terra",
+		"kind": "trail"
+	},
+	{
+		"id": 2,
+		"slug": "stone_trail",
+		"name": "Trilha de pedra",
+		"kind": "trail"
+	},
+	{
+		"id": 3,
+		"slug": "cobble_floor",
+		"name": "Praça de pedra",
+		"kind": "floor"
+	},
+	{
+		"id": 4,
+		"slug": "dirt_floor",
+		"name": "Chão de terra",
+		"kind": "floor"
+	}
+]

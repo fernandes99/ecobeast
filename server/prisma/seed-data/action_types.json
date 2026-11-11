@@ -1,0 +1,30 @@
+[
+	{
+		"id": 1,
+		"slug": "refuge",
+		"name": "Refúgio",
+		"color_hex": "#E0607E",
+		"kind": "open_screen"
+	},
+	{
+		"id": 2,
+		"slug": "shop",
+		"name": "Loja",
+		"color_hex": "#4F8FD9",
+		"kind": "open_screen"
+	},
+	{
+		"id": 3,
+		"slug": "arena",
+		"name": "Arena",
+		"color_hex": "#D9A441",
+		"kind": "open_screen"
+	},
+	{
+		"id": 4,
+		"slug": "house",
+		"name": "Casa",
+		"color_hex": "#A47551",
+		"kind": "open_screen"
+	}
+]

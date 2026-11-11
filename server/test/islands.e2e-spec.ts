@@ -18,6 +18,7 @@ interface Tile {
   biome: string;
   height: number;
   variant: number;
+  ground?: string;
   area?: number;
 }
 
@@ -28,7 +29,15 @@ interface IslandMap {
   creatures: { id: number; species_id: number; q: number; r: number }[];
   tamers: unknown[];
   island: { id: number; name: string } | null;
-  buildings: { building_type_id: number; tiles: { q: number; r: number }[] }[];
+  actions: { action_type_id: number; tiles: { q: number; r: number }[] }[];
+  objects: {
+    object_type_id: number;
+    q: number;
+    r: number;
+    variant: number;
+    mirrored: boolean;
+    tiles: { q: number; r: number; blocks: boolean }[];
+  }[];
 }
 
 /** Os hexágonos de um hexágono de raio `radius` em volta de (0, 0). */
@@ -48,15 +57,16 @@ describe('Ilhas do jogador (e2e)', () => {
   let prisma: PrismaClient;
   let tokens: TestTokens;
   let refuge: number;
+  let house: number;
   let editorToken: string;
   const editor = randomUUID();
   const users: string[] = [];
   const islands: number[] = [];
 
   /**
-   * Uma ilha de 7 hexágonos com a chegada em (0, 0), um Refúgio em (0, 1) e
-   * duas áreas: o Campo, com a chegada e (1, 0), e o Lago, com (-1, 0) e o
-   * hexágono do Refúgio.
+   * Uma ilha de 7 hexágonos com a chegada em (0, 0), um Refúgio em (0, 1), uma
+   * casa bloqueada em (1, 0), com trilha, e duas áreas: o Campo, com a chegada
+   * e a casa, e o Lago, com (-1, 0) e o hexágono do Refúgio.
    */
   function draft(name: string) {
     const tiles = hexagon(1);
@@ -66,11 +76,22 @@ describe('Ilhas do jogador (e2e)', () => {
     at(1, 0).area = 1;
     at(-1, 0).area = 2;
     at(0, 1).area = 2;
+    at(1, 0).ground = 'dirt_trail';
     return {
       name,
       start: { q: 0, r: 0 },
       tiles,
-      buildings: [{ building_type_id: refuge, tiles: [{ q: 0, r: 1 }] }],
+      actions: [{ action_type_id: refuge, tiles: [{ q: 0, r: 1 }] }],
+      objects: [
+        {
+          object_type_id: house,
+          q: 1,
+          r: 0,
+          variant: 1,
+          mirrored: false,
+          tiles: [{ q: 1, r: 0, blocks: true }],
+        },
+      ],
       areas: [
         {
           key: 1,
@@ -146,8 +167,13 @@ describe('Ilhas do jogador (e2e)', () => {
     });
     editorToken = await tokens.sign(editor);
     refuge = (
-      await prisma.buildingType.findUniqueOrThrow({
+      await prisma.actionType.findUniqueOrThrow({
         where: { slug: 'refuge' },
+      })
+    ).id;
+    house = (
+      await prisma.mapObjectType.findUniqueOrThrow({
+        where: { slug: 'house' },
       })
     ).id;
     published = await createIsland('Ilha publicada de teste', true);
@@ -187,7 +213,7 @@ describe('Ilhas do jogador (e2e)', () => {
   });
 
   describe('POST /v1/me/exploration numa ilha', () => {
-    it('devolve o mapa publicado, as construções e os Ecobeasts das áreas', async () => {
+    it('devolve o mapa publicado, o chão, os objetos, as ações e os Ecobeasts das áreas', async () => {
       const user = await newUser();
 
       const { body } = await user.explore({ island_id: published }).expect(201);
@@ -207,8 +233,21 @@ describe('Ilhas do jogador (e2e)', () => {
         'r',
         'variant',
       ]);
-      expect(map.buildings).toEqual([
-        { building_type_id: refuge, tiles: [{ q: 0, r: 1 }] },
+      expect(map.tiles.find(({ q, r }) => q === 1 && r === 0)!.ground).toBe(
+        'dirt_trail',
+      );
+      expect(map.actions).toEqual([
+        { action_type_id: refuge, tiles: [{ q: 0, r: 1 }] },
+      ]);
+      expect(map.objects).toEqual([
+        {
+          object_type_id: house,
+          q: 1,
+          r: 0,
+          variant: 1,
+          mirrored: false,
+          tiles: [{ q: 1, r: 0, blocks: true }],
+        },
       ]);
       expect(map.tamers).toEqual([]);
 
@@ -217,10 +256,10 @@ describe('Ilhas do jogador (e2e)', () => {
       const lake = map.creatures.filter((c) => c.species_id === NILU);
       expect(field).toHaveLength(3);
       expect(lake).toHaveLength(5);
+      // A casa bloqueia (1, 0), e o Refúgio é uma ação: nenhum dos dois recebe Ecobeast.
       for (const creature of field) {
-        expect(['0,0', '1,0']).toContain(`${creature.q},${creature.r}`);
+        expect(`${creature.q},${creature.r}`).toBe('0,0');
       }
-      // O hexágono do Refúgio é do Lago, mas construção não recebe Ecobeast.
       for (const creature of lake) {
         expect(`${creature.q},${creature.r}`).toBe('-1,0');
       }
@@ -293,12 +332,14 @@ describe('Ilhas do jogador (e2e)', () => {
       );
     });
 
-    it('sem corpo, sorteia o mapa de sempre, sem ilha nem construções', async () => {
+    it('sem corpo, sorteia o mapa de sempre, sem ilha, ações nem objetos', async () => {
       const user = await newUser();
       const { body } = await user.explore().expect(201);
       const map = (body as { map: IslandMap }).map;
       expect(map.island).toBeNull();
-      expect(map.buildings).toEqual([]);
+      expect(map.actions).toEqual([]);
+      expect(map.objects).toEqual([]);
+      expect(map.tiles.some((tile) => tile.ground !== undefined)).toBe(false);
       expect(map.tiles.length).toBeGreaterThan(1000);
     });
 

@@ -5,16 +5,18 @@ signal message(text: String)
 signal brush_changed
 signal edited(step: EditorHistory.Step, merge: bool)
 
-enum Tool { BIOME, HEIGHT, ADD, REMOVE, START, BUILDING, AREA }
+enum Tool { BIOME, HEIGHT, GROUND, ADD, REMOVE, START, OBJECT, ACTION, AREA }
 
-const TOOL_NAMES: Array[String] = ["Bioma", "Altura", "Pôr hexágono", "Tirar hexágono", "Chegada", "Construção", "Área"]
+const TOOL_NAMES: Array[String] = ["Bioma", "Altura", "Chão", "Pôr hexágono", "Tirar hexágono", "Chegada", "Objeto", "Ação", "Área"]
 const TOOL_HINTS: Array[String] = [
 	"Troca o bioma dos hexágonos que já existem.",
 	"Troca a altura dos hexágonos que já existem.",
+	"Pinta trilhas e pisos sobre o terreno. Sem chão apaga.",
 	"Cria hexágonos onde não há, com o bioma e a altura escolhidos abaixo.",
 	"Apaga hexágonos. A chegada nunca sai.",
 	"Move a chegada (a bandeira) para o hexágono clicado.",
-	"Pinta uma construção nova, ou aumenta a escolhida. Botão direito escolhe uma construção.",
+	"Põe objetos. Botão direito escolhe um objeto posto.",
+	"Pinta uma ação nova, ou aumenta a escolhida. Botão direito escolhe uma ação.",
 	"Pinta a área escolhida. Botão direito tira os hexágonos de qualquer área.",
 ]
 const NO_AREA_MESSAGE := "Crie ou escolha uma área no painel antes de pintar."
@@ -38,6 +40,7 @@ const FULL_MESSAGE := "A ilha chegou a 20.000 hexágonos."
 var tool := Tool.BIOME
 var biome := "temperate"
 var height := IslandDraft.BLANK_HEIGHT
+var ground := ""
 var radius := 0
 var detail_chance := 0.0
 
@@ -45,26 +48,31 @@ var _tool_buttons: Array[Button] = []
 var _tool_hint: Label
 var _biome_buttons: Dictionary[String, TerrainSwatch] = {}
 var _height_buttons: Array[TerrainSwatch] = []
+var _ground_buttons: Dictionary[String, TerrainSwatch] = {}
+var _ground_section: Control
 var _radius_value: Label
 var _radius_slider: HSlider
 var _rng := RandomNumberGenerator.new()
 var _terrain_sections: Array[Control] = []
 var _brush_section: Control
-var _building_section: Control
+var _action_section: Control
 var _area_section: Control
-var building_panel: BuildingPanel
+var action_panel: ActionPanel
+var object_panel: ObjectPanel
+var _object_section: Control
+var _object_done := false
 var area_panel: AreaPanel
 
 var _step: EditorHistory.Step = null
 var _full_warned := false
 var _secondary := false
-var _stroke_building := -2
+var _stroke_action := -2
 
 
 func _init() -> void:
 	add_theme_constant_override(&"separation", 10)
 
-	var tools_box := _section("Ferramenta  ·  teclas 1 a 7")
+	var tools_box := _section("Ferramenta  ·  teclas 1 a %d" % TOOL_NAMES.size())
 	var tools_group := ButtonGroup.new()
 	var grid := GridContainer.new()
 	grid.columns = 2
@@ -104,11 +112,33 @@ func _init() -> void:
 		heights_grid.add_child(swatch)
 		_height_buttons.append(swatch)
 
-	var buildings_box := _section("Construção")
-	_building_section = buildings_box.get_parent()
-	building_panel = BuildingPanel.new()
-	building_panel.edited.connect(func(step: EditorHistory.Step) -> void: edited.emit(step, false))
-	buildings_box.add_child(building_panel)
+	var grounds_box := _section("Chão")
+	_ground_section = grounds_box.get_parent()
+	var grounds_grid := _swatch_grid(grounds_box)
+	var ground_group := ButtonGroup.new()
+	var ground_slugs: Array[String] = [""]
+	for row: Dictionary in GameData.get_rows("ground_types"):
+		ground_slugs.append(str(row.get("slug", "")))
+	for slug: String in ground_slugs:
+		var swatch := _swatch(ground_group)
+		swatch.pressed.connect(_pick_ground.bind(slug))
+		grounds_grid.add_child(swatch)
+		_ground_buttons[slug] = swatch
+	if ground_slugs.size() > 1:
+		ground = ground_slugs[1]
+
+	var objects_box := _section("Objeto")
+	_object_section = objects_box.get_parent()
+	object_panel = ObjectPanel.new()
+	object_panel.edited.connect(func(step: EditorHistory.Step) -> void: edited.emit(step, false))
+	object_panel.blocks_editing_changed.connect(func(_on: bool) -> void: brush_changed.emit())
+	objects_box.add_child(object_panel)
+
+	var actions_box := _section("Ação")
+	_action_section = actions_box.get_parent()
+	action_panel = ActionPanel.new()
+	action_panel.edited.connect(func(step: EditorHistory.Step) -> void: edited.emit(step, false))
+	actions_box.add_child(action_panel)
 	var areas_box := _section("Área de Ecobeasts")
 	_area_section = areas_box.get_parent()
 	area_panel = AreaPanel.new()
@@ -156,6 +186,8 @@ func brush_radius() -> int:
 
 
 func brush_coords(center: Vector2i) -> Array[Vector2i]:
+	if tool == Tool.OBJECT and not object_panel.editing_blocks:
+		return ObjectPanel.coords_of(ObjectPanel.footprint(object_panel.type_id, center, object_panel.mirrored))
 	var reach := brush_radius()
 	var coords: Array[Vector2i] = []
 	for q: int in range(-reach, reach + 1):
@@ -165,17 +197,19 @@ func brush_coords(center: Vector2i) -> Array[Vector2i]:
 
 
 func set_draft(draft: IslandDraft) -> void:
-	building_panel.set_draft(draft)
+	action_panel.set_draft(draft)
+	object_panel.set_draft(draft)
 	area_panel.set_draft(draft)
 
 
 func refresh_panels() -> void:
-	building_panel.refresh()
+	action_panel.refresh()
+	object_panel.refresh()
 	area_panel.refresh()
 
 
 func paints_marks() -> bool:
-	return tool == Tool.BUILDING or tool == Tool.AREA
+	return tool == Tool.ACTION or tool == Tool.AREA
 
 
 func begin_stroke(draft: IslandDraft, secondary: bool = false) -> void:
@@ -183,17 +217,22 @@ func begin_stroke(draft: IslandDraft, secondary: bool = false) -> void:
 	_step.label = TOOL_NAMES[tool]
 	_full_warned = false
 	_secondary = secondary
-	_stroke_building = -2
-	if draft.buildings.size() > 0 or tool == Tool.BUILDING:
-		_step.buildings_before = draft.buildings.duplicate(true)
+	_stroke_action = -2
+	_object_done = false
+	if draft.actions.size() > 0 or tool == Tool.ACTION:
+		_step.actions_before = draft.actions.duplicate(true)
+	if draft.objects.size() > 0 or tool == Tool.OBJECT:
+		_step.objects_before = draft.objects.duplicate(true)
 
 
 func paint(draft: IslandDraft, center: Vector2i) -> Array[Vector2i]:
 	if _step == null:
 		begin_stroke(draft)
 	var changed: Array[Vector2i] = []
-	if tool == Tool.BUILDING:
-		return _paint_building(draft, center)
+	if tool == Tool.ACTION:
+		return _paint_action(draft, center)
+	if tool == Tool.OBJECT:
+		return _paint_object(draft, center)
 	if _secondary and tool != Tool.AREA:
 		return changed
 	if tool == Tool.START:
@@ -221,17 +260,23 @@ func end_stroke(draft: IslandDraft) -> EditorHistory.Step:
 	_step = null
 	if step == null:
 		return null
-	if tool == Tool.BUILDING:
-		for index: int in range(draft.buildings.size() - 1, -1, -1):
-			if (draft.buildings[index]["tiles"] as Array).is_empty():
-				draft.buildings.remove_at(index)
-		building_panel.refresh()
+	if tool == Tool.ACTION:
+		for index: int in range(draft.actions.size() - 1, -1, -1):
+			if (draft.actions[index]["tiles"] as Array).is_empty():
+				draft.actions.remove_at(index)
+		action_panel.refresh()
 	elif tool == Tool.AREA:
 		area_panel.refresh()
-	if step.buildings_before != null and step.buildings_before != draft.buildings:
-		step.buildings_after = draft.buildings.duplicate(true)
+	if step.actions_before != null and step.actions_before != draft.actions:
+		step.actions_after = draft.actions.duplicate(true)
 	else:
-		step.buildings_before = null
+		step.actions_before = null
+	if step.objects_before != null and step.objects_before != draft.objects:
+		step.objects_after = draft.objects.duplicate(true)
+	else:
+		step.objects_before = null
+	if tool == Tool.OBJECT or tool == Tool.REMOVE:
+		object_panel.refresh()
 	if step.start_after == step.start_before:
 		step.start_before = null
 		step.start_after = null
@@ -257,6 +302,11 @@ func _change(draft: IslandDraft, coord: Vector2i) -> bool:
 			if tile == null or tile.height == height:
 				return false
 			tile.height = height
+			return true
+		Tool.GROUND:
+			if tile == null or tile.ground == ground:
+				return false
+			tile.ground = ground
 			return true
 		Tool.ADD:
 			if tile != null:
@@ -290,24 +340,24 @@ func _change(draft: IslandDraft, coord: Vector2i) -> bool:
 	return false
 
 
-func _paint_building(draft: IslandDraft, center: Vector2i) -> Array[Vector2i]:
+func _paint_action(draft: IslandDraft, center: Vector2i) -> Array[Vector2i]:
 	var changed: Array[Vector2i] = []
 	if _secondary:
-		if _stroke_building == -2:
-			_stroke_building = -1
-			building_panel.select(draft.building_at(center))
+		if _stroke_action == -2:
+			_stroke_action = -1
+			action_panel.select(draft.action_at(center))
 		return changed
-	if _stroke_building == -2:
-		_stroke_building = _stroke_target(draft, center)
-	var target := _stroke_building
-	if target < 0 or target >= draft.buildings.size():
+	if _stroke_action == -2:
+		_stroke_action = _stroke_target(draft, center)
+	var target := _stroke_action
+	if target < 0 or target >= draft.actions.size():
 		return changed
-	var occupied: Array = draft.buildings[target]["tiles"]
+	var occupied: Array = draft.actions[target]["tiles"]
 	for coord: Vector2i in brush_coords(center):
 		if not draft.tiles.has(coord):
 			continue
-		var holder := draft.building_at(coord)
-		if building_panel.removing:
+		var holder := draft.action_at(coord)
+		if action_panel.removing:
 			if holder != target:
 				continue
 			for spot: int in range(occupied.size() - 1, -1, -1):
@@ -317,31 +367,72 @@ func _paint_building(draft: IslandDraft, center: Vector2i) -> Array[Vector2i]:
 		elif holder == -1:
 			occupied.append({"q": coord.x, "r": coord.y})
 			changed.append(coord)
-	if building_panel.removing and occupied.is_empty():
-		draft.buildings.remove_at(target)
-		_stroke_building = -1
-		building_panel.select(-1)
+	if action_panel.removing and occupied.is_empty():
+		draft.actions.remove_at(target)
+		_stroke_action = -1
+		action_panel.select(-1)
 	return changed
 
 
+## Uma coisa por clique: escolher (botão direito), trocar o bloqueio de um hexágono do
+## objeto escolhido ou pôr o objeto novo, se ele couber.
+func _paint_object(draft: IslandDraft, center: Vector2i) -> Array[Vector2i]:
+	var changed: Array[Vector2i] = []
+	if _object_done:
+		return changed
+	_object_done = true
+	if _secondary:
+		object_panel.select(draft.object_at(center))
+		return changed
+	if object_panel.editing_blocks:
+		var selected := object_panel.selected
+		if selected < 0 or draft.object_at(center) != selected:
+			return changed
+		for at: Variant in (draft.objects[selected] as Dictionary).get("tiles", []):
+			if int(at.get("q", 0)) == center.x and int(at.get("r", 0)) == center.y:
+				at["blocks"] = not bool(at.get("blocks", true))
+				changed.append(center)
+		return changed
+	var object := object_panel.new_object(center)
+	var coords := ObjectPanel.coords_of(object["tiles"])
+	if coords.is_empty() or not draft.object_fits(coords):
+		return changed
+	draft.objects.append(object)
+	object_panel.select(draft.objects.size() - 1)
+	return coords
+
+
+## A cor do contorno sob o ponteiro com a ferramenta Objeto: verde se o objeto cabe,
+## vermelho se não; transparente nas outras ferramentas.
+func brush_color(draft: IslandDraft, center: Vector2i) -> Color:
+	if tool != Tool.OBJECT or object_panel.editing_blocks or draft == null:
+		return Color.TRANSPARENT
+	return UiPalette.HP_HIGH if draft.object_fits(brush_coords(center)) else UiPalette.DANGER
+
+
 func _stroke_target(draft: IslandDraft, center: Vector2i) -> int:
-	if building_panel.removing:
-		return building_panel.selected
+	if action_panel.removing:
+		return action_panel.selected
 	if not draft.tiles.has(center):
 		return -1
-	var holder := draft.building_at(center)
+	var holder := draft.action_at(center)
 	if holder >= 0:
-		building_panel.select(holder)
+		action_panel.select(holder)
 		return holder
-	draft.buildings.append({"building_type_id": building_panel.type_id, "tiles": []})
-	building_panel.select(draft.buildings.size() - 1)
-	return draft.buildings.size() - 1
+	draft.actions.append({"action_type_id": action_panel.type_id, "tiles": []})
+	action_panel.select(draft.actions.size() - 1)
+	return draft.actions.size() - 1
 
 
 func _pick_biome(slug: String) -> void:
 	biome = slug
 	if tool != Tool.ADD:
 		set_tool(Tool.BIOME)
+
+
+func _pick_ground(slug: String) -> void:
+	ground = slug
+	set_tool(Tool.GROUND)
 
 
 func _pick_height(value: int) -> void:
@@ -357,17 +448,31 @@ func _refresh() -> void:
 	var terrain := tool == Tool.BIOME or tool == Tool.HEIGHT or tool == Tool.ADD
 	for section: Control in _terrain_sections:
 		section.visible = terrain
-	_building_section.visible = tool == Tool.BUILDING
+	_ground_section.visible = tool == Tool.GROUND
+	_object_section.visible = tool == Tool.OBJECT
+	_action_section.visible = tool == Tool.ACTION
 	_area_section.visible = tool == Tool.AREA
-	_brush_section.visible = tool != Tool.START
+	_brush_section.visible = tool != Tool.START and tool != Tool.OBJECT
 	for slug: String in _biome_buttons:
 		_biome_buttons[slug].set_pressed_no_signal(slug == biome)
 		_biome_buttons[slug].queue_redraw()
 	for value: int in _height_buttons.size():
 		_height_buttons[value].set_terrain(biome, "Altura %d" % value, value)
 		_height_buttons[value].set_pressed_no_signal(value == height)
+	for slug: String in _ground_buttons:
+		_ground_buttons[slug].set_ground(slug, _ground_name(slug), biome)
+		_ground_buttons[slug].set_pressed_no_signal(slug == ground)
 	_radius_slider.set_value_no_signal(radius)
 	_radius_value.text = "1 hexágono" if radius == 0 else "raio %d  ·  %d hexágonos" % [radius, 3 * radius * (radius + 1) + 1]
+
+
+func _ground_name(slug: String) -> String:
+	if slug.is_empty():
+		return "Sem chão"
+	for row: Dictionary in GameData.get_rows("ground_types"):
+		if row.get("slug") == slug:
+			return str(row.get("name", slug))
+	return slug
 
 
 func _biome_name(slug: String) -> String:

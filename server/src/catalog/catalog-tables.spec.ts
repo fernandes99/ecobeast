@@ -5,9 +5,9 @@ import { CATALOG_TABLES, SEED_DATA_DIR } from './catalog-tables.js';
 describe('CATALOG_TABLES', () => {
   const names = CATALOG_TABLES.map((table) => table.name);
 
-  it('tem as 32 tabelas, sem repetição', () => {
-    expect(names).toHaveLength(32);
-    expect(new Set(names).size).toBe(32);
+  it('tem as 35 tabelas, sem repetição', () => {
+    expect(names).toHaveLength(35);
+    expect(new Set(names).size).toBe(35);
   });
 
   it('casa com os arquivos .json da pasta de dados do seed', () => {
@@ -230,10 +230,20 @@ describe('carga inicial dos nomes e falas dos Domadores (npc-tamers/01)', () => 
   });
 });
 
-describe('carga inicial dos tipos de construção (map-editor/01)', () => {
+describe('carga inicial dos tipos de ação (island-villages/01)', () => {
   const types = JSON.parse(
-    readFileSync(join(SEED_DATA_DIR, 'building_types.json'), 'utf8'),
-  ) as { id: number; slug: string; name: string; color_hex: string }[];
+    readFileSync(join(SEED_DATA_DIR, 'action_types.json'), 'utf8'),
+  ) as {
+    id: number;
+    slug: string;
+    name: string;
+    color_hex: string;
+    kind: string;
+  }[];
+
+  it('todos abrem uma tela', () => {
+    expect(types.every(({ kind }) => kind === 'open_screen')).toBe(true);
+  });
 
   it('tem Refúgio, Loja, Arena e Casa, nessa ordem', () => {
     expect(types.map(({ slug, name }) => [slug, name])).toEqual([
@@ -248,5 +258,50 @@ describe('carga inicial dos tipos de construção (map-editor/01)', () => {
     for (const { color_hex } of types) {
       expect(color_hex).toMatch(/^#[0-9A-Fa-f]{6}$/);
     }
+  });
+});
+
+describe('carga inicial do chão e dos objetos (island-villages/01)', () => {
+  const read = <T>(file: string): T =>
+    JSON.parse(readFileSync(join(SEED_DATA_DIR, file), 'utf8')) as T;
+  const grounds = read<{ slug: string; kind: string }[]>('ground_types.json');
+  const objects = read<{ id: number; slug: string; variants: number }[]>(
+    'map_object_types.json',
+  );
+  const tiles = read<
+    { object_type_id: number; dq: number; dr: number; blocks: boolean }[]
+  >('map_object_type_tiles.json');
+
+  it('tem duas trilhas e dois pisos', () => {
+    expect(grounds.map(({ kind }) => kind)).toEqual([
+      'trail',
+      'trail',
+      'floor',
+      'floor',
+    ]);
+  });
+
+  it('tem os 17 objetos, cada um com o hexágono de apoio e pelo menos 1 variante', () => {
+    expect(objects).toHaveLength(17);
+    for (const { id, variants } of objects) {
+      expect(variants).toBeGreaterThanOrEqual(1);
+      expect(
+        tiles.some(
+          (tile) =>
+            tile.object_type_id === id && tile.dq === 0 && tile.dr === 0,
+        ),
+      ).toBe(true);
+    }
+  });
+
+  it('o castelo tem 4 hexágonos, com o portão livre', () => {
+    const castle = objects.find(({ slug }) => slug === 'castle')!;
+    const own = tiles.filter(
+      ({ object_type_id }) => object_type_id === castle.id,
+    );
+    expect(own).toHaveLength(4);
+    expect(own.filter(({ blocks }) => !blocks)).toEqual([
+      { object_type_id: castle.id, dq: 0, dr: 0, blocks: false },
+    ]);
   });
 });

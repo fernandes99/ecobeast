@@ -11,7 +11,8 @@ var name := ""
 var start := Vector2i.ZERO
 var tiles: Dictionary[Vector2i, HexTile] = {}
 var tile_areas: Dictionary[Vector2i, int] = {}
-var buildings: Array = []
+var actions: Array = []
+var objects: Array = []
 var areas: Array = []
 
 
@@ -51,7 +52,8 @@ static func from_dict(data: Dictionary) -> IslandDraft:
 	draft.id = DictFields.get_int(data, "id")
 	draft.name = DictFields.get_string(data, "name")
 	draft._read_terrain(data)
-	draft.buildings = DictFields.get_array(data, "buildings").duplicate(true)
+	draft.actions = DictFields.get_array(data, "actions").duplicate(true)
+	draft.objects = DictFields.get_array(data, "objects").duplicate(true)
 	draft.areas = DictFields.get_array(data, "areas").duplicate(true)
 	return draft
 
@@ -60,6 +62,8 @@ func to_dict() -> Dictionary:
 	var tile_list: Array[Dictionary] = []
 	for tile: HexTile in tiles.values():
 		var entry := {"q": tile.coord.x, "r": tile.coord.y, "biome": tile.biome, "height": tile.height, "variant": tile.variant}
+		if not tile.ground.is_empty():
+			entry["ground"] = tile.ground
 		if tile_areas.has(tile.coord):
 			entry["area"] = tile_areas[tile.coord]
 		tile_list.append(entry)
@@ -67,18 +71,19 @@ func to_dict() -> Dictionary:
 		"name": name,
 		"start": {"q": start.x, "r": start.y},
 		"tiles": tile_list,
-		"buildings": buildings,
+		"actions": actions,
+		"objects": objects,
 		"areas": areas,
 	}
 
 
-## Um hexágono para o desfazer: `[bioma, altura, variante, área]`, com área 0 quando
-## ele não tem; vazio quando o hexágono não existe.
+## Um hexágono para o desfazer: `[bioma, altura, variante, área, chão]`, com área 0 e
+## chão vazio quando ele não tem; vazio quando o hexágono não existe.
 func snapshot(coord: Vector2i) -> Array:
 	var tile: HexTile = tiles.get(coord)
 	if tile == null:
 		return []
-	return [tile.biome, tile.height, tile.variant, tile_areas.get(coord, 0)]
+	return [tile.biome, tile.height, tile.variant, tile_areas.get(coord, 0), tile.ground]
 
 
 func restore(coord: Vector2i, state: Array) -> void:
@@ -94,6 +99,7 @@ func restore(coord: Vector2i, state: Array) -> void:
 	tile.biome = state[0]
 	tile.height = state[1]
 	tile.variant = state[2]
+	tile.ground = state[4]
 	if int(state[3]) > 0:
 		tile_areas[coord] = int(state[3])
 	else:
@@ -116,42 +122,83 @@ func remove_tile(coord: Vector2i) -> bool:
 	tiles.erase(coord)
 	tile_areas.erase(coord)
 	var changed := false
-	for index: int in range(buildings.size() - 1, -1, -1):
-		var building: Dictionary = buildings[index]
-		var occupied: Array = building.get("tiles", [])
+	for index: int in range(actions.size() - 1, -1, -1):
+		var action: Dictionary = actions[index]
+		var occupied: Array = action.get("tiles", [])
 		for spot: int in range(occupied.size() - 1, -1, -1):
 			var at: Dictionary = occupied[spot]
 			if int(at.get("q", 0)) == coord.x and int(at.get("r", 0)) == coord.y:
 				occupied.remove_at(spot)
 				changed = true
 		if occupied.is_empty():
-			buildings.remove_at(index)
+			actions.remove_at(index)
+	var holder := object_at(coord)
+	if holder >= 0:
+		objects.remove_at(holder)
+		changed = true
 	return changed
 
 
-func touches_buildings(coords: Array[Vector2i]) -> bool:
-	for building: Variant in buildings:
-		for at: Variant in (building as Dictionary).get("tiles", []):
+func touches_actions(coords: Array[Vector2i]) -> bool:
+	for action: Variant in actions:
+		for at: Variant in (action as Dictionary).get("tiles", []):
 			if coords.has(Vector2i(int(at.get("q", 0)), int(at.get("r", 0)))):
 				return true
 	return false
 
 
-func building_at(coord: Vector2i) -> int:
-	for index: int in buildings.size():
-		for at: Variant in (buildings[index] as Dictionary).get("tiles", []):
+func action_at(coord: Vector2i) -> int:
+	for index: int in actions.size():
+		for at: Variant in (actions[index] as Dictionary).get("tiles", []):
 			if int(at.get("q", 0)) == coord.x and int(at.get("r", 0)) == coord.y:
 				return index
 	return -1
 
 
-func building_tiles(index: int) -> Array[Vector2i]:
+func action_tiles(index: int) -> Array[Vector2i]:
 	var coords: Array[Vector2i] = []
-	if index < 0 or index >= buildings.size():
+	if index < 0 or index >= actions.size():
 		return coords
-	for at: Variant in (buildings[index] as Dictionary).get("tiles", []):
+	for at: Variant in (actions[index] as Dictionary).get("tiles", []):
 		coords.append(Vector2i(int(at.get("q", 0)), int(at.get("r", 0))))
 	return coords
+
+
+func object_at(coord: Vector2i) -> int:
+	for index: int in objects.size():
+		if object_tiles(index).has(coord):
+			return index
+	return -1
+
+
+func object_tiles(index: int) -> Array[Vector2i]:
+	var coords: Array[Vector2i] = []
+	if index < 0 or index >= objects.size():
+		return coords
+	for at: Variant in (objects[index] as Dictionary).get("tiles", []):
+		coords.append(Vector2i(int(at.get("q", 0)), int(at.get("r", 0))))
+	return coords
+
+
+## Se um objeto caberia nesses hexágonos: todos existem e nenhum é de outro objeto
+## (menos o `ignore`, para espelhar um objeto no lugar).
+func object_fits(coords: Array[Vector2i], ignore: int = -1) -> bool:
+	for coord: Vector2i in coords:
+		if not tiles.has(coord):
+			return false
+		var holder := object_at(coord)
+		if holder >= 0 and holder != ignore:
+			return false
+	return true
+
+
+func map_objects() -> Array[MapObject]:
+	var list: Array[MapObject] = []
+	for entry: Variant in objects:
+		var object := MapObject.from_dict(entry as Dictionary)
+		if object != null:
+			list.append(object)
+	return list
 
 
 func area_by_key(key: int) -> Dictionary:
@@ -182,6 +229,7 @@ func to_map() -> ExplorationMap:
 	map.map_seed = id
 	map.start = start
 	map.tiles = tiles
+	map.set_objects(map_objects())
 	return map
 
 

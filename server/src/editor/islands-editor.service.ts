@@ -17,6 +17,7 @@ import {
   IslandsService,
 } from '../islands/islands.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { toObjectDto } from '../exploration/exploration.dto.js';
 import type {
   IslandCreatedResponseDto,
   IslandDraftDto,
@@ -58,17 +59,26 @@ export function toDraft(dto: IslandDraftDto): IslandDraft {
   return {
     name: dto.name,
     start: { q: dto.start.q, r: dto.start.r },
-    tiles: dto.tiles.map(({ q, r, biome, height, variant, area }) => ({
+    tiles: dto.tiles.map(({ q, r, biome, height, variant, ground, area }) => ({
       q,
       r,
       biome,
       height,
       variant,
+      ...(ground === undefined || ground === null ? {} : { ground }),
       ...(area === undefined || area === null ? {} : { area }),
     })),
-    buildings: dto.buildings.map(({ building_type_id, tiles }) => ({
-      buildingTypeId: building_type_id,
+    actions: dto.actions.map(({ action_type_id, tiles }) => ({
+      actionTypeId: action_type_id,
       tiles: tiles.map(({ q, r }) => ({ q, r })),
+    })),
+    objects: dto.objects.map((object) => ({
+      objectTypeId: object.object_type_id,
+      q: object.q,
+      r: object.r,
+      variant: object.variant,
+      mirrored: object.mirrored,
+      tiles: object.tiles.map(({ q, r, blocks }) => ({ q, r, blocks })),
     })),
     areas: dto.areas.map(({ key, name, color_hex, spawn_count, species }) => ({
       key,
@@ -91,10 +101,11 @@ function toDto(draft: IslandDraft): IslandDraftDto {
     name: draft.name,
     start: draft.start,
     tiles: draft.tiles,
-    buildings: draft.buildings.map(({ buildingTypeId, tiles }) => ({
-      building_type_id: buildingTypeId,
+    actions: draft.actions.map(({ actionTypeId, tiles }) => ({
+      action_type_id: actionTypeId,
       tiles,
     })),
+    objects: draft.objects.map(toObjectDto),
     areas: draft.areas.map(({ key, name, colorHex, spawnCount, species }) => ({
       key,
       name,
@@ -245,12 +256,16 @@ export class IslandsEditorService {
   }
 
   private async knownIds(): Promise<KnownIds> {
-    const [types, species] = await Promise.all([
-      this.prisma.buildingType.findMany({ select: { id: true } }),
+    const [actions, objects, grounds, species] = await Promise.all([
+      this.prisma.actionType.findMany({ select: { id: true } }),
+      this.prisma.mapObjectType.findMany({ select: { id: true } }),
+      this.prisma.groundType.findMany({ select: { slug: true } }),
       this.prisma.species.findMany({ select: { id: true } }),
     ]);
     return {
-      buildingTypeIds: new Set(types.map(({ id }) => id)),
+      actionTypeIds: new Set(actions.map(({ id }) => id)),
+      objectTypeIds: new Set(objects.map(({ id }) => id)),
+      groundSlugs: new Set(grounds.map(({ slug }) => slug)),
       speciesIds: new Set(species.map(({ id }) => id)),
     };
   }
@@ -303,31 +318,61 @@ export class IslandsEditorService {
         ({ id, slug }) => [slug, id],
       ),
     );
-    const tiles = draft.tiles.map(({ q, r, biome, height, variant, area }) => ({
-      islandMapId: map.id,
-      q,
-      r,
-      biomeId: biomeIds.get(biome)!,
-      height,
-      variant,
-      areaId: area === undefined ? null : areaIds.get(area)!,
-    }));
+    const groundIds = new Map(
+      (await tx.groundType.findMany({ select: { id: true, slug: true } })).map(
+        ({ id, slug }) => [slug, id],
+      ),
+    );
+    const tiles = draft.tiles.map(
+      ({ q, r, biome, height, variant, ground, area }) => ({
+        islandMapId: map.id,
+        q,
+        r,
+        biomeId: biomeIds.get(biome)!,
+        height,
+        variant,
+        groundTypeId: ground === undefined ? null : groundIds.get(ground)!,
+        areaId: area === undefined ? null : areaIds.get(area)!,
+      }),
+    );
     for (let first = 0; first < tiles.length; first += TILE_CHUNK) {
       await tx.islandTile.createMany({
         data: tiles.slice(first, first + TILE_CHUNK),
       });
     }
 
-    for (const building of draft.buildings) {
-      const created = await tx.islandBuilding.create({
-        data: { islandMapId: map.id, buildingTypeId: building.buildingTypeId },
+    for (const action of draft.actions) {
+      const created = await tx.islandAction.create({
+        data: { islandMapId: map.id, actionTypeId: action.actionTypeId },
       });
-      await tx.islandBuildingTile.createMany({
-        data: building.tiles.map(({ q, r }) => ({
-          buildingId: created.id,
+      await tx.islandActionTile.createMany({
+        data: action.tiles.map(({ q, r }) => ({
+          actionId: created.id,
           islandMapId: map.id,
           q,
           r,
+        })),
+      });
+    }
+
+    for (const object of draft.objects) {
+      const created = await tx.islandObject.create({
+        data: {
+          islandMapId: map.id,
+          objectTypeId: object.objectTypeId,
+          q: object.q,
+          r: object.r,
+          variant: object.variant,
+          mirrored: object.mirrored,
+        },
+      });
+      await tx.islandObjectTile.createMany({
+        data: object.tiles.map(({ q, r, blocks }) => ({
+          objectId: created.id,
+          islandMapId: map.id,
+          q,
+          r,
+          blocks,
         })),
       });
     }

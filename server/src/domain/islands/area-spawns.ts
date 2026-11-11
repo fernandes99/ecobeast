@@ -1,27 +1,33 @@
 import type { Random } from '../battle/types.js';
 import { type HexCoord, hexKey } from '../exploration/hex.js';
 import { type MapSpawn, pickWeighted } from '../exploration/spawns.js';
-import type { DraftAreaSpecies, IslandDraft } from './island-draft.js';
+import {
+  blockedKeys,
+  type DraftAreaSpecies,
+  type IslandDraft,
+} from './island-draft.js';
 
 /**
  * Os Ecobeasts de uma ilha, sorteados pelas áreas que o dono pintou
  * (.specs/islands/02-island-exploration.md, RF-08 a RF-11).
  */
 
-/** Uma área pronta para o sorteio: os hexágonos já vêm sem os de construção. */
+/** Uma área pronta para o sorteio: os hexágonos já vêm sem os de ação e os bloqueados. */
 export interface SpawnArea {
   tiles: HexCoord[];
   spawnCount: number;
   species: DraftAreaSpecies[];
 }
 
-/** As áreas do rascunho, na ordem da `key`, cada uma com os hexágonos fora de construção. */
+/** As áreas do rascunho, na ordem da `key`, cada uma sem os hexágonos de ação e os bloqueados. */
 export function spawnAreas(
-  draft: Pick<IslandDraft, 'tiles' | 'buildings' | 'areas'>,
+  draft: Pick<IslandDraft, 'tiles' | 'actions' | 'objects' | 'areas'>,
 ): SpawnArea[] {
-  const built = new Set(
-    draft.buildings.flatMap(({ tiles }) => tiles.map(hexKey)),
-  );
+  const blocked = blockedKeys(draft);
+  const built = new Set([
+    ...draft.actions.flatMap(({ tiles }) => tiles.map(hexKey)),
+    ...blocked,
+  ]);
   return [...draft.areas]
     .sort((a, b) => a.key - b.key)
     .map(({ key, spawnCount, species }) => ({

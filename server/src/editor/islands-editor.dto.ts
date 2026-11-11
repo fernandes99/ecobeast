@@ -2,6 +2,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   IsArray,
+  IsBoolean,
   IsIn,
   IsInt,
   IsObject,
@@ -64,6 +65,16 @@ export class DraftTileDto extends EditorHexDto {
 
   @ApiPropertyOptional({
     description:
+      'O slug de um `ground_types` (trilha ou piso). Sem ele, o hexágono não tem chão.',
+    example: 'dirt_trail',
+    nullable: true,
+  })
+  @IsOptional()
+  @IsString(text('ground'))
+  ground?: string | null;
+
+  @ApiPropertyOptional({
+    description:
       'A `key` da área do hexágono. Sem ela, o hexágono não tem área.',
     example: 1,
   })
@@ -72,16 +83,55 @@ export class DraftTileDto extends EditorHexDto {
   area?: number;
 }
 
-export class DraftBuildingDto {
-  @ApiProperty({ description: 'Id em `building_types`.', example: 1 })
-  @IsInt(integer('building_type_id'))
-  building_type_id: number;
+export class DraftActionDto {
+  @ApiProperty({ description: 'Id em `action_types`.', example: 1 })
+  @IsInt(integer('action_type_id'))
+  action_type_id: number;
 
   @ApiProperty({ type: [EditorHexDto], description: 'Os hexágonos dela.' })
   @IsArray(list('tiles'))
   @ValidateNested({ each: true })
   @Type(() => EditorHexDto)
   tiles: EditorHexDto[];
+}
+
+export class DraftObjectTileDto extends EditorHexDto {
+  @ApiProperty({
+    description: 'Se o Domador não atravessa este hexágono.',
+    example: true,
+  })
+  @IsBoolean({ message: 'blocks precisa ser verdadeiro ou falso.' })
+  blocks: boolean;
+}
+
+export class DraftObjectDto extends EditorHexDto {
+  @ApiProperty({ description: 'Id em `map_object_types`.', example: 1 })
+  @IsInt(integer('object_type_id'))
+  object_type_id: number;
+
+  @ApiProperty({
+    description: 'A variante da arte, de 1 em diante.',
+    example: 1,
+  })
+  @IsInt(integer('variant'))
+  variant: number;
+
+  @ApiProperty({
+    description: 'Se a arte e o formato estão espelhados na horizontal.',
+    example: false,
+  })
+  @IsBoolean({ message: 'mirrored precisa ser verdadeiro ou falso.' })
+  mirrored: boolean;
+
+  @ApiProperty({
+    type: [DraftObjectTileDto],
+    description:
+      'Os hexágonos do objeto, com o de apoio (q, r) entre eles, e o bloqueio de cada um.',
+  })
+  @IsArray(list('tiles'))
+  @ValidateNested({ each: true })
+  @Type(() => DraftObjectTileDto)
+  tiles: DraftObjectTileDto[];
 }
 
 export class DraftAreaSpeciesDto {
@@ -160,11 +210,17 @@ export class IslandDraftDto {
   @Type(() => DraftTileDto)
   tiles: DraftTileDto[];
 
-  @ApiProperty({ type: [DraftBuildingDto] })
-  @IsArray(list('buildings'))
+  @ApiProperty({ type: [DraftActionDto] })
+  @IsArray(list('actions'))
   @ValidateNested({ each: true })
-  @Type(() => DraftBuildingDto)
-  buildings: DraftBuildingDto[];
+  @Type(() => DraftActionDto)
+  actions: DraftActionDto[];
+
+  @ApiProperty({ type: [DraftObjectDto] })
+  @IsArray(list('objects'))
+  @ValidateNested({ each: true })
+  @Type(() => DraftObjectDto)
+  objects: DraftObjectDto[];
 
   @ApiProperty({ type: [DraftAreaDto] })
   @IsArray(list('areas'))

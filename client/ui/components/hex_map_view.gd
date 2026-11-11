@@ -62,6 +62,7 @@ var _highlighted_row: HexRowView = null
 var _hex_triangles := PackedVector2Array()
 var _window_scale := Vector2.ONE
 var _whole_map_area := Rect2()
+var _objects: Array[MapObjectSprite] = []
 
 
 func _init() -> void:
@@ -90,6 +91,7 @@ func _process(_delta: float) -> void:
 
 func set_map(map: ExplorationMap) -> void:
 	_map = map
+	_clear_objects()
 	for row: HexRowView in _rows.values() + _back_rows.values() + _front_rows.values():
 		remove_child(row)
 		row.queue_free()
@@ -170,6 +172,49 @@ func update_tiles(coords: Array[Vector2i]) -> void:
 			view.queue_redraw()
 		if not tiles.is_empty():
 			_build_row(row, back, front, tiles)
+	for sprite: MapObjectSprite in _objects:
+		sprite.place(_rise(_level_at(sprite.object.coord)))
+
+
+## Os objetos da ilha (island-villages/03): cada um entra na linha da frente dele,
+## por cima das decorações de trás e por baixo dos atores e das decorações da frente.
+## Chame depois do `set_map`.
+func set_objects(objects: Array[MapObject]) -> void:
+	_clear_objects()
+	for object: MapObject in objects:
+		var row := GameData.get_row("map_object_types", object.object_type_id)
+		var sprite := MapObjectSprite.new()
+		if not sprite.setup(object, str(row.get("slug", ""))):
+			sprite.free()
+			continue
+		add_child(sprite)
+		_objects.append(sprite)
+		_place_object(sprite)
+
+
+## O objeto cuja arte está desenhada num ponto, em pixels da arte, da frente para
+## trás; ou `null`.
+func object_hit(point: Vector2) -> MapObject:
+	var best: MapObjectSprite = null
+	for sprite: MapObjectSprite in _objects:
+		if sprite.hits(point) and (best == null or sprite.get_index() > best.get_index()):
+			best = sprite
+	return best.object if best != null else null
+
+
+func _clear_objects() -> void:
+	for sprite: MapObjectSprite in _objects:
+		remove_child(sprite)
+		sprite.queue_free()
+	_objects.clear()
+
+
+func _place_object(sprite: MapObjectSprite) -> void:
+	sprite.place(_rise(_level_at(sprite.object.coord)))
+	if not _row_chunks.has(sprite.front_row):
+		return
+	var at := _last_index(_back_rows, sprite.front_row) + 1
+	move_child(sprite, at if sprite.get_index() > at else at - 1)
 
 
 func build_all_rows() -> void:
@@ -252,6 +297,9 @@ func _add_chunk_nodes(key: Vector2i) -> void:
 	_rows[key] = terrain
 	_back_rows[key] = back
 	_front_rows[key] = front
+	for sprite: MapObjectSprite in _objects:
+		if sprite.front_row == row:
+			_place_object(sprite)
 
 
 ## Só para depuração: cabe o mapa inteiro em `area`, da tela lógica. Reduzido
@@ -362,6 +410,7 @@ func _build_row(row: HexRowView, back: HexRowView, front: HexRowView, tiles: Arr
 	for surface: String in by_surface:
 		_add_surface(row, surface, by_surface[surface])
 	_add_transitions(row, tiles)
+	_add_grounds(row, tiles)
 	_add_surface(row, CONTOUR_TEXTURE, tiles)
 	_add_decorations(back, front, tiles)
 	row.queue_redraw()
@@ -453,6 +502,23 @@ func _add_transitions(row: HexRowView, tiles: Array) -> void:
 	_add_mesh(row, HexTransitions.TEXTURE_PATH, points, texture_points)
 
 
+func _add_grounds(row: HexRowView, tiles: Array) -> void:
+	var batches: Dictionary[String, HexGrounds.Batch] = {}
+	for tile: HexTile in tiles:
+		if tile.ground.is_empty():
+			continue
+		if not batches.has(tile.ground):
+			batches[tile.ground] = HexGrounds.Batch.new()
+		var flat := _tile_origin(tile.coord)
+		var faces: Dictionary[int, float] = {}
+		for neighbor: Vector2i in LOWER_NEIGHBORS:
+			faces[HexGrounds.EDGE_NEIGHBORS.find(neighbor)] = _face_height(tile.coord + neighbor, tile.height)
+		HexGrounds.add_tile(batches[tile.ground], tile, _map, flat - _rise(tile.height), flat, faces)
+	for slug: String in batches:
+		var batch := batches[slug]
+		_add_mesh(row, HexGrounds.TEXTURE_PATH % slug, batch.points, batch.texture_points, batch.colors)
+
+
 func _front_lift(tile: HexTile, neighbor: Vector2i) -> Vector2:
 	if not LOWER_NEIGHBORS.has(neighbor):
 		return Vector2.ZERO
@@ -464,9 +530,13 @@ func _add_decorations(back: HexRowView, front: HexRowView, tiles: Array) -> void
 	var behind: Array[HexDecorations.Decoration] = []
 	var ahead: Array[HexDecorations.Decoration] = []
 	for tile: HexTile in tiles:
+		if _map.object_at(tile.coord) >= 0:
+			continue
 		var center := Vector2i(_tile_origin(tile.coord) + SURFACE_CENTER - _rise(tile.height))
 		for decoration: HexDecorations.Decoration in HexDecorations.decorations_of(tile, _map.map_seed):
 			if allows_decoration.is_valid() and not allows_decoration.call(tile.coord, decoration.kind):
+				continue
+			if not HexGrounds.allows_decoration(tile, decoration.kind):
 				continue
 			decoration.base = center + decoration.offset
 			if decoration.offset.y < 0:

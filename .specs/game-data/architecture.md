@@ -253,6 +253,8 @@ Como elas viram Ecobeasts no mapa está em [biome-encounters/architecture.md](..
 
 **`npc_tamer_names`** — os nomes que um Domador NPC sorteado pode ter (`id`, `name`, de 1 a 20 caracteres). **`npc_tamer_greetings`** — as falas do desafio (`id`, `text`, de 1 a 120 caracteres), escritas sem o nome na frente: o jogo monta `"{name}: {text}"`. As duas não têm FK, e o catálogo é recusado com alguma delas vazia. Como elas são sorteadas está em [npc-tamers/architecture.md](../npc-tamers/architecture.md).
 
+**`action_types`**, **`ground_types`**, **`map_object_types`** e **`map_object_type_tiles`** são os tipos das ilhas: o que uma ação faz (`kind` em `open_screen`; era `building_types`), as trilhas e os pisos (`kind` em `trail` ou `floor`), os objetos (`variants` ≥ 1) e o formato de cada objeto em coordenadas axiais a partir do hexágono de apoio `(0, 0)`, com o bloqueio padrão (`blocks`). O desenho deles está em [island-villages/architecture.md](../island-villages/architecture.md).
+
 ## Tabelas futuras (só documentadas)
 
 Entram com as iniciativas do [roadmap](../roadmap.md); não têm arquivo no MVP.

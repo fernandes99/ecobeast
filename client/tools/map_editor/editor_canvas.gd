@@ -19,22 +19,27 @@ const CHUNK_COLUMNS := 16
 ## Numa pincelada rápida, um ponto a cada tanto da arte, para não pular hexágonos.
 const STROKE_SPACING := 16.0
 const AREA_ALPHA := 0.38
-const BUILDING_ALPHA := 0.62
+const ACTION_ALPHA := 0.62
 const NAME_SIZE := 14
 
 var brush: Callable = Callable()
-var building_colors: Dictionary[int, Color] = {}
-var building_names: Dictionary[int, String] = {}
-var selected_building := -1
+## A cor do contorno sob o ponteiro (Color.TRANSPARENT: a de sempre).
+var brush_color: Callable = Callable()
+var selected_object := -1
+var action_colors: Dictionary[int, Color] = {}
+var action_names: Dictionary[int, String] = {}
+var selected_action := -1
 
 var _map_view: HexMapView
 var _overview: IslandOverview
 var _overlay: Overlay
 var _area_layer: HexTintLayer
 var _area_stripes: HexTintLayer
-var _building_layer: HexTintLayer
+var _action_layer: HexTintLayer
 var _show_areas := true
-var _show_buildings := true
+var _show_actions := true
+var _show_blocks := false
+var _object_tiles: Dictionary[Vector2i, bool] = {}
 var _draft: IslandDraft = null
 var _map: ExplorationMap = null
 var _zoom := OPEN_ZOOM
@@ -71,8 +76,8 @@ func _init() -> void:
 	add_child(_area_layer)
 	_area_stripes = HexTintLayer.new(true, IslandDraft.MAX_TILES)
 	add_child(_area_stripes)
-	_building_layer = HexTintLayer.new(false, IslandDraft.MAX_TILES)
-	add_child(_building_layer)
+	_action_layer = HexTintLayer.new(false, IslandDraft.MAX_TILES)
+	add_child(_action_layer)
 	_overlay = Overlay.new()
 	_overlay.canvas = self
 	add_child(_overlay)
@@ -84,6 +89,8 @@ func show_draft(draft: IslandDraft, fit: bool = true) -> void:
 	_pending.clear()
 	_map = draft.to_map() if draft != null else ExplorationMap.new()
 	_map_view.set_map(_map)
+	_map_view.set_objects(_map.objects)
+	_object_tiles = _current_object_tiles()
 	_overview.set_map(_map)
 	refresh_marks()
 	if fit and draft != null:
@@ -97,17 +104,50 @@ func update_tiles(coords: Array[Vector2i]) -> void:
 	_overlay.queue_redraw()
 
 
+## Os objetos mudaram no rascunho: troca a arte e refaz as decorações dos hexágonos
+## que ganharam ou perderam objeto.
+func refresh_objects() -> void:
+	if _draft == null or _map == null:
+		return
+	_map.set_objects(_draft.map_objects())
+	_map_view.set_objects(_map.objects)
+	var now := _current_object_tiles()
+	var changed: Array[Vector2i] = []
+	for coord: Vector2i in now:
+		if not _object_tiles.has(coord):
+			changed.append(coord)
+	for coord: Vector2i in _object_tiles:
+		if not now.has(coord):
+			changed.append(coord)
+	_object_tiles = now
+	update_tiles(changed)
+	_overlay.queue_redraw()
+
+
+func set_blocks(on: bool) -> void:
+	_show_blocks = on
+	_overlay.queue_redraw()
+
+
+func _current_object_tiles() -> Dictionary[Vector2i, bool]:
+	var result: Dictionary[Vector2i, bool] = {}
+	for object: MapObject in _map.objects:
+		for coord: Vector2i in object.tiles:
+			result[coord] = true
+	return result
+
+
 func refresh_brush() -> void:
 	_overlay.queue_redraw()
 
 
 func refresh_marks(coords: Array[Vector2i] = []) -> void:
 	if _draft == null:
-		for layer: HexTintLayer in [_area_layer, _area_stripes, _building_layer]:
+		for layer: HexTintLayer in [_area_layer, _area_stripes, _action_layer]:
 			layer.clear_all()
 		_overlay.queue_redraw()
 		return
-	var building_of := _building_index()
+	var action_of := _action_index()
 	var area_color: Dictionary[int, Color] = {}
 	var area_empty: Dictionary[int, bool] = {}
 	for area: Variant in _draft.areas:
@@ -116,11 +156,11 @@ func refresh_marks(coords: Array[Vector2i] = []) -> void:
 		area_empty[key] = (area.get("species", []) as Array).is_empty()
 	var targets: Array[Vector2i] = coords
 	if targets.is_empty():
-		for layer: HexTintLayer in [_area_layer, _area_stripes, _building_layer]:
+		for layer: HexTintLayer in [_area_layer, _area_stripes, _action_layer]:
 			layer.clear_all()
 		targets = []
 		targets.assign(_draft.tile_areas.keys())
-		targets.append_array(building_of.keys())
+		targets.append_array(action_of.keys())
 	for coord: Vector2i in targets:
 		var tile: HexTile = _draft.tiles.get(coord)
 		var key: int = _draft.tile_areas.get(coord, 0) if tile != null else 0
@@ -129,27 +169,27 @@ func refresh_marks(coords: Array[Vector2i] = []) -> void:
 		if area_color.has(key):
 			var layer := _area_stripes if area_empty[key] else _area_layer
 			layer.set_hex(coord, Color(area_color[key], AREA_ALPHA), tile.height)
-		var building: int = building_of.get(coord, -1) if tile != null else -1
-		if building >= 0:
-			var type_id := int(_draft.buildings[building].get("building_type_id", 0))
-			_building_layer.set_hex(coord, Color(building_colors.get(type_id, UiPalette.TEXT), BUILDING_ALPHA), tile.height)
+		var action: int = action_of.get(coord, -1) if tile != null else -1
+		if action >= 0:
+			var type_id := int(_draft.actions[action].get("action_type_id", 0))
+			_action_layer.set_hex(coord, Color(action_colors.get(type_id, UiPalette.TEXT), ACTION_ALPHA), tile.height)
 		else:
-			_building_layer.clear_hex(coord)
+			_action_layer.clear_hex(coord)
 	_overlay.queue_redraw()
 
 
-func set_layers(areas: bool, buildings: bool) -> void:
+func set_layers(areas: bool, actions: bool) -> void:
 	_show_areas = areas
-	_show_buildings = buildings
+	_show_actions = actions
 	_apply_view()
 
 
-func _building_index() -> Dictionary[Vector2i, int]:
-	var building_of: Dictionary[Vector2i, int] = {}
-	for index: int in _draft.buildings.size():
-		for coord: Vector2i in _draft.building_tiles(index):
-			building_of[coord] = index
-	return building_of
+func _action_index() -> Dictionary[Vector2i, int]:
+	var action_of: Dictionary[Vector2i, int] = {}
+	for index: int in _draft.actions.size():
+		for coord: Vector2i in _draft.action_tiles(index):
+			action_of[coord] = index
+	return action_of
 
 
 func fit_whole_island() -> void:
@@ -296,13 +336,13 @@ func _apply_view() -> void:
 	if not overview:
 		_map_view.fixed_scale = _zoom
 		_map_view.position = _origin.round()
-	for layer: HexTintLayer in [_area_layer, _area_stripes, _building_layer]:
+	for layer: HexTintLayer in [_area_layer, _area_stripes, _action_layer]:
 		layer.position = _overview.position if overview else _map_view.position
 		layer.scale = Vector2.ONE * _zoom
 		layer.set_raised(not overview)
 	_area_layer.visible = _show_areas
 	_area_stripes.visible = _show_areas
-	_building_layer.visible = _show_buildings
+	_action_layer.visible = _show_actions
 	_overlay.queue_redraw()
 
 
@@ -344,15 +384,22 @@ func _outline(node: Node2D, coord: Vector2i, color: Color) -> void:
 func draw_overlay(node: Node2D) -> void:
 	if _draft == null:
 		return
-	if _show_buildings:
-		_draw_buildings(node)
+	if _show_actions:
+		_draw_actions(node)
+	if selected_object >= 0:
+		for coord: Vector2i in _draft.object_tiles(selected_object):
+			_outline(node, coord, UiPalette.ACCENT)
+	if _show_blocks:
+		_draw_blocks(node)
 	if _has_hover:
 		var under: Array[Vector2i] = [_hovered]
 		if brush.is_valid():
 			under.assign(brush.call(_hovered))
 		var faint := Color(UiPalette.TEXT, 0.45)
+		var tint: Color = brush_color.call(_hovered) if brush_color.is_valid() else Color.TRANSPARENT
 		for coord: Vector2i in under:
-			_outline(node, coord, UiPalette.TEXT if coord == _hovered else faint)
+			var color := UiPalette.TEXT if coord == _hovered else faint
+			_outline(node, coord, color if tint.a == 0.0 else tint)
 	if _draft.tiles.has(_draft.start):
 		var foot := _screen_origin(_draft.start) + HexMapView.SURFACE_CENTER * _zoom
 		var top := foot - Vector2(0.0, FLAG_HEIGHT)
@@ -360,13 +407,23 @@ func draw_overlay(node: Node2D) -> void:
 		node.draw_colored_polygon(PackedVector2Array([top, top + Vector2(FLAG_WIDTH, FLAG_HEIGHT * 0.25), top + Vector2(0.0, FLAG_HEIGHT * 0.5)]), UiPalette.WARNING)
 
 
-func _draw_buildings(node: Node2D) -> void:
+## Um X vermelho em cada hexágono bloqueado.
+func _draw_blocks(node: Node2D) -> void:
+	var reach := Vector2(10.0, 7.0) * _zoom
+	for object: MapObject in _map.objects:
+		for coord: Vector2i in object.blocked_tiles():
+			var center := _screen_origin(coord) + HexMapView.SURFACE_CENTER * _zoom
+			node.draw_line(center - reach, center + reach, UiPalette.DANGER, OUTLINE_WIDTH + 1.0)
+			node.draw_line(center + Vector2(-reach.x, reach.y), center + Vector2(reach.x, -reach.y), UiPalette.DANGER, OUTLINE_WIDTH + 1.0)
+
+
+func _draw_actions(node: Node2D) -> void:
 	var font := get_theme_font(&"font")
-	for index: int in _draft.buildings.size():
-		var coords := _draft.building_tiles(index)
+	for index: int in _draft.actions.size():
+		var coords := _draft.action_tiles(index)
 		if coords.is_empty():
 			continue
-		if index == selected_building:
+		if index == selected_action:
 			for coord: Vector2i in coords:
 				_outline(node, coord, UiPalette.ACCENT)
 		var center := Vector2.ZERO
@@ -377,8 +434,8 @@ func _draw_buildings(node: Node2D) -> void:
 		for coord: Vector2i in coords:
 			if HexMapView.flat_center(coord).distance_to(center) < HexMapView.flat_center(middle).distance_to(center):
 				middle = coord
-		var type_id := int(_draft.buildings[index].get("building_type_id", 0))
-		var label: String = building_names.get(type_id, "?")
+		var type_id := int(_draft.actions[index].get("action_type_id", 0))
+		var label: String = action_names.get(type_id, "?")
 		var at := _screen_origin(middle) + HexMapView.SURFACE_CENTER * _zoom
 		var width := font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, NAME_SIZE).x
 		var baseline := at + Vector2(-width / 2.0, NAME_SIZE / 2.0)

@@ -17,8 +17,11 @@ var creatures: Dictionary[int, MapCreature] = {}
 var tamers: Dictionary[int, MapTamer] = {}
 var island_id: int = 0
 var island_name: String = ""
-var buildings: Array[MapBuilding] = []
-var _building_of: Dictionary[Vector2i, int] = {}
+var actions: Array[MapAction] = []
+var objects: Array[MapObject] = []
+var _action_of: Dictionary[Vector2i, int] = {}
+var _object_of: Dictionary[Vector2i, int] = {}
+var _blocked: Dictionary[Vector2i, bool] = {}
 
 
 static func distance(from: Vector2i, to: Vector2i) -> int:
@@ -54,8 +57,32 @@ func tamer_at(coord: Vector2i) -> MapTamer:
 	return null
 
 
-func building_at(coord: Vector2i) -> int:
-	return _building_of.get(coord, -1)
+func action_at(coord: Vector2i) -> int:
+	return _action_of.get(coord, -1)
+
+
+func object_at(coord: Vector2i) -> int:
+	return _object_of.get(coord, -1)
+
+
+func is_blocked(coord: Vector2i) -> bool:
+	return _blocked.has(coord)
+
+
+func set_objects(list: Array[MapObject]) -> void:
+	objects.clear()
+	_object_of.clear()
+	_blocked.clear()
+	for object: MapObject in list:
+		add_object(object)
+
+
+func add_object(object: MapObject) -> void:
+	for coord: Vector2i in object.tiles:
+		_object_of[coord] = objects.size()
+	for coord: Vector2i in object.blocked_tiles():
+		_blocked[coord] = true
+	objects.append(object)
 
 
 static func from_dict(d: Dictionary) -> ExplorationMap:
@@ -78,10 +105,14 @@ static func from_dict(d: Dictionary) -> ExplorationMap:
 	var island := DictFields.get_dict(d, "island")
 	map.island_id = DictFields.get_int(island, "id")
 	map.island_name = DictFields.get_string(island, "name")
-	for building_dict: Variant in DictFields.get_array(d, "buildings"):
-		var building: MapBuilding = MapBuilding.from_dict(building_dict) if building_dict is Dictionary else null
-		if building != null:
-			for coord: Vector2i in building.tiles:
-				map._building_of[coord] = map.buildings.size()
-			map.buildings.append(building)
+	for action_dict: Variant in DictFields.get_array(d, "actions"):
+		var action: MapAction = MapAction.from_dict(action_dict) if action_dict is Dictionary else null
+		if action != null:
+			for coord: Vector2i in action.tiles:
+				map._action_of[coord] = map.actions.size()
+			map.actions.append(action)
+	for object_dict: Variant in DictFields.get_array(d, "objects"):
+		var object: MapObject = MapObject.from_dict(object_dict) if object_dict is Dictionary else null
+		if object != null:
+			map.add_object(object)
 	return map

@@ -25,7 +25,8 @@ var _message_label: Label
 var _save_button: Button
 var _publish_button: Button
 var _areas_check: CheckButton
-var _buildings_check: CheckButton
+var _actions_check: CheckButton
+var _blocks_check: CheckButton
 var _publish_dialog: ConfirmationDialog
 var _side: VBoxContainer
 var _list: IslandList
@@ -120,7 +121,8 @@ func _show_island(draft: IslandDraft, status: String) -> void:
 	_status = status
 	_name_edit.text = draft.name if draft != null else ""
 	_name_edit.editable = draft != null
-	_canvas.selected_building = -1
+	_canvas.selected_action = -1
+	_canvas.selected_object = -1
 	_canvas.show_draft(draft)
 	_tools.set_draft(draft)
 	_history.reset(draft)
@@ -277,14 +279,19 @@ func _paint(coord: Vector2i) -> void:
 		return
 	if _tools.paints_marks():
 		_canvas.refresh_marks(changed)
+	elif _tools.tool == EditorTools.Tool.OBJECT:
+		_canvas.refresh_objects()
 	else:
 		_canvas.update_tiles(changed)
+		if _tools.tool == EditorTools.Tool.REMOVE:
+			_canvas.refresh_objects()
 	title = TITLE + " *"
 
 
 func _on_tools_edited(step: EditorHistory.Step, merge: bool) -> void:
 	_history.record(step, merge)
 	_canvas.refresh_marks()
+	_canvas.refresh_objects()
 	_update_dirty()
 
 
@@ -298,14 +305,17 @@ func _on_area_delete(key: int, area_name: String) -> void:
 
 func _on_brush_changed() -> void:
 	_canvas.refresh_brush()
-	if _tools.tool == EditorTools.Tool.BUILDING and not _buildings_check.button_pressed:
-		_buildings_check.button_pressed = true
+	if _tools.tool == EditorTools.Tool.ACTION and not _actions_check.button_pressed:
+		_actions_check.button_pressed = true
 	elif _tools.tool == EditorTools.Tool.AREA and not _areas_check.button_pressed:
 		_areas_check.button_pressed = true
+	if _tools.object_panel.editing_blocks and not _blocks_check.button_pressed:
+		_blocks_check.button_pressed = true
 
 
 func _on_layers_toggled(_on: bool) -> void:
-	_canvas.set_layers(_areas_check.button_pressed, _buildings_check.button_pressed)
+	_canvas.set_layers(_areas_check.button_pressed, _actions_check.button_pressed)
+	_canvas.set_blocks(_blocks_check.button_pressed)
 
 
 func _on_stroke_ended() -> void:
@@ -318,6 +328,7 @@ func _on_stroke_ended() -> void:
 func _on_history_applied(coords: Array[Vector2i]) -> void:
 	_canvas.update_tiles(coords)
 	_canvas.refresh_marks()
+	_canvas.refresh_objects()
 	_tools.refresh_panels()
 	if _name_edit.text.strip_edges() != _draft.name:
 		_name_edit.text = _draft.name
@@ -356,7 +367,17 @@ func _on_hovered(coord: Vector2i, tile: HexTile) -> void:
 	if tile == null:
 		_hover_label.text = ""
 		return
-	_hover_label.text = "(%d, %d)  ·  %s  ·  Altura %d" % [coord.x, coord.y, _biome_name(tile.biome), tile.height]
+	var text := "(%d, %d)  ·  %s  ·  Altura %d" % [coord.x, coord.y, _biome_name(tile.biome), tile.height]
+	if not tile.ground.is_empty():
+		text += "  ·  %s" % _ground_name(tile.ground)
+	_hover_label.text = text
+
+
+func _ground_name(slug: String) -> String:
+	for row: Dictionary in GameData.get_rows("ground_types"):
+		if row.get("slug") == slug:
+			return str(row.get("name", slug))
+	return slug
 
 
 func _biome_name(slug: String) -> String:
@@ -388,7 +409,7 @@ func _on_window_input(event: InputEvent) -> void:
 	elif key.ctrl_pressed and key.keycode == KEY_Z:
 		set_input_as_handled()
 		_undo()
-	elif key.keycode >= KEY_1 and key.keycode <= KEY_7 and not key.ctrl_pressed:
+	elif key.keycode >= KEY_1 and key.keycode < KEY_1 + EditorTools.TOOL_NAMES.size() and not key.ctrl_pressed:
 		set_input_as_handled()
 		_tools.set_tool(key.keycode - KEY_1)
 	elif key.keycode == KEY_BRACKETLEFT:
@@ -462,12 +483,17 @@ func _build() -> void:
 	_areas_check.focus_mode = Control.FOCUS_NONE
 	_areas_check.toggled.connect(_on_layers_toggled)
 	header.add_child(_areas_check)
-	_buildings_check = CheckButton.new()
-	_buildings_check.text = "Construções"
-	_buildings_check.button_pressed = true
-	_buildings_check.focus_mode = Control.FOCUS_NONE
-	_buildings_check.toggled.connect(_on_layers_toggled)
-	header.add_child(_buildings_check)
+	_actions_check = CheckButton.new()
+	_actions_check.text = "Ações"
+	_actions_check.button_pressed = true
+	_actions_check.focus_mode = Control.FOCUS_NONE
+	_actions_check.toggled.connect(_on_layers_toggled)
+	header.add_child(_actions_check)
+	_blocks_check = CheckButton.new()
+	_blocks_check.text = "Bloqueio"
+	_blocks_check.focus_mode = Control.FOCUS_NONE
+	_blocks_check.toggled.connect(_on_layers_toggled)
+	header.add_child(_blocks_check)
 	_save_button = Button.new()
 	_save_button.text = "Salvar (Ctrl+S)"
 	_save_button.pressed.connect(save)
@@ -494,8 +520,11 @@ func _build() -> void:
 	_tools.message.connect(func(text: String) -> void: _set_message(text, true))
 	_tools.edited.connect(_on_tools_edited)
 	_tools.area_panel.delete_requested.connect(_on_area_delete)
-	_tools.building_panel.selection_changed.connect(func(index: int) -> void:
-		_canvas.selected_building = index
+	_tools.action_panel.selection_changed.connect(func(index: int) -> void:
+		_canvas.selected_action = index
+		_canvas.refresh_brush())
+	_tools.object_panel.selection_changed.connect(func(index: int) -> void:
+		_canvas.selected_object = index
 		_canvas.refresh_brush())
 	tools_scroll.add_child(_tools)
 	_list = IslandList.new()
@@ -521,10 +550,11 @@ func _build() -> void:
 	_canvas.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_canvas.hovered.connect(_on_hovered)
 	_canvas.brush = _tools.brush_coords
-	for row: Dictionary in GameData.get_rows("building_types"):
+	_canvas.brush_color = func(coord: Vector2i) -> Color: return _tools.brush_color(_draft, coord)
+	for row: Dictionary in GameData.get_rows("action_types"):
 		var type_id := int(row.get("id", 0))
-		_canvas.building_colors[type_id] = Color.from_string(str(row.get("color_hex", "")), UiPalette.TEXT)
-		_canvas.building_names[type_id] = str(row.get("name", ""))
+		_canvas.action_colors[type_id] = Color.from_string(str(row.get("color_hex", "")), UiPalette.TEXT)
+		_canvas.action_names[type_id] = str(row.get("name", ""))
 	_canvas.stroke_started.connect(_on_stroke_started)
 	_canvas.stroke_moved.connect(_paint)
 	_canvas.stroke_ended.connect(_on_stroke_ended)
@@ -537,7 +567,7 @@ func _build() -> void:
 
 	_hover_label = Label.new()
 	_hover_label.theme_type_variation = &"SecondaryLabel"
-	_hover_label.text = "Botão esquerdo: pintar. Botão direito: escolher construção ou tirar área. Roda: zoom. Botão do meio, ou espaço e o botão esquerdo: arrastar. Tab: visão de cima. Ctrl+Z e Ctrl+Y: desfazer e refazer."
+	_hover_label.text = "Botão esquerdo: pintar. Botão direito: escolher objeto ou ação, ou tirar área. Roda: zoom. Botão do meio, ou espaço e o botão esquerdo: arrastar. Tab: visão de cima. Ctrl+Z e Ctrl+Y: desfazer e refazer."
 	_editor.add_child(_hover_label)
 
 	_unsaved_dialog = ConfirmationDialog.new()

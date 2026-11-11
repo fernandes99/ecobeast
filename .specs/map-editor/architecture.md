@@ -22,6 +22,8 @@ O jogador não lê nada disto nesta iniciativa. A rota do jogador, que lê só a
 
 ## Tabelas
 
+> **Depois da [island-villages](../island-villages/architecture.md):** `building_types` virou `action_types` (com `kind`), `island_buildings` e `island_building_tiles` viraram `island_actions` e `island_action_tiles`, e o JSON troca `buildings` por `actions`. Os hexágonos ganharam `ground` (trilha ou piso), e o rascunho ganhou `objects`. A ferramenta Construção virou Ação, e entraram Chão e Objeto. O texto abaixo é o da época da map-editor.
+
 Todas no schema `ecobeasts`. `building_types` é catálogo, editado pelo painel do Supabase e enviado pelo `GET /v1/catalog`. As outras são conteúdo do editor: só as rotas do editor as escrevem.
 
 ### `building_types` (catálogo)

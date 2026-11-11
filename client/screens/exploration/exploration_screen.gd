@@ -4,12 +4,13 @@ const PortraitScene := preload("res://ui/components/creature_portrait.tscn")
 
 const LOADING_TEXT := "Gerando mapa..."
 const ISLAND_LOADING_TEXT := "Chegando na ilha..."
-const BUILDING_TINT_ALPHA := 0.45
-const BUILDING_SCREENS: Dictionary[String, StringName] = {
+const ACTION_TINT_ALPHA := 0.45
+const ACTION_SCREENS: Dictionary[String, StringName] = {
 	"refuge": &"heal_station",
 	"shop": &"shop",
 }
 const NOTHING_HERE_TEXT := "Nada por aqui."
+const NO_TARGET := Vector2i(2147483647, 2147483647)
 const ALMOST_LEVEL_UP_TEXT := "A equipe está a 1 XP do próximo nível."
 const SPAWNED_TEXT := "%s apareceu aqui. Toque em Procurar."
 const EXPLORE_MUSIC_FADE_IN := 1.0
@@ -113,6 +114,7 @@ func _begin() -> void:
 	_map = result.data
 	_player_coord = _map.start
 	_map_view.set_map(_map)
+	_map_view.set_objects(_map.objects)
 	_map_view.set_current(_player_coord)
 	_map_view.set_actor_row(_marker, _player_coord.y)
 	_show_island()
@@ -145,8 +147,29 @@ func _tap(point: Vector2) -> void:
 		return
 	var art_point := (point - _map_view.position) / _map_view.pixel_scale()
 	var target := _map_view.coord_at(art_point)
-	if _map.neighbors(_player_coord).has(target):
+	var object := _map_view.object_hit(art_point)
+	if object != null:
+		target = _object_target(object, art_point)
+	if not _map.neighbors(_player_coord).has(target):
+		return
+	if not _map.is_blocked(target):
 		_step_to(target)
+	elif _map.action_at(target) >= 0:
+		_run_action(_map.action_at(target))
+
+
+## A arte de um objeto cobre os hexágonos de trás: o toque nela vale para o hexágono
+## dele ao lado do Domador, o de ação primeiro, senão o mais perto do toque.
+func _object_target(object: MapObject, art_point: Vector2) -> Vector2i:
+	var best := NO_TARGET
+	for coord: Vector2i in object.tiles:
+		if not _map.neighbors(_player_coord).has(coord):
+			continue
+		if best == NO_TARGET or (_map.action_at(coord) >= 0 and _map.action_at(best) < 0):
+			best = coord
+		elif (_map.action_at(coord) >= 0) == (_map.action_at(best) >= 0) and _map_view.surface_center(coord).distance_to(art_point) < _map_view.surface_center(best).distance_to(art_point):
+			best = coord
+	return best
 
 
 func _search() -> void:
@@ -198,7 +221,7 @@ func _step_to(target: Vector2i) -> void:
 	if tamer != null:
 		_challenge(tamer)
 	else:
-		_enter_building(_map.building_at(origin), _map.building_at(target))
+		_enter_action(_map.action_at(origin), _map.action_at(target))
 
 
 func _show_island() -> void:
@@ -207,15 +230,15 @@ func _show_island() -> void:
 	_building_names.clear()
 	# Uma camada por linha, para a linha seguinte e os atores ficarem por cima.
 	var rows: Dictionary[int, Array] = {}
-	for building: MapBuilding in _map.buildings:
-		var type := GameData.get_row("building_types", building.building_type_id)
+	for action: MapAction in _map.actions:
+		var type := GameData.get_row("action_types", action.action_type_id)
 		var color := Color.from_string(str(type.get("color_hex", "")), UiPalette.TEXT)
-		color.a = BUILDING_TINT_ALPHA
-		for coord: Vector2i in building.tiles:
+		color.a = ACTION_TINT_ALPHA
+		for coord: Vector2i in action.tiles:
 			if not rows.has(coord.y):
 				rows[coord.y] = []
 			rows[coord.y].append({"coord": coord, "color": color})
-		var middle := BuildingNamesLayer.middle_of(building.tiles)
+		var middle := BuildingNamesLayer.middle_of(action.tiles)
 		_building_names.add_name(str(type.get("name", "")), _map_view.surface_center(middle))
 	for row: int in rows:
 		var layer := HexTintLayer.new(false, rows[row].size())
@@ -227,11 +250,14 @@ func _show_island() -> void:
 		_map_view.set_ground_overlay(layer, row)
 
 
-func _enter_building(from: int, to: int) -> void:
-	if to < 0 or to == from:
-		return
-	var type := GameData.get_row("building_types", _map.buildings[to].building_type_id)
-	var screen: StringName = BUILDING_SCREENS.get(str(type.get("slug", "")), &"")
+func _enter_action(from: int, to: int) -> void:
+	if to >= 0 and to != from:
+		_run_action(to)
+
+
+func _run_action(index: int) -> void:
+	var type := GameData.get_row("action_types", _map.actions[index].action_type_id)
+	var screen: StringName = ACTION_SCREENS.get(str(type.get("slug", "")), &"")
 	if screen != &"":
 		_debug_menu.hide()
 		Router.push(screen)

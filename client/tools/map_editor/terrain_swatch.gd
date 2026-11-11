@@ -36,6 +36,14 @@ func set_terrain(biome: String, label: String, height: int) -> void:
 	queue_redraw()
 
 
+## Sem chão, a amostra mostra o bioma escolhido.
+func set_ground(slug: String, label: String, biome: String) -> void:
+	set_terrain(biome, label, 1)
+	if not slug.is_empty():
+		_surface = _load(HexGrounds.TEXTURE_PATH % slug)
+		queue_redraw()
+
+
 func _load(path: String) -> Texture2D:
 	return load(path) as Texture2D if ResourceLoader.exists(path) else null
 
