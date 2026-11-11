@@ -1,7 +1,8 @@
 class_name ExplorationMap
 extends RefCounted
 ## O mapa de uma exploração (.specs/wild-battle/architecture.md): os hexágonos
-## por coordenada axial. Quem gera é o servidor.
+## por coordenada axial. Quem gera é o servidor: sorteado, ou o de uma ilha
+## publicada, com o nome e as construções dela (islands/03).
 
 const DIRECTIONS: Array[Vector2i] = [
 	Vector2i(1, 0),
@@ -20,6 +21,13 @@ var tiles: Dictionary[Vector2i, HexTile] = {}
 var creatures: Dictionary[int, MapCreature] = {}
 ## Os Domadores NPC ainda no mapa, por id (npc-tamers/04). Um por hexágono.
 var tamers: Dictionary[int, MapTamer] = {}
+## A ilha do mapa; 0 e vazio no mapa sorteado.
+var island_id: int = 0
+var island_name: String = ""
+## As construções da ilha; vazio no mapa sorteado.
+var buildings: Array[MapBuilding] = []
+## Hexágono de construção -> índice em `buildings`.
+var _building_of: Dictionary[Vector2i, int] = {}
 
 
 ## Quantos passos pela grade separam duas posições.
@@ -59,6 +67,11 @@ func tamer_at(coord: Vector2i) -> MapTamer:
 	return null
 
 
+## O índice, em `buildings`, da construção do hexágono, ou -1.
+func building_at(coord: Vector2i) -> int:
+	return _building_of.get(coord, -1)
+
+
 static func from_dict(d: Dictionary) -> ExplorationMap:
 	var map := ExplorationMap.new()
 	map.map_seed = DictFields.get_int(d, "seed")
@@ -76,4 +89,13 @@ static func from_dict(d: Dictionary) -> ExplorationMap:
 		var tamer: MapTamer = MapTamer.from_dict(tamer_dict) if tamer_dict is Dictionary else null
 		if tamer != null:
 			map.tamers[tamer.id] = tamer
+	var island := DictFields.get_dict(d, "island")
+	map.island_id = DictFields.get_int(island, "id")
+	map.island_name = DictFields.get_string(island, "name")
+	for building_dict: Variant in DictFields.get_array(d, "buildings"):
+		var building: MapBuilding = MapBuilding.from_dict(building_dict) if building_dict is Dictionary else null
+		if building != null:
+			for coord: Vector2i in building.tiles:
+				map._building_of[coord] = map.buildings.size()
+			map.buildings.append(building)
 	return map

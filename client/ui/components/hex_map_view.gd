@@ -212,6 +212,16 @@ func set_actor_row(actor: Node2D, row: int) -> void:
 	move_child(actor, front if actor.get_index() > front else front - 1)
 
 
+## Põe um filho deste nó logo por cima do terreno de uma linha: por baixo das
+## decorações dela, dos atores e das linhas seguintes (islands/03). Chame depois do
+## `set_map`, que monta as linhas.
+func set_ground_overlay(overlay: Node2D, row: int) -> void:
+	if overlay.get_parent() != self:
+		add_child(overlay)
+	var back := _first_index(_back_rows, row)
+	move_child(overlay, back if overlay.get_index() > back else back - 1)
+
+
 ## Põe o destaque em um hexágono. Só o pedaço redesenha: nenhuma malha é remontada.
 func set_current(coord: Vector2i) -> void:
 	if _highlighted_row != null:

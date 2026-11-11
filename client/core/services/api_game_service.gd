@@ -25,6 +25,7 @@ const DEBUG_XP_PATH := "/v1/me/debug/xp"
 const DEBUG_SPAWNS_PATH := "/v1/me/exploration/spawns"
 const DEBUG_TAMERS_PATH := "/v1/me/exploration/tamers"
 const CODEX_PATH := "/v1/me/codex"
+const ISLANDS_PATH := "/v1/me/islands"
 const EVOLUTION_PATH := "/v1/me/creatures/%s/evolution"
 const LEARN_SKILL_PATH := "/v1/me/creatures/%s/skills"
 
@@ -92,12 +93,29 @@ func reset_progress() -> Result:
 	return Result.success() if response.ok else Result.failure(response.error)
 
 
-func start_exploration() -> Result:
-	var response: ApiResponse = await Api.request(HTTPClient.METHOD_POST, EXPLORATION_PATH, null, true)
+func start_exploration(island_id: int = 0) -> Result:
+	var body: Variant = null
+	if island_id > 0:
+		body = {"island_id": island_id}
+	var response: ApiResponse = await Api.request(HTTPClient.METHOD_POST, EXPLORATION_PATH, body, true)
 	if not response.ok:
 		return Result.failure(response.error)
 	var map: Variant = response.data.get("map") if response.data is Dictionary else null
 	return Result.success(ExplorationMap.from_dict(map)) if map is Dictionary else Result.failure(ApiResponse.SERVER_ERROR)
+
+
+func list_islands() -> Result:
+	var response: ApiResponse = await Api.request(HTTPClient.METHOD_GET, ISLANDS_PATH, null, true)
+	if not response.ok:
+		return Result.failure(response.error)
+	if not response.data is Dictionary:
+		return Result.failure(ApiResponse.SERVER_ERROR)
+	var islands: Array[IslandSummary] = []
+	for island_dict: Variant in DictFields.get_array(response.data, "islands"):
+		var island: IslandSummary = IslandSummary.from_dict(island_dict) if island_dict is Dictionary else null
+		if island != null:
+			islands.append(island)
+	return Result.success(islands)
 
 
 func start_wild_battle(coord: Vector2i, god: bool = false) -> Result:

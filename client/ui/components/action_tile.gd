@@ -4,7 +4,8 @@ extends TapPanel
 ## embaixo, título e subtítulo no fundo da cor do corpo. A arte é
 ## res://assets/ui/actions/<id>.webp se existir (quadrada, recortada no centro
 ## para caber na área), com a base se fundindo na cor do corpo; senão, um
-## gradiente da cor da arte com o ícone da ação.
+## gradiente da cor da arte com o ícone da ação. Uma ação ainda sem arte pode
+## usar a de outra (`art_id`).
 
 const ART_PATH := "res://assets/ui/actions/%s.webp"
 const ICON_PATH := "res://ui/icons/%s.svg"
@@ -19,6 +20,8 @@ const ART_DARKEN := 0.3
 const SUBTITLE_ALPHA := 0.75
 
 var _id: StringName = &""
+## A arte e o ícone de reserva, de outra ação, para quando esta não tem os seus.
+var _art_id: StringName = &""
 var _title := ""
 var _subtitle := ""
 var _art_color := Color.BLACK
@@ -43,8 +46,9 @@ func _notification(what: int) -> void:
 
 
 ## Pode ser chamado antes ou depois de o componente entrar na árvore.
-func setup(id: StringName, title: String, subtitle: String, art_color: Color, body_color: Color) -> void:
+func setup(id: StringName, title: String, subtitle: String, art_color: Color, body_color: Color, art_id: StringName = &"") -> void:
 	_id = id
+	_art_id = art_id if art_id != &"" else id
 	_title = title
 	_subtitle = subtitle
 	_art_color = art_color
@@ -70,8 +74,8 @@ func _refresh() -> void:
 	art_shape.corner_radius_top_right = CORNER_RADIUS - BORDER_WIDTH
 	_art.add_theme_stylebox_override(&"panel", art_shape)
 
-	var art_path := ART_PATH % _id
-	if ResourceLoader.exists(art_path):
+	var art_path := _first_existing(ART_PATH)
+	if not art_path.is_empty():
 		_art_fill.texture = load(art_path) as Texture2D
 		_art_fade.texture = _fade_gradient()
 		_art_fade.visible = true
@@ -79,8 +83,8 @@ func _refresh() -> void:
 	else:
 		_art_fade.visible = false
 		_art_fill.texture = _art_gradient()
-		var icon_path := ICON_PATH % _id
-		_icon.texture = load(icon_path) as Texture2D if ResourceLoader.exists(icon_path) else null
+		var icon_path := _first_existing(ICON_PATH)
+		_icon.texture = load(icon_path) as Texture2D if not icon_path.is_empty() else null
 		_icon.visible = _icon.texture != null
 
 	_title_label.text = _title
@@ -88,6 +92,14 @@ func _refresh() -> void:
 	var subtitle_color := UiPalette.TEXT
 	subtitle_color.a = SUBTITLE_ALPHA
 	_subtitle_label.add_theme_color_override(&"font_color", subtitle_color)
+
+
+## O arquivo da ação ou, sem ele, o da ação de reserva; vazio sem nenhum dos dois.
+func _first_existing(pattern: String) -> String:
+	for id: StringName in [_id, _art_id]:
+		if ResourceLoader.exists(pattern % id):
+			return pattern % id
+	return ""
 
 
 func _art_gradient() -> GradientTexture2D:

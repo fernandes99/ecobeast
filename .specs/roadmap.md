@@ -36,7 +36,7 @@ O que vem depois do MVP de estrutura (entrada, escolha do inicial e Hub). Cada l
 | 20  | [`hidden-traits`](hidden-traits/) | 1 chance em 20 de um Ecobeast (inicial ou selvagem) nascer com o Traço oculto da espécie | auth-google | concluída |
 | 21  | [`creature-sounds`](creature-sounds/) | O som característico de cada Ecobeast: o lugar do `call.wav` e o visualizador; tocar no jogo fica para depois | content-viewer | concluída |
 | 22  | [`map-editor`](map-editor/) | Editor de ilhas só de desenvolvimento (F2, 16:9): terreno do zero ou pelo gerador, construções, áreas de Ecobeasts com nível fixo, rascunho e publicar | content-viewer, biome-encounters | concluída |
-| 23  | [`islands`](islands/) | Ilhas fixas no jogo: a lista de ilhas no Hub, andar na ilha publicada, as construções abrindo as telas delas e os Ecobeasts nascendo pelas áreas | map-editor                 | planejada |
+| 23  | [`islands`](islands/) | Ilhas fixas no jogo: a lista de ilhas no Hub, andar na ilha publicada, as construções abrindo as telas delas e os Ecobeasts nascendo pelas áreas | map-editor                 | concluída |
 | 24  | `legacy-battle-removal` | Apagar a luta antiga, que nenhuma tela abre desde a board-battle/05: a tela `battle`, as rotas `/v1/me/battle` e o código só dela, mantendo as peças que a luta no tabuleiro usa. Os e2e dela já foram apagados em 2026-11-11, a pedido do dono | board-battle | planejada |
 
 ## Pós-lançamento (do GDD)

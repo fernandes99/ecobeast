@@ -4,11 +4,23 @@ extends Control
 ## toque, sem zoom nem arrastar. Quem gera o mapa e os Ecobeasts é o servidor, e ele
 ## confere a posição do Domador ao Procurar (biome-encounters/04). Os Domadores NPC
 ## passeiam no hexágono deles, e quem chega num deles é desafiado: a fala aparece, o
-## mapa trava e tocar na fala abre a luta (npc-tamers/04).
+## mapa trava e tocar na fala abre a luta (npc-tamers/04). Com `island_id`, o mapa é o
+## de uma ilha publicada: o nome dela no topo, as construções coloridas com o nome, e
+## entrar no Refúgio ou na Loja abre a tela deles (islands/03).
 
 const PortraitScene := preload("res://ui/components/creature_portrait.tscn")
 
 const LOADING_TEXT := "Gerando mapa..."
+## A revisar.
+const ISLAND_LOADING_TEXT := "Chegando na ilha..."
+## Quanto da cor do tipo cobre o terreno de uma construção. A revisar.
+const BUILDING_TINT_ALPHA := 0.45
+## A tela que cada tipo de construção abre, pelo `slug` do catálogo. Os outros
+## tipos não abrem nada.
+const BUILDING_SCREENS: Dictionary[String, StringName] = {
+	"refuge": &"heal_station",
+	"shop": &"shop",
+}
 const NOTHING_HERE_TEXT := "Nada por aqui."
 const ALMOST_LEVEL_UP_TEXT := "A equipe está a 1 XP do próximo nível."
 const SPAWNED_TEXT := "%s apareceu aqui. Toque em Procurar."
@@ -31,6 +43,8 @@ const GOD_OFF_TEXT := "God: desligado"
 ## para eles nascerem e saírem sem ninguém ver. A revisar.
 const CREATURE_RADIUS := 16
 
+## A ilha pedida; 0 é o mapa sorteado.
+var _island_id: int = 0
 ## null até o servidor responder.
 var _map: ExplorationMap = null
 var _player_coord := Vector2i.ZERO
@@ -71,6 +85,14 @@ var _debug_tamer_ids: Array[int] = []
 @onready var _debug_spawn_back_button: Button = %DebugSpawnBackButton
 @onready var _debug_god_button: Button = %DebugGodButton
 @onready var _greeting: TamerGreetingPanel = %TamerGreeting
+@onready var _island_plate: Control = %IslandPlate
+@onready var _island_name: Label = %IslandName
+@onready var _building_names: BuildingNamesLayer = %BuildingNames
+
+
+## Chamado pelo Router antes do `_ready`.
+func setup(params: Dictionary) -> void:
+	_island_id = int(params.get("island_id", 0))
 
 
 func _ready() -> void:
@@ -108,8 +130,8 @@ func _exit_tree() -> void:
 
 
 func _begin() -> void:
-	_show_message(LOADING_TEXT, &"SecondaryLabel")
-	var result: Result = await Session.start_exploration()
+	_show_message(ISLAND_LOADING_TEXT if _island_id > 0 else LOADING_TEXT, &"SecondaryLabel")
+	var result: Result = await Session.start_exploration(_island_id)
 	_loading = false
 	_back_button.disabled = false
 	if not result.ok:
@@ -120,6 +142,7 @@ func _begin() -> void:
 	_map_view.set_map(_map)
 	_map_view.set_current(_player_coord)
 	_map_view.set_actor_row(_marker, _player_coord.y)
+	_show_island()
 	_refresh_wild_sprites()
 	_map_view.show()
 	_marker.show()
@@ -186,6 +209,7 @@ func _on_visibility_changed() -> void:
 func _step_to(target: Vector2i) -> void:
 	_walking = true
 	_message.hide()
+	var origin := _player_coord
 	_marker.face(target - _player_coord)
 	_marker.play_run()
 	# Indo para a frente, ele muda de plano antes de sair: a linha nova cobriria os pés
@@ -204,6 +228,48 @@ func _step_to(target: Vector2i) -> void:
 	var tamer := _map.tamer_at(target)
 	if tamer != null:
 		_challenge(tamer)
+	else:
+		_enter_building(_map.building_at(origin), _map.building_at(target))
+
+
+## O nome da ilha no topo, a cor de cada construção por cima do terreno e o nome do
+## tipo no hexágono do meio dela. No mapa sorteado, nada disso aparece.
+func _show_island() -> void:
+	_island_plate.visible = _map.island_id > 0
+	_island_name.text = _map.island_name
+	_building_names.clear()
+	# Uma camada por linha, para a linha seguinte e os atores ficarem por cima.
+	var rows: Dictionary[int, Array] = {}
+	for building: MapBuilding in _map.buildings:
+		var type := GameData.get_row("building_types", building.building_type_id)
+		var color := Color.from_string(str(type.get("color_hex", "")), UiPalette.TEXT)
+		color.a = BUILDING_TINT_ALPHA
+		for coord: Vector2i in building.tiles:
+			if not rows.has(coord.y):
+				rows[coord.y] = []
+			rows[coord.y].append({"coord": coord, "color": color})
+		var middle := BuildingNamesLayer.middle_of(building.tiles)
+		_building_names.add_name(str(type.get("name", "")), _map_view.surface_center(middle))
+	for row: int in rows:
+		var layer := HexTintLayer.new(false, rows[row].size())
+		layer.set_raised(true)
+		for hex: Dictionary in rows[row]:
+			var tile := _map.tile_at(hex["coord"])
+			if tile != null:
+				layer.set_hex(hex["coord"], hex["color"], tile.level())
+		_map_view.set_ground_overlay(layer, row)
+
+
+## Entrar numa construção, vindo de fora dela, abre a tela do tipo por cima do mapa.
+## Andar dentro da mesma construção não abre de novo.
+func _enter_building(from: int, to: int) -> void:
+	if to < 0 or to == from:
+		return
+	var type := GameData.get_row("building_types", _map.buildings[to].building_type_id)
+	var screen: StringName = BUILDING_SCREENS.get(str(type.get("slug", "")), &"")
+	if screen != &"":
+		_debug_menu.hide()
+		Router.push(screen)
 
 
 ## Um Domador desafiou: o mapa trava, e a fala dele aparece. A luta é obrigatória.
@@ -469,6 +535,12 @@ func _fit_view() -> void:
 		creature.scale = _marker.scale
 	for tamer: TamerSprite in _tamer_sprites.values():
 		tamer.scale = _marker.scale
+	_sync_building_names()
+
+
+## Os nomes das construções acompanham o mapa: ao andar e no mapa inteiro.
+func _sync_building_names() -> void:
+	_building_names.set_view(_map_view.position, _map_view.pixel_scale())
 
 
 ## Parte do centro já arredondado: em uma tela de tamanho ímpar, ele cai no meio de
@@ -482,6 +554,7 @@ func _player_centered_position() -> Vector2:
 func _move_map(value: Vector2) -> void:
 	_map_view.position = _map_view.snapped_to_pixels(value)
 	_marker.position = (_map_view.snapped_to_pixels(size / 2.0) - _map_view.position) / _map_view.pixel_scale()
+	_sync_building_names()
 
 
 func _show_message(text: String, variation: StringName) -> void:

@@ -54,8 +54,13 @@ extends RefCounted
 @abstract func reset_progress() -> Result
 
 
-## data: o ExplorationMap, um mapa novo a cada chamada.
-@abstract func start_exploration() -> Result
+## data: o ExplorationMap. Sem ilha (0), um mapa novo a cada chamada; com ela, o
+## mapa da versão publicada (islands/03).
+@abstract func start_exploration(island_id: int = 0) -> Result
+
+
+## data: Array[IslandSummary], as ilhas publicadas (islands/03).
+@abstract func list_islands() -> Result
 
 
 ## data: o BattleTurn da abertura, contra um Ecobeast do hexágono do Domador.

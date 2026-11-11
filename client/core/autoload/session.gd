@@ -153,9 +153,16 @@ func reset_progress() -> Result:
 
 
 ## O mapa não fica aqui: ele só vive enquanto a tela de exploração estiver aberta.
-func start_exploration() -> Result:
+## Sem ilha (0), o mapa sorteado; com ela, o da ilha publicada (islands/03).
+func start_exploration(island_id: int = 0) -> Result:
 	@warning_ignore("redundant_await")
-	return await _service.start_exploration()
+	return await _service.start_exploration(island_id)
+
+
+## As ilhas publicadas (islands/03): lidas a cada abertura da tela, sem guardar aqui.
+func list_islands() -> Result:
+	@warning_ignore("redundant_await")
+	return await _service.list_islands()
 
 
 ## A batalha não fica aqui: quem a mostra é a tela, e o jogador é relido no fim.

@@ -27,9 +27,11 @@ const SHADE_ALPHA := 0.55
 const SHADE_FADE := 0.10
 
 ## Cards de ação, nesta ordem. O título é também o rótulo em DESTINATIONS; as
-## cores ficam em UiPalette.ACTION_COLORS.
+## cores ficam em UiPalette.ACTION_COLORS. `art` é a ação que empresta a arte a
+## quem ainda não tem a sua.
 const ACTIONS: Array[Dictionary] = [
 	{"id": &"explore", "title": "Explorar zona", "subtitle": "Conheça novas áreas e capture criaturas."},
+	{"id": &"islands", "title": "Ilhas", "subtitle": "Visite as ilhas do mundo.", "art": &"explore"},
 	{"id": &"challenge", "title": "Desafiar", "subtitle": "Enfrente outros Domadores."},
 	{"id": &"arenas", "title": "Arenas", "subtitle": "Derrote os 8 Mestres e conquiste a Liga."},
 	{"id": &"shop", "title": "Loja", "subtitle": "Compre itens, Esferas de Vínculo e mais."},
@@ -51,6 +53,7 @@ const TABS: Array[Dictionary] = [
 ## abre nada; a ação e a aba com o mesmo rótulo abrem a mesma tela.
 const DESTINATIONS: Dictionary[String, Dictionary] = {
 	"Explorar zona": {"id": &"exploration", "params": {}},
+	"Ilhas": {"id": &"islands", "params": {}},
 	# Um Domador NPC sorteado na hora (npc-tamers/05).
 	"Desafiar": {"id": &"board_battle", "params": {"challenge": true}},
 	"Arenas": {"id": &"placeholder", "params": {"title": "Arenas"}},
@@ -90,7 +93,7 @@ func _ready() -> void:
 	for action: Dictionary in ACTIONS:
 		var tile: ActionTile = ActionTileScene.instantiate()
 		var colors: Array = UiPalette.ACTION_COLORS[action["id"]]
-		tile.setup(action["id"], action["title"], action["subtitle"], colors[0], colors[1])
+		tile.setup(action["id"], action["title"], action["subtitle"], colors[0], colors[1], action.get("art", &""))
 		tile.pressed.connect(_open.bind(action["title"]))
 		_actions_grid.add_child(tile)
 	for tab: Dictionary in TABS:

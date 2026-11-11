@@ -1,7 +1,7 @@
 class_name HexTintLayer
 extends Node2D
-## Uma camada de cor por cima do mapa do editor de ilhas (map-editor/04): as áreas
-## de Ecobeasts e as construções. Cada hexágono pintado é uma instância de um
+## Uma camada de cor por cima do mapa: no editor de ilhas (map-editor/04), as áreas
+## de Ecobeasts e as construções; no jogo, as construções da ilha (islands/03). Cada hexágono pintado é uma instância de um
 ## `MultiMesh`, então trocar a cor de um ou de mil não remonta nada. Com
 ## `striped`, a cor vem em listras: a área ainda sem espécies.
 ##
@@ -20,7 +20,8 @@ var _count := 0
 var _raised := false
 
 
-func _init(striped: bool = false) -> void:
+## `capacity` é quantos hexágonos a camada aguenta pintar.
+func _init(striped: bool = false, capacity: int = 0) -> void:
 	var corners := HexMapView.HEX_CORNERS
 	var points := PackedVector2Array()
 	for corner: int in range(1, corners.size() - 1):
@@ -40,7 +41,7 @@ func _init(striped: bool = false) -> void:
 	_multimesh.transform_format = MultiMesh.TRANSFORM_2D
 	_multimesh.use_colors = true
 	_multimesh.mesh = hexagon
-	_multimesh.instance_count = IslandDraft.MAX_TILES
+	_multimesh.instance_count = capacity
 	_multimesh.visible_instance_count = 0
 
 
