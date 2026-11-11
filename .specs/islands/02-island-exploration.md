@@ -105,7 +105,7 @@ Arquivos alterados:
 ## Verificação
 
 ```bash
-cd server && npm run lint && npm run typecheck && npm test && npm run test:e2e && npm run test:e2e:legacy
+cd server && npm run lint && npm run typecheck && npm test && npm run test:e2e
 ```
 
 Com o servidor local e uma ilha publicada pelo editor: chamar `GET /v1/me/islands` e `POST /v1/me/exploration {island_id}` pelo `/docs`, conferir as construções e os Ecobeasts nas áreas, e Procurar num deles.

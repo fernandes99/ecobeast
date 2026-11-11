@@ -66,7 +66,7 @@ Documentos:
 ## Verificação
 
 ```bash
-cd server && npm run lint && npm run typecheck && npm test && npm run test:e2e && npm run test:e2e:legacy
+cd server && npm run lint && npm run typecheck && npm test && npm run test:e2e
 godot --headless -d --path client --quit-after 60
 ```
 
