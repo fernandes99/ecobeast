@@ -76,6 +76,7 @@ Arquivos novos, em `res://tools/map_editor/` (montados no código, sem `.tscn`, 
 - `island_list.gd`: a lista e apagar.
 - `new_island_panel.gd`: `NewIslandPanel`, do zero e pelo gerador.
 - `editor_canvas.gd`: `EditorCanvas`, o `HexMapView`, a visão de cima, o zoom, o arrastar e as camadas por cima.
+- `editor_number_field.gd`: `EditorNumberField`, um campo de texto com uma barra deslizante ao lado, para o raio, a seed e os parâmetros do gerador. O `SpinBox` do Godot ficou de fora: com vírgula ("0,5") ele lê 0, e o que foi digitado só vale depois do Enter ou de sair do campo. Na primeira versão, o dono zerou a água, clicou em Gerar e a água apareceu. O campo novo lê o texto na hora de gerar, com vírgula ou ponto, e um valor fora da faixa mostra "Parte de água: escreva um número entre 0 e 1."
 - `island_overview.gd`: `IslandOverview`, a visão de cima, numa malha só com uma cor por hexágono. A cor é a média da textura da superfície, para não ter cor fixa no código.
 
 Arquivos alterados:

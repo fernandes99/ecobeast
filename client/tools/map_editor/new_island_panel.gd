@@ -35,9 +35,9 @@ var _from_scratch: CheckBox
 var _from_generator: CheckBox
 var _scratch_box: VBoxContainer
 var _generator_box: VBoxContainer
-var _radius: SpinBox
-var _seed: SpinBox
-var _params: Dictionary[String, SpinBox] = {}
+var _radius: EditorNumberField
+var _seed: EditorNumberField
+var _params: Dictionary[String, EditorNumberField] = {}
 var _defaults: Dictionary = {}
 var _message: Label
 var _generate_button: Button
@@ -65,8 +65,8 @@ func _init() -> void:
 
 	_scratch_box = VBoxContainer.new()
 	add_child(_scratch_box)
-	_radius = _spin(1, MAX_RADIUS, 1)
-	_radius.value = DEFAULT_RADIUS
+	_radius = _number(1, MAX_RADIUS, true)
+	_radius.set_value(DEFAULT_RADIUS)
 	_scratch_box.add_child(_row("Raio, em hexágonos", _radius))
 
 	var scroll := ScrollContainer.new()
@@ -76,12 +76,12 @@ func _init() -> void:
 	_generator_box = VBoxContainer.new()
 	_generator_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(_generator_box)
-	_seed = _spin(0, MAX_SEED, 1)
+	_seed = _number(0, MAX_SEED, true, false)
 	var seed_row := _row("Seed", _seed)
 	var roll := Button.new()
 	roll.text = "Sortear"
 	roll.pressed.connect(_roll_seed)
-	seed_row.add_child(roll)
+	_seed.add_child(roll)
 	_generator_box.add_child(seed_row)
 
 	_message = Label.new()
@@ -107,10 +107,10 @@ func set_generator_params(params: Dictionary) -> void:
 	for field: String in _ordered_fields(_defaults.keys()):
 		var range_dict := DictFields.get_dict(ranges, field)
 		var integer := bool(range_dict.get("integer", false))
-		var spin := _spin(float(range_dict.get("min", 0.0)), float(range_dict.get("max", 1.0)), 1.0 if integer else 0.001)
-		spin.value = float(_defaults[field])
-		_params[field] = spin
-		_generator_box.add_child(_row(PARAM_LABELS.get(field, field), spin))
+		var number := _number(float(range_dict.get("min", 0.0)), float(range_dict.get("max", 1.0)), integer)
+		number.set_value(float(_defaults[field]))
+		_params[field] = number
+		_generator_box.add_child(_row(PARAM_LABELS.get(field, field), number))
 	var restore := Button.new()
 	restore.text = "Restaurar padrão"
 	restore.pressed.connect(_restore_defaults)
@@ -144,18 +144,26 @@ func _ordered_fields(fields: Array) -> Array[String]:
 func _generate() -> void:
 	_message.text = ""
 	if _from_scratch.button_pressed:
-		_preview = IslandDraft.blank(_island_name(), int(_radius.value), detail_chance(), _rng)
+		var radius := _read(_radius, "Raio")
+		if is_nan(radius):
+			return
+		_preview = IslandDraft.blank(_island_name(), int(radius), detail_chance(), _rng)
 		preview_ready.emit(_preview)
+		return
+	var map_seed := _read(_seed, "Seed")
+	if is_nan(map_seed):
 		return
 	var config: Dictionary = {}
 	for field: String in _params:
-		var spin: SpinBox = _params[field]
-		if spin.step >= 1.0:
-			config[field] = int(spin.value)
+		var number := _read(_params[field], PARAM_LABELS.get(field, field))
+		if is_nan(number):
+			return
+		if _params[field].integer:
+			config[field] = int(number)
 		else:
-			config[field] = spin.value
+			config[field] = number
 	_set_busy(true)
-	var response: ApiResponse = await EditorApi.generate(int(_seed.value), config)
+	var response: ApiResponse = await EditorApi.generate(int(map_seed), config)
 	_set_busy(false)
 	if not response.ok:
 		_message.text = response.error
@@ -188,14 +196,22 @@ func _island_name() -> String:
 	return text if not text.is_empty() else DEFAULT_NAME
 
 
+## O número de um campo, ou NAN com a mensagem do que está errado nele.
+func _read(field: EditorNumberField, label: String) -> float:
+	var number := field.value()
+	if is_nan(number):
+		_message.text = "%s: escreva um número %s." % [label, field.range_text()]
+	return number
+
+
 func _roll_seed() -> void:
-	_seed.value = _rng.randi()
+	_seed.set_value(_rng.randi())
 	_preview = null
 
 
 func _restore_defaults() -> void:
 	for field: String in _params:
-		_params[field].value = float(_defaults[field])
+		_params[field].set_value(float(_defaults[field]))
 	_preview = null
 
 
@@ -230,23 +246,21 @@ func _button(label: String, parent: Node, action: Callable) -> Button:
 	return button
 
 
-func _spin(min_value: float, max_value: float, step: float) -> SpinBox:
-	var spin := SpinBox.new()
-	spin.min_value = min_value
-	spin.max_value = max_value
-	spin.step = step
-	spin.custom_minimum_size.x = 120.0
-	spin.value_changed.connect(func(_value: float) -> void: _preview = null)
-	return spin
+func _number(min_value: float, max_value: float, integer: bool, with_slider: bool = true) -> EditorNumberField:
+	var number := EditorNumberField.new(min_value, max_value, integer, with_slider)
+	number.changed.connect(func() -> void: _preview = null)
+	return number
 
 
-func _row(label: String, control: Control) -> HBoxContainer:
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override(&"separation", 8)
+## O nome em cima e o campo embaixo: o painel é estreito.
+func _row(label: String, control: Control) -> VBoxContainer:
+	var row := VBoxContainer.new()
+	row.add_theme_constant_override(&"separation", 2)
 	var text := Label.new()
 	text.text = label
-	text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	text.theme_type_variation = &"SecondaryLabel"
 	text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	row.add_child(text)
+	control.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(control)
 	return row
