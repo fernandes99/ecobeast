@@ -96,7 +96,7 @@ Feita em 2026-11-10:
   - a ordem dos nós com pedaços e linhas novas, e o modo sem pedaços do Explorar zona (`set_current` e `set_actor_row`) e do tabuleiro (`build_all_rows`).
 - **Velocidade, com `-d`:** a pincelada de raio 10 numa ilha de 19.927 hexágonos levou 31 ms por quadro em média e 80 ms no pior quadro, de perto. Antes dos pedaços eram 262 ms. Na visão de cima, o pior quadro foi de 28 ms.
 - **Quadros do Movie Maker:** água com a margem atravessando os pedaços sem emenda, pedra com montanha e o buraco de Tirar hexágono com o paredão.
-- **Falta, com o dono:** os passos acima no F5.
+- **Com o dono, em 2026-11-11:** no F5, ele pediu um painel mais claro, porque não identificava os biomas. Com as amostras em hexágono, ele aprovou ("Ficou bom").
 
 ## Tarefas
 
