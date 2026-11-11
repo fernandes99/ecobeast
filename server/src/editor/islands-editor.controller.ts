@@ -35,10 +35,8 @@ import {
   IslandPublishedResponseDto,
   IslandSavedResponseDto,
 } from './islands-editor.dto.js';
-import {
-  ISLAND_NOT_FOUND,
-  IslandsEditorService,
-} from './islands-editor.service.js';
+import { ISLAND_NOT_FOUND } from '../islands/islands.service.js';
+import { IslandsEditorService } from './islands-editor.service.js';
 
 /** Um id de ilha; um texto que não é número responde como ilha que não existe. */
 const islandId = new ParseIntPipe({

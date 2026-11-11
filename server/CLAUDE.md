@@ -16,11 +16,12 @@ server/
   src/auth/              login com Google (Supabase Auth), AuthGuard e @CurrentUser()
   src/player/            o Domador do usuário logado (/v1/me)
   src/battle/            a batalha do usuário logado (/v1/me/battle), guardada na memória
-  src/exploration/       o mapa de exploração do usuário logado (/v1/me/exploration), com os Ecobeasts e os Domadores NPC guardados na memória
+  src/exploration/       o mapa de exploração do usuário logado (/v1/me/exploration), sorteado ou de uma ilha publicada, com os Ecobeasts e os Domadores NPC guardados na memória
   src/inventory/         a Loja e a Mochila do usuário logado (/v1/me/shop e /v1/me/items)
   src/team/              a equipe e o Santuário do usuário logado (/v1/me/team e /v1/me/storage)
   src/codex/             o Bestiário do usuário logado (/v1/me/codex) e o CodexService, que as lutas, a Evolução e o inicial usam para registrar visto e capturado
   src/editor/            o editor de ilhas (/v1/editor): ilhas em rascunho e publicadas e o gerador de mapas, só para quem está em MAP_EDITOR_USER_IDS
+  src/islands/           as ilhas publicadas para o jogador (/v1/me/islands) e o IslandsService, que lê uma versão de ilha para o editor e para a exploração numa ilha
   src/common/            peças compartilhadas pelas rotas
   src/catalog/           um módulo por recurso do catálogo
   src/domain/            regras puras de jogo (sem Nest nem Prisma)

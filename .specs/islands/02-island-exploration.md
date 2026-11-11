@@ -1,6 +1,6 @@
 # 02. A exploração numa ilha
 
-- **Status:** rascunho
+- **Status:** concluída
 - **Depende de:** [01-area-spawn-count](01-area-spawn-count.md), [architecture.md](architecture.md)
 
 ## Contexto
@@ -62,12 +62,12 @@ Com a [01](01-area-spawn-count.md), cada área de uma ilha diz quantos Ecobeasts
 
 ## Critérios de aceite
 
-- [ ] Com uma ilha publicada e outra só em rascunho, `GET /v1/me/islands` traz só a publicada, com o nome publicado mesmo depois de o rascunho mudar de nome.
-- [ ] `POST /v1/me/exploration {island_id}` de uma ilha publicada traz os hexágonos, a chegada, as construções e `island`; de uma em rascunho ou inexistente, `404`; com `"x"` ou `0`, `400`.
-- [ ] Sem corpo, a rota responde como antes, com `island: null` e `buildings: []`.
-- [ ] Numa ilha com duas áreas de `spawn_count` 3 e 5, vêm 8 Ecobeasts, cada um num hexágono da sua área, nenhum em construção, com espécies da área.
-- [ ] Procurar no hexágono de um desses Ecobeasts abre a luta com a espécie e um nível entre o mínimo e o máximo dele, e a captura funciona.
-- [ ] Os testes do servidor passam.
+- [x] Com uma ilha publicada e outra só em rascunho, `GET /v1/me/islands` traz só a publicada, com o nome publicado mesmo depois de o rascunho mudar de nome.
+- [x] `POST /v1/me/exploration {island_id}` de uma ilha publicada traz os hexágonos, a chegada, as construções e `island`; de uma em rascunho ou inexistente, `404`; com `"x"` ou `0`, `400`.
+- [x] Sem corpo, a rota responde como antes, com `island: null` e `buildings: []`.
+- [x] Numa ilha com duas áreas de `spawn_count` 3 e 5, vêm 8 Ecobeasts, cada um num hexágono da sua área, nenhum em construção, com espécies da área.
+- [x] Procurar no hexágono de um desses Ecobeasts abre a luta com a espécie e um nível entre o mínimo e o máximo dele, e a captura funciona.
+- [x] Os testes do servidor passam.
 
 ## Desenho técnico
 
@@ -95,12 +95,12 @@ Arquivos novos:
 Arquivos alterados:
 
 - `server/src/editor/islands-editor.service.ts`: usa o `IslandsService.readVersion`; o `EditorModule` importa o `IslandsModule`.
-- `server/src/exploration/exploration.dto.ts`: `StartExplorationBodyDto` (`island_id` opcional, `@IsInt` e `@Min(1)` com a mensagem "Ilha não encontrada.", o `@Min` só com um inteiro, por `@ValidateIf`, como no `DebugSpawnBodyDto`: a validação junta as mensagens numa frase só, e `"x"` daria a mensagem duas vezes), `MapIslandDto`, `MapBuildingDto`, e `island` e `buildings` no `ExplorationMapDto`.
+- `server/src/exploration/exploration.dto.ts`: `StartExplorationBodyDto` (`island_id` opcional, com uma conferência só, `@ValidateBy`, de inteiro maior que 0 e a mensagem "Ilha não encontrada.". Com `@IsInt` e `@Min`, `"x"` daria a mensagem duas vezes, porque a validação junta as mensagens numa frase só; e o `@ValidateIf` não serve, porque desliga todas as conferências do campo), `MapIslandDto`, `MapBuildingDto`, e `island` e `buildings` no `ExplorationMapDto`.
 - `server/src/exploration/exploration.service.ts`: `start(userId, islandId?)`. Sem ilha, o mapa sorteado de hoje com `island: null` e `buildings: []`. Com ilha, ele confere o Domador, lê a versão publicada, sorteia pelas áreas e guarda a exploração.
 - `server/src/exploration/exploration.controller.ts`: o corpo opcional e as respostas novas no `/docs`.
 - `server/src/exploration/exploration.module.ts`: importa o `IslandsModule`.
 - `server/src/app.module.ts`: o `IslandsModule`.
-- `server/test/exploration.e2e-spec.ts`: `island: null` e `buildings: []` no mapa sorteado.
+- `server/test/exploration.e2e-spec.ts`: sem mudança. O `island: null` e o `buildings: []` do mapa sorteado ficaram no `islands.e2e-spec.ts`, junto com o resto das ilhas.
 
 ## Verificação
 
@@ -110,10 +110,16 @@ cd server && npm run lint && npm run typecheck && npm test && npm run test:e2e
 
 Com o servidor local e uma ilha publicada pelo editor: chamar `GET /v1/me/islands` e `POST /v1/me/exploration {island_id}` pelo `/docs`, conferir as construções e os Ecobeasts nas áreas, e Procurar num deles.
 
+Feita em 2026-11-11:
+- **Servidor:** lint e tipos limpos; 802 testes de unidade e 465 e2e passando. Os novos conferem o sorteio pelas áreas no domínio (quantidade, hexágono fora de construção, peso e nível), a lista de ilhas, o mapa da ilha publicada, Procurar no início, o `404`, o `400`, o `409` antes da ilha, o mapa sorteado com `island: null` e os schemas no `/docs`.
+- **Ilha do dono (id 85, "Ilha nova"):** lida pelo `IslandsService` num script, já apagado. 1261 hexágonos, 4 construções e 2 áreas, com 81 e 14 hexágonos fora de construção e 10 Ecobeasts cada: saíram 20, todos nas áreas e com nível de 2 a 5.
+- **Teste instável:** `tamers.spec.ts` ("nunca põe Domador na água...") estourou os 5 s uma vez, com os e2e rodando ao mesmo tempo. Sozinho e na suíte de unidade ele passa. Já era assim antes desta fase.
+- **Para o dono:** pelo `/docs`, com o servidor local, ou esperar a fase 03, que mostra a ilha no jogo.
+
 ## Tarefas
 
-- [ ] O `IslandsService`, com a leitura movida, e o editor usando ele.
-- [ ] `spawnAreas` e `rollAreaSpawns`, com os testes.
-- [ ] `GET /v1/me/islands`.
-- [ ] A exploração numa ilha, com o e2e.
-- [ ] Rodar a verificação, dizer o que ficou para o dono e mudar o status aqui e no README da iniciativa.
+- [x] O `IslandsService`, com a leitura movida, e o editor usando ele.
+- [x] `spawnAreas` e `rollAreaSpawns`, com os testes.
+- [x] `GET /v1/me/islands`.
+- [x] A exploração numa ilha, com o e2e.
+- [x] Rodar a verificação, dizer o que ficou para o dono e mudar o status aqui e no README da iniciativa.

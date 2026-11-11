@@ -26,7 +26,9 @@ import {
   DebugTamerResponseDto,
   ExplorationResponseDto,
   INVALID_TAMER,
+  StartExplorationBodyDto,
 } from './exploration.dto.js';
+import { ISLAND_NOT_FOUND } from '../islands/islands.service.js';
 import { ExplorationService, NO_PLAYER } from './exploration.service.js';
 
 const CLOSED =
@@ -53,17 +55,31 @@ export class ExplorationController {
   @ApiOperation({
     summary: 'Começar uma exploração',
     description:
-      'Gera um mapa hexagonal novo, com seed sorteada pelo servidor, e sorteia os ' +
-      'Ecobeasts e os Domadores NPC dele pelas taxas de cada bioma e pela média ' +
-      'de nível da equipe. O servidor guarda os Ecobeasts, os Domadores e a ' +
-      'posição do Domador até a próxima exploração. Cada chamada devolve outro mapa.',
+      'Sem corpo, gera um mapa hexagonal novo, com seed sorteada pelo servidor, e ' +
+      'sorteia os Ecobeasts e os Domadores NPC dele pelas taxas de cada bioma e ' +
+      'pela média de nível da equipe; cada chamada devolve outro mapa. Com ' +
+      '`{island_id}`, devolve a versão publicada da ilha, com as construções, ' +
+      'sem Domadores NPC e com os Ecobeasts sorteados pelas áreas: a quantidade ' +
+      'de cada área, cada um num hexágono dela fora de construção, a espécie ' +
+      'pelo peso e o nível entre o mínimo e o máximo. Nos dois casos, o servidor ' +
+      'guarda os Ecobeasts, os Domadores e a posição do Domador até a próxima ' +
+      'exploração.',
   })
   @ApiCreatedResponse({ type: ExplorationResponseDto })
+  @ApiBadRequestResponse({
+    description: `\`island_id\` que não é um inteiro maior que 0: "${ISLAND_NOT_FOUND}"`,
+  })
+  @ApiNotFoundResponse({
+    description: `A ilha não existe ou nunca foi publicada: "${ISLAND_NOT_FOUND}"`,
+  })
   @ApiConflictResponse({
     description: `Sem Domador ou sem equipe: "${NO_PLAYER}"`,
   })
-  start(@CurrentUser() userId: string): Promise<ExplorationResponseDto> {
-    return this.exploration.start(userId);
+  start(
+    @CurrentUser() userId: string,
+    @Body() body: StartExplorationBodyDto,
+  ): Promise<ExplorationResponseDto> {
+    return this.exploration.start(userId, body?.island_id);
   }
 
   @Post('spawns')

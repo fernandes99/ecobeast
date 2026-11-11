@@ -1,6 +1,14 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsInt, IsOptional, Max, Min, ValidateIf } from 'class-validator';
+import {
+  IsInt,
+  IsOptional,
+  Max,
+  Min,
+  ValidateBy,
+  ValidateIf,
+} from 'class-validator';
 import { INVALID_ENEMY } from '../battle/battle.dto.js';
+import { ISLAND_NOT_FOUND } from '../islands/islands.service.js';
 
 export const INVALID_TAMER = 'Domador de depuração inválido.';
 import { BIOMES, TERRAIN_SHAPES } from '../domain/exploration/map-generator.js';
@@ -56,6 +64,27 @@ export class MapTamerDto extends HexCoordDto {
   greeting_id: number;
 }
 
+/** A ilha do mapa (islands/02). */
+export class MapIslandDto {
+  @ApiProperty({ example: 7 })
+  id: number;
+
+  @ApiProperty({
+    description: 'O nome da versão publicada.',
+    example: 'Ilha das Brumas',
+  })
+  name: string;
+}
+
+/** Uma construção da ilha: o tipo do catálogo e os hexágonos dela (islands/02). */
+export class MapBuildingDto {
+  @ApiProperty({ description: 'Id em `building_types`.', example: 1 })
+  building_type_id: number;
+
+  @ApiProperty({ type: [HexCoordDto] })
+  tiles: HexCoordDto[];
+}
+
 export class ExplorationMapDto {
   @ApiProperty({ description: 'Reproduz o terreno.', example: 1234567 })
   seed: number;
@@ -82,6 +111,42 @@ export class ExplorationMapDto {
       'luta só aparecem nela.',
   })
   tamers: MapTamerDto[];
+
+  @ApiProperty({
+    type: MapIslandDto,
+    nullable: true,
+    description: 'A ilha, ou `null` no mapa sorteado.',
+  })
+  island: MapIslandDto | null;
+
+  @ApiProperty({
+    type: [MapBuildingDto],
+    description: 'As construções da ilha; vazio no mapa sorteado.',
+  })
+  buildings: MapBuildingDto[];
+}
+
+/** O corpo de começar uma exploração (islands/02): sem ilha, o mapa sorteado. */
+export class StartExplorationBodyDto {
+  @ApiPropertyOptional({
+    description:
+      'A ilha publicada onde entrar. Sem ele, o servidor sorteia um mapa novo.',
+    example: 7,
+  })
+  @IsOptional()
+  // Uma conferência só: com @IsInt e @Min, "x" daria a mensagem duas vezes, numa
+  // frase só, porque a validação junta as mensagens.
+  @ValidateBy(
+    {
+      name: 'isIslandId',
+      validator: {
+        validate: (value: unknown) =>
+          typeof value === 'number' && Number.isInteger(value) && value >= 1,
+      },
+    },
+    { message: ISLAND_NOT_FOUND },
+  )
+  island_id?: number;
 }
 
 export class ExplorationResponseDto {

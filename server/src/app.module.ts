@@ -11,6 +11,7 @@ import { CodexModule } from './codex/codex.module.js';
 import { Env, validateEnv } from './config/env.js';
 import { EditorModule } from './editor/editor.module.js';
 import { ExplorationModule } from './exploration/exploration.module.js';
+import { IslandsModule } from './islands/islands.module.js';
 import { HealthModule } from './health/health.module.js';
 import { InventoryModule } from './inventory/inventory.module.js';
 import { PlayerModule } from './player/player.module.js';
@@ -44,6 +45,7 @@ import { TeamModule } from './team/team.module.js';
     ProgressionModule,
     CodexModule,
     EditorModule,
+    IslandsModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

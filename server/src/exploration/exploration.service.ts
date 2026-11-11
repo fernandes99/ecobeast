@@ -12,7 +12,11 @@ import {
 } from '../battle/battle.dto.js';
 import { secureRandom } from '../common/secure-random.js';
 import { generateMap } from '../domain/exploration/map-generator.js';
-import { rollSpawns } from '../domain/exploration/spawns.js';
+import { type MapSpawn, rollSpawns } from '../domain/exploration/spawns.js';
+import {
+  rollAreaSpawns,
+  spawnAreas,
+} from '../domain/islands/area-spawns.js';
 import type { TamerSize } from '../domain/tamers/tamer-config.js';
 import {
   type MapTamer,
@@ -20,6 +24,7 @@ import {
   rollMapTamers,
 } from '../domain/tamers/tamers.js';
 import type { Env } from '../config/env.js';
+import { ISLAND_NOT_FOUND, IslandsService } from '../islands/islands.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import {
   DebugClearResponseDto,
@@ -28,6 +33,7 @@ import {
   DebugTamerBodyDto,
   DebugTamerResponseDto,
   ExplorationResponseDto,
+  MapCreatureDto,
   MapTamerDto,
 } from './exploration.dto.js';
 import { ExplorationStore } from './exploration.store.js';
@@ -51,6 +57,11 @@ function toMapTamerDto({
   return { id, q, r, name_id: nameId, greeting_id: greetingId };
 }
 
+/** O Ecobeast como o mapa o mostra: sem o nível, que só aparece na luta. */
+function toMapCreatureDto({ id, speciesId, q, r }: MapSpawn): MapCreatureDto {
+  return { id, species_id: speciesId, q, r };
+}
+
 /**
  * Gera um mapa por exploração, com os Ecobeasts (biome-encounters/03) e os
  * Domadores NPC dele (npc-tamers/03).
@@ -61,11 +72,17 @@ export class ExplorationService {
     private readonly prisma: PrismaService,
     private readonly store: ExplorationStore,
     private readonly config: ConfigService<Env, true>,
+    private readonly islands: IslandsService,
   ) {}
 
-  async start(userId: string): Promise<ExplorationResponseDto> {
+  /** Sem ilha, o mapa sorteado; com ela, a versão publicada (islands/02). */
+  async start(
+    userId: string,
+    islandId?: number,
+  ): Promise<ExplorationResponseDto> {
     const teamAverage = await partyAverageLevel(this.prisma, userId);
     if (teamAverage === null) throw new ConflictException(NO_PLAYER);
+    if (islandId !== undefined) return this.startIsland(userId, islandId);
 
     const map = generateMap(Math.floor(secureRandom() * SEED_RANGE));
     const [species, texts] = await Promise.all([
@@ -90,13 +107,54 @@ export class ExplorationService {
     return {
       map: {
         ...map,
-        creatures: spawns.map(({ id, speciesId, q, r }) => ({
-          id,
-          species_id: speciesId,
+        creatures: spawns.map(toMapCreatureDto),
+        tamers: tamers.map(toMapTamerDto),
+        island: null,
+        buildings: [],
+      },
+    };
+  }
+
+  /**
+   * A versão publicada da ilha, com os Ecobeasts sorteados pelas áreas e sem
+   * Domadores NPC. A exploração fica guardada como a sorteada: Procurar, a luta
+   * e a captura não mudam.
+   */
+  private async startIsland(
+    userId: string,
+    islandId: number,
+  ): Promise<ExplorationResponseDto> {
+    const island = await this.islands.readPublished(islandId);
+    if (!island) throw new NotFoundException(ISLAND_NOT_FOUND);
+    const { draft } = island;
+    const spawns = rollAreaSpawns(spawnAreas(draft), secureRandom);
+    this.store.set(userId, {
+      spawns: new Map(spawns.map((spawn) => [spawn.id, spawn])),
+      tamers: new Map(),
+      position: draft.start,
+      positionAt: Date.now(),
+    });
+    return {
+      map: {
+        // A seed escolhe as decorações e os escorridos no desenho; o editor
+        // usa o mesmo id, então a ilha fica igual à dele.
+        seed: island.id,
+        start: draft.start,
+        // A área de cada hexágono fica no servidor.
+        tiles: draft.tiles.map(({ q, r, biome, shape, variant }) => ({
           q,
           r,
+          biome,
+          shape,
+          variant,
         })),
-        tamers: tamers.map(toMapTamerDto),
+        creatures: spawns.map(toMapCreatureDto),
+        tamers: [],
+        island: { id: island.id, name: island.name },
+        buildings: draft.buildings.map(({ buildingTypeId, tiles }) => ({
+          building_type_id: buildingTypeId,
+          tiles,
+        })),
       },
     };
   }

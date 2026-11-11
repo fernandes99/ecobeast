@@ -1,0 +1,105 @@
+import { Injectable } from '@nestjs/common';
+import type {
+  Biome,
+  TerrainShape,
+} from '../domain/exploration/map-generator.js';
+import type { IslandDraft } from '../domain/islands/island-draft.js';
+import type { Prisma } from '../generated/prisma/client.js';
+import { PrismaService } from '../prisma/prisma.service.js';
+
+export const ISLAND_NOT_FOUND = 'Ilha não encontrada.';
+
+const PUBLISHED = 'published';
+
+type Tx = Prisma.TransactionClient;
+
+/** A versão publicada de uma ilha, como o jogador a recebe (islands/02). */
+export interface PublishedIsland {
+  id: number;
+  name: string;
+  draft: IslandDraft;
+}
+
+/**
+ * A leitura das ilhas, compartilhada pelo editor (map-editor) e pela exploração
+ * numa ilha (.specs/islands/architecture.md, "Ler a ilha publicada").
+ */
+@Injectable()
+export class IslandsService {
+  constructor(private readonly prisma: PrismaService) {}
+
+  /** As ilhas com versão publicada, em ordem de id, com o nome publicado. */
+  async listPublished(): Promise<{ id: number; name: string }[]> {
+    const maps = await this.prisma.islandMap.findMany({
+      where: { kind: PUBLISHED },
+      orderBy: { islandId: 'asc' },
+      select: { islandId: true, name: true },
+    });
+    return maps.map(({ islandId, name }) => ({ id: islandId, name }));
+  }
+
+  /** A versão publicada da ilha, ou `null` se ela não existe ou nunca foi publicada. */
+  async readPublished(islandId: number): Promise<PublishedIsland | null> {
+    const map = await this.prisma.islandMap.findUnique({
+      where: { islandId_kind: { islandId, kind: PUBLISHED } },
+      select: { id: true },
+    });
+    if (!map) return null;
+    const draft = await this.readVersion(this.prisma, map.id);
+    return { id: islandId, name: draft.name, draft };
+  }
+
+  /** Uma versão guardada como o rascunho das regras, com as áreas numeradas de 1 em diante. */
+  async readVersion(
+    client: Tx | PrismaService,
+    islandMapId: number,
+  ): Promise<IslandDraft> {
+    const [map, tiles, buildings, areas] = await Promise.all([
+      client.islandMap.findUniqueOrThrow({ where: { id: islandMapId } }),
+      client.islandTile.findMany({
+        where: { islandMapId },
+        orderBy: [{ r: 'asc' }, { q: 'asc' }],
+        include: { biome: { select: { slug: true } } },
+      }),
+      client.islandBuilding.findMany({
+        where: { islandMapId },
+        orderBy: { id: 'asc' },
+        include: { tiles: { orderBy: [{ r: 'asc' }, { q: 'asc' }] } },
+      }),
+      client.islandArea.findMany({
+        where: { islandMapId },
+        orderBy: { id: 'asc' },
+        include: { species: { orderBy: { speciesId: 'asc' } } },
+      }),
+    ]);
+    const keys = new Map(areas.map((area, index) => [area.id, index + 1]));
+    return {
+      name: map.name,
+      start: { q: map.startQ, r: map.startR },
+      tiles: tiles.map(({ q, r, biome, shape, variant, areaId }) => ({
+        q,
+        r,
+        biome: biome.slug as Biome,
+        shape: shape as TerrainShape,
+        variant,
+        ...(areaId === null ? {} : { area: keys.get(areaId)! }),
+      })),
+      buildings: buildings.map(({ buildingTypeId, tiles: occupied }) => ({
+        buildingTypeId,
+        tiles: occupied.map(({ q, r }) => ({ q, r })),
+      })),
+      areas: areas.map(({ id, name, colorHex, spawnCount, species }) => ({
+        key: keys.get(id)!,
+        name,
+        colorHex,
+        spawnCount,
+        species: species.map(({ speciesId, weight, minLevel, maxLevel }) => ({
+          speciesId,
+          weight,
+          minLevel,
+          maxLevel,
+        })),
+      })),
+    };
+  }
+}

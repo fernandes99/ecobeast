@@ -67,7 +67,7 @@ Escolhas do planejamento (corrigíveis; ao mudar uma, atualize aqui e no [archit
 | # | Fase | Entrega | Status |
 | --- | --- | --- | --- |
 | 1 | [01-area-spawn-count](01-area-spawn-count.md) | Servidor e editor: a quantidade de Ecobeasts de cada área (`spawn_count`), no banco, nas rotas do editor e no painel de área | concluída |
-| 2 | [02-island-exploration](02-island-exploration.md) | Servidor: a lista das ilhas publicadas para o jogador, e a exploração numa ilha, com os Ecobeasts pelas áreas e as construções na resposta | rascunho |
+| 2 | [02-island-exploration](02-island-exploration.md) | Servidor: a lista das ilhas publicadas para o jogador, e a exploração numa ilha, com os Ecobeasts pelas áreas e as construções na resposta | concluída |
 | 3 | [03-island-screens](03-island-screens.md) | Jogo: a ação Ilhas no Hub, a tela da lista e a tela de Explorar zona numa ilha, com as construções no mapa e o Refúgio e a Loja abrindo | rascunho |
 
 O desenho compartilhado está no [architecture.md](architecture.md).

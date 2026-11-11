@@ -4,10 +4,6 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import type {
-  Biome,
-  TerrainShape,
-} from '../domain/exploration/map-generator.js';
 import {
   draftError,
   draftHash,
@@ -16,6 +12,7 @@ import {
   publishError,
 } from '../domain/islands/island-draft.js';
 import type { Prisma } from '../generated/prisma/client.js';
+import { ISLAND_NOT_FOUND, IslandsService } from '../islands/islands.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import type {
   IslandCreatedResponseDto,
@@ -27,7 +24,6 @@ import type {
   IslandStatus,
 } from './islands-editor.dto.js';
 
-export const ISLAND_NOT_FOUND = 'Ilha não encontrada.';
 export const PUBLISHED_CANNOT_BE_DELETED =
   'Uma ilha publicada não pode ser apagada.';
 
@@ -118,7 +114,10 @@ function toDto(draft: IslandDraft): IslandDraftDto {
  */
 @Injectable()
 export class IslandsEditorService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly islands: IslandsService,
+  ) {}
 
   async list(): Promise<IslandListResponseDto> {
     const islands = await this.prisma.island.findMany({
@@ -160,7 +159,7 @@ export class IslandsEditorService {
 
   async read(id: number): Promise<IslandDraftResponseDto> {
     const island = await this.island(id);
-    const draft = await this.readVersion(this.prisma, island.draftId);
+    const draft = await this.islands.readVersion(this.prisma, island.draftId);
     return {
       id,
       status: statusOf(island.maps),
@@ -192,7 +191,7 @@ export class IslandsEditorService {
 
   async publish(id: number): Promise<IslandPublishedResponseDto> {
     const island = await this.island(id);
-    const draft = await this.readVersion(this.prisma, island.draftId);
+    const draft = await this.islands.readVersion(this.prisma, island.draftId);
     const error = publishError(draft, await this.knownIds());
     if (error) throw new ConflictException(error);
     const publishedAt = await this.prisma.$transaction(async (tx) => {
@@ -330,59 +329,5 @@ export class IslandsEditorService {
       });
     }
     return map;
-  }
-
-  /** Uma versão guardada como o rascunho das regras, com as áreas numeradas de 1 em diante. */
-  private async readVersion(
-    client: Tx | PrismaService,
-    islandMapId: number,
-  ): Promise<IslandDraft> {
-    const [map, tiles, buildings, areas] = await Promise.all([
-      client.islandMap.findUniqueOrThrow({ where: { id: islandMapId } }),
-      client.islandTile.findMany({
-        where: { islandMapId },
-        orderBy: [{ r: 'asc' }, { q: 'asc' }],
-        include: { biome: { select: { slug: true } } },
-      }),
-      client.islandBuilding.findMany({
-        where: { islandMapId },
-        orderBy: { id: 'asc' },
-        include: { tiles: { orderBy: [{ r: 'asc' }, { q: 'asc' }] } },
-      }),
-      client.islandArea.findMany({
-        where: { islandMapId },
-        orderBy: { id: 'asc' },
-        include: { species: { orderBy: { speciesId: 'asc' } } },
-      }),
-    ]);
-    const keys = new Map(areas.map((area, index) => [area.id, index + 1]));
-    return {
-      name: map.name,
-      start: { q: map.startQ, r: map.startR },
-      tiles: tiles.map(({ q, r, biome, shape, variant, areaId }) => ({
-        q,
-        r,
-        biome: biome.slug as Biome,
-        shape: shape as TerrainShape,
-        variant,
-        ...(areaId === null ? {} : { area: keys.get(areaId)! }),
-      })),
-      buildings: buildings.map(({ buildingTypeId, tiles: occupied }) => ({
-        buildingTypeId,
-        tiles: occupied.map(({ q, r }) => ({ q, r })),
-      })),
-      areas: areas.map(({ id, name, colorHex, spawnCount, species }) => ({
-        key: keys.get(id)!,
-        name,
-        colorHex,
-        spawnCount,
-        species: species.map(({ speciesId, weight, minLevel, maxLevel }) => ({
-          speciesId,
-          weight,
-          minLevel,
-          maxLevel,
-        })),
-      })),
-    };
   }
 }
