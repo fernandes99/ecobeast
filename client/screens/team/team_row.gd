@@ -1,10 +1,7 @@
 class_name TeamRow
 extends PanelContainer
-## Uma vaga da equipe (team-and-storage/03, RF-02 a RF-04): um Ecobeast ou a vaga
-## livre. Só reconhece o gesto, o toque curto e o segurar: quem arrasta é a tela.
 
 signal tapped
-## O dedo ficou parado até o fim do %HoldTimer. `finger_y`: a altura dele na tela.
 signal hold_started(finger_y: float)
 
 const ElementBadgeScene := preload("res://ui/components/element_badge.tscn")
@@ -13,7 +10,6 @@ const NO_STATUS := -1
 const CHIP_FONT_SIZE := 18
 const LIFTED_SHADOW := 18
 
-## null na vaga livre.
 var creature: CreatureInstance = null
 ## Segurar levanta a linha. Sem isso, um toque longo conta como toque.
 var can_hold: bool = false
@@ -22,7 +18,6 @@ var _is_leader: bool = false
 var _is_lifted: bool = false
 var _is_pressing: bool = false
 var _press_position := Vector2.ZERO
-## Cópias do estilo do tema, só desta linha (a borda muda com o estado).
 var _normal_style: StyleBoxFlat
 var _leader_style: StyleBoxFlat
 var _lifted_style: StyleBoxFlat
@@ -75,7 +70,6 @@ func _gui_input(event: InputEvent) -> void:
 		_end_press()
 
 
-## Pode ser chamado antes ou depois de a linha entrar na árvore.
 func set_creature(value: CreatureInstance) -> void:
 	creature = value
 	if is_node_ready():

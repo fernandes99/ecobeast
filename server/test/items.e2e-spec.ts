@@ -7,6 +7,7 @@ import { PrismaService } from '../src/prisma/prisma.service.js';
 import { createTestApp } from './support/app.js';
 import { createTestPrisma } from './support/db.js';
 import { createTestTokens, TestTokens } from './support/tokens.js';
+import { BattleStore } from '../src/battle/battle.store.js';
 import { HERE, placeWild } from './support/wild.js';
 
 // Os testes não conferem os valores dos itens: leem do banco, que o dono muda
@@ -14,7 +15,7 @@ import { HERE, placeWild } from './support/wild.js';
 
 const RUVO = 1;
 const USE_PATH = '/v1/me/items/use';
-const FLEE = { type: 'flee' };
+const WAIT = { position: 0, action: { type: 'wait' } };
 const NO_PLAYER = 'Crie seu Domador primeiro.';
 const NO_ITEM = 'Você não tem esse item.';
 const INVALID_ITEM = 'Esse item não existe.';
@@ -77,10 +78,10 @@ describe('Rota de uso de item (e2e)', () => {
       use: (body: object) => http().post(USE_PATH).set(auth).send(body),
       wild: () => {
         placeWild(app, id);
-        return http().post('/v1/me/battle/wild').set(auth).send(HERE);
+        return http().post('/v1/me/board-battle/wild').set(auth).send(HERE);
       },
       act: (body: object) =>
-        http().post('/v1/me/battle/action').set(auth).send(body),
+        http().post('/v1/me/board-battle/action').set(auth).send(body),
     };
   }
 
@@ -323,7 +324,7 @@ describe('Rota de uso de item (e2e)', () => {
       .use({ item_id: tonic.id, creature_uid: creature.uid })
       .expect(200);
 
-    const res = await user.act(FLEE).expect(404);
+    const res = await user.act(WAIT).expect(404);
     expect(res.body.message).toBe(NO_BATTLE);
   });
 
@@ -336,7 +337,7 @@ describe('Rota de uso de item (e2e)', () => {
       .use({ item_id: tonic.id, creature_uid: creature.uid })
       .expect(409);
 
-    await user.act(FLEE).expect(200);
+    expect(app.get(BattleStore).get(user.id)).toBeDefined();
   });
 
   it('dois usos ao mesmo tempo da última unidade gastam uma só', async () => {

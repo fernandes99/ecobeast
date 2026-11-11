@@ -1,22 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
-import {
-  ArrayMaxSize,
-  ArrayMinSize,
-  IsArray,
-  IsBoolean,
-  IsIn,
-  IsInt,
-  IsOptional,
-  Max,
-  Min,
-  ValidateIf,
-  ValidateNested,
-} from 'class-validator';
-import { MAX_SLOTS } from '../domain/battle/field.js';
+import { IsBoolean, IsInt, IsOptional, ValidateIf } from 'class-validator';
 import type {
-  BattleAction,
-  BattleEvent,
   BattlePhase,
   BattleResult,
   CapturedTo,
@@ -29,6 +13,7 @@ import {
   STAT_BLOCK,
 } from '../player/player.dto.js';
 
+export const NO_BATTLE = 'Nenhuma batalha em andamento.';
 export const INVALID_ENEMY = 'Esse inimigo não existe.';
 export const INVALID_ACTION = 'Ação inválida.';
 export const INVALID_POSITION = 'Posição inválida.';
@@ -38,20 +23,10 @@ export const NOTHING_HERE = 'Nada por aqui.';
 export const NO_TAMER_HERE = 'Nenhum Domador por aqui.';
 export const TAMER_WAITING = 'Um Domador está esperando você aqui.';
 export const NO_CHALLENGER = 'Nenhum Domador quer lutar agora.';
-export const ENEMIES_OR_SPECIES = 'Use species_id ou enemies.';
 /** No máximo, a equipe inteira de um Domador. */
 export const MAX_TEST_ENEMIES = 6;
 
 export type { CapturedTo };
-
-const ACTION_TYPES: BattleAction['type'][] = [
-  'skill',
-  'emergency',
-  'flee',
-  'switch',
-  'item',
-  'capture',
-];
 
 const STAGES = {
   type: 'object',
@@ -88,50 +63,6 @@ export class TestEnemyDto {
   level: number;
 }
 
-export class StartBattleBodyDto {
-  @ApiPropertyOptional({
-    description: 'Id da espécie do inimigo, sem `enemies`.',
-    example: 1,
-  })
-  @ValidateIf((body: StartBattleBodyDto) => body.enemies === undefined)
-  @IsInt({ message: INVALID_ENEMY })
-  species_id?: number;
-
-  @ApiPropertyOptional({
-    description: 'Nível do inimigo, de 1 a 100, sem `enemies`.',
-    example: 5,
-  })
-  @ValidateIf(
-    (body: StartBattleBodyDto) =>
-      body.enemies === undefined && Number.isInteger(body.species_id),
-  )
-  @IsInt({ message: INVALID_ENEMY })
-  level?: number;
-
-  @ApiPropertyOptional({
-    description:
-      'A equipe inimiga, de 1 a 6, no lugar de `species_id` e `level`.',
-    type: () => [TestEnemyDto],
-  })
-  @IsOptional()
-  @IsArray({ message: INVALID_ENEMY })
-  @ArrayMinSize(1, { message: INVALID_ENEMY })
-  @ArrayMaxSize(MAX_TEST_ENEMIES, { message: INVALID_ENEMY })
-  @ValidateNested({ each: true })
-  @Type(() => TestEnemyDto)
-  enemies?: TestEnemyDto[];
-
-  @ApiPropertyOptional({
-    description: `Vagas em campo de cada lado, de 1 a ${MAX_SLOTS}. 1 sem ela.`,
-    example: 2,
-  })
-  @IsOptional()
-  @IsInt({ message: INVALID_ENEMY })
-  @Min(1, { message: INVALID_ENEMY })
-  @Max(MAX_SLOTS, { message: INVALID_ENEMY })
-  slots?: number;
-}
-
 export class StartWildBodyDto {
   @ApiProperty({ description: 'Coluna onde o Domador está.', example: 3 })
   @IsInt({ message: INVALID_POSITION })
@@ -152,86 +83,6 @@ export class StartWildBodyDto {
   @IsOptional()
   @IsBoolean({ message: INVALID_POSITION })
   god?: boolean;
-}
-
-export class BattleActionItemDto {
-  @ApiProperty({
-    description:
-      '`skill` usa uma Técnica; `emergency` é o golpe de quem está sem PP; ' +
-      '`flee` tenta fugir; `switch` põe outro Ecobeast em campo, gastando a ' +
-      'rodada em `choose_action`; `item` usa um item e gasta a rodada; ' +
-      '`capture` tenta capturar o inimigo com uma Esfera.',
-    enum: ACTION_TYPES,
-    example: 'skill',
-  })
-  // Num corpo com `actions`, o tipo vem em cada uma delas.
-  @ValidateIf((body: { actions?: unknown }) => body.actions === undefined)
-  @IsIn(ACTION_TYPES, { message: INVALID_ACTION })
-  type: BattleAction['type'];
-
-  @ApiPropertyOptional({
-    description: 'A vaga em campo de quem age, a partir de 0. 0 sem ela.',
-    example: 0,
-  })
-  @IsOptional()
-  @IsInt({ message: INVALID_ACTION })
-  position?: number;
-
-  @ApiPropertyOptional({
-    description:
-      'Em `skill`, `emergency` e `capture`: a vaga do adversário. Só é ' +
-      'obrigatória com mais de um adversário de pé.',
-    example: 1,
-  })
-  @IsOptional()
-  @IsInt({ message: INVALID_ACTION })
-  target?: number;
-
-  @ApiPropertyOptional({
-    description: 'Só em `skill`: o slot da Técnica, de 1 a 4.',
-    example: 1,
-  })
-  @ValidateIf((body: BattleActionItemDto) => body.type === 'skill')
-  @IsInt({ message: INVALID_ACTION })
-  slot?: number;
-
-  @ApiPropertyOptional({
-    description:
-      'Em `switch` e `item`: a posição do Ecobeast na equipe, a partir de 0.',
-    example: 1,
-  })
-  @ValidateIf((body: BattleActionItemDto) =>
-    ['switch', 'item'].includes(body.type),
-  )
-  @IsInt({ message: INVALID_ACTION })
-  team_index?: number;
-
-  @ApiPropertyOptional({
-    description: 'Em `item` e `capture`: o item.',
-    example: 4,
-  })
-  @ValidateIf((body: BattleActionItemDto) =>
-    ['item', 'capture'].includes(body.type),
-  )
-  @IsInt({ message: INVALID_ACTION })
-  item_id?: number;
-}
-
-/** Uma ação por vaga (battle-slots/architecture.md, "Ações"), ou o corpo antigo, de uma ação só. */
-export class BattleActionBodyDto extends BattleActionItemDto {
-  @ApiPropertyOptional({
-    description:
-      'Uma ação por Ecobeast de pé em campo. Sem ela, o próprio corpo é a ' +
-      'ação da posição 0, como antes das vagas.',
-    type: () => [BattleActionItemDto],
-  })
-  @IsOptional()
-  @IsArray({ message: INVALID_ACTION })
-  @ArrayMinSize(1, { message: INVALID_ACTION })
-  @ArrayMaxSize(MAX_SLOTS, { message: INVALID_ACTION })
-  @ValidateNested({ each: true })
-  @Type(() => BattleActionItemDto)
-  actions?: BattleActionItemDto[];
 }
 
 export class EnemyCreatureDto {
@@ -425,57 +276,4 @@ export class CreatureProgressDto {
     example: [],
   })
   pending_skill_ids: number[];
-}
-
-export class BattleResponseDto {
-  @ApiProperty({ type: () => BattleDto })
-  battle: BattleDto;
-
-  @ApiProperty({
-    description:
-      'O que aconteceu, em ordem, só desta chamada. Cada evento tem `type` e os ' +
-      'campos do seu tipo, descritos em `.specs/battle-core/architecture.md`.',
-    type: 'array',
-    items: { type: 'object' },
-    example: [
-      { type: 'skill_used', side: 'player', skill_id: 1 },
-      {
-        type: 'damage',
-        side: 'enemy',
-        damage: 5,
-        hp: 13,
-        multiplier: 1,
-        is_critical: false,
-      },
-    ],
-  })
-  events: BattleEvent[];
-
-  @ApiProperty({
-    description:
-      'Para onde foi o Ecobeast capturado: a equipe ou o Santuário. Nulo em ' +
-      'qualquer outra resposta.',
-    enum: ['party', 'storage'],
-    nullable: true,
-    example: null,
-  })
-  captured_to: CapturedTo | null;
-
-  @ApiProperty({
-    description:
-      'O Ecobeast que saiu do mapa para esta luta. Nulo em qualquer resposta ' +
-      'que não seja o começo de um encontro selvagem.',
-    type: 'integer',
-    nullable: true,
-    example: null,
-  })
-  spawn_id: number | null;
-
-  @ApiProperty({
-    description:
-      'Na resposta que termina a luta com vitória, quem recebeu XP, na ordem ' +
-      'da equipe. Vazio em qualquer outra resposta.',
-    type: () => [CreatureProgressDto],
-  })
-  progression: CreatureProgressDto[];
 }

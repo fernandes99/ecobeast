@@ -1,15 +1,10 @@
 class_name SkillLearnOverlay
 extends Control
-## Técnicas novas depois da vitória (progression/04, TELAS.md #7): o aviso de
-## quem aprendeu com vaga e, com as 4 ocupadas, a escolha de qual esquecer ou de
-## não aprender. A escolha vai para o servidor depois da confirmação.
 
-## A escolha do jogador: o id da Técnica esquecida, ou -1 para não aprender.
 signal _picked(forget_skill_id: int)
-## O "Sim" ou o "Não" da confirmação.
 signal _answered(yes: bool)
 
-const SkillButtonScene := preload("res://screens/battle/battle_skill_button.tscn")
+const SkillButtonScene := preload("res://screens/board_battle/battle_skill_button.tscn")
 
 const NO_CHOICE_TEXT := "Essa escolha não está mais disponível."
 
@@ -39,7 +34,6 @@ func _ready() -> void:
 	_no_button.pressed.connect(func() -> void: _answered.emit(false))
 
 
-## "<nome> aprendeu <Técnica>!". Só termina no "Continuar".
 func play_learned(display_name: String, skill_id: int) -> void:
 	_show_skill(skill_id)
 	_title.text = "%s aprendeu %s!" % [display_name, GameData.get_skill(skill_id).name]
@@ -50,8 +44,6 @@ func play_learned(display_name: String, skill_id: int) -> void:
 	hide()
 
 
-## A escolha de uma Técnica pendente. `known` são as 4 que ele sabe hoje.
-## Devolve a resposta do servidor, ou null quando a escolha não existe mais.
 func play_choice(uid: String, display_name: String, skill_id: int, known: Array[SkillSlot]) -> ProgressChoice:
 	var new_name := GameData.get_skill(skill_id).name
 	_show_skill(skill_id)
@@ -89,7 +81,6 @@ func play_choice(uid: String, display_name: String, skill_id: int, known: Array[
 	return choice
 
 
-## O voltar do Android: na confirmação, é o "Não"; no resultado, o "Continuar".
 func go_back() -> void:
 	if _confirm_box.visible:
 		_no_button.pressed.emit()
@@ -120,7 +111,6 @@ func _fill_known(known: Array[SkillSlot]) -> void:
 		button.pressed.connect(func() -> void: _picked.emit(slot.skill_id))
 
 
-## Tenta até o servidor responder: sem rede, mostra o erro e "Tentar de novo".
 func _send(uid: String, skill_id: int, forget_id: int) -> ProgressChoice:
 	var result: Result = await Session.learn_skill(uid, skill_id, forget_id)
 	while not result.ok:

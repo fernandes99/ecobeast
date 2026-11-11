@@ -45,7 +45,7 @@ A resposta é a mesma de hoje, com dois campos a mais no `map`:
   "map": {
     "seed": 7,
     "start": { "q": 0, "r": 0 },
-    "tiles": [{ "q": 0, "r": 0, "biome": "temperate", "shape": "flat", "variant": 2 }],
+    "tiles": [{ "q": 0, "r": 0, "biome": "temperate", "height": 1, "variant": 2 }],
     "creatures": [{ "id": 1, "species_id": 4, "q": 3, "r": -1 }],
     "tamers": [],
     "island": { "id": 7, "name": "Ilha das Brumas" },

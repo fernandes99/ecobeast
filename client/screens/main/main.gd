@@ -1,17 +1,10 @@
 extends Control
-## Cena raiz do jogo: carrega o catálogo, passa pelo login se preciso, carrega o
-## jogador, abre a primeira tela dentro de %ScreenHost e trata o voltar (Android
-## e Esc). (.specs/foundation/architecture.md, "Boot")
 
 const OFFLINE_MESSAGE := "Não foi possível conectar ao servidor. Confira sua internet e tente de novo."
-## O save de quando o jogador morava no aparelho (auth-google/05, RF-06).
 const OLD_SAVE_FILES: Array[String] = ["user://save.json", "user://save.tmp.json", "user://save.corrupted.json"]
 
-## O "Tentar de novo" refaz só a etapa que falhou.
 var _catalog_loaded := false
-## O visualizador de conteúdo (content-viewer/01), criado no primeiro F1.
 var _content_viewer: ContentViewer = null
-## O editor de ilhas (map-editor/02), criado no primeiro F2.
 var _map_editor: MapEditor = null
 
 
@@ -31,7 +24,6 @@ func _delete_old_saves() -> void:
 			DirAccess.remove_absolute(path)
 
 
-## Gradiente vertical do fundo: BACKGROUND em cima, BACKGROUND_DEEP embaixo.
 func _background_gradient() -> GradientTexture2D:
 	var gradient := Gradient.new()
 	gradient.set_color(0, UiPalette.BACKGROUND)
@@ -70,13 +62,11 @@ func _is_content_viewer_key(event: InputEvent) -> bool:
 	return _is_dev_key(event, KEY_F1)
 
 
-## Uma tecla das ferramentas de desenvolvimento (F1 e F2), só pelo editor do Godot.
 func _is_dev_key(event: InputEvent, keycode: Key) -> bool:
 	var key := event as InputEventKey
 	return key != null and key.pressed and not key.echo and key.keycode == keycode and OS.has_feature("editor")
 
 
-## A janela é criada uma vez e depois só aparece e some, guardando a aba escolhida.
 func _toggle_content_viewer() -> void:
 	if _content_viewer == null:
 		_content_viewer = ContentViewer.new()
@@ -86,8 +76,6 @@ func _toggle_content_viewer() -> void:
 		_content_viewer.visible = not _content_viewer.visible
 
 
-## Como o visualizador: criado uma vez, depois só aparece. Fechar com mudanças não
-## salvas pergunta antes (MapEditor.close).
 func _toggle_map_editor() -> void:
 	if _map_editor == null:
 		_map_editor = MapEditor.new()
@@ -99,7 +87,6 @@ func _toggle_map_editor() -> void:
 		_map_editor.show()
 
 
-## Catálogo (do servidor), login e jogador; a etapa que falha mostra o erro.
 func _boot() -> void:
 	_hide_load_error()
 	if not _catalog_loaded:
@@ -120,7 +107,6 @@ func _boot() -> void:
 		_open_login()
 
 
-## O fim do boot, também chamado quando o login termina.
 func _load_player() -> void:
 	var result: Result = await Session.load_player()
 	if result.ok:
@@ -135,7 +121,6 @@ func _open_login() -> void:
 	Router.go_to(&"login")
 
 
-## O erro tampa o %ScreenHost, que pode ter a tela de login aberta.
 func _show_load_error(message: String) -> void:
 	%LoadErrorMessage.text = message
 	%LoadErrorView.visible = true
@@ -147,7 +132,6 @@ func _hide_load_error() -> void:
 	%ScreenHost.visible = true
 
 
-## Sem jogador: entrada. Sem inicial: escolha. Com equipe: Hub.
 func _open_first_screen(player: Player) -> void:
 	if player == null:
 		Router.go_to(&"title")
@@ -157,8 +141,6 @@ func _open_first_screen(player: Player) -> void:
 		Router.go_to(&"hub")
 
 
-## Erro nos dados é de quem editou o catálogo, não do jogador: a lista aparece
-## na tela e no console, e nenhuma tela é aberta.
 func _show_data_errors(errors: Array[String]) -> void:
 	for error: String in errors:
 		push_error(error)

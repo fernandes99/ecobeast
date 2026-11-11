@@ -1,10 +1,7 @@
 class_name BattleSkillButton
 extends Button
-## Uma Técnica na batalha (battle-screen/03, RF-15), ou "Vazio". Sem PP, fica
-## desativada; a borda tem a cor do Elemento.
 
 const STYLE_STATES: Array[StringName] = [&"normal", &"hover", &"pressed", &"hover_pressed", &"disabled"]
-## Quanto a borda apaga com o botão desativado.
 const DISABLED_BORDER_ALPHA := 0.4
 
 var _slot: SkillSlot = null
@@ -21,7 +18,6 @@ func _ready() -> void:
 	_refresh()
 
 
-## Pode ser chamado antes ou depois de o componente entrar na árvore.
 func set_skill(slot: SkillSlot) -> void:
 	_slot = slot
 	if is_node_ready():

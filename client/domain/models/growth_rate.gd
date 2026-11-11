@@ -1,6 +1,5 @@
 class_name GrowthRate
 extends RefCounted
-## Uma curva de XP (tabela growth_rates): XP total = floor(xp_multiplier · nível³).
 
 var id: int
 var slug: String

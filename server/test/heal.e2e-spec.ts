@@ -10,7 +10,7 @@ import { createTestTokens, TestTokens } from './support/tokens.js';
 import { HERE, placeWild } from './support/wild.js';
 
 const RUVO = 1;
-const FLEE = { type: 'flee' };
+const WAIT = { position: 0, action: { type: 'wait' } };
 const NO_PLAYER = 'Crie seu Domador primeiro.';
 const NO_HEALTHY = 'Cure sua equipe no Refúgio.';
 const NO_BATTLE = 'Nenhuma batalha em andamento.';
@@ -59,10 +59,10 @@ describe('Rota de cura (e2e)', () => {
       heal: () => http().post('/v1/me/heal').set(auth),
       wild: () => {
         placeWild(app, id);
-        return http().post('/v1/me/battle/wild').set(auth).send(HERE);
+        return http().post('/v1/me/board-battle/wild').set(auth).send(HERE);
       },
       act: (body: object) =>
-        http().post('/v1/me/battle/action').set(auth).send(body),
+        http().post('/v1/me/board-battle/action').set(auth).send(body),
     };
   }
 
@@ -252,7 +252,7 @@ describe('Rota de cura (e2e)', () => {
 
     const [creature] = await healedParty(user);
 
-    const { body } = await user.act(FLEE).expect(404);
+    const { body } = await user.act(WAIT).expect(404);
     expect((body as { message: string }).message).toBe(NO_BATTLE);
     const row = await prisma.creatureInstance.findFirstOrThrow({
       where: { playerId: user.id },

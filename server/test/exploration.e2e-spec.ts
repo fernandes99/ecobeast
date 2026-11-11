@@ -4,7 +4,6 @@ import request from 'supertest';
 import type { App } from 'supertest/types.js';
 import type { MapTile } from '../src/domain/exploration/map-generator.js';
 import { DEFAULT_SPAWN_CONFIG } from '../src/domain/exploration/spawn-config.js';
-import { encounterBiome } from '../src/domain/exploration/spawns.js';
 import { ExplorationStore } from '../src/exploration/exploration.store.js';
 import { PrismaClient } from '../src/generated/prisma/client.js';
 import { createTestApp } from './support/app.js';
@@ -22,7 +21,7 @@ interface ExplorationBody {
       q: number;
       r: number;
       biome: MapTile['biome'];
-      shape: MapTile['shape'];
+      height: number;
       variant: number;
     }[];
     creatures: { id: number; species_id: number; q: number; r: number }[];
@@ -105,9 +104,9 @@ describe('Rota do mapa de exploração (e2e)', () => {
     expect(map.tiles).toContainEqual(expect.objectContaining(map.start));
     expect(Object.keys(map.tiles[0]!).sort()).toEqual([
       'biome',
+      'height',
       'q',
       'r',
-      'shape',
       'variant',
     ]);
   });
@@ -144,7 +143,7 @@ describe('Rota do mapa de exploração (e2e)', () => {
     for (const { species_id, q, r } of creatures) {
       const tile = byKey.get(`${q},${r}`);
       expect(tile).toBeDefined();
-      expect(allowed).toContain(`${species_id}|${encounterBiome(tile!)}`);
+      expect(allowed).toContain(`${species_id}|${tile!.biome}`);
     }
   });
 

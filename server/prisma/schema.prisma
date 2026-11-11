@@ -829,11 +829,11 @@ model IslandTile {
   islandMapId Int    @map("island_map_id")
   q           Int
   r           Int
-  /// Um dos 5 biomas de terreno, conferido pela rota.
+  /// Um dos 7 biomas; a variante de 1 a 3 em hill e mountain é conferida pela rota.
   biomeId     Int    @map("biome_id")
-  /// CHECK flat, hill ou mont (migration islands)
-  shape       String
-  /// CHECK 1–6 em flat, 1–3 nas outras formas (migration islands)
+  /// CHECK 0–4 (migration terrain_height)
+  height      Int
+  /// CHECK 1–6 (migration terrain_height)
   variant     Int
   areaId      Int?   @map("area_id")
 

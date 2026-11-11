@@ -1,33 +1,16 @@
 class_name ContentFiles
 extends RefCounted
-## Onde o jogo procura cada arquivo de conteúdo, e o que já existe
-## (content-viewer/architecture.md, "Os arquivos"). Quando o caminho já é constante
-## de uma classe do jogo, usa a constante dela. Os da Técnica moram aqui, e a tela da
-## luta os usa daqui.
-##
-## Um arquivo existe quando o ResourceLoader o encontra, que é como o jogo o carrega:
-## uma imagem que o Godot ainda não importou (sem o .import) conta como faltando.
 
 const CREATURES_DIR := "res://assets/creatures"
 const SKILL_ICON_PATH := "res://assets/skills/%s.png"
 const SKILL_EFFECT_PATH := "res://assets/effects/skills/%s.png"
-## A folha que voa de quem ataca até o fim da área (board-battle/15). Só as Técnicas
-## que cruzam o campo têm: no visualizador, é um arquivo opcional (content-viewer/05).
 const SKILL_PROJECTILE_PATH := "res://assets/effects/skills/%s_projectile.png"
 const SKILL_SOUND_PATH := "res://assets/sounds/skills/%s.wav"
-## O som característico do Ecobeast (creature-sounds/01). Nenhuma tela o toca ainda.
 const CREATURE_CALL_PATH := "res://assets/creatures/%s/call.wav"
-## O som do dano, pela efetividade (board-battle/09); a tela da luta o usa daqui.
 const HIT_SOUND_PATH := "res://assets/sounds/hits/%s.wav"
-## Os sons de dano, com o nome que aparece na tela.
 const HIT_SOUNDS: Dictionary[String, String] = {"normal": "normal", "super": "super efetivo", "weak": "pouco efetivo"}
 const TAMER_CREDITS_PATH := "res://assets/tamer/CREDITOS.md"
-## As peças que o mapa usa em todos os biomas (content-viewer/03, RF-03).
 const COMMON_SURFACES: Array[String] = ["cliff", "side", "contour", "highlight"]
-## O nome da superfície no mapa, quando é diferente do slug do bioma no catálogo: a
-## Montanha é "mountain" no catálogo e "mont" no gerador do mapa (HexTile.surface()).
-const SURFACE_OF_BIOME: Dictionary[String, String] = {"mountain": "mont"}
-## O nome de cada decoração (HexDecorations.KIND_ROWS) na tela.
 const DECORATION_NAMES: Dictionary[String, String] = {
 	"tree": "árvore",
 	"pine": "pinheiro",
@@ -48,7 +31,6 @@ const DECORATION_NAMES: Dictionary[String, String] = {
 	"spire": "pináculo",
 }
 
-## Como o preview mostra cada arquivo.
 enum Kind { IMAGE, EXPLORE_SHEET, BATTLE_SHEET, EFFECT, SOUND }
 
 ## As direções de cada folha, na ordem de uma volta: o nome, a linha da folha e se é a
@@ -64,13 +46,7 @@ const EXPLORE_DIRECTIONS: Array[Dictionary] = [
 	{"label": "esquerda", "row": SheetSprite.SIDE_ROW, "mirrored": true},
 	{"label": "desce à esquerda", "row": SheetSprite.LOWER_ROW, "mirrored": true},
 ]
-## Uma direção que a folha ainda não tem: aparece tracejada, como um arquivo que falta.
 const NO_ROW := -1
-## As folhas da luta vão ter as mesmas 8 direções do explorar (pedido do dono em
-## 2026-11-06). A parada tem frente e costas e, no idle de 5 linhas (board-battle/17),
-## os 3 lados; a andando tem os 3 passos de lado e, no walk de 5 linhas, frente e
-## costas. As que nenhuma folha tem ficam com NO_ROW; as a mais só valem para a espécie
-## cuja folha tem a linha (`has_direction`).
 const BATTLE_IDLE_DIRECTIONS: Array[Dictionary] = [
 	{"label": "frente", "row": BattleSheets.IDLE_SOUTH, "mirrored": false},
 	{"label": "desce à direita", "row": BattleSheets.IDLE_DOWN, "mirrored": false},
@@ -93,18 +69,14 @@ const BATTLE_WALK_DIRECTIONS: Array[Dictionary] = [
 ]
 
 
-## Um arquivo esperado: o nome curto que aparece no preview, o caminho e o tipo.
 class Entry:
 	extends RefCounted
 	var label: String
 	var path: String
 	var kind: Kind
-	## Para as folhas: o slug do Ecobeast e qual folha (idle ou walk).
 	var slug: String
 	var sheet: String
-	## Um ciclo da folha, em segundos; 0 usa o ritmo dos Ecobeasts no explorar.
 	var cycle := 0.0
-	## Um arquivo que só algumas Técnicas têm (content-viewer/05): sem ele, nada falta.
 	var optional := false
 
 	func _init(entry_label: String, entry_path: String, entry_kind: Kind, entry_slug := "", entry_sheet := "") -> void:
@@ -117,7 +89,6 @@ class Entry:
 	func exists() -> bool:
 		return ContentFiles.exists(path)
 
-	## As direções da folha; uma imagem ou um som não tem nenhuma.
 	func directions() -> Array[Dictionary]:
 		var empty: Array[Dictionary] = []
 		match kind:
@@ -127,8 +98,6 @@ class Entry:
 				return ContentFiles.BATTLE_IDLE_DIRECTIONS if sheet == BattleSheets.IDLE else ContentFiles.BATTLE_WALK_DIRECTIONS
 		return empty
 
-	## Se a folha tem a linha da direção. Uma folha da luta que o jogo não consegue
-	## ler não tem nenhuma.
 	func has_direction(direction: Dictionary) -> bool:
 		var row: int = direction["row"]
 		if row == NO_ROW:
@@ -138,7 +107,6 @@ class Entry:
 		var sheets := BattleSheets.for_slug(slug)
 		return sheets != null and sheets.has_row(sheet, row)
 
-	## As direções desenhadas (não espelhadas) que a folha ainda não tem.
 	func missing_directions() -> Array[String]:
 		var labels: Array[String] = []
 		for direction: Dictionary in directions():
@@ -146,11 +114,9 @@ class Entry:
 				labels.append(direction["label"])
 		return labels
 
-	## Pronto: o arquivo existe e, se for uma folha, tem todas as direções.
 	func complete() -> bool:
 		return exists() and missing_directions().is_empty()
 
-	## O que falta, numa frase curta: "battle idle" ou "battle idle (3 direções)".
 	func missing_text() -> String:
 		if not exists():
 			return label
@@ -162,7 +128,6 @@ static func exists(path: String) -> bool:
 	return ResourceLoader.exists(path)
 
 
-## Os 7 arquivos de um Ecobeast, na ordem em que aparecem.
 static func creature_files(slug: String) -> Array[Entry]:
 	var idle := CreatureSprite.IDLE
 	var walk := CreatureSprite.WALK
@@ -178,7 +143,6 @@ static func creature_files(slug: String) -> Array[Entry]:
 	return files
 
 
-## Os 3 arquivos de uma Técnica: ícone, efeito e som.
 static func skill_files(slug: String) -> Array[Entry]:
 	var files: Array[Entry] = [
 		Entry.new("ícone", SKILL_ICON_PATH % slug, Kind.IMAGE),
@@ -188,8 +152,6 @@ static func skill_files(slug: String) -> Array[Entry]:
 	return files
 
 
-## Os arquivos que só algumas Técnicas têm (content-viewer/05): o projétil. Eles não
-## entram nas contagens do que falta.
 static func skill_optional_files(slug: String) -> Array[Entry]:
 	var projectile := Entry.new("projétil", SKILL_PROJECTILE_PATH % slug, Kind.EFFECT)
 	projectile.optional = true
@@ -197,7 +159,6 @@ static func skill_optional_files(slug: String) -> Array[Entry]:
 	return files
 
 
-## As folhas do Domador, no mesmo formato das do explorar, com o ritmo dele.
 static func tamer_files() -> Array[Entry]:
 	var files: Array[Entry] = []
 	for sheet_name: String in [TamerSprite.IDLE, TamerSprite.RUN]:
@@ -207,7 +168,6 @@ static func tamer_files() -> Array[Entry]:
 	return files
 
 
-## Os sons de dano: normal, super efetivo e pouco efetivo.
 static func hit_sounds() -> Array[Entry]:
 	var files: Array[Entry] = []
 	for kind: String in HIT_SOUNDS:
@@ -215,27 +175,18 @@ static func hit_sounds() -> Array[Entry]:
 	return files
 
 
-## O ícone de um item.
 static func item_icon(slug: String) -> Entry:
 	return Entry.new("ícone", ItemIcon.SPRITE_PATH % slug, Kind.IMAGE)
 
 
-## A superfície que o mapa desenha num bioma.
 static func biome_surface(slug: String) -> Entry:
-	return Entry.new("superfície", HexMapView.SURFACE_PATH % surface_name(slug), Kind.IMAGE)
+	return Entry.new("superfície", HexMapView.SURFACE_PATH % slug, Kind.IMAGE)
 
 
-## O nome que o mapa usa para a superfície e as decorações do bioma.
-static func surface_name(biome_slug: String) -> String:
-	return SURFACE_OF_BIOME.get(biome_slug, biome_slug)
-
-
-## A folha das decorações, com uma linha por tipo e uma coluna por variante.
 static func decorations_sheet() -> Entry:
 	return Entry.new("decorações", HexDecorations.TEXTURE_PATH, Kind.IMAGE)
 
 
-## As peças que o mapa usa em todos os biomas, com o nome do arquivo.
 static func common_pieces() -> Array[Entry]:
 	var pieces: Array[Entry] = []
 	for surface: String in COMMON_SURFACES:
@@ -246,7 +197,6 @@ static func common_pieces() -> Array[Entry]:
 	return pieces
 
 
-## Quantos dos arquivos estão prontos: existem e têm todas as direções.
 static func count_complete(files: Array[Entry]) -> int:
 	var count := 0
 	for entry: Entry in files:
@@ -255,7 +205,6 @@ static func count_complete(files: Array[Entry]) -> int:
 	return count
 
 
-## O que falta de cada arquivo que não está pronto, na ordem da lista.
 static func missing_labels(files: Array[Entry]) -> Array[String]:
 	var labels: Array[String] = []
 	for entry: Entry in files:
@@ -264,7 +213,6 @@ static func missing_labels(files: Array[Entry]) -> Array[String]:
 	return labels
 
 
-## As subpastas de `dir`, em ordem alfabética.
 static func folders(dir: String) -> Array[String]:
 	var names: Array[String] = []
 	names.assign(DirAccess.get_directories_at(dir))
@@ -272,7 +220,6 @@ static func folders(dir: String) -> Array[String]:
 	return names
 
 
-## As subpastas de `dir` que não batem com nenhum slug, em ordem alfabética.
 static func orphan_folders(dir: String, slugs: Array[String]) -> Array[String]:
 	var orphans: Array[String] = []
 	for folder: String in folders(dir):

@@ -10,16 +10,12 @@ extends SceneTree
 const CREATURES_DIR := "res://assets/creatures"
 ## As alturas vêm do seed do servidor; sem ele, todos ficam com 1 m.
 const SPECIES_SEED := "res://../server/prisma/seed-data/species.json"
-## Altura em pixels do menor e do maior Ecobeast, sem o contorno. A revisar.
 const MIN_HEIGHT := 30
 const MAX_HEIGHT := 46
 const MIN_METERS := 0.3
 const MAX_METERS := 1.6
-## Quanto da transparência vira pixel cheio.
 const ALPHA_CUT := 0.5
-## O contorno é a cor do pixel vizinho, escurecida.
 const OUTLINE_DARKEN := 0.7
-## A folga em volta: 1 pixel para o contorno escuro e 1 para o branco de quem joga.
 const PADDING := 2
 
 
@@ -57,8 +53,6 @@ func _target_height(meters: float) -> int:
 	return roundi(lerpf(MIN_HEIGHT, MAX_HEIGHT, t))
 
 
-## Recorta o desenho, reduz até a altura, deixa a transparência só cheia ou
-## vazia e põe o contorno, com a folga em volta.
 func _pixelate(source: Image, height: int) -> Image:
 	source.convert(Image.FORMAT_RGBA8)
 	var used := source.get_used_rect()

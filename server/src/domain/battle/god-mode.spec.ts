@@ -1,18 +1,18 @@
-import { startBattle } from './engine.js';
 import {
   always,
+  cast,
+  ENEMY,
   eventsOf,
   makeCatalog,
   makeCombatant,
   makeSkill,
   makeState,
-  play,
+  PLAYER,
 } from './testing.js';
 import type { Combatant } from './types.js';
 
 const SCRATCH = makeSkill({ id: 1 });
 const catalog = makeCatalog({}, [SCRATCH]);
-const ATTACK = { type: 'skill', slot: 1 } as const;
 
 function fighter(overrides: Partial<Combatant> = {}): Combatant {
   return makeCombatant({
@@ -21,7 +21,7 @@ function fighter(overrides: Partial<Combatant> = {}): Combatant {
   });
 }
 
-/** Um inimigo que aguenta muitos golpes normais e é mais lento. */
+/** Um inimigo que aguenta muitos golpes normais. */
 function tank(): Combatant {
   return fighter({
     creatureUid: null,
@@ -33,9 +33,9 @@ function tank(): Combatant {
 
 describe('modo God (depuração)', () => {
   it('o golpe do jogador que acerta derruba o inimigo de uma vez', () => {
-    const { state, events } = play(
+    const { events } = cast(
       makeState(fighter(), tank(), { godMode: true }),
-      ATTACK,
+      SCRATCH,
       catalog,
     );
     expect(eventsOf(events, 'damage')[0]).toMatchObject({
@@ -44,21 +44,16 @@ describe('modo God (depuração)', () => {
       damage: 999,
       hp: 0,
     });
-    expect(state.result).toBe('victory');
   });
 
   it('o golpe do inimigo continua normal', () => {
-    const { events } = play(
-      makeState(
-        fighter({ stats: { ...fighter().stats, spd: 1 } }),
-        {
-          ...tank(),
-          stats: { ...tank().stats, spd: 99 },
-        },
-        { godMode: true },
-      ),
-      ATTACK,
+    const { events } = cast(
+      makeState(fighter(), tank(), { godMode: true }),
+      SCRATCH,
       catalog,
+      always(0.5),
+      ENEMY,
+      PLAYER,
     );
     const [enemyHit] = eventsOf(events, 'damage');
     expect(enemyHit!.side).toBe('player');
@@ -66,24 +61,7 @@ describe('modo God (depuração)', () => {
   });
 
   it('desligado, o dano é o normal', () => {
-    const { state } = play(makeState(fighter(), tank()), ATTACK, catalog);
+    const { state } = cast(makeState(fighter(), tank()), SCRATCH, catalog);
     expect(state.enemy.team[0]!.currentHp).toBeGreaterThan(900);
-  });
-
-  it('startBattle guarda o modo, e ele começa desligado', () => {
-    const on = startBattle(
-      [fighter()],
-      [tank()],
-      true,
-      catalog,
-      always(0.5),
-      [],
-      {
-        godMode: true,
-      },
-    );
-    const off = startBattle([fighter()], [tank()], true, catalog, always(0.5));
-    expect(on.state.godMode).toBe(true);
-    expect(off.state.godMode).toBe(false);
   });
 });

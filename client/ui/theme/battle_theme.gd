@@ -1,15 +1,6 @@
 class_name BattleTheme
 extends RefCounted
-## O visual da tela da luta (board-battle/10), todo desenhado pelo Godot, sem imagens
-## de moldura: cantos arredondados, bordas, sombra e brilho de StyleBoxFlat. Só os
-## ícones são imagens (res://assets/ui/battle/icons/).
-##
-## Um Theme é um conjunto de estilos que vale para um nó e todos os filhos dele. Aqui
-## ele só cria *variações* (como "BattlePanel", que herda de PanelContainer): quem
-## quer o estilo diz `theme_type_variation = BattleTheme.PANEL`, e o resto da tela,
-## inclusive os painéis que vêm da luta antiga, continua com o tema do jogo.
 
-## As variações, para usar em `theme_type_variation`.
 const PANEL := &"BattlePanel"
 const LOG := &"BattleLog"
 const PILL := &"BattlePill"
@@ -17,7 +8,6 @@ const BUTTON := &"BattleButton"
 
 const ICONS_DIR := "res://assets/ui/battle/icons/%s.png"
 
-## Cores. A revisar.
 const PANEL_FILL := Color("#132A57F0")
 const PANEL_BORDER := Color("#3F86E8")
 const PANEL_SHADOW := Color("#00000059")
@@ -31,12 +21,10 @@ const FOCUS_RING := Color("#FFB23E")
 const TEXT := Color("#FFFFFF")
 const TEXT_OUTLINE := Color("#0A1A3A")
 
-## Medidas, em pontos da tela de 720 de largura. A revisar.
 const PANEL_RADIUS := 22
 const PANEL_BORDER_WIDTH := 3
 const BUTTON_RADIUS := 18
 const BUTTON_BORDER_WIDTH := 3
-## A borda de baixo do botão, mais escura, que dá a impressão de relevo.
 const BUTTON_DEPTH := 6
 const BUTTON_PRESSED_DEPTH := 2
 const FOCUS_WIDTH := 4
@@ -47,19 +35,16 @@ const ICON_SIZE := 60
 static var _theme: Theme = null
 
 
-## O tema da luta, criado uma vez. Vai na raiz da tela.
 static func get_theme() -> Theme:
 	if _theme == null:
 		_theme = _build()
 	return _theme
 
 
-## O ícone pelo nome: attack, pass, bag, flee, help, chat ou more.
 static func icon(icon_name: String) -> Texture2D:
 	return load(ICONS_DIR % icon_name) as Texture2D
 
 
-## Um botão de ação: o ícone em cima, o nome embaixo.
 static func action_button(button: Button, icon_name: String) -> void:
 	button.theme_type_variation = BUTTON
 	button.icon = icon(icon_name)
@@ -90,7 +75,6 @@ static func _build() -> Theme:
 	return theme
 
 
-## Fundo azul-escuro, borda azul e uma sombra suave embaixo.
 static func _panel(radius: int, margin_x: int, margin_y: int) -> StyleBoxFlat:
 	var style := _flat(PANEL_FILL, PANEL_BORDER, PANEL_BORDER_WIDTH, radius)
 	style.shadow_color = PANEL_SHADOW
@@ -100,8 +84,6 @@ static func _panel(radius: int, margin_x: int, margin_y: int) -> StyleBoxFlat:
 	return style
 
 
-## Normal com relevo; apertado mais escuro e mais baixo; desativado apagado; e o foco,
-## um anel laranja com brilho por cima, que marca a última ação escolhida.
 static func _button_styles(theme: Theme, variation: StringName, margin: int) -> void:
 	var normal := _button(BUTTON_FILL, BUTTON_DEPTH, margin)
 	var pressed := _button(BUTTON_PRESSED_FILL, BUTTON_PRESSED_DEPTH, margin)
@@ -127,8 +109,6 @@ static func _button_styles(theme: Theme, variation: StringName, margin: int) -> 
 	theme.set_stylebox(&"focus", variation, focus)
 
 
-## A borda de baixo, mais grossa e na cor da sombra, faz o relevo. Um StyleBoxFlat tem
-## uma cor de borda só, então o relevo é a sombra deslocada para baixo, sem desfoque.
 static func _button(fill: Color, depth: int, margin: int) -> StyleBoxFlat:
 	var style := _flat(fill, BUTTON_BORDER, BUTTON_BORDER_WIDTH, BUTTON_RADIUS)
 	style.shadow_color = BUTTON_SHADOW

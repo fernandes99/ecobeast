@@ -1,11 +1,7 @@
 class_name SummaryTab
 extends ScrollContainer
-## A aba Resumo (content-viewer/01, RF-06 a RF-08 e RF-10): quanto do conteúdo está
-## pronto, em números, e as listas do que falta. Sem catálogo, mostra só as pastas de
-## Ecobeast e quantos arquivos cada uma tem.
 
 const CARD_WIDTH := 220
-## Uma Técnica que nenhum Ecobeast aprende vai para o fim da lista.
 const NO_LEVEL := 999
 
 var viewer: ContentViewer
@@ -57,7 +53,6 @@ func _build() -> void:
 		if not missing.is_empty():
 			incomplete.append({"species": one, "missing": missing})
 
-	# Os cartões quebram de linha quando a janela fica estreita.
 	var cards := ContentViewer.flow(10)
 	_box.add_child(cards)
 	_card(cards, "Ecobeasts no catálogo", str(total), UiPalette.TEXT)
@@ -93,8 +88,6 @@ func _build() -> void:
 	_build_world()
 
 
-## As Técnicas (content-viewer/02, RF-08): quantas têm cada arquivo e a lista do que
-## falta, primeiro as que aparecem mais cedo no jogo.
 func _build_skills() -> void:
 	var skills := GameData.get_rows("skills")
 	var total := skills.size()
@@ -118,12 +111,10 @@ func _build_skills() -> void:
 	_count_card(cards, "Com ícone", with_file[0], total)
 	_count_card(cards, "Com efeito", with_file[1], total)
 	_count_card(cards, "Com som", with_file[2], total)
-	# Opcional (content-viewer/05): a cor do texto, porque não ter não é faltar.
 	_card(cards, "Com projétil (opcional)", "%d de %d" % [with_projectile, total], UiPalette.TEXT)
 
 	if incomplete.is_empty():
 		return
-	# Primeiro as que um Ecobeast aprende mais cedo; as que ninguém aprende, no fim.
 	incomplete.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		if a["level"] != b["level"]:
 			return a["level"] < b["level"]
@@ -145,7 +136,6 @@ func _build_skills() -> void:
 		grid.add_child(ContentViewer.text("falta " + ", ".join(missing), 0, UiPalette.WARNING))
 
 
-## O menor nível em que algum Ecobeast aprende cada Técnica, pelo id dela.
 func _first_levels() -> Dictionary:
 	var levels: Dictionary = {}
 	for row: Dictionary in GameData.get_rows("species_skills"):
@@ -154,7 +144,6 @@ func _first_levels() -> Dictionary:
 	return levels
 
 
-## Os Elementos com algum Ecobeast, e os nomes dos que não têm.
 func _build_elements() -> void:
 	var used: Dictionary = {}
 	for species: CreatureSpecies in GameData.get_all_species():
@@ -173,8 +162,6 @@ func _build_elements() -> void:
 		box.add_child(ContentViewer.paragraph("Sem nenhum: " + ", ".join(without), UiPalette.TEXT_SECONDARY))
 
 
-## Os biomas e os itens (content-viewer/03, RF-09): quantos têm o arquivo e os
-## biomas sem Ecobeast.
 func _build_world() -> void:
 	var biomes := GameData.get_rows("biomes")
 	var with_surface := 0
@@ -200,8 +187,6 @@ func _build_world() -> void:
 	_count_card(cards, "Itens com ícone", with_icon, items.size())
 
 
-## Os iniciais, em ordem, e as curvas de XP com quantos Ecobeasts usam cada uma
-## (content-viewer/04, RF-03).
 func _starters_and_growth() -> void:
 	var row := ContentViewer.flow(10)
 	_box.add_child(row)
@@ -238,7 +223,6 @@ func _section(title: String) -> void:
 	_box.add_child(label)
 
 
-## Sem o catálogo, não se sabe quais Ecobeasts existem: só as pastas.
 func _build_offline() -> void:
 	var list := ContentViewer.block(_box, "Pastas de Ecobeast")
 	var folders := ContentFiles.folders(ContentFiles.CREATURES_DIR)
@@ -256,7 +240,6 @@ func _build_offline() -> void:
 		list.add_child(line)
 
 
-## O cartão devolve onde pôr mais conteúdo, embaixo do número.
 func _count_card(parent: Control, caption: String, done: int, total: int) -> VBoxContainer:
 	return _card(parent, caption, "%d de %d" % [done, total], ContentViewer.status_color(done, total))
 

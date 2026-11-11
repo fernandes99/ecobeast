@@ -1,8 +1,5 @@
 class_name TemperamentsTab
 extends ScrollContainer
-## A aba Temperamentos (content-viewer/03, RF-06): uma tabela só, sem detalhe. Cada
-## Temperamento aumenta um stat em 10% e diminui outro em 10%; os neutros aumentam e
-## diminuem o mesmo, e não mudam nada.
 
 const NEUTRAL := "neutro"
 

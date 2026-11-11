@@ -1,6 +1,5 @@
 class_name StorageCell
 extends TapPanel
-## Um Ecobeast na grade do Santuário (team-and-storage/02, RF-03).
 
 var creature: CreatureInstance = null
 

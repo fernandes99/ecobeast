@@ -13,10 +13,7 @@ import {
 import { secureRandom } from '../common/secure-random.js';
 import { generateMap } from '../domain/exploration/map-generator.js';
 import { type MapSpawn, rollSpawns } from '../domain/exploration/spawns.js';
-import {
-  rollAreaSpawns,
-  spawnAreas,
-} from '../domain/islands/area-spawns.js';
+import { rollAreaSpawns, spawnAreas } from '../domain/islands/area-spawns.js';
 import type { TamerSize } from '../domain/tamers/tamer-config.js';
 import {
   type MapTamer,
@@ -24,7 +21,10 @@ import {
   rollMapTamers,
 } from '../domain/tamers/tamers.js';
 import type { Env } from '../config/env.js';
-import { ISLAND_NOT_FOUND, IslandsService } from '../islands/islands.service.js';
+import {
+  ISLAND_NOT_FOUND,
+  IslandsService,
+} from '../islands/islands.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import {
   DebugClearResponseDto,
@@ -141,11 +141,11 @@ export class ExplorationService {
         seed: island.id,
         start: draft.start,
         // A área de cada hexágono fica no servidor.
-        tiles: draft.tiles.map(({ q, r, biome, shape, variant }) => ({
+        tiles: draft.tiles.map(({ q, r, biome, height, variant }) => ({
           q,
           r,
           biome,
-          shape,
+          height,
           variant,
         })),
         creatures: spawns.map(toMapCreatureDto),

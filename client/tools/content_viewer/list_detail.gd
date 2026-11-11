@@ -1,9 +1,5 @@
 class_name ListDetail
 extends HSplitContainer
-## A lista à esquerda e o detalhe do item escolhido à direita, que as abas do
-## visualizador usam (content-viewer/architecture.md, "O par lista e detalhe"). A aba
-## diz as linhas, com `set_rows`, e monta o detalhe em `_build_detail`; o detalhe é
-## montado de novo a cada escolha.
 
 const LIST_WIDTH := 320
 const ROW_HEIGHT := 30
@@ -11,14 +7,11 @@ const DOT_SIZE := 10
 const ICON_SIZE := 22
 const ROW_HOVER := Color("#FFFFFF14")
 
-## Uma linha da lista: o id, o texto, uma bolinha opcional (alpha 0 = sem) e um texto
-## à direita, com a cor dele.
 class Row:
 	extends RefCounted
 	var id: int
 	var text: String
 	var dot := Color(0, 0, 0, 0)
-	## Um ícone pequeno à esquerda, no lugar da bolinha (os itens).
 	var icon: Texture2D = null
 	var tail := ""
 	var tail_color := UiPalette.TEXT_SECONDARY
@@ -31,7 +24,6 @@ class Row:
 var viewer: ContentViewer
 var selected_id := -1
 var _list: VBoxContainer
-## Acima da lista, para um botão da aba (como a tabela dos Elementos).
 var _list_header: VBoxContainer
 var _detail: VBoxContainer
 var _detail_scroll: ScrollContainer
@@ -72,7 +64,6 @@ func _init(content_viewer: ContentViewer) -> void:
 	add_child(_detail_scroll)
 
 
-## Troca as linhas e escolhe a primeira, ou a escolhida antes, se ainda existir.
 func set_rows(rows: Array[Row]) -> void:
 	for child: Node in _list.get_children():
 		child.queue_free()
@@ -87,7 +78,6 @@ func set_rows(rows: Array[Row]) -> void:
 		select(rows[0].id)
 
 
-## Escolhe o item e monta o detalhe dele.
 func select(id: int) -> void:
 	if not _buttons.has(id):
 		return
@@ -100,14 +90,11 @@ func select(id: int) -> void:
 	_detail_scroll.scroll_vertical = 0
 
 
-## Põe um controle acima da lista.
 func add_list_header(control: Control) -> void:
 	_list_header.add_child(control)
 	_list_header.visible = true
 
 
-## Mostra no lugar do detalhe algo que não é um item da lista: nenhuma linha fica
-## escolhida, e `build` monta o conteúdo dentro do detalhe.
 func show_custom(build: Callable) -> void:
 	selected_id = -1
 	for button_id: int in _buttons:
@@ -123,7 +110,6 @@ func _clear_detail() -> void:
 		child.queue_free()
 
 
-## A aba monta o detalhe do item dentro de `box`.
 func _build_detail(_id: int, _box: VBoxContainer) -> void:
 	pass
 

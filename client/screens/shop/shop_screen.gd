@@ -1,16 +1,11 @@
 extends Control
-## Loja (inventory-shop/02, TELAS.md #12): uma aba por categoria e um card por
-## item. Quem cobra e entrega o item é o servidor; a tela pede e mostra o jogador
-## que volta.
 
 const CardScene := preload("res://screens/shop/shop_item_card.tscn")
 
 const TAB_HEIGHT := 64.0
 const PURCHASED_MESSAGE := "Item comprado!"
 
-## As categorias com itens, uma por aba.
 var _categories: Array[ItemCategory] = []
-## Há uma compra no servidor.
 var _buying: bool = false
 
 @onready var _coins_label: Label = %CoinsLabel
@@ -31,7 +26,6 @@ func _ready() -> void:
 		_show_tab(0)
 
 
-## A resposta do servidor volta para esta tela: ela não fecha antes disso.
 func handle_back() -> bool:
 	return _buying
 

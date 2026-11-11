@@ -1,15 +1,11 @@
 class_name Codex
 extends RefCounted
-## O Bestiário do jogador (codex/02): as espécies que ele já viu numa luta e as
-## que capturou, como o servidor mandou. Espécie fora daqui nunca foi vista.
 
 enum Status { UNKNOWN, SEEN, CAUGHT }
 
-## species_id -> capturado.
 var _caught: Dictionary[int, bool] = {}
 
 
-## `entries` de GET /v1/me/codex. Uma entrada sem `species_id` válido fica de fora.
 static func from_dict(d: Dictionary) -> Codex:
 	var codex := Codex.new()
 	for entry: Variant in DictFields.get_array(d, "entries"):
@@ -28,7 +24,6 @@ func status(species_id: int) -> Status:
 	return Status.CAUGHT if _caught[species_id] else Status.SEEN
 
 
-## Vistos, contando os capturados.
 func seen_count() -> int:
 	return _caught.size()
 

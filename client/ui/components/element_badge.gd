@@ -1,16 +1,12 @@
 class_name ElementBadge
 extends PanelContainer
-## Pílula com o nome do Elemento na cor dele (foundation/02, RF-11). Com
-## show_icon, mostra também res://assets/ui/elements/<slug>/icon.png, se existir.
 
-## Acima desta luminância, a cor do Elemento é clara demais para texto branco.
 const LIGHT_LUMINANCE := 0.6
 const ICON_PATH := "res://assets/ui/elements/%s/icon.png"
 
 @export var show_icon: bool = false
 
 var _element_id: int = -1
-## Cópia do estilo do tema, só deste selo (o fundo é a cor do Elemento).
 var _style: StyleBoxFlat
 
 @onready var _icon: TextureRect = %Icon
@@ -23,7 +19,6 @@ func _ready() -> void:
 	_refresh()
 
 
-## Pode ser chamado antes ou depois de o componente entrar na árvore.
 func set_element(element_id: int) -> void:
 	_element_id = element_id
 	if is_node_ready():

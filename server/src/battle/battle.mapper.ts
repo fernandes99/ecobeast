@@ -1,18 +1,9 @@
 import { noStages } from '../domain/battle/stages.js';
-import type {
-  BattleAction,
-  BattleState,
-  Combatant,
-} from '../domain/battle/types.js';
+import type { BattleState, Combatant } from '../domain/battle/types.js';
 import type { NewCreature } from '../domain/rules/creature-factory.js';
 import { Prisma } from '../generated/prisma/client.js';
 import { creatureStats, PLAYER_INCLUDE } from '../player/player.mapper.js';
-import type {
-  BattleActionBodyDto,
-  BattleActionItemDto,
-  BattleDto,
-  EnemyCreatureDto,
-} from './battle.dto.js';
+import type { BattleDto, EnemyCreatureDto } from './battle.dto.js';
 
 const { creatures: PARTY } = PLAYER_INCLUDE;
 
@@ -93,37 +84,6 @@ export function toEnemyCombatant(
     foughtBy: [],
     xpEarned: 0,
   };
-}
-
-/** A lista de `actions`, ou o corpo antigo como uma ação na posição 0. */
-export function toBattleActions(body: BattleActionBodyDto): BattleAction[] {
-  return body.actions
-    ? body.actions.map(toBattleAction)
-    : [toBattleAction({ ...body, type: body.type! })];
-}
-
-function toBattleAction(body: BattleActionItemDto): BattleAction {
-  const position = body.position ?? 0;
-  const target = body.target === undefined ? {} : { target: body.target };
-  switch (body.type) {
-    case 'skill':
-      return { type: 'skill', position, slot: body.slot!, ...target };
-    case 'emergency':
-      return { type: 'emergency', position, ...target };
-    case 'switch':
-      return { type: 'switch', position, team_index: body.team_index! };
-    case 'item':
-      return {
-        type: 'item',
-        position,
-        item_id: body.item_id!,
-        team_index: body.team_index!,
-      };
-    case 'capture':
-      return { type: 'capture', position, item_id: body.item_id!, ...target };
-    case 'flee':
-      return { type: 'flee', position };
-  }
 }
 
 /**

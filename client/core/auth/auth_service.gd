@@ -1,8 +1,5 @@
 class_name AuthService
 extends RefCounted
-## O login com Google pelo navegador (.specs/auth-google/04-client-login.md,
-## RF-04 a RF-06): começa no servidor, abre o navegador e pergunta até a sessão
-## sair. As telas chegam aqui só pelo Session.
 
 signal _login_finished(result: Result)
 
@@ -18,12 +15,9 @@ const BROWSER_FAILED := "Não foi possível abrir o navegador."
 
 var timeout_s := LOGIN_TIMEOUT_S
 
-## Cada login() e cancel() muda o número. Um login antigo, ao acordar de um
-## await, vê que não é mais o atual e para sem responder.
 var _attempt := 0
 
 
-## Assíncrono: chame com await. Sucesso: a sessão já está no Api.
 func login() -> Result:
 	_attempt += 1
 	# Deferido porque _run pode terminar sem esperar nada, e o sinal só pode
@@ -32,7 +26,6 @@ func login() -> Result:
 	return await _login_finished
 
 
-## O login em andamento devolve na hora uma falha com error vazio.
 func cancel() -> void:
 	_attempt += 1
 	_login_finished.emit(Result.failure(""))

@@ -11,11 +11,8 @@ import { INVALID_ENEMY } from '../battle/battle.dto.js';
 import { ISLAND_NOT_FOUND } from '../islands/islands.service.js';
 
 export const INVALID_TAMER = 'Domador de depuração inválido.';
-import { BIOMES, TERRAIN_SHAPES } from '../domain/exploration/map-generator.js';
-import type {
-  Biome,
-  TerrainShape,
-} from '../domain/exploration/map-generator.js';
+import { BIOMES, MAX_HEIGHT } from '../domain/exploration/map-generator.js';
+import type { Biome } from '../domain/exploration/map-generator.js';
 
 export class HexCoordDto {
   @ApiProperty({ description: 'Coluna, em coordenadas axiais.', example: 0 })
@@ -29,11 +26,15 @@ export class MapTileDto extends HexCoordDto {
   @ApiProperty({ enum: BIOMES, example: 'temperate' })
   biome: Biome;
 
-  @ApiProperty({ enum: TERRAIN_SHAPES, example: 'flat' })
-  shape: TerrainShape;
+  @ApiProperty({
+    description: `A altura do terreno, de 0 a ${MAX_HEIGHT}, em qualquer bioma.`,
+    example: 1,
+  })
+  height: number;
 
   @ApiProperty({
-    description: 'Qual sprite usar: de 1 a 6 em `flat`, de 1 a 3 nas outras.',
+    description:
+      'Qual sprite usar: de 1 a 3 em `hill` e `mountain`, de 1 a 6 nos outros.',
     example: 4,
   })
   variant: number;

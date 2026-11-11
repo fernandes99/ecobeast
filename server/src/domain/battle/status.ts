@@ -186,13 +186,6 @@ export function faintIfDown(context: TurnContext, spot: Spot): void {
   if (spot.side === 'enemy') awardXp(context, creature);
 }
 
-export function applyEndOfTurn(context: TurnContext, spot: Spot): void {
-  applyStatusDamage(context, spot);
-  const creature = combatantAt(context.state, spot);
-  creature.isFeared = false;
-  creature.isProtected = false;
-}
-
 /** A perda de HP da queimadura e do veneno, com o desmaio. */
 export function applyStatusDamage(context: TurnContext, spot: Spot): void {
   const creature = combatantAt(context.state, spot);

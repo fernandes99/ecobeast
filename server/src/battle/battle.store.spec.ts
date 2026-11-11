@@ -9,7 +9,6 @@ const MINUTE = 60_000;
 
 function battle(): StoredBattle {
   return {
-    kind: 'classic',
     state: makeState(makeCombatant(), makeCombatant()),
     catalog: makeCatalog(),
     // O `BattleStore` só guarda: não lê o que tem dentro.

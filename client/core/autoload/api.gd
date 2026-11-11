@@ -1,9 +1,5 @@
 extends Node
-## Autoload Api: as chamadas HTTP do jogo e a sessão que vai nelas
-## (.specs/auth-google/04-client-login.md, RF-01 e RF-02). É um Node porque o
-## HTTPRequest precisa estar na árvore de cenas para funcionar.
 
-## O servidor recusou a sessão: ela foi apagada, e o jogador precisa entrar de novo.
 signal session_lost
 signal _renewal_finished(response: ApiResponse)
 
@@ -13,7 +9,6 @@ const REFRESH_PATH := "/v1/auth/refresh"
 const UNAUTHORIZED := 401
 
 var base_url: String
-## A sessão atual, ou null se ninguém entrou.
 var session: AuthSession = null
 
 var _renewing := false
@@ -24,9 +19,6 @@ func _ready() -> void:
 	session = AuthSession.load_saved()
 
 
-## Faz a chamada e devolve a resposta. Assíncrono: chame com await.
-## Com authenticated, leva a sessão e cuida de renová-la. `timeout` muda o prazo
-## de TIMEOUT_SECONDS, para chamadas que demoram (salvar uma ilha, map-editor/02).
 func request(method: HTTPClient.Method, path: String, body: Variant = null, authenticated: bool = false, timeout: float = TIMEOUT_SECONDS) -> ApiResponse:
 	if not authenticated:
 		return await _send(method, path, body, "", timeout)
@@ -48,15 +40,12 @@ func request(method: HTTPClient.Method, path: String, body: Variant = null, auth
 	return response
 
 
-## Troca a sessão pela que veio do servidor e a guarda. Falso se o corpo não
-## tiver os tokens.
 func adopt_tokens(data: Variant) -> bool:
 	var tokens: AuthSession = AuthSession.from_tokens(data) if data is Dictionary else null
 	if tokens == null:
 		return false
 	session = tokens
 	if not session.save():
-		# Sem o arquivo o jogo funciona; só pede login na próxima abertura.
 		push_warning("Não foi possível guardar a sessão em %s." % AuthSession.PATH)
 	return true
 
@@ -66,8 +55,6 @@ func clear_session() -> void:
 	AuthSession.clear()
 
 
-## Só uma renovação por vez: o refresh_token vale uma vez só, então quem chegar
-## durante uma renovação espera o resultado dela.
 func _renew() -> ApiResponse:
 	if _renewing:
 		return await _renewal_finished
@@ -99,7 +86,6 @@ func _send(method: HTTPClient.Method, path: String, body: Variant, token: String
 	var http := HTTPRequest.new()
 	http.timeout = timeout
 	add_child(http)
-	# Os argumentos do sinal request_completed: resultado, código, cabeçalhos e corpo.
 	var completed: Array = [HTTPRequest.RESULT_CANT_CONNECT, 0, PackedStringArray(), PackedByteArray()]
 	if http.request(base_url + path, headers, method, payload) == OK:
 		completed = await http.request_completed

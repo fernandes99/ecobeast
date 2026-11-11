@@ -1,12 +1,9 @@
 extends Control
-## Ilhas (islands/03): a lista das ilhas publicadas. Tocar numa abre o mapa dela
-## por cima desta tela, e voltar do mapa cai aqui de novo.
 
 const LOADING_TEXT := "Carregando ilhas..."
 const EMPTY_TEXT := "Nenhuma ilha publicada ainda."
 const CARD_HEIGHT := 88.0
 
-## O pedido da lista ainda vai voltar para esta tela.
 var _loading: bool = true
 
 @onready var _list: VBoxContainer = %IslandList
@@ -19,7 +16,6 @@ func _ready() -> void:
 	_load()
 
 
-## A resposta do servidor volta para esta tela: ela não fecha antes disso.
 func handle_back() -> bool:
 	return _loading
 
@@ -42,7 +38,6 @@ func _load() -> void:
 		_list.add_child(_card(island))
 
 
-## Um cartão tocável com o nome da ilha.
 func _card(island: IslandSummary) -> TapPanel:
 	var card := TapPanel.new()
 	card.theme_type_variation = &"SectionPanel"

@@ -1,36 +1,30 @@
 class_name IslandDraft
 extends RefCounted
-## O rascunho de uma ilha no editor (map-editor/02): o terreno, a chegada, as
-## construções e as áreas, no formato do contrato de `/v1/editor`
-## (.specs/map-editor/architecture.md, "O rascunho").
 
 const MAX_TILES := 20000
 const BLANK_BIOME := "temperate"
-const BLANK_SHAPE := "flat"
+const BLANK_HEIGHT := 1
+const FEW_VARIANT_BIOMES: Array[String] = ["hill", "mountain"]
 
-## 0 enquanto a ilha não foi criada no servidor.
 var id := 0
 var name := ""
 var start := Vector2i.ZERO
 var tiles: Dictionary[Vector2i, HexTile] = {}
-## A `key` da área de cada hexágono que tem área.
 var tile_areas: Dictionary[Vector2i, int] = {}
-## As construções e as áreas como o contrato as descreve. A fase 04 as edita;
-## até lá, o editor as guarda e devolve sem mexer.
 var buildings: Array = []
 var areas: Array = []
 
 
-## A variante sorteada como o gerador faz: no plano, `detail_chance` escolhe entre
-## 4 e 6 e o resto entre 1 e 3; nas outras formas, entre 1 e 3.
-static func roll_variant(shape: String, detail_chance: float, rng: RandomNumberGenerator) -> int:
-	if shape == BLANK_SHAPE and rng.randf() < detail_chance:
+static func max_variant(biome: String) -> int:
+	return 3 if FEW_VARIANT_BIOMES.has(biome) else 6
+
+
+static func roll_variant(biome: String, detail_chance: float, rng: RandomNumberGenerator) -> int:
+	if max_variant(biome) > 3 and rng.randf() < detail_chance:
 		return rng.randi_range(4, 6)
 	return rng.randi_range(1, 3)
 
 
-## Uma ilha nova: um hexágono de raio `radius` em volta de (0, 0), todo planície
-## plana, com a chegada no centro.
 static func blank(island_name: String, radius: int, detail_chance: float, rng: RandomNumberGenerator) -> IslandDraft:
 	var draft := IslandDraft.new()
 	draft.name = island_name
@@ -39,13 +33,12 @@ static func blank(island_name: String, radius: int, detail_chance: float, rng: R
 			var tile := HexTile.new()
 			tile.coord = Vector2i(q, r)
 			tile.biome = BLANK_BIOME
-			tile.shape = BLANK_SHAPE
-			tile.variant = roll_variant(BLANK_SHAPE, detail_chance, rng)
+			tile.height = BLANK_HEIGHT
+			tile.variant = roll_variant(BLANK_BIOME, detail_chance, rng)
 			draft.tiles[tile.coord] = tile
 	return draft
 
 
-## Uma ilha nova com o que o gerador devolveu (`{start, tiles}`).
 static func generated(island_name: String, data: Dictionary) -> IslandDraft:
 	var draft := IslandDraft.new()
 	draft.name = island_name
@@ -53,7 +46,6 @@ static func generated(island_name: String, data: Dictionary) -> IslandDraft:
 	return draft
 
 
-## O rascunho como o servidor manda em `GET /v1/editor/islands/:id`.
 static func from_dict(data: Dictionary) -> IslandDraft:
 	var draft := IslandDraft.new()
 	draft.id = DictFields.get_int(data, "id")
@@ -64,11 +56,10 @@ static func from_dict(data: Dictionary) -> IslandDraft:
 	return draft
 
 
-## O corpo de criar e de salvar.
 func to_dict() -> Dictionary:
 	var tile_list: Array[Dictionary] = []
 	for tile: HexTile in tiles.values():
-		var entry := {"q": tile.coord.x, "r": tile.coord.y, "biome": tile.biome, "shape": tile.shape, "variant": tile.variant}
+		var entry := {"q": tile.coord.x, "r": tile.coord.y, "biome": tile.biome, "height": tile.height, "variant": tile.variant}
 		if tile_areas.has(tile.coord):
 			entry["area"] = tile_areas[tile.coord]
 		tile_list.append(entry)
@@ -81,16 +72,15 @@ func to_dict() -> Dictionary:
 	}
 
 
-## Um hexágono para o desfazer: `[bioma, forma, variante, área]`, com área 0 quando
+## Um hexágono para o desfazer: `[bioma, altura, variante, área]`, com área 0 quando
 ## ele não tem; vazio quando o hexágono não existe.
 func snapshot(coord: Vector2i) -> Array:
 	var tile: HexTile = tiles.get(coord)
 	if tile == null:
 		return []
-	return [tile.biome, tile.shape, tile.variant, tile_areas.get(coord, 0)]
+	return [tile.biome, tile.height, tile.variant, tile_areas.get(coord, 0)]
 
 
-## Volta um hexágono ao que `snapshot` guardou.
 func restore(coord: Vector2i, state: Array) -> void:
 	if state.is_empty():
 		tiles.erase(coord)
@@ -102,7 +92,7 @@ func restore(coord: Vector2i, state: Array) -> void:
 		tile.coord = coord
 		tiles[coord] = tile
 	tile.biome = state[0]
-	tile.shape = state[1]
+	tile.height = state[1]
 	tile.variant = state[2]
 	if int(state[3]) > 0:
 		tile_areas[coord] = int(state[3])
@@ -110,21 +100,18 @@ func restore(coord: Vector2i, state: Array) -> void:
 		tile_areas.erase(coord)
 
 
-## Um hexágono novo, se ainda não existe e a ilha não está cheia. Devolve se entrou.
-func add_tile(coord: Vector2i, biome: String, shape: String, variant: int) -> bool:
+func add_tile(coord: Vector2i, biome: String, height: int, variant: int) -> bool:
 	if tiles.has(coord) or tiles.size() >= MAX_TILES:
 		return false
 	var tile := HexTile.new()
 	tile.coord = coord
 	tile.biome = biome
-	tile.shape = shape
+	tile.height = height
 	tile.variant = variant
 	tiles[coord] = tile
 	return true
 
 
-## Tira um hexágono, e com ele a área e o lugar dele numa construção; a construção
-## que fica sem hexágonos sai. Devolve se alguma construção mudou.
 func remove_tile(coord: Vector2i) -> bool:
 	tiles.erase(coord)
 	tile_areas.erase(coord)
@@ -142,7 +129,6 @@ func remove_tile(coord: Vector2i) -> bool:
 	return changed
 
 
-## Algum hexágono de construção está entre estes.
 func touches_buildings(coords: Array[Vector2i]) -> bool:
 	for building: Variant in buildings:
 		for at: Variant in (building as Dictionary).get("tiles", []):
@@ -151,7 +137,6 @@ func touches_buildings(coords: Array[Vector2i]) -> bool:
 	return false
 
 
-## O índice da construção que ocupa um hexágono, ou -1.
 func building_at(coord: Vector2i) -> int:
 	for index: int in buildings.size():
 		for at: Variant in (buildings[index] as Dictionary).get("tiles", []):
@@ -160,7 +145,6 @@ func building_at(coord: Vector2i) -> int:
 	return -1
 
 
-## Os hexágonos de uma construção.
 func building_tiles(index: int) -> Array[Vector2i]:
 	var coords: Array[Vector2i] = []
 	if index < 0 or index >= buildings.size():
@@ -170,7 +154,6 @@ func building_tiles(index: int) -> Array[Vector2i]:
 	return coords
 
 
-## A área com esta `key`, ou um dicionário vazio.
 func area_by_key(key: int) -> Dictionary:
 	for area: Variant in areas:
 		if int((area as Dictionary).get("key", 0)) == key:
@@ -178,7 +161,6 @@ func area_by_key(key: int) -> Dictionary:
 	return {}
 
 
-## A próxima `key` livre, para uma área nova.
 func next_area_key() -> int:
 	var highest := 0
 	for area: Variant in areas:
@@ -186,7 +168,6 @@ func next_area_key() -> int:
 	return highest + 1
 
 
-## Quantos hexágonos estão em cada área, por `key`.
 func area_tile_counts() -> Dictionary[int, int]:
 	var counts: Dictionary[int, int] = {}
 	for key: int in tile_areas.values():

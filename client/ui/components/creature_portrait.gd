@@ -1,17 +1,10 @@
 class_name CreaturePortrait
 extends Control
-## Retrato de uma espécie (foundation/02, RF-12): o sprite, se existir em
-## res://assets/creatures/<slug>/front.png, ou um placeholder desenhado — círculo
-## na cor do primeiro Elemento, borda na cor do segundo e a inicial do nome.
-## Com set_silhouette(true), vira a sombra do Bestiário (codex/02): a arte numa cor
-## só, ou o círculo sem a inicial e sem as cores do Elemento.
 
 const SPRITE_PATH := "res://assets/creatures/%s/front.png"
 const SilhouetteShader := preload("res://ui/components/silhouette.gdshader")
 const BORDER_WIDTH := 6.0
-## Tamanho da inicial em relação ao retrato.
 const INITIAL_SCALE := 0.45
-## Quanto a borda escurece quando a espécie tem um Elemento só.
 const SINGLE_ELEMENT_BORDER_DARKEN := 0.25
 
 @export var portrait_size: int = 160
@@ -47,14 +40,12 @@ func _draw() -> void:
 	draw_circle(center, radius - BORDER_WIDTH / 2.0, _border_color, false, BORDER_WIDTH, true)
 
 
-## Pode ser chamado antes ou depois de o componente entrar na árvore.
 func set_species(species_id: int) -> void:
 	_species_id = species_id
 	if is_node_ready():
 		_refresh()
 
 
-## Pode ser chamado antes ou depois de o componente entrar na árvore.
 func set_silhouette(on: bool) -> void:
 	_silhouette = on
 	if is_node_ready():

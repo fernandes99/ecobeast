@@ -13,10 +13,10 @@ function island(): IslandDraft {
     name: 'Ilha',
     start: { q: 0, r: 0 },
     tiles: [
-      { q: 0, r: 0, biome: 'temperate', shape: 'flat', variant: 1 },
-      { q: 1, r: 0, biome: 'temperate', shape: 'flat', variant: 1, area: 1 },
-      { q: 2, r: 0, biome: 'boreal', shape: 'hill', variant: 1, area: 1 },
-      { q: 0, r: 1, biome: 'wshallow', shape: 'flat', variant: 1, area: 2 },
+      { q: 0, r: 0, biome: 'temperate', height: 1, variant: 1 },
+      { q: 1, r: 0, biome: 'temperate', height: 1, variant: 1, area: 1 },
+      { q: 2, r: 0, biome: 'hill', height: 2, variant: 1, area: 1 },
+      { q: 0, r: 1, biome: 'wshallow', height: 0, variant: 1, area: 2 },
     ],
     buildings: [{ buildingTypeId: 1, tiles: [{ q: 2, r: 0 }] }],
     areas: [
@@ -75,8 +75,10 @@ describe('rollAreaSpawns', () => {
     const lake = spawns.filter((spawn) => spawn.speciesId === NILU);
     expect(field).toHaveLength(5);
     expect(lake).toHaveLength(3);
-    for (const spawn of field) expect(hexKey(spawn)).toBe(hexKey({ q: 1, r: 0 }));
-    for (const spawn of lake) expect(hexKey(spawn)).toBe(hexKey({ q: 0, r: 1 }));
+    for (const spawn of field)
+      expect(hexKey(spawn)).toBe(hexKey({ q: 1, r: 0 }));
+    for (const spawn of lake)
+      expect(hexKey(spawn)).toBe(hexKey({ q: 0, r: 1 }));
   });
 
   it('numera os Ecobeasts de 1 em diante', () => {

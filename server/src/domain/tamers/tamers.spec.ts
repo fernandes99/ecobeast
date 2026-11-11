@@ -39,17 +39,13 @@ const START: HexCoord = { q: 0, r: 0 };
 function line(
   biome: MapTile['biome'],
   count: number,
-  {
-    shape = 'flat',
-    r = 0,
-    from = 0,
-  }: Partial<MapTile> & { from?: number } = {},
+  { height = 1, r = 0, from = 0 }: Partial<MapTile> & { from?: number } = {},
 ): MapTile[] {
   return Array.from({ length: count }, (_, index) => ({
     q: from + index,
     r,
     biome,
-    shape,
+    height,
     variant: 1,
   }));
 }
@@ -117,7 +113,7 @@ describe('rollMapTamers', () => {
 
   it('num hexágono de colina, só usa espécies com taxa em colina', () => {
     const tamers = rollMapTamers(
-      line('boreal', 60, { shape: 'hill', from: 10 }),
+      line('hill', 60, { from: 10 }),
       START,
       SPECIES,
       10,

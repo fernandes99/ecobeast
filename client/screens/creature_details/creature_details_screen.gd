@@ -1,8 +1,4 @@
 extends Control
-## Detalhes de um Ecobeast (creature-details/02, TELAS.md #8): topo fixo com o
-## retrato, a identidade, o HP e o XP, e quatro abas sem rolagem. Parâmetro:
-## {"uid": String}. Tudo vem do Session e do GameData; a tela só faz a conta da
-## barra de XP com os números que o servidor mandou.
 
 const ElementBadgeScene := preload("res://ui/components/element_badge.tscn")
 const SkillRowScene := preload("res://screens/creature_details/skill_row.tscn")
@@ -10,14 +6,12 @@ const GeneRowScene := preload("res://screens/creature_details/gene_row.tscn")
 
 const SKILL_SLOTS := 4
 const GLOW_ALPHA := 0.55
-## Acima desta luminância, o selo da raridade pede texto escuro.
 const LIGHT_RANK_LUMINANCE := 0.3
 const NO_ITEM := "Nenhum"
 const MAX_LEVEL_TEXT := "Nível máximo"
 const GENDERS: Dictionary[String, String] = {"male": "Macho", "female": "Fêmea", "none": "Sem gênero"}
 
 var _uid: String = ""
-## Cópia do estilo do tema, só deste selo (o fundo é a cor da raridade).
 var _rank_style: StyleBoxFlat
 
 @onready var _glow: TextureRect = %Glow
@@ -70,7 +64,6 @@ func _ready() -> void:
 	_refresh()
 
 
-## Chamado pelo Router no voltar do Android ou Esc: fecha o painel, se aberto.
 func handle_back() -> bool:
 	if _nickname_panel.visible:
 		_nickname_panel.close()
@@ -84,7 +77,6 @@ func _show_page(current: int) -> void:
 		_tabs[index].theme_type_variation = &"" if index == current else &"OutlineButton"
 
 
-## A criatura desta tela, na equipe ou no Santuário, ou null.
 func _creature() -> CreatureInstance:
 	if Session.player == null:
 		return null
@@ -125,7 +117,6 @@ func _show_identity(creature: CreatureInstance, species: CreatureSpecies) -> voi
 	_hp_bar.set_hp(creature.current_hp, creature.stats.hp)
 
 
-## Brilho radial atrás do retrato, na cor do Elemento, sumindo nas bordas.
 func _glow_gradient(color: Color) -> GradientTexture2D:
 	var clear := color
 	clear.a = 0.0
@@ -176,7 +167,6 @@ func _show_attributes(creature: CreatureInstance) -> void:
 	]
 
 
-## A pontuação e a raridade vêm prontas do servidor.
 func _show_genes(creature: CreatureInstance) -> void:
 	_genes_total_label.text = str(creature.genes_total)
 	_rank_label.text = creature.genes_rank_name

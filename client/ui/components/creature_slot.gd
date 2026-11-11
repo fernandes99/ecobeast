@@ -1,16 +1,10 @@
 class_name CreatureSlot
 extends TapPanel
-## Um lugar da equipe no Hub (visual-theme/02, RF-10 e RF-11): card vertical
-## com a arte sobre a cor do primeiro Elemento e, numa faixa escura embaixo,
-## nome, nível e HP; ou "Vazio", que não reage a toque.
 
 const BORDER_WIDTH := 2
 const CORNER_RADIUS := 12
-## Quanto a cor do Elemento escurece no fundo do card.
 const ELEMENT_DARKEN := 0.45
-## Opacidade da faixa escura das informações.
 const INFO_ALPHA := 0.85
-## Opacidade do fundo do slot vazio.
 const EMPTY_ALPHA := 0.5
 
 var _creature: CreatureInstance = null
@@ -40,14 +34,12 @@ func _ready() -> void:
 	_refresh()
 
 
-## Pode ser chamado antes ou depois de o componente entrar na árvore.
 func set_creature(creature: CreatureInstance) -> void:
 	_creature = creature
 	if is_node_ready():
 		_refresh()
 
 
-## Pode ser chamado antes ou depois de o componente entrar na árvore.
 func set_empty() -> void:
 	set_creature(null)
 

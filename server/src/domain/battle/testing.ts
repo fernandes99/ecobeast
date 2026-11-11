@@ -1,8 +1,7 @@
-import { applyAction, type BattleOutcome } from './engine.js';
+import { resolveSkill } from './actions.js';
 import { noStages } from './stages.js';
 import type { UsableItem } from '../items/use-item.js';
 import type {
-  BattleAction,
   BattleCatalog,
   BattleEvent,
   BattleSkill,
@@ -10,6 +9,8 @@ import type {
   BattleState,
   Combatant,
   Random,
+  Spot,
+  TurnContext,
 } from './types.js';
 
 /** Ajudantes dos testes da batalha; o código do jogo não usa este arquivo. */
@@ -127,16 +128,29 @@ export function always(value: number): Random {
   return () => value;
 }
 
-/** `applyAction` que falha o teste se a ação for recusada. */
-export function play(
+export const PLAYER: Spot = { side: 'player', position: 0 };
+export const ENEMY: Spot = { side: 'enemy', position: 0 };
+
+export function contextOf(
   state: BattleState,
-  action: BattleAction | BattleAction[],
   catalog: BattleCatalog,
   random: Random = always(0.5),
-): BattleOutcome {
-  const outcome = applyAction(state, action, catalog, random);
-  if ('error' in outcome) throw new Error(outcome.error);
-  return outcome;
+): TurnContext {
+  return { state: structuredClone(state), catalog, random, events: [] };
+}
+
+/** O autor usa a Técnica no adversário, numa cópia do estado, sem a luta em volta. */
+export function cast(
+  state: BattleState,
+  skill: BattleSkill,
+  catalog: BattleCatalog,
+  random: Random = always(0.5),
+  from: Spot = PLAYER,
+  to: Spot = ENEMY,
+): TurnContext {
+  const context = contextOf(state, catalog, random);
+  resolveSkill(context, from, skill, to);
+  return context;
 }
 
 export function eventsOf<Type extends BattleEvent['type']>(
@@ -152,7 +166,7 @@ export function eventsOf<Type extends BattleEvent['type']>(
 /**
  * Uma batalha em andamento, com as primeiras criaturas de cada lado em campo,
  * uma por vaga. Cada inimigo em campo sem `foughtBy` começa com quem está em
- * campo do outro lado, como no `startBattle`.
+ * campo do outro lado.
  */
 export function makeState(
   player: Combatant | Combatant[],

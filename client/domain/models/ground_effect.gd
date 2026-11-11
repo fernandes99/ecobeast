@@ -1,14 +1,10 @@
 class_name GroundEffect
 extends RefCounted
-## O que uma marca no chão do tabuleiro faz (tabela ground_effects,
-## board-battle/01). Colunas nulas viram 0 (dano) ou -1 (status).
 
 var id: int
 var slug: String
 var name: String
-## Dano em % do HP máximo, depois de cada vez da fila; 0 sem dano.
 var damage_percent: int = 0
-## O status que a marca tenta aplicar, ou -1.
 var status_condition_id: int = -1
 var color: Color
 

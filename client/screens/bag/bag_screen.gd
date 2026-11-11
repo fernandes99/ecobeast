@@ -1,15 +1,10 @@
 extends Control
-## Mochila (inventory-shop/03, TELAS.md #13): os itens por categoria, com a
-## quantidade, e a escolha do alvo. Abre pelo Hub e pelo mapa. Quem aplica o
-## efeito é o servidor; a tela pede e mostra o jogador que volta.
 
 const RowScene := preload("res://screens/bag/bag_item_row.tscn")
 
 const USED_MESSAGE := "%s usado em %s."
 
-## Há um pedido no servidor.
 var _using: bool = false
-## O item que espera a escolha do alvo.
 var _selected_item: Item = null
 
 @onready var _scroll: ScrollContainer = %Scroll
@@ -26,7 +21,6 @@ func _ready() -> void:
 	_refresh()
 
 
-## A resposta do servidor volta para esta tela: ela não fecha antes disso.
 func handle_back() -> bool:
 	if _using:
 		return true

@@ -1,9 +1,6 @@
 class_name StarterConfirmPanel
 extends Control
-## Painel de confirmação da escolha do inicial (onboarding/02, RF-06 e RF-07).
-## Só exibe e repassa toques: quem chama o Session é a tela.
 
-## O jogador tocou em "Escolher".
 signal choose_pressed(species_id: int)
 
 var _species_id: int = -1
@@ -36,7 +33,6 @@ func open(species: CreatureSpecies) -> void:
 	show()
 
 
-## Fecha sem escolher. Enquanto a escolha está em andamento, não fecha.
 func close() -> void:
 	if not _busy:
 		hide()

@@ -1,6 +1,6 @@
 [gd_scene format=3]
 
-[ext_resource type="Script" path="res://screens/battle/battle_skill_button.gd" id="1_script"]
+[ext_resource type="Script" path="res://screens/board_battle/battle_skill_button.gd" id="1_script"]
 [ext_resource type="PackedScene" path="res://ui/components/element_badge.tscn" id="2_badge"]
 
 [node name="BattleSkillButton" type="Button"]

@@ -1,130 +1,82 @@
-import { startBattle } from './engine.js';
+import { settleCoins } from './experience.js';
 import {
-  always,
+  contextOf,
   eventsOf,
   makeCatalog,
   makeCombatant,
-  makeSkill,
   makeState,
-  play,
 } from './testing.js';
-import type { Combatant } from './types.js';
+import type { BattleResult, BattleState, Combatant } from './types.js';
 
-const SCRATCH = makeSkill({ id: 1 });
-const catalog = makeCatalog({}, [SCRATCH], {}, {}, { 4: 50 });
-const ATTACK = { type: 'skill', slot: 1 } as const;
+const catalog = makeCatalog();
 
 function fighter(overrides: Partial<Combatant> = {}): Combatant {
-  return makeCombatant({
-    skills: [{ skillId: SCRATCH.id, currentPp: 10 }],
-    ...overrides,
-  });
+  return makeCombatant(overrides);
 }
 
-/** Um selvagem nível 5 com 1 de HP, mais lento que o Ruvo de `fighter`. */
-function weakWild(): Combatant {
-  return fighter({
-    creatureUid: null,
-    speciesId: 4,
-    stats: { ...fighter().stats, spd: 1 },
-    currentHp: 1,
-  });
+/** Um selvagem nível 5. */
+function wild(overrides: Partial<Combatant> = {}): Combatant {
+  return makeCombatant({ creatureUid: null, speciesId: 4, ...overrides });
 }
 
-/** Um selvagem nível 5 que age antes e derruba o Ruvo com 1 de HP. */
-function fastWild(): Combatant {
-  return fighter({
-    creatureUid: null,
-    speciesId: 4,
-    stats: { ...fighter().stats, spd: 99 },
-  });
+/** O fim da luta, com o sorteio do meio. */
+function settle(state: BattleState, result: BattleResult) {
+  const turn = contextOf(state, catalog);
+  settleCoins(turn, result);
+  return turn;
 }
+
+const won = (player: Combatant, coins = 0) =>
+  settle(makeState(player, wild({ currentHp: 0 }), { coins }), 'victory');
+const lost = (coins: number) =>
+  settle(makeState(fighter({ currentHp: 0 }), wild(), { coins }), 'defeat');
 
 describe('moedas contra o selvagem', () => {
-  it('a vitória sorteia as moedas e as anuncia antes do fim, depois do XP', () => {
-    const { state, events } = play(
-      makeState(fighter(), weakWild(), { coins: 100 }),
-      ATTACK,
-      catalog,
-    );
+  it('a vitória sorteia as moedas de cada inimigo desmaiado', () => {
+    const { state, events } = won(fighter(), 100);
     // Níveis iguais: de 10 a 30, e o sorteio do meio dá 20.
-    expect(eventsOf(events, 'coins_gained')).toEqual([
+    expect(events).toEqual([
       { type: 'coins_gained', amount: 20, species_id: 4 },
     ]);
-    const types = events.map((event) => event.type);
-    expect(types.indexOf('coins_gained')).toBeGreaterThan(
-      types.indexOf('xp_gained'),
-    );
-    expect(types.indexOf('coins_gained')).toBe(
-      types.indexOf('battle_ended') - 1,
-    );
     expect(state.coinsChange).toBe(20);
   });
 
   it('usa o nível de quem está em campo no fim', () => {
-    const { events } = play(
-      makeState(fighter({ level: 10 }), weakWild()),
-      ATTACK,
-      catalog,
-    );
+    const { events } = won(fighter({ level: 10 }));
     // Selvagem 5 contra 10: de 5 a 15, e o sorteio do meio dá 10.
     expect(eventsOf(events, 'coins_gained')[0]!.amount).toBe(10);
   });
 
-  it('a derrota tira moedas e as anuncia antes do fim', () => {
-    const { state, events } = play(
-      makeState(fighter({ currentHp: 1 }), fastWild(), { coins: 100 }),
-      ATTACK,
-      catalog,
+  it('o capturado não dá moedas', () => {
+    const { events } = settle(
+      makeState(fighter(), wild({ captured: true })),
+      'victory',
     );
-    expect(state.result).toBe('defeat');
+    expect(events).toEqual([]);
+  });
+
+  it('a derrota tira moedas', () => {
+    const { state, events } = lost(100);
     // Níveis iguais: de 2 a 7, e o sorteio do meio dá 5.
-    expect(eventsOf(events, 'coins_lost')).toEqual([
+    expect(events).toEqual([
       { type: 'coins_lost', amount: 5, species_ids: [4] },
     ]);
-    const types = events.map((event) => event.type);
-    expect(types.indexOf('coins_lost')).toBe(types.indexOf('battle_ended') - 1);
     expect(state.coinsChange).toBe(-5);
   });
 
   it('a derrota não tira mais do que o Domador tem', () => {
-    const outcome = (coins: number) =>
-      play(
-        makeState(fighter({ currentHp: 1 }), fastWild(), { coins }),
-        ATTACK,
-        catalog,
-      );
-    expect(outcome(3).state.coinsChange).toBe(-3);
-    const broke = outcome(0);
+    expect(lost(3).state.coinsChange).toBe(-3);
+    const broke = lost(0);
     expect(broke.state.coinsChange).toBe(0);
-    expect(eventsOf(broke.events, 'coins_lost')).toEqual([]);
+    expect(broke.events).toEqual([]);
   });
 
-  it('a fuga não mexe nas moedas', () => {
-    const { state, events } = play(
-      makeState(fighter(), fastWild(), { coins: 100 }),
-      { type: 'flee' },
-      catalog,
-      always(0.9),
+  it.each(['fled', 'captured'] as const)('%s não mexe nas moedas', (result) => {
+    const { state, events } = settle(
+      makeState(fighter(), wild(), { coins: 100 }),
+      result,
     );
-    expect(state.result).toBe('fled');
     expect(state.coinsChange).toBe(0);
-    expect(eventsOf(events, 'coins_gained')).toEqual([]);
-    expect(eventsOf(events, 'coins_lost')).toEqual([]);
-  });
-
-  it('startBattle guarda as moedas do Domador, e elas começam em 0', () => {
-    const start = (options = {}) =>
-      startBattle(
-        [fighter()],
-        [weakWild()],
-        true,
-        catalog,
-        always(0.5),
-        [],
-        options,
-      ).state;
-    expect(start({ coins: 250 })).toMatchObject({ coins: 250, coinsChange: 0 });
-    expect(start()).toMatchObject({ coins: 0, coinsChange: 0 });
+    expect(events).toEqual([]);
   });
 });

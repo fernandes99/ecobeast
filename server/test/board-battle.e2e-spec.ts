@@ -102,8 +102,6 @@ describe('Rotas da luta no tabuleiro (e2e)', () => {
         http().post('/v1/me/board-battle/wild').set(auth).send(body),
       act: (body: object) =>
         http().post('/v1/me/board-battle/action').set(auth).send(body),
-      startClassic: (body: object) =>
-        http().post('/v1/me/battle').set(auth).send(body),
       evolve: (uid: string, body: object) =>
         http().post(`/v1/me/creatures/${uid}/evolution`).set(auth).send(body),
     };
@@ -526,28 +524,19 @@ describe('Rotas da luta no tabuleiro (e2e)', () => {
     expect(app.get(ExplorationStore).get(user.id)!.spawns.has(1)).toBe(false);
   });
 
-  it('o encontro sem Ecobeast no hexágono dá 409, como na luta de hoje', async () => {
+  it('o encontro sem Ecobeast no hexágono dá 409', async () => {
     const user = await strongUser();
     placeWild(app, user.id, [{ q: 3, r: 3 }]);
     const res = await user.wild().expect(409);
     expect(res.body.message).toBe('Nada por aqui.');
   });
 
-  it('sem luta no tabuleiro, a vez dá 404, mesmo com uma luta de hoje em andamento', async () => {
+  it('sem luta no tabuleiro, a vez dá 404', async () => {
     const user = await strongUser();
-    await user.act({ position: 0, action: { type: 'wait' } }).expect(404);
-    await user.startClassic({ species_id: RUVO, level: 1 }).expect(201);
     const res = await user
       .act({ position: 0, action: { type: 'wait' } })
       .expect(404);
     expect(res.body.message).toBe(NO_BATTLE);
-  });
-
-  it('começar uma luta no tabuleiro descarta a de hoje', async () => {
-    const user = await strongUser();
-    await user.startClassic({ species_id: RUVO, level: 1 }).expect(201);
-    await start(user, { enemies: [WEAK_ENEMY] });
-    expect(app.get(BattleStore).get(user.id)!.kind).toBe('board');
   });
 
   it('o /docs mostra as três rotas', async () => {
@@ -559,7 +548,7 @@ describe('Rotas da luta no tabuleiro (e2e)', () => {
     expect(doc.paths['/v1/me/board-battle/action']?.post).toBeDefined();
   });
 
-  it('o /docs marca as rotas da luta antiga como legado', async () => {
+  it('o /docs não tem mais as rotas da luta antiga', async () => {
     const { body: doc } = await request(app.getHttpServer())
       .get('/docs/openapi.json')
       .expect(200);
@@ -568,12 +557,7 @@ describe('Rotas da luta no tabuleiro (e2e)', () => {
       '/v1/me/battle/wild',
       '/v1/me/battle/action',
     ]) {
-      const operation = doc.paths[path]?.post;
-      expect(operation?.deprecated).toBe(true);
-      expect(operation?.tags).toEqual(['Batalha (legado)']);
+      expect(doc.paths[path]).toBeUndefined();
     }
-    expect(
-      doc.paths['/v1/me/board-battle/action']?.post?.deprecated,
-    ).toBeUndefined();
   });
 });

@@ -118,3 +118,4 @@ godot --headless -d --path client --quit-after 60
 - **Conferência dos cinco níveis:** a verificação falhou com 14 falhas antes da mudança, e depois passou nos quatro tamanhos, com superfícies comparadas nos cinco níveis e paredões de 8 e 16 px. A tela real passou com 70 de 70 itens em 405×720 e 720×1061; 360×640 e 412×915 só rodaram na versão de três níveis. Das capturas desta rodada, 3 foram abertas e revisadas.
 - **A ordem de desenho mudou depois:** a [06](06-vegetation.md) trocou o desenho por nível pelo desenho por linha, porque uma planta baixa pode ficar na frente de um terreno alto.
 - **Falta do dono:** jogar no editor e no celular, e conferir as alturas e a quantidade de montanhas. Nenhum celular foi testado.
+- **Depois:** a [terrain-height](../terrain-height/README.md) trocou `HexTile.level()` pelo `height` que o servidor manda, e o paredão passou a sair do bioma.

@@ -1,10 +1,6 @@
 class_name StatusesTab
 extends ListDetail
-## A aba Estados (content-viewer/03, RF-07): os Estados pelo `id` e, depois deles, as
-## marcas no chão. O detalhe do Estado diz se ele dura só na luta, quem é imune, quem
-## o causa e quem o tira; o da marca, o dano, o Estado que causa e quem a deixa.
 
-## As marcas ficam na mesma lista dos Estados: o id da linha é este mais o da marca.
 const GROUND_OFFSET := 1000
 const SWATCH := Vector2(18, 18)
 
@@ -28,7 +24,6 @@ func tab_title() -> String:
 	return "Estados (%d)" % GameData.get_rows("status_conditions").size()
 
 
-## O id da linha de uma marca no chão, para os links.
 static func ground_row_id(ground_id: int) -> int:
 	return GROUND_OFFSET + ground_id
 
@@ -54,7 +49,6 @@ func _status(id: int, box: VBoxContainer) -> void:
 			immune.add_child(viewer.element_link(row["element_id"]))
 	_fill(ContentViewer.block(box, "Elementos imunes"), immune)
 
-	# Uma Técnica pode ter mais de um efeito com o mesmo Estado: aparece uma vez.
 	var causes := ContentViewer.flow(14)
 	var seen: Dictionary = {}
 	for effect: Dictionary in GameData.get_rows("skill_effects"):
@@ -77,8 +71,6 @@ func _status(id: int, box: VBoxContainer) -> void:
 			grounds.add_child(viewer.link(ground["name"], ContentViewer.TAB_STATUSES, ground_row_id(ground["id"])))
 	_fill(ContentViewer.block(box, "Marcas no chão que causam"), grounds)
 
-	# `cures_status` tira os Estados que duram depois da luta (o Bálsamo Puro tira
-	# Queimado, Envenenado, Paralisado, Adormecido e Congelado); os da luta passam sozinhos.
 	var cures := ContentViewer.flow(14)
 	if not volatile:
 		for item: Dictionary in GameData.get_rows("items"):
@@ -117,7 +109,6 @@ func _ground(ground_id: int, box: VBoxContainer) -> void:
 	_fill(ContentViewer.block(box, "Técnicas que deixam"), skills)
 
 
-## Um grupo de links, ou "—" quando vazio.
 func _fill(box: VBoxContainer, content: Control) -> void:
 	if content.get_child_count() == 0:
 		content.queue_free()

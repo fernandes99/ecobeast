@@ -1,6 +1,5 @@
 class_name ItemCategory
 extends RefCounted
-## Uma categoria de item (tabela item_categories): uma aba da Loja.
 
 var id: int
 var slug: String

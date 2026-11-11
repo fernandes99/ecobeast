@@ -1,28 +1,19 @@
 class_name MapEditor
 extends Window
-## O editor de ilhas (map-editor/02 a 04): uma janela só de desenvolvimento, aberta com
-## F2 quando o jogo roda pelo editor do Godot, para criar no PC as ilhas fixas e
-## guardá-las no banco pelas rotas de `/v1/editor`. Como o visualizador do F1, é
-## uma janela do sistema (`force_native`) por cima do jogo, que usa a sessão de
-## quem está logado nele.
 
 const TITLE := "Ecobeast: editor de ilhas"
 const WINDOW_SIZE := Vector2i(1600, 900)
 const MIN_SIZE := Vector2i(1280, 720)
 const FONT_SIZE := 16
 const SIDE_WIDTH := 380.0
-## A lista de ilhas fica embaixo, com esta altura; as ferramentas rolam em cima.
 const LIST_HEIGHT := 210.0
 const NO_SESSION := "Entre no jogo para usar o editor."
 const EDITOR_OFF := "O editor está desligado neste servidor. Ponha o seu id em MAP_EDITOR_USER_IDS no .env do servidor."
 const UNSAVED_QUESTION := "Salvar as mudanças?"
 const DISCARD := &"discard"
 
-## A resposta à pergunta de salvar: "save", "discard" ou "cancel".
 signal _unsaved_answered(answer: String)
-## A resposta à pergunta de apagar.
 signal _delete_answered(confirmed: bool)
-## A resposta à pergunta de publicar.
 signal _publish_answered(confirmed: bool)
 
 var _blocked: VBoxContainer
@@ -49,7 +40,6 @@ var _confirm_dialog: ConfirmationDialog
 var _draft: IslandDraft = null
 var _status := ""
 var _dirty := false
-## A posição do histórico no último salvar: voltar até ela tira o "*".
 var _saved_version := 0
 var _generator_loaded := false
 var _busy := false
@@ -78,7 +68,6 @@ func _ready() -> void:
 	_on_visibility_changed()
 
 
-## Fecha a janela, perguntando antes se há mudanças não salvas.
 func close() -> void:
 	if await _resolve_unsaved():
 		hide()
@@ -88,8 +77,6 @@ func _on_visibility_changed() -> void:
 	if visible:
 		_refresh_list()
 
-
-# --- Ilhas ---------------------------------------------------------------------
 
 func _refresh_list() -> void:
 	if Api.session == null:
@@ -154,7 +141,6 @@ func _leave_new_island() -> void:
 	_new_panel.visible = false
 	_list.get_parent().visible = true
 	_tools.visible = true
-	# Volta para a ilha de antes, ou para o mapa vazio.
 	_canvas.show_draft(_draft)
 
 
@@ -193,9 +179,6 @@ func _on_delete(id: int, island_name: String) -> void:
 	_refresh_list()
 
 
-# --- Salvar --------------------------------------------------------------------
-
-## Grava o rascunho inteiro. Devolve se deu certo.
 func save() -> bool:
 	if _draft == null or _busy:
 		return false
@@ -216,8 +199,6 @@ func save() -> bool:
 	return true
 
 
-## Sem mudanças, segue. Com elas, pergunta: Salvar, Descartar ou Cancelar.
-## Devolve se pode seguir.
 func _resolve_unsaved() -> bool:
 	if not _dirty or _draft == null:
 		return true
@@ -242,7 +223,6 @@ func _update_dirty() -> void:
 	_update_header()
 
 
-## Publica a ilha salva: o servidor confere e copia o rascunho para a publicada.
 func publish() -> void:
 	if _draft == null or _busy:
 		return
@@ -278,9 +258,6 @@ func _on_name_changed(text: String) -> void:
 	_update_dirty()
 
 
-# --- Pincéis -------------------------------------------------------------------
-
-## Só a ilha aberta se pinta: a prévia de uma ilha nova, não.
 func _can_paint() -> bool:
 	return _draft != null and not _new_panel.visible
 
@@ -305,7 +282,6 @@ func _paint(coord: Vector2i) -> void:
 	title = TITLE + " *"
 
 
-## Os painéis de construção e de área mudaram o rascunho.
 func _on_tools_edited(step: EditorHistory.Step, merge: bool) -> void:
 	_history.record(step, merge)
 	_canvas.refresh_marks()
@@ -320,7 +296,6 @@ func _on_area_delete(key: int, area_name: String) -> void:
 		_tools.area_panel.delete_area(key)
 
 
-## Outra ferramenta ou outro tamanho. Escolher Construção ou Área liga a camada dela.
 func _on_brush_changed() -> void:
 	_canvas.refresh_brush()
 	if _tools.tool == EditorTools.Tool.BUILDING and not _buildings_check.button_pressed:
@@ -340,7 +315,6 @@ func _on_stroke_ended() -> void:
 	_update_dirty()
 
 
-## O desfazer e o refazer mudaram o rascunho.
 func _on_history_applied(coords: Array[Vector2i]) -> void:
 	_canvas.update_tiles(coords)
 	_canvas.refresh_marks()
@@ -359,8 +333,6 @@ func _redo() -> void:
 	if _draft != null:
 		_history.redo()
 
-
-# --- Tela ----------------------------------------------------------------------
 
 func _update_header() -> void:
 	_status_label.text = IslandList.status_name(_status) if _draft != null else "Nenhuma ilha aberta"
@@ -384,7 +356,7 @@ func _on_hovered(coord: Vector2i, tile: HexTile) -> void:
 	if tile == null:
 		_hover_label.text = ""
 		return
-	_hover_label.text = "(%d, %d)  ·  %s  ·  %s" % [coord.x, coord.y, _biome_name(tile.biome), _shape_name(tile.shape)]
+	_hover_label.text = "(%d, %d)  ·  %s  ·  Altura %d" % [coord.x, coord.y, _biome_name(tile.biome), tile.height]
 
 
 func _biome_name(slug: String) -> String:
@@ -392,10 +364,6 @@ func _biome_name(slug: String) -> String:
 		if row.get("slug") == slug:
 			return str(row.get("name", slug))
 	return slug
-
-
-static func _shape_name(shape: String) -> String:
-	return {"flat": "Plano", "hill": "Colina", "mont": "Montanha"}.get(shape, shape)
 
 
 func _on_window_input(event: InputEvent) -> void:
@@ -431,7 +399,6 @@ func _on_window_input(event: InputEvent) -> void:
 		_tools.set_radius(_tools.radius + 1)
 
 
-## Um campo de texto tem o foco: o Tab é dele.
 func _typing() -> bool:
 	return gui_get_focus_owner() is LineEdit
 
@@ -518,7 +485,6 @@ func _build() -> void:
 	_side = VBoxContainer.new()
 	_side.custom_minimum_size.x = SIDE_WIDTH
 	body.add_child(_side)
-	# As ferramentas rolam: o bloco de área, com as espécies, pode ser alto.
 	var tools_scroll := ScrollContainer.new()
 	tools_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	tools_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -537,7 +503,6 @@ func _build() -> void:
 	_list.open_requested.connect(_open_island)
 	_list.new_requested.connect(_start_new_island)
 	_list.delete_requested.connect(_on_delete)
-	# A lista num bloco igual aos das ferramentas.
 	var list_panel := PanelContainer.new()
 	list_panel.theme_type_variation = &"SectionPanel"
 	list_panel.custom_minimum_size.y = LIST_HEIGHT

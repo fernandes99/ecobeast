@@ -1,8 +1,5 @@
 class_name GeneralTab
 extends ScrollContainer
-## A aba Geral (content-viewer/04, RF-04 e RF-05): o que não é de um Ecobeast, de uma
-## Técnica ou de um bioma. O Domador, que no catálogo não tem dados, só as folhas, e
-## os sons de dano, que tocam pela efetividade do golpe.
 
 
 var viewer: ContentViewer
@@ -42,7 +39,6 @@ func tab_title() -> String:
 	return "Geral"
 
 
-## O texto dos créditos sem o título em Markdown; vazio sem o arquivo.
 func _credits() -> String:
 	if not FileAccess.file_exists(ContentFiles.TAMER_CREDITS_PATH):
 		return ""

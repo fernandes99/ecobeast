@@ -38,18 +38,14 @@ export function spawnAreas(
  * forma uniforme (podendo repetir), a espécie pelo peso e o nível de forma
  * uniforme entre o mínimo e o máximo dela. Ids de 1 em diante.
  */
-export function rollAreaSpawns(
-  areas: SpawnArea[],
-  random: Random,
-): MapSpawn[] {
+export function rollAreaSpawns(areas: SpawnArea[], random: Random): MapSpawn[] {
   const spawns: MapSpawn[] = [];
   for (const { tiles, spawnCount, species } of areas) {
     if (tiles.length === 0 || species.length === 0) continue;
     for (let index = 0; index < spawnCount; index++) {
       const tile = tiles[Math.floor(random() * tiles.length)]!;
       const { speciesId, minLevel, maxLevel } = pickWeighted(species, random);
-      const level =
-        minLevel + Math.floor(random() * (maxLevel - minLevel + 1));
+      const level = minLevel + Math.floor(random() * (maxLevel - minLevel + 1));
       spawns.push({
         id: spawns.length + 1,
         speciesId,

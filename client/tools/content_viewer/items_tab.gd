@@ -1,8 +1,5 @@
 class_name ItemsTab
 extends ListDetail
-## A aba Itens (content-viewer/03, RF-04): a lista na ordem da Loja (`sort_order`),
-## com o ícone e a categoria, e o detalhe com o preço e o que o item faz. Os dados
-## saem das linhas do catálogo, que dizem quais campos estão vazios.
 
 const ICON_BOX := Vector2(128, 128)
 
@@ -56,7 +53,6 @@ func _build_detail(id: int, box: VBoxContainer) -> void:
 		does.add_child(ContentViewer.text(line))
 
 
-## O que o item faz, uma frase por campo preenchido.
 static func effect_lines(item: Dictionary) -> Array[String]:
 	var lines: Array[String] = []
 	if item.get("capture_bonus") != null:

@@ -1,13 +1,7 @@
 extends Node
-## Autoload GameData: o catálogo do jogo (espécies, técnicas, elementos…).
-## Telas e serviços leem o catálogo só por aqui. Quem chama load_catalog()
-## é o boot da cena raiz.
 
-## Resultados de load_catalog().
 const LOAD_OK := 0
-## O servidor não respondeu (o jogo é só online).
 const LOAD_OFFLINE := 1
-## O catálogo chegou com erros; a lista fica em errors.
 const LOAD_INVALID := 2
 
 const BASE_URL_SETTING := "ecobeast/api/base_url"
@@ -16,8 +10,6 @@ var catalog := Catalog.new()
 var errors: Array[String] = []
 
 
-## Baixa, valida e monta o catálogo (.specs/backend-api/07-client-remote-catalog.md).
-## Assíncrono: chame com await. Devolve LOAD_OK, LOAD_OFFLINE ou LOAD_INVALID.
 func load_catalog() -> int:
 	var source := HttpDataSource.new(ProjectSettings.get_setting(BASE_URL_SETTING))
 	var status: int = await _load_from(source)
@@ -138,7 +130,6 @@ func get_npc_tamer_greeting(id: int) -> String:
 	return catalog.get_npc_tamer_greeting(id)
 
 
-## Todas as linhas de uma tabela, copiadas (content-viewer/01).
 func get_rows(table_name: String) -> Array[Dictionary]:
 	return catalog.get_rows(table_name)
 

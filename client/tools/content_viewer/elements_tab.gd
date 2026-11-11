@@ -1,21 +1,14 @@
 class_name ElementsTab
 extends ListDetail
-## A aba Elementos (content-viewer/02, RF-04 a RF-06): a lista pelo `id`, com quantos
-## Ecobeasts têm o Elemento, o detalhe com as forças e as fraquezas, e a tabela de
-## efetividade de todos contra todos, aberta pelo botão acima da lista.
-##
-## Os multiplicadores vêm só de `element_efficacy`: o par que não está lá vale 1.
 
 const STRONG := 2.0
 const WEAK := 0.5
 const IMMUNE := 0.0
 const CELL_SIZE := Vector2(44, 28)
-## Quatro letras separam Instinto (Inst) de Inseto (Inse).
 const HEADER_CHARS := 4
 const STRONG_FILL := Color("#2E7D32")
 const WEAK_FILL := Color("#8E2A2A")
 const IMMUNE_FILL := Color("#3B4656")
-## Acima desta luminância, a cor do Elemento é clara demais para texto branco.
 const LIGHT_LUMINANCE := 0.6
 
 var _efficacy: Array[Dictionary] = []
@@ -97,7 +90,6 @@ func _build_detail(id: int, box: VBoxContainer) -> void:
 		skills_box.add_child(line)
 
 
-## Os Elementos com aquele multiplicador: atacando (`id` ataca) ou defendendo.
 func _against(id: int, multiplier: float, attacking: bool) -> Array[int]:
 	var ids: Array[int] = []
 	for row: Dictionary in _efficacy:
@@ -129,9 +121,6 @@ func _species_with(element_id: int) -> Array[CreatureSpecies]:
 	return found
 
 
-# --- A tabela de efetividade -----------------------------------------------------
-
-## O ataque nas linhas e a defesa nas colunas; só os multiplicadores diferentes de 1.
 func _build_table(box: VBoxContainer) -> void:
 	box.add_child(ContentViewer.text("Tabela de efetividade", ContentViewer.TITLE_SIZE))
 	box.add_child(ContentViewer.text("Linha: quem ataca. Coluna: quem defende. Vazio vale 1. Clique num Elemento para abri-lo.", 0, UiPalette.TEXT_SECONDARY))

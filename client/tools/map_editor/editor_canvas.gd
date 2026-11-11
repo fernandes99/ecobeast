@@ -1,50 +1,30 @@
 class_name EditorCanvas
 extends Control
-## O mapa do editor de ilhas (map-editor/02 a 04): a ilha no `HexMapView`, como no
-## jogo, ou na visão de cima (`IslandOverview`), com o zoom na roda do mouse e o
-## arrastar com o botão do meio (ou espaço e o botão esquerdo). O botão esquerdo
-## pinta e o direito faz a ação secundária da ferramenta. Por cima, as cores das
-## áreas e das construções (`HexTintLayer`), a bandeira da chegada, o nome das
-## construções e o contorno do pincel sob o ponteiro.
 
-## O hexágono sob o ponteiro mudou; `tile` é null fora da ilha.
 signal hovered(coord: Vector2i, tile: HexTile)
-## Uma pincelada: começa ao apertar o botão esquerdo, passa por cada hexágono sob
-## o ponteiro e acaba ao soltar.
 signal stroke_started(coord: Vector2i, secondary: bool)
 signal stroke_moved(coord: Vector2i)
 signal stroke_ended
 
-## Pixels da tela por pixel da arte, no `HexMapView`: inteiros, para a pixel art.
 const DETAIL_ZOOMS: Array[float] = [1.0, 2.0, 3.0, 4.0, 6.0]
-## Abaixo deste zoom, só a visão de cima: o `HexMapView` montaria linhas demais.
 const OVERVIEW_BELOW := 1.0
-## Quanto cada passo da roda muda o zoom na visão de cima.
 const OVERVIEW_STEP := 1.25
 const MIN_ZOOM := 0.01
-## O zoom de uma ilha aberta que cabe na tela de perto.
 const OPEN_ZOOM := 2.0
-## A folga em volta da ilha inteira, em pixels da tela.
 const FIT_MARGIN := 24.0
 const FLAG_HEIGHT := 22.0
 const FLAG_WIDTH := 12.0
 const OUTLINE_WIDTH := 2.0
-## Pedaços de linha do HexMapView: pintar refaz só os pedaços tocados, e não a
-## linha inteira de uma ilha larga.
 const CHUNK_COLUMNS := 16
 ## Numa pincelada rápida, um ponto a cada tanto da arte, para não pular hexágonos.
 const STROKE_SPACING := 16.0
-## A transparência das cores das áreas e das construções por cima do terreno.
 const AREA_ALPHA := 0.38
 const BUILDING_ALPHA := 0.62
 const NAME_SIZE := 14
 
-## Os hexágonos que o pincel pega em volta de um centro; sem ele, só o centro.
 var brush: Callable = Callable()
-## A cor e o nome de cada tipo de construção, por id (do catálogo).
 var building_colors: Dictionary[int, Color] = {}
 var building_names: Dictionary[int, String] = {}
-## A construção escolhida no painel, com o contorno de destaque; -1 sem nenhuma.
 var selected_building := -1
 
 var _map_view: HexMapView
@@ -57,20 +37,15 @@ var _show_areas := true
 var _show_buildings := true
 var _draft: IslandDraft = null
 var _map: ExplorationMap = null
-## Pixels da tela por pixel da arte.
 var _zoom := OPEN_ZOOM
-## Onde o (0, 0) da arte fica, em pontos deste Control.
 var _origin := Vector2.ZERO
-## A visão de cima pedida com Tab, mesmo de perto.
 var _force_overview := false
 var _dragging := false
 var _painting := false
-## O último ponto da pincelada, em pixels da arte, e o último hexágono pintado.
 var _last_art_point := Vector2.ZERO
 var _last_coord := Vector2i.ZERO
 var _hovered := Vector2i.ZERO
 var _has_hover := false
-## Os hexágonos que mudaram desde o último quadro: o mapa é refeito uma vez por quadro.
 var _pending: Dictionary[Vector2i, bool] = {}
 
 
@@ -104,7 +79,6 @@ func _init() -> void:
 	resized.connect(_apply_view)
 
 
-## Mostra uma ilha. Com `fit`, ela cabe inteira na tela; senão, o zoom e o lugar ficam.
 func show_draft(draft: IslandDraft, fit: bool = true) -> void:
 	_draft = draft
 	_pending.clear()
@@ -117,19 +91,16 @@ func show_draft(draft: IslandDraft, fit: bool = true) -> void:
 	_apply_view()
 
 
-## Estes hexágonos mudaram no rascunho: entram no desenho no próximo quadro.
 func update_tiles(coords: Array[Vector2i]) -> void:
 	for coord: Vector2i in coords:
 		_pending[coord] = true
 	_overlay.queue_redraw()
 
 
-## O contorno do pincel mudou (outra ferramenta ou outro tamanho).
 func refresh_brush() -> void:
 	_overlay.queue_redraw()
 
 
-## As cores das áreas e das construções: de todos os hexágonos, ou só destes.
 func refresh_marks(coords: Array[Vector2i] = []) -> void:
 	if _draft == null:
 		for layer: HexTintLayer in [_area_layer, _area_stripes, _building_layer]:
@@ -157,24 +128,22 @@ func refresh_marks(coords: Array[Vector2i] = []) -> void:
 		_area_stripes.clear_hex(coord)
 		if area_color.has(key):
 			var layer := _area_stripes if area_empty[key] else _area_layer
-			layer.set_hex(coord, Color(area_color[key], AREA_ALPHA), tile.level())
+			layer.set_hex(coord, Color(area_color[key], AREA_ALPHA), tile.height)
 		var building: int = building_of.get(coord, -1) if tile != null else -1
 		if building >= 0:
 			var type_id := int(_draft.buildings[building].get("building_type_id", 0))
-			_building_layer.set_hex(coord, Color(building_colors.get(type_id, UiPalette.TEXT), BUILDING_ALPHA), tile.level())
+			_building_layer.set_hex(coord, Color(building_colors.get(type_id, UiPalette.TEXT), BUILDING_ALPHA), tile.height)
 		else:
 			_building_layer.clear_hex(coord)
 	_overlay.queue_redraw()
 
 
-## As camadas de cor que aparecem; desligar não muda o rascunho.
 func set_layers(areas: bool, buildings: bool) -> void:
 	_show_areas = areas
 	_show_buildings = buildings
 	_apply_view()
 
 
-## O índice da construção de cada hexágono ocupado.
 func _building_index() -> Dictionary[Vector2i, int]:
 	var building_of: Dictionary[Vector2i, int] = {}
 	for index: int in _draft.buildings.size():
@@ -194,7 +163,6 @@ func fit_whole_island() -> void:
 	_origin = size / 2.0 - bounds.get_center() * _zoom
 
 
-## Da visão de cima, aproxima até o zoom 1 em volta do centro da tela.
 func toggle_overview() -> void:
 	if is_overview():
 		_force_overview = false
@@ -266,7 +234,6 @@ func _paint_button(button: InputEventMouseButton) -> void:
 		stroke_ended.emit()
 
 
-## Do último ponto até o atual, sem pular hexágonos numa pincelada rápida.
 func _continue_stroke(at: Vector2) -> void:
 	var art_point := _art_point(at)
 	var distance := _last_art_point.distance_to(art_point)
@@ -287,7 +254,6 @@ func _coord_at_art(art_point: Vector2) -> Vector2i:
 	return HexMapView.grid_coord(art_point) if is_overview() else _map_view.coord_at(art_point)
 
 
-## Um passo da roda: de perto, os zooms inteiros; de longe, ×1,25.
 func _step_zoom(at: Vector2, direction: int) -> void:
 	var target := _zoom
 	if _zoom >= OVERVIEW_BELOW:
@@ -305,7 +271,6 @@ func _step_zoom(at: Vector2, direction: int) -> void:
 	_update_hover(at)
 
 
-## Muda o zoom sem tirar do lugar o ponto da arte que está em `at`.
 func _zoom_around(at: Vector2, target: float) -> void:
 	var art_point := _art_point(at)
 	_zoom = target
@@ -353,7 +318,6 @@ func _update_hover(at: Vector2) -> void:
 	hovered.emit(coord, _draft.tiles.get(coord))
 
 
-## O retângulo da ilha plana, em pixels da arte.
 func _island_bounds() -> Rect2:
 	var bounds := Rect2()
 	for coord: Vector2i in _draft.tiles:
@@ -362,8 +326,6 @@ func _island_bounds() -> Rect2:
 	return bounds
 
 
-## O canto do hexágono em pontos deste Control, na altura em que ele aparece. Um
-## hexágono que não existe fica na altura do chão.
 func _screen_origin(coord: Vector2i) -> Vector2:
 	var detail := not is_overview() and _draft.tiles.has(coord)
 	var art := _map_view.surface_center(coord) if detail else HexMapView.flat_center(coord)
@@ -398,7 +360,6 @@ func draw_overlay(node: Node2D) -> void:
 		node.draw_colored_polygon(PackedVector2Array([top, top + Vector2(FLAG_WIDTH, FLAG_HEIGHT * 0.25), top + Vector2(0.0, FLAG_HEIGHT * 0.5)]), UiPalette.WARNING)
 
 
-## O contorno da construção escolhida e o nome de cada uma, no hexágono do meio dela.
 func _draw_buildings(node: Node2D) -> void:
 	var font := get_theme_font(&"font")
 	for index: int in _draft.buildings.size():

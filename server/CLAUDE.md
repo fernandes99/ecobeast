@@ -15,7 +15,8 @@ server/
   src/health/            GET /health
   src/auth/              login com Google (Supabase Auth), AuthGuard e @CurrentUser()
   src/player/            o Domador do usuário logado (/v1/me)
-  src/battle/            a batalha do usuário logado (/v1/me/battle), guardada na memória
+  src/battle/            o que toda luta usa: o BattleStore (a luta na memória), a leitura da equipe e a gravação do fim
+  src/board-battle/      a luta no tabuleiro do usuário logado (/v1/me/board-battle)
   src/exploration/       o mapa de exploração do usuário logado (/v1/me/exploration), sorteado ou de uma ilha publicada, com os Ecobeasts e os Domadores NPC guardados na memória
   src/inventory/         a Loja e a Mochila do usuário logado (/v1/me/shop e /v1/me/items)
   src/team/              a equipe e o Santuário do usuário logado (/v1/me/team e /v1/me/storage)

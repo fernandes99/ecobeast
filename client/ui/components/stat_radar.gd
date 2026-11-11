@@ -1,16 +1,11 @@
 class_name StatRadar
 extends Control
-## Hexágono dos 6 stats (creature-details/02, RF-11 e RF-12). A escala é o maior
-## stat da própria criatura: o gráfico mostra o perfil dela, e os números exatos
-## ficam em cada ponta. _draw() é o método em que um Control desenha a si mesmo;
-## o Godot o chama de novo depois de queue_redraw().
 
 const SIDES := 6
 const RINGS := 3
 const FILL_ALPHA := 0.35
 const RING_WIDTH := 2.0
 const SHAPE_WIDTH := 4.0
-## Espaço em volta do hexágono para os textos das pontas.
 const SIDE_MARGIN := 120.0
 const VERTICAL_MARGIN := 72.0
 const TEXT_GAP := 14.0
@@ -63,7 +58,6 @@ func _biggest_stat() -> int:
 	return biggest
 
 
-## A ponta de cada stat, em sentido horário a partir do topo.
 func _direction(index: int) -> Vector2:
 	return Vector2.UP.rotated(TAU * index / SIDES)
 
@@ -81,7 +75,6 @@ func _draw_closed(points: PackedVector2Array, color: Color, width: float) -> voi
 	draw_polyline(closed, color, width, true)
 
 
-## Nome curto e valor do stat, do lado de fora da ponta.
 func _draw_label(index: int, tip: Vector2) -> void:
 	var font := get_theme_font(&"font", FONT_TYPE)
 	var slug: String = StatBlock.SLUGS[index]
@@ -110,8 +103,6 @@ func _draw_label(index: int, tip: Vector2) -> void:
 		_draw_mark(Vector2(value_x + value_width + MARK_GAP, value_y - MARK_SIZE), slug == _increased_slug, color)
 
 
-## À direita do hexágono, o texto começa depois da ponta; à esquerda, termina
-## antes dela; em cima e embaixo, fica centrado.
 func _aligned_x(tip_x: float, direction_x: float, width: float) -> float:
 	if is_zero_approx(direction_x):
 		return tip_x - width / 2.0
@@ -128,7 +119,6 @@ func _value_color(slug: String) -> Color:
 	return UiPalette.TEXT
 
 
-## Triângulo para cima no stat aumentado, para baixo no diminuído.
 func _draw_mark(corner: Vector2, is_up: bool, color: Color) -> void:
 	var tip_y := corner.y if is_up else corner.y + MARK_SIZE
 	var base_y := corner.y + MARK_SIZE if is_up else corner.y

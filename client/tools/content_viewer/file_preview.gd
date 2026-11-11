@@ -1,10 +1,5 @@
 class_name FilePreview
 extends VBoxContainer
-## Um arquivo de conteúdo no visualizador (content-viewer/architecture.md, "O preview
-## de um arquivo"): o quadro com fundo xadrez e o arquivo dentro, parado ou animado
-## como no jogo, e o nome embaixo. O que falta aparece tracejado em vermelho, com o
-## caminho onde o jogo o procura; o opcional que falta, tracejado em cinza
-## (content-viewer/05). Um som vira o botão "▶ Ouvir".
 
 const BOX_SIZE := Vector2(104, 104)
 const CHECKER := 8.0
@@ -15,20 +10,15 @@ const MISSING_BORDER := Color("#FF7A7A")
 const DASH := 6.0
 const LABEL_SIZE := 13
 const PATH_SIZE := 11
-## Pausa entre uma volta e outra do efeito de Técnica, em segundos. A revisar.
 const EFFECT_PAUSE := 0.6
-## O quadro de cada direção de uma folha: o explorar (32) ampliado 3×, e a luta (64), 2×.
 const EXPLORE_DIRECTION_BOX := Vector2(96, 96)
 const BATTLE_DIRECTION_BOX := Vector2(136, 136)
 
 var entry: ContentFiles.Entry
-## Para uma folha: a direção mostrada ({label, row, mirrored}); vazia, a primeira linha.
 var direction: Dictionary = {}
-## Para uma folha de peças, como a das decorações: a célula, a linha, a coluna e o nome.
 var region: Dictionary = {}
 
 
-## Mostra o arquivo; o tamanho do quadro é opcional.
 static func create(file: ContentFiles.Entry, box_size := BOX_SIZE) -> FilePreview:
 	var preview := FilePreview.new()
 	preview.entry = file
@@ -36,7 +26,6 @@ static func create(file: ContentFiles.Entry, box_size := BOX_SIZE) -> FilePrevie
 	return preview
 
 
-## Uma célula de uma folha de peças (uma variante de uma decoração), parada.
 static func create_cell(file: ContentFiles.Entry, cell: Vector2i, row: int, column: int, label: String, box_size: Vector2) -> FilePreview:
 	var preview := FilePreview.new()
 	preview.entry = file
@@ -45,14 +34,11 @@ static func create_cell(file: ContentFiles.Entry, cell: Vector2i, row: int, colu
 	return preview
 
 
-## Uma folha com todas as direções, cada uma andando, sob o nome do arquivo. Sem o
-## arquivo, o tracejado de sempre.
 static func create_sheet(file: ContentFiles.Entry) -> Control:
 	if not file.exists() or file.directions().is_empty():
 		return create(file)
 	var group := VBoxContainer.new()
 	group.add_theme_constant_override(&"separation", 4)
-	# Uma folha sem todas as direções diz quantas faltam, em amarelo.
 	if file.complete():
 		group.add_child(ContentViewer.text(file.label, ContentViewer.SMALL_SIZE, UiPalette.ACCENT))
 	else:
@@ -75,7 +61,6 @@ func _build(box_size: Vector2) -> void:
 	add_theme_constant_override(&"separation", 2)
 	var found := entry.exists()
 	if found and not direction.is_empty() and not entry.has_direction(direction):
-		# A folha existe, mas ainda não tem esta direção.
 		found = false
 	if entry.kind == ContentFiles.Kind.SOUND and found:
 		_add_sound_button(box_size)
@@ -113,7 +98,6 @@ func _build(box_size: Vector2) -> void:
 		add_child(path)
 
 
-## Diz ao quadro qual parte da imagem desenhar e em que ritmo.
 func _setup_frame(frame: Frame) -> void:
 	var texture: Texture2D = load(entry.path)
 	frame.texture = texture
@@ -125,7 +109,6 @@ func _setup_frame(frame: Frame) -> void:
 		return
 	match entry.kind:
 		ContentFiles.Kind.EXPLORE_SHEET:
-			# Uma linha (sem direção, a de frente), num ciclo no ritmo do jogo.
 			var cell := SheetSprite.CELL_SIZE
 			var frames := maxi(1, texture.get_width() / cell.x)
 			var cycle := CreatureSprite.IDLE_SECONDS if entry.sheet == CreatureSprite.IDLE else CreatureSprite.WALK_SECONDS
@@ -133,14 +116,12 @@ func _setup_frame(frame: Frame) -> void:
 				cycle = entry.cycle
 			frame.animate(cell, frames, cycle / frames, 0.0, row)
 		ContentFiles.Kind.BATTLE_SHEET:
-			# Cada linha tem os quadros até a primeira célula vazia (BattleSheets).
 			var sheets := BattleSheets.for_slug(entry.slug)
 			if sheets == null:
 				frame.animate(Vector2i(texture.get_size()), 1, 1.0, 0.0)
 			else:
 				frame.animate(Vector2i(sheets.cell, sheets.cell), sheets.frame_count(entry.sheet, row), BattleSheets.FRAME_SECONDS[entry.sheet], 0.0, row)
 		ContentFiles.Kind.EFFECT:
-			# Os quadros ficam lado a lado, cada um da altura da imagem (BoardView.play_effect).
 			var side := texture.get_height()
 			var frames := maxi(1, roundi(texture.get_width() / float(side)))
 			frame.animate(Vector2i(side, side), frames, BoardView.EFFECT_FRAME_SECONDS, EFFECT_PAUSE)
@@ -159,20 +140,15 @@ func _add_sound_button(box_size: Vector2) -> void:
 	add_child(button)
 
 
-## O quadro: o xadrez e um quadro da imagem, ampliado por um número inteiro e sem
-## filtro (pixel art); o que não cabe é reduzido com filtro suave. Ou o tracejado.
 class Frame:
 	extends Control
 
 	var texture: Texture2D = null
 	var missing := false
-	## O que falta é opcional: o tracejado sai cinza, sem o fundo vermelho.
 	var optional := false
-	## Desenha a linha virada para o outro lado, como o flip_h do jogo.
 	var mirrored := false
 	var _cell := Vector2i.ONE
 	var _row := 0
-	## A primeira coluna desenhada; as animações andam a partir dela.
 	var column := 0
 	var _frames := 1
 	var _frame_seconds := 1.0
@@ -213,12 +189,10 @@ class Frame:
 		var target_size := Vector2(_cell) * _scale()
 		var target := Rect2(((size - target_size) / 2.0).floor(), target_size)
 		if mirrored:
-			# Espelha em volta do meio do quadro.
 			draw_set_transform(Vector2(size.x, 0.0), 0.0, Vector2(-1.0, 1.0))
 		draw_texture_rect_region(texture, target, source)
 		draw_set_transform(Vector2.ZERO)
 
-	## Inteiro quando a imagem cabe ampliada; senão, o quanto ela precisa encolher.
 	func _scale() -> float:
 		var fit := minf(custom_minimum_size.x / _cell.x, custom_minimum_size.y / _cell.y)
 		return floorf(fit) if fit >= 1.0 else fit

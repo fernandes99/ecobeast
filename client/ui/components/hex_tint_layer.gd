@@ -1,12 +1,5 @@
 class_name HexTintLayer
 extends Node2D
-## Uma camada de cor por cima do mapa: no editor de ilhas (map-editor/04), as áreas
-## de Ecobeasts e as construções; no jogo, as construções da ilha (islands/03). Cada hexágono pintado é uma instância de um
-## `MultiMesh`, então trocar a cor de um ou de mil não remonta nada. Com
-## `striped`, a cor vem em listras: a área ainda sem espécies.
-##
-## De perto, o hexágono sobe na altura do terreno, como no `HexMapView`; na visão
-## de cima, fica plano.
 
 const STRIPE_SIZE := 12
 const STRIPE_WIDTH := 4
@@ -20,7 +13,6 @@ var _count := 0
 var _raised := false
 
 
-## `capacity` é quantos hexágonos a camada aguenta pintar.
 func _init(striped: bool = false, capacity: int = 0) -> void:
 	var corners := HexMapView.HEX_CORNERS
 	var points := PackedVector2Array()
@@ -45,7 +37,6 @@ func _init(striped: bool = false, capacity: int = 0) -> void:
 	_multimesh.visible_instance_count = 0
 
 
-## Pinta um hexágono, na altura `level` do terreno (`HexTile.level()`).
 func set_hex(coord: Vector2i, color: Color, level: int) -> void:
 	if not _index_of.has(coord):
 		if _count >= _multimesh.instance_count:
@@ -63,7 +54,6 @@ func set_hex(coord: Vector2i, color: Color, level: int) -> void:
 	queue_redraw()
 
 
-## Tira a cor de um hexágono; a última instância ocupa a vaga.
 func clear_hex(coord: Vector2i) -> void:
 	if not _index_of.has(coord):
 		return
@@ -94,7 +84,6 @@ func has_hex(coord: Vector2i) -> bool:
 	return _index_of.has(coord)
 
 
-## De perto, os hexágonos sobem com o terreno; na visão de cima, ficam planos.
 func set_raised(raised: bool) -> void:
 	if raised == _raised:
 		return
@@ -111,7 +100,6 @@ func _transform(coord: Vector2i, level: int) -> Transform2D:
 	return Transform2D(0.0, origin)
 
 
-## Listras diagonais brancas, tingidas pela cor de cada instância.
 static func _stripes() -> Texture2D:
 	var image := Image.create(STRIPE_SIZE, STRIPE_SIZE, false, Image.FORMAT_RGBA8)
 	for y: int in STRIPE_SIZE:

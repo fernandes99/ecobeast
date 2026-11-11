@@ -8,7 +8,6 @@ import {
 import {
   ENCOUNTER_BIOMES,
   type EncounterBiome,
-  encounterBiome,
   pickWeighted,
   spawnWeight,
   type SpawnSpecies,
@@ -157,7 +156,7 @@ export function rollMapTamers(
     (tile) =>
       !WATER.has(tile.biome) &&
       hexDistance(tile, start) > config.minStartDistance &&
-      poolOf(encounterBiome(tile)).length > 0,
+      poolOf(tile.biome).length > 0,
   );
 
   const tamers: MapTamer[] = [];
@@ -170,7 +169,7 @@ export function rollMapTamers(
     tamers.push({
       ...rollTamer(
         id,
-        poolOf(encounterBiome(tile)),
+        poolOf(tile.biome),
         teamAverage,
         texts,
         random,

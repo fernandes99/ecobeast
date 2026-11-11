@@ -1,7 +1,5 @@
 class_name NextCreatureRow
 extends Button
-## Uma criatura no painel do próximo Ecobeast (battle-screen/03, RF-22 e RF-23).
-## Com 0 HP ou em campo, fica desativada.
 
 var _creature: BattleCreature = null
 var _display_name: String = ""
@@ -17,7 +15,6 @@ func _ready() -> void:
 	_refresh()
 
 
-## Pode ser chamado antes ou depois de o componente entrar na árvore.
 func set_creature(creature: BattleCreature, display_name: String, is_in_field: bool = false) -> void:
 	_creature = creature
 	_display_name = display_name

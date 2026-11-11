@@ -1,6 +1,5 @@
 class_name SkillSlot
 extends RefCounted
-## Uma Técnica que a criatura conhece, com o PP que resta.
 
 var skill_id: int
 var current_pp: int

@@ -1,18 +1,13 @@
 class_name BattleCreature
 extends RefCounted
-## Uma criatura em batalha, como o servidor a mostra (.specs/battle-core/architecture.md,
-## "API"). O inimigo vem sem uid e sem skills.
 
-## "" = inimigo.
 var uid: String = ""
 var species_id: int = 0
 var level: int = 1
 var hp: int = 0
 var max_hp: int = 0
-## burn, poison, paralysis, sleep ou freeze; "" = nenhum.
 var status: String = ""
 var confused: bool = false
-## Slug do stat -> estágio, de -6 a +6.
 var stages: Dictionary[String, int] = {}
 var skills: Array[SkillSlot] = []
 

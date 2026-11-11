@@ -1,24 +1,22 @@
-import { startBattle } from './engine.js';
-import { applyStatus } from './status.js';
+import {
+  applyStatus,
+  applyStatusDamage,
+  canAct,
+  faintIfDown,
+} from './status.js';
 import {
   always,
-  eventsOf,
+  contextOf,
   FIRE,
   makeCatalog,
   makeCombatant,
   makeSkill,
   makeState,
-  play,
+  PLAYER,
   sequence,
   WATER,
 } from './testing.js';
-import type {
-  BattleAction,
-  BattleCatalog,
-  Combatant,
-  Random,
-  TurnContext,
-} from './types.js';
+import type { BattleCatalog, Combatant, Random, TurnContext } from './types.js';
 
 const SCRATCH = makeSkill({ id: 1 });
 const IDLE = makeSkill({
@@ -29,7 +27,6 @@ const IDLE = makeSkill({
   targetSlug: 'self',
 });
 const catalog = makeCatalog({}, [SCRATCH, IDLE]);
-const USE_FIRST: BattleAction = { type: 'skill', slot: 1 };
 
 function attacker(overrides: Partial<Combatant> = {}): Combatant {
   return makeCombatant({
@@ -62,7 +59,14 @@ function context(
   };
 }
 
-describe('dano de status no fim do turno', () => {
+/** A vez do jogador começando: o que o `canAct` decide e o que ele conta. */
+function tryToAct(player: Combatant, random: Random = sequence()) {
+  const turn = contextOf(makeState(player, idle()), catalog, random);
+  const acts = canAct(turn, PLAYER);
+  return { acts, events: turn.events, creature: turn.state.player.team[0]! };
+}
+
+describe('dano de status', () => {
   it.each([
     ['burn', 19, 18],
     ['burn', 160, 150],
@@ -75,13 +79,10 @@ describe('dano de status no fim do turno', () => {
       stats: withMaxHp(maxHp),
       currentHp: maxHp,
     });
-    const { state, events } = play(
-      makeState(player, idle()),
-      USE_FIRST,
-      catalog,
-    );
-    expect(state.player.team[0]!.currentHp).toBe(hp);
-    expect(eventsOf(events, 'status_damage')).toEqual([
+    const turn = contextOf(makeState(player, idle()), catalog);
+    applyStatusDamage(turn, PLAYER);
+    expect(turn.state.player.team[0]!.currentHp).toBe(hp);
+    expect(turn.events).toEqual([
       {
         type: 'status_damage',
         side: 'player',
@@ -93,185 +94,116 @@ describe('dano de status no fim do turno', () => {
     ]);
   });
 
-  it('vem na ordem em que as criaturas agiram', () => {
-    const fast = idle({ statusSlug: 'poison', stats: withMaxHp(19, 20) });
-    const slow = idle({ statusSlug: 'poison', stats: withMaxHp(19, 5) });
-    const sides = (player: Combatant, enemy: Combatant) =>
-      eventsOf(
-        play(makeState(player, enemy), USE_FIRST, catalog).events,
-        'status_damage',
-      ).map((event) => event.side);
-
-    expect(sides(fast, slow)).toEqual(['player', 'enemy']);
-    expect(sides(slow, fast)).toEqual(['enemy', 'player']);
-  });
-
   it('pode derrubar quem o sofre', () => {
     const player = idle({ statusSlug: 'burn', currentHp: 1 });
-    const { state, events } = play(
-      makeState(player, idle()),
-      USE_FIRST,
-      catalog,
-    );
-    expect(state.result).toBe('defeat');
-    expect(eventsOf(events, 'fainted')).toEqual([
-      { type: 'fainted', side: 'player', position: 0 },
-    ]);
+    const turn = contextOf(makeState(player, idle()), catalog);
+    applyStatusDamage(turn, PLAYER);
+    expect(turn.events.at(-1)).toEqual({
+      type: 'fainted',
+      side: 'player',
+      position: 0,
+    });
+    expect(turn.state.player.team[0]!.statusSlug).toBeNull();
   });
 
-  it('não pega em quem já caiu no turno', () => {
-    const enemy = idle({
-      statusSlug: 'burn',
-      currentHp: 1,
-      stats: withMaxHp(19, 5),
-    });
-    const { events } = play(
-      makeState(attacker({ stats: withMaxHp(19, 20) }), enemy),
-      USE_FIRST,
-      catalog,
-    );
-    expect(eventsOf(events, 'status_damage')).toEqual([]);
+  it('sem status, não faz nada', () => {
+    const turn = contextOf(makeState(idle(), idle()), catalog);
+    applyStatusDamage(turn, PLAYER);
+    expect(turn.events).toEqual([]);
   });
 });
 
 describe('Paralisado', () => {
   const paralyzed = () => attacker({ statusSlug: 'paralysis' });
 
-  it('perde a vez com o sorteio abaixo de 25%, sem gastar PP', () => {
-    const { state, events } = play(
-      makeState(paralyzed(), idle()),
-      USE_FIRST,
-      catalog,
-      sequence(0, 0.24),
-    );
-    expect(eventsOf(events, 'cannot_act')).toEqual([
+  it('perde a vez com o sorteio abaixo de 25%', () => {
+    const { acts, events } = tryToAct(paralyzed(), sequence(0.24));
+    expect(acts).toBe(false);
+    expect(events).toEqual([
       { type: 'cannot_act', side: 'player', position: 0, reason: 'paralysis' },
     ]);
-    expect(state.player.team[0]!.skills[0]!.currentPp).toBe(10);
   });
 
   it('age com o sorteio em 25%', () => {
-    const { events } = play(
-      makeState(paralyzed(), idle()),
-      USE_FIRST,
-      catalog,
-      sequence(0, 0.25, 0.9, 0.5),
-    );
-    expect(eventsOf(events, 'cannot_act')).toEqual([]);
-    expect(eventsOf(events, 'damage')).toHaveLength(1);
+    const { acts, events } = tryToAct(paralyzed(), sequence(0.25));
+    expect(acts).toBe(true);
+    expect(events).toEqual([]);
   });
 });
 
 describe('Adormecido', () => {
-  it('não age nos turnos sorteados e age no turno em que acorda', () => {
-    const asleep = attacker({ statusSlug: 'sleep', sleepTurns: 2 });
-    const first = play(makeState(asleep, idle()), USE_FIRST, catalog);
-    expect(eventsOf(first.events, 'cannot_act')).toEqual([
+  it('não age nas vezes sorteadas e age na vez em que acorda', () => {
+    const turn = contextOf(
+      makeState(attacker({ statusSlug: 'sleep', sleepTurns: 2 }), idle()),
+      catalog,
+      sequence(),
+    );
+    expect(canAct(turn, PLAYER)).toBe(false);
+    expect(canAct(turn, PLAYER)).toBe(false);
+    expect(turn.events).toEqual([
+      { type: 'cannot_act', side: 'player', position: 0, reason: 'sleep' },
       { type: 'cannot_act', side: 'player', position: 0, reason: 'sleep' },
     ]);
 
-    const second = play(first.state, USE_FIRST, catalog);
-    expect(eventsOf(second.events, 'cannot_act')).toHaveLength(1);
-    expect(second.state.player.team[0]!.skills[0]!.currentPp).toBe(10);
-
-    const third = play(second.state, USE_FIRST, catalog);
-    expect(eventsOf(third.events, 'woke_up')).toEqual([
-      { type: 'woke_up', side: 'player', position: 0 },
-    ]);
-    expect(eventsOf(third.events, 'cannot_act')).toEqual([]);
-    expect(third.state.player.team[0]).toMatchObject({
+    expect(canAct(turn, PLAYER)).toBe(true);
+    expect(turn.events.at(-1)).toEqual({
+      type: 'woke_up',
+      side: 'player',
+      position: 0,
+    });
+    expect(turn.state.player.team[0]).toMatchObject({
       statusSlug: null,
       sleepTurns: 0,
     });
-    expect(third.state.player.team[0]!.skills[0]!.currentPp).toBe(9);
-  });
-
-  it('quem entra Adormecido sorteia os turnos de novo', () => {
-    const { state } = startBattle(
-      [idle({ statusSlug: 'sleep' })],
-      [idle()],
-      true,
-      catalog,
-      sequence(0.5),
-    );
-    expect(state.player.team[0]!.sleepTurns).toBe(2);
   });
 });
 
 describe('Congelado', () => {
   const frozen = () => attacker({ statusSlug: 'freeze' });
 
-  it('descongela com o sorteio abaixo de 20% e age no mesmo turno', () => {
-    const { state, events } = play(
-      makeState(frozen(), idle()),
-      USE_FIRST,
-      catalog,
-      always(0.19),
-    );
-    expect(eventsOf(events, 'thawed')).toEqual([
-      { type: 'thawed', side: 'player', position: 0 },
-    ]);
-    expect(eventsOf(events, 'skill_used').map((e) => e.side)).toContain(
-      'player',
-    );
-    expect(state.player.team[0]!.statusSlug).toBeNull();
+  it('descongela com o sorteio abaixo de 20% e age na mesma vez', () => {
+    const { acts, events, creature } = tryToAct(frozen(), always(0.19));
+    expect(acts).toBe(true);
+    expect(events).toEqual([{ type: 'thawed', side: 'player', position: 0 }]);
+    expect(creature.statusSlug).toBeNull();
   });
 
   it('não age com o sorteio em 20%', () => {
-    const { state, events } = play(
-      makeState(frozen(), idle()),
-      USE_FIRST,
-      catalog,
-      always(0.2),
-    );
-    expect(eventsOf(events, 'cannot_act')).toEqual([
+    const { acts, events, creature } = tryToAct(frozen(), always(0.2));
+    expect(acts).toBe(false);
+    expect(events).toEqual([
       { type: 'cannot_act', side: 'player', position: 0, reason: 'freeze' },
     ]);
-    expect(state.player.team[0]!.statusSlug).toBe('freeze');
+    expect(creature.statusSlug).toBe('freeze');
   });
 });
 
 describe('Confuso', () => {
   const confused = (overrides: Partial<Combatant> = {}) =>
-    attacker({ confusionTurns: 3, stats: withMaxHp(19, 20), ...overrides });
+    attacker({ confusionTurns: 3, ...overrides });
 
-  it('se atinge com o sorteio abaixo de 33%, sem gastar PP', () => {
-    const { state, events } = play(
-      makeState(confused(), idle()),
-      USE_FIRST,
-      catalog,
-      sequence(0, 0.32, 0),
-    );
-    const creature = state.player.team[0]!;
-    expect(eventsOf(events, 'confused_hit')).toEqual([
+  it('se atinge com o sorteio abaixo de 33% e perde a vez', () => {
+    const { acts, events, creature } = tryToAct(confused(), sequence(0.32, 0));
+    expect(acts).toBe(false);
+    expect(events).toEqual([
       { type: 'confused_hit', side: 'player', position: 0, damage: 4, hp: 15 },
     ]);
-    expect(eventsOf(events, 'skill_used').map((e) => e.side)).toEqual([
-      'enemy',
-    ]);
-    expect(creature.skills[0]!.currentPp).toBe(10);
     expect(creature.confusionTurns).toBe(2);
   });
 
   it('age com o sorteio em 33%', () => {
-    const { events } = play(
-      makeState(confused(), idle()),
-      USE_FIRST,
-      catalog,
-      sequence(0, 0.33, 0.9, 0.5),
-    );
-    expect(eventsOf(events, 'confused_hit')).toEqual([]);
-    expect(eventsOf(events, 'damage')).toHaveLength(1);
+    const { acts, events } = tryToAct(confused(), sequence(0.33));
+    expect(acts).toBe(true);
+    expect(events).toEqual([]);
   });
 
   it('avisa quando passa', () => {
-    const { state, events } = play(
-      makeState(confused({ confusionTurns: 1 }), idle()),
-      USE_FIRST,
-      catalog,
-      sequence(0, 0.5, 0.9, 0.5),
+    const { acts, events, creature } = tryToAct(
+      confused({ confusionTurns: 1 }),
+      sequence(0.5),
     );
-    expect(eventsOf(events, 'status_ended')).toEqual([
+    expect(acts).toBe(true);
+    expect(events).toEqual([
       {
         type: 'status_ended',
         side: 'player',
@@ -279,70 +211,56 @@ describe('Confuso', () => {
         status: 'confusion',
       },
     ]);
-    expect(state.player.team[0]!.confusionTurns).toBe(0);
+    expect(creature.confusionTurns).toBe(0);
   });
 
   it('pode se derrubar', () => {
-    const { state, events } = play(
+    const turn = contextOf(
       makeState(confused({ currentHp: 1, confusionTurns: 1 }), idle()),
-      USE_FIRST,
       catalog,
       always(0),
     );
-    expect(state.result).toBe('defeat');
-    expect(eventsOf(events, 'fainted')).toHaveLength(1);
-    expect(eventsOf(events, 'status_ended')).toEqual([]);
+    expect(canAct(turn, PLAYER)).toBe(false);
+    faintIfDown(turn, PLAYER);
+    expect(turn.events.map((event) => event.type)).toEqual([
+      'confused_hit',
+      'fainted',
+    ]);
   });
 });
 
 describe('Amedrontado', () => {
-  it('perde a ação sem gastar PP, e o efeito some no fim do turno', () => {
-    const { state, events } = play(
-      makeState(attacker({ isFeared: true }), idle()),
-      USE_FIRST,
-      catalog,
-    );
-    expect(eventsOf(events, 'cannot_act')).toEqual([
+  it('perde a vez', () => {
+    const { acts, events } = tryToAct(attacker({ isFeared: true }));
+    expect(acts).toBe(false);
+    expect(events).toEqual([
       { type: 'cannot_act', side: 'player', position: 0, reason: 'fear' },
     ]);
-    expect(state.player.team[0]).toMatchObject({ isFeared: false });
-    expect(state.player.team[0]!.skills[0]!.currentPp).toBe(10);
   });
 
   it('vem antes dos outros motivos', () => {
-    const player = attacker({
-      isFeared: true,
-      statusSlug: 'sleep',
-      sleepTurns: 2,
-    });
-    const { state, events } = play(
-      makeState(player, idle()),
-      USE_FIRST,
-      catalog,
+    const { events, creature } = tryToAct(
+      attacker({ isFeared: true, statusSlug: 'sleep', sleepTurns: 2 }),
     );
-    expect(eventsOf(events, 'cannot_act')).toEqual([
+    expect(events).toEqual([
       { type: 'cannot_act', side: 'player', position: 0, reason: 'fear' },
     ]);
-    expect(state.player.team[0]!.sleepTurns).toBe(2);
+    expect(creature.sleepTurns).toBe(2);
   });
 });
 
-describe('voláteis', () => {
-  it('somem no fim da batalha', () => {
+describe('desmaio', () => {
+  it('limpa o status e os voláteis', () => {
     const player = attacker({
+      currentHp: 0,
+      statusSlug: 'poison',
       confusionTurns: 3,
       isTrapped: true,
-      stats: withMaxHp(19, 20),
     });
-    const { state } = play(
-      makeState(player, idle({ currentHp: 1 })),
-      USE_FIRST,
-      catalog,
-      // O último é o das moedas da vitória.
-      sequence(0, 0.5, 0.9, 0.5, 0.5),
-    );
-    expect(state.result).toBe('victory');
-    expect(state.player.team[0]).toMatchObject({
+    const turn = contextOf(makeState(player, idle()), catalog);
+    faintIfDown(turn, PLAYER);
+    expect(turn.state.player.team[0]).toMatchObject({
+      statusSlug: null,
       confusionTurns: 0,
       isTrapped: false,
     });

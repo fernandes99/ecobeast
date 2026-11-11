@@ -1,15 +1,10 @@
 class_name BattleSign
 extends RefCounted
-## O sinal que sobe sobre um Ecobeast quando algo muda nele na luta (board-battle/12):
-## um stat que sobe ou desce, com setas, ou um estado novo, na cor dele. Um tipo
-## novo de sinal entra só em `from_event`.
 
-## Mais níveis que isso numa vez só ainda mostram 3 setas.
 const MAX_ARROWS := 3
 
 var text: String = ""
 var color: Color = UiPalette.TEXT
-## Setas ao lado do texto: positivo para cima, negativo para baixo, 0 sem seta.
 var arrows: int = 0
 
 
@@ -19,7 +14,6 @@ func _init(sign_text: String, sign_color: Color, sign_arrows: int = 0) -> void:
 	arrows = sign_arrows
 
 
-## O sinal de um evento da luta, ou null quando o evento não tem sinal.
 static func from_event(event: Dictionary) -> BattleSign:
 	match DictFields.get_string(event, "type"):
 		"stat_changed":

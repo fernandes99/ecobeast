@@ -1,6 +1,5 @@
 class_name InventorySlot
 extends RefCounted
-## Um item da Mochila, com a quantidade.
 
 var item_id: int
 var quantity: int

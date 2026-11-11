@@ -1,6 +1,5 @@
 class_name ShopItemCard
 extends PanelContainer
-## Um item à venda na Loja. Só mostra: quem decide a compra é o servidor.
 
 signal buy_pressed(item_id: int)
 

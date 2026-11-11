@@ -1,10 +1,6 @@
 class_name BoardGeometry
 extends RefCounted
-## As contas de hexágono da luta no tabuleiro, iguais às do servidor
-## (server/src/domain/board/). Só servem para acender o que dá para fazer: quem
-## decide e confere tudo é o servidor.
 
-## Quantos hexágonos se anda por vez, como no servidor. A revisar.
 const MOVE_RANGE := 1
 const DIRECTIONS: Array[Vector2i] = [
 	Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1),
@@ -20,8 +16,6 @@ static func distance(a: Vector2i, b: Vector2i) -> int:
 	return (absi(dq) + absi(dr) + absi(dq + dr)) / 2
 
 
-## Aonde se chega em até `steps` passos por hexágonos livres: destino -> caminho,
-## sem a origem. `blocked` são os hexágonos com algum Ecobeast.
 static func reachable(cells: Array[Vector2i], blocked: Array[Vector2i], from: Vector2i, steps: int = MOVE_RANGE) -> Dictionary[Vector2i, Array]:
 	var paths: Dictionary[Vector2i, Array] = {}
 	var seen: Dictionary[Vector2i, bool] = {from: true}
@@ -44,8 +38,6 @@ static func reachable(cells: Array[Vector2i], blocked: Array[Vector2i], from: Ve
 	return paths
 
 
-## Os hexágonos que servem de alvo para a Técnica, jogando de `from`.
-## `foes` são os hexágonos dos inimigos de pé.
 static func targets(skill: Skill, cells: Array[Vector2i], foes: Array[Vector2i], from: Vector2i) -> Array[Vector2i]:
 	var result: Array[Vector2i] = []
 	if skill.area_shape == "line":
@@ -65,7 +57,6 @@ static func targets(skill: Skill, cells: Array[Vector2i], foes: Array[Vector2i],
 	return result
 
 
-## Os hexágonos que a Técnica cobre contra `target`, para acender a área.
 static func area(skill: Skill, cells: Array[Vector2i], foes: Array[Vector2i], from: Vector2i, target: Vector2i) -> Array[Vector2i]:
 	if skill.area_shape != "line":
 		return [target]

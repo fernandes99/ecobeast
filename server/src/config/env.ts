@@ -24,7 +24,7 @@ const envSchema = z.object({
   /** O endereço deste servidor visto pelo navegador; padrão http://localhost:<PORT>. */
   PUBLIC_BASE_URL: httpUrl.optional(),
   /**
-   * Libera as rotas de teste: POST /v1/me/battle (battle-core/03),
+   * Libera as rotas de teste: POST /v1/me/board-battle,
    * POST /v1/me/debug/xp (progression/04) e o `god` da luta no mapa.
    */
   ENABLE_TEST_BATTLE: z.stringbool().default(false),

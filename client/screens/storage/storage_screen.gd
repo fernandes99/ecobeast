@@ -1,7 +1,4 @@
 extends Control
-## Santuário (team-and-storage/02, TELAS.md #10): uma grade com busca, filtro por
-## Elemento e ordem por nível. Tocar em um Ecobeast abre o caminho até a equipe.
-## Quem move é o servidor; a tela pede e mostra o que volta.
 
 const CellScene := preload("res://screens/storage/storage_cell.tscn")
 
@@ -19,13 +16,9 @@ const MOVE_TEXT := "Mover para a equipe"
 const ENTERED_TEXT := "%s entrou na equipe."
 
 var _filter := StorageFilter.new()
-## O id do Elemento -> o botão dele na faixa de filtros.
 var _filter_buttons: Dictionary[int, Button] = {}
-## O Ecobeast do painel aberto.
 var _selected: CreatureInstance = null
-## A lista já chegou do servidor.
 var _is_loaded: bool = false
-## Há um pedido no servidor: a resposta volta para os painéis.
 var _busy: bool = false
 
 @onready var _count_label: Label = %CountLabel
@@ -57,7 +50,6 @@ func _ready() -> void:
 	_load()
 
 
-## Chamado pelo Router no voltar do Android ou Esc: fecha o painel, se aberto.
 func handle_back() -> bool:
 	if _busy:
 		return true
@@ -115,7 +107,6 @@ func _show_filters() -> void:
 	_paint_filters()
 
 
-## Os Elementos de quem está no Santuário, com "Todos", que sempre existe.
 func _present_elements() -> Array[int]:
 	var present: Array[int] = [StorageFilter.ALL_ELEMENTS]
 	for creature: CreatureInstance in Session.storage:

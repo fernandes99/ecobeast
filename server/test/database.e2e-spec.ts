@@ -394,36 +394,26 @@ describe('restrições do banco (e2e)', () => {
       expectRejected(result, 'island_maps_kind_check');
     });
 
-    it('recusa variante 4 em colina e aceita 6 no plano', async () => {
+    it('recusa variante 7 e altura 5, e aceita variante 6 na altura 4', async () => {
       const biome = await prisma.biome.findFirstOrThrow();
-      const hill = await attempt(prisma, async (tx) => {
-        const map = await draftMap(tx);
-        await tx.islandTile.create({
-          data: {
-            islandMapId: map.id,
-            q: 0,
-            r: 0,
-            biomeId: biome.id,
-            shape: 'hill',
-            variant: 4,
-          },
+      const tile = (height: number, variant: number) =>
+        attempt(prisma, async (tx) => {
+          const map = await draftMap(tx);
+          await tx.islandTile.create({
+            data: {
+              islandMapId: map.id,
+              q: 0,
+              r: 0,
+              biomeId: biome.id,
+              height,
+              variant,
+            },
+          });
         });
-      });
-      expectRejected(hill, 'island_tiles_variant_check');
-      const flat = await attempt(prisma, async (tx) => {
-        const map = await draftMap(tx);
-        await tx.islandTile.create({
-          data: {
-            islandMapId: map.id,
-            q: 0,
-            r: 0,
-            biomeId: biome.id,
-            shape: 'flat',
-            variant: 6,
-          },
-        });
-      });
-      expect(flat).toBe('accepted');
+      expectRejected(await tile(1, 7), 'island_tiles_variant_check');
+      expectRejected(await tile(5, 1), 'island_tiles_height_check');
+      expectRejected(await tile(-1, 1), 'island_tiles_height_check');
+      expect(await tile(4, 6)).toBe('accepted');
     });
 
     it('recusa espécie de área com mínimo acima do máximo', async () => {

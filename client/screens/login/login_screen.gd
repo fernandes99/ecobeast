@@ -1,7 +1,4 @@
 extends Control
-## Tela de login (.specs/auth-google/04-client-login.md, RF-08 a RF-10). O
-## navegador faz o login; o jogo só espera. Com sucesso, a cena raiz abre a
-## primeira tela, por isso esta não navega.
 
 const LOGIN_TEXT := "Entrar com Google"
 const RETRY_TEXT := "Tentar de novo"

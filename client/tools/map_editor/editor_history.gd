@@ -1,24 +1,17 @@
 class_name EditorHistory
 extends Node
-## Desfazer e refazer do editor de ilhas (map-editor/03), sobre o `UndoRedo` do
-## Godot. Cada passo guarda só o que mudou: os hexágonos de antes e de depois, as
-## construções (quando um hexágono delas saiu), a chegada e o nome.
 
-## O rascunho mudou por desfazer ou refazer: estes hexágonos precisam ser redesenhados.
 signal applied(coords: Array[Vector2i])
 
 const RENAME_ACTION := "Renomear"
 
 
-## Um passo. Os campos que o passo não mexe ficam null.
 class Step:
 	var label := ""
-	## O hexágono como `IslandDraft.snapshot` devolve, antes e depois.
 	var before: Dictionary[Vector2i, Array] = {}
 	var after: Dictionary[Vector2i, Array] = {}
 	var buildings_before: Variant = null
 	var buildings_after: Variant = null
-	## A lista de áreas (nome, cor e espécies), quando o passo a muda.
 	var areas_before: Variant = null
 	var areas_after: Variant = null
 	var start_before: Variant = null
@@ -38,19 +31,15 @@ func _exit_tree() -> void:
 	_undo_redo.free()
 
 
-## Uma ilha nova, aberta ou descartada: o histórico começa do zero.
 func reset(draft: IslandDraft) -> void:
 	_draft = draft
 	_undo_redo.clear_history(false)
 
 
-## O número da posição no histórico: igual ao do último salvar, nada mudou.
 func version() -> int:
 	return _undo_redo.get_version()
 
 
-## Guarda um passo que já foi feito no rascunho. Com `merge`, ele se junta ao
-## anterior de mesmo nome: digitar num campo vira um passo só.
 func record(step: Step, merge: bool = false) -> void:
 	if step == null or step.is_empty():
 		return
@@ -60,7 +49,6 @@ func record(step: Step, merge: bool = false) -> void:
 	_undo_redo.commit_action(false)
 
 
-## Renomear, já feito. Letras seguidas viram um passo só.
 func record_rename(before: String, after: String) -> void:
 	var step := Step.new()
 	step.label = RENAME_ACTION

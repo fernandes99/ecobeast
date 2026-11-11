@@ -1,18 +1,11 @@
 class_name StatusIcons
 extends Node2D
-## A linha de ícones de estado em cima da vida de um Ecobeast do tabuleiro
-## (board-battle/16): um círculo na cor do estado (`UiPalette.STATUS_COLORS`), com
-## contorno escuro e um desenho escuro dentro. A fonte do jogo não tem esses
-## símbolos, então eles são desenhados aqui, como as setas do sinal da 12.
-##
-## O nó fica no meio da barra; a linha cresce para os dois lados.
 
 const RADIUS := 11.0
 const GAP := 3.0
 const OUTLINE := 2.0
 const LINE := 2.0
 
-## Os slugs dos estados, na ordem em que aparecem (`BattleStatuses.of`).
 var slugs: Array[String] = []:
 	set(value):
 		slugs = value
@@ -61,7 +54,6 @@ func _icon(slug: String, at: Vector2) -> void:
 			draw_rect(Rect2(at + Vector2(-5.0, -1.5), Vector2(10.0, 8.0)), dark)
 
 
-## Uma gota de ponta para cima, com a base redonda.
 func _flame() -> PackedVector2Array:
 	var points := PackedVector2Array([Vector2(0.0, -8.0)])
 	var steps := 10
@@ -71,7 +63,6 @@ func _flame() -> PackedVector2Array:
 	return points
 
 
-## Uma espiral de fora para dentro, em duas voltas.
 func _spiral() -> PackedVector2Array:
 	var points := PackedVector2Array()
 	var steps := 28

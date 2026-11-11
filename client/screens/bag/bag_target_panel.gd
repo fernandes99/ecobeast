@@ -1,7 +1,5 @@
 class_name BagTargetPanel
 extends Control
-## Painel que escolhe em quem usar o item (inventory-shop/03, RF-17). Só exibe e
-## repassa o toque: quem chama o Session é a tela.
 
 signal chosen(uid: String)
 
@@ -38,7 +36,6 @@ func close() -> void:
 	hide()
 
 
-## Enquanto o pedido volta, nada aqui responde ao toque.
 func set_busy(busy: bool) -> void:
 	_cancel_button.disabled = busy
 	for row: BagTargetRow in _list.get_children():

@@ -1,7 +1,5 @@
 class_name BagItemRow
 extends PanelContainer
-## Um item da Mochila (inventory-shop/03, RF-14 e RF-16). Só mostra e repassa o
-## toque: quem decide o uso é o servidor.
 
 signal use_pressed(item: Item)
 
@@ -9,7 +7,6 @@ const QUANTITY_TEXT := "x%d"
 
 var item: Item = null
 var quantity: int = 0
-## Mostra Usar também nas Esferas, que só funcionam na luta.
 var offer_capture: bool = false
 
 @onready var _icon: ItemIcon = %Icon

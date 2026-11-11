@@ -1,24 +1,14 @@
 class_name BattleStatuses
 extends RefCounted
-## Os estados que cada Ecobeast do tabuleiro tem agora (board-battle/16), para os
-## ícones em cima da vida. As regras são do servidor: aqui a tela só acompanha os
-## eventos que ele manda e, no fim de cada resposta, confere o principal e a
-## confusão com o que ele diz.
-##
-## Cada vaga ("enemy:0") guarda os slugs dos estados, na ordem de `ORDER`.
 
-## O principal primeiro (um de cada vez), depois os passageiros.
 const ORDER: Array[String] = ["burn", "poison", "paralysis", "sleep", "freeze", "confusion", "fear", "trapped"]
 const MAIN: Array[String] = ["burn", "poison", "paralysis", "sleep", "freeze"]
-## Os passageiros que o fim da luta limpa; a confusão é a única que o servidor manda.
 const VOLATILE: Array[String] = ["confusion", "fear", "trapped"]
 
 var _by_key: Dictionary[String, Array] = {}
-## Quem está jogando: o medo dele sai quando a vez de outro começa.
 var _actor := ""
 
 
-## Os estados da vaga, na ordem de `ORDER`.
 func of(key: String) -> Array[String]:
 	var slugs: Array[String] = []
 	var have: Array = _by_key.get(key, [])
@@ -31,8 +21,6 @@ func of(key: String) -> Array[String]:
 	return slugs
 
 
-## Acompanha um evento da luta sobre a vaga `key`. Devolve as vagas cujos estados
-## mudaram, para a tela redesenhar só elas.
 func apply(event: Dictionary, key: String) -> Array[String]:
 	var changed: Array[String] = []
 	match DictFields.get_string(event, "type"):
@@ -78,7 +66,6 @@ func apply(event: Dictionary, key: String) -> Array[String]:
 	return changed
 
 
-## O item que cura o estado: tira o principal.
 func cure(key: String) -> void:
 	for slug: String in MAIN:
 		_remove(key, slug)

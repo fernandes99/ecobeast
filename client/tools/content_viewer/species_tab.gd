@@ -1,15 +1,11 @@
 class_name SpeciesTab
 extends ListDetail
-## A aba Ecobeasts (content-viewer/01, RF-04 e RF-05): a lista pelo número do
-## Bestiário, com quantos dos 6 arquivos existem, e o detalhe com os dados, a linha de
-## Evolução, as Técnicas por nível, os stats, os Traços, os biomas e os arquivos.
 
 const FRONT_BOX := Vector2(128, 128)
 const STAT_MAX := 255.0
 const BAR_WIDTH := 260.0
 const BAR_HEIGHT := 10.0
 const LEVEL_UP := "level_up"
-## Técnicas que não são por nível vão para o fim da lista.
 const NO_LEVEL := 999
 
 
@@ -76,7 +72,6 @@ func _header(species: CreatureSpecies, box: VBoxContainer) -> void:
 	info.add_child(ContentViewer.paragraph(species.description))
 
 
-## A linha inteira, do primeiro ao último estágio, uma por ramo.
 func _evolution(species: CreatureSpecies, box: VBoxContainer) -> void:
 	var first := _first_stage(species)
 	var paths: Array = []
@@ -112,8 +107,6 @@ func _first_stage(species: CreatureSpecies) -> CreatureSpecies:
 	return stage
 
 
-## Cada caminho é uma lista de passos {species_id, rule?}: `rule` é a Evolução que
-## leva até aquele estágio.
 func _collect_paths(species_id: int, path: Array, paths: Array, rule: EvolutionRule = null) -> void:
 	var step := {"species_id": species_id}
 	if rule != null:
@@ -186,8 +179,6 @@ func _level_of(row: Dictionary) -> int:
 	return int(level) if level != null else NO_LEVEL
 
 
-## "ícone ✓ · efeito ✗ · som ✗", na cor de quanto está pronto. Um opcional, como o
-## projétil, só aparece quando existe (content-viewer/05).
 func _skill_files_label(slug: String) -> Label:
 	var files := ContentFiles.skill_files(slug)
 	var parts: Array[String] = []
@@ -224,7 +215,6 @@ func _stats(species: CreatureSpecies, box: VBoxContainer) -> void:
 	grid.add_child(total)
 
 
-## "inicial (1º de 3)" para um Ecobeast de `starter_options`; vazio para os outros.
 func _starter_text(species_id: int) -> String:
 	var starters := GameData.get_rows("starter_options")
 	starters.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return int(a["sort_order"]) < int(b["sort_order"]))
@@ -234,7 +224,6 @@ func _starter_text(species_id: int) -> String:
 	return ""
 
 
-## Os dados que pesam no balanceamento (content-viewer/04, RF-01).
 func _progress(species: CreatureSpecies, box: VBoxContainer) -> void:
 	var row: Dictionary = GameData.get_row("species", species.id)
 	var growth: Dictionary = GameData.get_row("growth_rates", species.growth_rate_id)
@@ -259,7 +248,6 @@ func _progress(species: CreatureSpecies, box: VBoxContainer) -> void:
 	box.add_child(grid)
 
 
-## `gender_ratio` é a fração de machos, de 0 a 1; −1 é sem gênero.
 static func gender_text(ratio: Variant) -> String:
 	if ratio == null:
 		return ContentViewer.EMPTY
@@ -308,8 +296,6 @@ func _biomes(species: CreatureSpecies, box: VBoxContainer) -> void:
 		grid.add_child(ContentViewer.text(str(row["rate"]), 0, UiPalette.TEXT_SECONDARY))
 
 
-## As imagens paradas e o som numa linha, cada folha na sua, com todas as direções,
-## e por último os tracejados das folhas que faltam.
 func _files(species: CreatureSpecies, box: VBoxContainer) -> void:
 	var images := ContentViewer.flow(14)
 	box.add_child(images)

@@ -1,8 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import type {
-  Biome,
-  TerrainShape,
-} from '../domain/exploration/map-generator.js';
+import type { Biome } from '../domain/exploration/map-generator.js';
 import type { IslandDraft } from '../domain/islands/island-draft.js';
 import type { Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
@@ -76,11 +73,11 @@ export class IslandsService {
     return {
       name: map.name,
       start: { q: map.startQ, r: map.startR },
-      tiles: tiles.map(({ q, r, biome, shape, variant, areaId }) => ({
+      tiles: tiles.map(({ q, r, biome, height, variant, areaId }) => ({
         q,
         r,
         biome: biome.slug as Biome,
-        shape: shape as TerrainShape,
+        height,
         variant,
         ...(areaId === null ? {} : { area: keys.get(areaId)! }),
       })),

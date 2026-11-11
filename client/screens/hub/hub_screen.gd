@@ -1,8 +1,4 @@
 extends Control
-## Hub (visual-theme/02, TELAS.md #3): cenário atrás de tudo, o Domador e as
-## moedas no topo, a equipe numa linha de cards, as ações em cards coloridos e
-## a barra inferior com ícones. Toda feature abre a tela de DESTINATIONS com
-## Router.push; ligar uma feature nova é trocar o id dela ali.
 
 const CreatureSlotScene := preload("res://ui/components/creature_slot.tscn")
 const ActionTileScene := preload("res://ui/components/action_tile.tscn")
@@ -12,18 +8,11 @@ const TAB_HEIGHT := 76
 const CURRENT_TAB := "Home"
 const ICON_PATH := "res://ui/icons/%s.svg"
 
-## Cenário do Hub. Sem o arquivo, um gradiente de céu ocupa o topo.
 const SCENE_PATH := "res://assets/backgrounds/hub.png"
-## Parte de cima da imagem que fica fora da tela, para o castelo cair acima da
-## equipe. 0 para uma imagem já composta com o castelo no terço de cima.
 const SCENE_TOP_CROP := 0.22
-## Onde o conteúdo começa, em fração da altura da tela; acima, o cenário aparece.
 const CONTENT_START := 0.30
-## Altura do céu de reserva, em fração da altura da tela.
 const SKY_HEIGHT := 0.45
-## Escurecimento do cenário até perto do fim da imagem.
 const SHADE_ALPHA := 0.55
-## Distância, em fração da altura da tela, em que o cenário some no fundo.
 const SHADE_FADE := 0.10
 
 ## Cards de ação, nesta ordem. O título é também o rótulo em DESTINATIONS; as
@@ -40,7 +29,6 @@ const ACTIONS: Array[Dictionary] = [
 	{"id": &"codex", "title": "Bestiário", "subtitle": "Veja todas as espécies."},
 	{"id": &"bag", "title": "Mochila", "subtitle": "Organize seus itens."},
 ]
-## Abas da barra inferior: rótulo e ícone.
 const TABS: Array[Dictionary] = [
 	{"label": "Home", "icon": "home"},
 	{"label": "Equipe", "icon": "team"},
@@ -49,12 +37,9 @@ const TABS: Array[Dictionary] = [
 	{"label": "Perfil", "icon": "person"},
 ]
 
-## Rótulo da ação ou aba -> tela que ele abre. Rótulo fora daqui (Home) não
-## abre nada; a ação e a aba com o mesmo rótulo abrem a mesma tela.
 const DESTINATIONS: Dictionary[String, Dictionary] = {
 	"Explorar zona": {"id": &"exploration", "params": {}},
 	"Ilhas": {"id": &"islands", "params": {}},
-	# Um Domador NPC sorteado na hora (npc-tamers/05).
 	"Desafiar": {"id": &"board_battle", "params": {"challenge": true}},
 	"Arenas": {"id": &"placeholder", "params": {"title": "Arenas"}},
 	"Loja": {"id": &"shop", "params": {}},
@@ -120,8 +105,6 @@ func _make_tab(label: String, icon: String) -> Button:
 	return button
 
 
-## Posiciona o cenário, o escurecimento e o espaço vazio do topo do conteúdo
-## para o tamanho atual da tela.
 func _layout_scene() -> void:
 	var height := size.y
 	if height <= 0.0:
@@ -134,14 +117,10 @@ func _layout_scene() -> void:
 	_scene_art.position = Vector2(0.0, art_top)
 	_scene_art.size = Vector2(size.x, art_height)
 	_scene_shade.texture = _shade_gradient(clampf((art_top + art_height) / height, 0.0, 1.0))
-	# O conteúdo começa em CONTENT_START da tela, contando o topo acima da rolagem.
 	var scroll_top := _scroll.get_global_rect().position.y - get_global_rect().position.y
 	_scene_spacer.custom_minimum_size.y = maxf(0.0, height * CONTENT_START - scroll_top)
 
 
-## Transparente até onde o conteúdo começa, escurece até perto do fim do
-## cenário e, no fim dele, fica da cor do fundo da tela naquela altura (sem
-## emenda); abaixo, transparente de novo.
 func _shade_gradient(art_bottom: float) -> GradientTexture2D:
 	var clear := UiPalette.BACKGROUND
 	clear.a = 0.0
@@ -192,7 +171,6 @@ func _open(label: String) -> void:
 	if not DESTINATIONS.has(label):
 		return
 	var destination := DESTINATIONS[label]
-	# O Desafiar entra na luta com a transição, do centro da tela (battle-intro/01).
 	if destination["id"] == &"board_battle":
 		var center := get_viewport().get_visible_rect().size / 2.0
 		if not await BattleIntro.cover(center, &"tamer"):
@@ -207,7 +185,6 @@ func _open_details(index: int) -> void:
 	Router.push(&"creature_details", {"uid": party[index].uid})
 
 
-## 1000 -> "1.000".
 static func _format_thousands(value: int) -> String:
 	var digits := str(absi(value))
 	var groups := PackedStringArray()

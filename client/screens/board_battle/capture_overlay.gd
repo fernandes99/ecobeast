@@ -1,20 +1,14 @@
 class_name CaptureOverlay
 extends Control
-## O carregamento da captura (capture/02, TELAS.md #6): o Ecobeast entra na Esfera
-## enquanto o anel enche, sem arremesso nem tremidas. O resultado já veio do
-## servidor; a tela só o revela no fim.
 
-## Tempos em segundos. A revisar.
 const LOADING_TIME := 3.5
 const RESULT_TIME := 1.2
 const ESCAPE_TIME := 0.25
-## O tamanho do sprite quando termina de entrar na Esfera.
 const ENTERED_SCALE := Vector2(0.08, 0.08)
 const LOADING_TEXT := "Entrando na Esfera..."
 const SUCCESS_TEXT := "Capturado!"
 const FAILURE_TEXT := "Escapou!"
 
-## Onde o sprite fica antes de entrar na Esfera.
 var _home := Vector2.ZERO
 
 @onready var _dim: ColorRect = %Dim
@@ -30,7 +24,6 @@ func _ready() -> void:
 	_home = _portrait.position
 
 
-## Só termina quando a tela fecha: quem chama espera com `await`.
 func play(item: Item, species_id: int, success: bool) -> void:
 	_icon.set_item(item)
 	_portrait.set_species(species_id)
@@ -79,6 +72,5 @@ func _leave_sphere() -> void:
 	await tween.finished
 
 
-## O tempo do resultado já inclui o sprite voltando.
 func _escape_time(success: bool) -> float:
 	return 0.0 if success else ESCAPE_TIME

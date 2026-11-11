@@ -1,19 +1,14 @@
 class_name HpBar
 extends HBoxContainer
-## Barra de HP com a cor da faixa (foundation/02, RF-13): verde acima de 50%,
-## amarela acima de 20% e vermelha até 20%.
 
 const MID_RATIO := 0.5
 const LOW_RATIO := 0.2
 
-## Mostra "atual/máximo" ao lado da barra.
 @export var show_numbers: bool = false
-## Altura da barra, em px.
 @export var bar_height: int = 16
 
 var _current: int = 0
 var _maximum: int = 0
-## Cópia do preenchimento do tema, só desta barra (a cor muda com a faixa).
 var _fill: StyleBoxFlat
 
 @onready var _bar: ProgressBar = %Bar
@@ -27,7 +22,6 @@ func _ready() -> void:
 	_refresh()
 
 
-## Pode ser chamado antes ou depois de o componente entrar na árvore.
 func set_hp(current: int, maximum: int) -> void:
 	_maximum = maxi(maximum, 0)
 	_current = clampi(current, 0, _maximum)

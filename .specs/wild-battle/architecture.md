@@ -22,15 +22,13 @@ Os cantos, a partir do canto do hexágono, em sentido horário: (32, 0), (64, 16
 
 | Arquivo                                             | Aparece em                                       |
 | --------------------------------------------------- | ------------------------------------------------ |
-| `temperate`, `boreal`, `stone`, `wshallow`, `wdeep` | Hexágonos planos desse bioma                     |
-| `hill`                                              | Forma `hill`, em qualquer bioma, inclusive ilhas |
-| `mont`                                              | Forma `mont`, em qualquer bioma, inclusive ilhas |
-| `side`                                              | Paredão dos níveis 0 a 2 e sua lateral           |
-| `cliff`                                             | Paredão dos níveis 3 e 4 e sua lateral           |
+| `temperate`, `boreal`, `stone`, `hill`, `mountain`, `wshallow`, `wdeep` | Hexágonos desse bioma, em qualquer altura |
+| `side`                                              | Paredão e lateral dos biomas fora de `cliff`, água incluída |
+| `cliff`                                             | Paredão e lateral de `stone` e `mountain`        |
 | `contour`                                           | Contorno, por cima de todos os hexágonos         |
 | `highlight`                                         | [Destaque](#destaque-do-hexágono-atual) do hexágono atual |
 
-Um bioma novo entra com um PNG novo, sem mudar código: `HexTile.surface()` devolve o nome do arquivo. `contour.png` tem 64×84 px, o período da grade em duas linhas, com linhas de 1 px em degraus de 2 por 1. Ele só vale para esses passos.
+Um bioma novo entra com um PNG novo, sem mudar código: o nome do arquivo é o slug do bioma ([terrain-height](../terrain-height/README.md)). Até a terrain-height, a forma `hill` e a `mont` tinham a textura delas em qualquer bioma; a `mont.png` virou `mountain.png`. `contour.png` tem 64×84 px, o período da grade em duas linhas, com linhas de 1 px em degraus de 2 por 1. Ele só vale para esses passos.
 
 **Desenho:** o `HexMapView` monta uma malha por textura e desenha [linha por linha](#decorações). O ponto da textura (UV) é a posição no mapa, antes da altura, dividida pelo tamanho da textura, por isso ela não recomeça a cada hexágono. As texturas atuais foram geradas por código, são provisórias, e o dono pode trocá-las.
 
@@ -38,21 +36,11 @@ Um bioma novo entra com um PNG novo, sem mudar código: `HexTile.surface()` devo
 
 ## Elevação
 
-O mapa tem cinco níveis, de 0 a 4, com alturas múltiplas de 8. O nível sai do bioma e da forma que o servidor manda, em `HexTile.level()`, então o contrato não muda.
-
-| Nível | Quem                                       | Altura |
-| ----- | ------------------------------------------ | ------ |
-| 0     | Água plana (`wshallow`, `wdeep`)           | 0 px   |
-| 1     | Terra plana (`temperate`, `boreal`)        | 8 px   |
-| 2     | `hill`, fora da região de pedra            | 16 px  |
-| 3     | Bioma `stone`, plano ou `hill`             | 24 px  |
-| 4     | `mont`, em qualquer bioma                  | 32 px  |
-
-As alturas ficam em `LEVEL_HEIGHTS`, no `HexMapView`. Quem ocupa os níveis 2 e 3 é _a revisar_. Ilhas seguem a forma: `hill` na água é nível 2, e `mont` na água é nível 4.
+O mapa tem cinco níveis, de 0 a 4, com alturas de 0, 8, 16, 24 e 32 px. Desde a [terrain-height](../terrain-height/README.md), o nível é o `height` que o servidor manda em cada hexágono (`HexTile.height`), e qualquer bioma pode ter qualquer nível, a água também. O gerador põe a água no 0, `temperate` e `boreal` no 1, `hill` no 2 (no 3 dentro da região de pedra), `stone` no 3 e `mountain` no 4. As alturas em pixels ficam em `LEVEL_HEIGHTS`, no `HexMapView`.
 
 Um hexágono sobe a altura do nível dele, com superfície e contorno. A textura continua presa à posição antes da altura, para os vizinhos do mesmo nível seguirem contínuos.
 
-**Paredão:** sob cada uma das duas bordas de baixo, o paredão aparece se o vizinho daquele lado for mais baixo, e tem a altura da diferença, então termina exatamente na borda de cima dele. Sem vizinho, na borda do mapa, ele desce a altura do nível mais 26 px. A coluna da textura segue a posição no mapa, e a linha 0 é a borda de cima. A face da direita é escurecida pela cor do vértice. Os níveis 3 e 4 usam `cliff`, e os outros, `side`. As duas têm 512×64 px.
+**Paredão:** sob cada uma das duas bordas de baixo, o paredão aparece se o vizinho daquele lado for mais baixo, e tem a altura da diferença, então termina exatamente na borda de cima dele. Sem vizinho, na borda do mapa, ele desce a altura do nível mais 26 px. A coluna da textura segue a posição no mapa, e a linha 0 é a borda de cima. A face da direita é escurecida pela cor do vértice. O paredão de `stone` e `mountain` usa `cliff`, e o dos outros biomas, `side` (`HexMapView.face_texture`). As duas têm 512×64 px.
 
 **Ordem de desenho:** de trás para a frente, [linha por linha](#decorações). Um terreno só cobre o que está atrás dele, porque o paredão termina na borda do vizinho da frente, sem invadi-lo.
 
@@ -84,7 +72,7 @@ Plantas e rochas são só enfeite: não mudam terreno, encontro nem movimento. P
 | `boreal`    | `pine`, `mossy_rock`, `dark_bush`, `fern`, `pebbles`  |
 | `hill`      | `rock`, `dry_shrub`, `pebbles`, `dry_tuft`            |
 | `stone`     | `spire`, `boulder`, `rock_pile`, `moss`               |
-| `mont`      | `brown_rock`, `moss`                                  |
+| `mountain`  | `brown_rock`, `moss`                                  |
 | Água        | nenhuma                                               |
 
 `KIND_RADIUS` é o espaço de cada tipo no chão e também a distância mínima do centro do hexágono, onde o jogador fica.
@@ -169,7 +157,7 @@ Ele usa `set_actor_row` com a linha do hexágono, então a [profundidade](#plano
 
 Duas superfícies vizinhas diferentes têm um arremate na divisa: um recorte irregular, dentro de um dos dois hexágonos, que esconde a linha reta. A exceção é a divisa entre `wshallow` e `wdeep`, que fica reta. Como as decorações, é só enfeite e sai do cliente, em `HexTransitions.transitions_of(tile, map)`, sem mudar o contrato.
 
-**Quem recebe:** `SURFACE_ORDER`, de quem recebe para quem avança, é `temperate`, `boreal`, `hill`, `stone` e `mont`. O hexágono mais baixo nessa lista recebe o material do vizinho, e o outro fica como está. A água não está na lista: ela recebe `foam` de qualquer terra. Uma superfície que não está na lista não avança sobre ninguém, e um bioma novo funciona sem arremate até entrar nela.
+**Quem recebe:** `SURFACE_ORDER`, de quem recebe para quem avança, é `temperate`, `boreal`, `hill`, `stone` e `mountain`. O hexágono mais baixo nessa lista recebe o material do vizinho, e o outro fica como está. A água não está na lista: ela recebe `foam` de qualquer terra, em qualquer altura. Uma superfície que não está na lista não avança sobre ninguém, e um bioma novo funciona sem arremate até entrar nela.
 
 **Arquivo:** `res://assets/terrain/transitions/transitions.png`, uma folha de 384×1044 px, com células de 64×58 px, do tamanho do hexágono. Cada coluna é uma borda, em sentido horário, a partir da de cima à direita, a mesma ordem de `HexTransitions.NEIGHBORS`. Cada material ocupa 3 linhas, uma por variante, na ordem de `MATERIAL_ROWS`.
 
@@ -178,7 +166,7 @@ Duas superfícies vizinhas diferentes têm um arremate na divisa: um recorte irr
 | `foam`                   | Faixa translúcida com crista fina, em ondas |
 | `temperate`, `boreal`    | Pontas curtas de grama                   |
 | `hill`                   | Solo irregular                           |
-| `stone`, `mont`          | Blocos baixos                            |
+| `stone`, `mountain`      | Blocos baixos                            |
 
 O recorte é discreto de propósito: sem linha nem sombra, e a borda da terra se desfaz em pontilhado. Nenhum pixel fica a mais de 9 px da borda do hexágono. Os recortes afinam nos cantos, e por isso duas bordas seguidas viram dois lóbulos, em vez de se cruzarem. Para trocar a arte, basta pintar por cima na mesma célula. A variante sai de `hash([map_seed, coord, borda])`.
 
@@ -203,12 +191,12 @@ O canto do hexágono, em pixels da arte, fica em `x = 64 * q + 32 * r` e `y = 42
   "map": {
     "seed": 1234567,
     "start": { "q": 0, "r": 1 },
-    "tiles": [{ "q": 0, "r": 0, "biome": "temperate", "shape": "flat", "variant": 4 }]
+    "tiles": [{ "q": 0, "r": 0, "biome": "temperate", "height": 1, "variant": 4 }]
   }
 }
 ```
 
-`variant` vai de 1 a 6 em `flat` (o cliente guarda o valor, mas as superfícies não o usam) e de 1 a 3 nas outras formas. Falha: `409` "Crie seu Domador primeiro." O `map` também traz `creatures`, os Ecobeasts do mapa, descritos na [biome-encounters](../biome-encounters/architecture.md#contrato).
+`biome` é um dos 7 biomas e `height` vai de 0 a 4. `variant` vai de 1 a 3 em `hill` e `mountain` e de 1 a 6 nos outros (o cliente guarda o valor, mas as superfícies não o usam). Falha: `409` "Crie seu Domador primeiro." O `map` também traz `creatures`, os Ecobeasts do mapa, descritos na [biome-encounters](../biome-encounters/architecture.md#contrato).
 
 ## Gerador
 
@@ -229,6 +217,7 @@ Uma função pura em `server/src/domain/exploration/`: `generateMap(seed, config
 6. **Limpeza.** `mont` de terra sem vizinho `mont` vira `hill`, até não sobrar nenhum. Depois, por `cleanupPasses` vezes, um bioma de terra sem vizinho igual assume o bioma de terra mais comum entre os vizinhos.
 7. **Variante.** Em `flat`, `detailChance` escolhe entre 4 e 6, e o resto entre 1 e 3. Nas outras formas, entre 1 e 3.
 8. **Início.** A posição de terra plana mais perto de `(0, 0)`.
+9. **Conversão** ([terrain-height](../terrain-height/01-terrain-height.md)). Cada hexágono troca a forma por bioma e altura (`terrainOf`): `mont` vira `mountain` na altura 4, `hill` vira `hill` na 2 (na 3 sobre `stone`), `stone` fica na 3, a terra comum na 1 e a água na 0. A etapa de antes da conversão é `generateShapedMap`, que os testes conferem.
 
 Os parâmetros ficam juntos em `DEFAULT_MAP_CONFIG`, em `server/src/domain/exploration/map-config.ts`. O dono os ajusta direto nesse arquivo, _a revisar_:
 

@@ -1,27 +1,15 @@
 extends Control
-## Equipe (team-and-storage/03, TELAS.md #9): as 6 vagas, a ordem ao segurar e
-## arrastar e o caminho até o Santuário. Quem grava é o servidor; a tela mostra a
-## ordem nova na hora e volta atrás se ele recusar.
-##
-## Arrastar: a linha segurada sai do layout da lista (`top_level`) e segue o dedo,
-## e uma lacuna do mesmo tamanho fica em seu lugar. Mover a lacuna entre as linhas
-## é o que abre espaço. O toque chega como mouse, porque o Godot o converte.
 
 const RowScene := preload("res://screens/team/team_row.tscn")
 
 const MOVE_TEXT := "Mandar para o Santuário"
 const LAST_CREATURE_TEXT := "A equipe precisa de ao menos 1 Ecobeast."
 
-## O Ecobeast do painel aberto.
 var _selected: CreatureInstance = null
-## Há um pedido no servidor: as linhas não aceitam toques.
 var _busy: bool = false
-## A linha que está seguindo o dedo.
 var _lifted: TeamRow = null
 var _gap := Control.new()
-## Onde a lacuna começou: voltar a ela é cancelar.
 var _origin: int = 0
-## A distância entre o topo da linha e o dedo.
 var _grab_offset: float = 0.0
 
 @onready var _list: VBoxContainer = %List
@@ -47,7 +35,6 @@ func _ready() -> void:
 	_show_team()
 
 
-## Chamado pelo Router no voltar do Android ou Esc: cancela o arrasto ou fecha o painel.
 func handle_back() -> bool:
 	if _lifted != null:
 		_cancel_drag()
@@ -95,7 +82,6 @@ func _show_team() -> void:
 	_mark_leader()
 
 
-## As linhas de cima para baixo: quem está no ar conta no lugar da lacuna.
 func _rows_in_order() -> Array[TeamRow]:
 	var rows: Array[TeamRow] = []
 	for child: Node in _list.get_children():
@@ -107,7 +93,6 @@ func _rows_in_order() -> Array[TeamRow]:
 	return rows
 
 
-## É quem o servidor põe em campo: o primeiro com HP, não o primeiro da lista.
 func _mark_leader() -> void:
 	var is_found := false
 	for row: TeamRow in _rows_in_order():
@@ -167,7 +152,6 @@ func _cancel_drag() -> void:
 	_land()
 
 
-## Devolve a linha à lista, no lugar da lacuna.
 func _land() -> void:
 	var row := _lifted
 	_lifted = null

@@ -4,8 +4,8 @@ import {
   BIOMES,
   type Biome,
   isWater,
-  TERRAIN_SHAPES,
-  type TerrainShape,
+  MAX_HEIGHT,
+  maxVariant,
 } from '../exploration/map-generator.js';
 
 /**
@@ -24,7 +24,7 @@ export const MAX_AREA_SPAWNS = 200;
 
 export interface DraftTile extends HexCoord {
   biome: Biome;
-  shape: TerrainShape;
+  height: number;
   variant: number;
   /** A `key` da área do hexágono; sem ela, o hexágono não tem área. */
   area?: number;
@@ -72,9 +72,14 @@ function validName(name: string): boolean {
   return name.length >= 1 && name.length <= MAX_NAME_LENGTH;
 }
 
-function validVariant({ shape, variant }: DraftTile): boolean {
-  const max = shape === 'flat' ? 6 : 3;
-  return Number.isInteger(variant) && variant >= 1 && variant <= max;
+function validVariant({ biome, variant }: DraftTile): boolean {
+  return (
+    Number.isInteger(variant) && variant >= 1 && variant <= maxVariant(biome)
+  );
+}
+
+function validHeight(height: number): boolean {
+  return Number.isInteger(height) && height >= 0 && height <= MAX_HEIGHT;
 }
 
 function validLevel(level: number): boolean {
@@ -85,11 +90,11 @@ function tileError(tile: DraftTile): string | null {
   if (!(BIOMES as readonly string[]).includes(tile.biome)) {
     return `O hexágono ${at(tile)} tem um bioma que não é de terreno.`;
   }
-  if (!(TERRAIN_SHAPES as readonly string[]).includes(tile.shape)) {
-    return `O hexágono ${at(tile)} tem uma forma inválida.`;
+  if (!validHeight(tile.height)) {
+    return `O hexágono ${at(tile)} tem a altura ${tile.height}: vai de 0 a ${MAX_HEIGHT}.`;
   }
   if (!validVariant(tile)) {
-    return `O hexágono ${at(tile)} tem a variante ${tile.variant}: vai de 1 a 6 no plano e de 1 a 3 nas outras formas.`;
+    return `O hexágono ${at(tile)} tem a variante ${tile.variant}: vai de 1 a 3 na Colina e na Montanha, e de 1 a 6 nos outros biomas.`;
   }
   return null;
 }
@@ -237,11 +242,11 @@ export function canonicalDraft(draft: IslandDraft): string {
     start: { q: draft.start.q, r: draft.start.r },
     tiles: [...draft.tiles]
       .sort(byRowThenColumn)
-      .map(({ q, r, biome, shape, variant, area }) => ({
+      .map(({ q, r, biome, height, variant, area }) => ({
         q,
         r,
         biome,
-        shape,
+        height,
         variant,
         area: area === undefined ? null : renumber.get(area),
       })),

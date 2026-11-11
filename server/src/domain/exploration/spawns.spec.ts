@@ -2,7 +2,6 @@ import { generateMap, MapTile } from './map-generator.js';
 import { seededRandom } from './seeded-random.js';
 import { DEFAULT_SPAWN_CONFIG, SpawnConfig } from './spawn-config.js';
 import {
-  encounterBiome,
   EvolutionLevel,
   naturalLevel,
   rollSpawns,
@@ -43,7 +42,7 @@ function tiles(biome: MapTile['biome'], count: number, r = 0): MapTile[] {
     q,
     r,
     biome,
-    shape: 'flat' as const,
+    height: 1,
     variant: 1,
   }));
 }
@@ -52,24 +51,23 @@ function count<T>(items: T[], matches: (item: T) => boolean): number {
   return items.filter(matches).length;
 }
 
-describe('encounterBiome', () => {
-  it('um hexágono plano conta como o próprio bioma', () => {
-    expect(encounterBiome({ biome: 'boreal', shape: 'flat' })).toBe('boreal');
-    expect(encounterBiome({ biome: 'wdeep', shape: 'flat' })).toBe('wdeep');
-  });
-
-  it('uma colina conta como colina, em qualquer bioma', () => {
-    expect(encounterBiome({ biome: 'boreal', shape: 'hill' })).toBe('hill');
-    expect(encounterBiome({ biome: 'stone', shape: 'hill' })).toBe('hill');
-  });
-
-  it('uma montanha conta como montanha, mesmo em uma ilha', () => {
-    expect(encounterBiome({ biome: 'temperate', shape: 'mont' })).toBe(
-      'mountain',
+describe('bioma de encontro', () => {
+  it('é o próprio bioma, em qualquer altura', () => {
+    const spawns = rollSpawns(
+      [
+        ...tiles('hill', 20, 0).map((tile) => ({ ...tile, height: 0 })),
+        ...tiles('wdeep', 20, 1).map((tile) => ({ ...tile, height: 4 })),
+      ],
+      [
+        { speciesId: 1, naturalLevel: 1, rates: { hill: 1 } },
+        { speciesId: 2, naturalLevel: 1, rates: { wdeep: 1 } },
+      ],
+      10,
+      seededRandom(5),
+      { ...CONFIG, count: 200 },
     );
-    expect(encounterBiome({ biome: 'wshallow', shape: 'mont' })).toBe(
-      'mountain',
-    );
+    expect(spawns.every(({ speciesId, r }) => speciesId === r + 1)).toBe(true);
+    expect(new Set(spawns.map(({ speciesId }) => speciesId)).size).toBe(2);
   });
 });
 
@@ -378,7 +376,7 @@ describe('rollSpawns', () => {
     const eluBiomes = new Set(
       spawns
         .filter(({ speciesId }) => speciesId === ELU.speciesId)
-        .map(({ q, r }) => encounterBiome(byKey.get(`${q},${r}`)!)),
+        .map(({ q, r }) => byKey.get(`${q},${r}`)!.biome),
     );
     expect([...eluBiomes].sort()).toEqual(['boreal', 'mountain']);
   });

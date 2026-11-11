@@ -1,7 +1,5 @@
 class_name StatBlock
 extends RefCounted
-## Um valor para cada stat (HP, Atq, Def, Atq.E, Def.E, Vel).
-## Usado para stats base, Genes, Treino e stats calculados.
 
 const SLUGS: Array[String] = ["hp", "atk", "def", "sp_atk", "sp_def", "spd"]
 

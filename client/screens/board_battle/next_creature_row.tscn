@@ -1,6 +1,6 @@
 [gd_scene format=3]
 
-[ext_resource type="Script" path="res://screens/battle/next_creature_row.gd" id="1_script"]
+[ext_resource type="Script" path="res://screens/board_battle/next_creature_row.gd" id="1_script"]
 [ext_resource type="PackedScene" path="res://ui/components/creature_portrait.tscn" id="2_portrait"]
 [ext_resource type="PackedScene" path="res://ui/components/hp_bar.tscn" id="3_hp_bar"]
 

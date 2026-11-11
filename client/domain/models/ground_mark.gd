@@ -1,10 +1,8 @@
 class_name GroundMark
 extends RefCounted
-## Uma marca no chão do tabuleiro, como o servidor a mostra (board-battle/03).
 
 var cell := Vector2i.ZERO
 var ground_effect_id: int = 0
-## Quantas vezes da fila ainda faltam.
 var remaining: int = 0
 
 

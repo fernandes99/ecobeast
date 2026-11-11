@@ -1,7 +1,5 @@
 class_name TurnQueueBar
 extends HBoxContainer
-## A fila da rodada (board-battle/04, RF-05): quem ainda joga, na ordem, com o
-## retrato e a borda na cor do lado. Quem joga agora vem primeiro, maior.
 
 const PortraitScene := preload("res://ui/components/creature_portrait.tscn")
 const PORTRAIT_SIZE := 48
@@ -10,7 +8,6 @@ const BORDER_WIDTH := 3
 const CURRENT_BORDER_WIDTH := 5
 
 
-## `entries`: cada um com `species_id` e `side`, na ordem da fila.
 func set_queue(entries: Array[Dictionary]) -> void:
 	for child: Node in get_children():
 		remove_child(child)

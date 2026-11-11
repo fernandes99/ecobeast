@@ -1,6 +1,5 @@
 class_name CreatureTrait
 extends RefCounted
-## Um Traço (tabela traits). O efeito em batalha é implementado pelo slug.
 
 var id: int
 var slug: String

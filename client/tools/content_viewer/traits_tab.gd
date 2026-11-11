@@ -1,7 +1,5 @@
 class_name TraitsTab
 extends ListDetail
-## A aba Traços (content-viewer/03, RF-05): a lista pelo `id`, com quantos Ecobeasts
-## têm o Traço, e o detalhe com a descrição e esses Ecobeasts, marcando o oculto.
 
 
 func _init(content_viewer: ContentViewer) -> void:
@@ -42,7 +40,6 @@ func _build_detail(id: int, box: VBoxContainer) -> void:
 		holders_box.add_child(line)
 
 
-## As linhas de `species_traits` com o Traço, pelo número do Ecobeast.
 func _holders(trait_id: int) -> Array[Dictionary]:
 	var rows: Array[Dictionary] = []
 	for row: Dictionary in GameData.get_rows("species_traits"):

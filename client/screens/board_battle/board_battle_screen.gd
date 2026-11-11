@@ -1,13 +1,6 @@
 extends Control
-## Luta no tabuleiro (board-battle/04 a 08): o cartão do selvagem e a rodada em
-## cima, o tabuleiro no meio, parado, e embaixo o cartão de quem joga e os botões.
-## Na vez de um Ecobeast do jogador, ele anda (sem pedir nada
-## ao servidor) e depois escolhe a Técnica e o alvo; a vez vai ao servidor no
-## toque final, e a resposta traz as vezes dos selvagens, mostradas em ordem.
-## O servidor decide tudo: a tela só acende o que dá para fazer e mostra o que
-## aconteceu (.specs/board-battle/architecture.md, "Jogo").
 
-const SkillButtonScene := preload("res://screens/battle/battle_skill_button.tscn")
+const SkillButtonScene := preload("res://screens/board_battle/battle_skill_button.tscn")
 
 const SKILL_SLOTS := 4
 const SEARCHING_TEXT := "Procurando um Ecobeast..."
@@ -24,107 +17,70 @@ const RESULT_TEXTS: Dictionary[String, String] = {
 	"fled": "Você fugiu.",
 	"captured": "Capturado!",
 }
-## O fim contra um Domador NPC, com o nome dele (npc-tamers/04).
 const TAMER_RESULT_TEXTS: Dictionary[String, String] = {
 	"victory": "Você venceu %s!",
 	"defeat": "%s venceu a luta.",
 }
 const EXIT_TEXT := "Voltar"
-## Perder para um Domador do mapa encerra a exploração: a saída é o Hub.
 const EXIT_TO_HUB_TEXT := "Voltar ao Hub"
-## Linhas dos eventos do tabuleiro, que o BattleNarrator não conhece. A revisar.
 const BOARD_LINES: Dictionary[String, String] = {
 	"moved": "%s andou.",
 	"waited": "%s esperou.",
 	"ground_damage": "%s se feriu no chão.",
 }
-## Frases que vão só para o histórico, sem passar pelo log: a rodada não é uma ação, e
-## o log guarda a última ação da luta (board-battle/09).
 const HISTORY_ONLY: Array[String] = ["round_started"]
 const HP_EVENTS: Array[String] = ["damage", "recoil", "healed", "confused_hit", "status_damage", "ground_damage"]
 const LOSS_EVENTS: Array[String] = ["damage", "recoil", "confused_hit", "status_damage", "ground_damage"]
-## A largura do tabuleiro de 6 colunas: os hexágonos ficam do tamanho que tinham nele.
 const REFERENCE_BOARD_WIDTH := 624.0
-## Espera depois de cada frase completa no log, em segundos. A revisar.
 const EVENT_DELAY := 0.35
-## As frases aparecem no log letra por letra (board-battle/09). A revisar.
 const CHARS_PER_SECOND := 60.0
-## O efeito e o som de cada Técnica saem do slug dela, pelos caminhos do
-## ContentFiles; sem o arquivo, ela não tem efeito ou som (board-battle/09).
-## O som do dano, junto com a piscada, pela efetividade: normal, super ou weak.
-## A Técnica de emergência é corpo a corpo.
 const EMERGENCY_RANGE := 1
 
-## O hexágono do Domador, de onde sai o selvagem ou o Domador NPC; ou as vagas da
-## luta de teste.
 var _coord := Vector2i.ZERO
 var _test_slots := 0
-## A luta é contra o Domador NPC do hexágono (npc-tamers/04).
 var _against_tamer: bool = false
-## A luta é o Desafiar do Hub, contra um Domador NPC sorteado (npc-tamers/05).
 var _challenge: bool = false
-## O nome do Domador NPC adversário; vazio contra selvagem.
 var _tamer_name := ""
-## O bioma e a forma do hexágono do Domador, para o chão do tabuleiro (board-battle/08).
 var _biome := BoardView.DEFAULT_BIOME
-var _shape := BoardView.DEFAULT_SHAPE
-## O último estado do servidor; null até a abertura terminar.
+var _height := BoardView.DEFAULT_HEIGHT
 var _view: BoardBattleView = null
-## O estado da resposta que está sendo mostrada: dá os nomes de quem entra.
 var _incoming: BoardBattleView = null
 var _narrator := BattleNarrator.new()
 var _busy: bool = false
-## Um passo está sendo mostrado: os toques esperam.
 var _walking: bool = false
 var _needs_reload: bool = false
 var _leaving: bool = false
-## O golpe que está sendo mostrado: quem usou a Técnica e qual (board-battle/09).
-## Vazio e -1 fora de um golpe; -1 também na Técnica de emergência.
 var _attacker_key: String = ""
 var _attack_skill_id := -1
-## Se a Técnica deste uso já tocou o efeito: a sem dano toca uma vez só (board-battle/11).
 var _effect_played := false
-## Se a Técnica deste uso voou (board-battle/15): o som já tocou no lançamento.
 var _projectile_flown := false
-## Os estados de cada Ecobeast, para os ícones em cima da vida (board-battle/16).
 var _statuses := BattleStatuses.new()
 var _typing: Tween = null
-## A última frase da luta no log: quando um aviso sai, ela volta (board-battle/09).
 var _last_line := ""
-## Toca o som das Técnicas. Um AudioStreamPlayer toca um som de cada vez, sem lugar
-## na tela, e cai no bus Master.
 var _skill_sound := AudioStreamPlayer.new()
-## Um segundo tocador, para o som do dano não cortar o da Técnica.
 var _hit_sound := AudioStreamPlayer.new()
 
-## Quem está no tabuleiro agora, pela chave da vaga ("player:0").
 var _names: Dictionary[String, String] = {}
 var _species: Dictionary[String, int] = {}
 var _max_hp: Dictionary[String, int] = {}
 var _team_index: Dictionary[String, int] = {}
 var _level: Dictionary[String, int] = {}
 var _hp: Dictionary[String, int] = {}
-## Quem aparece nos cartões: o selvagem e o Ecobeast do jogador em foco.
 var _enemy_focus: String = ""
 var _player_focus: String = ""
-## As marcas no chão, como estão na tela.
 var _marks: Dictionary[Vector2i, int] = {}
 
-## A vez do jogador: a vaga, de onde ele saiu e para onde andou.
 var _actor := -1
 var _origin := Vector2i.ZERO
 var _moved: bool = false
 var _destination := Vector2i.ZERO
 var _reach: Dictionary[Vector2i, Array] = {}
-## 0 sem Técnica escolhida; -1 é a emergência.
 var _skill_slot := 0
-## A Esfera escolhida na Mochila, à espera do selvagem; -1 sem nenhuma.
 var _sphere_item := -1
 var _targets: Array[Vector2i] = []
 ## Fugir depois de andar pede um segundo toque, que desfaz o passo.
 var _flee_armed: bool = false
 
-## Depois de uma queda: quem entra, um por vaga pendente.
 var _entries: Array[Dictionary] = []
 var _entry_team := -1
 
@@ -159,17 +115,13 @@ var _entry_team := -1
 @onready var _history: BattleHistoryPanel = %HistoryPanel
 
 
-## `coord`: o encontro do mapa. `tamer_coord`: a luta contra o Domador NPC desse
-## hexágono. `challenge`: o Desafiar do Hub, no chão padrão. `test_slots`: a luta de
-## teste, com 2 ou 3 vagas. `biome` e `shape`: o terreno do hexágono do Domador, para o
-## chão do tabuleiro.
 func setup(params: Dictionary) -> void:
 	_against_tamer = params.has("tamer_coord")
 	_challenge = params.get("challenge", false)
 	_coord = params.get("tamer_coord", params.get("coord", Vector2i.ZERO))
 	_test_slots = params.get("test_slots", 0)
 	_biome = params.get("biome", BoardView.DEFAULT_BIOME)
-	_shape = params.get("shape", BoardView.DEFAULT_SHAPE)
+	_height = params.get("height", BoardView.DEFAULT_HEIGHT)
 
 
 func _ready() -> void:
@@ -195,16 +147,12 @@ func _ready() -> void:
 	_log_box.gui_input.connect(_on_log_input)
 	_exit_button.pressed.connect(_leave)
 	_board.cell_tapped.connect(_on_cell_tapped)
-	# O tabuleiro mora numa camada atrás da interface (board-battle/08): a área na
-	# coluna só diz onde ele fica.
 	_board_area.item_rect_changed.connect(_fit_board)
 	_next_panel.chosen.connect(_on_creature_chosen)
 	_set_busy(true)
 	_begin()
 
 
-## Voltar do Android ou Esc: fecha painéis, desfaz a Técnica ou a Esfera
-## escolhida ou, com a luta encerrada, volta ao mapa. Sair no meio da luta é Fugir.
 func handle_back() -> bool:
 	if _leaving:
 		return false
@@ -253,15 +201,13 @@ func _begin() -> void:
 		return
 	var turn: BoardTurn = result.data
 	_meet_tamer(turn.view)
-	_board.set_board(turn.view.board_cells, _biome, _shape)
+	_board.set_board(turn.view.board_cells, _biome, _height)
 	_fit_board()
-	# O pixelado se desfaz sobre o tabuleiro já montado, e a abertura começa junto.
 	BattleIntro.reveal()
 	await _show_turn(turn)
 	_narrator.begin_turns()
 
 
-## Contra um Domador NPC, ele dá nome à luta, e não há Fugir (npc-tamers/04).
 func _meet_tamer(view: BoardBattleView) -> void:
 	if view.tamer_name_id <= 0:
 		return
@@ -270,7 +216,6 @@ func _meet_tamer(view: BoardBattleView) -> void:
 	_flee_button.hide()
 
 
-## A luta de teste: Ecobeasts sorteados do catálogo, no nível do primeiro da equipe.
 func _test_enemies() -> Array[Dictionary]:
 	var level := 5
 	if Session.player != null and not Session.player.party.is_empty():
@@ -283,8 +228,6 @@ func _test_enemies() -> Array[Dictionary]:
 	return enemies
 
 
-## O visual da luta (board-battle/10): o tema vale para a tela inteira, mas só muda
-## quem pede uma variação dele; os painéis que vêm da luta antiga ficam como estão.
 func _style_controls() -> void:
 	theme = BattleTheme.get_theme()
 	BattleTheme.action_button(_attack_button, "attack")
@@ -298,17 +241,12 @@ func _style_controls() -> void:
 	_more_icon.texture = BattleTheme.icon("more")
 
 
-## Tocar no log abre o histórico da luta (board-battle/13), quando o dedo sai,
-## como num botão.
 func _on_log_input(event: InputEvent) -> void:
 	var click := event as InputEventMouseButton
 	if click != null and click.button_index == MOUSE_BUTTON_LEFT and not click.pressed:
 		_history.open()
 
 
-## Um aviso inteiro no log, sem letra por letra e sem o triângulo de "continua".
-## Vazio tira o aviso e volta a última frase da luta: o log nunca fica em branco
-## depois que a luta começa.
 func _show_message(text: String) -> void:
 	if _typing != null:
 		_typing.kill()
@@ -324,14 +262,10 @@ func _reserve_bottom() -> void:
 	var tallest := 0.0
 	for form: Control in [_actions_row, _skills_box, _result_box]:
 		tallest = maxf(tallest, form.get_combined_minimum_size().y)
-	# A reserva fica no bloco todo, alinhado no pé: o cartão desce junto com os botões.
-	# O log tem sempre uma linha (board-battle/09).
 	var gap := _bottom.get_theme_constant(&"separation")
 	_bottom.custom_minimum_size.y = _log_box.get_combined_minimum_size().y + _player_card.get_combined_minimum_size().y + tallest + gap * 2
 
 
-## O tabuleiro inteiro cabe na área, centrado, sem passar do tamanho dos
-## hexágonos do tabuleiro antigo, de 6 colunas: o dono achou maior grande demais.
 func _fit_board() -> void:
 	var board_size := _board.board_size()
 	if board_size == Vector2.ZERO:
@@ -348,9 +282,6 @@ func _fit_board() -> void:
 	_board.cover_screen()
 
 
-# --- Mostrar a resposta --------------------------------------------------------
-
-## Mostra os eventos um a um; no fim, a resposta do servidor manda em tudo.
 func _show_turn(turn: BoardTurn) -> void:
 	_set_busy(true)
 	_incoming = turn.view
@@ -363,7 +294,6 @@ func _show_turn(turn: BoardTurn) -> void:
 	var destination := _narrator.describe_captured_to(turn.captured_to)
 	if not destination.is_empty():
 		_history.add_line(destination)
-	# A primeira captura da espécie (codex/03), antes da subida de nível.
 	for species_id: int in turn.registered_species_ids:
 		await _codex_overlay.play(species_id)
 	_view = turn.view
@@ -403,7 +333,6 @@ func _play_event(event: Dictionary) -> void:
 			if not path.is_empty() and _board.has_token(key) and _board.token_cell(key) != path[-1]:
 				await _board.walk(key, path)
 		"skill_used":
-			# Quem ataca treme, com a área acesa (board-battle/09).
 			_attacker_key = key
 			_attack_skill_id = DictFields.get_id(event, "skill_id")
 			_effect_played = false
@@ -423,7 +352,6 @@ func _play_event(event: Dictionary) -> void:
 		"fainted":
 			_board.fade(key)
 		"creature_left":
-			# O selvagem derrotado deixa uma moeda; o capturado já entrou na Esfera.
 			var defeated: bool = side == "enemy" and _hp.get(key, 1) <= 0
 			await _board.vanish(key, defeated)
 			_refresh_cards()
@@ -438,21 +366,13 @@ func _play_event(event: Dictionary) -> void:
 			if not DictFields.get_string(event, "cured_status").is_empty():
 				_cure_team(DictFields.get_int(event, "team_index"))
 		"stat_changed", "status_applied":
-			# A Técnica sem dano, como a Rugido Feroz, toca o efeito no primeiro
-			# evento que causa (board-battle/11).
 			if not _effect_played and _board.has_token(key):
 				await _play_skill_effect(key)
-			# O sinal sobe depois do efeito, também sem Técnica (board-battle/12), e o
-			# ícone do estado aparece com ele (board-battle/16).
 			_board.float_sign(key, BattleSign.from_event(event))
 			_show_statuses(_statuses.apply(event, key))
-	# Os ícones de estado acompanham os eventos (board-battle/16); o do estado novo já
-	# apareceu com o sinal.
 	if type != "status_applied":
 		_show_statuses(_statuses.apply(event, key))
 	if type in HP_EVENTS and _board.has_token(key):
-		# O golpe (board-battle/09): o efeito da Técnica no alvo, o alvo treme e pisca
-		# com a barra caindo, e o número sobe sem a sequência esperar por ele.
 		if type == "damage":
 			await _play_skill_effect(key)
 		_hp[key] = DictFields.get_int(event, "hp")
@@ -468,8 +388,6 @@ func _play_event(event: Dictionary) -> void:
 	await _say(type, side, key, event)
 
 
-## A frase do evento: vai para o histórico e, menos as que são só dele, aparece no
-## log letra por letra e fica um pouco.
 func _say(type: String, side: String, key: String, event: Dictionary) -> void:
 	var line := _line_for(type, side, key, event)
 	if line.is_empty():
@@ -481,8 +399,6 @@ func _say(type: String, side: String, key: String, event: Dictionary) -> void:
 	await get_tree().create_timer(EVENT_DELAY).timeout
 
 
-## O som e o efeito da Técnica do golpe atual sobre o alvo, com o efeito espelhado
-## se o atacante estiver à direita. Cada um só existe se o arquivo dele existir.
 func _play_skill_effect(target_key: String) -> void:
 	if _attack_skill_id < 0:
 		return
@@ -499,12 +415,10 @@ func _play_skill_effect(target_key: String) -> void:
 	var from: Variant = _board.token_position(_attacker_key)
 	var to: Variant = _board.token_position(target_key)
 	var mirrored: bool = from != null and to != null and (from as Vector2).x > (to as Vector2).x
-	# O impacto do projétil que vem de cima vira, para seguir o golpe (board-battle/15).
 	var flipped: bool = _projectile_flown and from != null and to != null and (from as Vector2).y < (to as Vector2).y
 	await _board.play_effect(target_key, load(path) as Texture2D, mirrored, flipped)
 
 
-## O som da Técnica, se o arquivo existir.
 func _play_skill_sound(skill: Skill) -> void:
 	var path := ContentFiles.SKILL_SOUND_PATH % skill.slug
 	if ResourceLoader.exists(path):
@@ -512,7 +426,6 @@ func _play_skill_sound(skill: Skill) -> void:
 		_skill_sound.play()
 
 
-## A folha do projétil da Técnica do golpe atual (board-battle/15), ou null sem ela.
 func _projectile_texture() -> Texture2D:
 	var skill := GameData.get_skill(_attack_skill_id) if _attack_skill_id >= 0 else null
 	if skill == null:
@@ -521,16 +434,12 @@ func _projectile_texture() -> Texture2D:
 	return load(path) as Texture2D if ResourceLoader.exists(path) else null
 
 
-## A Técnica com projétil (board-battle/15): o som toca no lançamento, e a folha voa
-## de quem ataca até o fim da área.
 func _fly_projectile(area: Array[Vector2i], texture: Texture2D) -> void:
 	_projectile_flown = true
 	_play_skill_sound(GameData.get_skill(_attack_skill_id))
 	await _board.fly_projectile(_attacker_key, area, texture)
 
 
-## O tipo do som de dano: a efetividade da Técnica, ou normal para o dano que não
-## vem de uma (recuo, estado, chão e confusão).
 func _hit_kind(type: String, event: Dictionary) -> String:
 	if type != "damage":
 		return "normal"
@@ -564,7 +473,6 @@ func _type_line(text: String) -> void:
 	_typing.tween_property(_message, ^"visible_characters", count, seconds)
 	await get_tree().create_timer(seconds).timeout
 	_message.visible_characters = -1
-	# A frase terminou: o triângulo avisa que a luta continua.
 	_more_icon.visible = true
 
 
@@ -585,7 +493,6 @@ func _enter(key: String, side: String, event: Dictionary) -> void:
 	_refresh_cards()
 
 
-## O texto do evento, com o nome de quem o sofre; vazio sem linha.
 func _line_for(type: String, side: String, key: String, event: Dictionary) -> String:
 	var who: String = _names.get(key, "")
 	if BOARD_LINES.has(type):
@@ -607,7 +514,6 @@ func _line_for(type: String, side: String, key: String, event: Dictionary) -> St
 	return _narrator.describe(event)
 
 
-## No fim da resposta, a tela fica igual ao estado do servidor.
 func _sync_board() -> void:
 	var present: Dictionary[String, bool] = {}
 	for slot: int in _view.player_cells:
@@ -649,12 +555,10 @@ func _sync_token(key: String, side: String, creature: BattleCreature, cell: Vect
 	_level[key] = creature.level
 	_hp[key] = creature.hp
 	_board.set_hp(key, creature.hp, creature.max_hp)
-	# O principal e a confusão ficam iguais aos do servidor (board-battle/16).
 	_statuses.sync(key, creature.status, creature.confused)
 	_board.set_statuses(key, _statuses.of(key))
 
 
-## Quem joga ou sofre algo passa a aparecer no cartão do lado dele.
 func _focus(side: String, key: String) -> void:
 	if side == "enemy":
 		_enemy_focus = key
@@ -663,7 +567,6 @@ func _focus(side: String, key: String) -> void:
 	_refresh_cards()
 
 
-## Cada cartão mostra quem está em foco; sem ele no tabuleiro, o primeiro do lado.
 func _refresh_cards() -> void:
 	_enemy_focus = _focus_or_first(_enemy_focus, "enemy:")
 	_player_focus = _focus_or_first(_player_focus, "player:")
@@ -697,13 +600,11 @@ func _refresh_marks() -> void:
 	_board.set_marks(colors)
 
 
-## Redesenha os ícones de estado das vagas que mudaram (board-battle/16).
 func _show_statuses(keys: Array[String]) -> void:
 	for changed: String in keys:
 		_board.set_statuses(changed, _statuses.of(changed))
 
 
-## O item que cura o estado tira o principal de quem o recebeu, se estiver no tabuleiro.
 func _cure_team(team_index: int) -> void:
 	for key: String in _team_index:
 		if key.begins_with("player:") and _team_index[key] == team_index:
@@ -718,8 +619,6 @@ func _update_team_hp(team_index: int, hp: int) -> void:
 			_board.set_hp(key, hp, _max_hp.get(key, 0))
 	_refresh_cards()
 
-
-# --- A vez do jogador ----------------------------------------------------------
 
 func _begin_vez() -> void:
 	var current := _view.current()
@@ -800,7 +699,6 @@ func _on_cell_tapped(cell: Vector2i) -> void:
 		_step_to(cell)
 
 
-## Anda sem pedir nada ao servidor: o passo só vai junto com a ação.
 func _step_to(cell: Vector2i) -> void:
 	_walking = true
 	_board.light([], Color.TRANSPARENT)
@@ -814,8 +712,6 @@ func _step_to(cell: Vector2i) -> void:
 	_light_reach()
 
 
-## Tocar numa Técnica acende os alvos; tocar de novo desliga. A Técnica em si
-## mesmo vai direto, sem alvo.
 func _choose_skill(slot: int) -> void:
 	if _busy or _walking:
 		return
@@ -852,7 +748,6 @@ func _cancel_skill() -> void:
 	_light_reach()
 
 
-## Atacar troca os botões pelas Técnicas; Voltar desfaz.
 func _open_skills() -> void:
 	if not _can_choose():
 		return
@@ -874,12 +769,10 @@ func _wait() -> void:
 	_send({"type": "wait"})
 
 
-## As ações do painel de baixo só valem na vez de um Ecobeast do jogador.
 func _can_choose() -> bool:
 	return not _busy and not _walking and _view != null and _view.phase == "choose_action" and _actor >= 0
 
 
-## Contra um Domador NPC, a Mochila não oferece Esferas.
 func _open_bag() -> void:
 	if not _can_choose():
 		return
@@ -888,13 +781,11 @@ func _open_bag() -> void:
 	_items_panel.open(_view.items, _view.team, _team_names(_view), _tamer_name.is_empty())
 
 
-## Um item de cura serve para qualquer um da equipe, e gasta a vez.
 func _use_item(item_id: int, team_index: int) -> void:
 	_items_panel.close()
 	_send({"type": "item", "item_id": item_id, "team_index": team_index})
 
 
-## A Esfera pede o selvagem: todos acendem, a qualquer distância.
 func _aim_sphere(item_id: int) -> void:
 	_items_panel.close()
 	_skill_slot = 0
@@ -905,8 +796,6 @@ func _aim_sphere(item_id: int) -> void:
 	_show_message(PICK_SPHERE_TEXT)
 
 
-## A troca está sem botão: o dono tirou o Trocar do pé da tela e ainda vai decidir
-## onde ele fica (board-battle/08).
 func _open_switch() -> void:
 	if not _can_choose():
 		return
@@ -915,7 +804,6 @@ func _open_switch() -> void:
 	_next_panel.open(_view.team, _team_names(_view), _view.player_actives[_actor], true)
 
 
-## O mesmo painel serve à troca e à escolha depois de uma queda.
 func _on_creature_chosen(team_index: int) -> void:
 	if _view == null:
 		return
@@ -955,7 +843,6 @@ func _disarm_flee() -> void:
 		_show_message("")
 
 
-## Alguém da equipe de pé e fora do tabuleiro, para a troca.
 func _has_reserve() -> bool:
 	if _view == null:
 		return false
@@ -965,7 +852,6 @@ func _has_reserve() -> bool:
 	return false
 
 
-## A vez vai ao servidor; uma recusa devolve o Ecobeast para onde estava.
 func _send(action: Dictionary) -> void:
 	if _busy or _walking:
 		return
@@ -985,8 +871,6 @@ func _send(action: Dictionary) -> void:
 		return
 	await _show_turn(result.data)
 
-
-# --- Quem entra depois de uma queda --------------------------------------------
 
 func _begin_entries() -> void:
 	_entries.clear()
@@ -1047,10 +931,6 @@ func _pick_entry_cell(cell: Vector2i) -> void:
 	await _show_turn(result.data)
 
 
-# --- Fim da luta ---------------------------------------------------------------
-
-## Como na luta de hoje (progression/03 e 04): cada um que subiu de nível ganha
-## a comemoração, a evolução, os avisos de Técnica aprendida e as escolhas.
 func _celebrate(progression: Array[CreatureProgress]) -> void:
 	for progress: CreatureProgress in progression:
 		if not progress.leveled_up():
@@ -1067,7 +947,6 @@ func _celebrate(progression: Array[CreatureProgress]) -> void:
 			)
 			if evolved == null:
 				continue
-			# A espécie nova entrou no Bestiário agora (codex/03).
 			for species_id: int in evolved.registered_species_ids:
 				await _codex_overlay.play(species_id)
 			var species := GameData.get_species(evolved.creature.species_id)
@@ -1099,8 +978,6 @@ func _show_battle_gone() -> void:
 	_show_exit(GONE_TEXT, true)
 
 
-## O fim da luta muda a música (battle-intro/02): vencer ou capturar toca o toque de
-## vitória, e perder ou fugir faz a música sumir aos poucos.
 func _play_end_music(result: String) -> void:
 	if result == "victory" or result == "captured":
 		Music.play_victory()
@@ -1108,7 +985,6 @@ func _play_end_music(result: String) -> void:
 		Music.fade_out()
 
 
-## Só a saída. `needs_reload`: a luta chegou a existir, e o jogador é relido.
 func _show_exit(text: String, needs_reload: bool) -> void:
 	_needs_reload = needs_reload
 	_exit_button.text = EXIT_TO_HUB_TEXT if _exits_to_hub() else EXIT_TEXT
@@ -1146,12 +1022,9 @@ func _result_text() -> String:
 	return RESULT_TEXTS.get(_view.result, "")
 
 
-## Perder para um Domador do mapa leva ao Hub.
 func _exits_to_hub() -> bool:
 	return _view != null and _view.phase == "ended" and _view.result == "defeat" and _view.tamer_source == "map"
 
-
-# --- Ajudantes -----------------------------------------------------------------
 
 func _set_busy(busy: bool) -> void:
 	_busy = busy
@@ -1173,7 +1046,6 @@ func _show_controls(playing: bool) -> void:
 	_result_box.visible = false
 
 
-## O caminho do evento `moved`, sem a origem.
 func _path_of(event: Dictionary) -> Array[Vector2i]:
 	return _cells_of(DictFields.get_array(event, "path"))
 
@@ -1186,7 +1058,6 @@ func _cells_of(items: Array) -> Array[Vector2i]:
 	return cells
 
 
-## A criatura do jogador com esse uid, ou null.
 func _party_creature(uid: String) -> CreatureInstance:
 	if Session.player == null:
 		return null

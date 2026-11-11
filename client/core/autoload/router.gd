@@ -1,19 +1,11 @@
 extends Node
-## Autoload Router: troca de telas em pilha dentro do %ScreenHost da cena raiz
-## (.specs/foundation/architecture.md, "Navegação").
-## Se a tela tiver setup(params: Dictionary), ele é chamado antes de a tela
-## entrar na árvore, ou seja, antes do _ready dela.
 
-## A tela visível mudou: abriu uma nova ou voltou para a anterior. `id` é o dela.
 signal screen_changed(id: StringName)
 
-## Onde cada tela guarda o id com que foi aberta.
 const SCREEN_ID_META := &"screen_id"
 
-## Telas registradas: id -> cena. Cada fase acrescenta a sua.
 const SCREENS: Dictionary[StringName, String] = {
 	&"bag": "res://screens/bag/bag_screen.tscn",
-	&"battle": "res://screens/battle/battle_screen.tscn",
 	&"board_battle": "res://screens/board_battle/board_battle_screen.tscn",
 	&"codex": "res://screens/codex/codex_screen.tscn",
 	&"creature_details": "res://screens/creature_details/creature_details_screen.tscn",
@@ -31,16 +23,13 @@ const SCREENS: Dictionary[StringName, String] = {
 }
 
 var _host: Control
-## Telas abertas; a última é a visível.
 var _stack: Array[Control] = []
 
 
-## Chamado pela cena raiz no boot, antes de qualquer navegação.
 func set_host(host: Control) -> void:
 	_host = host
 
 
-## Limpa a pilha e abre a tela (sem volta).
 func go_to(id: StringName, params: Dictionary = {}) -> void:
 	var screen := _instantiate(id, params)
 	if screen == null:
@@ -51,7 +40,6 @@ func go_to(id: StringName, params: Dictionary = {}) -> void:
 	_open(screen)
 
 
-## Esconde a tela atual, sem destruir, e abre a nova por cima.
 func push(id: StringName, params: Dictionary = {}) -> void:
 	var screen := _instantiate(id, params)
 	if screen == null:
@@ -61,9 +49,6 @@ func push(id: StringName, params: Dictionary = {}) -> void:
 	_open(screen)
 
 
-## Fecha a tela do topo e mostra a anterior. Na última tela, não faz nada.
-## Se a tela do topo tiver handle_back() -> bool e ele devolver true, ela
-## tratou o voltar sozinha (ex.: fechou um painel) e continua aberta.
 func back() -> void:
 	# Com a transição da luta cobrindo a tela, o voltar espera (battle-intro/01).
 	if BattleIntro.is_covering():

@@ -1,22 +1,15 @@
 class_name CreatureSprite
 extends WanderingSprite
-## Um Ecobeast no mapa (wild-battle/13 e biome-encounters/04): passeia dentro do
-## hexágono, com o passeio do `WanderingSprite`. Quem sabe onde ele está é o servidor.
 
-## As folhas do mapa ficam em explore/; as da luta, em battle/ (board-battle/07).
 const SHEET_PATH := "res://assets/creatures/%s/explore/%s.png"
 const IDLE := "idle"
 const WALK := "walk"
-## Um ciclo de cada folha, em segundos. A revisar.
 const IDLE_SECONDS := 0.8
 const WALK_SECONDS := 0.6
 
-## As animações de cada espécie, montadas uma vez: são 50 quadros, e o mapa pode ter
-## vários Ecobeasts iguais.
 static var _frames_by_slug: Dictionary[String, SpriteFrames] = {}
 
 
-## Quem ainda não tem as duas folhas não pode entrar no mapa.
 static func has_sheets(slug: String) -> bool:
 	return ResourceLoader.exists(SHEET_PATH % [slug, IDLE]) and ResourceLoader.exists(SHEET_PATH % [slug, WALK])
 

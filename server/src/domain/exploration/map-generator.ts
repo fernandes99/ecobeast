@@ -4,21 +4,36 @@ import { DEFAULT_MAP_CONFIG, MapConfig } from './map-config.js';
 import { createNoise, Noise2D } from './noise.js';
 import { seededRandom } from './seeded-random.js';
 
+/** Os biomas de um hexágono, os mesmos slugs da tabela `biomes`. */
 export const BIOMES = [
+  'temperate',
+  'boreal',
+  'stone',
+  'hill',
+  'mountain',
+  'wshallow',
+  'wdeep',
+] as const;
+export type Biome = (typeof BIOMES)[number];
+
+/** Os biomas que o gerador sorteia antes de converter a forma (terrain-height). */
+export const SHAPED_BIOMES = [
   'temperate',
   'boreal',
   'stone',
   'wshallow',
   'wdeep',
 ] as const;
-export type Biome = (typeof BIOMES)[number];
+export type ShapedBiome = (typeof SHAPED_BIOMES)[number];
 
 export const TERRAIN_SHAPES = ['flat', 'hill', 'mont'] as const;
 export type TerrainShape = (typeof TERRAIN_SHAPES)[number];
 
+export const MAX_HEIGHT = 4;
+
 export interface MapTile extends HexCoord {
   biome: Biome;
-  shape: TerrainShape;
+  height: number;
   variant: number;
 }
 
@@ -28,13 +43,25 @@ export interface GeneratedMap {
   tiles: MapTile[];
 }
 
+export interface ShapedTile extends HexCoord {
+  biome: ShapedBiome;
+  shape: TerrainShape;
+  variant: number;
+}
+
+export interface ShapedMap {
+  seed: number;
+  start: HexCoord;
+  tiles: ShapedTile[];
+}
+
 /** Um hexágono enquanto o mapa é montado; os campos são percentis em [0, 1). */
 interface Cell extends HexCoord {
   elevation: number;
   moisture: number;
   rock: number;
   ridge: number;
-  biome: Biome;
+  biome: ShapedBiome;
   shape: TerrainShape;
   neighbors: Cell[];
 }
@@ -48,11 +75,48 @@ export function isWater(biome: Biome): boolean {
   return biome === 'wshallow' || biome === 'wdeep';
 }
 
+/** Colina e Montanha têm 3 variantes; os outros biomas, 6. */
+export function maxVariant(biome: Biome): number {
+  return biome === 'hill' || biome === 'mountain'
+    ? BASIC_VARIANTS
+    : BASIC_VARIANTS * 2;
+}
+
+/** O bioma e a altura de um hexágono com forma (.specs/terrain-height/01, RF-05). */
+export function terrainOf(
+  biome: ShapedBiome,
+  shape: TerrainShape,
+): { biome: Biome; height: number } {
+  if (shape === 'mont') return { biome: 'mountain', height: MAX_HEIGHT };
+  if (biome === 'stone')
+    return { biome: shape === 'hill' ? 'hill' : 'stone', height: 3 };
+  if (shape === 'hill') return { biome: 'hill', height: 2 };
+  return { biome, height: isWater(biome) ? 0 : 1 };
+}
+
 /** O mapa de uma seed (.specs/wild-battle/architecture.md, "Gerador"). */
 export function generateMap(
   seed: number,
   config: MapConfig = DEFAULT_MAP_CONFIG,
 ): GeneratedMap {
+  const map = generateShapedMap(seed, config);
+  return {
+    seed: map.seed,
+    start: map.start,
+    tiles: map.tiles.map(({ q, r, biome, shape, variant }) => ({
+      q,
+      r,
+      ...terrainOf(biome, shape),
+      variant,
+    })),
+  };
+}
+
+/** O mapa antes de a forma virar bioma e altura; exportado para os testes. */
+export function generateShapedMap(
+  seed: number,
+  config: MapConfig = DEFAULT_MAP_CONFIG,
+): ShapedMap {
   const random = seededRandom(seed);
   const edge = createNoise(random);
   const elevation = createNoise(random);
@@ -181,7 +245,7 @@ function placeWater(cells: Cell[], config: MapConfig): void {
 }
 
 /** O bioma não olha a crista: plano, colina e montanha existem em todos. */
-function landBiome({ moisture, rock }: Cell, config: MapConfig): Biome {
+function landBiome({ moisture, rock }: Cell, config: MapConfig): ShapedBiome {
   if (rock > 1 - config.stoneFraction) return 'stone';
   return moisture > config.wetLimit ? 'boreal' : 'temperate';
 }
@@ -228,17 +292,17 @@ function gatherBiomes(cells: Cell[], config: MapConfig): void {
   }
 }
 
-function commonLandBiome(cells: Cell[]): Biome | undefined {
+function commonLandBiome(cells: Cell[]): ShapedBiome | undefined {
   const counts = countBiomes(cells.filter(({ biome }) => !isWater(biome)));
-  let common: Biome | undefined;
+  let common: ShapedBiome | undefined;
   for (const [biome, count] of counts) {
     if (!common || count > counts.get(common)!) common = biome;
   }
   return common;
 }
 
-function countBiomes(cells: Cell[]): Map<Biome, number> {
-  const counts = new Map<Biome, number>();
+function countBiomes(cells: Cell[]): Map<ShapedBiome, number> {
+  const counts = new Map<ShapedBiome, number>();
   for (const { biome } of cells) {
     counts.set(biome, (counts.get(biome) ?? 0) + 1);
   }

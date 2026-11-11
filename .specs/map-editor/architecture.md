@@ -61,7 +61,7 @@ A tela que cada tipo abre não fica no banco: é a `islands` que liga o `slug` �
 
 | Tabela | Colunas | Observações |
 | --- | --- | --- |
-| `island_tiles` | `island_map_id` (FK `CASCADE`), `q`, `r`, `biome_id` (FK `biomes`, `RESTRICT`), `shape`, `variant`, `area_id` (FK `island_areas`, nulo, `SET NULL`) | Chave `(island_map_id, q, r)`. `shape` em `flat`, `hill`, `mont` (`CHECK`). `variant` de 1 a 6 em `flat` e de 1 a 3 nas outras (`CHECK`). O bioma é um dos 5 de terreno (`temperate`, `boreal`, `stone`, `wshallow`, `wdeep`), conferido na rota: `hill` e `mountain` são biomas de encontro, não de terreno |
+| `island_tiles` | `island_map_id` (FK `CASCADE`), `q`, `r`, `biome_id` (FK `biomes`, `RESTRICT`), `height`, `variant`, `area_id` (FK `island_areas`, nulo, `SET NULL`) | Chave `(island_map_id, q, r)`. `height` de 0 a 4 e `variant` de 1 a 6 (`CHECK`). O bioma é um dos 7, e a variante de 1 a 3 em `hill` e `mountain` é conferida na rota. Até a [terrain-height](../terrain-height/README.md), a coluna era `shape` (`flat`, `hill`, `mont`), e o bioma era um dos 5 de terreno |
 | `island_buildings` | `id`, `island_map_id` (FK `CASCADE`), `building_type_id` (FK `RESTRICT`) | |
 | `island_building_tiles` | `building_id` (FK `CASCADE`), `island_map_id`, `q`, `r` | Chave `(building_id, q, r)` e único `(island_map_id, q, r)`: dois prédios nunca dividem um hexágono |
 | `island_areas` | `id`, `island_map_id` (FK `CASCADE`), `name` (1 a 40), `color_hex` (`#RRGGBB`), `spawn_count` (1 a 200, padrão 10) | A cor serve só ao editor. `spawn_count` é quantos Ecobeasts nascem na área a cada entrada ([islands/01](../islands/01-area-spawn-count.md)) |
@@ -87,7 +87,7 @@ O mesmo formato vai e volta (ler, criar, salvar):
 {
   "name": "Ilha das Brumas",
   "start": { "q": 0, "r": 0 },
-  "tiles": [{ "q": 0, "r": 0, "biome": "temperate", "shape": "flat", "variant": 2, "area": 1 }],
+  "tiles": [{ "q": 0, "r": 0, "biome": "temperate", "height": 1, "variant": 2, "area": 1 }],
   "buildings": [{ "building_type_id": 1, "tiles": [{ "q": 3, "r": -1 }, { "q": 4, "r": -1 }] }],
   "areas": [
     {
@@ -107,7 +107,7 @@ O mesmo formato vai e volta (ler, criar, salvar):
 ### Conferências ao salvar (`400`, mensagem em pt-BR)
 
 1. Nome de 1 a 40 caracteres.
-2. De 1 a 20.000 hexágonos, sem `(q, r)` repetido. `biome`, `shape` e `variant` válidos.
+2. De 1 a 20.000 hexágonos, sem `(q, r)` repetido. `biome`, `height` e `variant` válidos.
 3. A chegada é um hexágono da ilha.
 4. Cada construção tem um tipo que existe e pelo menos 1 hexágono. Todos os hexágonos dela existem na ilha, e nenhum é de outra construção.
 5. `key` sem repetição; todo `area` de hexágono aponta para uma `key` que existe. `spawn_count` de 1 a 200 ([islands/01](../islands/01-area-spawn-count.md)). Espécies que existem, sem repetir na mesma área, com peso inteiro maior que 0 e níveis de 1 a 100, mínimo até o máximo.
@@ -173,7 +173,7 @@ res://tools/map_editor/
 - **As chamadas:** pelo `Api` autoload, como os serviços do jogo, num serviço só do editor (`res://tools/map_editor/editor_api.gd`). Nenhuma tela do jogo depende de `res://tools/map_editor/`.
 - **O desenho:** o `IslandDraft` monta um `ExplorationMap` para o `HexMapView`. Pintar muda o rascunho e manda o `HexMapView` refazer só as linhas de hexágonos tocadas (um método novo, `update_tiles(coords)`), para o pincel não esperar a ilha inteira. Por cima dele, numa camada do editor: a cor das construções com o nome, a cor das áreas (que liga e desliga), a bandeira da chegada e o contorno do pincel.
 - **Zoom e arrastar:** roda do mouse para o zoom, centrado no ponteiro. Botão do meio, ou espaço com o botão esquerdo, para arrastar.
-- **A visão de cima:** o `HexMapView` monta só as linhas perto da tela, porque montar o mapa inteiro trava o jogo ([wild-battle](../wild-battle/architecture.md)). Para ver e pintar a ilha inteira, abaixo de um zoom o editor troca o `HexMapView` por uma visão plana: uma textura com um hexágono de cor chapada por hexágono da ilha, na cor do bioma (mais escura em colina, mais ainda em montanha), com as mesmas camadas por cima. Os pincéis funcionam nas duas visões. A tecla Tab alterna à mão.
-- **Os pincéis:** bioma, forma, pôr hexágono, tirar hexágono, construção, área e chegada. O tamanho é um raio de 0 a 10 hexágonos. Pintar `flat` sorteia a variante como o gerador (`detailChance`); as outras formas sorteiam de 1 a 3.
+- **A visão de cima:** o `HexMapView` monta só as linhas perto da tela, porque montar o mapa inteiro trava o jogo ([wild-battle](../wild-battle/architecture.md)). Para ver e pintar a ilha inteira, abaixo de um zoom o editor troca o `HexMapView` por uma visão plana: uma textura com um hexágono de cor chapada por hexágono da ilha, na cor média da textura do bioma, sem a altura, com as mesmas camadas por cima. Os pincéis funcionam nas duas visões. A tecla Tab alterna à mão.
+- **Os pincéis:** bioma, altura, pôr hexágono, tirar hexágono, construção, área e chegada ([terrain-height](../terrain-height/01-terrain-height.md)). O tamanho é um raio de 0 a 10 hexágonos. Pôr hexágono sorteia a variante como o gerador (`detailChance`) nos biomas de 6 variantes, e de 1 a 3 em `hill` e `mountain`; trocar o bioma só sorteia de novo se a variante passar do máximo dele.
 - **Desfazer:** cada pincelada, do apertar ao soltar do botão, é um passo do `UndoRedo`. Ctrl+Z desfaz, Ctrl+Y refaz. Salvar não apaga o histórico; trocar de ilha apaga.
 - **Não salvo:** o título da janela ganha um `*`. Trocar de ilha ou fechar a janela com mudanças pergunta "Salvar as mudanças?" (Salvar, Descartar, Cancelar). Ctrl+S salva.

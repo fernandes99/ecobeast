@@ -1,54 +1,38 @@
 class_name BoardBattleView
 extends RefCounted
-## A luta no tabuleiro como o jogador a vê: o JSON `battle` de
-## /v1/me/board-battle (.specs/board-battle/03-board-api.md). Os hexágonos são
-## Vector2i(q, r), em coordenadas axiais, como no mapa de Explorar zona.
 
-## choose_action, choose_next ou ended.
 var phase: String = ""
-## victory, defeat, fled ou captured; "" enquanto a luta dura.
 var result: String = ""
 var round_number: int = 1
 var can_flee: bool = false
-## O Domador NPC adversário (npc-tamers/04): o id do nome, ou 0 contra selvagem.
 var tamer_name_id: int = 0
-## De onde ele veio: "map" ou "challenge"; vazio contra selvagem.
 var tamer_source: String = ""
 var team: Array[BattleCreature] = []
-## O que resta na Mochila, descontando o que já foi usado na luta.
 var items: Array[InventorySlot] = []
 var board_cells: Array[Vector2i] = []
 var player_zone: Array[Vector2i] = []
 var enemy_zone: Array[Vector2i] = []
 var marks: Array[GroundMark] = []
-## O que falta da rodada; o primeiro joga agora.
 var queue: Array[BoardSpot] = []
-## Por vaga do jogador: o índice na equipe, ou -1 com a vaga vazia.
 var player_actives: Array[int] = []
-## Por vaga: onde está quem ocupa a vaga; vagas fora do tabuleiro não entram.
 var player_cells: Dictionary[int, Vector2i] = {}
 var enemy_cells: Dictionary[int, Vector2i] = {}
-## Por vaga do inimigo: quem está ali; vagas vazias não entram.
 var enemies: Dictionary[int, BattleCreature] = {}
 var enemy_team_size: int = 0
-## No choose_next: as vagas que esperam quem entra, e onde ele pode ficar.
 var pending_positions: Array[int] = []
 var entry_cells: Array[Vector2i] = []
 
 
-## Quem joga agora; null fora do choose_action.
 func current() -> BoardSpot:
 	return queue[0] if phase == "choose_action" and not queue.is_empty() else null
 
 
-## O Ecobeast do jogador na vaga, ou null.
 func player_at(position: int) -> BattleCreature:
 	if position < 0 or position >= player_actives.size() or player_actives[position] < 0:
 		return null
 	return team[player_actives[position]]
 
 
-## Os hexágonos ocupados, dos dois lados.
 func occupied_cells() -> Array[Vector2i]:
 	var cells: Array[Vector2i] = []
 	cells.append_array(player_cells.values())

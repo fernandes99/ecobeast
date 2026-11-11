@@ -1,7 +1,4 @@
 extends Control
-## Tela placeholder (foundation/02, RF-14 e RF-15): título, "Em construção" e
-## Voltar. Parâmetros: {"title": String, "extra": PackedScene (opcional), que
-## entra abaixo do texto}.
 
 var _title: String = ""
 var _extra: PackedScene = null

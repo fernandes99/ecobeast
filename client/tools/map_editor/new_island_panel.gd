@@ -1,10 +1,6 @@
 class_name NewIslandPanel
 extends VBoxContainer
-## Ilha nova, no painel da esquerda do editor (map-editor/02): do zero (um
-## hexágono de um raio) ou pelo gerador (a seed e os parâmetros dele). Gerar mostra
-## a ilha no mapa sem gravar, quantas vezes for preciso; Criar grava.
 
-## Uma ilha para mostrar no mapa, ainda sem gravar.
 signal preview_ready(draft: IslandDraft)
 signal create_requested(draft: IslandDraft)
 signal cancelled
@@ -13,8 +9,6 @@ const DEFAULT_NAME := "Ilha nova"
 const DEFAULT_RADIUS := 20
 const MAX_RADIUS := 80
 const MAX_SEED := 4294967295
-## Os nomes dos parâmetros do gerador, na ordem do formulário. Um parâmetro novo
-## no servidor aparece no fim, com o nome da API.
 const PARAM_LABELS: Dictionary[String, String] = {
 	"tile_count": "Hexágonos",
 	"edge_roughness": "Recorte da borda",
@@ -100,7 +94,6 @@ func _init() -> void:
 	_show_mode()
 
 
-## Os parâmetros do gerador (`{defaults, ranges}` de `GET /v1/editor/map-generator`).
 func set_generator_params(params: Dictionary) -> void:
 	_defaults = DictFields.get_dict(params, "defaults").duplicate()
 	var ranges := DictFields.get_dict(params, "ranges")
@@ -117,12 +110,10 @@ func set_generator_params(params: Dictionary) -> void:
 	_generator_box.add_child(restore)
 
 
-## A chance de detalhe do gerador, para as variantes de uma ilha do zero.
 func detail_chance() -> float:
 	return float(_defaults.get("detail_chance", 0.0))
 
 
-## Volta ao começo, para uma ilha nova de novo.
 func reset() -> void:
 	_preview = null
 	_message.text = ""
@@ -181,7 +172,6 @@ func _create() -> void:
 	create_requested.emit(_preview)
 
 
-## Quem cria avisa o fim, com ou sem erro.
 func finish_create(error: String) -> void:
 	_set_busy(false)
 	_message.text = error
@@ -196,7 +186,6 @@ func _island_name() -> String:
 	return text if not text.is_empty() else DEFAULT_NAME
 
 
-## O número de um campo, ou NAN com a mensagem do que está errado nele.
 func _read(field: EditorNumberField, label: String) -> float:
 	var number := field.value()
 	if is_nan(number):
@@ -252,7 +241,6 @@ func _number(min_value: float, max_value: float, integer: bool, with_slider: boo
 	return number
 
 
-## O nome em cima e o campo embaixo: o painel é estreito.
 func _row(label: String, control: Control) -> VBoxContainer:
 	var row := VBoxContainer.new()
 	row.add_theme_constant_override(&"separation", 2)

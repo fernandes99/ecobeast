@@ -1,6 +1,6 @@
 # Battle screen
 
-> **Legado.** Desde a [board-battle/05](../board-battle/05-board-actions.md), Explorar zona abre a luta no tabuleiro de hexágonos, e nenhuma tela abre esta. O código dela (`res://screens/battle/` e as rotas `/v1/me/battle`, marcadas como legado em `/docs`) fica no repositório até o dono pedir para apagar. Os e2e dela foram apagados em 2026-11-11, a pedido do dono, antes de apagar o resto do código antigo (a `legacy-battle-removal`, no roadmap). Peças daqui, como o `BattleItemsPanel`, o `NextCreaturePanel`, o `CaptureOverlay` e as telas de subir de nível, são usadas pela luta nova.
+> **Apagada.** Desde a [board-battle/05](../board-battle/05-board-actions.md), Explorar zona abre a luta no tabuleiro de hexágonos. A tela `battle`, as rotas `/v1/me/battle` e o laço de turno desta iniciativa foram apagados em 2026-11-11, na [legacy-battle-removal](../legacy-battle-removal/). As peças que a luta nova usa, como o `BattleItemsPanel`, o `NextCreaturePanel`, o `CaptureOverlay` e as telas de subir de nível, ficaram em `res://screens/board_battle/`. Este documento fica como registro.
 
 A batalha que o jogador vê. Tocar em **Explorar zona** no Hub começa uma luta contra um Ecobeast sorteado pelo servidor, e a tela mostra o turno linha a linha, a partir dos eventos do [battle-core](../battle-core/). O jogo só diz o que o jogador quer fazer: quem decide tudo é o servidor.
 

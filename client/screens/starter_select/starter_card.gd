@@ -1,19 +1,11 @@
 class_name StarterCard
 extends TapPanel
-## Cartão de uma espécie na escolha do inicial (visual-theme/03, RF-05 a RF-09):
-## moldura, moeda e cena do Elemento, a arte da espécie, o nome, o Elemento, a
-## descrição e o botão. O cartão inteiro é tocável (TapPanel). As peças ficam em
-## res://assets/ui/elements/<slug>/; um Elemento sem elas mostra o cartão em cor
-## lisa, com a borda na cor do Elemento.
 
 const ELEMENT_ART_PATH := "res://assets/ui/elements/%s/%s"
 const BORDER_WIDTH := 3
-## Distância entre a borda da moldura e o conteúdo.
 const FRAME_PADDING := 7
-## Partes da moldura que não esticam: os cantos e o pé, que tem desenho.
 const FRAME_MARGIN := 30
 const FRAME_BOTTOM_MARGIN := 110
-## Largura de cada ponta do botão; só o meio estica.
 const BUTTON_TIP_WIDTH := 34
 
 var _species: CreatureSpecies

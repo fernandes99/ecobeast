@@ -104,3 +104,7 @@ Feita em 2026-11-10:
 - [x] As ferramentas, o tamanho e o contorno.
 - [x] Desfazer e refazer.
 - [x] Rodar a verificação, dizer o que ficou para o dono e mudar o status aqui e no README.
+
+## Depois
+
+A [terrain-height](../terrain-height/README.md) trocou a ferramenta Forma pela Altura, e Colina e Montanha viraram biomas.

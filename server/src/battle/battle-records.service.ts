@@ -60,7 +60,7 @@ import type { WildCreature } from './battle.store.js';
 const NO_PLAYER = 'Crie seu Domador primeiro.';
 const NO_HEALTHY_CREATURE = 'Cure sua equipe no Refúgio.';
 /** Um passo no cliente leva 360 ms; a diferença é a folga para o relógio. */
-export const MIN_STEP_MS = 300;
+const MIN_STEP_MS = 300;
 
 export interface Team {
   creatures: Combatant[];

@@ -1,14 +1,9 @@
 class_name TerrainSwatch
 extends Button
-## Uma amostra de terreno no painel do editor de ilhas (map-editor/03): um
-## hexágono com a textura do jogo, a altura dele (o paredão, como no mapa) e o
-## nome embaixo, em até duas linhas. A escolhida tem o contorno na cor de destaque.
 
-## O hexágono da arte (64 × 58) desenhado a 3/4.
 const ART_SCALE := 0.75
 const HEX_ART_SIZE := Vector2(64.0, 58.0)
 const OUTLINE_WIDTH := 3.0
-## A altura mostrada não passa disto, em pixels da arte, para a amostra caber.
 const MAX_RISE := 20.0
 const TOP_MARGIN := 4.0
 const LABEL_LINES := 2
@@ -32,11 +27,10 @@ func _init() -> void:
 	custom_minimum_size = Vector2(hex.x + 8.0, TOP_MARGIN + hex.y + MAX_RISE * ART_SCALE + 6.0 + LABEL_LINE_HEIGHT * LABEL_LINES)
 
 
-## A superfície (`temperate`, `hill`…), o nome e o nível de altura do `HexTile`.
-func set_terrain(surface: String, label: String, level: int) -> void:
-	_surface = _load(HexMapView.SURFACE_PATH % surface)
-	_face = _load(HexMapView.SURFACE_PATH % HexMapView.FACE_TEXTURES[level])
-	_rise = minf(HexMapView.LEVEL_HEIGHTS[level] + 4.0, MAX_RISE) if level > 0 else 0.0
+func set_terrain(biome: String, label: String, height: int) -> void:
+	_surface = _load(HexMapView.SURFACE_PATH % biome)
+	_face = _load(HexMapView.SURFACE_PATH % HexMapView.face_texture(biome))
+	_rise = minf(HexMapView.LEVEL_HEIGHTS[height] + 4.0, MAX_RISE) if height > 0 else 0.0
 	_label = label
 	tooltip_text = label
 	queue_redraw()
@@ -51,7 +45,6 @@ func _draw() -> void:
 	var corners: Array[Vector2] = []
 	for corner: Vector2 in HexMapView.HEX_CORNERS:
 		corners.append(top_left + corner * ART_SCALE)
-	# O paredão: as duas bordas de baixo descendo, com o tom de cada lado do mapa.
 	if _rise > 0.0 and _face != null:
 		for edge: int in HexMapView.LOWER_EDGE_CORNERS.size():
 			var pair := HexMapView.LOWER_EDGE_CORNERS[edge]

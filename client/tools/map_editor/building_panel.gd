@@ -1,21 +1,13 @@
 class_name BuildingPanel
 extends VBoxContainer
-## As construções no painel do editor de ilhas (map-editor/04): o tipo que o pincel
-## pinta (Refúgio, Loja, Arena, Casa, do catálogo `building_types`) e a construção
-## escolhida, com o tipo, o tamanho, tirar hexágonos dela e apagá-la.
 
-## Uma mudança no rascunho, já feita, para o desfazer.
 signal edited(step: EditorHistory.Step)
-## A construção escolhida mudou (-1 sem nenhuma).
 signal selection_changed(index: int)
 
 const CHIP_SIZE := Vector2(14.0, 14.0)
 
-## O tipo que o pincel pinta numa construção nova.
 var type_id := 0
-## A construção escolhida, pelo índice em `IslandDraft.buildings`; -1 sem nenhuma.
 var selected := -1
-## O pincel tira hexágonos da construção escolhida, em vez de pintar.
 var removing := false
 
 var _draft: IslandDraft = null
@@ -92,7 +84,6 @@ func set_draft(draft: IslandDraft) -> void:
 	select(-1)
 
 
-## Escolhe uma construção (ou nenhuma, com -1).
 func select(index: int) -> void:
 	if _draft == null or index >= _draft.buildings.size():
 		index = -1
@@ -102,7 +93,6 @@ func select(index: int) -> void:
 	selection_changed.emit(selected)
 
 
-## Mostra o tipo escolhido e a construção escolhida como estão no rascunho.
 func refresh() -> void:
 	for id: int in _type_buttons:
 		_type_buttons[id].set_pressed_no_signal(id == type_id)
@@ -158,7 +148,6 @@ func _type_name(id: int) -> String:
 	return "?"
 
 
-## Um quadradinho de cor, para ícone de botão e de lista.
 static func color_chip(color: Color, chip_size: Vector2i = Vector2i(CHIP_SIZE)) -> Texture2D:
 	var image := Image.create(chip_size.x, chip_size.y, false, Image.FORMAT_RGBA8)
 	image.fill(color)

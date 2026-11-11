@@ -1,26 +1,16 @@
 class_name ActionTile
 extends TapPanel
-## Card de uma ação do Hub (visual-theme/02, RF-13 e RF-14): a arte em cima e,
-## embaixo, título e subtítulo no fundo da cor do corpo. A arte é
-## res://assets/ui/actions/<id>.webp se existir (quadrada, recortada no centro
-## para caber na área), com a base se fundindo na cor do corpo; senão, um
-## gradiente da cor da arte com o ícone da ação. Uma ação ainda sem arte pode
-## usar a de outra (`art_id`).
 
 const ART_PATH := "res://assets/ui/actions/%s.webp"
 const ICON_PATH := "res://ui/icons/%s.svg"
 const CORNER_RADIUS := 16
 const BORDER_WIDTH := 2
-## Altura da área da arte em relação à largura do card.
 const ART_HEIGHT_RATIO := 0.8
-## Quanto a borda clareia em relação à cor do corpo.
 const BORDER_LIGHTEN := 0.25
-## Quanto o gradiente da arte escurece embaixo.
 const ART_DARKEN := 0.3
 const SUBTITLE_ALPHA := 0.75
 
 var _id: StringName = &""
-## A arte e o ícone de reserva, de outra ação, para quando esta não tem os seus.
 var _art_id: StringName = &""
 var _title := ""
 var _subtitle := ""
@@ -39,13 +29,11 @@ func _ready() -> void:
 	_refresh()
 
 
-# A largura vem da grade; a altura da arte acompanha a largura.
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_RESIZED and is_node_ready():
 		_art.custom_minimum_size.y = roundf(size.x * ART_HEIGHT_RATIO)
 
 
-## Pode ser chamado antes ou depois de o componente entrar na árvore.
 func setup(id: StringName, title: String, subtitle: String, art_color: Color, body_color: Color, art_id: StringName = &"") -> void:
 	_id = id
 	_art_id = art_id if art_id != &"" else id
@@ -66,8 +54,6 @@ func _refresh() -> void:
 	style.set_content_margin_all(BORDER_WIDTH)
 	add_theme_stylebox_override(&"panel", style)
 
-	# O formato da área da arte (cantos de cima arredondados) recorta a imagem
-	# ou o gradiente que ficam dentro dela (clip_children).
 	var art_shape := StyleBoxFlat.new()
 	art_shape.bg_color = _art_color
 	art_shape.corner_radius_top_left = CORNER_RADIUS - BORDER_WIDTH
@@ -94,7 +80,6 @@ func _refresh() -> void:
 	_subtitle_label.add_theme_color_override(&"font_color", subtitle_color)
 
 
-## O arquivo da ação ou, sem ele, o da ação de reserva; vazio sem nenhum dos dois.
 func _first_existing(pattern: String) -> String:
 	for id: StringName in [_id, _art_id]:
 		if ResourceLoader.exists(pattern % id):
@@ -113,7 +98,6 @@ func _art_gradient() -> GradientTexture2D:
 	return texture
 
 
-# Faixa na base da arte, da cor do corpo transparente até a cor do corpo.
 func _fade_gradient() -> GradientTexture2D:
 	var clear := _body_color
 	clear.a = 0.0

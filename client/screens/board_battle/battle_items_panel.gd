@@ -1,14 +1,11 @@
 class_name BattleItemsPanel
 extends Control
-## Painel de itens da batalha (inventory-shop/04, RF-14 a RF-17; capture/02):
-## primeiro o item e, se houver mais de um Ecobeast, o alvo. A Esfera não pede
-## alvo. Só exibe e repassa o toque: quem manda a ação é a tela.
 
 signal chosen(item_id: int, team_index: int)
 signal capture_chosen(item_id: int)
 
 const ItemRowScene := preload("res://screens/bag/bag_item_row.tscn")
-const TargetRowScene := preload("res://screens/battle/next_creature_row.tscn")
+const TargetRowScene := preload("res://screens/board_battle/next_creature_row.tscn")
 
 const ITEMS_TITLE := "Usar um item"
 const TARGET_TITLE := "Usar %s em:"
@@ -16,7 +13,6 @@ const TARGET_TITLE := "Usar %s em:"
 var _slots: Array[InventorySlot] = []
 var _team: Array[BattleCreature] = []
 var _names: Array[String] = []
-## Falso contra um Domador NPC: as Esferas não aparecem (npc-tamers/04).
 var _allow_capture: bool = true
 
 @onready var _dim: ColorRect = %Dim
@@ -33,8 +29,6 @@ func _ready() -> void:
 	_close_button.pressed.connect(go_back)
 
 
-## `names`: o nome de exibição de cada criatura de `team`, na mesma ordem.
-## `allow_capture`: falso esconde as Esferas.
 func open(slots: Array[InventorySlot], team: Array[BattleCreature], names: Array[String], allow_capture: bool = true) -> void:
 	_allow_capture = allow_capture
 	_slots = slots.duplicate()
@@ -50,7 +44,6 @@ func close() -> void:
 	hide()
 
 
-## Da escolha do alvo volta aos itens; dos itens, fecha o painel.
 func go_back() -> void:
 	if _target_list.visible:
 		_show_items()

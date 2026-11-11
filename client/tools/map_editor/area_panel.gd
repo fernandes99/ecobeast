@@ -1,19 +1,10 @@
 class_name AreaPanel
 extends VBoxContainer
-## As áreas de Ecobeasts no painel do editor de ilhas (map-editor/04): a lista de
-## áreas da ilha e a escolhida, com o nome, a cor e as espécies que aparecem nela,
-## cada uma com o peso no sorteio e os níveis mínimo e máximo (fixos, por pedido do
-## dono). O pincel pinta os hexágonos da área escolhida.
 
-## Uma mudança no rascunho, já feita, para o desfazer. Com `merge`, ela se junta
-## à anterior de mesmo nome (digitar num campo vira um passo só).
 signal edited(step: EditorHistory.Step, merge: bool)
-## Pede para apagar uma área; quem pergunta chama `delete_area`.
 signal delete_requested(key: int, area_name: String)
-## A área escolhida mudou (0 sem nenhuma).
 signal selection_changed(key: int)
 
-## O que uma espécie nova na área começa tendo. _A revisar._
 const DEFAULT_WEIGHT := 10
 const DEFAULT_MIN_LEVEL := 2
 const DEFAULT_MAX_LEVEL := 5
@@ -21,13 +12,10 @@ const MAX_LEVEL := 100
 const MAX_WEIGHT := 1000
 const NUMBER_WIDTH := 52.0
 const MAX_RESULTS := 6
-## Quantos Ecobeasts nascem na área a cada entrada (islands/01): a faixa do servidor
-## e o número de uma área nova (_a revisar_).
 const MIN_SPAWNS := 1
 const MAX_SPAWNS := 200
 const DEFAULT_SPAWNS := 10
 
-## A área escolhida, pela `key`; 0 sem nenhuma.
 var selected_key := 0
 
 var _draft: IslandDraft = null
@@ -72,7 +60,6 @@ func _init() -> void:
 	_name_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_name_edit.text_changed.connect(_on_name_changed)
 	name_row.add_child(_name_edit)
-	# A cor sai de uma paleta pequena: as cores de UiPalette.MAP_AREA_COLORS.
 	_color_button = Button.new()
 	_color_button.focus_mode = Control.FOCUS_NONE
 	_color_button.tooltip_text = "Cor da área no editor"
@@ -150,7 +137,6 @@ func select(key: int) -> void:
 	selection_changed.emit(selected_key)
 
 
-## A lista e a área escolhida como estão no rascunho.
 func refresh() -> void:
 	_list.clear()
 	_keys.clear()
@@ -186,7 +172,6 @@ func refresh() -> void:
 	_rebuild_species(species)
 
 
-## Tira a área do rascunho e dos hexágonos dela.
 func delete_area(key: int) -> void:
 	if _draft == null or _draft.area_by_key(key).is_empty():
 		return
@@ -237,7 +222,6 @@ func _on_color_changed(color: Color) -> void:
 	edited.emit(step, true)
 
 
-## O botão da cor é pintado com ela.
 func _paint_color_button(color: Color) -> void:
 	for state: StringName in [&"normal", &"hover", &"pressed"]:
 		var style := StyleBoxFlat.new()
@@ -308,8 +292,6 @@ func _remove_species(species_id: int) -> void:
 	edited.emit(step, false)
 
 
-## A quantidade de Ecobeasts da área. Fora da faixa, o campo fica vermelho e o
-## rascunho não muda, como os números das espécies.
 func _on_spawn_count_changed() -> void:
 	var value := _spawn_field.value()
 	_spawn_field.mark_invalid(is_nan(value))
@@ -322,8 +304,6 @@ func _on_spawn_count_changed() -> void:
 	edited.emit(step, true)
 
 
-## Um número de uma espécie da área: o peso ou um dos níveis. Fora da faixa, o
-## campo fica vermelho e o rascunho não muda.
 func _on_species_number(field: EditorNumberField, species_id: int, key: String) -> void:
 	var value := field.value()
 	field.mark_invalid(is_nan(value))
@@ -343,7 +323,6 @@ func _rebuild_species(species: Array) -> void:
 	for child: Node in _species_box.get_children():
 		_species_box.remove_child(child)
 		child.queue_free()
-	# Cada espécie em duas linhas: o nome e o tirar; embaixo, o peso e os níveis.
 	for entry: Variant in species:
 		var species_id := int(entry.get("species_id", 0))
 		var card := PanelContainer.new()

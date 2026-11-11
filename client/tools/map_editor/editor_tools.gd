@@ -1,48 +1,35 @@
 class_name EditorTools
 extends VBoxContainer
-## Os pincéis do editor de ilhas (map-editor/03 e 04): o painel com as
-## ferramentas, o bioma, a forma, as construções, as áreas e o tamanho, e o que
-## cada pincelada muda no rascunho. Uma pincelada vai do apertar ao soltar do
-## botão e vira um passo do desfazer (`EditorHistory.Step`). O botão direito faz a
-## ação secundária: escolher uma construção, ou tirar hexágonos de uma área.
 
-## Algo para a barra de cima, como o limite de hexágonos.
 signal message(text: String)
-## A ferramenta ou o tamanho mudou: o contorno do pincel muda junto.
 signal brush_changed
-## Os painéis de construção e de área mudaram o rascunho, fora de uma pincelada.
 signal edited(step: EditorHistory.Step, merge: bool)
 
-enum Tool { BIOME, SHAPE, ADD, REMOVE, START, BUILDING, AREA }
+enum Tool { BIOME, HEIGHT, ADD, REMOVE, START, BUILDING, AREA }
 
-const TOOL_NAMES: Array[String] = ["Bioma", "Forma", "Pôr hexágono", "Tirar hexágono", "Chegada", "Construção", "Área"]
-## O que cada ferramenta faz, embaixo dos botões.
+const TOOL_NAMES: Array[String] = ["Bioma", "Altura", "Pôr hexágono", "Tirar hexágono", "Chegada", "Construção", "Área"]
 const TOOL_HINTS: Array[String] = [
 	"Troca o bioma dos hexágonos que já existem.",
-	"Troca a forma dos hexágonos que já existem: plano, colina ou montanha.",
-	"Cria hexágonos onde não há, com o bioma e a forma escolhidos abaixo.",
+	"Troca a altura dos hexágonos que já existem.",
+	"Cria hexágonos onde não há, com o bioma e a altura escolhidos abaixo.",
 	"Apaga hexágonos. A chegada nunca sai.",
 	"Move a chegada (a bandeira) para o hexágono clicado.",
 	"Pinta uma construção nova, ou aumenta a escolhida. Botão direito escolhe uma construção.",
 	"Pinta a área escolhida. Botão direito tira os hexágonos de qualquer área.",
 ]
 const NO_AREA_MESSAGE := "Crie ou escolha uma área no painel antes de pintar."
-## Os biomas de terreno, na ordem do painel; o nome vem do catálogo.
-const BIOMES: Array[String] = ["temperate", "boreal", "stone", "wshallow", "wdeep"]
-const SHAPES: Array[String] = ["flat", "hill", "mont"]
-const SHAPE_NAMES: Dictionary[String, String] = {"flat": "Plano", "hill": "Colina", "mont": "Montanha"}
-## A altura de cada forma na amostra, como `HexTile.level()` (o plano fica na
-## altura do bioma).
-const SHAPE_LEVELS: Dictionary[String, int] = {"hill": 2, "mont": 4}
+const BIOMES: Array[String] = ["temperate", "boreal", "stone", "hill", "mountain", "wshallow", "wdeep"]
+const BIOME_SWATCH_HEIGHT := 1
 const MAX_RADIUS := 10
 const SWATCH_WIDTH := 64.0
 const SWATCH_COLUMNS := 5
 const TITLE_SIZE := 13
-## Os nomes de reserva, se o catálogo não tiver o bioma.
 const BIOME_NAMES: Dictionary[String, String] = {
 	"temperate": "Planície",
 	"boreal": "Boreal",
 	"stone": "Pedra",
+	"hill": "Colina",
+	"mountain": "Montanha",
 	"wshallow": "Água rasa",
 	"wdeep": "Água profunda",
 }
@@ -50,16 +37,14 @@ const FULL_MESSAGE := "A ilha chegou a 20.000 hexágonos."
 
 var tool := Tool.BIOME
 var biome := "temperate"
-var shape := "flat"
-## 0 é um hexágono só.
+var height := IslandDraft.BLANK_HEIGHT
 var radius := 0
-## A chance de detalhe do gerador, para sortear a variante como ele.
 var detail_chance := 0.0
 
 var _tool_buttons: Array[Button] = []
 var _tool_hint: Label
 var _biome_buttons: Dictionary[String, TerrainSwatch] = {}
-var _shape_buttons: Dictionary[String, TerrainSwatch] = {}
+var _height_buttons: Array[TerrainSwatch] = []
 var _radius_value: Label
 var _radius_slider: HSlider
 var _rng := RandomNumberGenerator.new()
@@ -70,11 +55,9 @@ var _area_section: Control
 var building_panel: BuildingPanel
 var area_panel: AreaPanel
 
-## A pincelada em andamento.
 var _step: EditorHistory.Step = null
 var _full_warned := false
 var _secondary := false
-## A construção que a pincelada pinta ou tira; -2 até o primeiro hexágono.
 var _stroke_building := -2
 
 
@@ -106,20 +89,20 @@ func _init() -> void:
 	var biome_group := ButtonGroup.new()
 	for slug: String in BIOMES:
 		var swatch := _swatch(biome_group)
-		swatch.set_terrain(slug, _biome_name(slug), _flat_level(slug))
+		swatch.set_terrain(slug, _biome_name(slug), BIOME_SWATCH_HEIGHT)
 		swatch.pressed.connect(_pick_biome.bind(slug))
 		biomes_grid.add_child(swatch)
 		_biome_buttons[slug] = swatch
 
-	var shapes_box := _section("Forma")
-	_terrain_sections.append(shapes_box.get_parent())
-	var shapes_grid := _swatch_grid(shapes_box)
-	var shape_group := ButtonGroup.new()
-	for slug: String in SHAPES:
-		var swatch := _swatch(shape_group)
-		swatch.pressed.connect(_pick_shape.bind(slug))
-		shapes_grid.add_child(swatch)
-		_shape_buttons[slug] = swatch
+	var heights_box := _section("Altura")
+	_terrain_sections.append(heights_box.get_parent())
+	var heights_grid := _swatch_grid(heights_box)
+	var height_group := ButtonGroup.new()
+	for value: int in HexTile.MAX_HEIGHT + 1:
+		var swatch := _swatch(height_group)
+		swatch.pressed.connect(_pick_height.bind(value))
+		heights_grid.add_child(swatch)
+		_height_buttons.append(swatch)
 
 	var buildings_box := _section("Construção")
 	_building_section = buildings_box.get_parent()
@@ -172,7 +155,6 @@ func brush_radius() -> int:
 	return 0 if tool == Tool.START else radius
 
 
-## Os hexágonos que o pincel pega em volta de `center`, existam ou não.
 func brush_coords(center: Vector2i) -> Array[Vector2i]:
 	var reach := brush_radius()
 	var coords: Array[Vector2i] = []
@@ -182,20 +164,16 @@ func brush_coords(center: Vector2i) -> Array[Vector2i]:
 	return coords
 
 
-## A ilha aberta, para os painéis de construção e de área.
 func set_draft(draft: IslandDraft) -> void:
 	building_panel.set_draft(draft)
 	area_panel.set_draft(draft)
 
 
-## As construções e as áreas mudaram por fora (desfazer, refazer): os painéis
-## mostram o rascunho de novo.
 func refresh_panels() -> void:
 	building_panel.refresh()
 	area_panel.refresh()
 
 
-## A construção e a área mudam a camada de cor, e não o terreno.
 func paints_marks() -> bool:
 	return tool == Tool.BUILDING or tool == Tool.AREA
 
@@ -210,7 +188,6 @@ func begin_stroke(draft: IslandDraft, secondary: bool = false) -> void:
 		_step.buildings_before = draft.buildings.duplicate(true)
 
 
-## Pinta em volta de `center` e devolve os hexágonos que mudaram.
 func paint(draft: IslandDraft, center: Vector2i) -> Array[Vector2i]:
 	if _step == null:
 		begin_stroke(draft)
@@ -239,7 +216,6 @@ func paint(draft: IslandDraft, center: Vector2i) -> Array[Vector2i]:
 	return changed
 
 
-## Fecha a pincelada: o passo do desfazer, ou null se nada mudou.
 func end_stroke(draft: IslandDraft) -> EditorHistory.Step:
 	var step := _step
 	_step = null
@@ -267,7 +243,6 @@ func end_stroke(draft: IslandDraft) -> EditorHistory.Step:
 	return null if step.is_empty() else step
 
 
-## Um hexágono sob o pincel; devolve se mudou.
 func _change(draft: IslandDraft, coord: Vector2i) -> bool:
 	var tile: HexTile = draft.tiles.get(coord)
 	match tool:
@@ -275,12 +250,13 @@ func _change(draft: IslandDraft, coord: Vector2i) -> bool:
 			if tile == null or tile.biome == biome:
 				return false
 			tile.biome = biome
+			if tile.variant > IslandDraft.max_variant(biome):
+				tile.variant = IslandDraft.roll_variant(biome, detail_chance, _rng)
 			return true
-		Tool.SHAPE:
-			if tile == null or tile.shape == shape:
+		Tool.HEIGHT:
+			if tile == null or tile.height == height:
 				return false
-			tile.shape = shape
-			tile.variant = IslandDraft.roll_variant(shape, detail_chance, _rng)
+			tile.height = height
 			return true
 		Tool.ADD:
 			if tile != null:
@@ -290,7 +266,7 @@ func _change(draft: IslandDraft, coord: Vector2i) -> bool:
 					_full_warned = true
 					message.emit(FULL_MESSAGE)
 				return false
-			return draft.add_tile(coord, biome, shape, IslandDraft.roll_variant(shape, detail_chance, _rng))
+			return draft.add_tile(coord, biome, height, IslandDraft.roll_variant(biome, detail_chance, _rng))
 		Tool.REMOVE:
 			if tile == null or coord == draft.start:
 				return false
@@ -314,9 +290,6 @@ func _change(draft: IslandDraft, coord: Vector2i) -> bool:
 	return false
 
 
-## A construção: o botão direito escolhe; o esquerdo cria uma nova num hexágono
-## livre, ou aumenta a construção de onde a pincelada começou. Com "Tirar
-## hexágonos", o pincel tira só da construção escolhida.
 func _paint_building(draft: IslandDraft, center: Vector2i) -> Array[Vector2i]:
 	var changed: Array[Vector2i] = []
 	if _secondary:
@@ -351,8 +324,6 @@ func _paint_building(draft: IslandDraft, center: Vector2i) -> Array[Vector2i]:
 	return changed
 
 
-## Onde a pincelada de construção começa: na escolhida, tirando; numa construção,
-## aumentando-a; num hexágono livre, uma construção nova.
 func _stroke_target(draft: IslandDraft, center: Vector2i) -> int:
 	if building_panel.removing:
 		return building_panel.selected
@@ -373,17 +344,17 @@ func _pick_biome(slug: String) -> void:
 		set_tool(Tool.BIOME)
 
 
-func _pick_shape(slug: String) -> void:
-	shape = slug
+func _pick_height(value: int) -> void:
+	height = value
 	if tool != Tool.ADD:
-		set_tool(Tool.SHAPE)
+		set_tool(Tool.HEIGHT)
 
 
 func _refresh() -> void:
 	for index: int in _tool_buttons.size():
 		_tool_buttons[index].set_pressed_no_signal(index == tool)
 	_tool_hint.text = TOOL_HINTS[tool]
-	var terrain := tool == Tool.BIOME or tool == Tool.SHAPE or tool == Tool.ADD
+	var terrain := tool == Tool.BIOME or tool == Tool.HEIGHT or tool == Tool.ADD
 	for section: Control in _terrain_sections:
 		section.visible = terrain
 	_building_section.visible = tool == Tool.BUILDING
@@ -392,21 +363,11 @@ func _refresh() -> void:
 	for slug: String in _biome_buttons:
 		_biome_buttons[slug].set_pressed_no_signal(slug == biome)
 		_biome_buttons[slug].queue_redraw()
-	for slug: String in _shape_buttons:
-		var level: int = SHAPE_LEVELS.get(slug, _flat_level(biome))
-		var surface := biome if slug == "flat" else slug
-		_shape_buttons[slug].set_terrain(surface, SHAPE_NAMES[slug], level)
-		_shape_buttons[slug].set_pressed_no_signal(slug == shape)
+	for value: int in _height_buttons.size():
+		_height_buttons[value].set_terrain(biome, "Altura %d" % value, value)
+		_height_buttons[value].set_pressed_no_signal(value == height)
 	_radius_slider.set_value_no_signal(radius)
 	_radius_value.text = "1 hexágono" if radius == 0 else "raio %d  ·  %d hexágonos" % [radius, 3 * radius * (radius + 1) + 1]
-
-
-## O plano de um bioma: a água fica embaixo, a pedra mais alta, como no jogo.
-static func _flat_level(slug: String) -> int:
-	var tile := HexTile.new()
-	tile.biome = slug
-	tile.shape = "flat"
-	return tile.level()
 
 
 func _biome_name(slug: String) -> String:
@@ -416,7 +377,6 @@ func _biome_name(slug: String) -> String:
 	return BIOME_NAMES.get(slug, slug)
 
 
-## Um bloco do painel, com o título pequeno em cima; devolve onde pôr o conteúdo.
 func _section(title: String) -> VBoxContainer:
 	var panel := PanelContainer.new()
 	panel.theme_type_variation = &"SectionPanel"
@@ -431,7 +391,6 @@ func _section(title: String) -> VBoxContainer:
 	return box
 
 
-## O título pequeno de um bloco do painel, também usado pela lista de ilhas.
 static func section_title(label: Label) -> void:
 	label.add_theme_color_override(&"font_color", UiPalette.TEXT_SECONDARY)
 	label.add_theme_font_size_override(&"font_size", TITLE_SIZE)
@@ -453,8 +412,6 @@ func _swatch(group: ButtonGroup) -> TerrainSwatch:
 	return swatch
 
 
-## Um botão de ferramenta: escuro, e azul com borda clara quando escolhido. Sem
-## grupo, ele liga e desliga sozinho.
 static func tool_button(text: String, group: ButtonGroup) -> Button:
 	var button := Button.new()
 	button.text = text

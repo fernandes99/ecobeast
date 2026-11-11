@@ -1,11 +1,8 @@
 class_name CodexCell
 extends TapPanel
-## Uma espécie na grade do Bestiário (codex/02, RF-05): colorida se capturada,
-## sombra se só vista, e "???" se nunca vista.
 
 const NUMBER_TEXT := "#%03d"
 const UNKNOWN_TEXT := "???"
-## A marca de capturado é a arte da Esfera de Vínculo.
 const CAUGHT_MARK_PATH := "res://assets/items/bond_sphere.png"
 
 var species_id: int = 0

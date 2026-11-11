@@ -1,9 +1,5 @@
 class_name BoardCreatureCard
 extends PanelContainer
-## O cartão de um lado da luta no tabuleiro (board-battle/06, RF-05 e RF-06): o
-## retrato, o nome, o nível numa pílula, os Elementos e o HP, no painel do tema da
-## luta (board-battle/10). O do selvagem fica em cima, e o do jogador embaixo do
-## tabuleiro. Monta os nós no código: só exibe.
 
 const PortraitScene := preload("res://ui/components/creature_portrait.tscn")
 const HpBarScene := preload("res://ui/components/hp_bar.tscn")

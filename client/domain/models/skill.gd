@@ -1,6 +1,5 @@
 class_name Skill
 extends RefCounted
-## Uma Técnica (tabela skills), com seus efeitos na ordem de aplicação.
 
 var id: int
 var slug: String
@@ -18,16 +17,12 @@ var skill_target_id: int
 var makes_contact: bool
 var min_hits: int
 var max_hits: int
-## Forma da área no tabuleiro: "single" (um hexágono a até range) ou "line".
 var area_shape: String = "single"
 ## Alcance em hexágonos, de 1 a 6 (coluna range). "single" com 1 é o corpo a
 ## corpo. Não se chama range para não esconder a função range() do GDScript.
 var area_range: int = 1
-## Só na "line": atravessa os inimigos em vez de parar no primeiro.
 var pierces: bool = false
-## A marca que fica no chão, ou -1 sem marca.
 var ground_effect_id: int = -1
-## Por quantas vezes da fila a marca fica; 0 sem marca.
 var ground_turns: int = 0
 var effects: Array[SkillEffect] = []
 

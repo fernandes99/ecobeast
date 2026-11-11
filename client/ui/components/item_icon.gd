@@ -1,11 +1,7 @@
 class_name ItemIcon
 extends Control
-## A imagem de um item (inventory-shop/02, RF-19): o arquivo, se existir em
-## res://assets/items/<slug>.png, ou uma forma provisória — círculo na cor da
-## categoria, com a inicial do nome.
 
 const SPRITE_PATH := "res://assets/items/%s.png"
-## Tamanho da inicial em relação ao ícone.
 const INITIAL_SCALE := 0.45
 
 @export var icon_size: int = 96
@@ -28,7 +24,6 @@ func _draw() -> void:
 		draw_circle(size / 2.0, minf(size.x, size.y) / 2.0, _fill_color, true, -1.0, true)
 
 
-## Pode ser chamado antes ou depois de o componente entrar na árvore.
 func set_item(item: Item) -> void:
 	_item = item
 	if is_node_ready():

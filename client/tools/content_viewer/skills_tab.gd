@@ -1,11 +1,5 @@
 class_name SkillsTab
 extends ListDetail
-## A aba Técnicas (content-viewer/02, RF-01 e RF-02): a lista pelo `id`, com quantos
-## dos 3 arquivos (ícone, efeito e som) existem, e o detalhe com os dados, a marca no
-## chão, os efeitos, quem aprende e os arquivos tocando.
-##
-## Os dados saem das linhas do catálogo, e não do modelo `Skill`: a linha diz o que
-## está vazio (o poder de uma Técnica de suporte), e a tela mostra "—".
 
 const ICON_BOX := Vector2(104, 104)
 const LEVEL_UP := "level_up"
@@ -46,7 +40,6 @@ func _build_detail(id: int, box: VBoxContainer) -> void:
 		_effects(effects, ContentViewer.block(box, "Efeitos"))
 	_learners(id, ContentViewer.block(box, "Quem aprende"))
 	var row := ContentViewer.flow(14)
-	# Os opcionais, como o projétil, vêm depois e não contam no que falta (content-viewer/05).
 	for entry: ContentFiles.Entry in files + ContentFiles.skill_optional_files(skill["slug"]):
 		row.add_child(FilePreview.create(entry))
 	ContentViewer.block(box, "Arquivos").add_child(row)
@@ -113,9 +106,6 @@ func _effects_of(skill_id: int) -> Array[Dictionary]:
 	return effects
 
 
-## "Alterar atributo · 100% · Inimigo · Ataque −1": o tipo, a chance, o alvo e os
-## campos preenchidos da linha.
-## O Estado de um efeito vira link para a aba Estados (content-viewer/03, RF-08).
 func _effects(effects: Array[Dictionary], box: VBoxContainer) -> void:
 	for effect: Dictionary in effects:
 		if effect.get("status_condition_id") == null:
@@ -186,7 +176,6 @@ func _learners(skill_id: int, box: VBoxContainer) -> void:
 		grid.add_child(ContentViewer.text(when, 0, UiPalette.TEXT_SECONDARY))
 
 
-## Pares de nome e valor em colunas.
 func _grid(lines: Array, columns: int) -> GridContainer:
 	var grid := GridContainer.new()
 	grid.columns = columns * 2
@@ -198,7 +187,6 @@ func _grid(lines: Array, columns: int) -> GridContainer:
 	return grid
 
 
-## Poder 0 é uma Técnica sem dano (de suporte): aparece "—", como um valor vazio.
 func _power_text(power: Variant) -> String:
 	if power == null or int(power) <= 0:
 		return ContentViewer.EMPTY

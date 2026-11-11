@@ -1,11 +1,6 @@
 class_name NicknamePanel
 extends Control
-## Painel do apelido (creature-details/02, RF-13 a RF-16). Só exibe e repassa
-## toques: quem chama o Session é a tela. Fica no terço de cima, para o teclado
-## do celular não o cobrir.
 
-## O jogador tocou em "Salvar". O texto vai como foi digitado: quem decide é o
-## servidor.
 signal save_pressed(nickname: String)
 
 const SAVE_TEXT := "Salvar"
@@ -39,7 +34,6 @@ func open(current: String) -> void:
 	_edit.grab_focus()
 
 
-## Fecha sem salvar. Enquanto o apelido está sendo enviado, não fecha.
 func close() -> void:
 	if not _busy:
 		_edit.release_focus()
@@ -59,8 +53,6 @@ func show_error(message: String) -> void:
 	_message.show()
 
 
-## Vazio vale: remove o apelido. Fora isso, a mesma regra do nome do Domador,
-## só para habilitar o botão na hora.
 func _update_save() -> void:
 	var nickname := Player.normalize_name(_edit.text)
 	_save_button.disabled = _busy or not (nickname.is_empty() or Player.is_valid_name(nickname))

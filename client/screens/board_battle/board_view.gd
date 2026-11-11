@@ -1,79 +1,50 @@
 class_name BoardView
 extends Control
-## O tabuleiro da luta (board-battle/04 e 06): os hexágonos, as marcas no chão,
-## o que está aceso e os Ecobeasts. Só desenha e conta toques: quem decide é o
-## servidor, e quem pede é a tela.
-##
-## Um nó (Node) é cada peça da cena. Este é um Control com, na ordem de desenho:
-## o chão do mapa de Explorar (um HexMapView, board-battle/08), que cobre a tela
-## inteira, um nó que desenha o limite do tabuleiro, as marcas e o que está aceso, e
-## um nó por Ecobeast, com a sombra, o sprite e a barra.
 
 signal cell_tapped(cell: Vector2i)
 
 const HpBarScene := preload("res://ui/components/hp_bar.tscn")
 
-## As proporções do hexágono do mapa (wild-battle/architecture.md), em 1,5×.
 const HEX_WIDTH := 96.0
 const HEX_HEIGHT := 87.0
 const STEP_X := 96.0
 const STEP_Y := 63.0
 const ROW_SHIFT := 48.0
-## O Ecobeast que ainda não andou: parado, olha para o adversário (board-battle/17).
 const NO_FACING := -1
-## Cantos a partir do canto de cima à esquerda, no sentido do relógio.
 const CORNERS: Array[Vector2] = [
 	Vector2(48, 0), Vector2(96, 24), Vector2(96, 63),
 	Vector2(48, 87), Vector2(0, 63), Vector2(0, 24),
 ]
-## O chão é o do mapa (board-battle/08): o hexágono dele, de 64 × 58 pixels da arte,
-## ampliado até o do tabuleiro, na mesma grade axial.
 const GROUND_SCALE := HEX_WIDTH / HexMapView.TILE_SIZE.x
-## Sem o hexágono do Domador, como na luta de teste sem mapa.
 const DEFAULT_BIOME := "temperate"
-const DEFAULT_SHAPE := "flat"
-## No tabuleiro e na volta dele, só as decorações baixas: árvores, arbustos e rochas
-## cobririam os Ecobeasts. Mais longe, todas as do bioma.
+const DEFAULT_HEIGHT := 1
 const LOW_DECORATIONS: Array[String] = ["tuft", "flowers", "pebbles", "fern", "moss", "dry_tuft"]
 const LOW_DECORATION_DISTANCE := 1
-## O chão passa da tela por estes hexágonos, para a borda do mapa nunca aparecer.
 const COVER_MARGIN := 2
-## Mais que isso de hexágonos por lado é uma conta errada, não uma tela.
 const MAX_COVER_CELLS := 64
 const OUTLINE_WIDTH := 3.0
-## O que está aceso fica um pouco para dentro do contorno do chão.
 const HEX_GAP := 3.0
 const LIT_BORDER_WIDTH := 3.0
 const ACTIVE_WIDTH := 4.0
 const GLOW_WIDTH := 12.0
 const GLOW_ALPHA := 0.35
 
-## As folhas da luta (board-battle/07) aparecem sem ampliar: 1 pixel da arte vale 1
-## pixel do tabuleiro, e o tabuleiro inteiro é ampliado para caber. A revisar.
 const BATTLE_SPRITE_SCALE := 1.0
-## Sem elas, o sprite do tabuleiro (`board.png`, gerado do front.png por
-## tools/board_sprites.gd) aparece 2× maior, sem filtro. A revisar.
 const BOARD_SPRITE_PATH := "res://assets/creatures/%s/board.png"
 const FRONT_PATH := "res://assets/creatures/%s/front.png"
 const SPRITE_SCALE := 2.0
-## Sem board.png, o front.png fica nesta altura.
 const FALLBACK_HEIGHT := 80.0
-## Onde ficam os pés: um pouco abaixo do centro do hexágono.
 const FEET_Y := HEX_HEIGHT * 0.2
 const SHADOW_COLOR := Color(0, 0, 0, 0.35)
 const SHADOW_FLATTEN := 0.32
-## Respirar: o corpo estica e encolhe de leve, preso nos pés.
 const BREATH_SECONDS := 1.6
 const BREATH_STRETCH := 0.035
-## Andar: um pulinho por hexágono.
 const STEP_SECONDS := 0.34
 const HOP_HEIGHT := 12.0
 const BAR_HEIGHT := 8
-## O espaço entre os ícones de estado e a barra de vida (board-battle/16).
 const STATUS_GAP := 3.0
 const BAR_WIDTH := HEX_WIDTH * 0.7
 const NUMBER_FONT_SIZE := 34
-## O número do dano sobe e ondula de um lado para o outro enquanto some (board-battle/09).
 const NUMBER_RISE := 50.0
 ## O dono achou 1,2 s rápido demais: agora são 2 s, e o número só começa a sumir
 ## depois da metade do caminho.
@@ -81,45 +52,31 @@ const NUMBER_SECONDS := 2.0
 const NUMBER_FADE_FROM := 0.5
 const NUMBER_SWAY := 8.0
 const NUMBER_SWAYS := 2.0
-## O sinal de stat ou de estado (board-battle/12): o texto menor que o número, por ser
-## mais longo, e as setas desenhadas, porque a fonte não tem nenhuma.
 const SIGN_FONT_SIZE := 26
 const SIGN_ARROW_WIDTH := 16.0
 const SIGN_ARROW_HEIGHT := 14.0
 const SIGN_ARROW_GAP := 2.0
 const SIGN_OUTLINE := 6
-## Quem ataca treme de lado, como se tomasse impulso (board-battle/09). A revisar.
 const ATTACK_SHAKE_SECONDS := 0.25
 const ATTACK_SHAKE := 3.0
-## Quem é atingido treme mais e pisca.
 const HIT_SECONDS := 0.35
 const HIT_SHAKE := 4.0
 const HIT_BLINK_SECONDS := 0.07
 const HIT_BLINK_ALPHA := 0.25
-## Quantas idas e vindas cabem em cada tremida.
 const SHAKES := 4
-## O selvagem derrotado some de vez e, no lugar dele, uma moeda sobe girando e some
-## (board-battle/09). A revisar.
 const VANISH_SECONDS := 0.3
 const COIN_PATH := "res://ui/icons/coin.svg"
 const COIN_SIZE := 40.0
 const COIN_RISE := 70.0
 const COIN_SECONDS := 1.1
 const COIN_SPINS := 3.0
-## A moeda só começa a sumir depois deste ponto da subida.
 const COIN_FADE_FROM := 0.55
-## O efeito da Técnica: um quadro a cada tanto, sobre o meio do corpo, ampliado
-## para cobrir o Ecobeast. A revisar.
 const EFFECT_FRAME_SECONDS := 0.05
 const EFFECT_SCALE := 1.5
-## O projétil (board-battle/15): quanto ele leva por hexágono, e onde fica a ponta
-## na folha, que aponta para a direita: a fração do quadro à direita do meio. A revisar.
 const PROJECTILE_SECONDS_PER_CELL := 0.09
 const PROJECTILE_TIP := 27.0 / 64.0
 
 
-## As setas do sinal de stat, desenhadas: triângulos com contorno escuro, para cima
-## com `arrows` positivo e para baixo com negativo.
 class Arrows:
 	extends Control
 
@@ -154,32 +111,23 @@ class Arrows:
 			draw_colored_polygon(points, color)
 
 
-## Um Ecobeast no tabuleiro: a sombra no chão, o corpo (que respira e pula) com o
-## sprite, e a barra de HP por cima. Com as folhas da luta (board-battle/07), o
-## sprite toca o idle e o walk, um quadro por vez, e não respira nem pula.
 class Token:
 	extends Node2D
 	var side: String = ""
 	var cell := Vector2i.ZERO
-	## A altura do sprite na tela, para a barra e os números ficarem logo acima.
 	var height := 0.0
 	var shadow_radius := 0.0
 	var body := Node2D.new()
 	var sprite := Sprite2D.new()
 	var bar: HpBar = null
-	## Os ícones de estado em cima da barra (board-battle/16); null sem nenhum ainda.
 	var statuses: StatusIcons = null
 	var breath: Tween = null
-	## As folhas da luta; null para quem usa o board.png ou o front.png.
 	var sheets: BattleSheets = null
-	## A linha do idle do último passo (board-battle/17), com o espelho do sprite;
-	## NO_FACING enquanto ele não andou.
 	var facing := BoardView.NO_FACING
 	var _sheet := ""
 	var _row := 0
 	var _elapsed := 0.0
 
-	## Toca uma linha de uma folha, do primeiro quadro, se ainda não estiver nela.
 	func play(sheet: String, row: int) -> void:
 		if sheet == _sheet and row == _row:
 			return
@@ -191,7 +139,6 @@ class Token:
 		sprite.vframes = sheets.rows[sheet]
 		sprite.frame_coords = Vector2i(0, row)
 
-	# O Godot liga o `_process` sozinho para todo nó com ele; sem folhas, não faz nada.
 	func _process(delta: float) -> void:
 		if sheets == null or _sheet == "":
 			return
@@ -209,16 +156,13 @@ var _cells: Array[Vector2i] = []
 var _ground := HexMapView.new()
 var _ground_seed := 0
 var _biome := DEFAULT_BIOME
-var _shape := DEFAULT_SHAPE
-## Os hexágonos de chão fora do tabuleiro, que ficam escurecidos.
+var _height := DEFAULT_HEIGHT
 var _outside: Array[Vector2i] = []
-## Desenha as marcas, o que está aceso e quem joga, por cima do chão.
 var _overlay := Node2D.new()
 var _marks: Dictionary[Vector2i, Color] = {}
 var _lit: Dictionary[Vector2i, Color] = {}
 var _tokens: Dictionary[String, Token] = {}
 var _active_key: String = ""
-## Onde o hexágono (0, 0) do tabuleiro começa, para o tabuleiro todo caber a partir de 0.
 var _origin := Vector2.ZERO
 var _board_size := Vector2.ZERO
 
@@ -237,12 +181,10 @@ func _ready() -> void:
 	gui_input.connect(_on_gui_input)
 
 
-## O tabuleiro e o chão em volta dele têm o bioma e a forma do hexágono do Domador,
-## na mesma altura; as áreas de cada lado não têm cor própria.
-func set_board(cells: Array[Vector2i], biome: String = DEFAULT_BIOME, shape: String = DEFAULT_SHAPE) -> void:
+func set_board(cells: Array[Vector2i], biome: String = DEFAULT_BIOME, height: int = DEFAULT_HEIGHT) -> void:
 	_cells = cells
 	_biome = biome
-	_shape = shape
+	_height = height
 	_ground_seed = randi()
 	var low := Vector2(INF, INF)
 	var high := Vector2(-INF, -INF)
@@ -258,14 +200,11 @@ func set_board(cells: Array[Vector2i], biome: String = DEFAULT_BIOME, shape: Str
 	cover(Rect2(Vector2.ZERO, _board_size))
 
 
-## Cobre de chão a tela inteira, onde o tabuleiro está agora (board-battle/08).
-## Quem chama é a tela, depois de pôr o tabuleiro no lugar.
 func cover_screen() -> void:
 	var to_local := get_global_transform_with_canvas().affine_inverse()
 	cover(to_local * get_viewport_rect())
 
 
-## Monta o chão em todos os hexágonos que encostam em `area`, nas coordenadas deste nó.
 func cover(area: Rect2) -> void:
 	if _cells.is_empty() or not area.is_finite():
 		return
@@ -283,15 +222,14 @@ func cover(area: Rect2) -> void:
 			var tile := HexTile.new()
 			tile.coord = Vector2i(column, row)
 			tile.biome = _biome
-			tile.shape = _shape
+			tile.height = _height
 			tile.variant = 1
 			map.tiles[tile.coord] = tile
 			if not _cells.has(tile.coord):
 				_outside.append(tile.coord)
 	# O mapa sobe cada hexágono pela altura do nível: aqui ele desce o mesmo tanto,
 	# para a superfície cair na grade do tabuleiro.
-	var level := map.tiles[_cells[0]].level()
-	_ground.position = _origin + Vector2(0.0, HexMapView.LEVEL_HEIGHTS[level] * GROUND_SCALE)
+	_ground.position = _origin + Vector2(0.0, HexMapView.LEVEL_HEIGHTS[_height] * GROUND_SCALE)
 	_ground.set_map(map)
 	_ground.build_all_rows()
 	_redraw()
@@ -301,13 +239,11 @@ func board_size() -> Vector2:
 	return _board_size
 
 
-## As marcas no chão, cada uma na cor do efeito.
 func set_marks(marks: Dictionary[Vector2i, Color]) -> void:
 	_marks = marks
 	_redraw()
 
 
-## Acende hexágonos com uma cor; vazio apaga tudo.
 func light(cells: Array[Vector2i], color: Color) -> void:
 	_lit.clear()
 	for cell: Vector2i in cells:
@@ -315,19 +251,15 @@ func light(cells: Array[Vector2i], color: Color) -> void:
 	_redraw()
 
 
-## Quem joga agora fica destacado só pelo hexágono: o contorno branco no sprite saiu
-## a pedido do dono (board-battle/07).
 func set_active(key: String) -> void:
 	_active_key = key
 	_redraw()
 
 
-## O centro do hexágono, nas coordenadas deste nó.
 func cell_center(cell: Vector2i) -> Vector2:
 	return _raw_corner(cell) + _origin + Vector2(HEX_WIDTH, HEX_HEIGHT) / 2.0
 
 
-## O hexágono do tabuleiro sob o ponto; o mais perto do centro, ou null fora.
 func cell_at(point: Vector2) -> Variant:
 	var best: Variant = null
 	var best_distance := INF
@@ -349,7 +281,6 @@ func token_cell(key: String) -> Vector2i:
 	return _tokens[key].cell
 
 
-## Põe (ou troca) o Ecobeast da vaga `key` no hexágono.
 func place(key: String, side: String, species_id: int, hp: int, max_hp: int, cell: Vector2i) -> void:
 	remove(key)
 	var token := Token.new()
@@ -393,7 +324,6 @@ func set_hp(key: String, hp: int, max_hp: int) -> void:
 		_tokens[key].bar.set_hp(hp, max_hp)
 
 
-## Põe no hexágono na hora, sem andar: para desfazer um passo ou acertar com a resposta.
 func snap(key: String, cell: Vector2i) -> void:
 	if not _tokens.has(key):
 		return
@@ -405,8 +335,6 @@ func snap(key: String, cell: Vector2i) -> void:
 	_redraw()
 
 
-## Anda pelo caminho, virando para cada passo: com as folhas da luta, tocando o walk
-## na vista do passo; sem elas, com um pulinho por hexágono. Parado, toca o idle.
 func walk(key: String, path: Array[Vector2i]) -> void:
 	if not _tokens.has(key) or path.is_empty():
 		return
@@ -428,8 +356,6 @@ func walk(key: String, path: Array[Vector2i]) -> void:
 	_rest(token)
 
 
-## Um número que sobe e some sobre o Ecobeast, como o dano: ele ondula de um lado
-## para o outro enquanto sobe e vai sumindo aos poucos. Não precisa ser esperado.
 func float_number(key: String, text: String, color: Color) -> void:
 	if not _tokens.has(key):
 		return
@@ -444,8 +370,6 @@ func float_number(key: String, text: String, color: Color) -> void:
 	_rise(number, token)
 
 
-## O sinal de stat ou de estado sobe sobre o Ecobeast, como o número do dano
-## (board-battle/12): o texto e, ao lado, as setas.
 func float_sign(key: String, battle_sign: BattleSign) -> void:
 	if not _tokens.has(key) or battle_sign == null:
 		return
@@ -464,8 +388,6 @@ func float_sign(key: String, battle_sign: BattleSign) -> void:
 	_rise(line, _tokens[key])
 
 
-## Põe o texto com o meio sobre o Ecobeast, logo acima da barra de HP, e o faz subir
-## ondulando e sumir aos poucos.
 func _rise(node: Control, token: Token) -> void:
 	add_child(node)
 	var text_size := node.get_combined_minimum_size()
@@ -478,13 +400,11 @@ func _rise(node: Control, token: Token) -> void:
 	rise.finished.connect(node.queue_free)
 
 
-## Quem ataca treme de lado e volta ao lugar. Pode ser esperado.
 func attack_shake(key: String) -> void:
 	if _tokens.has(key):
 		await _shake(_tokens[key], ATTACK_SHAKE, ATTACK_SHAKE_SECONDS)
 
 
-## Quem é atingido treme e pisca. Pode ser esperado.
 func hit(key: String) -> void:
 	if not _tokens.has(key):
 		return
@@ -500,10 +420,6 @@ func hit(key: String) -> void:
 		token.sprite.self_modulate.a = 1.0
 
 
-## Toca o efeito de uma Técnica sobre o meio do corpo do alvo: uma tira de quadros
-## quadrados, da esquerda para a direita. `mirrored`: o atacante está à direita.
-## `flipped`: virado na vertical, para o impacto de um projétil que vem de cima
-## (board-battle/15). Pode ser esperado; o efeito some no fim.
 func play_effect(key: String, texture: Texture2D, mirrored: bool, flipped: bool = false) -> void:
 	if not _tokens.has(key) or texture == null:
 		return
@@ -523,11 +439,6 @@ func play_effect(key: String, texture: Texture2D, mirrored: bool, flipped: bool 
 	effect.queue_free()
 
 
-## A folha que voa (board-battle/15): sai do meio do corpo de quem está em
-## `from_key` e vai em linha reta até o último hexágono de `cells`, a
-## `PROJECTILE_SECONDS_PER_CELL` por hexágono, girada na direção do voo, com os quadros
-## em loop. Termina no meio do corpo de quem estiver lá ou, com o hexágono vazio, no
-## meio dele, na altura do corpo de quem ataca. Pode ser esperado; some no fim.
 func fly_projectile(from_key: String, cells: Array[Vector2i], texture: Texture2D) -> void:
 	if not _tokens.has(from_key) or cells.is_empty() or texture == null:
 		return
@@ -541,7 +452,6 @@ func fly_projectile(from_key: String, cells: Array[Vector2i], texture: Texture2D
 	spark.texture = texture
 	spark.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	spark.hframes = maxi(1, roundi(texture.get_width() / float(texture.get_height())))
-	# A ponta da folha fica no ponto que voa.
 	spark.offset = Vector2(-texture.get_height() * PROJECTILE_TIP, 0.0)
 	spark.scale = Vector2.ONE * EFFECT_SCALE
 	spark.rotation = (end - start).angle()
@@ -561,13 +471,10 @@ func fly_projectile(from_key: String, cells: Array[Vector2i], texture: Texture2D
 	spark.queue_free()
 
 
-## O meio do corpo de um Ecobeast, onde os efeitos e o projétil acertam.
 func _body_middle(token: Token) -> Vector2:
 	return token.position + Vector2(0.0, FEET_Y - token.height / 2.0)
 
 
-## Os ícones dos estados da vaga (board-battle/16), em cima da barra de vida e
-## centrados nela; vazio tira todos.
 func set_statuses(key: String, slugs: Array[String]) -> void:
 	if not _tokens.has(key):
 		return
@@ -582,12 +489,10 @@ func set_statuses(key: String, slugs: Array[String]) -> void:
 	token.statuses.slugs = slugs.duplicate()
 
 
-## O centro do hexágono de quem está na vaga, ou null sem ninguém.
 func token_position(key: String) -> Variant:
 	return _tokens[key].position if _tokens.has(key) else null
 
 
-## O corpo vai e volta de lado, `SHAKES` vezes, e volta ao lugar.
 func _shake(token: Token, amount: float, seconds: float) -> void:
 	var shake := create_tween()
 	shake.bind_node(token)
@@ -601,8 +506,6 @@ func _shake(token: Token, amount: float, seconds: float) -> void:
 	await get_tree().create_timer(seconds + step / 2.0).timeout
 
 
-## O Ecobeast some de vez e sai do tabuleiro; com `coin`, uma moeda sobe girando no
-## lugar dele. Pode ser esperado até ele sumir; a moeda segue sozinha.
 func vanish(key: String, coin: bool) -> void:
 	if not _tokens.has(key):
 		return
@@ -615,8 +518,6 @@ func vanish(key: String, coin: bool) -> void:
 		_pop_coin(middle)
 
 
-## A moeda gira (encolhe e estica na largura, como uma moeda de pé), sobe
-## desacelerando e some aos poucos de baixo para cima do caminho.
 func _pop_coin(at: Vector2) -> void:
 	var coin := Sprite2D.new()
 	coin.texture = load(COIN_PATH) as Texture2D
@@ -632,7 +533,6 @@ func _pop_coin(at: Vector2) -> void:
 	rise.finished.connect(coin.queue_free)
 
 
-## Apaga o Ecobeast que caiu, antes de ele sair do tabuleiro.
 func fade(key: String) -> void:
 	if _tokens.has(key):
 		create_tween().tween_property(_tokens[key], ^"modulate:a", 0.3, 0.3)
@@ -642,8 +542,6 @@ func _redraw() -> void:
 	_overlay.queue_redraw()
 
 
-## O contorno de cada hexágono já vem do chão: aqui o limite do tabuleiro, com o
-## chão de fora escurecido e uma borda clara, e o que muda na luta.
 func _draw_overlay() -> void:
 	var active: Variant = _tokens[_active_key].cell if _tokens.has(_active_key) else null
 	var enemy_active := _tokens.has(_active_key) and _tokens[_active_key].side == "enemy"
@@ -661,7 +559,6 @@ func _draw_overlay() -> void:
 		if _lit.has(cell):
 			_overlay.draw_colored_polygon(points, _lit[cell])
 			_overlay.draw_polyline(_closed(points), Color(_lit[cell], 1.0).lightened(0.25), LIT_BORDER_WIDTH, true)
-	# Quem joga agora: o hexágono na cor do lado, com brilho em volta.
 	if active != null:
 		var points := _polygon(active, HEX_GAP)
 		var glow := UiPalette.BOARD_ACTIVE_ENEMY_GLOW if enemy_active else UiPalette.BOARD_ACTIVE_GLOW
@@ -689,7 +586,6 @@ func _raw_corner(cell: Vector2i) -> Vector2:
 	return Vector2(STEP_X * cell.x + ROW_SHIFT * cell.y, STEP_Y * cell.y)
 
 
-## Os cantos do hexágono, recolhidos `inset` pixels na direção do centro.
 func _polygon(cell: Vector2i, inset: float = 0.0) -> PackedVector2Array:
 	var corner := _raw_corner(cell) + _origin
 	var center := Vector2(HEX_WIDTH, HEX_HEIGHT) / 2.0
@@ -700,8 +596,6 @@ func _polygon(cell: Vector2i, inset: float = 0.0) -> PackedVector2Array:
 	return points
 
 
-## As folhas da luta, o sprite do tabuleiro ou o front.png reduzido, com os pés na
-## origem do corpo.
 func _dress(token: Token, slug: String) -> void:
 	var sprite := token.sprite
 	token.sheets = BattleSheets.for_slug(slug)
@@ -733,7 +627,6 @@ func _dress(token: Token, slug: String) -> void:
 	token.shadow_radius = art_size.x * sprite.scale.x * 0.42
 
 
-## Perto do tabuleiro, só as decorações baixas.
 func _allows_decoration(coord: Vector2i, kind: String) -> bool:
 	if LOW_DECORATIONS.has(kind):
 		return true
@@ -743,7 +636,6 @@ func _allows_decoration(coord: Vector2i, kind: String) -> bool:
 	return true
 
 
-## O corpo estica e encolhe de leve, sem parar, preso nos pés.
 func _breathe(token: Token) -> void:
 	token.breath = create_tween().set_loops()
 	token.breath.bind_node(token)
@@ -752,11 +644,6 @@ func _breathe(token: Token) -> void:
 	token.breath.tween_property(token.body, ^"scale", Vector2.ONE, BREATH_SECONDS / 2.0)
 
 
-
-## Parado, cada um olha para o adversário. Com as folhas da luta, os do jogador, que
-## estão embaixo, ficam de costas, e os selvagens, em cima, de frente. Sem elas, os do
-## jogador olham para a direita e os selvagens para a esquerda. Quem tem o idle de lado
-## (board-battle/17) e já andou fica olhando para o último passo, com o mesmo espelho.
 func _rest(token: Token) -> void:
 	if token.sheets != null:
 		if token.sheets.has_row(BattleSheets.IDLE, token.facing):
@@ -772,8 +659,6 @@ func _rest_row(side: String) -> int:
 	return BattleSheets.IDLE_NORTH if side == "player" else BattleSheets.IDLE_SOUTH
 
 
-## Vira para o passo. Com as folhas, escolhe a vista do walk: no tabuleiro, todo passo
-## é para o lado ou numa diagonal, descendo ou subindo; para a esquerda, espelha.
 func _face(token: Token, direction: Vector2) -> void:
 	if absf(direction.x) > 0.01:
 		token.sprite.flip_h = direction.x < 0.0

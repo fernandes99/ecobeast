@@ -1,13 +1,11 @@
 class_name Temperament
 extends RefCounted
-## Um Temperamento (tabela temperaments): +10% em um stat, -10% em outro.
 
 var id: int
 var slug: String
 var name: String
 var increased_stat_id: int
 var decreased_stat_id: int
-## Slugs dos stats (ex.: "atk"), preenchidos pelo catálogo.
 var increased_stat_slug: String
 var decreased_stat_slug: String
 

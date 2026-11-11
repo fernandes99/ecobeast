@@ -1,6 +1,4 @@
 extends Control
-## Refúgio (heal-station/02, TELAS.md #14): a equipe e o botão que cura todos.
-## Quem cura é o servidor; a tela pede e mostra o jogador que volta.
 
 const RowScene := preload("res://screens/heal_station/heal_creature_row.tscn")
 
@@ -10,7 +8,6 @@ const ALREADY_HEALED_TEXT := "Equipe já curada"
 const HEALED_MESSAGE := "Equipe curada!"
 const NO_STATUS := -1
 
-## Há um pedido de cura no servidor.
 var _healing: bool = false
 
 @onready var _team_list: VBoxContainer = %TeamList
@@ -25,7 +22,6 @@ func _ready() -> void:
 	_refresh()
 
 
-## A resposta do servidor volta para esta tela: ela não fecha antes disso.
 func handle_back() -> bool:
 	return _healing
 
@@ -69,7 +65,6 @@ func _show_message(text: String, variation: StringName) -> void:
 	_message.show()
 
 
-## Só decide se o botão vale a pena: quem cura é o servidor.
 static func _needs_healing(creature: CreatureInstance) -> bool:
 	if creature.current_hp < creature.stats.hp or creature.status_condition_id != NO_STATUS:
 		return true

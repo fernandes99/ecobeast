@@ -1,13 +1,8 @@
 class_name BattleNarrator
 extends RefCounted
-## Escreve cada evento da batalha em uma linha em pt-BR
-## (.specs/battle-screen/architecture.md, "O texto de cada evento"). Só escreve:
-## não muda nada. Um evento sem linha, ou desconhecido, devolve texto vazio.
 
 const EMERGENCY_SKILL_NAME := "Golpe de Esforço"
-## Marca o lugar do ícone nas linhas de moedas; a tela troca pela imagem.
 const COIN_ICON := "{moeda}"
-## A partir de quantos estágios a mudança é "muito".
 const BIG_STAT_CHANGE := 2
 const CANNOT_ACT: Dictionary[String, String] = {
 	"fear": "%s ficou com medo e não agiu.",
@@ -15,12 +10,10 @@ const CANNOT_ACT: Dictionary[String, String] = {
 	"sleep": "%s está dormindo.",
 	"paralysis": "%s está paralisado e não agiu.",
 }
-## `captured_to` -> texto com o nome do capturado.
 const CAPTURED_TO: Dictionary[String, String] = {
 	"party": "%s entrou na equipe.",
 	"storage": "%s foi para o Santuário.",
 }
-## Tipo do evento -> texto com o nome de quem o sofre.
 const SIMPLE_LINES: Dictionary[String, String] = {
 	"woke_up": "%s acordou.",
 	"thawed": "%s descongelou.",
@@ -33,7 +26,6 @@ const SIMPLE_LINES: Dictionary[String, String] = {
 var _names: Dictionary[String, String] = {"player": "", "enemy": ""}
 var _team_names: Array[String] = []
 var _is_opening := true
-## O Domador NPC adversário (npc-tamers/04); vazio contra selvagem.
 var _tamer_name := ""
 
 
@@ -41,17 +33,14 @@ func set_side_name(side: String, display_name: String) -> void:
 	_names[side] = display_name
 
 
-## Contra um Domador NPC, quem entra do lado dele é enviado por ele.
 func set_tamer_name(tamer_name: String) -> void:
 	_tamer_name = tamer_name
 
 
-## O nome de cada criatura da equipe, para o item usado em um reserva.
 func set_team_names(names: Array[String]) -> void:
 	_team_names = names
 
 
-## Termina a abertura: daqui em diante, quem entra "entra na luta".
 func begin_turns() -> void:
 	_is_opening = false
 
@@ -103,7 +92,6 @@ func describe(event: Dictionary) -> String:
 	return ""
 
 
-## Para onde foi o capturado; "" sem captura.
 func describe_captured_to(captured_to: String) -> String:
 	var line: String = CAPTURED_TO.get(captured_to, "")
 	return line % _names["enemy"] if not line.is_empty() else ""
@@ -152,7 +140,6 @@ func _item_used(event: Dictionary) -> String:
 	return "Você usou %s em %s: não está mais %s." % [item_name, target, status]
 
 
-## Quem recebeu é da equipe, e pode não estar em campo.
 func _xp_gained(event: Dictionary) -> String:
 	var index := DictFields.get_int(event, "team_index")
 	if index < 0 or index >= _team_names.size():

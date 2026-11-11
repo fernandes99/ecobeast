@@ -1,7 +1,5 @@
 class_name BattleHistoryPanel
 extends Control
-## O histórico da luta no tabuleiro (board-battle/04, RF-15): no lugar da caixa
-## de mensagens, o botão de informação abre todas as linhas desde o começo.
 
 const LINE_FONT_SIZE := 22
 

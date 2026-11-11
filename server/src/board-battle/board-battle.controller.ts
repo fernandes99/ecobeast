@@ -25,7 +25,7 @@ import {
   TAMER_WAITING,
   UNREACHABLE,
 } from '../battle/battle.dto.js';
-import { NO_BATTLE } from '../battle/battle.service.js';
+import { NO_BATTLE } from '../battle/battle.dto.js';
 import {
   BoardBattleResponseDto,
   BoardVezBodyDto,

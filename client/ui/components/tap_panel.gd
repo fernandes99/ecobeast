@@ -1,13 +1,8 @@
 class_name TapPanel
 extends PanelContainer
-## Painel inteiro tocável, base do StarterCard e do CreatureSlot. Só conta como
-## toque se o dedo andar até TAP_SLOP entre tocar e soltar, e não consome o
-## evento: um ScrollContainer por fora continua rolando com o arraste.
 
 signal pressed
 
-## Quanto o dedo pode andar entre tocar e soltar para ainda contar como toque
-## (mais que isso é o jogador rolando a tela).
 const TAP_SLOP := 24.0
 
 var _press_position := Vector2.ZERO
@@ -30,7 +25,6 @@ func _gui_input(event: InputEvent) -> void:
 
 
 func _notification(what: int) -> void:
-	# Se o toque for cancelado (o dedo saiu ou a tela rolou), desfaz o destaque.
 	if what == NOTIFICATION_MOUSE_EXIT and _is_pressing:
 		_cancel_press()
 

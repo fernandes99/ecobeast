@@ -1,7 +1,5 @@
 class_name StorageFilter
 extends RefCounted
-## A busca, o filtro e a ordem do Santuário (team-and-storage/02, RF-07 a RF-10).
-## Só organiza o que o servidor mandou.
 
 const ALL_ELEMENTS := -1
 const ACCENTS: Dictionary[String, String] = {

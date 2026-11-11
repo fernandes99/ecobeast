@@ -1,5 +1,4 @@
 extends Control
-## Tela de entrada (onboarding/01, TELAS.md #1): logo e nome do Domador.
 
 const HINT := "De 2 a 16 letras ou números."
 
@@ -23,8 +22,6 @@ func _process(_delta: float) -> void:
 	_follow_virtual_keyboard()
 
 
-## Valida a cada tecla: o botão só habilita com nome válido, e a dica fica na
-## cor de perigo quando há algo digitado que não vale.
 func _update_form() -> void:
 	var player_name := Player.normalize_name(_name_edit.text)
 	var is_valid := Player.is_valid_name(player_name)
@@ -59,8 +56,6 @@ func _show_hint(text: String, is_error: bool) -> void:
 		_hint.remove_theme_color_override(&"font_color")
 
 
-## No celular, o teclado virtual cobre a parte de baixo da tela; um espaço da
-## altura dele no fim da coluna sobe o conteúdo (RF-13).
 func _follow_virtual_keyboard() -> void:
 	var window_height := float(DisplayServer.window_get_size().y)
 	if window_height <= 0.0:

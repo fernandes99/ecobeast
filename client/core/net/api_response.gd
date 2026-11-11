@@ -1,17 +1,12 @@
 class_name ApiResponse
 extends RefCounted
-## Resposta de uma chamada do autoload Api (.specs/auth-google/04-client-login.md, RF-01).
 
 const OFFLINE_ERROR := "Não foi possível conectar ao servidor."
 const SERVER_ERROR := "O servidor teve um problema. Tente de novo."
 
-## Código HTTP, ou 0 se o servidor não respondeu.
 var code: int = 0
-## O JSON da resposta, ou null se não veio JSON.
 var data: Variant = null
-## Verdadeiro para 2xx.
 var ok: bool = false
-## Mensagem em pt-BR, pronta para a tela. Vazia quando ok.
 var error: String = ""
 
 

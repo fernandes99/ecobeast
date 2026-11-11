@@ -1,11 +1,7 @@
 class_name SheetSprite
 extends AnimatedSprite2D
-## Um personagem do mapa (wild-battle/10 e 13). Cada folha tem uma linha por direção e
-## uma coluna por quadro. Só há linhas olhando para a direita: a esquerda é a mesma
-## arte espelhada. A posição do nó é o ponto entre os pés.
 
 const CELL_SIZE := Vector2i(32, 32)
-## Da frente para as costas.
 const SHEET_ROWS := 5
 const FRONT_ROW := 0
 const LOWER_ROW := 1

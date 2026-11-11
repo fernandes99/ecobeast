@@ -1,15 +1,11 @@
 class_name CodexRegisteredOverlay
 extends Control
-## O aviso "Novo registro no Bestiário!" (codex/03): aparece por cima da luta na
-## primeira captura de uma espécie, ou na Evolução para uma espécie nova. Quem diz
-## que é a primeira vez é o servidor (`registered_species_ids`).
 
 signal closed
 
 const ElementBadgeScene := preload("res://ui/components/element_badge.tscn")
 
 const NUMBER_TEXT := "#%03d %s"
-## Quanto o centro do brilho atrás da arte aparece.
 const GLOW_ALPHA := 0.55
 
 @onready var _dim: ColorRect = %Dim
@@ -28,7 +24,6 @@ func _ready() -> void:
 	_continue_button.pressed.connect(close)
 
 
-## Só termina quando o jogador toca em "Continuar" (ou no voltar do aparelho).
 func play(species_id: int) -> void:
 	var species := GameData.get_species(species_id)
 	_portrait.set_species(species_id)
@@ -45,7 +40,6 @@ func play(species_id: int) -> void:
 	await closed
 
 
-## O mesmo que "Continuar": o voltar do aparelho chama este também.
 func close() -> void:
 	if not visible:
 		return
@@ -53,7 +47,6 @@ func close() -> void:
 	closed.emit()
 
 
-## Brilho radial atrás da arte, sumindo nas bordas.
 func _glow_gradient(color: Color) -> GradientTexture2D:
 	var clear := color
 	clear.a = 0.0

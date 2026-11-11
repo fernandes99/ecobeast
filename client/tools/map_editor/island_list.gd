@@ -1,7 +1,5 @@
 class_name IslandList
 extends VBoxContainer
-## A lista de ilhas do editor (map-editor/02), com o nome e o status de cada uma, e
-## os botões de ilha nova e de apagar.
 
 signal open_requested(id: int)
 signal new_requested
@@ -15,7 +13,6 @@ const STATUS_NAMES: Dictionary[String, String] = {
 
 var _items: ItemList
 var _delete_button: Button
-## As ilhas da última leitura, na ordem da lista.
 var _islands: Array[Dictionary] = []
 
 
@@ -52,7 +49,6 @@ func _init() -> void:
 	_update_delete_button()
 
 
-## As ilhas de `GET /v1/editor/islands`, escolhendo `selected_id` se ela estiver lá.
 func set_islands(islands: Array, selected_id: int) -> void:
 	_islands.clear()
 	_items.clear()
@@ -64,7 +60,6 @@ func set_islands(islands: Array, selected_id: int) -> void:
 	select(selected_id)
 
 
-## Marca a ilha na lista, sem pedir para abri-la.
 func select(id: int) -> void:
 	_items.deselect_all()
 	for index: int in _islands.size():

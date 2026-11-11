@@ -1,7 +1,5 @@
 class_name Catalog
 extends RefCounted
-## O catálogo carregado: converte as tabelas em modelos tipados, monta os
-## índices e responde às consultas. Usado pelo autoload GameData.
 
 var _tables: Dictionary = {}          # tabela -> Array[Dictionary] (normalizadas)
 var _rows_by_id: Dictionary = {}      # tabela -> {id: linha}
@@ -28,8 +26,6 @@ var _item_list: Array[Item] = []
 var _item_categories: Array[ItemCategory] = []
 
 
-## Carrega todas as tabelas do schema pela fonte, valida e monta o catálogo.
-## Devolve a lista de erros; com erros, o catálogo fica vazio.
 func load_from(source: DataSource) -> Array[String]:
 	_clear()
 	var names := CatalogSchema.table_names()
@@ -60,8 +56,6 @@ func row_count() -> int:
 	return total
 
 
-# --- Consultas ------------------------------------------------------------------
-
 func get_element(id: int) -> Element:
 	return _lookup(_elements, id, "elemento")
 
@@ -70,7 +64,6 @@ func get_elements() -> Array[Element]:
 	return _element_list
 
 
-## Multiplicador de dano de um elemento atacante contra os elementos do defensor.
 func get_efficacy(attacker_element_id: int, defender_element_ids: Array[int]) -> float:
 	var result := 1.0
 	for defender_id: int in defender_element_ids:
@@ -93,7 +86,6 @@ func get_starters() -> Array[CreatureSpecies]:
 	return _starters
 
 
-## Técnicas por nível e ao evoluir, por nível (as de evoluir, nível 0, primeiro).
 func get_learnset(species_id: int) -> Array[LearnsetEntry]:
 	var empty: Array[LearnsetEntry] = []
 	return _learnsets.get(species_id, empty)
@@ -104,9 +96,6 @@ func get_evolutions(species_id: int) -> Array[EvolutionRule]:
 	return _evolutions.get(species_id, empty)
 
 
-## A família evolutiva da espécie (codex/02, RF-10): da primeira forma até as últimas,
-## em largura. Cada passo é {"species_id": int, "rule": EvolutionRule}, com a regra que
-## leva até ele; a primeira forma tem "rule" nulo.
 func get_evolution_line(species_id: int) -> Array[Dictionary]:
 	var root := species_id
 	# A guarda impede um laço sem fim num catálogo errado.
@@ -127,8 +116,6 @@ func get_evolution_line(species_id: int) -> Array[Dictionary]:
 	return line
 
 
-## Os nomes dos biomas onde a espécie aparece selvagem (taxa acima de 0), do mais
-## comum para o mais raro (codex/02, RF-09).
 func get_habitat_names(species_id: int) -> Array[String]:
 	var found: Array[Dictionary] = []
 	for row: Dictionary in _rows("species_biomes"):
@@ -156,7 +143,6 @@ func get_trait(id: int) -> CreatureTrait:
 	return _lookup(_traits, id, "traço")
 
 
-## Linhas de species_traits da espécie, por slot.
 func get_species_traits(species_id: int) -> Array[Dictionary]:
 	var empty: Array[Dictionary] = []
 	return _species_traits.get(species_id, empty)
@@ -174,12 +160,10 @@ func get_item(id: int) -> Item:
 	return _lookup(_items, id, "item")
 
 
-## Na ordem da Loja.
 func get_items() -> Array[Item]:
 	return _item_list
 
 
-## Na ordem das abas da Loja.
 func get_item_categories() -> Array[ItemCategory]:
 	return _item_categories
 
@@ -195,27 +179,22 @@ func get_stat_id(slug: String) -> int:
 	return _stat_ids[slug]
 
 
-## O nome de um status; slug desconhecido volta como veio.
 func get_status_name(slug: String) -> String:
 	return _name_by_slug("status_conditions", slug)
 
 
-## O nome de um Domador NPC (npc-tamers/01); vazio com um id que não existe.
 func get_npc_tamer_name(id: int) -> String:
 	return _text_by_id("npc_tamer_names", id, "name")
 
 
-## A fala do desafio de um Domador NPC, sem o nome; vazia com um id que não existe.
 func get_npc_tamer_greeting(id: int) -> String:
 	return _text_by_id("npc_tamer_greetings", id, "text")
 
 
-## O nome de um stat; slug desconhecido volta como veio.
 func get_stat_name(slug: String) -> String:
 	return _name_by_slug("stats", slug)
 
 
-## Linha de uma tabela de referência sem modelo próprio (rarities, status_conditions…).
 func get_row(table_name: String, id: int) -> Dictionary:
 	var by_id: Dictionary = _rows_by_id.get(table_name, {})
 	if not by_id.has(id):
@@ -229,9 +208,6 @@ func _text_by_id(table_name: String, id: int, column: String) -> String:
 	return row.get(column, "")
 
 
-## Cópia das linhas de uma tabela, na ordem do `id` quando ela tem a coluna. Para
-## quem só mostra o catálogo, como o visualizador de conteúdo (content-viewer/01).
-## Uma tabela que não existe volta vazia.
 func get_rows(table_name: String) -> Array[Dictionary]:
 	var rows: Array[Dictionary] = []
 	for row: Dictionary in _rows(table_name):
@@ -247,8 +223,6 @@ func _name_by_slug(table_name: String, slug: String) -> String:
 			return row["name"]
 	return slug
 
-
-# --- Montagem -------------------------------------------------------------------
 
 func _clear() -> void:
 	_tables.clear()
@@ -383,14 +357,11 @@ func _build_learnsets() -> void:
 			return file_order[a] < file_order[b])
 
 
-# --- Utilitários ----------------------------------------------------------------
-
 func _rows(table_name: String) -> Array[Dictionary]:
 	var empty: Array[Dictionary] = []
 	return _tables.get(table_name, empty)
 
 
-## Cópia das linhas ordenada por uma coluna inteira.
 func _sorted(rows: Array[Dictionary], column: String) -> Array[Dictionary]:
 	var result := rows.duplicate()
 	result.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a[column] < b[column])

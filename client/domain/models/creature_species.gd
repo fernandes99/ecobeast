@@ -1,6 +1,5 @@
 class_name CreatureSpecies
 extends RefCounted
-## Uma espécie de Ecobeast (tabela species), com elementos e stats já juntados.
 
 var id: int
 var slug: String
@@ -10,13 +9,10 @@ var growth_rate_id: int
 var rarity_id: int
 var base_xp_yield: int
 var capture_rate: int
-## Fração de machos (0–1); -1 = sem gênero.
 var gender_ratio: float
 var height_m: float
 var weight_kg: float
-## -1 na forma base.
 var evolves_from_species_id: int = -1
-## Ids dos elementos, na ordem dos slots (1 ou 2 itens).
 var element_ids: Array[int] = []
 var base_stats := StatBlock.new()
 var training_yield := StatBlock.new()

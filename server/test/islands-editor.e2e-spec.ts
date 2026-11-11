@@ -16,7 +16,7 @@ interface Tile {
   q: number;
   r: number;
   biome: string;
-  shape: string;
+  height: number;
   variant: number;
   area?: number;
 }
@@ -46,7 +46,7 @@ function hexagon(radius: number): Tile[] {
   for (let q = -radius; q <= radius; q++) {
     for (let r = -radius; r <= radius; r++) {
       if (Math.abs(q + r) <= radius) {
-        tiles.push({ q, r, biome: 'temperate', shape: 'flat', variant: 1 });
+        tiles.push({ q, r, biome: 'temperate', height: 1, variant: 1 });
       }
     }
   }
@@ -211,8 +211,22 @@ describe('Editor de ilhas (e2e)', () => {
       ],
       [
         'bioma que não é de terreno',
-        (d: Draft) => (d.tiles[0]!.biome = 'mountain'),
+        (d: Draft) => (d.tiles[0]!.biome = 'lava'),
         'biome',
+      ],
+      ['altura acima de 4', (d: Draft) => (d.tiles[0]!.height = 5), 'height'],
+      [
+        'hexágono sem altura',
+        (d: Draft) => delete (d.tiles[0] as { height?: number }).height,
+        'height',
+      ],
+      [
+        'variante 4 na Colina',
+        (d: Draft) => {
+          d.tiles[0]!.biome = 'hill';
+          d.tiles[0]!.variant = 4;
+        },
+        'vai de 1 a 3 na Colina e na Montanha',
       ],
     ])('recusa salvar com %s (400)', async (_label, change, message) => {
       const id = await create();

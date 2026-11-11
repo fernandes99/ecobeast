@@ -4,7 +4,6 @@ import type { NewCreature } from '../domain/rules/creature-factory.js';
 import { toPlayerDto } from '../player/player.mapper.js';
 import {
   BattleCreatureRow,
-  toBattleActions,
   toBattleDto,
   toCombatant,
   toEnemyCombatant,
@@ -63,35 +62,6 @@ function creature(
     ...overrides,
   };
 }
-
-describe('toBattleActions', () => {
-  it('leva a Esfera da captura, na posição 0 sem ela', () => {
-    expect(toBattleActions({ type: 'capture', item_id: 1 })).toEqual([
-      { type: 'capture', position: 0, item_id: 1 },
-    ]);
-  });
-
-  it('leva o item e o alvo da ação', () => {
-    expect(
-      toBattleActions({ type: 'item', item_id: 4, team_index: 1 }),
-    ).toEqual([{ type: 'item', position: 0, item_id: 4, team_index: 1 }]);
-  });
-
-  it('leva uma ação por vaga, com a posição e o alvo', () => {
-    expect(
-      toBattleActions({
-        type: undefined as never,
-        actions: [
-          { type: 'skill', slot: 2, position: 0, target: 1 },
-          { type: 'emergency', position: 1 },
-        ],
-      }),
-    ).toEqual([
-      { type: 'skill', position: 0, slot: 2, target: 1 },
-      { type: 'emergency', position: 1 },
-    ]);
-  });
-});
 
 describe('toCombatant', () => {
   it('leva a criatura para a batalha com o HP, o PP e o status do banco', () => {

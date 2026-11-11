@@ -1,13 +1,8 @@
 class_name TamerGreetingPanel
 extends PanelContainer
-## A fala de um Domador NPC sobre o mapa (npc-tamers/04): escreve "Lia: O que está
-## fazendo aqui?..." letra por letra, no estilo do log da luta, com o triângulo de
-## "continua" no fim. Um toque com a frase pela metade mostra a frase inteira; com
-## ela inteira, o painel avisa (`tapped`), e quem o usa abre a luta.
 
 signal tapped
 
-## A mesma velocidade do log da luta (board-battle/09). A revisar.
 const CHARS_PER_SECOND := 60.0
 const ICON_SIZE := 36.0
 const MORE_ICON_SIZE := 22.0
@@ -38,7 +33,6 @@ func _init() -> void:
 	gui_input.connect(_on_input)
 
 
-## Escreve a fala do começo; o painel aparece se estava escondido.
 func say(text: String) -> void:
 	if _typing != null:
 		_typing.kill()
@@ -58,7 +52,6 @@ func close() -> void:
 	hide()
 
 
-## Quando o dedo sai, como num botão.
 func _on_input(event: InputEvent) -> void:
 	var click := event as InputEventMouseButton
 	if click == null or click.button_index != MOUSE_BUTTON_LEFT or click.pressed:

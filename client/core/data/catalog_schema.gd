@@ -34,7 +34,6 @@ const EFFECT_PARAMS := {
 const AREA_SHAPES: Array[String] = ["single", "line"]
 
 const TABLES := {
-	# --- Referência -----------------------------------------------------------
 	"elements": {
 		"key": ["id"],
 		"columns": {
@@ -146,7 +145,6 @@ const TABLES := {
 		"key": ["id"],
 		"columns": {"id": ID, "slug": SLUG, "name": TEXT},
 	},
-	# Os nomes e as falas dos Domadores NPC sorteados (npc-tamers/01).
 	"npc_tamer_names": {
 		"key": ["id"],
 		"columns": {"id": ID, "name": TEXT},
@@ -155,7 +153,6 @@ const TABLES := {
 		"key": ["id"],
 		"columns": {"id": ID, "text": TEXT},
 	},
-	# Os tipos de construção que o editor de ilhas põe no mapa (map-editor/01).
 	"building_types": {
 		"key": ["id"],
 		"columns": {
@@ -165,7 +162,6 @@ const TABLES := {
 			"color_hex": {"type": "string", "pattern": "^#[0-9A-Fa-f]{6}$"},
 		},
 	},
-	# --- Conteúdo -------------------------------------------------------------
 	"species": {
 		"key": ["id"],
 		"columns": {
@@ -287,7 +283,6 @@ const TABLES := {
 			"zone_id": {"type": "int", "nullable": true, "fk_future": "zones"},
 		},
 	},
-	# --- Itens ----------------------------------------------------------------
 	"item_categories": {
 		"key": ["id"],
 		"columns": {
@@ -322,13 +317,10 @@ const TABLES := {
 }
 
 
-## Nomes das tabelas, na ordem em que aparecem no schema.
 static func table_names() -> PackedStringArray:
 	return PackedStringArray(TABLES.keys())
 
 
-## Converte os valores de uma linha já validada para os tipos do schema
-## (o JSON do Godot lê todo número como float).
 static func normalize_row(table_name: String, row: Dictionary) -> Dictionary:
 	var columns: Dictionary = TABLES[table_name]["columns"]
 	var result: Dictionary = {}

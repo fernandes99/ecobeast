@@ -1,22 +1,10 @@
 extends Control
-## Mapa de exploração (wild-battle/03, TELAS.md #4): o jogador fica parado no
-## centro da tela, e quem se move é o mapa. Ele anda um hexágono por vez, por
-## toque, sem zoom nem arrastar. Quem gera o mapa e os Ecobeasts é o servidor, e ele
-## confere a posição do Domador ao Procurar (biome-encounters/04). Os Domadores NPC
-## passeiam no hexágono deles, e quem chega num deles é desafiado: a fala aparece, o
-## mapa trava e tocar na fala abre a luta (npc-tamers/04). Com `island_id`, o mapa é o
-## de uma ilha publicada: o nome dela no topo, as construções coloridas com o nome, e
-## entrar no Refúgio ou na Loja abre a tela deles (islands/03).
 
 const PortraitScene := preload("res://ui/components/creature_portrait.tscn")
 
 const LOADING_TEXT := "Gerando mapa..."
-## A revisar.
 const ISLAND_LOADING_TEXT := "Chegando na ilha..."
-## Quanto da cor do tipo cobre o terreno de uma construção. A revisar.
 const BUILDING_TINT_ALPHA := 0.45
-## A tela que cada tipo de construção abre, pelo `slug` do catálogo. Os outros
-## tipos não abrem nada.
 const BUILDING_SCREENS: Dictionary[String, StringName] = {
 	"refuge": &"heal_station",
 	"shop": &"shop",
@@ -24,7 +12,6 @@ const BUILDING_SCREENS: Dictionary[String, StringName] = {
 const NOTHING_HERE_TEXT := "Nada por aqui."
 const ALMOST_LEVEL_UP_TEXT := "A equipe está a 1 XP do próximo nível."
 const SPAWNED_TEXT := "%s apareceu aqui. Toque em Procurar."
-## Quanto a música de explorar leva para entrar de novo na volta da luta, em segundos.
 const EXPLORE_MUSIC_FADE_IN := 1.0
 ## Duração de um passo, em segundos: um ciclo inteiro da corrida do Domador.
 const STEP_SECONDS := TamerSprite.RUN_SECONDS
@@ -35,7 +22,6 @@ const NORMAL_ZOOM_TEXT := "Debug: voltar ao zoom normal"
 const DEBUG_SPECIES_HEIGHT := 112.0
 const DEBUG_PORTRAIT_SIZE := 64
 const DEBUG_NAME_FONT_SIZE := 18
-## Quanto apaga o cartão de quem ainda não tem folhas.
 const DEBUG_DISABLED_ALPHA := 0.35
 const GOD_ON_TEXT := "God: ligado"
 const GOD_OFF_TEXT := "God: desligado"
@@ -43,25 +29,16 @@ const GOD_OFF_TEXT := "God: desligado"
 ## para eles nascerem e saírem sem ninguém ver. A revisar.
 const CREATURE_RADIUS := 16
 
-## A ilha pedida; 0 é o mapa sorteado.
 var _island_id: int = 0
-## null até o servidor responder.
 var _map: ExplorationMap = null
 var _player_coord := Vector2i.ZERO
-## O pedido do mapa ainda vai voltar para esta tela.
 var _loading: bool = true
 var _walking: bool = false
 var _press_position := Vector2.ZERO
-## Só em build de debug: o mapa inteiro na tela, sem andar.
 var _showing_whole_map: bool = false
-## Os Ecobeasts do mapa que têm nó agora, pelo id deles.
 var _wild_sprites: Dictionary[int, CreatureSprite] = {}
-## Os Domadores NPC do mapa que têm nó agora, pelo id deles.
 var _tamer_sprites: Dictionary[int, TamerSprite] = {}
-## O Domador NPC que desafiou o jogador: com ele, o mapa fica travado até a luta.
 var _challenger: MapTamer = null
-## Só em build de debug: os ids dos Ecobeasts do spawn, que o servidor guarda junto
-## com os do mapa (biome-encounters/05), e os dos Domadores da depuração.
 var _debug_spawn_ids: Array[int] = []
 var _debug_tamer_ids: Array[int] = []
 
@@ -90,7 +67,6 @@ var _debug_tamer_ids: Array[int] = []
 @onready var _building_names: BuildingNamesLayer = %BuildingNames
 
 
-## Chamado pelo Router antes do `_ready`.
 func setup(params: Dictionary) -> void:
 	_island_id = int(params.get("island_id", 0))
 
@@ -118,13 +94,10 @@ func _ready() -> void:
 	_begin()
 
 
-## A resposta do servidor volta para esta tela: ela não fecha antes disso. Com um
-## Domador desafiando, a luta é obrigatória, e o voltar não faz nada.
 func handle_back() -> bool:
 	return _loading or _challenger != null
 
 
-## Fora do mapa (o Hub), a música dele some (battle-intro/03).
 func _exit_tree() -> void:
 	Music.fade_out()
 
@@ -176,13 +149,10 @@ func _tap(point: Vector2) -> void:
 		_step_to(target)
 
 
-## O servidor recusaria quem chegou agora, e o hexágono já é o de destino no meio
-## do passo: enquanto o Domador anda, Procurar não faz nada.
 func _search() -> void:
 	if _walking or _challenger != null:
 		return
 	if _map.has_creature(_player_coord):
-		# A luta de Explorar zona é a do tabuleiro (board-battle/05).
 		_open_battle({"coord": _player_coord}, &"wild")
 	else:
 		_show_message(NOTHING_HERE_TEXT, &"SecondaryLabel")
@@ -193,7 +163,6 @@ func _search() -> void:
 ## até o jogador sair do hexágono e entrar de novo.
 func _on_visibility_changed() -> void:
 	if visible and _map != null:
-		# A música do mapa volta depois da luta, entrando aos poucos (battle-intro/03).
 		Music.play_explore(EXPLORE_MUSIC_FADE_IN)
 		var fought := Session.take_fought_spawn()
 		_map.creatures.erase(fought)
@@ -232,8 +201,6 @@ func _step_to(target: Vector2i) -> void:
 		_enter_building(_map.building_at(origin), _map.building_at(target))
 
 
-## O nome da ilha no topo, a cor de cada construção por cima do terreno e o nome do
-## tipo no hexágono do meio dela. No mapa sorteado, nada disso aparece.
 func _show_island() -> void:
 	_island_plate.visible = _map.island_id > 0
 	_island_name.text = _map.island_name
@@ -256,12 +223,10 @@ func _show_island() -> void:
 		for hex: Dictionary in rows[row]:
 			var tile := _map.tile_at(hex["coord"])
 			if tile != null:
-				layer.set_hex(hex["coord"], hex["color"], tile.level())
+				layer.set_hex(hex["coord"], hex["color"], tile.height)
 		_map_view.set_ground_overlay(layer, row)
 
 
-## Entrar numa construção, vindo de fora dela, abre a tela do tipo por cima do mapa.
-## Andar dentro da mesma construção não abre de novo.
 func _enter_building(from: int, to: int) -> void:
 	if to < 0 or to == from:
 		return
@@ -272,7 +237,6 @@ func _enter_building(from: int, to: int) -> void:
 		Router.push(screen)
 
 
-## Um Domador desafiou: o mapa trava, e a fala dele aparece. A luta é obrigatória.
 func _challenge(tamer: MapTamer) -> void:
 	_challenger = tamer
 	_debug_menu.hide()
@@ -281,7 +245,6 @@ func _challenge(tamer: MapTamer) -> void:
 	_greeting.say("%s: %s" % [GameData.get_npc_tamer_name(tamer.name_id), GameData.get_npc_tamer_greeting(tamer.greeting_id)])
 
 
-## O terreno vai junto, como no Procurar: é o chão do tabuleiro.
 func _fight_challenger() -> void:
 	if _challenger == null:
 		return
@@ -313,19 +276,16 @@ func _toggle_whole_map() -> void:
 	_fit_view()
 
 
-## O menu sempre abre na parte principal.
 func _toggle_debug_menu() -> void:
 	_show_debug_part(false)
 	_debug_menu.visible = not _debug_menu.visible
 
 
-## A lista do Spawn, ou os botões principais.
 func _show_debug_part(spawn: bool) -> void:
 	_debug_spawn.visible = spawn
 	_debug_main.visible = not spawn
 
 
-## O God vale para as lutas que começarem depois; o menu continua aberto.
 func _toggle_god() -> void:
 	Session.debug_god = not Session.debug_god
 	_refresh_god_button()
@@ -335,7 +295,6 @@ func _refresh_god_button() -> void:
 	_debug_god_button.text = GOD_ON_TEXT if Session.debug_god else GOD_OFF_TEXT
 
 
-## A luta de teste no tabuleiro, contra Ecobeasts sorteados; o mapa não muda.
 func _open_board_test(slots: int) -> void:
 	if _walking or _challenger != null:
 		return
@@ -343,25 +302,20 @@ func _open_board_test(slots: int) -> void:
 	_open_battle({"test_slots": slots}, &"wild")
 
 
-## A transição de zoom pixelado no Domador do jogador (battle-intro/01), e a luta
-## abre por baixo da tela preta. Com outra transição correndo, nada acontece.
 func _open_battle(params: Dictionary, opponent: StringName) -> void:
 	if not await BattleIntro.cover(_marker.get_global_transform_with_canvas().origin, opponent):
 		return
 	Router.push(&"board_battle", _battle_params(params))
 
 
-## O terreno do hexágono do Domador vai junto: é o chão do tabuleiro (board-battle/08).
 func _battle_params(params: Dictionary) -> Dictionary:
 	var tile: HexTile = _map.tile_at(_player_coord) if _map != null else null
 	if tile != null:
 		params["biome"] = tile.biome
-		params["shape"] = tile.shape
+		params["height"] = tile.height
 	return params
 
 
-## Todos os Ecobeasts do catálogo, cada um com o retrato e o nome; quem ainda não
-## tem folhas fica apagado e desativado.
 func _fill_debug_species() -> void:
 	for species: CreatureSpecies in GameData.get_all_species():
 		var button := Button.new()
@@ -395,8 +349,6 @@ func _species_card(species: CreatureSpecies, disabled: bool) -> Control:
 	return card
 
 
-## O servidor põe o Ecobeast no hexágono do Domador (biome-encounters/05): Procurar
-## enfrenta ele como um do mapa, e depois da luta ele some como os outros.
 func _spawn(species: CreatureSpecies) -> void:
 	if _walking or _challenger != null:
 		return
@@ -412,8 +364,6 @@ func _spawn(species: CreatureSpecies) -> void:
 	_show_message(SPAWNED_TEXT % species.name, &"SecondaryLabel")
 
 
-## O servidor põe um Domador de `size` no hexágono do jogador, no lugar do que houver
-## ali (npc-tamers/04), e ele desafia na hora, como se o jogador tivesse chegado.
 func _debug_tamer(size: int) -> void:
 	if _walking or _challenger != null:
 		return
@@ -434,7 +384,6 @@ func _debug_tamer(size: int) -> void:
 	_challenge(tamer)
 
 
-## Tira do servidor e do mapa só os Ecobeasts e os Domadores da depuração.
 func _clear_creatures() -> void:
 	_debug_clear_button.disabled = true
 	var result: Result = await Session.debug_clear_spawns()
@@ -456,9 +405,6 @@ func _refresh_debug_clear() -> void:
 	_debug_clear_button.disabled = _debug_spawn_ids.is_empty() and _debug_tamer_ids.is_empty()
 
 
-## Só para testar a progressão (progression/04): cada um da equipe fica a 1 XP do
-## próximo nível, e a próxima vitória sobe. O servidor só aceita com a rota de
-## teste ligada.
 func _almost_level_up() -> void:
 	_debug_xp_button.disabled = true
 	var result: Result = await Session.debug_almost_level_up()
@@ -470,8 +416,6 @@ func _almost_level_up() -> void:
 		_show_message(result.error, &"DangerLabel")
 
 
-## Deixa com nó só os Ecobeasts e os Domadores NPC perto do Domador. Quem sai e volta
-## fica no mesmo hexágono, porque o lugar dele mora no mapa, e não no nó.
 func _refresh_wild_sprites() -> void:
 	_refresh_tamer_sprites()
 	for id: int in _wild_sprites.keys():
@@ -511,7 +455,6 @@ func _add_creature_sprite(slug: String, coord: Vector2i) -> CreatureSprite:
 	return creature
 
 
-## Põe no mapa quem passeia num hexágono, na escala do Domador do jogador.
 func _place_wanderer(sprite: WanderingSprite, coord: Vector2i) -> void:
 	_map_view.add_child(sprite)
 	_map_view.set_actor_row(sprite, coord.y)
@@ -538,7 +481,6 @@ func _fit_view() -> void:
 	_sync_building_names()
 
 
-## Os nomes das construções acompanham o mapa: ao andar e no mapa inteiro.
 func _sync_building_names() -> void:
 	_building_names.set_view(_map_view.position, _map_view.pixel_scale())
 

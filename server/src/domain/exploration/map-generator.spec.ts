@@ -1,13 +1,18 @@
 import { hexKey, hexNeighbors } from './hex.js';
 import { DEFAULT_MAP_CONFIG, MapConfig } from './map-config.js';
 import {
-  Biome,
   BIOMES,
-  GeneratedMap,
   generateMap,
+  generateShapedMap,
   isWater,
-  MapTile,
+  MAX_HEIGHT,
+  maxVariant,
+  SHAPED_BIOMES,
+  ShapedBiome,
+  ShapedMap,
+  ShapedTile,
   TERRAIN_SHAPES,
+  terrainOf,
 } from './map-generator.js';
 
 const SEEDS = Array.from({ length: 200 }, (_, index) => index * 7919 + 1);
@@ -33,18 +38,21 @@ const CONFIG: MapConfig = {
   cleanupPasses: 3,
 };
 
-function indexed(map: GeneratedMap): Map<string, MapTile> {
+function indexed(map: ShapedMap): Map<string, ShapedTile> {
   return new Map(map.tiles.map((tile) => [hexKey(tile), tile]));
 }
 
-function neighborsOf(tile: MapTile, byKey: Map<string, MapTile>): MapTile[] {
+function neighborsOf(
+  tile: ShapedTile,
+  byKey: Map<string, ShapedTile>,
+): ShapedTile[] {
   return hexNeighbors(tile).flatMap((coord) => {
     const neighbor = byKey.get(hexKey(coord));
     return neighbor ? [neighbor] : [];
   });
 }
 
-function reachableFrom(map: GeneratedMap): number {
+function reachableFrom(map: ShapedMap): number {
   const byKey = indexed(map);
   const seen = new Set([hexKey(map.tiles[0]!)]);
   const pending = [map.tiles[0]!];
@@ -59,28 +67,28 @@ function reachableFrom(map: GeneratedMap): number {
   return seen.size;
 }
 
-const waterShare = (map: GeneratedMap) =>
+const waterShare = (map: ShapedMap) =>
   map.tiles.filter((tile) => isWater(tile.biome)).length / map.tiles.length;
 
-describe('generateMap', () => {
-  let maps: GeneratedMap[];
+describe('generateShapedMap', () => {
+  let maps: ShapedMap[];
 
   beforeAll(() => {
-    maps = SEEDS.map((seed) => generateMap(seed, CONFIG));
+    maps = SEEDS.map((seed) => generateShapedMap(seed, CONFIG));
   });
 
   it('só existem as cinco regiões', () => {
-    expect([...BIOMES].sort()).toEqual(
+    expect([...SHAPED_BIOMES].sort()).toEqual(
       ['boreal', 'stone', 'temperate', 'wdeep', 'wshallow'].sort(),
     );
   });
 
   it('a configuração do jogo gera um mapa válido', () => {
-    const map = generateMap(1);
+    const map = generateShapedMap(1);
     expect(map.tiles).toHaveLength(DEFAULT_MAP_CONFIG.tileCount);
     expect(new Set(map.tiles.map(hexKey)).size).toBe(map.tiles.length);
     for (const tile of map.tiles) {
-      expect(BIOMES).toContain(tile.biome);
+      expect(SHAPED_BIOMES).toContain(tile.biome);
       expect(TERRAIN_SHAPES).toContain(tile.shape);
     }
     const start = indexed(map).get(hexKey(map.start));
@@ -89,21 +97,23 @@ describe('generateMap', () => {
   });
 
   it('devolve a seed recebida', () => {
-    expect(generateMap(123, CONFIG).seed).toBe(123);
+    expect(generateShapedMap(123, CONFIG).seed).toBe(123);
   });
 
   it('a mesma seed dá o mesmo mapa', () => {
-    expect(generateMap(555, CONFIG)).toEqual(generateMap(555, CONFIG));
+    expect(generateShapedMap(555, CONFIG)).toEqual(
+      generateShapedMap(555, CONFIG),
+    );
   });
 
   it('seeds diferentes dão mapas diferentes', () => {
-    expect(generateMap(555, CONFIG).tiles).not.toEqual(
-      generateMap(556, CONFIG).tiles,
+    expect(generateShapedMap(555, CONFIG).tiles).not.toEqual(
+      generateShapedMap(556, CONFIG).tiles,
     );
   });
 
   it('o recorte do mapa muda com a seed', () => {
-    const shape = (map: GeneratedMap) => map.tiles.map(hexKey).sort().join('|');
+    const shape = (map: ShapedMap) => map.tiles.map(hexKey).sort().join('|');
     expect(new Set(maps.map(shape)).size).toBeGreaterThan(190);
   });
 
@@ -116,7 +126,7 @@ describe('generateMap', () => {
 
   it('muda de tamanho com `tileCount`', () => {
     const config = { ...CONFIG, tileCount: 120 };
-    expect(generateMap(9, config).tiles).toHaveLength(120);
+    expect(generateShapedMap(9, config).tiles).toHaveLength(120);
   });
 
   it('todas as posições são alcançáveis', () => {
@@ -131,7 +141,7 @@ describe('generateMap', () => {
       .flatMap(({ tiles }) => tiles)
       .filter(
         ({ biome, shape, variant }) =>
-          !BIOMES.includes(biome) ||
+          !SHAPED_BIOMES.includes(biome) ||
           !TERRAIN_SHAPES.includes(shape) ||
           variant < 1 ||
           variant > (shape === 'flat' ? 6 : 3),
@@ -199,14 +209,14 @@ describe('generateMap', () => {
   });
 
   it('aparecem todos os biomas ao longo das seeds', () => {
-    const seen = new Set<Biome>(
+    const seen = new Set<ShapedBiome>(
       maps.flatMap(({ tiles }) => tiles.map((tile) => tile.biome)),
     );
-    expect([...seen].sort()).toEqual([...BIOMES].sort());
+    expect([...seen].sort()).toEqual([...SHAPED_BIOMES].sort());
   });
 
   it('nenhum bioma de terra é raridade ao longo das seeds', () => {
-    for (const biome of BIOMES.filter((slug) => !isWater(slug))) {
+    for (const biome of SHAPED_BIOMES.filter((slug) => !isWater(slug))) {
       const containing = maps.filter(({ tiles }) =>
         tiles.some((tile) => tile.biome === biome),
       );
@@ -215,7 +225,7 @@ describe('generateMap', () => {
   });
 
   it('nenhum bioma domina os mapas', () => {
-    for (const biome of BIOMES) {
+    for (const biome of SHAPED_BIOMES) {
       const tiles = maps.flatMap((map) => map.tiles);
       const share = tiles.filter((tile) => tile.biome === biome).length;
       expect(share / tiles.length).toBeLessThan(MAX_BIOME_SHARE);
@@ -256,8 +266,9 @@ describe('generateMap', () => {
 
   it('mais `stoneFraction` dá mais pedra', () => {
     const stoneCount = (config: MapConfig) =>
-      generateMap(9, config).tiles.filter(({ biome }) => biome === 'stone')
-        .length;
+      generateShapedMap(9, config).tiles.filter(
+        ({ biome }) => biome === 'stone',
+      ).length;
     expect(stoneCount({ ...CONFIG, stoneFraction: 0.4 })).toBeGreaterThan(
       stoneCount(CONFIG),
     );
@@ -285,8 +296,103 @@ describe('generateMap', () => {
 
   it('mais `waterFraction` dá mais água', () => {
     const wetter: MapConfig = { ...CONFIG, waterFraction: 0.4 };
-    expect(waterShare(generateMap(9, wetter))).toBeGreaterThan(
-      waterShare(generateMap(9, CONFIG)),
+    expect(waterShare(generateShapedMap(9, wetter))).toBeGreaterThan(
+      waterShare(generateShapedMap(9, CONFIG)),
     );
+  });
+});
+
+describe('terrainOf', () => {
+  it.each([
+    ['temperate', 'flat', 'temperate', 1],
+    ['boreal', 'flat', 'boreal', 1],
+    ['stone', 'flat', 'stone', 3],
+    ['wshallow', 'flat', 'wshallow', 0],
+    ['wdeep', 'flat', 'wdeep', 0],
+    ['temperate', 'hill', 'hill', 2],
+    ['boreal', 'hill', 'hill', 2],
+    ['stone', 'hill', 'hill', 3],
+    ['wshallow', 'hill', 'hill', 2],
+    ['temperate', 'mont', 'mountain', 4],
+    ['stone', 'mont', 'mountain', 4],
+    ['wdeep', 'mont', 'mountain', 4],
+  ] as const)('%s com %s vira %s na altura %d', (biome, shape, to, height) => {
+    expect(terrainOf(biome, shape)).toEqual({ biome: to, height });
+  });
+});
+
+describe('generateMap', () => {
+  let maps: ReturnType<typeof generateMap>[];
+
+  beforeAll(() => {
+    maps = SEEDS.slice(0, 40).map((seed) => generateMap(seed, CONFIG));
+  });
+
+  it('são os 7 biomas do catálogo', () => {
+    expect([...BIOMES].sort()).toEqual(
+      [
+        'boreal',
+        'hill',
+        'mountain',
+        'stone',
+        'temperate',
+        'wdeep',
+        'wshallow',
+      ].sort(),
+    );
+  });
+
+  it('é o mapa com forma convertido, hexágono por hexágono', () => {
+    const shaped = generateShapedMap(77, CONFIG);
+    const map = generateMap(77, CONFIG);
+    expect(map.seed).toBe(shaped.seed);
+    expect(map.start).toEqual(shaped.start);
+    expect(map.tiles).toEqual(
+      shaped.tiles.map(({ q, r, biome, shape, variant }) => ({
+        q,
+        r,
+        ...terrainOf(biome, shape),
+        variant,
+      })),
+    );
+  });
+
+  it('todo hexágono tem bioma, altura e variante válidos', () => {
+    const invalid = maps
+      .flatMap(({ tiles }) => tiles)
+      .filter(
+        ({ biome, height, variant }) =>
+          !BIOMES.includes(biome) ||
+          !Number.isInteger(height) ||
+          height < 0 ||
+          height > MAX_HEIGHT ||
+          variant < 1 ||
+          variant > maxVariant(biome),
+      );
+    expect(invalid).toEqual([]);
+  });
+
+  it('cada bioma fica na altura de antes', () => {
+    const heights = new Map<string, Set<number>>();
+    for (const { biome, height } of maps.flatMap(({ tiles }) => tiles)) {
+      heights.set(biome, (heights.get(biome) ?? new Set()).add(height));
+    }
+    const sorted = (biome: string) => [...(heights.get(biome) ?? [])].sort();
+    expect(sorted('mountain')).toEqual([4]);
+    expect(sorted('stone')).toEqual([3]);
+    expect(sorted('hill')).toEqual([2, 3]);
+    expect(sorted('temperate')).toEqual([1]);
+    expect(sorted('boreal')).toEqual([1]);
+    expect(sorted('wshallow')).toEqual([0]);
+    expect(sorted('wdeep')).toEqual([0]);
+  });
+
+  it('começa em terra plana', () => {
+    for (const map of maps) {
+      const start = map.tiles.find(
+        ({ q, r }) => q === map.start.q && r === map.start.r,
+      );
+      expect(['temperate', 'boreal', 'stone']).toContain(start!.biome);
+    }
   });
 });

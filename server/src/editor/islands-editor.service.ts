@@ -12,7 +12,10 @@ import {
   publishError,
 } from '../domain/islands/island-draft.js';
 import type { Prisma } from '../generated/prisma/client.js';
-import { ISLAND_NOT_FOUND, IslandsService } from '../islands/islands.service.js';
+import {
+  ISLAND_NOT_FOUND,
+  IslandsService,
+} from '../islands/islands.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import type {
   IslandCreatedResponseDto,
@@ -55,11 +58,11 @@ export function toDraft(dto: IslandDraftDto): IslandDraft {
   return {
     name: dto.name,
     start: { q: dto.start.q, r: dto.start.r },
-    tiles: dto.tiles.map(({ q, r, biome, shape, variant, area }) => ({
+    tiles: dto.tiles.map(({ q, r, biome, height, variant, area }) => ({
       q,
       r,
       biome,
-      shape,
+      height,
       variant,
       ...(area === undefined || area === null ? {} : { area }),
     })),
@@ -300,12 +303,12 @@ export class IslandsEditorService {
         ({ id, slug }) => [slug, id],
       ),
     );
-    const tiles = draft.tiles.map(({ q, r, biome, shape, variant, area }) => ({
+    const tiles = draft.tiles.map(({ q, r, biome, height, variant, area }) => ({
       islandMapId: map.id,
       q,
       r,
       biomeId: biomeIds.get(biome)!,
-      shape,
+      height,
       variant,
       areaId: area === undefined ? null : areaIds.get(area)!,
     }));

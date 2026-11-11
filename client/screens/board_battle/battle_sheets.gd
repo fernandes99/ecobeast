@@ -1,14 +1,5 @@
 class_name BattleSheets
 extends RefCounted
-## As folhas da luta de um Ecobeast (board-battle/07), em
-## res://assets/creatures/<slug>/battle/, montadas do PixelLab pela ferramenta da skill
-## creature-sprites. Uma linha por vista e uma coluna por quadro, todas olhando para a
-## direita: a esquerda é a mesma arte espelhada.
-##
-## Tudo sai da própria imagem, sem arquivo de dados ao lado: a célula é quadrada e a
-## mesma nas duas folhas; o idle tem 2 ou 5 linhas, e o walk 3 ou 5 (board-battle/17),
-## o que a proporção entre as alturas diz; uma linha tem os quadros até a primeira
-## célula vazia; e os pés ficam na última linha de pixels de todas as células.
 
 const PATH := "res://assets/creatures/%s/battle/%s.png"
 const IDLE := "idle"
@@ -26,27 +17,18 @@ const WALK_SIDE := 1
 const WALK_UP := 2
 const WALK_SOUTH := 3
 const WALK_NORTH := 4
-## As alturas que cada folha pode ter, em linhas: as vistas de sempre, ou com as a mais.
 const IDLE_ROWS: PackedInt32Array = [2, 5]
 const WALK_ROWS: PackedInt32Array = [3, 5]
-## Segundos por quadro. O idle usa o tempo dos GIFs do PixelLab; o walk é mais
-## rápido, para um ciclo caber num passo de hexágono. A revisar.
 const FRAME_SECONDS: Dictionary[String, float] = {IDLE: 0.2, WALK: 0.15}
 
-## As folhas de cada espécie, lidas uma vez: a luta pode ter vários Ecobeasts iguais.
 static var _by_slug: Dictionary[String, BattleSheets] = {}
 
 var textures: Dictionary[String, Texture2D] = {}
-## Quantas linhas cada folha tem.
 var rows: Dictionary[String, int] = {}
-## Quantos quadros cada linha tem, por folha.
 var frames: Dictionary[String, PackedInt32Array] = {}
 var cell := 0
-## A última linha de pixels dos pés, dentro da célula.
 var feet := 0
-## A primeira linha com pixels, em todas as células: dá a altura do Ecobeast.
 var top := 0
-## A largura do primeiro quadro de frente, para a sombra.
 var rest_width := 0
 
 
@@ -54,7 +36,6 @@ static func has_sheets(slug: String) -> bool:
 	return ResourceLoader.exists(PATH % [slug, IDLE]) and ResourceLoader.exists(PATH % [slug, WALK])
 
 
-## As folhas da espécie, ou null se ela não tem as duas.
 static func for_slug(slug: String) -> BattleSheets:
 	if not _by_slug.has(slug):
 		_by_slug[slug] = _read(slug) if has_sheets(slug) else null
@@ -99,9 +80,6 @@ static func _read(slug: String) -> BattleSheets:
 	return sheets
 
 
-## Acha quantas linhas cada folha tem e a célula, que é a mesma nas duas. Cada
-## combinação de linhas dá uma proporção diferente entre as alturas, então no máximo
-## uma serve.
 static func _find_rows(sheets: BattleSheets, idle_height: int, walk_height: int) -> bool:
 	for idle_rows: int in IDLE_ROWS:
 		for walk_rows: int in WALK_ROWS:
@@ -124,16 +102,13 @@ func frame_count(sheet: String, row: int) -> int:
 	return frames[sheet][row]
 
 
-## Se a folha tem a linha: o idle de 2 linhas não tem as vistas de lado.
 func has_row(sheet: String, row: int) -> bool:
 	return row >= 0 and row < rows[sheet]
 
 
-## A altura do Ecobeast em pixels da arte, dos pés ao ponto mais alto.
 func height() -> int:
 	return feet + 1 - top
 
 
-## Quanto dura um passo de hexágono: um ciclo do walk.
 func step_seconds() -> float:
 	return frame_count(WALK, WALK_SIDE) * FRAME_SECONDS[WALK]

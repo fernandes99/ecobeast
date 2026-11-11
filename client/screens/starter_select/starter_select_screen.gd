@@ -1,6 +1,4 @@
 extends Control
-## Escolha do Ecobeast inicial (onboarding/02, visual-theme/03, TELAS.md #2). Sem
-## botão de voltar: o Domador já foi criado.
 
 const StarterCardScene := preload("res://screens/starter_select/starter_card.tscn")
 
@@ -17,7 +15,6 @@ func _ready() -> void:
 	_confirm_panel.choose_pressed.connect(_choose)
 
 
-## Chamado pelo Router no voltar do Android ou Esc: fecha o painel, se aberto.
 func handle_back() -> bool:
 	if _confirm_panel.visible:
 		_confirm_panel.close()

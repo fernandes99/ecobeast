@@ -1,13 +1,7 @@
 shader_type canvas_item;
-// O vento nas plantas do mapa (wild-battle/12). Cada linha de pixels da planta anda
-// um número inteiro de pixels da arte: a base fica presa, e o topo anda mais. Duas
-// ondas correm pelo mapa: o balanço e, mais devagar, a força da rajada.
 
-// Zero desliga o vento.
 uniform float strength = 1.0;
-// Para onde as ondas andam, no mapa. As plantas se curvam só na horizontal.
 uniform vec2 direction = vec2(1.0, 0.4);
-// Em segundos e em pixels da arte. A revisar.
 uniform float sway_period = 2.8;
 uniform float sway_length = 240.0;
 uniform float gust_period = 9.0;
@@ -18,12 +12,10 @@ uniform float gust_length = 700.0;
 varying flat vec4 plant;
 varying float map_y;
 
-
 void vertex() {
 	plant = CUSTOM0;
 	map_y = VERTEX.y;
 }
-
 
 void fragment() {
 	float along = dot(plant.xy, direction);

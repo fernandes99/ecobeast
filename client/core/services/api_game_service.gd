@@ -1,7 +1,5 @@
 class_name ApiGameService
 extends GameService
-## As ações do jogador pelas rotas do servidor (.specs/auth-google/05-client-player.md).
-## Quem decide as regras é o servidor, que manda os stats prontos em cada criatura.
 
 const ME_PATH := "/v1/me"
 const STARTER_PATH := "/v1/me/starter"
@@ -14,8 +12,6 @@ const TEAM_ORDER_PATH := "/v1/me/team/order"
 const TEAM_BRING_PATH := "/v1/me/team/bring"
 const TEAM_STORE_PATH := "/v1/me/team/store"
 const EXPLORATION_PATH := "/v1/me/exploration"
-const WILD_BATTLE_PATH := "/v1/me/battle/wild"
-const BATTLE_ACTION_PATH := "/v1/me/battle/action"
 const BOARD_BATTLE_PATH := "/v1/me/board-battle"
 const BOARD_WILD_PATH := "/v1/me/board-battle/wild"
 const BOARD_TAMER_PATH := "/v1/me/board-battle/tamer"
@@ -116,21 +112,6 @@ func list_islands() -> Result:
 		if island != null:
 			islands.append(island)
 	return Result.success(islands)
-
-
-func start_wild_battle(coord: Vector2i, god: bool = false) -> Result:
-	var body := {"q": coord.x, "r": coord.y}
-	if god:
-		body["god"] = true
-	return _turn_result(await Api.request(HTTPClient.METHOD_POST, WILD_BATTLE_PATH, body, true))
-
-
-func battle_action(action: Dictionary) -> Result:
-	var response: ApiResponse = await Api.request(HTTPClient.METHOD_POST, BATTLE_ACTION_PATH, action, true)
-	# A batalha expirou ou o servidor reiniciou: a tela oferece a saída.
-	if response.code == HTTPClient.RESPONSE_NOT_FOUND:
-		return Result.success(null)
-	return _turn_result(response)
 
 
 func start_board_wild_battle(coord: Vector2i, god: bool = false) -> Result:
@@ -235,8 +216,6 @@ func learn_skill(uid: String, skill_id: int, forget_skill_id: int) -> Result:
 	return _choice_result(await Api.request(HTTPClient.METHOD_POST, LEARN_SKILL_PATH % uid, body, true))
 
 
-## data: o ProgressChoice da resposta, ou null se a escolha expirou, já foi feita
-## ou o servidor reiniciou (404).
 func _choice_result(response: ApiResponse) -> Result:
 	if response.code == HTTPClient.RESPONSE_NOT_FOUND:
 		return Result.success(null)
@@ -246,14 +225,6 @@ func _choice_result(response: ApiResponse) -> Result:
 	return Result.success(choice) if choice != null else Result.failure(ApiResponse.SERVER_ERROR)
 
 
-## data: o BattleTurn da resposta.
-func _turn_result(response: ApiResponse) -> Result:
-	if not response.ok:
-		return Result.failure(response.error)
-	var turn: BattleTurn = BattleTurn.from_dict(response.data) if response.data is Dictionary else null
-	return Result.success(turn) if turn != null else Result.failure(ApiResponse.SERVER_ERROR)
-
-
 func _board_result(response: ApiResponse) -> Result:
 	if not response.ok:
 		return Result.failure(response.error)
@@ -261,7 +232,6 @@ func _board_result(response: ApiResponse) -> Result:
 	return Result.success(turn) if turn != null else Result.failure(ApiResponse.SERVER_ERROR)
 
 
-## data: o Player da resposta, ou null se a conta ainda não tem Domador.
 func _player_result(response: ApiResponse) -> Result:
 	if not response.ok:
 		return Result.failure(response.error)

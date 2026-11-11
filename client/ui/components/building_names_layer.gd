@@ -1,11 +1,6 @@
 class_name BuildingNamesLayer
 extends Control
-## Os nomes das construções por cima do mapa de uma ilha (islands/03, RF-10). O
-## texto fica no tamanho da interface, e não escalado com a arte do mapa: a tela
-## passa a posição e a escala do `HexMapView` sempre que elas mudam. Não recebe
-## toques, que são do mapa.
 
-## O tamanho do nome, em pontos da tela lógica. A revisar.
 const NAME_SIZE := 30
 const OUTLINE_SIZE := 8
 
@@ -19,7 +14,6 @@ func _init() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 
-## O hexágono do meio de uma construção: o mais perto do centro dela.
 static func middle_of(tiles: Array[Vector2i]) -> Vector2i:
 	var center := Vector2.ZERO
 	for coord: Vector2i in tiles:
@@ -37,13 +31,11 @@ func clear() -> void:
 	queue_redraw()
 
 
-## `art_point` é o centro do nome, em pixels da arte do mapa.
 func add_name(text: String, art_point: Vector2) -> void:
 	_names.append({"text": text, "point": art_point})
 	queue_redraw()
 
 
-## Onde o mapa está na tela e em que escala.
 func set_view(map_position: Vector2, map_scale: Vector2) -> void:
 	_map_position = map_position
 	_map_scale = map_scale

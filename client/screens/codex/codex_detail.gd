@@ -1,8 +1,5 @@
 class_name CodexDetail
 extends Control
-## O detalhe de uma espécie do Bestiário (codex/02, RF-07 a RF-11), aberto por cima
-## da grade. Capturada: tudo. Só vista: a sombra, o número e o nome. A linha
-## evolutiva segue a regra da grade, e tocar numa forma conhecida troca o detalhe.
 
 const ElementBadgeScene := preload("res://ui/components/element_badge.tscn")
 const CreaturePortraitScene := preload("res://ui/components/creature_portrait.tscn")
@@ -42,7 +39,6 @@ func _ready() -> void:
 	hide()
 
 
-## Mostra a espécie, que precisa ser vista ou capturada.
 func open(species_id: int, codex: Codex) -> void:
 	_codex = codex
 	_show(species_id)
@@ -83,7 +79,6 @@ func _show_elements(species: CreatureSpecies) -> void:
 		_element_row.add_child(badge)
 
 
-## Uma casa, com vírgula: 1.0 vira "1,0".
 func _decimal(value: float) -> String:
 	return ("%.1f" % value).replace(".", ",")
 
@@ -97,7 +92,6 @@ func _show_line(current_id: int) -> void:
 		_line_row.add_child(_make_form(step["species_id"], step["species_id"] == current_id))
 
 
-## A seta até a forma, com o nível embaixo na Evolução por nível.
 func _make_arrow(rule: EvolutionRule) -> Control:
 	var box := VBoxContainer.new()
 	box.alignment = BoxContainer.ALIGNMENT_CENTER

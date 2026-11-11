@@ -1,24 +1,16 @@
 class_name CatalogValidator
 extends RefCounted
-## Confere as tabelas do catálogo contra o CatalogSchema e as regras de
-## consistência (.specs/game-data/01-data-layer.md, RF-06 a RF-12).
-## Cada erro é "<tabela>.json linha <n>: <motivo>" (n = posição da linha no
-## array, a partir de 1) ou "<tabela>.json: <motivo>".
 
 const TEMPERAMENT_COUNT := 25
 const HIDDEN_TRAIT_SLOT := 3
 
 var _errors: Array[String] = []
-## Linhas que passaram na checagem de estrutura, normalizadas: tabela -> Array[Dictionary].
 var _rows: Dictionary = {}
-## Posição original (a partir de 1) de cada linha em _rows: tabela -> Array[int].
 var _lines: Dictionary = {}
-## Cache de ids por tabela: tabela -> {id: índice em _rows}.
 var _id_index: Dictionary = {}
 var _regex_cache: Dictionary = {}
 
 
-## Valida as tabelas (nome -> Array de linhas) e devolve a lista de erros.
 static func validate(tables: Dictionary) -> Array[String]:
 	var validator := CatalogValidator.new()
 	return validator._run(tables)
@@ -43,8 +35,6 @@ func _run(tables: Dictionary) -> Array[String]:
 	_check_npc_tamer_texts()
 	return _errors
 
-
-# --- Estrutura, tipos e faixas (RF-06 a RF-08) ---------------------------------
 
 func _check_structure(table_name: String, rows: Array) -> void:
 	var columns: Dictionary = CatalogSchema.TABLES[table_name]["columns"]
@@ -142,8 +132,6 @@ func _get_regex(pattern: String) -> RegEx:
 	return _regex_cache[pattern]
 
 
-# --- Chaves, únicos e FKs (RF-08 a RF-10) --------------------------------------
-
 func _check_keys_and_unique(table_name: String) -> void:
 	var schema: Dictionary = CatalogSchema.TABLES[table_name]
 	var key_columns: Array = schema["key"]
@@ -192,7 +180,6 @@ func _check_foreign_keys(table_name: String) -> void:
 				_row_error(table_name, lines[i], "'%s' = %d não existe em %s.json" % [column, value, target])
 
 
-## {id: índice da linha} das linhas válidas de uma tabela com coluna id.
 func _ids(table_name: String) -> Dictionary:
 	if not _id_index.has(table_name):
 		var index: Dictionary = {}
@@ -216,7 +203,6 @@ func _slug_of(table_name: String, id: Variant) -> String:
 	return String(_row_by_id(table_name, id).get("slug", ""))
 
 
-## Agrupa os índices das linhas de uma tabela pelo valor de uma coluna.
 func _group(table_name: String, column: String) -> Dictionary:
 	var groups: Dictionary = {}
 	var rows: Array[Dictionary] = _rows[table_name]
@@ -227,8 +213,6 @@ func _group(table_name: String, column: String) -> Dictionary:
 		groups[value].append(i)
 	return groups
 
-
-# --- Consistência (RF-11 e RF-12) ----------------------------------------------
 
 func _check_species_elements() -> void:
 	var by_species := _group("species_elements", "species_id")
@@ -404,7 +388,6 @@ func _check_starter_options() -> void:
 		_table_error("starter_options", "deve ter pelo menos 1 linha")
 
 
-## Um Domador NPC sorteado precisa de um nome e de uma fala (npc-tamers/01).
 func _check_npc_tamer_texts() -> void:
 	for table_name: String in ["npc_tamer_names", "npc_tamer_greetings"]:
 		var rows: Array[Dictionary] = _rows[table_name]
@@ -418,8 +401,6 @@ func _for_each_species(callback: Callable) -> void:
 	for i: int in rows.size():
 		callback.call(rows[i], lines[i])
 
-
-# --- Mensagens ------------------------------------------------------------------
 
 func _row_error(table_name: String, line: int, message: String) -> void:
 	_errors.append("%s.json linha %d: %s" % [table_name, line, message])

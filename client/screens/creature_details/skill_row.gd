@@ -1,6 +1,5 @@
 class_name SkillRow
 extends PanelContainer
-## Uma linha da aba Técnicas (creature-details/02, RF-10): a Técnica, ou "Vazio".
 
 const NEVER_MISSES := "Nunca erra"
 
@@ -21,14 +20,12 @@ func _ready() -> void:
 	_refresh()
 
 
-## Pode ser chamado antes ou depois de o componente entrar na árvore.
 func set_skill(slot: SkillSlot) -> void:
 	_slot = slot
 	if is_node_ready():
 		_refresh()
 
 
-## Pode ser chamado antes ou depois de o componente entrar na árvore.
 func set_empty() -> void:
 	set_skill(null)
 

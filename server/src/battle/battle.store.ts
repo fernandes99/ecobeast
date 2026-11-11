@@ -18,8 +18,6 @@ export interface BattleTamer {
 
 /** O catálogo fica junto: uma edição no painel não muda uma luta em andamento. */
 export interface StoredBattle {
-  /** A luta de hoje (`classic`) ou a do tabuleiro (`board`); cada rota só vê a sua. */
-  kind: 'classic' | 'board';
   state: BattleState;
   catalog: BattleCatalog;
   /** Um por Ecobeast da equipe inimiga, na mesma ordem. */

@@ -11,11 +11,8 @@ import {
   Min,
   ValidateNested,
 } from 'class-validator';
-import { BIOMES, TERRAIN_SHAPES } from '../domain/exploration/map-generator.js';
-import type {
-  Biome,
-  TerrainShape,
-} from '../domain/exploration/map-generator.js';
+import { BIOMES, MAX_HEIGHT } from '../domain/exploration/map-generator.js';
+import type { Biome } from '../domain/exploration/map-generator.js';
 import { MapTileDto } from '../exploration/exploration.dto.js';
 
 /** O rascunho de uma ilha e as respostas do editor (.specs/map-editor/architecture.md, "Contrato"). */
@@ -48,14 +45,18 @@ export class DraftTileDto extends EditorHexDto {
   })
   biome: Biome;
 
-  @ApiProperty({ enum: TERRAIN_SHAPES, example: 'flat' })
-  @IsIn(TERRAIN_SHAPES, {
-    message: `shape precisa ser ${TERRAIN_SHAPES.join(', ')}.`,
+  @ApiProperty({
+    description: `A altura do terreno, de 0 a ${MAX_HEIGHT}, em qualquer bioma.`,
+    example: 1,
   })
-  shape: TerrainShape;
+  @IsInt(integer('height'))
+  @Min(0, { message: `height vai de 0 a ${MAX_HEIGHT}.` })
+  @Max(MAX_HEIGHT, { message: `height vai de 0 a ${MAX_HEIGHT}.` })
+  height: number;
 
   @ApiProperty({
-    description: 'Qual sprite usar: de 1 a 6 em `flat`, de 1 a 3 nas outras.',
+    description:
+      'Qual sprite usar: de 1 a 3 em `hill` e `mountain`, de 1 a 6 nos outros.',
     example: 2,
   })
   @IsInt(integer('variant'))

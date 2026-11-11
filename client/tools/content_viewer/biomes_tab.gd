@@ -1,18 +1,9 @@
 class_name BiomesTab
 extends ListDetail
-## A aba Biomas (content-viewer/03, RF-01 a RF-03): a lista pelo `id`, com quantos
-## Ecobeasts nascem em cada bioma, e o detalhe com os Ecobeasts, a superfície que o
-## mapa desenha e as decorações que nascem nela, com todas as variantes. A última
-## linha, Peças comuns, não é um bioma: são as peças que o mapa usa em todos.
-##
-## Colina e Montanha são biomas no catálogo, mas o gerador do mapa as trata como
-## formas do terreno: a aba mostra o que encontra e não corrige isso.
 
-## A linha de Peças comuns: nenhum bioma tem id 0.
 const COMMON_ID := 0
 const SURFACE_BOX := Vector2(160, 160)
 const COMMON_BOX := Vector2(200, 200)
-## A célula da decoração (48 × 64) ampliada 2×.
 const DECORATION_BOX := Vector2(104, 136)
 
 
@@ -66,11 +57,9 @@ func _build_detail(id: int, box: VBoxContainer) -> void:
 		spawns_box.add_child(grid)
 
 	ContentViewer.block(box, "Superfície").add_child(FilePreview.create(ContentFiles.biome_surface(biome["slug"]), SURFACE_BOX))
-	_decorations(ContentFiles.surface_name(biome["slug"]), ContentViewer.block(box, "Decorações"))
+	_decorations(biome["slug"], ContentViewer.block(box, "Decorações"))
 
 
-## As decorações que o mapa sorteia na superfície (HexDecorations.RECIPES), da maior
-## para a menor: a chance de aparecer num hexágono, quantas, e as variantes.
 func _decorations(surface: String, box: VBoxContainer) -> void:
 	var recipe: Array = HexDecorations.RECIPES.get(surface, [])
 	if recipe.is_empty():
@@ -96,7 +85,6 @@ func _decorations(surface: String, box: VBoxContainer) -> void:
 		box.add_child(variants)
 
 
-## As linhas de `species_biomes` do bioma, da maior taxa para a menor.
 func _spawns(biome_id: int) -> Array[Dictionary]:
 	var rows: Array[Dictionary] = []
 	for row: Dictionary in GameData.get_rows("species_biomes"):

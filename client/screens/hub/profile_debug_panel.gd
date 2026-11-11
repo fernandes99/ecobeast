@@ -1,8 +1,4 @@
 extends VBoxContainer
-## Painel extra do placeholder do Perfil (hub/01, RF-11 e RF-12): o nome do
-## Domador, "Sair da conta" (auth-google/04, RF-14) e, só em build de debug,
-## "Apagar progresso" para refazer o onboarding. Apaga só com dois toques em
-## até 3 s (%ConfirmTimer).
 
 const RESET_TEXT := "Apagar progresso"
 const CONFIRM_TEXT := "Toque de novo para apagar"
@@ -29,7 +25,6 @@ func _on_logout_pressed() -> void:
 	Router.go_to(&"login")
 
 
-## Primeiro toque arma; o segundo, com o timer ainda correndo, apaga.
 func _on_reset_pressed() -> void:
 	if _confirm_timer.is_stopped():
 		_reset_button.text = CONFIRM_TEXT

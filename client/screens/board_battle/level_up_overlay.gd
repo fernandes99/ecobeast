@@ -1,23 +1,17 @@
 class_name LevelUpOverlay
 extends Control
-## A comemoração de quem subiu de nível depois da vitória (progression/03,
-## TELAS.md #7): o retrato grande e animado, o nível antigo e o novo e os stats
-## de antes e depois. Os números já vieram do servidor.
 
 signal finished
 
-## Tempos em segundos e escalas do retrato. A revisar.
 const ENTER_TIME := 0.45
 const PULSE_TIME := 0.8
 const ENTER_SCALE := Vector2(0.6, 0.6)
 const PULSE_SCALE := Vector2(1.06, 1.06)
-## O brilho fica mais fraco no meio do pulso.
 const PULSE_GLOW := 0.55
 const STAT_FONT_SIZE := 26
 const GAIN_WIDTH := 72.0
 
 var _pulse: Tween = null
-## Cada `play` conta uma vez: a animação de uma tela já fechada não recomeça.
 var _round: int = 0
 
 @onready var _dim: ColorRect = %Dim
@@ -37,7 +31,6 @@ func _ready() -> void:
 	_continue_button.pressed.connect(close)
 
 
-## Só termina quando o jogador toca em "Continuar": quem chama espera com `await`.
 func play(progress: CreatureProgress, species_id: int, display_name: String) -> void:
 	_round += 1
 	_portrait.set_species(species_id)
@@ -49,7 +42,6 @@ func play(progress: CreatureProgress, species_id: int, display_name: String) -> 
 	await finished
 
 
-## O "Continuar", e também o voltar do Android.
 func close() -> void:
 	if not visible:
 		return
@@ -87,7 +79,6 @@ func _stat_label(text: String, color: Color) -> Label:
 	return label
 
 
-## O retrato entra crescendo e depois pulsa com o brilho, até a tela fechar.
 func _animate(round_id: int) -> void:
 	_portrait.pivot_offset = _portrait.size / 2.0
 	_portrait.scale = ENTER_SCALE

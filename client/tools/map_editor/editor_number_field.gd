@@ -10,7 +10,6 @@ signal changed
 const DECIMALS := 3
 const FIELD_WIDTH := 96.0
 const SLIDER_WIDTH := 120.0
-## A margem interna de um campo estreito (`set_field_width`).
 const COMPACT_MARGIN := 6.0
 
 var min_value: float
@@ -46,14 +45,11 @@ func _init(minimum: float, maximum: float, is_integer: bool, with_slider: bool =
 	add_child(_edit)
 
 
-## Um número de um texto, com vírgula ou ponto; NAN se não for número.
 static func parse(text: String) -> float:
 	var clean := text.strip_edges().replace(",", ".")
 	return float(clean) if clean.is_valid_float() else NAN
 
 
-## O texto de um número como o editor mostra: inteiro sem casas, e fração com
-## vírgula e sem zeros sobrando.
 static func format(number: float, is_integer: bool) -> String:
 	if is_integer:
 		return str(roundi(number))
@@ -63,7 +59,6 @@ static func format(number: float, is_integer: bool) -> String:
 	return text.replace(".", ",")
 
 
-## Um campo estreito, que não cresce: os números de uma linha da tabela de espécies.
 func set_field_width(width: float) -> void:
 	_edit.custom_minimum_size.x = width
 	_edit.size_flags_horizontal = Control.SIZE_FILL
@@ -82,7 +77,6 @@ func set_field_width(width: float) -> void:
 		_edit.add_theme_stylebox_override(state, compact)
 
 
-## O texto em vermelho, quando o número escrito não serve.
 func mark_invalid(invalid: bool) -> void:
 	if invalid:
 		_edit.add_theme_color_override(&"font_color", UiPalette.DANGER)
@@ -98,8 +92,6 @@ func set_value(number: float) -> void:
 	_syncing = false
 
 
-## O número escrito agora, ou NAN se ele não é número, não é inteiro quando
-## precisa ser, ou está fora da faixa.
 func value() -> float:
 	var number := parse(_edit.text)
 	if is_nan(number) or number < min_value or number > max_value:
@@ -109,7 +101,6 @@ func value() -> float:
 	return number
 
 
-## "entre 0 e 1", para a mensagem de um valor fora da faixa.
 func range_text() -> String:
 	return "entre %s e %s" % [format(min_value, integer), format(max_value, integer)]
 

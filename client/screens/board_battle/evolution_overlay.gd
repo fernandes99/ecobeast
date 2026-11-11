@@ -1,14 +1,8 @@
 class_name EvolutionOverlay
 extends Control
-## A evolução depois da vitória (progression/04, TELAS.md #7): o retrato alterna
-## entre a espécie atual e a nova, com um clarão branco, e o jogador pode cancelar
-## enquanto isso. A escolha vai para o servidor no fim da animação.
 
-## Tempos em segundos. A revisar.
 const STEP_TIME := 0.25
-## Cada passo é um clarão e uma troca de retrato: 6 passos dão cerca de 3 s.
 const STEPS := 6
-## Acima de 1, o `modulate` clareia o retrato até quase branco.
 const FLASH := Color(4.0, 4.0, 4.0)
 const NO_CHOICE_TEXT := "Essa escolha não está mais disponível."
 
@@ -31,8 +25,6 @@ func _ready() -> void:
 	_cancel_button.pressed.connect(_cancel)
 
 
-## Só termina no "Continuar". Devolve a resposta do servidor, ou null quando a
-## escolha não existe mais.
 func play(uid: String, species_id: int, evolved_species_id: int, display_name: String) -> ProgressChoice:
 	_cancelled = false
 	_portrait.set_species(species_id)
@@ -61,7 +53,6 @@ func play(uid: String, species_id: int, evolved_species_id: int, display_name: S
 	return choice
 
 
-## O voltar do Android: cancela durante a animação e continua no resultado.
 func go_back() -> void:
 	if _animating:
 		_cancel()
@@ -73,7 +64,6 @@ func _cancel() -> void:
 	_cancelled = true
 
 
-## Para no meio quando o jogador cancela; sem cancelar, termina na espécie nova.
 func _animate(species_id: int, evolved_species_id: int) -> void:
 	_animating = true
 	for step: int in STEPS:
@@ -92,7 +82,6 @@ func _animate(species_id: int, evolved_species_id: int) -> void:
 	_animating = false
 
 
-## Tenta até o servidor responder: sem rede, mostra o erro e "Tentar de novo".
 func _send(uid: String, accept: bool) -> ProgressChoice:
 	var result: Result = await Session.evolve(uid, accept)
 	while not result.ok:

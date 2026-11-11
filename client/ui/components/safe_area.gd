@@ -1,9 +1,6 @@
 class_name SafeArea
 extends MarginContainer
-## Margem que mantém o conteúdo fora do notch e das barras do sistema
-## (foundation/02, RF-10). Todo conteúdo de tela fica dentro de um SafeArea.
 
-## Margem mínima nas laterais, mesmo sem recorte na tela.
 const MIN_SIDE_MARGIN := 24
 
 

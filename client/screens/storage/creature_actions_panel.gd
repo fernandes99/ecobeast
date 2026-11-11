@@ -1,7 +1,5 @@
 class_name CreatureActionsPanel
 extends Control
-## As ações de um Ecobeast, por cima da tela (team-and-storage/02, RF-12). Só
-## exibe e repassa o toque: quem chama o Session é a tela.
 
 signal move_pressed
 signal details_pressed
@@ -28,7 +26,6 @@ func _ready() -> void:
 	_close_button.pressed.connect(close)
 
 
-## `note`: o motivo, quando `can_move` é falso.
 func open(creature: CreatureInstance, move_text: String, can_move: bool = true, note: String = "") -> void:
 	var species := GameData.get_species(creature.species_id)
 	_portrait.set_species(species.id)
@@ -47,7 +44,6 @@ func close() -> void:
 	hide()
 
 
-## Enquanto o pedido volta, nada aqui responde ao toque.
 func set_busy(busy: bool) -> void:
 	_move_button.disabled = busy or not _can_move
 	_details_button.disabled = busy

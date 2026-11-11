@@ -1,20 +1,9 @@
 class_name IslandOverview
 extends Node2D
-## A visão de cima do editor de ilhas (map-editor/02): a ilha inteira plana, um
-## hexágono de cor chapada por hexágono. O `HexMapView` monta só as linhas perto da
-## tela, e montar a ilha inteira com ele trava o jogo; aqui cada hexágono é uma
-## instância de um `MultiMesh`, desenhado de uma vez. As posições são as do
-## `HexMapView` sem a altura, então as duas visões ficam alinhadas.
-##
-## Pintar só troca a cor da instância, e pôr ou tirar um hexágono usa uma vaga
-## livre (map-editor/03): nada é remontado, nem numa ilha de 20.000 hexágonos.
 
-## A cor de cada superfície: a média da própria textura, para a visão de cima
-## lembrar o jogo sem cores fixas no código.
 static var _surface_colors: Dictionary[String, Color] = {}
 
 var _multimesh := MultiMesh.new()
-## A instância de cada hexágono; as `count` primeiras estão em uso.
 var _index_of: Dictionary[Vector2i, int] = {}
 var _coord_at: Array[Vector2i] = []
 var _count := 0
@@ -47,7 +36,6 @@ func set_map(map: ExplorationMap) -> void:
 	queue_redraw()
 
 
-## Os hexágonos mudaram: a cor dos que ficaram, e a vaga dos que entraram ou saíram.
 func update_tiles(coords: Array[Vector2i], map: ExplorationMap) -> void:
 	for coord: Vector2i in coords:
 		var tile := map.tile_at(coord)
@@ -61,12 +49,10 @@ func update_tiles(coords: Array[Vector2i], map: ExplorationMap) -> void:
 	queue_redraw()
 
 
-## A cor de um hexágono na visão de cima: a da textura que ele mostra no jogo.
 static func surface_color(tile: HexTile) -> Color:
-	var surface := tile.surface()
-	if not _surface_colors.has(surface):
-		_surface_colors[surface] = _average_color(HexMapView.SURFACE_PATH % surface)
-	return _surface_colors[surface]
+	if not _surface_colors.has(tile.biome):
+		_surface_colors[tile.biome] = _average_color(HexMapView.SURFACE_PATH % tile.biome)
+	return _surface_colors[tile.biome]
 
 
 func _add(tile: HexTile) -> void:
@@ -83,7 +69,6 @@ func _add(tile: HexTile) -> void:
 	_multimesh.set_instance_color(index, surface_color(tile))
 
 
-## A última instância ocupa a vaga de quem saiu.
 func _remove(coord: Vector2i) -> void:
 	if not _index_of.has(coord):
 		return
@@ -106,8 +91,6 @@ static func _average_color(path: String) -> Color:
 		return UiPalette.TEXT_MUTED
 	if image.is_compressed():
 		image.decompress()
-	# As texturas do terreno são pequenas: a média de todos os pixels sai rápido,
-	# uma vez por superfície.
 	var sum := Vector3.ZERO
 	var count := 0
 	for y: int in image.get_height():

@@ -1,7 +1,5 @@
 class_name BagTargetRow
 extends Button
-## Um Ecobeast na escolha do alvo (inventory-shop/03, RF-17). Fica ativo mesmo
-## com 0 HP: a recusa do servidor explica o motivo.
 
 var _creature: CreatureInstance = null
 
@@ -15,7 +13,6 @@ func _ready() -> void:
 	_refresh()
 
 
-## Pode ser chamado antes ou depois de o componente entrar na árvore.
 func set_creature(creature: CreatureInstance) -> void:
 	_creature = creature
 	if is_node_ready():

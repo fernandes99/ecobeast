@@ -1,7 +1,5 @@
 class_name HealCreatureRow
 extends PanelContainer
-## Uma criatura na tela do Refúgio (heal-station/02, RF-04 e RF-05): retrato,
-## nome, nível, HP e, abaixo, o PP somado das Técnicas e o status, se houver.
 
 const NO_STATUS := -1
 
@@ -18,7 +16,6 @@ func _ready() -> void:
 	_refresh()
 
 
-## Pode ser chamado antes ou depois de o componente entrar na árvore.
 func set_creature(creature: CreatureInstance) -> void:
 	_creature = creature
 	if is_node_ready():

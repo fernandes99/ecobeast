@@ -1,3 +1,4 @@
+import { canAct } from './status.js';
 import {
   always,
   eventsOf,
@@ -6,16 +7,13 @@ import {
   makeCombatant,
   makeEffect,
   makeSkill,
+  cast,
+  ENEMY,
   makeState,
-  play,
+  PLAYER,
   sequence,
 } from './testing.js';
-import type {
-  BattleAction,
-  BattleSkill,
-  Combatant,
-  StageSlug,
-} from './types.js';
+import type { BattleSkill, Combatant, StageSlug } from './types.js';
 
 const support = (id: number, overrides: Partial<BattleSkill>): BattleSkill =>
   makeSkill({
@@ -113,8 +111,6 @@ const catalog = makeCatalog({}, [
   RECKLESS,
   STORM,
 ]);
-const USE_FIRST: BattleAction = { type: 'skill', slot: 1 };
-const USE_SECOND: BattleAction = { type: 'skill', slot: 2 };
 
 function knowing(
   skills: BattleSkill[],
@@ -132,11 +128,11 @@ const idleEnemy = (overrides: Partial<Combatant> = {}) =>
 
 describe('apply_status', () => {
   it('vale com o sorteio abaixo da chance', () => {
-    const { state, events } = play(
+    const { state, events } = cast(
       makeState(knowing([FLAME_FANG]), idleEnemy({ elementIds: [] })),
-      USE_FIRST,
+      FLAME_FANG,
       catalog,
-      sequence(0, 0.9, 0.5, 0.09),
+      sequence(0.9, 0.5, 0.09),
     );
     expect(state.enemy.team[0]!.statusSlug).toBe('burn');
     expect(eventsOf(events, 'status_applied')).toEqual([
@@ -145,37 +141,36 @@ describe('apply_status', () => {
   });
 
   it('não vale com o sorteio na chance', () => {
-    const { state } = play(
+    const { state } = cast(
       makeState(knowing([FLAME_FANG]), idleEnemy()),
-      USE_FIRST,
+      FLAME_FANG,
       catalog,
-      sequence(0, 0.9, 0.5, 0.1),
+      sequence(0.9, 0.5, 0.1),
     );
     expect(state.enemy.team[0]!.statusSlug).toBeNull();
   });
 
   it('funciona numa Técnica de suporte', () => {
-    const { state } = play(
+    const { state } = cast(
       makeState(knowing([SPORES]), idleEnemy()),
-      USE_FIRST,
+      SPORES,
       catalog,
-      sequence(0, 0.7, 0.5),
+      sequence(0.7, 0.5),
     );
-    // Sorteou 2 turnos, e o primeiro passa aqui, quando o inimigo tenta agir.
     expect(state.enemy.team[0]).toMatchObject({
       statusSlug: 'sleep',
-      sleepTurns: 1,
+      sleepTurns: 2,
     });
   });
 
   it('Fogo não queima', () => {
     const immune = makeCatalog({}, [FLAME_FANG, IDLE]);
     immune.statusImmunities.set('burn', [FIRE]);
-    const { state, events } = play(
+    const { state, events } = cast(
       makeState(knowing([FLAME_FANG]), idleEnemy()),
-      USE_FIRST,
+      FLAME_FANG,
       immune,
-      sequence(0, 0.9, 0.5, 0),
+      sequence(0.9, 0.5, 0),
     );
     expect(state.enemy.team[0]!.statusSlug).toBeNull();
     expect(eventsOf(events, 'effect_failed')).toEqual([
@@ -183,83 +178,75 @@ describe('apply_status', () => {
     ]);
   });
 
-  it('não vale se o alvo desmaiou', () => {
-    const { events } = play(
+  it('não vale se o alvo ficou sem HP', () => {
+    const { events } = cast(
       makeState(knowing([FLAME_FANG]), idleEnemy({ currentHp: 1 })),
-      USE_FIRST,
+      FLAME_FANG,
       catalog,
-      // O último é o das moedas da vitória.
-      sequence(0, 0.9, 0.5, 0.5),
+      always(0),
     );
     expect(eventsOf(events, 'status_applied')).toEqual([]);
   });
 
   it('não vale se a Técnica errou', () => {
-    const { state } = play(
+    const { state, events } = cast(
       makeState(knowing([SPORES]), idleEnemy()),
-      USE_FIRST,
+      SPORES,
       catalog,
       always(0.8),
     );
     expect(state.enemy.team[0]!.statusSlug).toBeNull();
+    expect(eventsOf(events, 'missed')).toEqual([
+      { type: 'missed', side: 'player', position: 0 },
+    ]);
   });
 
   it('não vale com efetividade 0', () => {
     const immune = makeCatalog({ '13:1': 0 }, [FLAME_FANG, IDLE]);
-    const { state } = play(
+    const { state, events } = cast(
       makeState(knowing([FLAME_FANG]), idleEnemy({ elementIds: [FIRE] })),
-      USE_FIRST,
+      FLAME_FANG,
       immune,
       always(0),
     );
     expect(state.enemy.team[0]!.statusSlug).toBeNull();
+    expect(eventsOf(events, 'no_effect')).toEqual([
+      { type: 'no_effect', side: 'enemy', position: 0 },
+    ]);
   });
 });
 
 describe('flinch', () => {
   it('Ciclone com o sorteio abaixo de 20% faz o alvo perder a vez', () => {
-    const { state, events } = play(
+    const turn = cast(
       makeState(knowing([CYCLONE]), idleEnemy()),
-      USE_FIRST,
+      CYCLONE,
       catalog,
-      sequence(0, 0.9, 0.5, 0.19),
+      sequence(0.9, 0.5, 0.19),
     );
-    expect(eventsOf(events, 'cannot_act')).toEqual([
+    expect(turn.state.enemy.team[0]!.isFeared).toBe(true);
+    expect(canAct(turn, ENEMY)).toBe(false);
+    expect(eventsOf(turn.events, 'cannot_act')).toEqual([
       { type: 'cannot_act', side: 'enemy', position: 0, reason: 'fear' },
     ]);
-    expect(state.enemy.team[0]!.isFeared).toBe(false);
   });
 
   it('não vale com o sorteio em 20%', () => {
-    const { events } = play(
+    const { state } = cast(
       makeState(knowing([CYCLONE]), idleEnemy()),
-      USE_FIRST,
+      CYCLONE,
       catalog,
-      sequence(0, 0.9, 0.5, 0.2),
+      sequence(0.9, 0.5, 0.2),
     );
-    expect(eventsOf(events, 'cannot_act')).toEqual([]);
-  });
-
-  it('não muda nada em quem já agiu', () => {
-    const slow = knowing([CYCLONE], {
-      stats: { hp: 19, atk: 10, def: 9, sp_atk: 11, sp_def: 9, spd: 1 },
-    });
-    const { state, events } = play(
-      makeState(slow, idleEnemy()),
-      USE_FIRST,
-      catalog,
-      sequence(0, 0.9, 0.5, 0),
-    );
-    expect(eventsOf(events, 'cannot_act')).toEqual([]);
     expect(state.enemy.team[0]!.isFeared).toBe(false);
   });
 });
 
 describe('modify_stat', () => {
   it('Rugido Feroz baixa o Atq do inimigo', () => {
-    const { state, events } = play(
+    const { state, events } = cast(
       makeState(knowing([FIERCE_ROAR]), idleEnemy()),
-      USE_FIRST,
+      FIERCE_ROAR,
       catalog,
     );
     expect(state.enemy.team[0]!.stages.atk).toBe(-1);
@@ -278,11 +265,11 @@ describe('modify_stat', () => {
   it('depois de 6 usos, dá effect_failed', () => {
     let state = makeState(knowing([FIERCE_ROAR]), idleEnemy());
     for (let use = 0; use < 6; use += 1) {
-      ({ state } = play(state, USE_FIRST, catalog));
+      ({ state } = cast(state, FIERCE_ROAR, catalog));
     }
     expect(state.enemy.team[0]!.stages.atk).toBe(-6);
 
-    const { events } = play(state, USE_FIRST, catalog);
+    const { events } = cast(state, FIERCE_ROAR, catalog);
     expect(eventsOf(events, 'stat_changed')).toEqual([]);
     expect(eventsOf(events, 'effect_failed')).toEqual([
       { type: 'effect_failed', side: 'enemy', position: 0 },
@@ -292,9 +279,9 @@ describe('modify_stat', () => {
   it('conta só o que mudou de verdade', () => {
     const big = support(20, { effects: [raiseStat('atk', 2)] });
     const stages = { ...makeCombatant().stages, atk: 5 };
-    const { events } = play(
+    const { events } = cast(
       makeState(knowing([big], { stages }), idleEnemy()),
-      USE_FIRST,
+      big,
       makeCatalog({}, [big, IDLE]),
     );
     expect(eventsOf(events, 'stat_changed')[0]).toMatchObject({
@@ -304,9 +291,9 @@ describe('modify_stat', () => {
   });
 
   it('aplica os efeitos em ordem, no alvo de cada um', () => {
-    const { state, events } = play(
+    const { state, events } = cast(
       makeState(knowing([ASH_ARMOR]), idleEnemy()),
-      USE_FIRST,
+      ASH_ARMOR,
       catalog,
     );
     expect(state.player.team[0]!.stages).toMatchObject({ def: 1, sp_def: 1 });
@@ -316,10 +303,10 @@ describe('modify_stat', () => {
     ]);
   });
 
-  it('não vale se o alvo desmaiou', () => {
-    const { events } = play(
+  it('não vale se o alvo ficou sem HP', () => {
+    const { events } = cast(
       makeState(knowing([CRUSH]), idleEnemy({ currentHp: 1 })),
-      USE_FIRST,
+      CRUSH,
       catalog,
     );
     expect(eventsOf(events, 'stat_changed')).toEqual([]);
@@ -328,9 +315,9 @@ describe('modify_stat', () => {
 
 describe('heal', () => {
   it('cura a porcentagem do HP máximo', () => {
-    const { state, events } = play(
+    const { state, events } = cast(
       makeState(knowing([RESTORE], { currentHp: 5 }), idleEnemy()),
-      USE_FIRST,
+      RESTORE,
       catalog,
     );
     expect(state.player.team[0]!.currentHp).toBe(14);
@@ -340,18 +327,18 @@ describe('heal', () => {
   });
 
   it('não passa do HP máximo', () => {
-    const { events } = play(
+    const { events } = cast(
       makeState(knowing([RESTORE], { currentHp: 15 }), idleEnemy()),
-      USE_FIRST,
+      RESTORE,
       catalog,
     );
     expect(eventsOf(events, 'healed')[0]).toMatchObject({ amount: 4, hp: 19 });
   });
 
   it('com HP cheio, dá effect_failed', () => {
-    const { events } = play(
+    const { events } = cast(
       makeState(knowing([RESTORE]), idleEnemy()),
-      USE_FIRST,
+      RESTORE,
       catalog,
     );
     expect(eventsOf(events, 'healed')).toEqual([]);
@@ -361,9 +348,9 @@ describe('heal', () => {
   });
 
   it('com o HP acima do máximo, não tira HP', () => {
-    const { state, events } = play(
+    const { state, events } = cast(
       makeState(knowing([RESTORE], { currentHp: 25 }), idleEnemy()),
-      USE_FIRST,
+      RESTORE,
       catalog,
     );
     expect(state.player.team[0]!.currentHp).toBe(25);
@@ -373,9 +360,9 @@ describe('heal', () => {
 
 describe('drain', () => {
   it('Seiva Vital cura metade do dano', () => {
-    const { events } = play(
+    const { events } = cast(
       makeState(knowing([VITAL_SAP], { currentHp: 10 }), idleEnemy()),
-      USE_FIRST,
+      VITAL_SAP,
       catalog,
     );
     expect(eventsOf(events, 'damage')[0]).toMatchObject({ damage: 5 });
@@ -385,34 +372,34 @@ describe('drain', () => {
   });
 
   it('cura ao menos 1', () => {
-    const { events } = play(
+    const { events } = cast(
       makeState(
         knowing([VITAL_SAP], { currentHp: 10 }),
         idleEnemy({ currentHp: 1 }),
       ),
-      USE_FIRST,
+      VITAL_SAP,
       catalog,
     );
     expect(eventsOf(events, 'healed')[0]).toMatchObject({ amount: 1 });
   });
 
   it('com HP cheio, não cura nem falha', () => {
-    const { events } = play(
+    const { events } = cast(
       makeState(knowing([VITAL_SAP]), idleEnemy()),
-      USE_FIRST,
+      VITAL_SAP,
       catalog,
     );
     expect(eventsOf(events, 'healed')).toEqual([]);
     expect(eventsOf(events, 'effect_failed')).toEqual([]);
   });
 
-  it('cura mesmo se o alvo desmaiou', () => {
-    const { state } = play(
+  it('cura mesmo se o alvo ficou sem HP', () => {
+    const { state } = cast(
       makeState(
         knowing([VITAL_SAP], { currentHp: 10 }),
         idleEnemy({ currentHp: 4 }),
       ),
-      USE_FIRST,
+      VITAL_SAP,
       catalog,
     );
     expect(state.player.team[0]!.currentHp).toBe(12);
@@ -421,9 +408,9 @@ describe('drain', () => {
 
 describe('recoil', () => {
   it('Erupção Solar tira 33% do dano do autor', () => {
-    const { state, events } = play(
+    const { state, events } = cast(
       makeState(knowing([SOLAR_ERUPTION]), idleEnemy()),
-      USE_FIRST,
+      SOLAR_ERUPTION,
       catalog,
     );
     expect(eventsOf(events, 'damage')[0]).toMatchObject({ damage: 11 });
@@ -434,81 +421,71 @@ describe('recoil', () => {
   });
 
   it('tira ao menos 1', () => {
-    const { events } = play(
+    const { events } = cast(
       makeState(knowing([SOLAR_ERUPTION]), idleEnemy({ currentHp: 1 })),
-      USE_FIRST,
+      SOLAR_ERUPTION,
       catalog,
     );
     expect(eventsOf(events, 'recoil')[0]).toMatchObject({ damage: 1 });
   });
 
-  it('vale mesmo se o alvo desmaiou', () => {
-    const { events } = play(
+  it('vale mesmo se o alvo ficou sem HP', () => {
+    const { events } = cast(
       makeState(knowing([SOLAR_ERUPTION]), idleEnemy({ currentHp: 3 })),
-      USE_FIRST,
+      SOLAR_ERUPTION,
       catalog,
     );
     expect(eventsOf(events, 'recoil')).toHaveLength(1);
   });
 
-  it('um efeito no autor não vale depois que ele desmaiou', () => {
-    const { state, events } = play(
+  it('um efeito no autor não vale depois que ele ficou sem HP', () => {
+    const { state, events } = cast(
       makeState(knowing([RECKLESS], { currentHp: 1 }), [idleEnemy()]),
-      USE_FIRST,
+      RECKLESS,
       catalog,
     );
-    expect(state.result).toBe('defeat');
+    expect(state.player.team[0]!.currentHp).toBe(0);
     expect(eventsOf(events, 'healed')).toEqual([]);
   });
 });
 
 describe('protect', () => {
-  const shell = () =>
-    knowing([CLOSED_SHELL, SCRATCH], {
-      stats: { hp: 19, atk: 10, def: 9, sp_atk: 11, sp_def: 9, spd: 1 },
-    });
+  const shell = () => knowing([CLOSED_SHELL, SCRATCH]);
   const scratcher = () => knowing([SCRATCH]);
+  const shielded = (enemy: Combatant) =>
+    cast(makeState(shell(), enemy), CLOSED_SHELL, catalog).state;
 
-  it('Casca Fechada age antes e bloqueia o golpe do turno', () => {
-    const { state, events } = play(
-      makeState(shell(), scratcher()),
-      USE_FIRST,
-      catalog,
-    );
-    expect(eventsOf(events, 'skill_used').map((e) => e.side)).toEqual([
-      'player',
-      'enemy',
-    ]);
-    expect(eventsOf(events, 'blocked')).toEqual([
+  it('Casca Fechada bloqueia o golpe seguinte', () => {
+    const state = shielded(scratcher());
+    expect(state.player.team[0]!.isProtected).toBe(true);
+
+    const hit = cast(state, SCRATCH, catalog, always(0.5), ENEMY, PLAYER);
+    expect(eventsOf(hit.events, 'blocked')).toEqual([
       { type: 'blocked', side: 'player', position: 0 },
     ]);
-    expect(state.player.team[0]!.currentHp).toBe(19);
-    expect(state.enemy.team[0]!.skills[0]!.currentPp).toBe(19);
-  });
-
-  it('não bloqueia o golpe do turno seguinte', () => {
-    const first = play(makeState(shell(), scratcher()), USE_FIRST, catalog);
-    expect(first.state.player.team[0]!.isProtected).toBe(false);
-
-    const { state, events } = play(first.state, USE_SECOND, catalog);
-    expect(eventsOf(events, 'blocked')).toEqual([]);
-    expect(state.player.team[0]!.currentHp).toBeLessThan(19);
+    expect(hit.state.player.team[0]!.currentHp).toBe(19);
   });
 
   it('bloqueia também os efeitos', () => {
-    const { state } = play(
-      makeState(shell(), knowing([FIERCE_ROAR])),
-      USE_FIRST,
+    const { state } = cast(
+      shielded(knowing([FIERCE_ROAR])),
+      FIERCE_ROAR,
       catalog,
+      always(0.5),
+      ENEMY,
+      PLAYER,
     );
     expect(state.player.team[0]!.stages.atk).toBe(0);
   });
 
   it('não impede o adversário de usar uma Técnica em si mesmo', () => {
-    const { state, events } = play(
-      makeState(shell(), knowing([ASH_ARMOR])),
-      USE_FIRST,
+    const { state, events } = cast(
+      shielded(knowing([ASH_ARMOR])),
+      ASH_ARMOR,
       catalog,
+      always(0.5),
+      ENEMY,
+      PLAYER,
     );
     expect(eventsOf(events, 'blocked')).toEqual([]);
     expect(state.enemy.team[0]!.stages.def).toBe(1);
@@ -516,9 +493,9 @@ describe('protect', () => {
 });
 
 it('um efeito que o motor não conhece é ignorado', () => {
-  const { events } = play(
+  const { events } = cast(
     makeState(knowing([STORM]), idleEnemy()),
-    USE_FIRST,
+    STORM,
     catalog,
   );
   expect(eventsOf(events, 'effect_failed')).toEqual([]);

@@ -1,8 +1,5 @@
 class_name AuthSession
 extends RefCounted
-## A sessão da conta guardada no aparelho (.specs/auth-google/04-client-login.md,
-## RF-03). A cifra só evita que o arquivo seja lido por engano: quem protege a
-## conta é o servidor, que confere cada token.
 
 const PATH := "user://session.json"
 
@@ -12,8 +9,6 @@ var refresh_token: String = ""
 var expires_at: int = 0
 
 
-## A sessão vinda do servidor ({access_token, refresh_token, expires_in}), ou
-## null se faltar algum campo.
 static func from_tokens(data: Dictionary) -> AuthSession:
 	var expires_in: Variant = data.get("expires_in")
 	if not (expires_in is int or expires_in is float):
@@ -21,7 +16,6 @@ static func from_tokens(data: Dictionary) -> AuthSession:
 	return _build(data.get("access_token"), data.get("refresh_token"), _now() + int(expires_in))
 
 
-## A sessão guardada, ou null. Arquivo ilegível conta como sem sessão e é apagado.
 static func load_saved() -> AuthSession:
 	if not FileAccess.file_exists(PATH):
 		return null
@@ -56,7 +50,6 @@ func save() -> bool:
 	return written
 
 
-## Falta menos que isso para o access_token vencer?
 func expires_within(seconds: int) -> bool:
 	return expires_at - _now() < seconds
 

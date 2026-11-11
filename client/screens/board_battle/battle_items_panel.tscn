@@ -1,6 +1,6 @@
 [gd_scene format=3]
 
-[ext_resource type="Script" path="res://screens/battle/battle_items_panel.gd" id="1_script"]
+[ext_resource type="Script" path="res://screens/board_battle/battle_items_panel.gd" id="1_script"]
 
 [node name="BattleItemsPanel" type="Control"]
 layout_mode = 3

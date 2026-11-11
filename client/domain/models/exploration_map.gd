@@ -1,8 +1,5 @@
 class_name ExplorationMap
 extends RefCounted
-## O mapa de uma exploração (.specs/wild-battle/architecture.md): os hexágonos
-## por coordenada axial. Quem gera é o servidor: sorteado, ou o de uma ilha
-## publicada, com o nome e as construções dela (islands/03).
 
 const DIRECTIONS: Array[Vector2i] = [
 	Vector2i(1, 0),
@@ -13,24 +10,17 @@ const DIRECTIONS: Array[Vector2i] = [
 	Vector2i(-1, 1),
 ]
 
-## `seed` já é uma função do GDScript.
 var map_seed: int = 0
 var start := Vector2i.ZERO
 var tiles: Dictionary[Vector2i, HexTile] = {}
-## Os Ecobeasts ainda no mapa, por id.
 var creatures: Dictionary[int, MapCreature] = {}
-## Os Domadores NPC ainda no mapa, por id (npc-tamers/04). Um por hexágono.
 var tamers: Dictionary[int, MapTamer] = {}
-## A ilha do mapa; 0 e vazio no mapa sorteado.
 var island_id: int = 0
 var island_name: String = ""
-## As construções da ilha; vazio no mapa sorteado.
 var buildings: Array[MapBuilding] = []
-## Hexágono de construção -> índice em `buildings`.
 var _building_of: Dictionary[Vector2i, int] = {}
 
 
-## Quantos passos pela grade separam duas posições.
 static func distance(from: Vector2i, to: Vector2i) -> int:
 	var delta := from - to
 	@warning_ignore("integer_division")
@@ -41,12 +31,10 @@ func has(coord: Vector2i) -> bool:
 	return tiles.has(coord)
 
 
-## null fora do mapa.
 func tile_at(coord: Vector2i) -> HexTile:
 	return tiles.get(coord)
 
 
-## As posições vizinhas que pertencem ao mapa.
 func neighbors(coord: Vector2i) -> Array[Vector2i]:
 	var result: Array[Vector2i] = []
 	for direction: Vector2i in DIRECTIONS:
@@ -59,7 +47,6 @@ func has_creature(coord: Vector2i) -> bool:
 	return creatures.values().any(func(creature: MapCreature) -> bool: return creature.coord == coord)
 
 
-## O Domador NPC do hexágono, ou null.
 func tamer_at(coord: Vector2i) -> MapTamer:
 	for tamer: MapTamer in tamers.values():
 		if tamer.coord == coord:
@@ -67,7 +54,6 @@ func tamer_at(coord: Vector2i) -> MapTamer:
 	return null
 
 
-## O índice, em `buildings`, da construção do hexágono, ou -1.
 func building_at(coord: Vector2i) -> int:
 	return _building_of.get(coord, -1)
 

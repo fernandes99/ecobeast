@@ -15,7 +15,7 @@ import {
   type Team,
 } from '../battle/battle-records.service.js';
 import { NO_CHALLENGER } from '../battle/battle.dto.js';
-import { NO_BATTLE } from '../battle/battle.service.js';
+import { NO_BATTLE } from '../battle/battle.dto.js';
 import {
   BattleStore,
   type BattleTamer,
@@ -179,7 +179,7 @@ export class BoardBattleService {
     input: BoardInput,
   ): Promise<BoardBattleResponseDto> {
     const battle = this.store.get(userId);
-    if (!battle || battle.kind !== 'board') {
+    if (!battle) {
       throw new NotFoundException(NO_BATTLE);
     }
     const tamer = battle.tamer ?? null;
@@ -290,7 +290,7 @@ export class BoardBattleService {
       return toResponse(state, events, tamer, finish);
     }
     // Substitui a luta anterior, de qualquer tipo, sem gravar nada dela.
-    this.store.set(userId, { kind: 'board', state, catalog, wilds, tamer });
+    this.store.set(userId, { state, catalog, wilds, tamer });
     await this.recordSeen(userId, events);
     return toResponse(state, events, tamer);
   }

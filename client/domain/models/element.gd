@@ -1,6 +1,5 @@
 class_name Element
 extends RefCounted
-## Um dos 15 elementos (tabela elements).
 
 var id: int
 var slug: String

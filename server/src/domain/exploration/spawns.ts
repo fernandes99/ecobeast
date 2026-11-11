@@ -1,23 +1,16 @@
 import type { Random } from '../battle/types.js';
 import { MAX_LEVEL } from '../rules/xp-curve.js';
 import type { HexCoord } from './hex.js';
-import type { MapTile } from './map-generator.js';
+import { BIOMES, type Biome, type MapTile } from './map-generator.js';
 import { DEFAULT_SPAWN_CONFIG, SpawnConfig } from './spawn-config.js';
 
 const MIN_LEVEL = 1;
 /** A base de uma linha, que não vem de nenhuma evolução. */
 const BASE_NATURAL_LEVEL = 1;
 
-export const ENCOUNTER_BIOMES = [
-  'temperate',
-  'boreal',
-  'stone',
-  'hill',
-  'mountain',
-  'wshallow',
-  'wdeep',
-] as const;
-export type EncounterBiome = (typeof ENCOUNTER_BIOMES)[number];
+/** O bioma de encontro é o próprio bioma do hexágono (terrain-height). */
+export const ENCOUNTER_BIOMES = BIOMES;
+export type EncounterBiome = Biome;
 
 export interface EvolutionLevel {
   speciesId: number;
@@ -51,16 +44,6 @@ interface BiomeRoll {
   candidates: WeightedSpecies[];
   /** Hexágonos do bioma × soma dos pesos: a chance dele levar a vaga. */
   weight: number;
-}
-
-/** Colina e montanha valem em qualquer bioma, e o resto é o próprio bioma. */
-export function encounterBiome({
-  biome,
-  shape,
-}: Pick<MapTile, 'biome' | 'shape'>): EncounterBiome {
-  if (shape === 'hill') return 'hill';
-  if (shape === 'mont') return 'mountain';
-  return biome;
 }
 
 /**
@@ -134,7 +117,7 @@ function biomeRolls(
 ): BiomeRoll[] {
   const byBiome = new Map<EncounterBiome, MapTile[]>();
   for (const tile of tiles) {
-    const biome = encounterBiome(tile);
+    const biome = tile.biome;
     const group = byBiome.get(biome);
     if (group) group.push(tile);
     else byBiome.set(biome, [tile]);

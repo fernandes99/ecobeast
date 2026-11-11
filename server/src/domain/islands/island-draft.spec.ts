@@ -22,9 +22,9 @@ function island(): IslandDraft {
     name: 'Ilha das Brumas',
     start: { q: 0, r: 0 },
     tiles: [
-      { q: 0, r: 0, biome: 'temperate', shape: 'flat', variant: 2 },
-      { q: 1, r: 0, biome: 'boreal', shape: 'hill', variant: 3, area: 1 },
-      { q: 0, r: 1, biome: 'wshallow', shape: 'flat', variant: 6 },
+      { q: 0, r: 0, biome: 'temperate', height: 1, variant: 2 },
+      { q: 1, r: 0, biome: 'hill', height: 2, variant: 3, area: 1 },
+      { q: 0, r: 1, biome: 'wshallow', height: 0, variant: 6 },
     ],
     buildings: [{ buildingTypeId: REFUGE, tiles: [{ q: 0, r: 1 }] }],
     areas: [
@@ -70,7 +70,7 @@ describe('draftError', () => {
       q,
       r: 0,
       biome: 'temperate' as const,
-      shape: 'flat' as const,
+      height: 1,
       variant: 1,
     }));
     const draft = { ...island(), tiles, buildings: [], areas: [] };
@@ -81,7 +81,7 @@ describe('draftError', () => {
 
   it('recusa um hexágono repetido', () => {
     const draft = island();
-    draft.tiles.push({ q: 1, r: 0, biome: 'stone', shape: 'flat', variant: 1 });
+    draft.tiles.push({ q: 1, r: 0, biome: 'stone', height: 3, variant: 1 });
     expect(draftError(draft, known)).toBe(
       'O hexágono (1, 0) aparece duas vezes.',
     );
@@ -89,30 +89,37 @@ describe('draftError', () => {
 
   it('recusa um bioma que não é de terreno', () => {
     const draft = island();
-    (draft.tiles[0] as { biome: string }).biome = 'mountain';
+    (draft.tiles[0] as { biome: string }).biome = 'lava';
     expect(draftError(draft, known)).toBe(
       'O hexágono (0, 0) tem um bioma que não é de terreno.',
     );
   });
 
-  it('recusa uma forma desconhecida', () => {
+  it('aceita a Colina e a Montanha em qualquer altura', () => {
     const draft = island();
-    (draft.tiles[0] as { shape: string }).shape = 'cliff';
+    draft.tiles[0] = { q: 0, r: 0, biome: 'mountain', height: 0, variant: 3 };
+    draft.tiles[2] = { q: 0, r: 1, biome: 'wshallow', height: 4, variant: 6 };
+    expect(draftError(draft, known)).toBeNull();
+  });
+
+  it.each([-1, 5, 1.5])('recusa a altura %d', (height) => {
+    const draft = island();
+    draft.tiles[0] = { q: 0, r: 0, biome: 'temperate', height, variant: 1 };
     expect(draftError(draft, known)).toBe(
-      'O hexágono (0, 0) tem uma forma inválida.',
+      `O hexágono (0, 0) tem a altura ${height}: vai de 0 a 4.`,
     );
   });
 
   it.each([
-    ['flat', 7],
-    ['flat', 0],
+    ['temperate', 7],
+    ['wdeep', 0],
     ['hill', 4],
-    ['mont', 1.5],
-  ] as const)('recusa a variante %s %d', (shape, variant) => {
+    ['mountain', 1.5],
+  ] as const)('recusa a variante %s %d', (biome, variant) => {
     const draft = island();
-    draft.tiles[0] = { q: 0, r: 0, biome: 'temperate', shape, variant };
+    draft.tiles[0] = { q: 0, r: 0, biome, height: 1, variant };
     expect(draftError(draft, known)).toBe(
-      `O hexágono (0, 0) tem a variante ${variant}: vai de 1 a 6 no plano e de 1 a 3 nas outras formas.`,
+      `O hexágono (0, 0) tem a variante ${variant}: vai de 1 a 3 na Colina e na Montanha, e de 1 a 6 nos outros biomas.`,
     );
   });
 

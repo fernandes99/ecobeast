@@ -1,22 +1,15 @@
 class_name Player
 extends RefCounted
-## O Domador (.specs/onboarding/architecture.md, "Modelos").
-## from_dict lê o JSON da API.
 
-## Nome já normalizado: 2 a 16 letras, números ou espaços.
 const NAME_PATTERN := "^[\\p{L}\\p{N} ]{2,16}$"
-## Quantos Ecobeasts cabem na equipe principal.
 const PARTY_SIZE := 6
 
 var id: String
 var name: String
 var level: int = 1
 var coins: int = 0
-## ISO 8601 em UTC.
 var created_at: String
-## Na ordem dos slots da equipe.
 var party: Array[CreatureInstance] = []
-## A Mochila, em ordem de item.
 var inventory: Array[InventorySlot] = []
 
 
@@ -24,7 +17,6 @@ func has_starter() -> bool:
 	return not party.is_empty()
 
 
-## 0 se o jogador não tem o item.
 func quantity_of(item_id: int) -> int:
 	for slot: InventorySlot in inventory:
 		if slot.item_id == item_id:
@@ -32,13 +24,11 @@ func quantity_of(item_id: int) -> int:
 	return 0
 
 
-## Tira os espaços das pontas e troca sequências de espaços por um só.
 static func normalize_name(raw_name: String) -> String:
 	var spaces := RegEx.create_from_string("\\s+")
 	return spaces.sub(raw_name.strip_edges(), " ", true)
 
 
-## Recebe o nome já normalizado.
 static func is_valid_name(normalized_name: String) -> bool:
 	return RegEx.create_from_string(NAME_PATTERN).search(normalized_name) != null
 

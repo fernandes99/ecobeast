@@ -1,13 +1,9 @@
 class_name NextCreaturePanel
 extends Control
-## Painel de quem entra em campo (battle-screen/03, RF-22 a RF-24, e
-## team-and-storage/04): pelo botão Equipe ou depois de um desmaio. Só exibe e
-## repassa o toque: quem chama o Session é a tela. Depois de um desmaio, não se
-## fecha sem uma escolha.
 
 signal chosen(team_index: int)
 
-const RowScene := preload("res://screens/battle/next_creature_row.tscn")
+const RowScene := preload("res://screens/board_battle/next_creature_row.tscn")
 
 var _can_go_back: bool = false
 
@@ -23,8 +19,6 @@ func _ready() -> void:
 	_back_button.pressed.connect(go_back)
 
 
-## `names`: o nome de exibição de cada criatura de `team`, na mesma ordem.
-## `active_index`: quem está em campo, que não pode ser escolhido; -1 sem ninguém.
 func open(team: Array[BattleCreature], names: Array[String], active_index: int = -1, can_go_back: bool = false) -> void:
 	for row: Node in _list.get_children():
 		_list.remove_child(row)

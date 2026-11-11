@@ -1,14 +1,10 @@
 extends Control
-## Bestiário (codex/02, TELAS.md #11): todas as espécies do catálogo, na ordem do
-## número, com a contagem de vistos e de capturados. Tocar numa espécie conhecida
-## abre o detalhe por cima da grade. Quem decide o que o jogador conhece é o servidor.
 
 const CellScene := preload("res://screens/codex/codex_cell.tscn")
 
 const LOADING_TEXT := "Carregando..."
 
 var _codex: Codex = null
-## Há um pedido no servidor: os toques esperam a resposta.
 var _busy: bool = false
 
 @onready var _seen_count: Label = %SeenCount
@@ -32,7 +28,6 @@ func _ready() -> void:
 	_load()
 
 
-## Chamado pelo Router no voltar do Android ou Esc: fecha o detalhe, se aberto.
 func handle_back() -> bool:
 	if _busy:
 		return true
@@ -85,7 +80,6 @@ func _open_detail(species_id: int) -> void:
 		_detail.open(species_id, _codex)
 
 
-## Só em build de debug (codex/02, RF-13): apaga o Bestiário e relê.
 func _debug_clear() -> void:
 	if _busy:
 		return

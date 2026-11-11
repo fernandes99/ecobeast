@@ -20,7 +20,7 @@ Voltar da luta      →  o cliente tira do mapa o Ecobeast enfrentado
 
 ## Biomas de encontro
 
-As taxas usam 7 biomas. O gerador segue com `biome` e `shape`, sem mudança, e uma função traduz cada hexágono:
+As taxas usam 7 biomas. Desde a [terrain-height](../terrain-height/README.md), o hexágono já tem um desses 7 biomas, e o bioma de encontro é o próprio `biome`, em qualquer altura. Antes dela, uma função traduzia a forma do hexágono, como na tabela abaixo; o gerador converte a forma do mesmo jeito, então as taxas não mudaram:
 
 | Forma do hexágono | Bioma de encontro |
 | --- | --- |
@@ -153,7 +153,7 @@ Quem altera o cliente consegue saber onde estão os 500 Ecobeasts, mas continua 
   "map": {
     "seed": 1234567,
     "start": { "q": 0, "r": 1 },
-    "tiles": [{ "q": 0, "r": 0, "biome": "temperate", "shape": "flat", "variant": 4 }],
+    "tiles": [{ "q": 0, "r": 0, "biome": "temperate", "height": 1, "variant": 4 }],
     "creatures": [{ "id": 1, "species_id": 7, "q": 3, "r": -2 }]
   }
 }

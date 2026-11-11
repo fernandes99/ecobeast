@@ -66,7 +66,11 @@ describe('Equipe e Santuário (e2e)', () => {
         http().post('/v1/me/team/bring').set(auth).send(body),
       store: (body: object) =>
         http().post('/v1/me/team/store').set(auth).send(body),
-      start: () => http().post('/v1/me/battle').set(auth).send(WEAK_ENEMY),
+      start: () =>
+        http()
+          .post('/v1/me/board-battle')
+          .set(auth)
+          .send({ enemies: [WEAK_ENEMY] }),
     };
   }
 

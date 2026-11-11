@@ -16,7 +16,7 @@ interface Tile {
   q: number;
   r: number;
   biome: string;
-  shape: string;
+  height: number;
   variant: number;
   area?: number;
 }
@@ -37,7 +37,7 @@ function hexagon(radius: number): Tile[] {
   for (let q = -radius; q <= radius; q++) {
     for (let r = -radius; r <= radius; r++) {
       if (Math.abs(q + r) > radius) continue;
-      tiles.push({ q, r, biome: 'temperate', shape: 'flat', variant: 1 });
+      tiles.push({ q, r, biome: 'temperate', height: 1, variant: 1 });
     }
   }
   return tiles;
@@ -190,9 +190,7 @@ describe('Ilhas do jogador (e2e)', () => {
     it('devolve o mapa publicado, as construções e os Ecobeasts das áreas', async () => {
       const user = await newUser();
 
-      const { body } = await user
-        .explore({ island_id: published })
-        .expect(201);
+      const { body } = await user.explore({ island_id: published }).expect(201);
 
       const map = (body as { map: IslandMap }).map;
       expect(map.seed).toBe(published);
@@ -204,9 +202,9 @@ describe('Ilhas do jogador (e2e)', () => {
       expect(map.tiles).toHaveLength(7);
       expect(Object.keys(map.tiles[0]!).sort()).toEqual([
         'biome',
+        'height',
         'q',
         'r',
-        'shape',
         'variant',
       ]);
       expect(map.buildings).toEqual([
@@ -226,9 +224,9 @@ describe('Ilhas do jogador (e2e)', () => {
       for (const creature of lake) {
         expect(`${creature.q},${creature.r}`).toBe('-1,0');
       }
-      expect(map.creatures.map(({ id }) => id).sort((a, b) => a - b)).toEqual(
-        [1, 2, 3, 4, 5, 6, 7, 8],
-      );
+      expect(map.creatures.map(({ id }) => id).sort((a, b) => a - b)).toEqual([
+        1, 2, 3, 4, 5, 6, 7, 8,
+      ]);
 
       const stored = app.get(ExplorationStore).get(user.id)!;
       expect(stored.tamers.size).toBe(0);
@@ -287,9 +285,9 @@ describe('Ilhas do jogador (e2e)', () => {
 
     it('sem Domador, dá 409 antes de procurar a ilha', async () => {
       const user = await newUser(false);
-      const { body } = await user.explore({ island_id: 2_147_483_647 }).expect(
-        409,
-      );
+      const { body } = await user
+        .explore({ island_id: 2_147_483_647 })
+        .expect(409);
       expect((body as { message: string }).message).toBe(
         'Crie seu Domador primeiro.',
       );
