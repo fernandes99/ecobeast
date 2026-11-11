@@ -24,7 +24,13 @@ Com a [02](02-editor-window.md), o editor abre, cria, mostra e salva ilhas, mas 
 
 ### Os pincéis
 
-- **RF-01:** o painel da esquerda ganha as ferramentas, acima da lista de ilhas: Bioma (com os 5 biomas de terreno, cada um com a amostra da superfície), Forma (`flat`, `hill`, `mont`, com os nomes Plano, Colina e Montanha), Pôr hexágono, Tirar hexágono e Chegada. Uma ferramenta fica escolhida por vez, e as teclas 1 a 5 escolhem nessa ordem.
+- **RF-01:** o painel da esquerda ganha as ferramentas, acima da lista de ilhas, em blocos:
+  - **Ferramenta:** Bioma, Forma, Pôr hexágono, Tirar hexágono e Chegada. A escolhida fica azul, com a borda clara, e uma frase embaixo diz o que ela faz. As teclas 1 a 5 escolhem nessa ordem.
+  - **Bioma:** os 5 biomas de terreno, cada um como um hexágono com a textura e a altura do jogo (`TerrainSwatch`) e o nome do catálogo embaixo.
+  - **Forma:** Plano, Colina e Montanha, também como hexágonos. O Plano mostra o bioma escolhido.
+  - **Pincel:** o tamanho, com a quantidade de hexágonos que ele pega.
+
+  Pedido do dono, depois do primeiro teste: na primeira versão, os biomas eram quadrados sem nome, e ele não conseguia identificá-los.
 - **RF-02:** o tamanho do pincel é um raio de 0 (um hexágono) a 10, mudado num controle do painel e com `[` e `]`. Sob o ponteiro, o contorno mostra os hexágonos que o pincel vai pegar, nas duas visões.
 - **RF-03:** o botão esquerdo pinta: apertar e arrastar pinta todos os hexágonos por onde o pincel passa.
   - **Bioma:** troca o bioma dos hexágonos que existem.
@@ -60,6 +66,7 @@ Arquivos novos, em `res://tools/map_editor/`:
 
 - `editor_tools.gd`: as ferramentas, o tamanho, o contorno e o que cada uma muda no `IslandDraft`.
 - `editor_history.gd`: o desfazer e refazer sobre o `UndoRedo` do Godot. Cada passo guarda os hexágonos de antes e de depois só dos que mudaram.
+- `terrain_swatch.gd`: `TerrainSwatch`, a amostra em hexágono de um bioma ou de uma forma, com o paredão na altura do `HexTile.level()` e o nome em até duas linhas.
 
 Arquivos alterados:
 

@@ -10,7 +10,7 @@ const TITLE := "Ecobeast: editor de ilhas"
 const WINDOW_SIZE := Vector2i(1600, 900)
 const MIN_SIZE := Vector2i(1280, 720)
 const FONT_SIZE := 16
-const SIDE_WIDTH := 340.0
+const SIDE_WIDTH := 380.0
 const NO_SESSION := "Entre no jogo para usar o editor."
 const EDITOR_OFF := "O editor está desligado neste servidor. Ponha o seu id em MAP_EDITOR_USER_IDS no .env do servidor."
 const UNSAVED_QUESTION := "Salvar as mudanças?"
@@ -135,14 +135,14 @@ func _start_new_island() -> void:
 	if not await _resolve_unsaved():
 		return
 	_new_panel.reset()
-	_list.visible = false
+	_list.get_parent().visible = false
 	_tools.visible = false
 	_new_panel.visible = true
 
 
 func _leave_new_island() -> void:
 	_new_panel.visible = false
-	_list.visible = true
+	_list.get_parent().visible = true
 	_tools.visible = true
 	# Volta para a ilha de antes, ou para o mapa vazio.
 	_canvas.show_draft(_draft)
@@ -162,7 +162,7 @@ func _on_create(preview: IslandDraft) -> void:
 	_new_panel.finish_create("")
 	preview.id = DictFields.get_int(response.data, "id")
 	_new_panel.visible = false
-	_list.visible = true
+	_list.get_parent().visible = true
 	_tools.visible = true
 	_show_island(preview, "draft")
 	_refresh_list()
@@ -430,13 +430,17 @@ func _build() -> void:
 	_tools = EditorTools.new()
 	_tools.message.connect(func(text: String) -> void: _set_message(text, true))
 	_side.add_child(_tools)
-	_side.add_child(HSeparator.new())
 	_list = IslandList.new()
 	_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_list.open_requested.connect(_open_island)
 	_list.new_requested.connect(_start_new_island)
 	_list.delete_requested.connect(_on_delete)
-	_side.add_child(_list)
+	# A lista num bloco igual aos das ferramentas.
+	var list_panel := PanelContainer.new()
+	list_panel.theme_type_variation = &"SectionPanel"
+	list_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	list_panel.add_child(_list)
+	_side.add_child(list_panel)
 	_new_panel = NewIslandPanel.new()
 	_new_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_new_panel.visible = false

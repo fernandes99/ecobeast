@@ -27,7 +27,7 @@ func _init() -> void:
 	add_theme_constant_override(&"separation", 8)
 	var title := Label.new()
 	title.text = "Ilhas"
-	title.theme_type_variation = &"BoldLabel"
+	EditorTools.section_title(title)
 	add_child(title)
 
 	_items = ItemList.new()
