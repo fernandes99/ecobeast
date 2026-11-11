@@ -107,7 +107,7 @@ Feita em 2026-11-11:
   - as camadas de cor com a contagem certa das áreas, das construções e das listras.
 - **Pelo servidor:** uma ilha com 2 construções e 2 áreas foi criada. Publicar com a área vazia foi recusado com a mensagem dela; corrigida, ela foi publicada com o status `published` e lida de volta com as construções e as áreas. A ilha de teste foi apagada do banco no fim, porque uma publicada não se apaga pelo editor.
 - **Quadros do Movie Maker:** os painéis de Construção e de Área, e o mapa nas duas visões com o Refúgio escolhido (contorno azul), a Loja, as casas com o nome, a área com espécies em cor chapada e a sem espécies em listras.
-- **Falta, com o dono:** os passos acima no F5.
+- **Com o dono, em 2026-11-11:** no F5, os tipos de construção não apareciam porque o jogo aberto era de antes da fase 04. Depois de rodar de novo, ele testou e aprovou ("Ficou certo").
 
 ## Tarefas
 
