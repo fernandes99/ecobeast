@@ -42,6 +42,7 @@ O Ecobeast é um jogo mobile (Android/iOS, retrato): o cliente em **Godot 4.7 co
 | [codex](codex/) | Bestiário: espécies vistas em luta e capturadas, detalhe com linha evolutiva e o aviso de registro |
 | [battle-intro](battle-intro/) | A abertura da luta: zoom pixelado e música retrô de selvagem, de Domador e de vitória |
 | [map-editor](map-editor/) | Editor de ilhas só de desenvolvimento (F2): terreno, construções, áreas de Ecobeasts, rascunho e publicar |
+| [islands](islands/) | Jogar nas ilhas publicadas: a lista no Hub, as construções abrindo as telas e os Ecobeasts pelas áreas |
 
 As próximas iniciativas estão no [roadmap.md](roadmap.md).
 
