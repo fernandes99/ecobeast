@@ -175,6 +175,10 @@ func update_tiles(coords: Array[Vector2i]) -> void:
 			_build_row(row, back, front, tiles)
 	for sprite: MapObjectSprite in _objects:
 		sprite.place(_rise(_level_at(sprite.object.coord)))
+		if sprite.fence:
+			var art := _fence_art(sprite.object)
+			if art != null:
+				sprite.set_fence_texture(art)
 
 
 ## Os objetos da ilha (island-villages/03): cada um entra logo depois do chão da linha
@@ -189,7 +193,11 @@ func set_objects(objects: Array[MapObject]) -> void:
 		if str(row.get("slug", "")) == HexDecorations.PLANTS_SLUG:
 			continue
 		var sprite := MapObjectSprite.new()
-		if not sprite.setup(object, str(row.get("slug", ""))):
+		var slug := str(row.get("slug", ""))
+		var fence_art := _fence_art(object) if slug == HexFences.SLUG else null
+		if fence_art != null:
+			sprite.setup_fence(object, fence_art)
+		elif not sprite.setup(object, slug):
 			sprite.free()
 			continue
 		add_child(sprite)
@@ -205,6 +213,10 @@ func object_hit(point: Vector2) -> MapObject:
 		if sprite.hits(point) and (best == null or sprite.get_index() > best.get_index()):
 			best = sprite
 	return best.object if best != null else null
+
+
+func _fence_art(object: MapObject) -> Texture2D:
+	return HexFences.texture(object.variant, HexFences.links(_map, object.coord, object.object_type_id))
 
 
 func _clear_objects() -> void:

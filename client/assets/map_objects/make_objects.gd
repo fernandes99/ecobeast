@@ -109,6 +109,10 @@ func _init() -> void:
 			DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("res://assets/map_objects/%s" % slug))
 			var error := art.save_png(OUT % [slug, variant])
 			print("%s/%d: %dx%d %s" % [slug, variant, art.get_width(), art.get_height(), "ok" if error == OK else error_string(error)])
+	for variant: int in [1, 2]:
+		var parts := _strip_cells(_fence_parts(variant))
+		var error := parts.save_png(HexFences.PARTS_PATH % variant)
+		print("fence/parts_%d: %dx%d %s" % [variant, parts.get_width(), parts.get_height(), "ok" if error == OK else error_string(error)])
 	quit()
 
 
@@ -600,11 +604,86 @@ func _draw_garden(variant: int) -> void:
 				_put(_element("Crops/%s.png" % slug), origin + Vector2(hole.x + 8, hole.y + 9))
 
 
+## A prévia do editor: a cerca sozinha, com os braços da esquerda e da direita.
 func _draw_fence(variant: int) -> void:
+	var cell := HexFences.compose(_fence_parts(variant), 0)
+	_image.blend_rect(cell, Rect2i(Vector2i.ZERO, cell.get_size()), Vector2i(_c(0) - HexFences.CELL_CENTER))
+
+
+## As 7 células da cerca (island-villages/05): o poste do centro e os braços dos lados
+## 0 a 5. A madeira tem postes a cada meio braço e o trilho entre eles; a pedra, o muro
+## nos lados retos e pilares empilhados nas diagonais.
+func _fence_parts(variant: int) -> Array[Image]:
+	var cells: Array[Image] = []
+	var center := HexFences.CELL_CENTER
+	for index: int in 7:
+		var cell := Image.create(HexFences.CELL_SIZE.x, HexFences.CELL_SIZE.y, false, Image.FORMAT_RGBA8)
+		if index == 0:
+			_fence_post(cell, variant, center)
+		else:
+			var reach := HexFences.EDGE_MIDPOINTS[index - 1]
+			if variant == 1:
+				_wood_arm(cell, center, reach)
+			else:
+				_stone_arm(cell, center, reach)
+		cells.append(cell)
+	return cells
+
+
+func _fence_post(cell: Image, variant: int, at: Vector2) -> void:
 	if variant == 1:
-		_put(_piece(612, 32, 57, 16), _c(0) + Vector2(0, 8))
+		_stamp(cell, _piece(624, 50, 8, 11), at + Vector2(0, 5))
 	else:
-		_put(_piece(704, 16, 64, 17), _c(0) + Vector2(0, 8))
+		_stamp(cell, _piece(708, 33, 8, 15), at + Vector2(0, 6))
+
+
+func _wood_arm(cell: Image, center: Vector2, reach: Vector2) -> void:
+	var end := center + reach
+	if is_zero_approx(reach.y):
+		var rail := _piece(620, 34, 1, 11)
+		for x: int in range(roundi(minf(center.x, end.x)), roundi(maxf(center.x, end.x)) + 1):
+			_stamp(cell, rail, Vector2(x, center.y + 5))
+	else:
+		var strip := _piece(646, 45, 4, 1)
+		var from := center + Vector2(0, -2)
+		var steps := absi(roundi(reach.y))
+		for step: int in steps + 1:
+			var point := from + reach * (step / float(steps))
+			cell.blend_rect(strip, Rect2i(0, 0, 4, 1), Vector2i(roundi(point.x - 2.0), roundi(point.y)))
+	var posts: Array[Vector2] = [center + reach * 0.5, end]
+	posts.sort_custom(func(a: Vector2, b: Vector2) -> bool: return a.y < b.y)
+	for post: Vector2 in posts:
+		_stamp(cell, _piece(624, 50, 8, 11), post + Vector2(0, 5))
+
+
+func _stone_arm(cell: Image, center: Vector2, reach: Vector2) -> void:
+	if is_zero_approx(reach.y):
+		var wall := _piece(704 if reach.x < 0.0 else 736, 16, 32, 17)
+		var left := minf(center.x, center.x + reach.x)
+		cell.blend_rect(wall, Rect2i(Vector2i.ZERO, wall.get_size()), Vector2i(roundi(left), roundi(center.y + 6.0) - wall.get_height()))
+		return
+	var pillar := _piece(708, 33, 8, 15)
+	var points: Array[Vector2] = []
+	var steps := 5
+	for step: int in range(1, steps + 1):
+		points.append(center + reach * (step / float(steps)))
+	points.sort_custom(func(a: Vector2, b: Vector2) -> bool: return a.y < b.y)
+	for point: Vector2 in points:
+		_stamp(cell, pillar, point + Vector2(0, 6))
+
+
+## Põe a peça com o meio da borda de baixo em `foot`.
+static func _stamp(cell: Image, piece: Image, foot: Vector2) -> void:
+	var at := Vector2i(roundi(foot.x - piece.get_width() / 2.0), roundi(foot.y) - piece.get_height())
+	cell.blend_rect(piece, Rect2i(Vector2i.ZERO, piece.get_size()), at)
+
+
+static func _strip_cells(cells: Array[Image]) -> Image:
+	var size := cells[0].get_size()
+	var strip := Image.create(size.x * cells.size(), size.y, false, Image.FORMAT_RGBA8)
+	for index: int in cells.size():
+		strip.blit_rect(cells[index], Rect2i(Vector2i.ZERO, size), Vector2i(size.x * index, 0))
+	return strip
 
 
 func _draw_well(_variant: int) -> void:

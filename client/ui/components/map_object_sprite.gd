@@ -15,6 +15,7 @@ const DEFAULT_FRAME_RATE := 6.0
 
 var object: MapObject
 var front_row := 0
+var fence := false
 
 var _image: Image = null
 var _frames := 1
@@ -92,6 +93,24 @@ func setup(map_object: MapObject, slug: String) -> bool:
 	for coord: Vector2i in map_object.tiles:
 		front_row = maxi(front_row, coord.y)
 	return true
+
+
+## A Cerca (island-villages/05): uma célula montada pelos lados ligados, sem quadros.
+func setup_fence(map_object: MapObject, art: Texture2D) -> void:
+	object = map_object
+	fence = true
+	centered = false
+	front_row = map_object.coord.y
+	set_process(false)
+	set_fence_texture(art)
+
+
+func set_fence_texture(art: Texture2D) -> void:
+	if art == texture:
+		return
+	texture = art
+	_image = null
+	offset = Vector2(-art.get_width() / 2.0, -art.get_height())
 
 
 func _process(_delta: float) -> void:

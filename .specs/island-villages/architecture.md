@@ -59,7 +59,7 @@ Os tipos depois da revisão da [03](03-map-objects.md#revisão-casas-árvores-pe
 | 5 | `tree` | Árvore | um | 8: sozinhas, em grupo, no outono e floridas, balançando | bloqueia |
 | 6 | `rock` | Pedra | um | 6: sozinhas, em grupo e com musgo | bloqueia |
 | 7 | `garden` | Horta | um | 6: canteiros de abóbora, raízes, trigo, girassol, tubérculos e uma em crescimento | bloqueia |
-| 8 | `fence` | Cerca | um | 2: madeira e pedra | bloqueia |
+| 8 | `fence` | Cerca | um | 2: madeira e pedra, ligando-se às vizinhas | bloqueia |
 | 9 | `well` | Poço | um | 1 | bloqueia |
 | 10 | `market_stall` | Barraca de feira | um | 3: toldo vermelho, verde e azul | bloqueia |
 | 11 | `cart` | Carroça | um | 1 | bloqueia |
@@ -67,6 +67,8 @@ Os tipos depois da revisão da [03](03-map-objects.md#revisão-casas-árvores-pe
 | 16 | `trough` | Bebedouro | um | 1 | bloqueia |
 | 17 | `rune_shrine` | Santuário de runas | um | 4: minério azul, de ouro, de prata e de carvão, com brilho | bloqueia |
 | 20 | `plants` | Vegetação | um | 10: as plantas do terreno, com o vento | não bloqueia |
+
+Depois da [05](05-connected-fences.md), a Cerca se liga sozinha: um poste no centro e um braço até o meio de cada lado cujo vizinho, na mesma altura, também tem cerca; sozinha, ela é reta. O `HexFences` monta a arte a partir de `fence/parts_<variante>.png` (7 células de 96×72: o poste e os braços dos lados 0 a 5), e o `<variante>.png` é só a prévia do editor.
 
 Depois da [04](04-plants-and-animations.md), a casa na árvore (14) saiu, e a Vegetação não tem sprite: as plantas dela saem do `HexMapView`, como as do bioma. Os objetos animados têm os quadros lado a lado no PNG da variante, cada um com a largura da célula, e o `MapObjectSprite` anda neles na velocidade do tipo. Um objeto é desenhado depois do chão da linha seguinte à da frente dele (por baixo das decorações e dos atores dela), para a arte que desce da borda, como a pá do moinho, não ser cortada; só com um hexágono da frente mais alto ele fica antes das decorações da frente da própria linha.
 
