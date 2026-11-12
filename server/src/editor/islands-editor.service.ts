@@ -4,6 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { hexKey } from '../domain/exploration/hex.js';
 import {
   draftError,
   draftHash,
@@ -355,25 +356,37 @@ export class IslandsEditorService {
       });
     }
 
-    for (const object of draft.objects) {
-      const created = await tx.islandObject.create({
-        data: {
-          islandMapId: map.id,
-          objectTypeId: object.objectTypeId,
-          q: object.q,
-          r: object.r,
-          variant: object.variant,
-          mirrored: object.mirrored,
-        },
+    // Em lote: um a um, 300 objetos passavam do tempo da transação até o Supabase.
+    // O apoio de cada objeto é um hexágono só dele, e por isso acha o id.
+    const objectIds = new Map<string, number>();
+    for (let first = 0; first < draft.objects.length; first += TILE_CHUNK) {
+      const created = await tx.islandObject.createManyAndReturn({
+        data: draft.objects
+          .slice(first, first + TILE_CHUNK)
+          .map(({ objectTypeId, q, r, variant, mirrored }) => ({
+            islandMapId: map.id,
+            objectTypeId,
+            q,
+            r,
+            variant,
+            mirrored,
+          })),
+        select: { id: true, q: true, r: true },
       });
+      for (const { id, q, r } of created) objectIds.set(hexKey({ q, r }), id);
+    }
+    const objectTiles = draft.objects.flatMap((object) =>
+      object.tiles.map(({ q, r, blocks }) => ({
+        objectId: objectIds.get(hexKey(object))!,
+        islandMapId: map.id,
+        q,
+        r,
+        blocks,
+      })),
+    );
+    for (let first = 0; first < objectTiles.length; first += TILE_CHUNK) {
       await tx.islandObjectTile.createMany({
-        data: object.tiles.map(({ q, r, blocks }) => ({
-          objectId: created.id,
-          islandMapId: map.id,
-          q,
-          r,
-          blocks,
-        })),
+        data: objectTiles.slice(first, first + TILE_CHUNK),
       });
     }
     return map;

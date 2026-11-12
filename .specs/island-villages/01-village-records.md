@@ -128,3 +128,4 @@ Passos no editor (F2) e em Ilhas: abrir as ilhas que existem, pintar uma ação,
   - o catálogo baixado pelo jogo contra o servidor local, sem erro do `CatalogValidator`;
   - a ida e volta de chão, objetos e ações no `ExplorationMap` e no `IslandDraft`;
   - o desfazer com o chão.
+- **Objetos gravados em lote (correção, 2026-11-11):** a primeira versão gravava cada objeto com o `create` dele e os hexágonos dele, duas idas ao Supabase por objeto. A Vila de Ventoverde, com 296 objetos, passou dos 60 s da transação ao salvar. Agora os objetos entram num `createManyAndReturn`, e cada id é achado pelo hexágono de apoio, que é só daquele objeto; os hexágonos dos objetos entram num `createMany`. Salvar a mesma ilha pelo serviço do editor levou 6,7 s, e a leitura depois do salvamento deu os mesmos objetos e hexágonos.
