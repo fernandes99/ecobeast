@@ -187,7 +187,7 @@ Tamanhos da arte de agora, na variante 1 (em pixels da arte, como as texturas do
 | `house_large` | 128×113 (a 5: 128×232) | `beast_stable` | 128×79 |
 | `windmill` | 128×110 (9 quadros) | `plants` | 64×53 (só a prévia) |
 | `tree` | 64×49 (4 quadros) | `trough` | 64×35 |
-| `rock` | 64×43 | `rune_shrine` | 64×66 (4 quadros) |
+| `rock` | 64×43 | `rune_shrine` | 64×68 (16 quadros) |
 | `garden` | 64×52 | `fence` | 64×37 |
 | `well` | 64×59 | | |
 

@@ -55,7 +55,7 @@ const TYPES := {
 	"cart": ["one", 1],
 	"beast_stable": ["pair", 2],
 	"trough": ["one", 1],
-	"rune_shrine": ["one", 4, 4],
+	"rune_shrine": ["one", 4, 16],
 	"plants": ["one", 10],
 }
 const DECORATIONS := "res://assets/terrain/decorations/decorations.png"
@@ -171,6 +171,13 @@ func _sprite(name: String) -> Array:
 		_sprites[name] = [frames, origin]
 	var frames: Array = _sprites[name][0]
 	return [frames[_frame % frames.size()], _sprites[name][1]]
+
+
+## Um quadro escolhido de um sprite, fora da conta do `_frame`.
+func _sprite_frame(name: String, index: int) -> Image:
+	_sprite(name)
+	var frames: Array = _sprites[name][0]
+	return frames[index % frames.size()]
 
 
 func _element(path: String) -> Image:
@@ -647,18 +654,40 @@ func _draw_trough(_variant: int) -> void:
 
 
 const SHRINE_ORES: Array[String] = ["spr_deco_ore_bluestone", "spr_deco_ore_gold", "spr_deco_ore_silver", "spr_deco_ore_coal"]
+## O brilho em cada quadro do santuário: -1 é sem brilho; os outros são quadros do
+## spr_deco_glint_01, do ponto (3) à cruz grande (0), aparecendo e sumindo.
+const SHRINE_GLINT: Array[int] = [-1, -1, -1, -1, -1, -1, -1, -1, -1, 3, 4, 1, 0, 1, 4, 3]
 
 
-## O pilar do tileset com um minério em cima, os dois centrados, e um brilho que pisca.
+## O pilar do tileset com um minério em cima, a base do minério centrada no topo do
+## pilar, e um brilho que aparece e some.
 func _draw_rune_shrine(variant: int) -> void:
 	var foot := _c(0) + Vector2(0, 12)
-	_put_centered(_piece(736, 304, 30, 44), foot)
+	var pillar := _piece(736, 304, 30, 44)
+	var used := pillar.get_used_rect()
+	var pillar_at := Vector2i(roundi(foot.x - used.position.x - used.size.x / 2.0), roundi(foot.y) - pillar.get_height())
+	_image.blend_rect(pillar, Rect2i(Vector2i.ZERO, pillar.get_size()), pillar_at)
 	var ore: Image = _sprite(SHRINE_ORES[variant - 1])[0]
-	var ore_foot := foot + Vector2(0, -36)
-	_put_centered(ore, ore_foot)
-	var used := ore.get_used_rect()
-	var glint: Image = _sprite("spr_deco_glint_02")[0]
-	_put_centered(glint, ore_foot + Vector2(used.size.x / 2.0 - 2.0, -used.size.y + 4.0))
+	var ore_used := ore.get_used_rect()
+	var top := pillar_at.x + _row_middle(pillar, used.position.y)
+	var ore_at := Vector2i(roundi(top - _row_middle(ore, ore_used.end.y - 1)), pillar_at.y + used.position.y + 1 - ore_used.end.y)
+	_image.blend_rect(ore, Rect2i(Vector2i.ZERO, ore.get_size()), ore_at)
+	var glint_frame := SHRINE_GLINT[_frame % SHRINE_GLINT.size()]
+	if glint_frame >= 0:
+		var glint: Image = _sprite_frame("spr_deco_glint_01", glint_frame)
+		var spark := Vector2(ore_at + ore_used.position) + Vector2(ore_used.size.x - 2.0, 2.0)
+		_image.blend_rect(glint, Rect2i(Vector2i.ZERO, glint.get_size()), Vector2i((spark - Vector2(glint.get_size()) / 2.0).round()))
+
+
+## O meio dos pixels desenhados de uma linha da imagem.
+static func _row_middle(image: Image, y: int) -> float:
+	var left := image.get_width()
+	var right := -1
+	for x: int in image.get_width():
+		if image.get_pixel(x, y).a > 0.0:
+			left = mini(left, x)
+			right = maxi(right, x)
+	return (left + right + 1) / 2.0
 
 
 ## A prévia da Vegetação no editor: as plantas do terreno que o objeto põe no hexágono

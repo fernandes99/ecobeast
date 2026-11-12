@@ -10,7 +10,7 @@ const CENTER_TO_BOTTOM := 29.0
 const HIT_ALPHA := 0.5
 const HEX_HALF_WIDTH := 32.0
 ## Quadros por segundo dos objetos animados, os do pacote de arte.
-const FRAME_RATES: Dictionary[String, float] = {"windmill": 10.0, "tree": 4.0, "rune_shrine": 5.0}
+const FRAME_RATES: Dictionary[String, float] = {"windmill": 10.0, "tree": 4.0, "rune_shrine": 8.0}
 const DEFAULT_FRAME_RATE := 6.0
 
 var object: MapObject

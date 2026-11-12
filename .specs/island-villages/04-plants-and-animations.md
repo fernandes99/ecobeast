@@ -50,10 +50,10 @@ O pacote Sunnyside tem as pás do moinho girando (9 quadros, a 10 por segundo), 
 
 **Animados**
 
-- **RF-05:** Um objeto animado tem os quadros lado a lado no PNG da variante, cada um com a largura da célula do formato. O `MapObjectSprite` conta os quadros pela largura e anda neles na velocidade do tipo (`FRAME_RATES`: moinho 10, árvore 4, santuário 5 por segundo), cada objeto começando num ponto diferente do ciclo. O toque na arte confere o quadro da vez.
+- **RF-05:** Um objeto animado tem os quadros lado a lado no PNG da variante, cada um com a largura da célula do formato. O `MapObjectSprite` conta os quadros pela largura e anda neles na velocidade do tipo (`FRAME_RATES`: moinho 10, árvore 4, santuário 8 por segundo), cada objeto começando num ponto diferente do ciclo. O toque na arte confere o quadro da vez.
 - **RF-06:** Moinho: o corpo do mapa de exemplo, sem as pás, com as pás do pacote girando por cima, no mesmo eixo; a pá de baixo cabe inteira.
 - **RF-07:** Árvore: as 8 variantes balançam com os quadros do pacote, cogumelos incluídos.
-- **RF-08:** Santuário de runas: o pilar e o minério centrados pelos pixels desenhados, com um brilho que pisca. As 4 variantes têm minério azul, de ouro, de prata e de carvão.
+- **RF-08:** Santuário de runas: a base do minério fica centrada no topo do pilar (pelos pixels desenhados da última linha do minério e da primeira do pilar). O brilho aparece e some: são 16 quadros a 8 por segundo, 9 sem brilho e 7 com o brilho do `spr_deco_glint_01` crescendo do ponto até a cruz grande e voltando, no canto de cima, à direita do minério. As 4 variantes têm minério azul, de ouro, de prata e de carvão.
 - **RF-09:** A prévia e os ícones do editor mostram o primeiro quadro.
 - **RF-09b:** A arte que desce da borda de baixo de um objeto (a pá do moinho) passa por cima do chão da linha da frente. Só um hexágono da frente encostado no objeto e mais alto que ele cobre essa arte, como um degrau. Para isso, o objeto entra logo depois do chão da linha seguinte, por baixo das decorações e dos atores dela; com a frente mais alta, fica onde estava, antes das decorações da frente da própria linha.
 
@@ -88,5 +88,6 @@ O pacote Sunnyside tem as pás do moinho girando (9 quadros, a 10 por segundo), 
 
 - A arte foi conferida numa folha de contato: o moinho tinha um fio de 1 px da casa vizinha na borda (recorte com 113 px de largura, corrigido para 112), a casa média 8 trazia caixotes e a 9 a ponte da casa ao lado (recortes trocados).
 - Numa cena temporária, já apagada, o editor abriu a Vila de Ventoverde, pôs uma Vegetação de cada variante, um moinho e os 4 santuários (sem salvar), e duas imagens com 0,17 s de diferença mostraram as pás em outra posição.
+- O dono viu o minério do santuário 1 px para a esquerda (centrado pelo retângulo do sprite, que tem uma sombra de um lado) e o brilho sempre girando. Agora a base do minério ocupa as mesmas colunas do topo do pilar, conferido pixel a pixel no quadro 0, e o quadro 12 tem a cruz grande do brilho, que nos quadros 0 a 8 não aparece.
 - O dono viu a pá cortada pelo hexágono da frente, plano. Corrigido e conferido no editor: um moinho em grama plana, com a pá por cima do chão da frente e atrás das árvores dela, e o mesmo moinho com o hexágono da frente uma altura acima, que cobre a ponta.
 - Havia 2 casas na árvore nas ilhas, e a migration as apagou; o `recompute-island-hashes.ts` mudou 2 hashes.
