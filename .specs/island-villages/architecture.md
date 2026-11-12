@@ -179,28 +179,28 @@ Além das de hoje (a chegada não fica na água nem numa ação): a chegada não
 - **Ponto de apoio:** o meio da borda de baixo da imagem fica no ponto mais baixo do formato, que é o canto de baixo dos hexágonos da linha da frente, centrado na média dos centros dos hexágonos.
 - **Espelhado:** a imagem é invertida na horizontal em volta do ponto de apoio.
 
-Tamanhos da arte provisória, que a final deve seguir (em pixels da arte, como as texturas do mapa):
+Tamanhos da arte de agora, na variante 1 (em pixels da arte, como as texturas do mapa). A largura é a do formato; a altura é a da arte, e muda entre as variantes de alguns tipos:
 
 | Tipo | Tamanho | Tipo | Tamanho |
 | --- | --- | --- | --- |
-| `house` | 64×84 | `market_stall` | 64×70 |
-| `farmhouse` | 128×84 | `cart` | 64×54 |
-| `windmill` | 128×124 | `bridge` | 64×46 |
-| `castle` | 128×176 | `beast_stable` | 128×84 |
-| `big_tree` | 128×136 | `treehouse` | 128×136 |
-| `big_rock` | 128×64 | `nest` | 64×50 |
-| `garden` | 64×48 | `trough` | 64×42 |
-| `fence` | 64×44 | `rune_shrine` | 64×80 |
-| `well` | 64×68 | | |
+| `house` | 64×69 | `market_stall` | 64×55 |
+| `farmhouse` | 128×95 | `cart` | 64×45 |
+| `windmill` | 128×98 | `bridge` | 64×46 |
+| `castle` | 128×247 | `beast_stable` | 128×79 |
+| `big_tree` | 128×119 | `treehouse` | 128×122 |
+| `big_rock` | 128×46 | `nest` | 64×37 |
+| `garden` | 64×57 | `trough` | 64×35 |
+| `fence` | 64×37 | `rune_shrine` | 64×63 |
+| `well` | 64×59 | | |
 
-A altura pode crescer na arte final, desde que o pé continue no mesmo lugar.
+A altura pode mudar na arte final, desde que o pé continue no mesmo lugar. A escala é a do pacote Sunnyside em 1x: uma casa tem uns 48 px de largura num hexágono de 64, e o Domador tem 25 px de altura.
 
-**Arte provisória:** gerada pelo próprio Godot, sem dependências, para gerar de novo quando quiser:
+**Arte de agora:** gerada pelo próprio Godot, para gerar de novo quando quiser:
 
-- `res://assets/map_objects/make_placeholders.gd` desenha os objetos com formas simples e contorno escuro;
+- `res://assets/map_objects/make_objects.gd` monta os objetos a partir do pacote Sunnyside World, que o dono tem na máquina e passa como argumento. Ele lê o tileset, os sprites e o mapa de exemplo do pacote (`Room1`, do GameMaker), onde as casas, o moinho e as barracas já estão montados peça por peça. A cor do telhado das variantes troca o bloco de cor do tileset, que repete as mesmas peças em azul, verde, laranja, vermelho e roxo. O que o pacote não tem (castelo, carroça, ninho) é composto com peças dele ou desenhado no estilo dele.
 - `res://assets/terrain/grounds/make_grounds.gd` gera as texturas de chão.
 
-Da pasta `client/`: `godot --headless -s res://assets/map_objects/make_placeholders.gd`.
+Da pasta `client/`: `godot --headless -s res://assets/map_objects/make_objects.gd -- <pasta do pacote>`, a pasta que tem `Sunnyside_World_Assets` e `Sunnyside_World_Gamemaker`.
 
 ## No jogo, andar e agir
 

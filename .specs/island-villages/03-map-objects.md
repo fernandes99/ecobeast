@@ -24,7 +24,7 @@ Com a [01](01-village-records.md), uma ilha guarda objetos com bloqueio por hex�
 
 ### Arte
 
-- **RF-01:** `res://assets/map_objects/make_placeholders.gd` gera `res://assets/map_objects/<slug>/<variante>.png` para os 17 tipos, um arquivo por variante, no formato do [architecture.md](architecture.md#o-desenho-no-jogo).
+- **RF-01:** `res://assets/map_objects/make_objects.gd` (antes `make_placeholders.gd`; ver a revisão) gera `res://assets/map_objects/<slug>/<variante>.png` para os 17 tipos, um arquivo por variante, no formato do [architecture.md](architecture.md#o-desenho-no-jogo).
   - As formas são simples, com contorno escuro, no estilo dos hexágonos do mapa: paredes claras e telhado da cor da variante nas casas, copa redonda na árvore, torres no castelo, e assim por diante.
   - As cores das variantes são as da tabela de tipos.
 - **RF-02:** a tabela do tamanho da célula de cada tipo fica no [architecture.md](architecture.md#o-desenho-no-jogo).
@@ -72,7 +72,7 @@ Com a [01](01-village-records.md), uma ilha guarda objetos com bloqueio por hex�
 
 **Criar**
 
-- `res://assets/map_objects/make_placeholders.gd` e os 31 PNG (um por variante), com o `.import`.
+- `res://assets/map_objects/make_objects.gd` e os 31 PNG (um por variante), com o `.import`.
 - `res://ui/components/map_object_sprite.gd`: `MapObjectSprite`, o nó de um objeto, com a célula, o espelho e o ponto de apoio.
 - `res://tools/map_editor/object_panel.gd`: `ObjectPanel`, o bloco Objeto e o painel do objeto escolhido.
 
@@ -150,3 +150,18 @@ Em Ilhas:
 2. Em Ilhas, andar em volta da vila, entrar pelo portão e tocar numa casa bloqueada com a Loja.
 
 Nenhum celular foi testado.
+
+## Revisão: arte a partir do pacote Sunnyside
+
+Pedido do dono em 2026-11-11: a arte dos objetos estava muito distante do terreno, e ele liberou o pacote Sunnyside World que tem na máquina.
+
+- **Licença, decisão do dono:** o repositório no GitHub é público, e a licença do pacote (pela página dele no itch.io; o pacote não traz o arquivo) permite usar e modificar num jogo, mas não redistribuir os arquivos. Avisado de que a arte derivada no repositório público se aproxima de redistribuir, o dono decidiu seguir assim. A arte final, que ele vai gerar com outra IA, deve substituir esta.
+- **`make_objects.gd` no lugar de `make_placeholders.gd`:** o pacote não fica no repositório; o script recebe a pasta dele depois de `--` e grava os 31 PNG, que ficam no repositório.
+- **De onde vem cada tipo:**
+  - Do mapa de exemplo do pacote (`Room1`, cujas camadas de tiles e sprites o script lê e desenha): a casa, a casa da horta, o moinho com as pás, as 3 barracas, o estábulo e a casa elevada da casa na árvore.
+  - **Variantes de cor:** o tileset repete as peças de construção em 5 blocos de cor, de 8 linhas cada, a partir da linha 9, nas colunas 15 a 35. Trocar o bloco troca a cor do telhado. Fora dessas colunas ficam peças de pedra, que não podem mudar de bloco; a primeira versão mudava e apagava a pedra do castelo.
+  - Dos sprites e do tileset: o poço coberto com o balde, o bebedouro com o barril, a cerca de madeira e o muro de pedra, as pedras grandes, a horta (canteiros de terra com as plantas crescidas) e o santuário (o pedestal com a pedra azul).
+  - **Compostos:** o castelo (o corpo de pedra da torre do moinho grande, com o pico do telhado azul, em três torres, e o muro com o portão na frente) e a árvore grande, que é um bosque da camada de floresta do mapa, com a variante 2 no outono (o verde das folhas vai para o laranja).
+  - **Desenhados no estilo do pacote**, porque ele não tem: a carroça (com um caixote e feno) e o ninho (palha em anel, com os ovos do pacote).
+- **Ponto de apoio:** a base de cada peça fica 10 a 16 px abaixo do centro do hexágono, para a construção parecer em cima dele.
+- **Verificação:** uma cena temporária, já apagada, pôs os 17 tipos e as variantes num mapa com trilhas; a captura em 1x e os recortes em 3x foram abertos e revisados. O projeto abriu sem avisos novos.
