@@ -1,6 +1,6 @@
 # Wild battle
 
-Explorar zona passa a abrir um **mapa hexagonal gerado a cada exploração**, maior que a tela. O jogador anda um hexágono por vez, com a câmera sempre nele, e procura Ecobeasts a partir dali. Cada bioma é uma superfície contínua, dividida pela grade, e os terrenos formam regiões coerentes, não uma mistura aleatória.
+Explorar zona passa a abrir um **mapa hexagonal gerado a cada exploração**, maior que a tela. O jogador anda um hexágono por vez (desde a [14](14-tap-to-walk.md), tocando longe, ele vai sozinho pelo caminho mais curto), com a câmera sempre nele, e procura Ecobeasts a partir dali. Cada bioma é uma superfície contínua, dividida pela grade, e os terrenos formam regiões coerentes, não uma mistura aleatória.
 
 ## Contexto
 
@@ -28,7 +28,7 @@ Tomadas com o dono do projeto:
 | Um mapa novo a cada exploração, finito e maior que a tela                                     | Pedido do dono                                                                          |
 | O jogador vê só o entorno: a câmera o acompanha, sem zoom e sem arrastar                      | Ver mais do mapa exige andar                                                            |
 | Sem neblina: todos os hexágonos estão visíveis, mesmo os não visitados, quando entram na tela | Decisão do dono                                                                         |
-| Anda um hexágono por vez, por qualquer terreno                                                | O bloqueio por terreno vem depois                                                       |
+| Anda um hexágono por vez, por qualquer terreno                                                | O bloqueio por terreno vem depois. Desde a [14](14-tap-to-walk.md), tocar longe anda o caminho mais curto, um hexágono por vez |
 | Botão provisório "Procurar Ecobeast" no mapa                                                  | É a entrada para a batalha enquanto o encontro não nasce do terreno                     |
 | O bioma do hexágono vai decidir o Campo, mas não nesta iniciativa                             | Nesta, o encontro continua sorteado como hoje                                           |
 | `O_flat` é o mesmo terreno que `flat`, com mais detalhe                                       | Confirmado pelo dono                                                                    |
@@ -92,5 +92,6 @@ Tomadas no planejamento (corrigíveis; ao mudar uma, atualize aqui e nas specs a
 | [11-depth-planes](11-depth-planes.md)             | O Domador na frente do que está atrás e atrás do que está na frente      | concluída |
 | [12-plant-wind](12-plant-wind.md)                 | As plantas balançam com o vento, em uma onda pelo mapa                   | concluída |
 | [13-debug-menu](13-debug-menu.md)                 | Menu de depuração no mapa, com spawn de qualquer Ecobeast                | concluída |
+| [14-tap-to-walk](14-tap-to-walk.md)               | Tocar num hexágono distante e o Domador ir sozinho pelo caminho mais curto | concluída |
 
 O desenho compartilhado está em [architecture.md](architecture.md).

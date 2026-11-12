@@ -105,7 +105,9 @@ A tela chama `set_current` ao abrir o mapa e no início de cada passo.
 
 Os vizinhos da esquerda, `(-1, 1)`, `(-1, 0)` e `(0, -1)`, usam `flip_h`. As animações se chamam `idle_<linha>` e `run_<linha>`.
 
-No passo, a tela chama `face(vizinho)` e `play_run()`, e `play_idle()` ao chegar. `STEP_SECONDS` é o próprio `TamerSprite.RUN_SECONDS`, para cada hexágono ser um ciclo inteiro da corrida.
+No passo, a tela chama `face(vizinho)` e `play_run()`, e `play_idle()` ao chegar.
+
+**Rota ([14](14-tap-to-walk.md)):** o toque num hexágono distante vira uma lista de passos, calculada no cliente por `ExplorationMap.path_to_any`, uma busca em largura pelos vizinhos livres. A tela anda a lista com o mesmo passo, sem `play_idle()` entre eles, e só olha o fim: um Domador NPC para a caminhada na hora, um toque novo troca o destino ao fim do passo, e a ação só abre no último hexágono. Num bloqueado, o destino são os livres ao lado dele (`free_sides`). `STEP_SECONDS` é o próprio `TamerSprite.RUN_SECONDS`, para cada hexágono ser um ciclo inteiro da corrida.
 
 No modo de depuração do mapa inteiro, `_fit_view` desconta a escala do mapa, com `art_scale()`, porque na escala do mapa ele sumiria.
 

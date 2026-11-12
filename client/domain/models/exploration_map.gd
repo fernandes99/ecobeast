@@ -69,6 +69,47 @@ func is_blocked(coord: Vector2i) -> bool:
 	return _blocked.has(coord)
 
 
+## O caminho mais curto de `from` até o primeiro hexágono de `goals`, sem o `from`,
+## desviando dos bloqueados. Vazio quando não há caminho ou `from` já é um deles.
+func path_to_any(from: Vector2i, goals: Dictionary[Vector2i, bool]) -> Array[Vector2i]:
+	var path: Array[Vector2i] = []
+	if goals.has(from):
+		return path
+	var came_from: Dictionary[Vector2i, Vector2i] = {from: from}
+	var frontier: Array[Vector2i] = [from]
+	var index := 0
+	while index < frontier.size():
+		var coord := frontier[index]
+		index += 1
+		for next: Vector2i in neighbors(coord):
+			if came_from.has(next) or is_blocked(next):
+				continue
+			came_from[next] = coord
+			if goals.has(next):
+				while next != from:
+					path.push_front(next)
+					next = came_from[next]
+				return path
+			frontier.append(next)
+	return path
+
+
+## Os hexágonos livres de onde o Domador alcança o bloqueado `coord`: os vizinhos dele,
+## ou, se ele estiver cercado, os de qualquer hexágono do mesmo objeto.
+func free_sides(coord: Vector2i) -> Dictionary[Vector2i, bool]:
+	var sides: Dictionary[Vector2i, bool] = {}
+	var around: Array[Vector2i] = [coord]
+	for _pass: int in 2:
+		for tile: Vector2i in around:
+			for next: Vector2i in neighbors(tile):
+				if not is_blocked(next):
+					sides[next] = true
+		if not sides.is_empty() or object_at(coord) < 0:
+			break
+		around = objects[object_at(coord)].tiles
+	return sides
+
+
 func set_objects(list: Array[MapObject]) -> void:
 	objects.clear()
 	_object_of.clear()

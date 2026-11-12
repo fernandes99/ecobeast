@@ -10,6 +10,7 @@ const ACTION_SCREENS: Dictionary[String, StringName] = {
 	"shop": &"shop",
 }
 const NOTHING_HERE_TEXT := "Nada por aqui."
+const NO_PATH_TEXT := "Não dá para chegar lá."
 const NO_TARGET := Vector2i(2147483647, 2147483647)
 const ALMOST_LEVEL_UP_TEXT := "A equipe está a 1 XP do próximo nível."
 const SPAWNED_TEXT := "%s apareceu aqui. Toque em Procurar."
@@ -35,6 +36,7 @@ var _map: ExplorationMap = null
 var _player_coord := Vector2i.ZERO
 var _loading: bool = true
 var _walking: bool = false
+var _next_target := NO_TARGET
 var _press_position := Vector2.ZERO
 var _showing_whole_map: bool = false
 var _wild_sprites: Dictionary[int, CreatureSprite] = {}
@@ -143,23 +145,23 @@ func _on_map_input(event: InputEvent) -> void:
 
 
 func _tap(point: Vector2) -> void:
-	if _map == null or _walking or _showing_whole_map or _challenger != null:
+	if _map == null or _showing_whole_map or _challenger != null:
 		return
 	var art_point := (point - _map_view.position) / _map_view.pixel_scale()
 	var target := _map_view.coord_at(art_point)
 	var object := _map_view.object_hit(art_point)
 	if object != null:
 		target = _object_target(object, art_point)
-	if not _map.neighbors(_player_coord).has(target):
+	if not _map.has(target) or target == _player_coord:
 		return
-	if not _map.is_blocked(target):
-		_step_to(target)
-	elif _map.action_at(target) >= 0:
-		_run_action(_map.action_at(target))
+	if _walking:
+		_next_target = target
+	else:
+		_go_to(target)
 
 
 ## A arte de um objeto cobre os hexágonos de trás: o toque nela vale para o hexágono
-## dele ao lado do Domador, o de ação primeiro, senão o mais perto do toque.
+## dele ao lado do Domador, o de ação primeiro; longe dele, para o mais perto do toque.
 func _object_target(object: MapObject, art_point: Vector2) -> Vector2i:
 	var best := NO_TARGET
 	for coord: Vector2i in object.tiles:
@@ -167,9 +169,63 @@ func _object_target(object: MapObject, art_point: Vector2) -> Vector2i:
 			continue
 		if best == NO_TARGET or (_map.action_at(coord) >= 0 and _map.action_at(best) < 0):
 			best = coord
-		elif (_map.action_at(coord) >= 0) == (_map.action_at(best) >= 0) and _map_view.surface_center(coord).distance_to(art_point) < _map_view.surface_center(best).distance_to(art_point):
+		elif (_map.action_at(coord) >= 0) == (_map.action_at(best) >= 0) and _closer(coord, best, art_point):
+			best = coord
+	if best != NO_TARGET:
+		return best
+	for coord: Vector2i in object.tiles:
+		if best == NO_TARGET or _closer(coord, best, art_point):
 			best = coord
 	return best
+
+
+func _closer(coord: Vector2i, than: Vector2i, art_point: Vector2) -> bool:
+	return _map_view.surface_center(coord).distance_to(art_point) < _map_view.surface_center(than).distance_to(art_point)
+
+
+## Num livre, o Domador anda até ele; num bloqueado, até o lado livre mais perto, e
+## executa a ação dele, se houver.
+func _go_to(target: Vector2i) -> void:
+	var action := -1
+	var goals: Dictionary[Vector2i, bool] = {target: true}
+	if _map.is_blocked(target):
+		action = _map.action_at(target)
+		goals = _map.free_sides(target)
+	if goals.has(_player_coord):
+		if action >= 0:
+			_run_action(action)
+		return
+	var path := _map.path_to_any(_player_coord, goals)
+	if path.is_empty():
+		_show_message(NO_PATH_TEXT, &"SecondaryLabel")
+		return
+	_walk(path, action)
+
+
+func _walk(path: Array[Vector2i], action: int) -> void:
+	_walking = true
+	_message.hide()
+	var origin := _player_coord
+	for coord: Vector2i in path:
+		origin = _player_coord
+		await _step_to(coord)
+		if _map.tamer_at(coord) != null or _next_target != NO_TARGET:
+			break
+	_marker.play_idle()
+	_walking = false
+	var tamer := _map.tamer_at(_player_coord)
+	if tamer != null:
+		_next_target = NO_TARGET
+		_challenge(tamer)
+	elif _next_target != NO_TARGET:
+		var next := _next_target
+		_next_target = NO_TARGET
+		if next != _player_coord:
+			_go_to(next)
+	elif action >= 0:
+		_run_action(action)
+	else:
+		_enter_action(_map.action_at(origin), _map.action_at(_player_coord))
 
 
 func _search() -> void:
@@ -199,9 +255,6 @@ func _on_visibility_changed() -> void:
 
 
 func _step_to(target: Vector2i) -> void:
-	_walking = true
-	_message.hide()
-	var origin := _player_coord
 	_marker.face(target - _player_coord)
 	_marker.play_run()
 	# Indo para a frente, ele muda de plano antes de sair: a linha nova cobriria os pés
@@ -215,13 +268,6 @@ func _step_to(target: Vector2i) -> void:
 	step.tween_method(_move_map, _map_view.position, _player_centered_position(), STEP_SECONDS)
 	await step.finished
 	_map_view.set_actor_row(_marker, target.y)
-	_marker.play_idle()
-	_walking = false
-	var tamer := _map.tamer_at(target)
-	if tamer != null:
-		_challenge(tamer)
-	else:
-		_enter_action(_map.action_at(origin), _map.action_at(target))
 
 
 func _show_island() -> void:
