@@ -155,9 +155,14 @@ Além das de hoje (a chegada não fica na água nem numa ação): a chegada não
 - **Trilha:** uma faixa da textura do tipo (`res://assets/terrain/grounds/<slug>.png`, com o ponto da textura preso à posição no mapa, como as superfícies).
   - A faixa vai do centro do hexágono até o meio de cada lado em que o vizinho tem chão, trilha ou piso, de qualquer tipo.
   - Sem vizinho ligado, ela é só um círculo no centro.
-  - A largura é de 22 px da arte, com a borda suavizada, _a revisar_.
-- **Piso:** cobre o hexágono inteiro com a textura do tipo. Nos lados em que o vizinho não tem chão, uma borda de 2 px mais escura fecha o piso. Num lado com trilha ligada, não há borda: a trilha entra no piso.
-- **Altura:** a faixa e o piso sobem com a superfície. Dois hexágonos com chão se ligam quando têm a mesma altura, ou quando o lado entre eles é um dos dois lados de baixo do mais alto (onde há paredão). Nesse caso, a faixa continua pelo paredão até o pé dele, como o escorrido. Nos outros lados com alturas diferentes não há paredão desenhado, e a faixa não se liga: ela termina arredondada.
+  - Entre dois lados ligados vizinhos, o canto fica cheio: três hexágonos com trilha, vizinhos entre si, formam uma mancha sem grama no meio, e um caminho de duas fileiras fica inteiro. Nas curvas abertas e no Y, o canto de dentro é arredondado.
+  - A largura é de 22 px da arte, _a revisar_.
+- **Piso:** cobre o hexágono inteiro com a textura do tipo. Nos lados em que o vizinho não tem chão, a borda fecha o piso. Num lado com trilha ligada, a borda só abre na largura da trilha; com piso ligado, não há borda.
+- **Borda em pixel art:** a forma é medida no centro de cada pixel da arte, num shader (`res://ui/components/hex_grounds.gdshader`, o material das linhas de terreno), e por isso a borda sai em pixels inteiros, sem degradê. Ela tem 2 px da própria textura mais escura (74%), e a trilha tem por fora 1 px de sombra na grama. O `HexGrounds` monta o hexágono inteiro e manda, no `CUSTOM0` de cada vértice, o ponto a partir do centro, os lados ligados e o tipo; as outras malhas do terreno não têm `CUSTOM0`, chegam com zero e passam direto.
+- **Altura:** a faixa e o piso sobem com a superfície. Dois hexágonos com chão se ligam em qualquer altura.
+  - Quando o lado entre eles é um dos dois lados de baixo do mais alto (onde há paredão), a faixa continua pelo paredão até o pé dele, como o escorrido.
+  - Nos outros lados não há paredão desenhado. A ponta do braço se entorta para encontrar a do vizinho na tela (`HexGrounds.arm_shift`): atrás de um vizinho mais alto, ela sobe até o lado de cima dele; nos lados retos, as duas se encontram no meio do degrau.
+  - O piso, nesses lados, guarda a borda, para o degrau aparecer, e só abre para uma trilha que chega.
 - **Decorações:** num hexágono de piso, nenhuma nasce. Num de trilha, só `tuft`, `dry_tuft`, `flowers`, `pebbles` e `moss`. É o filtro `allows_decoration` do `HexMapView`, que o tabuleiro já usa.
 
 **Objetos:** cada objeto é um nó com a arte, filho do `HexMapView`.

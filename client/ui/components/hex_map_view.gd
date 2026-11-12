@@ -57,6 +57,7 @@ var _front_rows: Dictionary[Vector2i, HexRowView] = {}
 ## passa da borda do hexágono fica por cima do chão do pedaço ao lado.
 var _row_chunks: Dictionary[int, Array] = {}
 var _wind_material := ShaderMaterial.new()
+var _terrain_material := ShaderMaterial.new()
 var _unbuilt_rows: Dictionary[Vector2i, Array] = {}
 var _highlighted_row: HexRowView = null
 var _hex_triangles := PackedVector2Array()
@@ -67,6 +68,7 @@ var _objects: Array[MapObjectSprite] = []
 
 func _init() -> void:
 	_wind_material.shader = load(HexDecorations.WIND_SHADER_PATH) as Shader
+	_terrain_material.shader = load(HexGrounds.SHADER_PATH) as Shader
 	for corner: int in range(1, HEX_CORNERS.size() - 1):
 		_hex_triangles.append_array(PackedVector2Array([HEX_CORNERS[0], HEX_CORNERS[corner], HEX_CORNERS[corner + 1]]))
 
@@ -117,8 +119,7 @@ func set_map(map: ExplorationMap) -> void:
 		var chunks: Array = _row_chunks[row_number]
 		chunks.sort()
 		for chunk: int in chunks:
-			_rows[Vector2i(chunk, row_number)] = HexRowView.new()
-			add_child(_rows[Vector2i(chunk, row_number)])
+			_rows[Vector2i(chunk, row_number)] = _new_terrain_row()
 		for chunk: int in chunks:
 			_back_rows[Vector2i(chunk, row_number)] = _new_decoration_row()
 		for chunk: int in chunks:
@@ -274,8 +275,7 @@ func _last_index(views: Dictionary[Vector2i, HexRowView], row: int) -> int:
 
 func _add_chunk_nodes(key: Vector2i) -> void:
 	var row := key.y
-	var terrain := HexRowView.new()
-	add_child(terrain)
+	var terrain := _new_terrain_row()
 	var back := _new_decoration_row()
 	var front := _new_decoration_row()
 	if _row_chunks.has(row):
@@ -390,6 +390,13 @@ func _map_bounds() -> Rect2:
 		var box := Rect2(_tile_origin(tile.coord) - rise, TILE_SIZE + rise)
 		bounds = box if not bounds.has_area() else bounds.merge(box)
 	return bounds
+
+
+func _new_terrain_row() -> HexRowView:
+	var row := HexRowView.new()
+	row.material = _terrain_material
+	add_child(row)
+	return row
 
 
 func _new_decoration_row() -> HexRowView:
@@ -516,7 +523,7 @@ func _add_grounds(row: HexRowView, tiles: Array) -> void:
 		HexGrounds.add_tile(batches[tile.ground], tile, _map, flat - _rise(tile.height), flat, faces)
 	for slug: String in batches:
 		var batch := batches[slug]
-		_add_mesh(row, HexGrounds.TEXTURE_PATH % slug, batch.points, batch.texture_points, batch.colors)
+		_add_mesh(row, HexGrounds.TEXTURE_PATH % slug, batch.points, batch.texture_points, batch.colors, batch.custom, batch.shifts)
 
 
 func _front_lift(tile: HexTile, neighbor: Vector2i) -> Vector2:
@@ -598,7 +605,7 @@ func _face_height(neighbor: Vector2i, level: int) -> float:
 	return LEVEL_HEIGHTS[level] - LEVEL_HEIGHTS[_level_at(neighbor)]
 
 
-func _add_mesh(row: HexRowView, path: String, points: PackedVector2Array, texture_points: PackedVector2Array, colors := PackedColorArray(), wind := PackedFloat32Array()) -> void:
+func _add_mesh(row: HexRowView, path: String, points: PackedVector2Array, texture_points: PackedVector2Array, colors := PackedColorArray(), custom := PackedFloat32Array(), custom1 := PackedFloat32Array()) -> void:
 	var texture := _texture(path)
 	if texture == null or points.is_empty():
 		return
@@ -610,9 +617,12 @@ func _add_mesh(row: HexRowView, path: String, points: PackedVector2Array, textur
 	if not colors.is_empty():
 		arrays[Mesh.ARRAY_COLOR] = colors
 	var flags := 0
-	if not wind.is_empty():
-		arrays[Mesh.ARRAY_CUSTOM0] = wind
+	if not custom.is_empty():
+		arrays[Mesh.ARRAY_CUSTOM0] = custom
 		flags = Mesh.ARRAY_CUSTOM_RGBA_FLOAT << Mesh.ARRAY_FORMAT_CUSTOM0_SHIFT
+	if not custom1.is_empty():
+		arrays[Mesh.ARRAY_CUSTOM1] = custom1
+		flags |= Mesh.ARRAY_CUSTOM_RGBA_FLOAT << Mesh.ARRAY_FORMAT_CUSTOM1_SHIFT
 	var mesh := ArrayMesh.new()
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays, [], {}, flags)
 	row.meshes.append(mesh)

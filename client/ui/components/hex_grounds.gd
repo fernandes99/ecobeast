@@ -1,18 +1,17 @@
 class_name HexGrounds
 extends RefCounted
 ## Trilhas e pisos sobre o terreno das ilhas (.specs/island-villages/02-grounds.md).
-## A trilha é uma faixa do centro até cada lado ligado; o piso cobre o hexágono. Dois
-## hexágonos com chão se ligam na mesma altura, ou por um lado de baixo do mais alto,
-## onde há paredão.
+## A trilha é uma faixa do centro até cada lado ligado, com o canto cheio entre dois
+## lados ligados vizinhos; o piso cobre o hexágono. Dois hexágonos com chão se ligam
+## em qualquer altura: com paredão, a faixa desce por ele; sem, a ponta se entorta
+## para encontrar a do vizinho na tela.
 
 const TEXTURE_PATH := "res://assets/terrain/grounds/%s.png"
 const TRAIL := "trail"
 const FLOOR := "floor"
-const HALF_WIDTH := 11.0
-const FRINGE := 3.0
-const DISC_SIDES := 16
-const BORDER_WIDTH := 2.0
-const BORDER_COLOR := Color(0.6, 0.54, 0.48)
+const SHADER_PATH := "res://ui/components/hex_grounds.gdshader"
+const TRAIL_CODE := 1
+const FLOOR_CODE := 2
 const TRAIL_DECORATIONS: Array[String] = ["tuft", "dry_tuft", "flowers", "pebbles", "moss"]
 ## Os lados na ordem dos cantos de HexMapView.HEX_CORNERS: o lado i vai do canto i
 ## ao canto i + 1.
@@ -46,11 +45,18 @@ static func allows_decoration(tile: HexTile, kind: String) -> bool:
 	return TRAIL_DECORATIONS.has(kind)
 
 
+## Dois hexágonos com chão sempre se ligam, em qualquer altura.
 static func linked(tile: HexTile, map: ExplorationMap, edge: int) -> bool:
+	var neighbor := map.tile_at(tile.coord + EDGE_NEIGHBORS[edge])
+	return neighbor != null and not neighbor.ground.is_empty()
+
+
+## Se a divisa com o vizinho aparece inteira: na mesma altura, ou com o paredão do
+## mais alto, que fica atrás, descendo até o mais baixo. Nos outros lados, o degrau
+## não tem paredão desenhado, e o piso guarda a borda para marcá-lo.
+static func seamless(tile: HexTile, map: ExplorationMap, edge: int) -> bool:
 	var offset := EDGE_NEIGHBORS[edge]
 	var neighbor := map.tile_at(tile.coord + offset)
-	if neighbor == null or neighbor.ground.is_empty():
-		return false
 	if neighbor.height == tile.height:
 		return true
 	if tile.height > neighbor.height:
@@ -58,25 +64,41 @@ static func linked(tile: HexTile, map: ExplorationMap, edge: int) -> bool:
 	return HexMapView.LOWER_NEIGHBORS.has(-offset)
 
 
-static func edge_middle(edge: int) -> Vector2:
-	return (HexMapView.HEX_CORNERS[edge] + HexMapView.HEX_CORNERS[(edge + 1) % 6]) / 2.0
+## Quanto a ponta do braço de um lado desce (positivo) ou sobe, em pixels, para
+## encontrar a do vizinho na tela, nos lados sem paredão. Num lado de baixo com o
+## vizinho mais alto, ele cobre a divisa, e a ponta sobe até o lado de cima dele. Nos
+## lados retos (1 e 4), as duas pontas se encontram no meio do degrau.
+static func arm_shift(tile: HexTile, map: ExplorationMap, edge: int) -> float:
+	var neighbor := map.tile_at(tile.coord + EDGE_NEIGHBORS[edge])
+	if neighbor == null or neighbor.ground.is_empty():
+		return 0.0
+	var step := HexMapView.LEVEL_HEIGHTS[tile.height] - HexMapView.LEVEL_HEIGHTS[neighbor.height]
+	match edge:
+		1, 4:
+			return step / 2.0
+		2, 3:
+			return minf(step, 0.0)
+	return 0.0
 
 
-## Os triângulos de chão de uma textura, com a cor de cada vértice.
+## Os triângulos de chão de uma textura. A forma da trilha e a borda saem do shader
+## (`SHADER_PATH`), por dois dados de cada vértice. CUSTOM0: o ponto no hexágono, a
+## partir do centro; os lados abertos (no piso, mais 6 bits para os ligados a uma
+## trilha); e o tipo. CUSTOM1: o `arm_shift` dos lados 1 a 4.
 class Batch:
 	extends RefCounted
 	var points := PackedVector2Array()
 	var texture_points := PackedVector2Array()
 	var colors := PackedColorArray()
+	var custom := PackedFloat32Array()
+	var shifts := PackedFloat32Array()
 
-	func triangle(a: Vector2, b: Vector2, c: Vector2, shift: Vector2, ca: Color, cb: Color, cc: Color) -> void:
-		points.append_array(PackedVector2Array([a, b, c]))
-		texture_points.append_array(PackedVector2Array([a + shift, b + shift, c + shift]))
-		colors.append_array(PackedColorArray([ca, cb, cc]))
-
-	func quad(a: Vector2, b: Vector2, c: Vector2, d: Vector2, shift: Vector2, ca: Color, cb: Color, cc: Color, cd: Color) -> void:
-		triangle(a, b, c, shift, ca, cb, cc)
-		triangle(a, c, d, shift, ca, cc, cd)
+	func vertex(point: Vector2, shift: Vector2, color: Color, local: Vector2, links: int, kind: int, arms: PackedFloat32Array) -> void:
+		points.append(point)
+		texture_points.append(point + shift)
+		colors.append(color)
+		custom.append_array(PackedFloat32Array([local.x, local.y, links, kind]))
+		shifts.append_array(arms)
 
 
 ## `raised` é o canto do hexágono na tela, já na altura; `flat` é o mesmo canto sem a
@@ -84,70 +106,37 @@ class Batch:
 ## altura do paredão (0 sem paredão).
 static func add_tile(mesh: Batch, tile: HexTile, map: ExplorationMap, raised: Vector2, flat: Vector2, face_heights: Dictionary[int, float]) -> void:
 	var shift := flat - raised
-	var kind := kind_of(tile.ground)
+	var kind := FLOOR_CODE if kind_of(tile.ground) == FLOOR else TRAIL_CODE
+	var links := 0
+	for edge: int in 6:
+		if not linked(tile, map, edge):
+			continue
+		if kind == TRAIL_CODE or seamless(tile, map, edge):
+			links |= 1 << edge
+		if kind == FLOOR_CODE and kind_of(map.tile_at(tile.coord + EDGE_NEIGHBORS[edge]).ground) == TRAIL:
+			links |= 1 << (edge + 6)
+	var arms := PackedFloat32Array()
+	for edge: int in range(1, 5):
+		arms.append(arm_shift(tile, map, edge))
 	var center := raised + HexMapView.SURFACE_CENTER
-	if kind == FLOOR:
-		_add_floor(mesh, tile, map, raised, center, shift)
-	else:
-		_add_trail(mesh, tile, map, raised, center, shift)
-	for edge: int in face_heights:
-		if face_heights[edge] > 0.0 and linked(tile, map, edge):
-			_add_face_strip(mesh, raised, edge, face_heights[edge], shift, kind == FLOOR)
-
-
-static func _add_floor(mesh: Batch, tile: HexTile, map: ExplorationMap, raised: Vector2, center: Vector2, shift: Vector2) -> void:
 	var white := Color.WHITE
 	for edge: int in 6:
 		var a := raised + HexMapView.HEX_CORNERS[edge]
 		var b := raised + HexMapView.HEX_CORNERS[(edge + 1) % 6]
-		mesh.triangle(center, a, b, shift, white, white, white)
-	for edge: int in 6:
-		if linked(tile, map, edge):
-			continue
-		var a := raised + HexMapView.HEX_CORNERS[edge]
-		var b := raised + HexMapView.HEX_CORNERS[(edge + 1) % 6]
-		var inner_a := a + (center - a).normalized() * BORDER_WIDTH
-		var inner_b := b + (center - b).normalized() * BORDER_WIDTH
-		mesh.quad(a, b, inner_b, inner_a, shift, BORDER_COLOR, BORDER_COLOR, BORDER_COLOR, BORDER_COLOR)
+		mesh.vertex(center, shift, white, Vector2.ZERO, links, kind, arms)
+		mesh.vertex(a, shift, white, a - center, links, kind, arms)
+		mesh.vertex(b, shift, white, b - center, links, kind, arms)
+	for edge: int in face_heights:
+		if face_heights[edge] > 0.0 and linked(tile, map, edge):
+			_add_face(mesh, raised, center, edge, face_heights[edge], shift, links, kind, arms)
 
 
-static func _add_trail(mesh: Batch, tile: HexTile, map: ExplorationMap, raised: Vector2, center: Vector2, shift: Vector2) -> void:
-	var solid := Color.WHITE
-	var clear := Color(1.0, 1.0, 1.0, 0.0)
-	var core := HALF_WIDTH - FRINGE
-	for side: int in DISC_SIDES:
-		var a := Vector2.from_angle(TAU * side / DISC_SIDES)
-		var b := Vector2.from_angle(TAU * (side + 1) / DISC_SIDES)
-		mesh.triangle(center, center + a * core, center + b * core, shift, solid, solid, solid)
-		mesh.quad(center + a * core, center + b * core, center + b * HALF_WIDTH, center + a * HALF_WIDTH, shift, solid, solid, clear, clear)
-	for edge: int in 6:
-		if not linked(tile, map, edge):
-			continue
-		var end := raised + edge_middle(edge)
-		var along := (end - center).normalized()
-		var across := Vector2(-along.y, along.x)
-		mesh.quad(center + across * core, end + across * core, end - across * core, center - across * core, shift, solid, solid, solid, solid)
-		for side: float in [1.0, -1.0]:
-			var inner := across * core * side
-			var outer := across * HALF_WIDTH * side
-			mesh.quad(center + inner, end + inner, end + outer, center + outer, shift, solid, solid, clear, clear)
-
-
-## A faixa desce pelo paredão do lado de baixo até o pé dele, com a sombra do lado.
-static func _add_face_strip(mesh: Batch, raised: Vector2, edge: int, height: float, shift: Vector2, whole: bool) -> void:
+## O paredão do lado de baixo repete, em cada coluna, o ponto do lado em cima dela:
+## a trilha desce reta até o pé, com a sombra do lado.
+static func _add_face(mesh: Batch, raised: Vector2, center: Vector2, edge: int, height: float, shift: Vector2, links: int, kind: int, arms: PackedFloat32Array) -> void:
 	var a := raised + HexMapView.HEX_CORNERS[edge]
 	var b := raised + HexMapView.HEX_CORNERS[(edge + 1) % 6]
 	var shade: Color = HexMapView.FACE_COLORS[HexMapView.LOWER_NEIGHBORS.find(EDGE_NEIGHBORS[edge])]
 	var down := Vector2(0.0, height)
-	if whole:
-		mesh.quad(a, b, b + down, a + down, shift, shade, shade, shade, shade)
-		return
-	var middle := (a + b) / 2.0
-	var along := (b - a).normalized()
-	var core := HALF_WIDTH - FRINGE
-	var clear := Color(shade, 0.0)
-	mesh.quad(middle - along * core, middle + along * core, middle + along * core + down, middle - along * core + down, shift, shade, shade, shade, shade)
-	for side: float in [1.0, -1.0]:
-		var inner := along * core * side
-		var outer := along * HALF_WIDTH * side
-		mesh.quad(middle + inner, middle + outer, middle + outer + down, middle + inner + down, shift, shade, clear, clear, shade)
+	for corner: Array in [[a, a], [b, b], [b + down, b], [a, a], [b + down, b], [a + down, a]]:
+		mesh.vertex(corner[0], shift, shade, corner[1] - center, links, kind, arms)
