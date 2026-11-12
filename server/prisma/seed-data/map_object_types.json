@@ -60,12 +60,6 @@
 		"variants": 2
 	},
 	{
-		"id": 14,
-		"slug": "treehouse",
-		"name": "Casa na árvore",
-		"variants": 1
-	},
-	{
 		"id": 16,
 		"slug": "trough",
 		"name": "Bebedouro",
@@ -75,18 +69,24 @@
 		"id": 17,
 		"slug": "rune_shrine",
 		"name": "Santuário de runas",
-		"variants": 1
+		"variants": 4
 	},
 	{
 		"id": 18,
 		"slug": "house_medium",
 		"name": "Casa média",
-		"variants": 6
+		"variants": 11
 	},
 	{
 		"id": 19,
 		"slug": "house_large",
 		"name": "Casa grande",
-		"variants": 5
+		"variants": 10
+	},
+	{
+		"id": 20,
+		"slug": "plants",
+		"name": "Vegetação",
+		"variants": 10
 	}
 ]

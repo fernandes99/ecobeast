@@ -53,10 +53,10 @@ Os tipos depois da revisão da [03](03-map-objects.md#revisão-casas-árvores-pe
 | id | slug | name | Formato | Variantes | Bloqueio padrão |
 | --- | --- | --- | --- | --- | --- |
 | 1 | `house` | Casa | um | 9 modelos | bloqueia |
-| 18 | `house_medium` | Casa média | par | 6 | os dois |
-| 19 | `house_large` | Casa grande | triângulo | 5 | todos |
-| 3 | `windmill` | Moinho | par | 3: telhado vermelho, laranja e verde | os dois |
-| 5 | `tree` | Árvore | um | 8: sozinhas, em grupo, no outono e floridas | bloqueia |
+| 18 | `house_medium` | Casa média | par | 11 | os dois |
+| 19 | `house_large` | Casa grande | triângulo | 10 | todos |
+| 3 | `windmill` | Moinho | par | 3: telhado vermelho, laranja e verde, com as pás girando | os dois |
+| 5 | `tree` | Árvore | um | 8: sozinhas, em grupo, no outono e floridas, balançando | bloqueia |
 | 6 | `rock` | Pedra | um | 6: sozinhas, em grupo e com musgo | bloqueia |
 | 7 | `garden` | Horta | um | 6: canteiros de abóbora, raízes, trigo, girassol, tubérculos e uma em crescimento | bloqueia |
 | 8 | `fence` | Cerca | um | 2: madeira e pedra | bloqueia |
@@ -64,9 +64,11 @@ Os tipos depois da revisão da [03](03-map-objects.md#revisão-casas-árvores-pe
 | 10 | `market_stall` | Barraca de feira | um | 3: toldo vermelho, verde e azul | bloqueia |
 | 11 | `cart` | Carroça | um | 1 | bloqueia |
 | 13 | `beast_stable` | Estábulo de Ecobeasts | par | 2: madeira e pedra | os dois |
-| 14 | `treehouse` | Casa na árvore | par | 1 | os dois |
 | 16 | `trough` | Bebedouro | um | 1 | bloqueia |
-| `rune_shrine` | Santuário de runas | um | 1 | bloqueia |
+| 17 | `rune_shrine` | Santuário de runas | um | 4: minério azul, de ouro, de prata e de carvão, com brilho | bloqueia |
+| 20 | `plants` | Vegetação | um | 10: as plantas do terreno, com o vento | não bloqueia |
+
+Depois da [04](04-plants-and-animations.md), a casa na árvore (14) saiu, e a Vegetação não tem sprite: as plantas dela saem do `HexMapView`, como as do bioma. Os objetos animados têm os quadros lado a lado no PNG da variante, cada um com a largura da célula, e o `MapObjectSprite` anda neles na velocidade do tipo. Um objeto é desenhado depois do chão da linha seguinte à da frente dele (por baixo das decorações e dos atores dela), para a arte que desce da borda, como a pá do moinho, não ser cortada; só com um hexágono da frente mais alto ele fica antes das decorações da frente da própria linha.
 
 ### Os tipos de ação
 
@@ -183,9 +185,9 @@ Tamanhos da arte de agora, na variante 1 (em pixels da arte, como as texturas do
 | `house` | 64×67 (até 64×103) | `market_stall` | 64×55 |
 | `house_medium` | 128×77 (até 128×101) | `cart` | 64×45 |
 | `house_large` | 128×113 (a 5: 128×232) | `beast_stable` | 128×79 |
-| `windmill` | 128×98 | `treehouse` | 128×122 |
-| `tree` | 64×48 | `trough` | 64×35 |
-| `rock` | 64×43 | `rune_shrine` | 64×63 |
+| `windmill` | 128×110 (9 quadros) | `plants` | 64×53 (só a prévia) |
+| `tree` | 64×49 (4 quadros) | `trough` | 64×35 |
+| `rock` | 64×43 | `rune_shrine` | 64×66 (4 quadros) |
 | `garden` | 64×52 | `fence` | 64×37 |
 | `well` | 64×59 | | |
 

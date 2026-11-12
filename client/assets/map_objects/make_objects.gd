@@ -9,7 +9,9 @@ extends SceneTree
 ## montadas peça por peça; a cor do telhado troca de bloco no tileset, que repete as
 ## mesmas peças em cada cor. As árvores, as pedras e as hortas são compostas com os
 ## sprites e as peças do pacote. A célula tem a largura do formato, simétrica em volta do
-## ponto de apoio, e o pé dela é o canto de baixo da linha da frente.
+## ponto de apoio, e o pé dela é o canto de baixo da linha da frente. Um objeto animado
+## tem os quadros lado a lado no mesmo PNG, cada um com a largura da célula. A
+## Vegetação usa as plantas do terreno (HexDecorations): o PNG dela é só a prévia do editor.
 
 const OUT := "res://assets/map_objects/%s/%d.png"
 const HEX_HALF_WIDTH := 32.0
@@ -38,13 +40,13 @@ const SKIPPED_SPRITES: Array[String] = [
 	"spr_deco_sheep_01", "spr_deco_pig_01", "spr_deco_cow", "spr_deco_duck_01", "spr_deco_windmillshadow",
 	"spr_deco_windmill_withshadow", "expression_attack", "expression_alerted",
 ]
-## slug: formato e quantas variantes.
+## slug: formato, quantas variantes e, nos animados, quantos quadros.
 const TYPES := {
 	"house": ["one", 9],
-	"house_medium": ["pair", 6],
-	"house_large": ["triangle", 5],
-	"windmill": ["pair", 3],
-	"tree": ["one", 8],
+	"house_medium": ["pair", 11],
+	"house_large": ["triangle", 10],
+	"windmill": ["pair", 3, 9],
+	"tree": ["one", 8, 4],
 	"rock": ["one", 6],
 	"garden": ["one", 6],
 	"fence": ["one", 2],
@@ -52,10 +54,11 @@ const TYPES := {
 	"market_stall": ["one", 3],
 	"cart": ["one", 1],
 	"beast_stable": ["pair", 2],
-	"treehouse": ["pair", 1],
 	"trough": ["one", 1],
-	"rune_shrine": ["one", 1],
+	"rune_shrine": ["one", 4, 4],
+	"plants": ["one", 10],
 }
+const DECORATIONS := "res://assets/terrain/decorations/decorations.png"
 const OUTLINE := Color8(61, 41, 46)
 const WOOD := Color8(196, 120, 76)
 const WOOD_LIGHT := Color8(232, 168, 112)
@@ -78,6 +81,8 @@ var _assets: Array[Dictionary] = []
 var _sprites: Dictionary = {}
 var _image: Image
 var _centers: Array[Vector2] = []
+## O quadro que está sendo desenhado: os sprites animados do pacote usam o quadro dele.
+var _frame := 0
 
 
 func _init() -> void:
@@ -92,10 +97,15 @@ func _init() -> void:
 	_read_room(_pack + "/Sunnyside_World_Gamemaker/rooms/Room1/Room1.yy")
 	for slug: String in TYPES:
 		var entry: Array = TYPES[slug]
+		var frames := int(entry[2]) if entry.size() > 2 else 1
 		for variant: int in range(1, int(entry[1]) + 1):
-			_begin(SHAPES[entry[0]])
-			call("_draw_" + slug, variant)
-			var art := _trimmed()
+			var images: Array[Image] = []
+			for frame: int in frames:
+				_frame = frame
+				_begin(SHAPES[entry[0]])
+				call("_draw_" + slug, variant)
+				images.append(_image)
+			var art := _strip(images)
 			DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("res://assets/map_objects/%s" % slug))
 			var error := art.save_png(OUT % [slug, variant])
 			print("%s/%d: %dx%d %s" % [slug, variant, art.get_width(), art.get_height(), "ok" if error == OK else error_string(error)])
@@ -148,15 +158,19 @@ func _read_room(path: String) -> void:
 						_assets.append(asset)
 
 
-## O primeiro quadro de um sprite do GameMaker, com o ponto de origem dele.
+## O quadro `_frame` de um sprite do GameMaker (o primeiro, num sprite parado), com o
+## ponto de origem dele.
 func _sprite(name: String) -> Array:
 	if not _sprites.has(name):
 		var folder := _pack + "/Sunnyside_World_Gamemaker/sprites/" + name
 		var data := _yy(folder + "/" + name + ".yy")
-		var frame := str(data["frames"][0]["name"])
+		var frames: Array[Image] = []
+		for frame: Dictionary in data["frames"]:
+			frames.append(_load(folder + "/" + str(frame["name"]) + ".png"))
 		var origin := Vector2(data["sequence"]["xorigin"], data["sequence"]["yorigin"])
-		_sprites[name] = [_load(folder + "/" + frame + ".png"), origin]
-	return _sprites[name]
+		_sprites[name] = [frames, origin]
+	var frames: Array = _sprites[name][0]
+	return [frames[_frame % frames.size()], _sprites[name][1]]
 
 
 func _element(path: String) -> Image:
@@ -289,17 +303,33 @@ func _begin(shape: Array) -> void:
 		_centers.append(Vector2(center.x - pivot_x + width / 2.0, center.y - bottom + CANVAS_HEIGHT))
 
 
-## Corta as linhas vazias de cima; o pé continua embaixo.
-func _trimmed() -> Image:
+## Os quadros lado a lado, cortados no mesmo topo (as linhas vazias de cima de todos);
+## o pé continua embaixo.
+static func _strip(images: Array[Image]) -> Image:
+	var width := images[0].get_width()
 	var top := CANVAS_HEIGHT - 1
-	for y: int in CANVAS_HEIGHT:
-		for x: int in _image.get_width():
-			if _image.get_pixel(x, y).a > 0.0:
-				top = y
-				break
-		if top == y:
-			break
-	return _image.get_region(Rect2i(0, top, _image.get_width(), CANVAS_HEIGHT - top))
+	for image: Image in images:
+		top = mini(top, _top(image))
+	var strip := Image.create(width * images.size(), CANVAS_HEIGHT - top, false, Image.FORMAT_RGBA8)
+	for index: int in images.size():
+		strip.blit_rect(images[index], Rect2i(0, top, width, CANVAS_HEIGHT - top), Vector2i(width * index, 0))
+	return strip
+
+
+static func _top(image: Image) -> int:
+	for y: int in image.get_height():
+		for x: int in image.get_width():
+			if image.get_pixel(x, y).a > 0.0:
+				return y
+	return image.get_height() - 1
+
+
+## Põe a imagem com o meio dos pixels desenhados em `foot.x` e a borda de baixo em
+## `foot.y`: sprites com borda vazia de um lado só ficam centrados.
+func _put_centered(image: Image, foot: Vector2) -> void:
+	var used := image.get_used_rect()
+	var at := Vector2i(roundi(foot.x - used.position.x - used.size.x / 2.0), roundi(foot.y) - image.get_height())
+	_image.blend_rect(image, Rect2i(Vector2i.ZERO, image.get_size()), at)
 
 
 ## O centro de um hexágono do formato, na célula, na ordem de SHAPES.
@@ -387,7 +417,7 @@ const HOUSES := [
 	[Rect2i(1128, 422, 46, 40), ORANGE],
 	[Rect2i(360, 278, 30, 40), RED],
 	[Rect2i(1224, 634, 46, 78), PURPLE],
-	[Rect2i(344, 410, 40, 68), ORANGE],
+	[Rect2i(696, 26, 52, 72), ORANGE],
 	[Rect2i(648, 230, 30, 88), BLUE],
 	[Rect2i(1000, 310, 46, 88), GREEN],
 ]
@@ -398,6 +428,11 @@ const MEDIUM_HOUSES := [
 	[Rect2i(520, 304, 62, 78), RED],
 	[Rect2i(216, 424, 78, 86), PURPLE],
 	[Rect2i(872, 0, 62, 62), RED],
+	[Rect2i(886, 492, 84, 72), ORANGE],
+	[Rect2i(278, 534, 80, 60), RED],
+	[Rect2i(216, 424, 78, 86), GREEN],
+	[Rect2i(36, 400, 64, 112), PURPLE],
+	[Rect2i(648, 514, 66, 96), GREEN],
 ]
 const LARGE_HOUSES := [
 	[Rect2i(632, 392, 102, 94), BLUE],
@@ -405,6 +440,11 @@ const LARGE_HOUSES := [
 	[Rect2i(632, 392, 102, 94), GREEN],
 	[Rect2i(632, 392, 102, 94), PURPLE],
 	[Rect2i(454, 20, 116, 214), ORANGE],
+	[Rect2i(632, 392, 102, 94), ORANGE],
+	[Rect2i(454, 20, 116, 214), RED],
+	[Rect2i(454, 20, 116, 214), BLUE],
+	[Rect2i(454, 20, 116, 214), GREEN],
+	[Rect2i(454, 20, 116, 214), PURPLE],
 ]
 
 
@@ -423,8 +463,13 @@ func _draw_house_large(variant: int) -> void:
 	_put(_room(house[0], house[1], OBJECT_LAYERS, false), _mid() + Vector2(0, 24))
 
 
+## O corpo do moinho do mapa de exemplo, sem as pás, e as pás do pacote no quadro da
+## vez, com o eixo no mesmo lugar: a de baixo cabe inteira.
 func _draw_windmill(variant: int) -> void:
-	_put(_room(Rect2i(1112, 630, 112, 100), [RED, BLUE, ORANGE][variant - 1]), _mid() + Vector2(0, 14))
+	var body := _room(Rect2i(1112, 630, 112, 122), [RED, BLUE, ORANGE][variant - 1], OBJECT_LAYERS, false)
+	var sails: Image = _sprite("spr_deco_windmill")[0]
+	body.blend_rect(sails, Rect2i(Vector2i.ZERO, sails.get_size()), Vector2i(1, 8))
+	_put(body, _mid() + Vector2(0, 36))
 
 
 ## O primeiro quadro de um sprite, numa cópia que pode ser recolorida.
@@ -596,18 +641,37 @@ func _draw_beast_stable(variant: int) -> void:
 	_put(_sprite("spr_deco_trough")[0], _c(1) + Vector2(14, 16))
 
 
-## A casa sobre estacas do mapa de exemplo, com a escada, entre as árvores.
-func _draw_treehouse(_variant: int) -> void:
-	_put(_room(Rect2i(398, 270, 66, 60), -1, ["forest"], false), _mid() + Vector2(-6, -2))
-	_put(_room(Rect2i(36, 400, 64, 112), GREEN, OBJECT_LAYERS, false), _mid() + Vector2(0, 14))
-	_put(_sprite("spr_deco_tree_01")[0], _c(1) + Vector2(14, 14))
-
-
 func _draw_trough(_variant: int) -> void:
 	_put(_sprite("spr_deco_trough")[0], _c(0) + Vector2(-4, 12))
 	_put(_sprite("spr_deco_barrel_water")[0], _c(0) + Vector2(18, 10))
 
 
-func _draw_rune_shrine(_variant: int) -> void:
-	_put(_piece(736, 304, 30, 44), _c(0) + Vector2(0, 12))
-	_put(_sprite("spr_deco_ore_bluestone")[0], _c(0) + Vector2(0, -24))
+const SHRINE_ORES: Array[String] = ["spr_deco_ore_bluestone", "spr_deco_ore_gold", "spr_deco_ore_silver", "spr_deco_ore_coal"]
+
+
+## O pilar do tileset com um minério em cima, os dois centrados, e um brilho que pisca.
+func _draw_rune_shrine(variant: int) -> void:
+	var foot := _c(0) + Vector2(0, 12)
+	_put_centered(_piece(736, 304, 30, 44), foot)
+	var ore: Image = _sprite(SHRINE_ORES[variant - 1])[0]
+	var ore_foot := foot + Vector2(0, -36)
+	_put_centered(ore, ore_foot)
+	var used := ore.get_used_rect()
+	var glint: Image = _sprite("spr_deco_glint_02")[0]
+	_put_centered(glint, ore_foot + Vector2(used.size.x / 2.0 - 2.0, -used.size.y + 4.0))
+
+
+## A prévia da Vegetação no editor: as plantas do terreno que o objeto põe no hexágono
+## (0, 0). No mapa, elas saem do HexMapView, com o vento.
+func _draw_plants(variant: int) -> void:
+	var sheet := Image.load_from_file(ProjectSettings.globalize_path(DECORATIONS))
+	sheet.convert(Image.FORMAT_RGBA8)
+	var decorations := HexDecorations.decorations_of_object(Vector2i.ZERO, variant, false)
+	decorations.sort_custom(func(a: HexDecorations.Decoration, b: HexDecorations.Decoration) -> bool: return a.offset.y < b.offset.y)
+	for decoration: HexDecorations.Decoration in decorations:
+		var cell := Vector2i(decoration.column, HexDecorations.KIND_ROWS[decoration.kind]) * HexDecorations.CELL_SIZE
+		var piece := sheet.get_region(Rect2i(cell, HexDecorations.CELL_SIZE))
+		if decoration.flipped:
+			piece.flip_x()
+		var at := Vector2i(_c(0)) + decoration.offset - HexDecorations.CELL_BASE
+		_image.blend_rect(piece, Rect2i(Vector2i.ZERO, piece.get_size()), at)

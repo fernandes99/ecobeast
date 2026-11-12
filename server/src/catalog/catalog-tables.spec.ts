@@ -297,11 +297,18 @@ describe('carga inicial do chão e dos objetos (island-villages/01)', () => {
   it('as casas têm 1, 2 e 3 hexágonos; a árvore e a pedra, 1', () => {
     const size = (slug: string) => {
       const { id } = objects.find((object) => object.slug === slug)!;
-      return tiles.filter(({ object_type_id }) => object_type_id === id)
-        .length;
+      return tiles.filter(({ object_type_id }) => object_type_id === id).length;
     };
     expect(
       ['house', 'house_medium', 'house_large', 'tree', 'rock'].map(size),
     ).toEqual([1, 2, 3, 1, 1]);
+  });
+
+  it('a Vegetação ocupa 1 hexágono sem bloquear, e a casa na árvore saiu', () => {
+    const plants = objects.find((object) => object.slug === 'plants')!;
+    expect(
+      tiles.filter(({ object_type_id }) => object_type_id === plants.id),
+    ).toEqual([{ object_type_id: plants.id, dq: 0, dr: 0, blocks: false }]);
+    expect(objects.some(({ slug }) => slug === 'treehouse')).toBe(false);
   });
 });

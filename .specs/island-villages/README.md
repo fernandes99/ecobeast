@@ -75,5 +75,6 @@ Escolhas do planejamento (corrigíveis; ao mudar uma, atualize aqui e no [archit
 | 1 | [01-village-records](01-village-records.md) | Servidor e contrato: os tipos no catálogo, o chão, os objetos e as ações nas ilhas, as construções convertidas em ações e as regras do bloqueio. O jogo e o editor passam a falar de ações | concluída |
 | 2 | [02-grounds](02-grounds.md) | Jogo e editor: trilhas e pisos desenhados, com a arte provisória, e a ferramenta Chão | concluída |
 | 3 | [03-map-objects](03-map-objects.md) | Jogo e editor: os objetos desenhados, com a arte provisória, a ferramenta Objeto com variante, espelho e bloqueio, e o Domador respeitando o bloqueio e as ações em hexágono bloqueado | concluída |
+| 4 | [04-plants-and-animations](04-plants-and-animations.md) | A Vegetação (as plantas do terreno como objeto), moinho, árvore e santuário animados, mais casas e santuários, e sai a casa na árvore | concluída |
 
 O desenho compartilhado está no [architecture.md](architecture.md).

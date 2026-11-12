@@ -137,7 +137,7 @@ func _init() -> void:
 		button.add_theme_constant_override(&"icon_max_width", TYPE_ICON_WIDTH)
 		var path := MapObjectSprite.art_path(str(row.get("slug", "")), 1)
 		if not path.is_empty():
-			button.icon = load(path) as Texture2D
+			button.icon = MapObjectSprite.first_frame(load(path) as Texture2D, coords_of(footprint(id, Vector2i.ZERO, false)))
 		button.pressed.connect(_pick_type.bind(id))
 		add_child(button)
 		_type_buttons[id] = button
@@ -175,7 +175,8 @@ func refresh() -> void:
 		_type_buttons[id].set_pressed_no_signal(id == shown_type)
 	var count := _variants(shown_type)
 	var path := MapObjectSprite.art_path(_slug(shown_type), shown_variant)
-	_preview.texture = load(path) as Texture2D if not path.is_empty() else null
+	var art: Texture2D = load(path) as Texture2D if not path.is_empty() else null
+	_preview.texture = MapObjectSprite.first_frame(art, coords_of(footprint(shown_type, Vector2i.ZERO, false))) if art != null else null
 	_preview.flip_h = shown_mirror
 	_caption.text = ("Escolhido: %s" if selected >= 0 else "Novo: %s") % _type_name(shown_type)
 	_variant_label.text = "Variante %d de %d" % [shown_variant, count]

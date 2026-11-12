@@ -177,13 +177,17 @@ func update_tiles(coords: Array[Vector2i]) -> void:
 		sprite.place(_rise(_level_at(sprite.object.coord)))
 
 
-## Os objetos da ilha (island-villages/03): cada um entra na linha da frente dele,
-## por cima das decorações de trás e por baixo dos atores e das decorações da frente.
+## Os objetos da ilha (island-villages/03): cada um entra logo depois do chão da linha
+## seguinte à da frente dele, por baixo das decorações e dos atores dela (ou, com um
+## hexágono da frente mais alto, antes das decorações da frente da própria linha).
 ## Chame depois do `set_map`.
 func set_objects(objects: Array[MapObject]) -> void:
 	_clear_objects()
 	for object: MapObject in objects:
 		var row := GameData.get_row("map_object_types", object.object_type_id)
+		# A Vegetação não tem arte própria: as plantas dela saem das decorações.
+		if str(row.get("slug", "")) == HexDecorations.PLANTS_SLUG:
+			continue
 		var sprite := MapObjectSprite.new()
 		if not sprite.setup(object, str(row.get("slug", ""))):
 			sprite.free()
@@ -210,12 +214,29 @@ func _clear_objects() -> void:
 	_objects.clear()
 
 
+## A arte que desce da borda de baixo do objeto (a pá do moinho) passa por cima do
+## chão da linha da frente, a não ser que um hexágono da frente encostado nele seja
+## mais alto: aí o chão dele cobre, como um degrau.
 func _place_object(sprite: MapObjectSprite) -> void:
 	sprite.place(_rise(_level_at(sprite.object.coord)))
-	if not _row_chunks.has(sprite.front_row):
+	var row := sprite.front_row
+	if not _row_chunks.has(row):
 		return
-	var at := _last_index(_back_rows, sprite.front_row) + 1
+	var at := _last_index(_back_rows, row) + 1
+	if _row_chunks.has(row + 1) and not _front_is_higher(sprite.object, row):
+		at = _first_index(_back_rows, row + 1)
 	move_child(sprite, at if sprite.get_index() > at else at - 1)
+
+
+func _front_is_higher(object: MapObject, row: int) -> bool:
+	var level := _level_at(object.coord)
+	for coord: Vector2i in object.tiles:
+		if coord.y != row:
+			continue
+		for below: Vector2i in [coord + Vector2i(-1, 1), coord + Vector2i(0, 1)]:
+			if _map.has(below) and _level_at(below) > level:
+				return true
+	return false
 
 
 func build_all_rows() -> void:
@@ -298,7 +319,7 @@ func _add_chunk_nodes(key: Vector2i) -> void:
 	_back_rows[key] = back
 	_front_rows[key] = front
 	for sprite: MapObjectSprite in _objects:
-		if sprite.front_row == row:
+		if sprite.front_row == row or sprite.front_row == row - 1:
 			_place_object(sprite)
 
 
@@ -537,13 +558,17 @@ func _add_decorations(back: HexRowView, front: HexRowView, tiles: Array) -> void
 	var behind: Array[HexDecorations.Decoration] = []
 	var ahead: Array[HexDecorations.Decoration] = []
 	for tile: HexTile in tiles:
-		if _map.object_at(tile.coord) >= 0:
+		var plants := _plants_at(tile.coord)
+		if plants == null and _map.object_at(tile.coord) >= 0:
 			continue
 		var center := Vector2i(_tile_origin(tile.coord) + SURFACE_CENTER - _rise(tile.height))
-		for decoration: HexDecorations.Decoration in HexDecorations.decorations_of(tile, _map.map_seed):
-			if allows_decoration.is_valid() and not allows_decoration.call(tile.coord, decoration.kind):
+		var decorations := HexDecorations.decorations_of(tile, _map.map_seed)
+		if plants != null:
+			decorations = HexDecorations.decorations_of_object(tile.coord, plants.variant, plants.mirrored)
+		for decoration: HexDecorations.Decoration in decorations:
+			if plants == null and allows_decoration.is_valid() and not allows_decoration.call(tile.coord, decoration.kind):
 				continue
-			if not HexGrounds.allows_decoration(tile, decoration.kind):
+			if plants == null and not HexGrounds.allows_decoration(tile, decoration.kind):
 				continue
 			decoration.base = center + decoration.offset
 			if decoration.offset.y < 0:
@@ -552,6 +577,18 @@ func _add_decorations(back: HexRowView, front: HexRowView, tiles: Array) -> void
 				ahead.append(decoration)
 	_add_decoration_mesh(back, behind)
 	_add_decoration_mesh(front, ahead)
+
+
+## A Vegetação apoiada neste hexágono, ou `null`.
+func _plants_at(coord: Vector2i) -> MapObject:
+	var index := _map.object_at(coord)
+	if index < 0:
+		return null
+	var object := _map.objects[index]
+	if object.coord != coord:
+		return null
+	var row := GameData.get_row("map_object_types", object.object_type_id)
+	return object if str(row.get("slug", "")) == HexDecorations.PLANTS_SLUG else null
 
 
 func _add_decoration_mesh(row: HexRowView, decorations: Array[HexDecorations.Decoration]) -> void:

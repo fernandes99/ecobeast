@@ -44,7 +44,9 @@ var _focus_key := 0
 var _show_areas := true
 var _show_actions := true
 var _show_blocks := false
-var _object_tiles: Dictionary[Vector2i, bool] = {}
+## O que cada hexágono com objeto mostra (tipo, variante e espelho): mudou, refaz as
+## decorações dele, porque a Vegetação é desenhada com elas.
+var _object_tiles: Dictionary[Vector2i, String] = {}
 var _draft: IslandDraft = null
 var _map: ExplorationMap = null
 var _zoom := OPEN_ZOOM
@@ -121,7 +123,7 @@ func refresh_objects() -> void:
 	var now := _current_object_tiles()
 	var changed: Array[Vector2i] = []
 	for coord: Vector2i in now:
-		if not _object_tiles.has(coord):
+		if _object_tiles.get(coord, "") != now[coord]:
 			changed.append(coord)
 	for coord: Vector2i in _object_tiles:
 		if not now.has(coord):
@@ -136,11 +138,11 @@ func set_blocks(on: bool) -> void:
 	_overlay.queue_redraw()
 
 
-func _current_object_tiles() -> Dictionary[Vector2i, bool]:
-	var result: Dictionary[Vector2i, bool] = {}
+func _current_object_tiles() -> Dictionary[Vector2i, String]:
+	var result: Dictionary[Vector2i, String] = {}
 	for object: MapObject in _map.objects:
 		for coord: Vector2i in object.tiles:
-			result[coord] = true
+			result[coord] = "%d:%d:%s" % [object.object_type_id, object.variant, object.mirrored]
 	return result
 
 
