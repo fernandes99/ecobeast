@@ -14,10 +14,11 @@ A posição do jogador continua só no cliente: o servidor não confere passo a 
 - Tocar em qualquer hexágono do mapa leva o Domador até ele, pelo caminho com menos hexágonos, desviando dos bloqueados.
 - Tocar num bloqueado de longe leva o Domador para um hexágono livre ao lado dele e, se ele tiver ação, executa a ação ao chegar.
 - Trocar de destino no meio do caminho.
+- Um indicador sutil do caminho e do destino enquanto ele anda (pedido do dono depois da primeira entrega).
 
 ## Fora do escopo
 
-- Mostrar a rota no mapa antes ou durante a caminhada.
+- Mostrar a rota antes de andar, ou pedir confirmação do destino.
 - Custo por terreno ou altura: todo hexágono livre custa 1, como no passo de um hexágono.
 - Bloqueio por terreno (água, montanha): continua valendo só o bloqueio dos objetos.
 - Mudar o servidor.
@@ -33,6 +34,8 @@ A posição do jogador continua só no cliente: o servidor não confere passo a 
 - **RF-07:** Ecobeasts selvagens no caminho não param a caminhada. Procurar continua sendo o único jeito de enfrentar um.
 - **RF-08:** Um toque durante a caminhada troca o destino: o Domador termina o passo atual e segue para o novo, sem executar a ação do destino antigo.
 - **RF-09:** Sem caminho até o destino, o Domador não sai do lugar, e a tela mostra "Não dá para chegar lá.".
+- **RF-11:** Enquanto o Domador anda, o caminho que falta aparece no chão: um ponto branco de 2×2 pixels da arte, com contorno escuro de 1 pixel, no centro de cada hexágono, e outro no meio de dois hexágonos seguidos da mesma altura. O destino tem um anel achatado (uma elipse de 7×4,5 pixels da arte), que pulsa devagar. As cores são `UiPalette.MAP_ROUTE` e `MAP_ROUTE_SHADOW`, _a revisar_.
+- **RF-12:** As marcas ficam no plano do chão de cada linha: por cima do terreno e das cores de ação, por baixo das decorações, dos objetos e dos atores. O ponto do meio de um passo some quando o passo começa; o do hexágono, quando o Domador chega nele. Ao parar (chegada, Domador NPC ou troca de destino), todas somem, e a troca desenha o caminho novo.
 - **RF-10:** Procurar, o mapa inteiro e o spawn do menu de depuração continuam recusando agir enquanto o Domador anda, como já faziam no passo de um hexágono.
 
 ## Critérios de aceite
@@ -42,6 +45,7 @@ A posição do jogador continua só no cliente: o servidor não confere passo a 
 - [x] Tocar na Loja de longe leva o Domador para o lado dela e abre a tela da Loja.
 - [x] Um toque no meio do caminho troca o destino; com o novo destino bloqueado, ele para ao lado.
 - [x] O caminho contorna uma parede de objetos e fica vazio para um destino cercado ou bloqueado.
+- [x] Os pontos aparecem pelo caminho e o anel no destino, atrás de um arbusto da frente; os pontos de trás somem conforme ele passa.
 - [ ] Pisar num Domador NPC no meio do caminho para ali, com a fala (passo do dono).
 - [x] O projeto abre sem erros nem avisos de script novos.
 
@@ -51,6 +55,8 @@ A posição do jogador continua só no cliente: o servidor não confere passo a 
 
 - `client/domain/models/exploration_map.gd`: `path_to_any(from, goals)`, uma busca em largura pelos vizinhos livres que para no primeiro hexágono de `goals` e devolve o caminho sem o `from`; e `free_sides(coord)`.
 - `client/screens/exploration/exploration_screen.gd`: `_tap` escolhe o destino, `_go_to` monta os objetivos e a rota, `_walk` anda passo a passo e decide o fim (Domador NPC, novo destino, ação tocada ou ação de chegada), e `_step_to` passa a ser só o passo. O novo destino de um toque durante a caminhada fica em `_next_target`.
+- `client/screens/exploration/route_mark.gd` (novo): `class_name RouteMark`, um ponto ou o anel, desenhado em pixels da arte (`HexMapView.ART_SCALE`) e posto na linha com `HexMapView.set_ground_overlay`. Cada um guarda a `order` na rota, para a tela tirar os que ficaram para trás.
+- `client/ui/theme/palette.gd`: `MAP_ROUTE` e `MAP_ROUTE_SHADOW`.
 - `README.md`, `architecture.md` e `client/CLAUDE.md`.
 
 **Conceito do Godot**
@@ -64,7 +70,8 @@ Uma cena temporária, já apagada, montou um mapa de 6×6 com uma parede de obje
 - um hexágono livre a 5 de distância: o Domador chegou nele;
 - o poço (objeto de 1 hexágono) a 4: ele parou ao lado;
 - um toque no caminho de volta, trocado por um destino bloqueado: ele parou ao lado do novo;
-- a Loja, de longe: ele parou ao lado dela e a tela `shop` abriu.
+- a Loja, de longe: ele parou ao lado dela e a tela `shop` abriu;
+- o indicador, em recortes ampliados no começo e no meio de uma caminhada: na primeira tentativa, branco a 60% sem contorno, ele sumia na pedra clara; com 85% e o contorno escuro, aparece sem pesar.
 
 ```bash
 godot --headless -d --path client --quit-after 60
@@ -75,4 +82,5 @@ godot --headless -d --path client --quit-after 60
 - [x] `path_to_any` e `free_sides`, com a verificação temporária.
 - [x] O toque, a caminhada e a troca de destino na tela (RF-01 a RF-10).
 - [x] Conferir no jogo, na Vila de Ventoverde.
+- [x] O indicador do caminho e do destino (RF-11 e RF-12), conferido no jogo.
 - [x] Remover os arquivos temporários; atualizar o README, `architecture.md` e o `client/CLAUDE.md`.

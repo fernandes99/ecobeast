@@ -21,6 +21,8 @@ const OVERLAY := Color(0.0, 0.0, 0.0, 0.6)
 const SILHOUETTE := Color("#060E18")
 
 const SKY := Color("#52C4F5")
+const MAP_ROUTE := Color("#FFFFFFD9")
+const MAP_ROUTE_SHADOW := Color("#0000004D")
 const MAP_AREA_COLORS: Array[Color] = [
 	Color("#E8C547"),
 	Color("#E0607E"),

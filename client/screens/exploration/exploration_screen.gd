@@ -37,6 +37,7 @@ var _player_coord := Vector2i.ZERO
 var _loading: bool = true
 var _walking: bool = false
 var _next_target := NO_TARGET
+var _route: Array[RouteMark] = []
 var _press_position := Vector2.ZERO
 var _showing_whole_map: bool = false
 var _wild_sprites: Dictionary[int, CreatureSprite] = {}
@@ -205,12 +206,16 @@ func _go_to(target: Vector2i) -> void:
 func _walk(path: Array[Vector2i], action: int) -> void:
 	_walking = true
 	_message.hide()
+	_show_route(path)
 	var origin := _player_coord
-	for coord: Vector2i in path:
+	for index: int in path.size():
 		origin = _player_coord
-		await _step_to(coord)
-		if _map.tamer_at(coord) != null or _next_target != NO_TARGET:
+		_trim_route(2 * index + 2)
+		await _step_to(path[index])
+		_trim_route(2 * index + 3)
+		if _map.tamer_at(path[index]) != null or _next_target != NO_TARGET:
 			break
+	_clear_route()
 	_marker.play_idle()
 	_walking = false
 	var tamer := _map.tamer_at(_player_coord)
@@ -226,6 +231,38 @@ func _walk(path: Array[Vector2i], action: int) -> void:
 		_run_action(action)
 	else:
 		_enter_action(_map.action_at(origin), _map.action_at(_player_coord))
+
+
+## Um ponto em cada hexágono e outro entre dois da mesma altura; no fim, um anel.
+func _show_route(path: Array[Vector2i]) -> void:
+	_clear_route()
+	var previous := _player_coord
+	for index: int in path.size():
+		var coord := path[index]
+		var step := index + 1
+		if _map.tile_at(previous).height == _map.tile_at(coord).height:
+			var middle := (_map_view.surface_center(previous) + _map_view.surface_center(coord)) / 2.0
+			_add_route_mark(RouteMark.new(2 * step - 1, false), middle, maxi(previous.y, coord.y))
+		_add_route_mark(RouteMark.new(2 * step, step == path.size()), _map_view.surface_center(coord), coord.y)
+		previous = coord
+
+
+func _add_route_mark(mark: RouteMark, center: Vector2, row: int) -> void:
+	mark.place(center)
+	_map_view.set_ground_overlay(mark, row)
+	_route.append(mark)
+
+
+## Tira as marcas de ordem menor que `order`.
+func _trim_route(order: int) -> void:
+	while not _route.is_empty() and _route[0].order < order:
+		_route.pop_front().queue_free()
+
+
+func _clear_route() -> void:
+	for mark: RouteMark in _route:
+		mark.queue_free()
+	_route.clear()
 
 
 func _search() -> void:
