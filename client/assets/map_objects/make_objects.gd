@@ -7,7 +7,8 @@ extends SceneTree
 ##
 ## As casas, o moinho e as barracas vêm do mapa de exemplo do pacote (Room1), já
 ## montadas peça por peça; a cor do telhado troca de bloco no tileset, que repete as
-## mesmas peças em cada cor. A célula tem a largura do formato, simétrica em volta do
+## mesmas peças em cada cor. As árvores, as pedras e as hortas são compostas com os
+## sprites e as peças do pacote. A célula tem a largura do formato, simétrica em volta do
 ## ponto de apoio, e o pé dela é o canto de baixo da linha da frente.
 
 const OUT := "res://assets/map_objects/%s/%d.png"
@@ -19,7 +20,6 @@ const SHAPES := {
 	"one": [Vector2i(0, 0)],
 	"pair": [Vector2i(0, 0), Vector2i(1, 0)],
 	"triangle": [Vector2i(0, 0), Vector2i(1, 0), Vector2i(1, -1)],
-	"diamond": [Vector2i(0, 0), Vector2i(0, -1), Vector2i(1, -1), Vector2i(1, -2)],
 }
 ## Os blocos de cor do tileset, de 8 linhas cada, a partir da linha 9, nas colunas 15 a 35.
 const BLUE := 0
@@ -40,21 +40,19 @@ const SKIPPED_SPRITES: Array[String] = [
 ]
 ## slug: formato e quantas variantes.
 const TYPES := {
-	"house": ["one", 4],
-	"farmhouse": ["pair", 4],
+	"house": ["one", 9],
+	"house_medium": ["pair", 6],
+	"house_large": ["triangle", 5],
 	"windmill": ["pair", 3],
-	"castle": ["diamond", 1],
-	"big_tree": ["triangle", 2],
-	"big_rock": ["pair", 1],
-	"garden": ["one", 2],
+	"tree": ["one", 8],
+	"rock": ["one", 6],
+	"garden": ["one", 6],
 	"fence": ["one", 2],
 	"well": ["one", 1],
 	"market_stall": ["one", 3],
 	"cart": ["one", 1],
-	"bridge": ["one", 1],
 	"beast_stable": ["pair", 2],
 	"treehouse": ["pair", 1],
-	"nest": ["one", 1],
 	"trough": ["one", 1],
 	"rune_shrine": ["one", 1],
 }
@@ -64,8 +62,13 @@ const WOOD_LIGHT := Color8(232, 168, 112)
 const WOOD_DARK := Color8(140, 80, 56)
 const STRAW := Color8(214, 170, 92)
 const STRAW_LIGHT := Color8(240, 206, 126)
-const STRAW_DARK := Color8(160, 116, 60)
 const SHADOW := Color(0.0, 0.0, 0.0, 0.18)
+const DIRT := Color8(228, 166, 114)
+const DIRT_DARK := Color8(190, 124, 82)
+const DIRT_SPECK := Color8(206, 140, 94)
+const DIRT_LIGHT := Color8(238, 186, 136)
+const MOSS := Color8(99, 160, 74)
+const MOSS_LIGHT := Color8(140, 196, 92)
 
 var _pack := ""
 var _tileset: Image
@@ -200,9 +203,15 @@ func _room_tiles(image: Image, rect: Rect2i, layer: Dictionary, color: int) -> v
 		var tile := value & 0x7FFFF
 		var row := tile / columns
 		var column := tile % columns
+		var piece: Image
 		if color >= 0 and not layer["forest"] and row >= 9 and row < 49 and column >= 15 and column < 36:
-			row += (color - (row - 9) / 8) * 8
-		var piece := source.get_region(Rect2i((tile % columns) * size, row * size, size, size))
+			var block := (row - 9) / 8
+			var original := source.get_region(Rect2i(column * size, row * size, size, size))
+			piece = source.get_region(Rect2i(column * size, (row + (color - block) * 8) * size, size, size))
+			if _opaque(piece) < _opaque(original) * 0.8:
+				piece = _hue_shifted(original, block, color)
+		else:
+			piece = source.get_region(Rect2i(column * size, row * size, size, size))
 		if value & (1 << 28):
 			piece.flip_x()
 		if value & (1 << 29):
@@ -210,6 +219,30 @@ func _room_tiles(image: Image, rect: Rect2i, layer: Dictionary, color: int) -> v
 		if value & (1 << 30):
 			piece.rotate_90(CLOCKWISE)
 		image.blend_rect(piece, Rect2i(0, 0, size, size), at)
+
+
+const BLOCK_HUES: Array[float] = [0.55, 0.27, 0.07, 0.98, 0.83]
+
+
+## Algumas peças (a cumeeira da casa grande) só existem num bloco de cor: nos outros,
+## a peça é a original com o matiz do telhado trocado, menos saturada.
+static func _hue_shifted(piece: Image, from: int, to: int) -> Image:
+	var shift := BLOCK_HUES[to] - BLOCK_HUES[from]
+	for y: int in piece.get_height():
+		for x: int in piece.get_width():
+			var color := piece.get_pixel(x, y)
+			if color.a > 0.0 and color.s > 0.25 and absf(wrapf(color.h - BLOCK_HUES[from], -0.5, 0.5)) < 0.12:
+				piece.set_pixel(x, y, Color.from_hsv(wrapf(color.h + shift, 0.0, 1.0), color.s * 0.7, color.v * 0.95, color.a))
+	return piece
+
+
+static func _opaque(piece: Image) -> int:
+	var count := 0
+	for y: int in piece.get_height():
+		for x: int in piece.get_width():
+			if piece.get_pixel(x, y).a > 0.0:
+				count += 1
+	return count
 
 
 func _room_sprite(image: Image, rect: Rect2i, asset: Dictionary) -> void:
@@ -316,78 +349,203 @@ static func _autumn(image: Image) -> Image:
 	return result
 
 
+## As folhas verdes ganham a florada: rosa no lugar do verde, sem mexer no contorno.
+static func _blossom(image: Image) -> Image:
+	var result := image.duplicate() as Image
+	for y: int in result.get_height():
+		for x: int in result.get_width():
+			var color := result.get_pixel(x, y)
+			if color.a > 0.0 and color.g > color.r * 1.15 and color.g > color.b:
+				result.set_pixel(x, y, Color.from_hsv(0.93, minf(color.s * 0.55, 1.0), minf(color.v * 1.25, 1.0), color.a))
+	return result
+
+
+## Musgo no alto da pedra: os pixels claros de cima ficam verdes.
+static func _mossy(image: Image) -> Image:
+	var result := image.duplicate() as Image
+	var top := result.get_height()
+	for y: int in result.get_height():
+		for x: int in result.get_width():
+			if result.get_pixel(x, y).a > 0.0:
+				top = mini(top, y)
+	for y: int in result.get_height():
+		for x: int in result.get_width():
+			var color := result.get_pixel(x, y)
+			if color.a < 1.0 or y > top + 10 or color.v < 0.55 or (x * 5 + y * 3) % 7 == 0:
+				continue
+			result.set_pixel(x, y, MOSS_LIGHT if color.v > 0.75 else MOSS)
+	return result
+
+
 # --- Os objetos -------------------------------------------------------------------
 
-const HOUSE_COLORS: Array[int] = [RED, BLUE, GREEN, PURPLE]
+## As casas do mapa de exemplo: o retângulo e a cor do telhado de cada variante.
+const HOUSES := [
+	[Rect2i(808, 410, 46, 52), RED],
+	[Rect2i(488, 426, 48, 60), BLUE],
+	[Rect2i(848, 202, 54, 60), GREEN],
+	[Rect2i(1128, 422, 46, 40), ORANGE],
+	[Rect2i(360, 278, 30, 40), RED],
+	[Rect2i(1224, 634, 46, 78), PURPLE],
+	[Rect2i(344, 410, 40, 68), ORANGE],
+	[Rect2i(648, 230, 30, 88), BLUE],
+	[Rect2i(1000, 310, 46, 88), GREEN],
+]
+const MEDIUM_HOUSES := [
+	[Rect2i(872, 0, 62, 62), BLUE],
+	[Rect2i(824, 106, 64, 60), GREEN],
+	[Rect2i(872, 394, 78, 68), ORANGE],
+	[Rect2i(520, 304, 62, 78), RED],
+	[Rect2i(216, 424, 78, 86), PURPLE],
+	[Rect2i(872, 0, 62, 62), RED],
+]
+const LARGE_HOUSES := [
+	[Rect2i(632, 392, 102, 94), BLUE],
+	[Rect2i(632, 392, 102, 94), RED],
+	[Rect2i(632, 392, 102, 94), GREEN],
+	[Rect2i(632, 392, 102, 94), PURPLE],
+	[Rect2i(454, 20, 116, 214), ORANGE],
+]
 
 
 func _draw_house(variant: int) -> void:
-	_put(_room(Rect2i(809, 410, 47, 54), HOUSE_COLORS[variant - 1], OBJECT_LAYERS, false), _c(0) + Vector2(0, 14))
+	var house: Array = HOUSES[variant - 1]
+	_put(_room(house[0], house[1], OBJECT_LAYERS, false), _c(0) + Vector2(0, 14))
 
 
-func _draw_farmhouse(variant: int) -> void:
-	_put(_garden_patch(variant % 2 + 1), _c(1) + Vector2(6, 14))
-	_put(_room(Rect2i(520, 304, 64, 80), HOUSE_COLORS[variant - 1], OBJECT_LAYERS, false), _c(0) + Vector2(4, 14))
+func _draw_house_medium(variant: int) -> void:
+	var house: Array = MEDIUM_HOUSES[variant - 1]
+	_put(_room(house[0], house[1], OBJECT_LAYERS, false), _mid() + Vector2(0, 14))
+
+
+func _draw_house_large(variant: int) -> void:
+	var house: Array = LARGE_HOUSES[variant - 1]
+	_put(_room(house[0], house[1], OBJECT_LAYERS, false), _mid() + Vector2(0, 24))
 
 
 func _draw_windmill(variant: int) -> void:
 	_put(_room(Rect2i(1112, 630, 112, 100), [RED, BLUE, ORANGE][variant - 1]), _mid() + Vector2(0, 14))
 
 
-## O pacote não tem castelo: as torres são o corpo de pedra da torre do moinho grande,
-## com o pico do telhado em cima, e na frente o muro com o portão.
-func _draw_castle(_variant: int) -> void:
-	var source := _room(Rect2i(1160, 16, 48, 192), BLUE, OBJECT_LAYERS, false)
-	var peak := source.get_region(Rect2i(0, 0, 48, 18))
-	var stone := source.get_region(Rect2i(0, 86, 48, 62))
-	var keep := Image.create(48, 18 + 62 * 2, false, Image.FORMAT_RGBA8)
-	keep.blend_rect(stone, Rect2i(0, 0, 48, 62), Vector2i(0, 80))
-	keep.blend_rect(stone, Rect2i(0, 0, 48, 62), Vector2i(0, 18))
-	keep.blend_rect(peak, Rect2i(0, 0, 48, 18), Vector2i.ZERO)
-	var tower := Image.create(48, 18 + 62, false, Image.FORMAT_RGBA8)
-	tower.blend_rect(stone, Rect2i(0, 0, 48, 62), Vector2i(0, 18))
-	tower.blend_rect(peak, Rect2i(0, 0, 48, 18), Vector2i.ZERO)
-	_put(keep, _c(3) + Vector2(0, 8))
-	_put(tower, _c(1) + Vector2(-4, 12))
-	_put(tower, _c(2) + Vector2(4, 12))
-	var wall := Image.create(64, 32, false, Image.FORMAT_RGBA8)
-	wall.blend_rect(_piece(704, 16, 64, 16), Rect2i(0, 0, 64, 16), Vector2i.ZERO)
-	wall.blend_rect(_piece(704, 32, 16, 16), Rect2i(0, 0, 16, 16), Vector2i(0, 16))
-	wall.blend_rect(_piece(720, 32, 48, 16), Rect2i(0, 0, 48, 16), Vector2i(16, 16))
-	_put(wall, _c(0) + Vector2(0, 8))
+## O primeiro quadro de um sprite, numa cópia que pode ser recolorida.
+func _copy(name: String) -> Image:
+	return (_sprite(name)[0] as Image).duplicate() as Image
 
 
-func _draw_big_tree(variant: int) -> void:
-	var grove := _room(Rect2i(392, 270, 102, 100), -1, ["forest"], false)
-	_put(grove if variant == 1 else _autumn(grove), _mid() + Vector2(0, 22))
+## Uma árvore ou um grupo delas, com a redonda e o pinheiro dos sprites do pacote. O
+## outono e a florada recolorem a árvore verde.
+func _draw_tree(variant: int) -> void:
+	var round_tree := _copy("spr_deco_tree_01")
+	var pine := _copy("spr_deco_tree_02")
+	var mushrooms := _copy("spr_deco_mushroom_red_01")
+	var blue_mushrooms := _copy("spr_deco_mushroom_blue_02")
+	var foot := _c(0) + Vector2(0, 14)
+	match variant:
+		1:
+			_put(round_tree, foot)
+		2:
+			_put(pine, foot)
+		3:
+			_put(round_tree, foot + Vector2(-9, -7))
+			_put(round_tree, foot + Vector2(9, 0))
+		4:
+			_put(pine, foot + Vector2(-10, -6))
+			_put(round_tree, foot + Vector2(8, 0))
+		5:
+			_put(pine, foot + Vector2(0, -9))
+			_put(pine, foot + Vector2(-12, 0))
+			_put(pine, foot + Vector2(12, 1))
+		6:
+			_put(_autumn(round_tree), foot + Vector2(-8, -6))
+			_put(_autumn(round_tree), foot + Vector2(9, 0))
+		7:
+			_put(round_tree, foot + Vector2(-4, -3))
+			_put(mushrooms, foot + Vector2(14, 3))
+		8:
+			_put(_blossom(round_tree), foot + Vector2(-4, -3))
+			_put(blue_mushrooms, foot + Vector2(14, 3))
 
 
-func _draw_big_rock(_variant: int) -> void:
-	_put(_piece(816, 464, 32, 32), _c(1) + Vector2(-2, 8))
-	_put(_piece(784, 464, 32, 32), _c(0) + Vector2(10, 12))
-	_put(_piece(848, 464, 32, 32), _c(1) + Vector2(16, 16))
-	_put(_piece(880, 464, 16, 32), _c(0) + Vector2(-14, 14))
+## As pedras do tileset (grande, média, achatada e pequena), sozinhas ou juntas.
+func _draw_rock(variant: int) -> void:
+	var big := _piece(784, 464, 32, 32)
+	var medium := _piece(816, 464, 32, 32)
+	var flat := _piece(848, 464, 32, 32)
+	var small := _piece(880, 464, 16, 32)
+	var foot := _c(0) + Vector2(0, 14)
+	match variant:
+		1:
+			_put(big, foot + Vector2(-2, 0))
+			_put(small, foot + Vector2(14, 2))
+		2:
+			_put(medium, foot + Vector2(-6, 0))
+			_put(flat, foot + Vector2(10, 4))
+		3:
+			_put(medium, foot + Vector2(10, -4))
+			_put(big, foot + Vector2(-6, 2))
+		4:
+			_put(flat, foot)
+			_put(small, foot + Vector2(-16, 3))
+			_put(small, foot + Vector2(15, 4))
+		5:
+			_put(_mossy(big), foot + Vector2(-4, 0))
+			_put(_mossy(small), foot + Vector2(13, 3))
+		6:
+			_put(_mossy(medium), foot + Vector2(-8, -2))
+			_put(_mossy(flat), foot + Vector2(9, 3))
 
 
-## Um canteiro de terra com 3 x 2 plantas, já crescidas.
-func _garden_patch(variant: int) -> Image:
-	var crops: Array[String] = ["pumpkin", "cabbage", "cauliflower"]
-	if variant != 1:
-		crops = ["carrot", "beetroot", "radish"]
-	var soil := _element("Crops/soil_00.png")
-	var patch := Image.create(48, 40, false, Image.FORMAT_RGBA8)
-	for row: int in 2:
-		for column: int in 3:
-			patch.blend_rect(soil, Rect2i(Vector2i.ZERO, soil.get_size()), Vector2i(column * 16, 8 + row * 16))
-	for row: int in 2:
-		for column: int in 3:
-			var crop := _element("Crops/%s_05.png" % crops[(column + row) % 3])
-			patch.blend_rect(crop, Rect2i(Vector2i.ZERO, crop.get_size()), Vector2i(column * 16, row * 16))
-	return patch
+## As plantas de cada horta, por fileira de trás para a frente, crescidas (04) ou
+## crescendo (02 e 03); "" é a cova vazia.
+const GARDENS := [
+	[["pumpkin_04", "cabbage_04", "pumpkin_04"], ["cabbage_04", "pumpkin_04", "cabbage_04", "pumpkin_04"], ["pumpkin_04", "cabbage_04", "pumpkin_04"]],
+	[["carrot_04", "carrot_04", "carrot_04"], ["beetroot_04", "beetroot_04", "beetroot_04", "beetroot_04"], ["radish_04", "radish_04", "radish_04"]],
+	[["wheat_04", "wheat_04", "wheat_04"], ["wheat_04", "wheat_04", "wheat_04", "wheat_04"], ["wheat_04", "wheat_04", "wheat_04"]],
+	[["sunflower_04", "sunflower_04", "sunflower_04"], ["cauliflower_04", "kale_04", "cauliflower_04", "kale_04"], ["kale_04", "cauliflower_04", "kale_04"]],
+	[["parsnip_04", "potato_04", "parsnip_04"], ["potato_04", "parsnip_04", "potato_04", "parsnip_04"], ["parsnip_04", "potato_04", "parsnip_04"]],
+	[["cabbage_02", "carrot_03", "beetroot_02"], ["", "radish_02", "kale_03", ""], ["carrot_02", "", "cabbage_03"]],
+]
 
 
+## Um canteiro oval de terra arada, com as covas em fileiras desencontradas e as plantas
+## em cima delas.
 func _draw_garden(variant: int) -> void:
-	_put(_garden_patch(variant), _c(0) + Vector2(0, 12))
+	var bed := Image.create(60, 40, false, Image.FORMAT_RGBA8)
+	var center := Vector2(30, 20)
+	var noise := RandomNumberGenerator.new()
+	noise.seed = variant * 31
+	for y: int in bed.get_height():
+		for x: int in bed.get_width():
+			var d := Vector2((x + 0.5 - center.x) / 29.5, (y + 0.5 - center.y) / 19.5).length()
+			if d > 1.0:
+				continue
+			var color := DIRT
+			if d > 0.93:
+				color = DIRT_DARK
+			elif y > center.y + 13 and d > 0.82:
+				color = DIRT_SPECK
+			elif noise.randf() < 0.06:
+				color = DIRT_SPECK if noise.randf() < 0.7 else DIRT_LIGHT
+			bed.set_pixel(x, y, color)
+	var soil := _element("Crops/soil_00.png")
+	var rows: Array = GARDENS[variant - 1]
+	var holes: Array[Vector2i] = []
+	for row: int in rows.size():
+		var plants: Array = rows[row]
+		for column: int in plants.size():
+			var hole := Vector2i(30 - plants.size() * 7 + column * 14 - 1, 6 + row * 10)
+			bed.blend_rect(soil, Rect2i(Vector2i.ZERO, soil.get_size()), hole)
+			holes.append(hole)
+	var bottom := _c(0) + Vector2(0, 16)
+	_put(bed, bottom)
+	var origin := bottom - Vector2(30, 40)
+	var index := 0
+	for plants: Array in rows:
+		for slug: String in plants:
+			var hole := holes[index]
+			index += 1
+			if not slug.is_empty():
+				_put(_element("Crops/%s.png" % slug), origin + Vector2(hole.x + 8, hole.y + 9))
 
 
 func _draw_fence(variant: int) -> void:
@@ -433,15 +591,6 @@ func _draw_cart(_variant: int) -> void:
 	_put(cart, _c(0) + Vector2(0, 14))
 
 
-func _draw_bridge(_variant: int) -> void:
-	var piece := _piece(632, 78, 32, 34)
-	piece.rotate_90(CLOCKWISE)
-	var bridge := Image.create(64, 32, false, Image.FORMAT_RGBA8)
-	bridge.blend_rect(piece, Rect2i(0, 0, 34, 32), Vector2i(0, 0))
-	bridge.blend_rect(piece, Rect2i(0, 0, 34, 32), Vector2i(30, 0))
-	_put(bridge.get_region(Rect2i(0, 0, 60, 32)), _c(0) + Vector2(0, 14))
-
-
 func _draw_beast_stable(variant: int) -> void:
 	_put(_room(Rect2i(888, 496, 80, 64), [ORANGE, RED][variant - 1], OBJECT_LAYERS, false), _mid() + Vector2(-8, 14))
 	_put(_sprite("spr_deco_trough")[0], _c(1) + Vector2(14, 16))
@@ -452,32 +601,6 @@ func _draw_treehouse(_variant: int) -> void:
 	_put(_room(Rect2i(398, 270, 66, 60), -1, ["forest"], false), _mid() + Vector2(-6, -2))
 	_put(_room(Rect2i(36, 400, 64, 112), GREEN, OBJECT_LAYERS, false), _mid() + Vector2(0, 14))
 	_put(_sprite("spr_deco_tree_01")[0], _c(1) + Vector2(14, 14))
-
-
-## O ninho não existe no pacote: palha em anel, desenhada no estilo dele, com ovos.
-func _draw_nest(_variant: int) -> void:
-	var nest := Image.create(40, 22, false, Image.FORMAT_RGBA8)
-	var center := Vector2(20, 13)
-	for y: int in nest.get_height():
-		for x: int in nest.get_width():
-			var d := Vector2((x + 0.5 - center.x) / 19.0, (y + 0.5 - center.y) / 9.0).length()
-			if d > 1.0:
-				continue
-			var color := STRAW
-			if d > 0.88:
-				color = OUTLINE
-			elif d < 0.55 and y < 13:
-				color = STRAW_DARK
-			elif (x * 7 + y * 3) % 5 == 0:
-				color = STRAW_LIGHT
-			elif (x * 3 + y * 5) % 7 == 0:
-				color = STRAW_DARK
-			nest.set_pixel(x, y, color)
-	var egg := _element("Crops/egg.png")
-	for at: Vector2i in [Vector2i(9, 0), Vector2i(17, -2), Vector2i(23, 1)]:
-		nest.blend_rect(egg, Rect2i(Vector2i.ZERO, egg.get_size()), at)
-	_shadow(_c(0) + Vector2(0, 12), Vector2(20, 4))
-	_put(nest, _c(0) + Vector2(0, 14))
 
 
 func _draw_trough(_variant: int) -> void:

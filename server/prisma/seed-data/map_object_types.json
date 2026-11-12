@@ -3,13 +3,7 @@
 		"id": 1,
 		"slug": "house",
 		"name": "Casa",
-		"variants": 4
-	},
-	{
-		"id": 2,
-		"slug": "farmhouse",
-		"name": "Casa com horta",
-		"variants": 4
+		"variants": 9
 	},
 	{
 		"id": 3,
@@ -18,28 +12,22 @@
 		"variants": 3
 	},
 	{
-		"id": 4,
-		"slug": "castle",
-		"name": "Castelo",
-		"variants": 1
-	},
-	{
 		"id": 5,
-		"slug": "big_tree",
-		"name": "Árvore grande",
-		"variants": 2
+		"slug": "tree",
+		"name": "Árvore",
+		"variants": 8
 	},
 	{
 		"id": 6,
-		"slug": "big_rock",
-		"name": "Pedra grande",
-		"variants": 1
+		"slug": "rock",
+		"name": "Pedra",
+		"variants": 6
 	},
 	{
 		"id": 7,
 		"slug": "garden",
 		"name": "Horta",
-		"variants": 2
+		"variants": 6
 	},
 	{
 		"id": 8,
@@ -66,12 +54,6 @@
 		"variants": 1
 	},
 	{
-		"id": 12,
-		"slug": "bridge",
-		"name": "Ponte",
-		"variants": 1
-	},
-	{
 		"id": 13,
 		"slug": "beast_stable",
 		"name": "Estábulo de Ecobeasts",
@@ -81,12 +63,6 @@
 		"id": 14,
 		"slug": "treehouse",
 		"name": "Casa na árvore",
-		"variants": 1
-	},
-	{
-		"id": 15,
-		"slug": "nest",
-		"name": "Ninho grande",
 		"variants": 1
 	},
 	{
@@ -100,5 +76,17 @@
 		"slug": "rune_shrine",
 		"name": "Santuário de runas",
 		"variants": 1
+	},
+	{
+		"id": 18,
+		"slug": "house_medium",
+		"name": "Casa média",
+		"variants": 6
+	},
+	{
+		"id": 19,
+		"slug": "house_large",
+		"name": "Casa grande",
+		"variants": 5
 	}
 ]

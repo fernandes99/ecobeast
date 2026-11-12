@@ -47,28 +47,25 @@ Os formatos são estes (o `(0, 0)` é o hexágono de apoio, onde o dono clica):
 | um | `(0, 0)` | 1 hexágono |
 | par | `(0, 0)`, `(1, 0)` | 2 lado a lado |
 | triângulo | `(0, 0)`, `(1, 0)`, `(1, -1)` | 2 embaixo e 1 em cima, entre eles |
-| losango | `(0, 0)`, `(0, -1)`, `(1, -1)`, `(1, -2)` | 1 embaixo, 2 no meio e 1 em cima |
 
-A primeira leva, aprovada pelo dono. Os nomes, as variantes e os números são _a revisar_:
+Os tipos depois da revisão da [03](03-map-objects.md#revisão-casas-árvores-pedras-e-hortas). A casa com horta (id 2), o castelo (4), a ponte (12) e o ninho (15) saíram, e o formato losango saiu com o castelo. A árvore (5) e a pedra (6) eram a árvore grande e a pedra grande, de 3 e 2 hexágonos:
 
-| slug | name | Formato | Variantes | Bloqueio padrão |
-| --- | --- | --- | --- | --- |
-| `house` | Casa | um | 4: telhado vermelho, azul, verde e roxo | bloqueia |
-| `farmhouse` | Casa com horta | par | 4: os mesmos telhados | os dois |
-| `windmill` | Moinho | par | 3: telhado vermelho, laranja e verde | os dois |
-| `castle` | Castelo | losango | 1 | todos, menos o portão `(0, 0)` |
-| `big_tree` | Árvore grande | triângulo | 2: verde e outono | todos |
-| `big_rock` | Pedra grande | par | 1 | os dois |
-| `garden` | Horta | um | 2: verduras e flores | bloqueia |
-| `fence` | Cerca | um | 2: madeira e pedra | bloqueia |
-| `well` | Poço | um | 1 | bloqueia |
-| `market_stall` | Barraca de feira | um | 3: toldo vermelho, verde e azul | bloqueia |
-| `cart` | Carroça | um | 1 | bloqueia |
-| `bridge` | Ponte | um | 1 | livre |
-| `beast_stable` | Estábulo de Ecobeasts | par | 2: madeira e pedra | os dois |
-| `treehouse` | Casa na árvore | par | 1 | os dois |
-| `nest` | Ninho grande | um | 1 | bloqueia |
-| `trough` | Bebedouro | um | 1 | bloqueia |
+| id | slug | name | Formato | Variantes | Bloqueio padrão |
+| --- | --- | --- | --- | --- | --- |
+| 1 | `house` | Casa | um | 9 modelos | bloqueia |
+| 18 | `house_medium` | Casa média | par | 6 | os dois |
+| 19 | `house_large` | Casa grande | triângulo | 5 | todos |
+| 3 | `windmill` | Moinho | par | 3: telhado vermelho, laranja e verde | os dois |
+| 5 | `tree` | Árvore | um | 8: sozinhas, em grupo, no outono e floridas | bloqueia |
+| 6 | `rock` | Pedra | um | 6: sozinhas, em grupo e com musgo | bloqueia |
+| 7 | `garden` | Horta | um | 6: canteiros de abóbora, raízes, trigo, girassol, tubérculos e uma em crescimento | bloqueia |
+| 8 | `fence` | Cerca | um | 2: madeira e pedra | bloqueia |
+| 9 | `well` | Poço | um | 1 | bloqueia |
+| 10 | `market_stall` | Barraca de feira | um | 3: toldo vermelho, verde e azul | bloqueia |
+| 11 | `cart` | Carroça | um | 1 | bloqueia |
+| 13 | `beast_stable` | Estábulo de Ecobeasts | par | 2: madeira e pedra | os dois |
+| 14 | `treehouse` | Casa na árvore | par | 1 | os dois |
+| 16 | `trough` | Bebedouro | um | 1 | bloqueia |
 | `rune_shrine` | Santuário de runas | um | 1 | bloqueia |
 
 ### Os tipos de ação
@@ -183,21 +180,20 @@ Tamanhos da arte de agora, na variante 1 (em pixels da arte, como as texturas do
 
 | Tipo | Tamanho | Tipo | Tamanho |
 | --- | --- | --- | --- |
-| `house` | 64×69 | `market_stall` | 64×55 |
-| `farmhouse` | 128×95 | `cart` | 64×45 |
-| `windmill` | 128×98 | `bridge` | 64×46 |
-| `castle` | 128×247 | `beast_stable` | 128×79 |
-| `big_tree` | 128×119 | `treehouse` | 128×122 |
-| `big_rock` | 128×46 | `nest` | 64×37 |
-| `garden` | 64×57 | `trough` | 64×35 |
-| `fence` | 64×37 | `rune_shrine` | 64×63 |
+| `house` | 64×67 (até 64×103) | `market_stall` | 64×55 |
+| `house_medium` | 128×77 (até 128×101) | `cart` | 64×45 |
+| `house_large` | 128×113 (a 5: 128×232) | `beast_stable` | 128×79 |
+| `windmill` | 128×98 | `treehouse` | 128×122 |
+| `tree` | 64×48 | `trough` | 64×35 |
+| `rock` | 64×43 | `rune_shrine` | 64×63 |
+| `garden` | 64×52 | `fence` | 64×37 |
 | `well` | 64×59 | | |
 
 A altura pode mudar na arte final, desde que o pé continue no mesmo lugar. A escala é a do pacote Sunnyside em 1x: uma casa tem uns 48 px de largura num hexágono de 64, e o Domador tem 25 px de altura.
 
 **Arte de agora:** gerada pelo próprio Godot, para gerar de novo quando quiser:
 
-- `res://assets/map_objects/make_objects.gd` monta os objetos a partir do pacote Sunnyside World, que o dono tem na máquina e passa como argumento. Ele lê o tileset, os sprites e o mapa de exemplo do pacote (`Room1`, do GameMaker), onde as casas, o moinho e as barracas já estão montados peça por peça. A cor do telhado das variantes troca o bloco de cor do tileset, que repete as mesmas peças em azul, verde, laranja, vermelho e roxo. O que o pacote não tem (castelo, carroça, ninho) é composto com peças dele ou desenhado no estilo dele.
+- `res://assets/map_objects/make_objects.gd` monta os objetos a partir do pacote Sunnyside World, que o dono tem na máquina e passa como argumento. Ele lê o tileset, os sprites e o mapa de exemplo do pacote (`Room1`, do GameMaker), onde as casas, o moinho e as barracas já estão montados peça por peça. A cor do telhado das variantes troca o bloco de cor do tileset, que repete as mesmas peças em azul, verde, laranja, vermelho e roxo. Peças que só existem num bloco de cor, como a cumeeira da casa grande, mudam de matiz nos outros. As árvores, as pedras e as hortas são compostas com os sprites e as peças do pacote, e a carroça, que ele não tem, é desenhada no estilo dele.
 - `res://assets/terrain/grounds/make_grounds.gd` gera as texturas de chão.
 
 Da pasta `client/`: `godot --headless -s res://assets/map_objects/make_objects.gd -- <pasta do pacote>`, a pasta que tem `Sunnyside_World_Assets` e `Sunnyside_World_Gamemaker`.

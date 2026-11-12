@@ -24,7 +24,7 @@ Com a [01](01-village-records.md), uma ilha guarda objetos com bloqueio por hex�
 
 ### Arte
 
-- **RF-01:** `res://assets/map_objects/make_objects.gd` (antes `make_placeholders.gd`; ver a revisão) gera `res://assets/map_objects/<slug>/<variante>.png` para os 17 tipos, um arquivo por variante, no formato do [architecture.md](architecture.md#o-desenho-no-jogo).
+- **RF-01:** `res://assets/map_objects/make_objects.gd` (antes `make_placeholders.gd`; ver a revisão) gera `res://assets/map_objects/<slug>/<variante>.png` para os 17 tipos (15 depois da segunda revisão), um arquivo por variante, no formato do [architecture.md](architecture.md#o-desenho-no-jogo).
   - As formas são simples, com contorno escuro, no estilo dos hexágonos do mapa: paredes claras e telhado da cor da variante nas casas, copa redonda na árvore, torres no castelo, e assim por diante.
   - As cores das variantes são as da tabela de tipos.
 - **RF-02:** a tabela do tamanho da célula de cada tipo fica no [architecture.md](architecture.md#o-desenho-no-jogo).
@@ -165,3 +165,39 @@ Pedido do dono em 2026-11-11: a arte dos objetos estava muito distante do terren
   - **Desenhados no estilo do pacote**, porque ele não tem: a carroça (com um caixote e feno) e o ninho (palha em anel, com os ovos do pacote).
 - **Ponto de apoio:** a base de cada peça fica 10 a 16 px abaixo do centro do hexágono, para a construção parecer em cima dele.
 - **Verificação:** uma cena temporária, já apagada, pôs os 17 tipos e as variantes num mapa com trilhas; a captura em 1x e os recortes em 3x foram abertos e revisados. O projeto abriu sem avisos novos.
+
+## Revisão: casas, árvores, pedras e hortas
+
+Pedido do dono em 2026-11-11, depois de ver a arte do pacote no mapa.
+
+- **Pedido:**
+  - vários modelos de casa de 1 hexágono;
+  - casas de 2 e 3 hexágonos;
+  - mais variantes de horta, e melhores;
+  - árvore e pedra de 1 hexágono, com várias versões, no lugar da árvore grande (3 hexágonos) e da pedra grande (2);
+  - sair o castelo, a casa com horta, o ninho e a ponte.
+- **Os tipos** estão na tabela do [architecture.md](architecture.md#os-tipos-de-objeto). A migration `20261113000000_map_objects_revision`:
+  - cria a casa média (id 18, par) e a casa grande (id 19, triângulo);
+  - apaga os tipos 2, 4, 12 e 15;
+  - reduz a árvore (5) e a pedra (6) ao hexágono de apoio, com slug `tree` e `rock`;
+  - sobe as variantes da casa para 9 e as da horta para 6.
+- **As ilhas que já existiam:**
+  - as casas com horta viram casas médias, que têm o mesmo formato;
+  - o castelo, as pontes e os ninhos são apagados;
+  - as árvores e as pedras ficam só com o hexágono de apoio, e os outros ficam livres.
+
+  O `content_hash` das versões mudou e foi recalculado com `prisma/recompute-island-hashes.ts`. Na ilha 331 (Vila de Ventoverde), saíram 1 castelo, 15 pontes e 22 ninhos, e 13 casas com horta viraram casas médias.
+- **Ids reaproveitados:** a árvore e a pedra mantêm os ids 5 e 6, porque continuam sendo a mesma coisa, só menores; trocar o id apagaria as 67 árvores e as 33 pedras da ilha 331.
+- **A arte**, toda vinda do mapa de exemplo do pacote (`Room1`):
+  - **Casa de 1 hexágono:** 9 modelos diferentes, cada um com uma cor de telhado.
+  - **Casa média:** 6, dos modelos mais largos.
+  - **Casa grande:** a casa de duas águas em 4 cores, e a casa em L com a torre, em laranja.
+- **A cumeeira da casa grande** só existe no bloco azul do tileset. Nos outros blocos a peça vem vazia ou pela metade. O script usa a peça azul com o matiz do telhado trocado quando a peça da cor pedida tem menos de 80% dos pixels.
+- **Árvore e pedra:**
+  - a árvore usa a árvore redonda e o pinheiro dos sprites do pacote, sozinhos ou em grupo, com outono, florada (rosa) e cogumelos;
+  - a pedra usa as 4 pedras lisas do tileset, sozinhas ou juntas, e duas com musgo.
+- **Horta:**
+  - a primeira versão usava os ícones das plantas colhidas (fase `05`), por isso parecia solta;
+  - agora é um canteiro oval de terra arada, com covas do pacote (`soil_00`) em 3 fileiras desencontradas e as plantas na fase crescida (`04`);
+  - a sexta horta ainda está crescendo, com covas vazias.
+- **Verificação:** uma cena temporária, já apagada, desenhou a ilha 331 com os objetos novos em 1x e 2x, e as folhas de conferência de cada grupo, sobre os hexágonos do formato, foram abertas e revisadas.

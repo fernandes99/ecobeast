@@ -281,8 +281,8 @@ describe('carga inicial do chão e dos objetos (island-villages/01)', () => {
     ]);
   });
 
-  it('tem os 17 objetos, cada um com o hexágono de apoio e pelo menos 1 variante', () => {
-    expect(objects).toHaveLength(17);
+  it('tem os 15 objetos, cada um com o hexágono de apoio e pelo menos 1 variante', () => {
+    expect(objects).toHaveLength(15);
     for (const { id, variants } of objects) {
       expect(variants).toBeGreaterThanOrEqual(1);
       expect(
@@ -294,14 +294,14 @@ describe('carga inicial do chão e dos objetos (island-villages/01)', () => {
     }
   });
 
-  it('o castelo tem 4 hexágonos, com o portão livre', () => {
-    const castle = objects.find(({ slug }) => slug === 'castle')!;
-    const own = tiles.filter(
-      ({ object_type_id }) => object_type_id === castle.id,
-    );
-    expect(own).toHaveLength(4);
-    expect(own.filter(({ blocks }) => !blocks)).toEqual([
-      { object_type_id: castle.id, dq: 0, dr: 0, blocks: false },
-    ]);
+  it('as casas têm 1, 2 e 3 hexágonos; a árvore e a pedra, 1', () => {
+    const size = (slug: string) => {
+      const { id } = objects.find((object) => object.slug === slug)!;
+      return tiles.filter(({ object_type_id }) => object_type_id === id)
+        .length;
+    };
+    expect(
+      ['house', 'house_medium', 'house_large', 'tree', 'rock'].map(size),
+    ).toEqual([1, 2, 3, 1, 1]);
   });
 });
