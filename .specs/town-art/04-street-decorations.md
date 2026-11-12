@@ -11,10 +11,10 @@ As cidades das referências do dono têm postes de luz, placas, canteiros de flo
 
 | id | slug | name | Formato | Variantes (_a revisar_) | Bloqueio padrão |
 | --- | --- | --- | --- | --- | --- |
-| 24 | `lamp_post` | Poste de luz | um | 2: de ferro e de madeira | bloqueia |
-| 25 | `sign` | Placa | um | 2: de madeira e de pedra | bloqueia |
-| 26 | `flower_bed` | Canteiro de flores | um | 3: vermelho e amarelo, rosa e branco, e misturado | não bloqueia |
-| 27 | `bench` | Banco | um | 2: de madeira e de pedra | bloqueia |
+| 36 | `lamp_post` | Poste de luz | um | 2: de ferro e de madeira | bloqueia |
+| 37 | `sign` | Placa | um | 2: de madeira e de pedra | bloqueia |
+| 38 | `flower_bed` | Canteiro de flores | um | 3: vermelho e amarelo, rosa e branco, e misturado | não bloqueia |
+| 39 | `bench` | Banco | um | 2: de madeira e de pedra | bloqueia |
 
 ## Fora do escopo
 
@@ -37,7 +37,7 @@ As cidades das referências do dono têm postes de luz, placas, canteiros de flo
 
 ## Desenho técnico
 
-- Servidor: a migração `server/prisma/migrations/20261116000000_street_decorations/migration.sql`, no formato da [01](01-key-buildings.md).
+- Servidor: a migração `server/prisma/migrations/20261118000000_street_decorations/migration.sql`, no formato da [01](01-key-buildings.md), com a carga inicial e o teste da carga (34 objetos).
 - `make_town.gd`: os quatro tipos no `TYPES` e as funções de desenho.
 - `.specs/island-villages/architecture.md`: a tabela de tipos e a de tamanhos.
 

@@ -15,10 +15,10 @@ O que existe hoje:
 ## Objetivos
 
 1. O Refúgio, a Loja e a Arena viram objetos próprios, que se reconhecem de longe pela cor e pelo símbolo.
-2. As casas e os objetos da vila são redesenhados no estilo novo, com os mesmos ids, para as ilhas que já existem mudarem sozinhas.
+2. As casas e os objetos da vila ganham versões no estilo novo, como tipos novos, ao lado dos de hoje.
 3. Decorações novas de rua: poste de luz, placa, canteiro de flores e banco.
 4. O estilo fica documentado e é seguido por toda arte nova de cidade.
-5. A Vila da Fonte Azul (ilha 634, rascunho) é refeita com tudo isso, como vitrine.
+5. Uma ilha nova, a partir da Vila da Fonte Azul (ilha 634, rascunho), mostra tudo isso como vitrine; a 634 fica como está.
 
 ## Decisões
 
@@ -31,6 +31,7 @@ Do dono, em 2026-11-12:
 | O terreno, a água, as elevações, as árvores, as pedras e a vegetação continuam como estão | Pedido do dono: o ambiente já está bom |
 | Todas as casas e objetos da vila ganham o estilo novo, não só as três construções-chave | Pedido do dono: a cidade fica uniforme |
 | O estilo novo é documentado, e o dono passa a segui-lo sempre | Pedido do dono |
+| Nada do que existe é apagado nem trocado: o estilo novo entra só como tipos novos, ao lado dos de hoje, e as ilhas de hoje continuam iguais | Pedido do dono, antes da fase 02 |
 
 Escolhas do planejamento, _a revisar_ (ao mudar uma, atualize aqui e na fase):
 
@@ -39,9 +40,9 @@ Escolhas do planejamento, _a revisar_ (ao mudar uma, atualize aqui e na fase):
 | As três construções-chave são tipos de objeto novos, e a ação continua uma camada separada, pintada pelo dono | É a regra da island-villages: objeto é arte e bloqueio, ação é o que acontece |
 | As construções-chave têm 1 variante cada | A cara única é o que as faz reconhecíveis |
 | O vermelho de telhado é só do Refúgio, o azul só da Loja e o cinza-ardósia com laranja só da Arena | Uma casa vermelha confundiria com o Refúgio |
-| Os tipos redesenhados guardam o id e o número de variantes | As ilhas já postas continuam válidas e mudam de arte sozinhas |
-| Um gerador novo, `res://assets/map_objects/make_town.gd`, desenha a cidade; o `make_objects.gd` fica só com árvore, pedra e vegetação | O gerador novo não depende do pacote Sunnyside |
-| O moinho e o santuário continuam animados, com o mesmo número de quadros | O jogo já anda nos quadros por `FRAME_RATES` |
+| Os tipos novos de casa e de vila têm o slug do tipo de hoje com `town_` na frente e o nome com "(cidade)" no fim | O dono acha o par de cada um na barra do editor |
+| Um gerador novo, `res://assets/map_objects/make_town.gd`, desenha os tipos novos; o `make_objects.gd` continua igual | O gerador novo não depende do pacote Sunnyside, e a arte de hoje não muda |
+| O moinho e o santuário novos são animados, como os de hoje | O jogo já anda nos quadros por `FRAME_RATES` |
 
 ## Fora do escopo
 
@@ -60,9 +61,9 @@ Escolhas do planejamento, _a revisar_ (ao mudar uma, atualize aqui e na fase):
 | # | Fase | Entrega | Status |
 | --- | --- | --- | --- |
 | 1 | [01-key-buildings](01-key-buildings.md) | O gerador `make_town.gd` com o traço do guia, e o Refúgio, a Loja e a Arena como objetos novos no catálogo | concluída |
-| 2 | [02-houses](02-houses.md) | Casa, Casa média e Casa grande redesenhadas, com as mesmas variantes | rascunho |
-| 3 | [03-village-objects](03-village-objects.md) | Moinho, horta, cerca, poço, barraca, carroça, estábulo, bebedouro e santuário redesenhados | rascunho |
+| 2 | [02-houses](02-houses.md) | Casa, Casa média e Casa grande da cidade, tipos novos ao lado dos de hoje | rascunho |
+| 3 | [03-village-objects](03-village-objects.md) | Moinho, horta, cerca, poço, barraca, carroça, estábulo, bebedouro e santuário da cidade, tipos novos | rascunho |
 | 4 | [04-street-decorations](04-street-decorations.md) | Poste de luz, placa, canteiro de flores e banco, novos no catálogo | rascunho |
-| 5 | [05-showcase-village](05-showcase-village.md) | A Vila da Fonte Azul refeita com a arte nova | rascunho |
+| 5 | [05-showcase-village](05-showcase-village.md) | Uma ilha nova, a partir da Vila da Fonte Azul, com a arte nova | rascunho |
 
 O estilo, com as cores, o traço e as regras, está no [style-guide.md](style-guide.md).

@@ -1,69 +1,72 @@
-# 03. Os objetos da vila no estilo novo
+# 03. Os objetos de vila da cidade
 
 - **Status:** rascunho
 - **Depende de:** [02-houses](02-houses.md)
 
 ## Contexto
 
-Depois das casas, o resto da vila ainda vem do pacote Sunnyside. Esta fase redesenha os objetos de vila no `make_town.gd`, com os mesmos ids, formatos e variantes. A árvore, a pedra e a Vegetação são do ambiente e ficam como estão.
+Depois das casas, os objetos de vila no estilo novo. Como na [02](02-houses.md), eles entram como tipos novos, ao lado dos de hoje, e nada do que existe é apagado nem trocado. A árvore, a pedra e a Vegetação são do ambiente e não ganham versão nova.
 
 ## Escopo
 
-A arte nova destes tipos:
+Os tipos novos, cada um com o formato, o bloqueio e o número de variantes do tipo de hoje com o mesmo nome:
 
-| id | slug | Formato | Variantes | Como fica (_a revisar_) |
-| --- | --- | --- | --- | --- |
-| 3 | `windmill` | par | 3, com 9 quadros | torre de pedra e madeira com pás girando; telhado laranja, verde e marrom |
-| 7 | `garden` | um | 6 | canteiro com borda de madeira: abóbora, raízes, trigo, girassol, tubérculos e um em crescimento |
-| 8 | `fence` | um | 2 | madeira e pedra, ligando-se às vizinhas, na folha de peças de hoje |
-| 9 | `well` | um | 1 | poço de pedra com telhadinho de madeira e balde |
-| 10 | `market_stall` | um | 3 | barraca de madeira com toldo listrado laranja, verde e roxo, com frutas |
-| 11 | `cart` | um | 1 | carroça de madeira com caixotes |
-| 13 | `beast_stable` | par | 2 | estábulo de madeira e de pedra, com feno |
-| 16 | `trough` | um | 1 | cocho de madeira com água |
-| 17 | `rune_shrine` | um | 4, com 16 quadros | pilar de pedra com o minério azul, de ouro, de prata e de carvão, com o brilho |
+| id | slug | name | Formato | Variantes | Como fica (_a revisar_) |
+| --- | --- | --- | --- | --- | --- |
+| 27 | `town_windmill` | Moinho (cidade) | par | 3, com 9 quadros | torre de pedra e madeira com pás girando; telhado laranja, verde e marrom |
+| 28 | `town_garden` | Horta (cidade) | um | 6 | canteiro com borda de madeira: abóbora, raízes, trigo, girassol, tubérculos e um em crescimento |
+| 29 | `town_fence` | Cerca (cidade) | um | 2 | madeira e pedra, ligando-se às vizinhas |
+| 30 | `town_well` | Poço (cidade) | um | 1 | poço de pedra com telhadinho de madeira e balde |
+| 31 | `town_market_stall` | Barraca de feira (cidade) | um | 3 | barraca de madeira com toldo listrado laranja, verde e roxo, com frutas |
+| 32 | `town_cart` | Carroça (cidade) | um | 1 | carroça de madeira com caixotes |
+| 33 | `town_beast_stable` | Estábulo de Ecobeasts (cidade) | par | 2 | estábulo de madeira e de pedra, com feno |
+| 34 | `town_trough` | Bebedouro (cidade) | um | 1 | cocho de madeira com água |
+| 35 | `town_rune_shrine` | Santuário de runas (cidade) | um | 4, com 16 quadros | pilar de pedra com o minério azul, de ouro, de prata e de carvão, com o brilho |
 
 ## Fora do escopo
 
-- Árvore (5), pedra (6) e Vegetação (20).
-- Mudar formato, bloqueio ou número de variantes.
+- Mudar, apagar ou redesenhar os tipos de hoje, o `make_objects.gd` ou as ilhas que existem.
+- Árvore, pedra e Vegetação no estilo novo.
 
 ## Requisitos
 
-- **RF-01:** Cada tipo da tabela é desenhado pelo `make_town.gd`, seguindo o guia, com o mesmo formato, variantes e número de quadros de hoje.
-- **RF-02:** O moinho e a barraca não usam vermelho nem azul no telhado e no toldo, que são do Refúgio e da Loja. As variantes 1 a 3 trocam de cor nessa ordem: o moinho de hoje vermelho, laranja e verde vira laranja, verde e marrom, e a barraca de hoje vermelha, verde e azul vira laranja, verde e roxa.
-- **RF-03:** A Cerca guarda o formato da folha de peças (`fence/parts_<variante>.png`, 7 células de 96×72, com o centro em (48, 43)), e o `HexFences` não muda. A prévia `fence/<variante>.png` continua a peça reta, montada com as mesmas células.
-- **RF-04:** Os animados têm os quadros lado a lado, cortados no mesmo topo e com o pé no mesmo lugar, e as velocidades de `FRAME_RATES` continuam.
-- **RF-05:** O `make_objects.gd` fica só com `tree`, `rock` e `plants`.
+- **RF-01:** O catálogo ganha os tipos da tabela, e o `make_town.gd` os desenha seguindo o guia.
+- **RF-02:** O moinho e a barraca não usam vermelho nem azul no telhado e no toldo, que são do Refúgio e da Loja.
+- **RF-03:** A Cerca da cidade se liga sozinha como a de hoje ([island-villages 05](../island-villages/05-connected-fences.md)), com a folha de peças em `town_fence/parts_<variante>.png` no mesmo formato (7 células de 96×72, com o centro em (48, 43)). Ela se liga só a outra Cerca da cidade, e a de hoje só à de hoje, porque os dois traços juntos não emendam bem.
+- **RF-04:** Os animados têm os quadros lado a lado, cortados no mesmo topo e com o pé no mesmo lugar. O moinho anda a 10 quadros por segundo e o santuário a 8, como os de hoje.
 
 ## Critérios de aceite
 
-- [ ] O gerador grava todos os tipos da tabela, com as variantes e os quadros de hoje.
-- [ ] Numa imagem com todos lado a lado e o Domador, o traço é o mesmo das casas e das construções-chave.
-- [ ] Uma fileira e um anel de cercas, de madeira e de pedra, se emendam como antes.
+- [ ] O gerador grava todos os tipos da tabela, com as variantes e os quadros, e os PNGs dos tipos de hoje não mudam.
+- [ ] Numa imagem com todos lado a lado e o Domador, o traço é o mesmo das casas e das construções-chave da cidade.
+- [ ] Uma fileira e um anel de Cercas da cidade, de madeira e de pedra, se emendam; uma Cerca da cidade ao lado de uma de hoje não se liga a ela.
 - [ ] As pás do moinho giram e o santuário brilha no jogo, sem pulo entre os quadros.
-- [ ] Rodar o `make_objects.gd` depois não muda os PNGs da tabela.
+- [ ] O catálogo traz os tipos, e o editor os põe (com o dono, no F2).
 
 ## Desenho técnico
 
-- `make_town.gd`: os tipos no `TYPES`, uma função `_draw_<slug>` para cada um e o `_fence_parts` com a folha de peças (as funções de hoje, `_fence_parts`, `_fence_post`, `_wood_arm` e `_stone_arm`, saem do `make_objects.gd` e são redesenhadas aqui).
-- `make_objects.gd`: sobram `tree`, `rock` e `plants` e o que eles usam; o resto sai.
-- `.specs/island-villages/architecture.md`: a tabela de tipos e o parágrafo da arte dizem que a cidade vem do `make_town.gd` e o ambiente do `make_objects.gd`.
+- **Servidor:** a migração `server/prisma/migrations/20261117000000_town_village_objects/migration.sql`, a carga inicial e o teste da carga (30 objetos).
+- **`make_town.gd`:** os tipos no `TYPES`, uma função `_draw_<slug>` para cada um, e a folha de peças da Cerca da cidade, desenhada no estilo do guia.
+- **`HexFences`** (`res://ui/components/hex_fences.gd`): passa a conhecer os dois slugs de cerca, cada um com o caminho da folha dele, e guarda as artes montadas por slug, variante e lados. O `links` já liga só o mesmo `object_type_id`.
+- **`HexMapView`:** monta pelo `HexFences` as cercas dos dois slugs.
+- **`MapObjectSprite`:** `FRAME_RATES` ganha `town_windmill` (10) e `town_rune_shrine` (8).
+- **Specs:** a tabela de tipos e a de tamanhos do [architecture.md da island-villages](../island-villages/architecture.md#os-tipos-de-objeto) e o parágrafo da Cerca.
 
 ## Verificação
 
 ```bash
 godot --headless -s res://assets/map_objects/make_town.gd
-godot --headless -s res://assets/map_objects/make_objects.gd -- <pasta do pacote>
 godot --headless --path client --editor --quit
 godot --headless -d --path client --quit-after 60
+cd server && npx prisma migrate deploy && npm run lint && npm run typecheck && npm test && npm run test:e2e
 ```
 
-Uma cena temporária com todos os objetos, uma fileira e um anel de cercas e o Domador, e um olhar no jogo para as animações.
+Uma cena temporária com todos os objetos, uma fileira e um anel de cercas das duas versões lado a lado e o Domador, e um olhar no jogo para as animações.
 
 ## Tarefas
 
+- [ ] A migração, a carga inicial e o teste da carga.
 - [ ] Moinho, horta, poço, barraca, carroça, estábulo, bebedouro e santuário.
-- [ ] A folha de peças da cerca.
-- [ ] Enxugar o `make_objects.gd`.
+- [ ] A Cerca da cidade: a folha de peças, o `HexFences` e o `HexMapView`.
+- [ ] As velocidades no `MapObjectSprite`.
 - [ ] Conferir nas imagens e no jogo, e atualizar o `architecture.md` da island-villages e o `client/CLAUDE.md`.
