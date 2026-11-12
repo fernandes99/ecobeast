@@ -281,8 +281,8 @@ describe('carga inicial do chão e dos objetos (island-villages/01)', () => {
     ]);
   });
 
-  it('tem os 15 objetos, cada um com o hexágono de apoio e pelo menos 1 variante', () => {
-    expect(objects).toHaveLength(15);
+  it('tem os 18 objetos, cada um com o hexágono de apoio e pelo menos 1 variante', () => {
+    expect(objects).toHaveLength(18);
     for (const { id, variants } of objects) {
       expect(variants).toBeGreaterThanOrEqual(1);
       expect(

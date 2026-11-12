@@ -118,5 +118,71 @@
 		"dq": 0,
 		"dr": 0,
 		"blocks": false
+	},
+	{
+		"object_type_id": 21,
+		"dq": 0,
+		"dr": 0,
+		"blocks": true
+	},
+	{
+		"object_type_id": 21,
+		"dq": 1,
+		"dr": 0,
+		"blocks": true
+	},
+	{
+		"object_type_id": 21,
+		"dq": 1,
+		"dr": -1,
+		"blocks": true
+	},
+	{
+		"object_type_id": 22,
+		"dq": 0,
+		"dr": 0,
+		"blocks": true
+	},
+	{
+		"object_type_id": 22,
+		"dq": 1,
+		"dr": 0,
+		"blocks": true
+	},
+	{
+		"object_type_id": 22,
+		"dq": 1,
+		"dr": -1,
+		"blocks": true
+	},
+	{
+		"object_type_id": 23,
+		"dq": 0,
+		"dr": 0,
+		"blocks": true
+	},
+	{
+		"object_type_id": 23,
+		"dq": 1,
+		"dr": 0,
+		"blocks": true
+	},
+	{
+		"object_type_id": 23,
+		"dq": 2,
+		"dr": 0,
+		"blocks": true
+	},
+	{
+		"object_type_id": 23,
+		"dq": 1,
+		"dr": -1,
+		"blocks": true
+	},
+	{
+		"object_type_id": 23,
+		"dq": 2,
+		"dr": -1,
+		"blocks": true
 	}
 ]

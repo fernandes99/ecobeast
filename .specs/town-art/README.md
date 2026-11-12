@@ -59,7 +59,7 @@ Escolhas do planejamento, _a revisar_ (ao mudar uma, atualize aqui e na fase):
 
 | # | Fase | Entrega | Status |
 | --- | --- | --- | --- |
-| 1 | [01-key-buildings](01-key-buildings.md) | O gerador `make_town.gd` com o traço do guia, e o Refúgio, a Loja e a Arena como objetos novos no catálogo | rascunho |
+| 1 | [01-key-buildings](01-key-buildings.md) | O gerador `make_town.gd` com o traço do guia, e o Refúgio, a Loja e a Arena como objetos novos no catálogo | concluída |
 | 2 | [02-houses](02-houses.md) | Casa, Casa média e Casa grande redesenhadas, com as mesmas variantes | rascunho |
 | 3 | [03-village-objects](03-village-objects.md) | Moinho, horta, cerca, poço, barraca, carroça, estábulo, bebedouro e santuário redesenhados | rascunho |
 | 4 | [04-street-decorations](04-street-decorations.md) | Poste de luz, placa, canteiro de flores e banco, novos no catálogo | rascunho |

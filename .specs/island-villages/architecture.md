@@ -47,6 +47,7 @@ Os formatos são estes (o `(0, 0)` é o hexágono de apoio, onde o dono clica):
 | um | `(0, 0)` | 1 hexágono |
 | par | `(0, 0)`, `(1, 0)` | 2 lado a lado |
 | triângulo | `(0, 0)`, `(1, 0)`, `(1, -1)` | 2 embaixo e 1 em cima, entre eles |
+| bloco | `(0, 0)`, `(1, 0)`, `(2, 0)`, `(1, -1)`, `(2, -1)` | 3 embaixo e 2 em cima, entre eles ([town-art](../town-art/01-key-buildings.md)) |
 
 Os tipos depois da revisão da [03](03-map-objects.md#revisão-casas-árvores-pedras-e-hortas). A casa com horta (id 2), o castelo (4), a ponte (12) e o ninho (15) saíram, e o formato losango saiu com o castelo. A árvore (5) e a pedra (6) eram a árvore grande e a pedra grande, de 3 e 2 hexágonos:
 
@@ -67,6 +68,11 @@ Os tipos depois da revisão da [03](03-map-objects.md#revisão-casas-árvores-pe
 | 16 | `trough` | Bebedouro | um | 1 | bloqueia |
 | 17 | `rune_shrine` | Santuário de runas | um | 4: minério azul, de ouro, de prata e de carvão, com brilho | bloqueia |
 | 20 | `plants` | Vegetação | um | 10: as plantas do terreno, com o vento | não bloqueia |
+| 21 | `refuge_building` | Prédio do Refúgio | triângulo | 1 | todos |
+| 22 | `shop_building` | Prédio da Loja | triângulo | 1 | todos |
+| 23 | `arena_building` | Prédio da Arena | bloco | 1 | todos |
+
+Os prédios 21 a 23 são da [town-art](../town-art/README.md): a arte deles vem do `make_town.gd`, no estilo do [guia](../town-art/style-guide.md), e a ação continua pintada à parte.
 
 Depois da [05](05-connected-fences.md), a Cerca se liga sozinha: um poste no centro e um braço até o meio de cada lado cujo vizinho, na mesma altura, também tem cerca; sozinha, ela é reta. O `HexFences` monta a arte a partir de `fence/parts_<variante>.png` (7 células de 96×72: o poste e os braços dos lados 0 a 5), e o `<variante>.png` é só a prévia do editor.
 
@@ -191,13 +197,15 @@ Tamanhos da arte de agora, na variante 1 (em pixels da arte, como as texturas do
 | `tree` | 64×49 (4 quadros) | `trough` | 64×35 |
 | `rock` | 64×43 | `rune_shrine` | 64×68 (16 quadros) |
 | `garden` | 64×52 | `fence` | 64×37 |
-| `well` | 64×59 | | |
+| `well` | 64×59 | `refuge_building` | 128×88 |
+| `shop_building` | 128×84 | `arena_building` | 192×114 |
 
 A altura pode mudar na arte final, desde que o pé continue no mesmo lugar. A escala é a do pacote Sunnyside em 1x: uma casa tem uns 48 px de largura num hexágono de 64, e o Domador tem 25 px de altura.
 
 **Arte de agora:** gerada pelo próprio Godot, para gerar de novo quando quiser:
 
 - `res://assets/map_objects/make_objects.gd` monta os objetos a partir do pacote Sunnyside World, que o dono tem na máquina e passa como argumento. Ele lê o tileset, os sprites e o mapa de exemplo do pacote (`Room1`, do GameMaker), onde as casas, o moinho e as barracas já estão montados peça por peça. A cor do telhado das variantes troca o bloco de cor do tileset, que repete as mesmas peças em azul, verde, laranja, vermelho e roxo. Peças que só existem num bloco de cor, como a cumeeira da casa grande, mudam de matiz nos outros. As árvores, as pedras e as hortas são compostas com os sprites e as peças do pacote, e a carroça, que ele não tem, é desenhada no estilo dele.
+- `res://assets/map_objects/make_town.gd` desenha a cidade só por código, no estilo do [guia da town-art](../town-art/style-guide.md), sem pacote de fora: hoje os prédios do Refúgio, da Loja e da Arena. Da pasta `client/`: `godot --headless -s res://assets/map_objects/make_town.gd`, ou com slugs depois de `--` para gerar só esses.
 - `res://assets/terrain/grounds/make_grounds.gd` gera as texturas de chão.
 
 Da pasta `client/`: `godot --headless -s res://assets/map_objects/make_objects.gd -- <pasta do pacote>`, a pasta que tem `Sunnyside_World_Assets` e `Sunnyside_World_Gamemaker`.

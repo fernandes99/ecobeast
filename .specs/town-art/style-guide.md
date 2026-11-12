@@ -89,7 +89,7 @@ Cada material tem 4 tons: claro, base, escuro e contorno. Um objeto usa só as c
 
 ## As construções-chave
 
-Cada uma tem uma cor reservada e um **emblema**: um disco branco de raio 7 px com o anel do tom de contorno do telhado, no meio da frente do telhado, com o símbolo dentro.
+Cada uma tem uma cor reservada e um **emblema**: um disco branco de raio 10 px com o anel de 1 px do tom de contorno do telhado, no meio da frente do telhado, com o símbolo dentro.
 
 | Construção | Telhado | Emblema | Detalhes que a fazem reconhecível |
 | --- | --- | --- | --- |

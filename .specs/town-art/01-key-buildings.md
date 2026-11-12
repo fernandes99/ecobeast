@@ -1,6 +1,6 @@
 # 01. O gerador da cidade e as construções-chave
 
-- **Status:** rascunho
+- **Status:** concluída
 - **Depende de:** [island-villages](../island-villages/README.md) concluída
 
 ## Contexto
@@ -38,11 +38,11 @@ Hoje o Refúgio e a Loja de uma ilha são uma Casa grande de outra cor com a aç
 
 ## Critérios de aceite
 
-- [ ] O gerador roda sem erro e grava `refuge_building/1.png`, `shop_building/1.png` e `arena_building/1.png`.
-- [ ] Numa imagem do mapa (cena temporária), as três construções aparecem lado a lado com uma casa e o Domador, e cada uma se reconhece pela cor e pelo emblema.
-- [ ] A porta das três é mais alta que a metade do Domador e cabe na largura dele.
-- [ ] Nenhuma cor da arte fica fora das paletas do guia (o gerador só usa as constantes delas).
-- [ ] O catálogo (`GET /v1/catalog`) traz os três tipos com os formatos do RF-01.
+- [x] O gerador roda sem erro e grava `refuge_building/1.png`, `shop_building/1.png` e `arena_building/1.png`.
+- [x] Numa imagem do mapa (cena temporária), as três construções aparecem lado a lado com uma casa e o Domador, e cada uma se reconhece pela cor e pelo emblema.
+- [x] A porta das três é mais alta que a metade do Domador e cabe na largura dele.
+- [x] Nenhuma cor da arte fica fora das paletas do guia (o gerador só usa as constantes delas).
+- [x] O catálogo (`GET /v1/catalog`) traz os três tipos com os formatos do RF-01.
 - [ ] No editor, os três tipos aparecem na barra e podem ser postos (com o dono, no F2).
 
 ## Desenho técnico
@@ -69,9 +69,16 @@ cd server && npx prisma migrate deploy && npm run test:e2e
 
 Uma cena temporária em `client/zz_tmp_check/`, apagada depois, com as três construções, uma casa de hoje e o Domador num pedaço de ilha, salva numa imagem e conferida pelos 4 passos de [Conferir uma arte nova](style-guide.md#conferir-uma-arte-nova).
 
+Feita em 2026-11-12:
+- **Arte:** o `make_town.gd` gravou `refuge_building/1.png` (128×88), `shop_building/1.png` (128×84) e `arena_building/1.png` (192×114), com as cores só das constantes das paletas do guia.
+- **Mapa:** numa cena temporária, já apagada, os três prédios ficaram lado a lado com a Casa grande e a Casa de hoje, numa fileira de grama sobre uma praça de pedra, com o Domador na frente de cada um. Cada um se reconhece pela cor e pelo emblema, e a porta (22 a 24 px) tem quase a altura do Domador.
+- **Servidor:** a migração foi aplicada com `prisma migrate deploy`, a carga inicial (`prisma/seed-data/`) ganhou os três tipos, e o teste da carga passou a contar 18 objetos. `lint`, `typecheck`, `npm test` e `npm run test:e2e` passam.
+- **Projeto:** abre sem erro de script.
+- **Editor:** falta o dono pôr os três prédios no F2.
+
 ## Tarefas
 
-- [ ] A migração dos três tipos e a tabela do `architecture.md` da island-villages.
-- [ ] O `make_town.gd` com as paletas e as peças comuns.
-- [ ] A arte do Refúgio, da Loja e da Arena.
-- [ ] Conferir numa imagem e no editor, e atualizar o `client/CLAUDE.md`.
+- [x] A migração dos três tipos e a tabela do `architecture.md` da island-villages.
+- [x] O `make_town.gd` com as paletas e as peças comuns.
+- [x] A arte do Refúgio, da Loja e da Arena.
+- [x] Conferir numa imagem e no editor, e atualizar o `client/CLAUDE.md`.
