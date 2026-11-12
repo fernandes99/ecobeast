@@ -45,6 +45,7 @@ O Ecobeast é um jogo mobile (Android/iOS, retrato): o cliente em **Godot 4.7 co
 | [islands](islands/) | Jogar nas ilhas publicadas: a lista no Hub, as construções abrindo as telas e os Ecobeasts pelas áreas |
 | [legacy-battle-removal](legacy-battle-removal/) | A luta antiga apagada do servidor e do jogo, com os testes das regras portados |
 | [island-villages](island-villages/) | Vilas nas ilhas: trilhas e pisos, objetos com bloqueio e as construções viradas ações |
+| [town-art](town-art/) | O estilo de arte das cidades, com guia: Refúgio, Loja e Arena reconhecíveis, casas e objetos redesenhados e decorações de rua |
 | [terrain-height](terrain-height/) | A altura do terreno em cada hexágono, Colina e Montanha como biomas e a ferramenta Altura no editor |
 
 As próximas iniciativas estão no [roadmap.md](roadmap.md).

@@ -32,6 +32,7 @@ A spec é a fonte da verdade. Se a implementação precisar divergir, atualize a
 - **O servidor é a autoridade:** regras de jogo (stats, dano, captura, recompensas) são decididas pelo servidor; o cliente só exibe.
 - **Dados de design** são tabelas relacionais (ids estáveis, FKs `<singular>_id`), descritas em `.specs/game-data/architecture.md`. Moram no banco (schema `ecobeasts`) e se editam pelo painel do Supabase. O estado do jogador guarda só ids do catálogo.
 - Textos do jogador em pt-BR. A exceção são os nomes de Ecobeast, que não ficam em português e precisam ser entendidos em qualquer país. Eles podem juntar duas palavras, menos os 3 iniciais e suas evoluções, que usam palavras inventadas (Ruvo, Nilu, Elu).
+- Toda arte de construção e de decoração de cidade segue o guia de estilo `.specs/town-art/style-guide.md`.
 - Sem segredos no repositório (chaves do Supabase, senhas, tokens).
 - Um commit por fase; commits só de spec usam `chore`, os de implementação `feat` ou `fix`.
 
