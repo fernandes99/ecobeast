@@ -4,6 +4,8 @@ extends VBoxContainer
 signal edited(step: EditorHistory.Step, merge: bool)
 signal delete_requested(key: int, area_name: String)
 signal selection_changed(key: int)
+## O foco mudou: a chave da área em foco, ou 0 sem foco.
+signal focus_changed(key: int)
 
 const DEFAULT_WEIGHT := 10
 const DEFAULT_MIN_LEVEL := 2
@@ -17,6 +19,8 @@ const MAX_SPAWNS := 200
 const DEFAULT_SPAWNS := 10
 
 var selected_key := 0
+var focusing := false
+var _focus_button: Button
 
 var _draft: IslandDraft = null
 var _list: ItemList
@@ -46,6 +50,13 @@ func _init() -> void:
 	new_button.focus_mode = Control.FOCUS_NONE
 	new_button.pressed.connect(_new_area)
 	add_child(new_button)
+	_focus_button = EditorTools.tool_button("Focar na escolhida  (F)", null)
+	_focus_button.alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_focus_button.icon = load(MapEditor.ICONS % "focus") as Texture2D
+	_focus_button.add_theme_constant_override(&"icon_max_width", MapEditor.ICON_WIDTH)
+	_focus_button.tooltip_text = "Escurece o mapa fora da área escolhida."
+	_focus_button.toggled.connect(set_focus)
+	add_child(_focus_button)
 
 	_selected_box = VBoxContainer.new()
 	_selected_box.add_theme_constant_override(&"separation", 6)
@@ -135,6 +146,19 @@ func select(key: int) -> void:
 	selected_key = key
 	refresh()
 	selection_changed.emit(selected_key)
+	if focusing:
+		focus_changed.emit(selected_key)
+
+
+func set_focus(on: bool) -> void:
+	focusing = on
+	if _focus_button != null:
+		_focus_button.set_pressed_no_signal(on)
+	focus_changed.emit(selected_key if on else 0)
+
+
+func toggle_focus() -> void:
+	set_focus(not focusing)
 
 
 func refresh() -> void:

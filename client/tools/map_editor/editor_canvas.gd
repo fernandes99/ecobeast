@@ -5,6 +5,8 @@ signal hovered(coord: Vector2i, tile: HexTile)
 signal stroke_started(coord: Vector2i, secondary: bool)
 signal stroke_moved(coord: Vector2i)
 signal stroke_ended
+## O zoom ou o arrasto mudaram: o que acompanha o mapa se reposiciona.
+signal view_changed
 
 const DETAIL_ZOOMS: Array[float] = [1.0, 2.0, 3.0, 4.0, 6.0]
 const OVERVIEW_BELOW := 1.0
@@ -21,6 +23,7 @@ const STROKE_SPACING := 16.0
 const AREA_ALPHA := 0.38
 const ACTION_ALPHA := 0.62
 const NAME_SIZE := 14
+const FOCUS_DIM := Color(UiPalette.BACKGROUND_DEEP, 0.72)
 
 var brush: Callable = Callable()
 ## A cor do contorno sob o ponteiro (Color.TRANSPARENT: a de sempre).
@@ -36,6 +39,8 @@ var _overlay: Overlay
 var _area_layer: HexTintLayer
 var _area_stripes: HexTintLayer
 var _action_layer: HexTintLayer
+var _dim_layer: HexTintLayer
+var _focus_key := 0
 var _show_areas := true
 var _show_actions := true
 var _show_blocks := false
@@ -72,6 +77,8 @@ func _init() -> void:
 	add_child(_map_view)
 	_overview = IslandOverview.new()
 	add_child(_overview)
+	_dim_layer = HexTintLayer.new(false, IslandDraft.MAX_TILES)
+	add_child(_dim_layer)
 	_area_layer = HexTintLayer.new(false, IslandDraft.MAX_TILES)
 	add_child(_area_layer)
 	_area_stripes = HexTintLayer.new(true, IslandDraft.MAX_TILES)
@@ -143,7 +150,7 @@ func refresh_brush() -> void:
 
 func refresh_marks(coords: Array[Vector2i] = []) -> void:
 	if _draft == null:
-		for layer: HexTintLayer in [_area_layer, _area_stripes, _action_layer]:
+		for layer: HexTintLayer in [_area_layer, _area_stripes, _action_layer, _dim_layer]:
 			layer.clear_all()
 		_overlay.queue_redraw()
 		return
@@ -156,17 +163,23 @@ func refresh_marks(coords: Array[Vector2i] = []) -> void:
 		area_empty[key] = (area.get("species", []) as Array).is_empty()
 	var targets: Array[Vector2i] = coords
 	if targets.is_empty():
-		for layer: HexTintLayer in [_area_layer, _area_stripes, _action_layer]:
+		for layer: HexTintLayer in [_area_layer, _area_stripes, _action_layer, _dim_layer]:
 			layer.clear_all()
 		targets = []
-		targets.assign(_draft.tile_areas.keys())
-		targets.append_array(action_of.keys())
+		if _focus_key > 0:
+			targets.assign(_draft.tiles.keys())
+		else:
+			targets.assign(_draft.tile_areas.keys())
+			targets.append_array(action_of.keys())
 	for coord: Vector2i in targets:
 		var tile: HexTile = _draft.tiles.get(coord)
 		var key: int = _draft.tile_areas.get(coord, 0) if tile != null else 0
 		_area_layer.clear_hex(coord)
 		_area_stripes.clear_hex(coord)
-		if area_color.has(key):
+		_dim_layer.clear_hex(coord)
+		if _focus_key > 0 and tile != null and key != _focus_key:
+			_dim_layer.set_hex(coord, FOCUS_DIM, tile.height)
+		elif area_color.has(key):
 			var layer := _area_stripes if area_empty[key] else _area_layer
 			layer.set_hex(coord, Color(area_color[key], AREA_ALPHA), tile.height)
 		var action: int = action_of.get(coord, -1) if tile != null else -1
@@ -176,6 +189,28 @@ func refresh_marks(coords: Array[Vector2i] = []) -> void:
 		else:
 			_action_layer.clear_hex(coord)
 	_overlay.queue_redraw()
+
+
+## Escurece todo hexágono fora da área `key`; 0 tira o foco.
+func set_area_focus(key: int) -> void:
+	if key == _focus_key:
+		return
+	_focus_key = key
+	refresh_marks()
+
+
+## O retângulo, em pontos deste Control, dos hexágonos de um objeto.
+func object_rect(index: int) -> Rect2:
+	var top_left := Vector2.INF
+	var bottom_right := -Vector2.INF
+	for corner: Vector2 in HexMapView.HEX_CORNERS:
+		top_left = top_left.min(corner)
+		bottom_right = bottom_right.max(corner)
+	var rect := Rect2()
+	for coord: Vector2i in _draft.object_tiles(index):
+		var box := Rect2(_screen_origin(coord) + top_left * _zoom, (bottom_right - top_left) * _zoom)
+		rect = box if not rect.has_area() else rect.merge(box)
+	return rect
 
 
 func set_layers(areas: bool, actions: bool) -> void:
@@ -336,7 +371,7 @@ func _apply_view() -> void:
 	if not overview:
 		_map_view.fixed_scale = _zoom
 		_map_view.position = _origin.round()
-	for layer: HexTintLayer in [_area_layer, _area_stripes, _action_layer]:
+	for layer: HexTintLayer in [_area_layer, _area_stripes, _action_layer, _dim_layer]:
 		layer.position = _overview.position if overview else _map_view.position
 		layer.scale = Vector2.ONE * _zoom
 		layer.set_raised(not overview)
@@ -344,6 +379,7 @@ func _apply_view() -> void:
 	_area_stripes.visible = _show_areas
 	_action_layer.visible = _show_actions
 	_overlay.queue_redraw()
+	view_changed.emit()
 
 
 func _update_hover(at: Vector2) -> void:

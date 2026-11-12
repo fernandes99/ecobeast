@@ -8,20 +8,25 @@ signal edited(step: EditorHistory.Step, merge: bool)
 enum Tool { BIOME, HEIGHT, GROUND, ADD, REMOVE, START, OBJECT, ACTION, AREA }
 
 const TOOL_NAMES: Array[String] = ["Bioma", "Altura", "Chão", "Pôr hexágono", "Tirar hexágono", "Chegada", "Objeto", "Ação", "Área"]
+const TOOL_ICONS: Array[String] = ["biome", "height", "ground", "hex_add", "hex_remove", "flag", "object", "action", "area"]
 const TOOL_HINTS: Array[String] = [
-	"Troca o bioma dos hexágonos que já existem.",
-	"Troca a altura dos hexágonos que já existem.",
+	"Troca o bioma dos hexágonos que já existem. A altura só muda se você escolher uma abaixo.",
+	"Troca só a altura dos hexágonos que já existem.",
 	"Pinta trilhas e pisos sobre o terreno. Sem chão apaga.",
 	"Cria hexágonos onde não há, com o bioma e a altura escolhidos abaixo.",
 	"Apaga hexágonos. A chegada nunca sai.",
 	"Move a chegada (a bandeira) para o hexágono clicado.",
-	"Põe objetos. Botão direito escolhe um objeto posto.",
+	"Põe objetos. Clicar num objeto posto escolhe ele.",
 	"Pinta uma ação nova, ou aumenta a escolhida. Botão direito escolhe uma ação.",
 	"Pinta a área escolhida. Botão direito tira os hexágonos de qualquer área.",
 ]
 const NO_AREA_MESSAGE := "Crie ou escolha uma área no painel antes de pintar."
 const BIOMES: Array[String] = ["temperate", "boreal", "stone", "hill", "mountain", "wshallow", "wdeep"]
 const BIOME_SWATCH_HEIGHT := 1
+const TOOL_BUTTON_SIZE := Vector2(58.0, 58.0)
+const TOOL_ICON_WIDTH := 26
+const HEIGHT_BUTTON_SIZE := Vector2(52.0, 44.0)
+const KEEP_HEIGHT := -1
 const MAX_RADIUS := 10
 const SWATCH_WIDTH := 64.0
 const SWATCH_COLUMNS := 5
@@ -40,20 +45,28 @@ const FULL_MESSAGE := "A ilha chegou a 20.000 hexágonos."
 var tool := Tool.BIOME
 var biome := "temperate"
 var height := IslandDraft.BLANK_HEIGHT
+## A altura que o Bioma também põe; KEEP_HEIGHT deixa a de cada hexágono.
+var biome_height := KEEP_HEIGHT
+## A coluna de botões das ferramentas, que o MapEditor põe ao lado do painel.
+var tool_column := VBoxContainer.new()
 var ground := ""
 var radius := 0
 var detail_chance := 0.0
 
 var _tool_buttons: Array[Button] = []
+var _tool_title: Label
 var _tool_hint: Label
 var _biome_buttons: Dictionary[String, TerrainSwatch] = {}
-var _height_buttons: Array[TerrainSwatch] = []
+var _height_buttons: Array[Button] = []
+var _biome_height_buttons: Array[Button] = []
+var _biome_section: Control
+var _biome_height_section: Control
+var _height_section: Control
 var _ground_buttons: Dictionary[String, TerrainSwatch] = {}
 var _ground_section: Control
 var _radius_value: Label
 var _radius_slider: HSlider
 var _rng := RandomNumberGenerator.new()
-var _terrain_sections: Array[Control] = []
 var _brush_section: Control
 var _action_section: Control
 var _area_section: Control
@@ -72,19 +85,28 @@ var _stroke_action := -2
 func _init() -> void:
 	add_theme_constant_override(&"separation", 10)
 
-	var tools_box := _section("Ferramenta  ·  teclas 1 a %d" % TOOL_NAMES.size())
+	tool_column.add_theme_constant_override(&"separation", 4)
 	var tools_group := ButtonGroup.new()
-	var grid := GridContainer.new()
-	grid.columns = 2
-	grid.add_theme_constant_override(&"h_separation", 6)
-	grid.add_theme_constant_override(&"v_separation", 6)
-	tools_box.add_child(grid)
 	for index: int in TOOL_NAMES.size():
-		var button := tool_button("%d   %s" % [index + 1, TOOL_NAMES[index]], tools_group)
-		button.tooltip_text = TOOL_HINTS[index]
+		var button := tool_button(str(index + 1), tools_group)
+		button.icon = load(MapEditor.ICONS % TOOL_ICONS[index]) as Texture2D
+		button.add_theme_constant_override(&"icon_max_width", TOOL_ICON_WIDTH)
+		button.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		button.vertical_icon_alignment = VERTICAL_ALIGNMENT_TOP
+		button.alignment = HORIZONTAL_ALIGNMENT_CENTER
+		button.custom_minimum_size = TOOL_BUTTON_SIZE
+		button.size_flags_horizontal = Control.SIZE_FILL
+		button.add_theme_font_size_override(&"font_size", TITLE_SIZE)
+		button.tooltip_text = "%d · %s\n%s" % [index + 1, TOOL_NAMES[index], TOOL_HINTS[index]]
 		button.pressed.connect(set_tool.bind(index))
-		grid.add_child(button)
+		tool_column.add_child(button)
 		_tool_buttons.append(button)
+
+	var tools_box := _section("")
+	_tool_title = tools_box.get_child(0) as Label
+	_tool_title.theme_type_variation = &"BoldLabel"
+	_tool_title.remove_theme_font_size_override(&"font_size")
+	_tool_title.remove_theme_color_override(&"font_color")
 	_tool_hint = Label.new()
 	_tool_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_tool_hint.add_theme_color_override(&"font_color", UiPalette.TEXT_SECONDARY)
@@ -92,7 +114,7 @@ func _init() -> void:
 	tools_box.add_child(_tool_hint)
 
 	var biomes_box := _section("Bioma")
-	_terrain_sections.append(biomes_box.get_parent())
+	_biome_section = biomes_box.get_parent()
 	var biomes_grid := _swatch_grid(biomes_box)
 	var biome_group := ButtonGroup.new()
 	for slug: String in BIOMES:
@@ -102,15 +124,33 @@ func _init() -> void:
 		biomes_grid.add_child(swatch)
 		_biome_buttons[slug] = swatch
 
-	var heights_box := _section("Altura")
-	_terrain_sections.append(heights_box.get_parent())
-	var heights_grid := _swatch_grid(heights_box)
+	var biome_height_box := _section("Também pôr altura  ·  Shift+0 a 4")
+	_biome_height_section = biome_height_box.get_parent()
+	var keep_row := HBoxContainer.new()
+	keep_row.add_theme_constant_override(&"separation", 4)
+	biome_height_box.add_child(keep_row)
+	var biome_height_group := ButtonGroup.new()
+	for value: int in range(KEEP_HEIGHT, HexTile.MAX_HEIGHT + 1):
+		var button := _height_button("Manter" if value == KEEP_HEIGHT else str(value), biome_height_group)
+		if value == KEEP_HEIGHT:
+			button.custom_minimum_size.x = 0.0
+			button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			button.tooltip_text = "Pintar o bioma sem mudar a altura."
+		button.pressed.connect(_pick_biome_height.bind(value))
+		keep_row.add_child(button)
+		_biome_height_buttons.append(button)
+
+	var heights_box := _section("Altura  ·  Shift+0 a 4")
+	_height_section = heights_box.get_parent()
+	var heights_row := HBoxContainer.new()
+	heights_row.add_theme_constant_override(&"separation", 4)
+	heights_box.add_child(heights_row)
 	var height_group := ButtonGroup.new()
 	for value: int in HexTile.MAX_HEIGHT + 1:
-		var swatch := _swatch(height_group)
-		swatch.pressed.connect(_pick_height.bind(value))
-		heights_grid.add_child(swatch)
-		_height_buttons.append(swatch)
+		var button := _height_button(str(value), height_group)
+		button.pressed.connect(_pick_height.bind(value))
+		heights_row.add_child(button)
+		_height_buttons.append(button)
 
 	var grounds_box := _section("Chão")
 	_ground_section = grounds_box.get_parent()
@@ -170,6 +210,8 @@ func _init() -> void:
 
 func set_tool(value: int) -> void:
 	tool = value as Tool
+	if tool != Tool.AREA:
+		area_panel.set_focus(false)
 	_refresh()
 	brush_changed.emit()
 
@@ -292,12 +334,18 @@ func _change(draft: IslandDraft, coord: Vector2i) -> bool:
 	var tile: HexTile = draft.tiles.get(coord)
 	match tool:
 		Tool.BIOME:
-			if tile == null or tile.biome == biome:
+			if tile == null:
 				return false
-			tile.biome = biome
-			if tile.variant > IslandDraft.max_variant(biome):
-				tile.variant = IslandDraft.roll_variant(biome, detail_chance, _rng)
-			return true
+			var changed := false
+			if tile.biome != biome:
+				tile.biome = biome
+				if tile.variant > IslandDraft.max_variant(biome):
+					tile.variant = IslandDraft.roll_variant(biome, detail_chance, _rng)
+				changed = true
+			if biome_height != KEEP_HEIGHT and tile.height != biome_height:
+				tile.height = biome_height
+				changed = true
+			return changed
 		Tool.HEIGHT:
 			if tile == null or tile.height == height:
 				return false
@@ -381,7 +429,7 @@ func _paint_object(draft: IslandDraft, center: Vector2i) -> Array[Vector2i]:
 	if _object_done:
 		return changed
 	_object_done = true
-	if _secondary:
+	if _secondary or (not object_panel.editing_blocks and draft.object_at(center) >= 0):
 		object_panel.select(draft.object_at(center))
 		return changed
 	if object_panel.editing_blocks:
@@ -437,17 +485,33 @@ func _pick_ground(slug: String) -> void:
 
 func _pick_height(value: int) -> void:
 	height = value
-	if tool != Tool.ADD:
-		set_tool(Tool.HEIGHT)
+	_refresh()
+
+
+func _pick_biome_height(value: int) -> void:
+	biome_height = value
+	_refresh()
+
+
+## Shift+0 a 4: a altura da ferramenta escolhida, no Bioma a que ele também põe.
+func pick_height_key(value: int) -> bool:
+	if tool == Tool.BIOME:
+		_pick_biome_height(value)
+	elif tool == Tool.HEIGHT or tool == Tool.ADD:
+		_pick_height(value)
+	else:
+		return false
+	return true
 
 
 func _refresh() -> void:
 	for index: int in _tool_buttons.size():
 		_tool_buttons[index].set_pressed_no_signal(index == tool)
+	_tool_title.text = "%d · %s" % [tool + 1, TOOL_NAMES[tool]]
 	_tool_hint.text = TOOL_HINTS[tool]
-	var terrain := tool == Tool.BIOME or tool == Tool.HEIGHT or tool == Tool.ADD
-	for section: Control in _terrain_sections:
-		section.visible = terrain
+	_biome_section.visible = tool == Tool.BIOME or tool == Tool.ADD
+	_biome_height_section.visible = tool == Tool.BIOME
+	_height_section.visible = tool == Tool.HEIGHT or tool == Tool.ADD
 	_ground_section.visible = tool == Tool.GROUND
 	_object_section.visible = tool == Tool.OBJECT
 	_action_section.visible = tool == Tool.ACTION
@@ -457,8 +521,9 @@ func _refresh() -> void:
 		_biome_buttons[slug].set_pressed_no_signal(slug == biome)
 		_biome_buttons[slug].queue_redraw()
 	for value: int in _height_buttons.size():
-		_height_buttons[value].set_terrain(biome, "Altura %d" % value, value)
 		_height_buttons[value].set_pressed_no_signal(value == height)
+	for index: int in _biome_height_buttons.size():
+		_biome_height_buttons[index].set_pressed_no_signal(index + KEEP_HEIGHT == biome_height)
 	for slug: String in _ground_buttons:
 		_ground_buttons[slug].set_ground(slug, _ground_name(slug), biome)
 		_ground_buttons[slug].set_pressed_no_signal(slug == ground)
@@ -515,6 +580,14 @@ func _swatch(group: ButtonGroup) -> TerrainSwatch:
 	swatch.button_group = group
 	swatch.custom_minimum_size.x = SWATCH_WIDTH
 	return swatch
+
+
+func _height_button(text: String, group: ButtonGroup) -> Button:
+	var button := tool_button(text, group)
+	button.alignment = HORIZONTAL_ALIGNMENT_CENTER
+	button.custom_minimum_size = HEIGHT_BUTTON_SIZE
+	button.size_flags_horizontal = Control.SIZE_FILL
+	return button
 
 
 static func tool_button(text: String, group: ButtonGroup) -> Button:

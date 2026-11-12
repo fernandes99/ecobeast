@@ -62,6 +62,14 @@ func record_rename(before: String, after: String) -> void:
 	_undo_redo.commit_action(false)
 
 
+func can_undo() -> bool:
+	return _undo_redo.has_undo()
+
+
+func can_redo() -> bool:
+	return _undo_redo.has_redo()
+
+
 func undo() -> bool:
 	return _undo_redo.undo()
 

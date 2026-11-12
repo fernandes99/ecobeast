@@ -5,8 +5,10 @@ const TITLE := "Ecobeast: editor de ilhas"
 const WINDOW_SIZE := Vector2i(1600, 900)
 const MIN_SIZE := Vector2i(1280, 720)
 const FONT_SIZE := 16
-const SIDE_WIDTH := 380.0
-const LIST_HEIGHT := 210.0
+const SIDE_WIDTH := 430.0
+const ISLANDS_SIZE := Vector2i(460, 360)
+const ICONS := "res://tools/map_editor/icons/%s.svg"
+const ICON_WIDTH := 22
 const NO_SESSION := "Entre no jogo para usar o editor."
 const EDITOR_OFF := "O editor está desligado neste servidor. Ponha o seu id em MAP_EDITOR_USER_IDS no .env do servidor."
 const UNSAVED_QUESTION := "Salvar as mudanças?"
@@ -24,6 +26,14 @@ var _status_label: Label
 var _message_label: Label
 var _save_button: Button
 var _publish_button: Button
+var _islands_button: Button
+var _islands_popup: PopupPanel
+var _undo_button: Button
+var _redo_button: Button
+var _layers_button: Button
+var _layers_popup: PopupPanel
+var _tools_scroll: ScrollContainer
+var _object_bar: ObjectBar
 var _areas_check: CheckButton
 var _actions_check: CheckButton
 var _blocks_check: CheckButton
@@ -59,6 +69,8 @@ func _init() -> void:
 	var project_theme := ThemeDB.get_project_theme()
 	theme = project_theme.duplicate() if project_theme != null else Theme.new()
 	theme.default_font_size = FONT_SIZE
+	# Os painéis de Ilhas e Camadas abrem dentro da janela, perto do botão.
+	gui_embed_subwindows = true
 	_build()
 
 
@@ -102,6 +114,7 @@ func _refresh_list() -> void:
 
 
 func _open_island(id: int) -> void:
+	_islands_popup.hide()
 	if _draft != null and _draft.id == id:
 		return
 	if not await _resolve_unsaved():
@@ -133,17 +146,21 @@ func _show_island(draft: IslandDraft, status: String) -> void:
 func _start_new_island() -> void:
 	if not await _resolve_unsaved():
 		return
+	_islands_popup.hide()
 	_new_panel.reset()
-	_list.get_parent().visible = false
-	_tools.visible = false
+	_set_tools_visible(false)
 	_new_panel.visible = true
 
 
 func _leave_new_island() -> void:
 	_new_panel.visible = false
-	_list.get_parent().visible = true
-	_tools.visible = true
+	_set_tools_visible(true)
 	_canvas.show_draft(_draft)
+
+
+func _set_tools_visible(on: bool) -> void:
+	_tools_scroll.visible = on
+	_tools.tool_column.visible = on
 
 
 func _on_preview(preview: IslandDraft) -> void:
@@ -160,8 +177,7 @@ func _on_create(preview: IslandDraft) -> void:
 	_new_panel.finish_create("")
 	preview.id = DictFields.get_int(response.data, "id")
 	_new_panel.visible = false
-	_list.get_parent().visible = true
-	_tools.visible = true
+	_set_tools_visible(true)
 	_show_island(preview, "draft")
 	_refresh_list()
 
@@ -293,6 +309,7 @@ func _on_tools_edited(step: EditorHistory.Step, merge: bool) -> void:
 	_canvas.refresh_marks()
 	_canvas.refresh_objects()
 	_update_dirty()
+	_place_object_bar()
 
 
 func _on_area_delete(key: int, area_name: String) -> void:
@@ -305,6 +322,7 @@ func _on_area_delete(key: int, area_name: String) -> void:
 
 func _on_brush_changed() -> void:
 	_canvas.refresh_brush()
+	_place_object_bar()
 	if _tools.tool == EditorTools.Tool.ACTION and not _actions_check.button_pressed:
 		_actions_check.button_pressed = true
 	elif _tools.tool == EditorTools.Tool.AREA and not _areas_check.button_pressed:
@@ -333,6 +351,7 @@ func _on_history_applied(coords: Array[Vector2i]) -> void:
 	if _name_edit.text.strip_edges() != _draft.name:
 		_name_edit.text = _draft.name
 	_update_dirty()
+	_place_object_bar()
 
 
 func _undo() -> void:
@@ -350,6 +369,8 @@ func _update_header() -> void:
 	_save_button.disabled = _draft == null or _busy
 	_publish_button.disabled = _draft == null or _busy or _dirty or _status == "published"
 	_publish_button.tooltip_text = "Salve antes de publicar." if _dirty else "Confere a ilha e a deixa pronta para o jogo."
+	_undo_button.disabled = _draft == null or not _history.can_undo()
+	_redo_button.disabled = _draft == null or not _history.can_redo()
 
 
 func _set_message(text: String, error: bool = false) -> void:
@@ -409,6 +430,8 @@ func _on_window_input(event: InputEvent) -> void:
 	elif key.ctrl_pressed and key.keycode == KEY_Z:
 		set_input_as_handled()
 		_undo()
+	elif _tool_key(key):
+		set_input_as_handled()
 	elif key.keycode >= KEY_1 and key.keycode < KEY_1 + EditorTools.TOOL_NAMES.size() and not key.ctrl_pressed:
 		set_input_as_handled()
 		_tools.set_tool(key.keycode - KEY_1)
@@ -418,6 +441,38 @@ func _on_window_input(event: InputEvent) -> void:
 	elif key.keycode == KEY_BRACKETRIGHT:
 		set_input_as_handled()
 		_tools.set_radius(_tools.radius + 1)
+
+
+## As teclas que dependem da ferramenta: alturas, o objeto escolhido e o foco da área.
+func _tool_key(key: InputEventKey) -> bool:
+	if _draft == null or key.ctrl_pressed:
+		return false
+	if key.shift_pressed and key.keycode >= KEY_0 and key.keycode <= KEY_0 + HexTile.MAX_HEIGHT:
+		return _tools.pick_height_key(key.keycode - KEY_0)
+	if _tools.tool == EditorTools.Tool.AREA and key.keycode == KEY_F:
+		_tools.area_panel.toggle_focus()
+		return true
+	var objects := _tools.object_panel
+	if _tools.tool != EditorTools.Tool.OBJECT:
+		return false
+	match key.keycode:
+		KEY_LEFT:
+			objects.change_variant(-1)
+		KEY_RIGHT:
+			objects.change_variant(1)
+		KEY_M:
+			objects.toggle_mirror()
+		KEY_DELETE, KEY_BACKSPACE:
+			if objects.selected < 0:
+				return false
+			objects.delete_selected()
+		KEY_ESCAPE:
+			if objects.selected < 0:
+				return false
+			objects.select(-1)
+		_:
+			return false
+	return true
 
 
 func _typing() -> bool:
@@ -461,12 +516,12 @@ func _build() -> void:
 	stack.add_child(_editor)
 
 	var header := HBoxContainer.new()
-	header.add_theme_constant_override(&"separation", 12)
+	header.add_theme_constant_override(&"separation", 8)
 	_editor.add_child(header)
 	_name_edit = LineEdit.new()
 	_name_edit.placeholder_text = "Nome da ilha"
 	_name_edit.max_length = 40
-	_name_edit.custom_minimum_size.x = 320.0
+	_name_edit.custom_minimum_size.x = 300.0
 	_name_edit.editable = false
 	_name_edit.text_changed.connect(_on_name_changed)
 	header.add_child(_name_edit)
@@ -477,66 +532,72 @@ func _build() -> void:
 	_message_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_message_label.clip_text = true
 	header.add_child(_message_label)
-	_areas_check = CheckButton.new()
-	_areas_check.text = "Áreas"
-	_areas_check.button_pressed = true
-	_areas_check.focus_mode = Control.FOCUS_NONE
-	_areas_check.toggled.connect(_on_layers_toggled)
-	header.add_child(_areas_check)
-	_actions_check = CheckButton.new()
-	_actions_check.text = "Ações"
-	_actions_check.button_pressed = true
-	_actions_check.focus_mode = Control.FOCUS_NONE
-	_actions_check.toggled.connect(_on_layers_toggled)
-	header.add_child(_actions_check)
-	_blocks_check = CheckButton.new()
-	_blocks_check.text = "Bloqueio"
-	_blocks_check.focus_mode = Control.FOCUS_NONE
-	_blocks_check.toggled.connect(_on_layers_toggled)
-	header.add_child(_blocks_check)
+	_islands_button = header_button("Ilhas", "islands", "As ilhas: abrir, criar e apagar.")
+	_islands_button.pressed.connect(_open_islands)
+	header.add_child(_islands_button)
+	_undo_button = header_button("", "undo", "Desfazer (Ctrl+Z)")
+	_undo_button.pressed.connect(_undo)
+	header.add_child(_undo_button)
+	_redo_button = header_button("", "redo", "Refazer (Ctrl+Y)")
+	_redo_button.pressed.connect(_redo)
+	header.add_child(_redo_button)
+	_layers_button = header_button("Camadas", "eye", "Mostrar ou esconder áreas, ações e bloqueio.")
+	_layers_button.pressed.connect(_open_layers)
+	header.add_child(_layers_button)
 	_save_button = Button.new()
 	_save_button.text = "Salvar (Ctrl+S)"
+	_save_button.focus_mode = Control.FOCUS_NONE
 	_save_button.pressed.connect(save)
 	header.add_child(_save_button)
 	_publish_button = Button.new()
 	_publish_button.text = "Publicar"
 	_publish_button.theme_type_variation = &"OutlineButton"
+	_publish_button.focus_mode = Control.FOCUS_NONE
 	_publish_button.pressed.connect(publish)
 	header.add_child(_publish_button)
+
+	_layers_popup = _popup_panel()
+	var layers := VBoxContainer.new()
+	layers.add_theme_constant_override(&"separation", 4)
+	_layers_popup.add_child(layers)
+	_areas_check = _layer_check("Áreas", true)
+	layers.add_child(_areas_check)
+	_actions_check = _layer_check("Ações", true)
+	layers.add_child(_actions_check)
+	_blocks_check = _layer_check("Bloqueio", false)
+	layers.add_child(_blocks_check)
+
+	_islands_popup = _popup_panel()
+	_list = IslandList.new()
+	_list.custom_minimum_size = ISLANDS_SIZE
+	_list.open_requested.connect(_open_island)
+	_list.new_requested.connect(_start_new_island)
+	_list.delete_requested.connect(_on_delete)
+	_islands_popup.add_child(_list)
 
 	var body := HBoxContainer.new()
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body.add_theme_constant_override(&"separation", 10)
 	_editor.add_child(body)
-	_side = VBoxContainer.new()
-	_side.custom_minimum_size.x = SIDE_WIDTH
-	body.add_child(_side)
-	var tools_scroll := ScrollContainer.new()
-	tools_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	tools_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_side.add_child(tools_scroll)
 	_tools = EditorTools.new()
 	_tools.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_tools.message.connect(func(text: String) -> void: _set_message(text, true))
 	_tools.edited.connect(_on_tools_edited)
 	_tools.area_panel.delete_requested.connect(_on_area_delete)
+	_tools.area_panel.focus_changed.connect(_on_area_focus)
 	_tools.action_panel.selection_changed.connect(func(index: int) -> void:
 		_canvas.selected_action = index
 		_canvas.refresh_brush())
-	_tools.object_panel.selection_changed.connect(func(index: int) -> void:
-		_canvas.selected_object = index
-		_canvas.refresh_brush())
-	tools_scroll.add_child(_tools)
-	_list = IslandList.new()
-	_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_list.open_requested.connect(_open_island)
-	_list.new_requested.connect(_start_new_island)
-	_list.delete_requested.connect(_on_delete)
-	var list_panel := PanelContainer.new()
-	list_panel.theme_type_variation = &"SectionPanel"
-	list_panel.custom_minimum_size.y = LIST_HEIGHT
-	list_panel.add_child(_list)
-	_side.add_child(list_panel)
+	_tools.object_panel.selection_changed.connect(_on_object_selected)
+	body.add_child(_tools.tool_column)
+	_side = VBoxContainer.new()
+	_side.custom_minimum_size.x = SIDE_WIDTH
+	body.add_child(_side)
+	_tools_scroll = ScrollContainer.new()
+	_tools_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_tools_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_side.add_child(_tools_scroll)
+	_tools_scroll.add_child(_tools)
 	_new_panel = NewIslandPanel.new()
 	_new_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_new_panel.visible = false
@@ -559,7 +620,11 @@ func _build() -> void:
 	_canvas.stroke_moved.connect(_paint)
 	_canvas.stroke_ended.connect(_on_stroke_ended)
 	_tools.brush_changed.connect(_on_brush_changed)
+	_canvas.view_changed.connect(_place_object_bar)
 	body.add_child(_canvas)
+	_object_bar = ObjectBar.new(_tools.object_panel)
+	_object_bar.visible = false
+	_canvas.add_child(_object_bar)
 
 	_history = EditorHistory.new()
 	_history.applied.connect(_on_history_applied)
@@ -567,7 +632,9 @@ func _build() -> void:
 
 	_hover_label = Label.new()
 	_hover_label.theme_type_variation = &"SecondaryLabel"
-	_hover_label.text = "Botão esquerdo: pintar. Botão direito: escolher objeto ou ação, ou tirar área. Roda: zoom. Botão do meio, ou espaço e o botão esquerdo: arrastar. Tab: visão de cima. Ctrl+Z e Ctrl+Y: desfazer e refazer."
+	_hover_label.clip_text = true
+	_hover_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_hover_label.text = "Botão esquerdo: pintar, ou escolher um objeto posto. Botão direito: escolher objeto ou ação, ou tirar área. Roda: zoom. Botão do meio, ou espaço e o botão esquerdo: arrastar. Tab: visão de cima. Ctrl+Z e Ctrl+Y: desfazer e refazer."
 	_editor.add_child(_hover_label)
 
 	_unsaved_dialog = ConfirmationDialog.new()
@@ -600,3 +667,77 @@ func _build() -> void:
 	_publish_dialog.canceled.connect(func() -> void: _publish_answered.emit(false))
 	add_child(_publish_dialog)
 	_update_header()
+
+
+static func header_button(text: String, icon_name: String, tip: String) -> Button:
+	var button := Button.new()
+	button.text = text
+	button.icon = load(ICONS % icon_name) as Texture2D
+	button.add_theme_constant_override(&"icon_max_width", ICON_WIDTH)
+	button.tooltip_text = tip
+	button.focus_mode = Control.FOCUS_NONE
+	return button
+
+
+func _popup_panel() -> PopupPanel:
+	var panel := PopupPanel.new()
+	var style := StyleBoxFlat.new()
+	style.bg_color = UiPalette.SURFACE
+	style.border_color = UiPalette.BORDER
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(10)
+	style.set_content_margin_all(10.0)
+	panel.add_theme_stylebox_override(&"panel", style)
+	add_child(panel)
+	return panel
+
+
+func _layer_check(text: String, on: bool) -> CheckButton:
+	var check := CheckButton.new()
+	check.text = text
+	check.button_pressed = on
+	check.focus_mode = Control.FOCUS_NONE
+	check.toggled.connect(_on_layers_toggled)
+	return check
+
+
+func _open_islands() -> void:
+	_popup_below(_islands_popup, _islands_button)
+
+
+func _open_layers() -> void:
+	_popup_below(_layers_popup, _layers_button)
+
+
+## Abre o painel logo abaixo do botão, alinhado pela direita, sem passar da janela.
+func _popup_below(panel: PopupPanel, button: Control) -> void:
+	var rect := button.get_global_rect()
+	var popup_size := Vector2(panel.get_contents_minimum_size())
+	var x := clampf(rect.end.x - popup_size.x, 0.0, float(size.x) - popup_size.x)
+	panel.popup(Rect2i(Vector2i(Vector2(x, rect.end.y + 4.0).round()), Vector2i(popup_size.ceil())))
+
+
+func _on_object_selected(index: int) -> void:
+	_canvas.selected_object = index
+	_canvas.refresh_brush()
+	_place_object_bar()
+
+
+func _place_object_bar() -> void:
+	var index := _tools.object_panel.selected
+	if _draft == null or index < 0 or _tools.tool != EditorTools.Tool.OBJECT or _canvas.is_overview():
+		_object_bar.visible = false
+		return
+	_object_bar.refresh()
+	var rect := _canvas.object_rect(index)
+	var bar_size := _object_bar.get_combined_minimum_size()
+	var at := (Vector2(rect.get_center().x - bar_size.x / 2.0, rect.end.y + 6.0)).round()
+	_object_bar.position = at
+	_object_bar.size = bar_size
+	_object_bar.visible = Rect2(Vector2.ZERO, _canvas.size).intersects(Rect2(at, bar_size))
+
+
+func _on_area_focus(key: int) -> void:
+	_canvas.set_area_focus(key)
+	if key > 0 and not _areas_check.button_pressed:
+		_areas_check.button_pressed = true

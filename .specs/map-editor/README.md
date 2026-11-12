@@ -74,6 +74,7 @@ Escolhas do planejamento (corrigíveis; ao mudar uma, atualize aqui e no [archit
 | 2 | [02-editor-window](02-editor-window.md) | Jogo: a janela F2, a lista de ilhas, ilha nova do zero ou pelo gerador, ver com zoom e arrastar, salvar | concluída |
 | 3 | [03-terrain-tools](03-terrain-tools.md) | Jogo: os pincéis de bioma e forma, pôr e tirar hexágonos, o tamanho do pincel, a chegada, desfazer e refazer | concluída |
 | 4 | [04-buildings-and-areas](04-buildings-and-areas.md) | Jogo: as construções, as áreas de Ecobeasts e o publicar | concluída |
+| 5 | [05-editor-ux](05-editor-ux.md) | Jogo: topo com Ilhas, desfazer, refazer e Camadas; coluna de ferramentas; Bioma e Altura separados; prévia e barra dos objetos; foco na área | concluída |
 
 O desenho compartilhado está no [architecture.md](architecture.md).
 
