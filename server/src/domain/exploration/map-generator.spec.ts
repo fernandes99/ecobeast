@@ -19,10 +19,6 @@ const SEEDS = Array.from({ length: 200 }, (_, index) => index * 7919 + 1);
 const MAX_LONELY_LAND = 0.05;
 /** A grama é a base da região; nenhum bioma deve ir além disto. */
 const MAX_BIOME_SHARE = 0.6;
-/**
- * Fixa, separada de `DEFAULT_MAP_CONFIG`: o dono ajusta os valores do jogo sem
- * reprovar estes testes, que conferem o algoritmo, e não o balanceamento.
- */
 const CONFIG: MapConfig = {
   tileCount: 300,
   edgeRoughness: 7,

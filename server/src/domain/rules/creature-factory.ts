@@ -5,29 +5,20 @@ import { totalXpForLevel } from './xp-curve.js';
 const MAX_GENE = 31;
 const MAX_SKILLS = 4;
 const START_BOND = 70;
-/**
- * A chance de nascer com o Traço oculto da espécie (.specs/hidden-traits/01),
- * pedida pelo dono: 1 em 20.
- */
 export const HIDDEN_TRAIT_CHANCE = 1 / 20;
 
 export interface LearnsetEntry {
   skillId: number;
-  /** Slug de `skill_learn_methods`; só `level_up` entra na criatura nova. */
   method: string;
-  /** Nulo nas Técnicas que não se aprendem por nível. */
   level: number | null;
 }
 
 export interface CreateCreatureParams {
   species: { id: number; genderRatio: number; baseStats: StatBlock };
   level: number;
-  /** Em ordem de nível e, no empate, na ordem da tabela. */
   learnset: LearnsetEntry[];
   maxPpBySkill: ReadonlyMap<number, number>;
-  /** Só os Traços normais da espécie. */
   traitIds: number[];
-  /** O Traço oculto da espécie; sem ele (ou nulo), a chance não é sorteada. */
   hiddenTraitId?: number | null;
   temperaments: (TemperamentEffect & { id: number })[];
   xpMultiplier: number;
@@ -102,7 +93,6 @@ export function createCreature(
   };
 }
 
-/** O oculto com a chance de HIDDEN_TRAIT_CHANCE; senão, um dos normais. */
 function pickTrait(
   traitIds: number[],
   hiddenTraitId: number | null,
@@ -114,12 +104,10 @@ function pickTrait(
   return traitIds[pickInt(traitIds.length, random)]!;
 }
 
-/** Inteiro em [0, count). */
 function pickInt(count: number, random: () => number): number {
   return Math.floor(random() * count);
 }
 
-/** `none` se a espécie não tem gênero; senão `male` com a chance da proporção. */
 function pickGender(
   genderRatio: number,
   random: () => number,
@@ -128,7 +116,6 @@ function pickGender(
   return random() < genderRatio ? 'male' : 'female';
 }
 
-/** As 4 últimas Técnicas aprendidas por nível até o nível atual, com PP cheio. */
 function startingSkills({
   learnset,
   level,

@@ -30,7 +30,6 @@ export class SetNicknameBodyDto {
   nickname: string;
 }
 
-/** Os 6 stats, para a documentação dos campos `stats`, `genes` e `training_points`. */
 export const STAT_BLOCK = {
   type: 'object',
   properties: {

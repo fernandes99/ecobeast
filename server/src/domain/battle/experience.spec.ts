@@ -12,7 +12,6 @@ import {
 import type { BattleState, Combatant } from './types.js';
 
 const NILU = 4;
-/** Um selvagem de nível 5 com xp base 62 dá 44 de XP. */
 const catalog = makeCatalog({}, [], {}, {}, { [NILU]: 62 });
 
 function fighter(overrides: Partial<Combatant> = {}): Combatant {
@@ -23,7 +22,6 @@ function wild(overrides: Partial<Combatant> = {}): Combatant {
   return makeCombatant({ creatureUid: null, speciesId: NILU, ...overrides });
 }
 
-/** O inimigo em campo cai, como depois de um golpe. */
 function defeat(state: BattleState) {
   const turn = contextOf(state, catalog);
   turn.state.enemy.team[0]!.currentHp = 0;
@@ -31,7 +29,6 @@ function defeat(state: BattleState) {
   return turn;
 }
 
-/** Dois do jogador, com o segundo em campo, contra um inimigo que os dois enfrentaram. */
 function afterSwitch(first: Combatant, second: Combatant = fighter()) {
   return makeState([first, second], wild({ foughtBy: [0, 1] }), {
     player: { team: [first, second], activeIndices: [1] },

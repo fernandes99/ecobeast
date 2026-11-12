@@ -51,7 +51,6 @@ export interface CatalogRows {
   }[];
 }
 
-/** O catálogo que as regras da batalha recebem, lido do banco. */
 export async function loadBattleCatalog(
   prisma: PrismaService,
 ): Promise<BattleCatalog> {

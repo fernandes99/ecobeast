@@ -51,7 +51,6 @@ interface Draft {
   }[];
 }
 
-/** Um hexágono de raio `radius` em volta de (0, 0), todo planície plana. */
 function hexagon(radius: number): Tile[] {
   const tiles: Tile[] = [];
   for (let q = -radius; q <= radius; q++) {
@@ -74,7 +73,6 @@ describe('Editor de ilhas (e2e)', () => {
   const editor = randomUUID();
   const islands: number[] = [];
 
-  /** Uma ilha válida e pequena: 7 hexágonos, uma trilha, um Refúgio numa casa espelhada e uma área. */
   function draft(name = 'Ilha de teste'): Draft {
     const tiles = hexagon(1);
     tiles.find((tile) => tile.q === 1 && tile.r === 0)!.area = 1;

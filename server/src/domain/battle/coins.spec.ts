@@ -14,12 +14,10 @@ function fighter(overrides: Partial<Combatant> = {}): Combatant {
   return makeCombatant(overrides);
 }
 
-/** Um selvagem nível 5. */
 function wild(overrides: Partial<Combatant> = {}): Combatant {
   return makeCombatant({ creatureUid: null, speciesId: 4, ...overrides });
 }
 
-/** O fim da luta, com o sorteio do meio. */
 function settle(state: BattleState, result: BattleResult) {
   const turn = contextOf(state, catalog);
   settleCoins(turn, result);

@@ -1,9 +1,7 @@
 import { fileURLToPath } from 'node:url';
 
-/** Uma tabela do catálogo: nome no banco, delegate do Prisma e colunas da chave. */
 export interface CatalogTable {
   name: string;
-  /** O delegate do Prisma: o nome do modelo, no singular (Element → element). */
   model: string;
   key: readonly string[];
 }
@@ -75,10 +73,6 @@ export const CATALOG_TABLES: readonly CatalogTable[] = [
   table('starter_options', 'starterOption', ['species_id']),
 ];
 
-/**
- * Os JSON da carga inicial do catálogo: a foto do catálogo antes do banco
- * (backend-api/07). Depois da carga, o catálogo se edita no banco, não aqui.
- */
 export const SEED_DATA_DIR = fileURLToPath(
   new URL('../../prisma/seed-data/', import.meta.url),
 );

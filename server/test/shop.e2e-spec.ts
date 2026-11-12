@@ -54,7 +54,6 @@ describe('Rota de compra (e2e)', () => {
 
   type User = Awaited<ReturnType<typeof newUser>>;
 
-  /** Um usuário com inicial e exatamente estas moedas. */
   async function userWithCoins(coins: number): Promise<User> {
     const user = await newUser();
     await user.create().expect(201);

@@ -17,13 +17,11 @@ const MAX_SLEEP_TURNS = 3;
 const MIN_CONFUSION_TURNS = 2;
 const MAX_CONFUSION_TURNS = 5;
 
-/** Fração do HP máximo perdida no fim do turno. */
 const END_OF_TURN_LOSS: Record<string, number> = {
   burn: 1 / 16,
   poison: 1 / 8,
 };
 
-/** O golpe de quem se atinge, se Confuso. Valores a revisar. */
 const CONFUSED_HIT: BattleSkill = {
   id: 0,
   elementId: null,
@@ -47,7 +45,6 @@ export function rollSleepTurns(random: Random): number {
   return 1 + Math.floor(random() * MAX_SLEEP_TURNS);
 }
 
-/** Confere, na ordem, o que impede a criatura de agir neste turno. */
 export function canAct(context: TurnContext, spot: Spot): boolean {
   const creature = combatantAt(context.state, spot);
   if (creature.isFeared) return loseTurn(context, spot, 'fear');
@@ -91,7 +88,6 @@ function wakeUp(context: TurnContext, spot: Spot): boolean {
   return true;
 }
 
-/** Uma tentativa de agir sob confusão; ela dura esse número de tentativas. */
 function hitsItself(context: TurnContext, spot: Spot): boolean {
   const { catalog, events, random } = context;
   const creature = combatantAt(context.state, spot);
@@ -122,7 +118,6 @@ function hitsItself(context: TurnContext, spot: Spot): boolean {
   return isHit;
 }
 
-/** Aplica o status; se não pegar, avisa com `effect_failed`. */
 export function applyStatus(
   context: TurnContext,
   spot: Spot,
@@ -175,7 +170,6 @@ export function clearVolatile(creature: Combatant): void {
   creature.isProtected = false;
 }
 
-/** Quem chegou a 0 HP desmaia, e o desmaio limpa todo o status. */
 export function faintIfDown(context: TurnContext, spot: Spot): void {
   const creature = combatantAt(context.state, spot);
   if (creature.currentHp > 0) return;
@@ -186,7 +180,6 @@ export function faintIfDown(context: TurnContext, spot: Spot): void {
   if (spot.side === 'enemy') awardXp(context, creature);
 }
 
-/** A perda de HP da queimadura e do veneno, com o desmaio. */
 export function applyStatusDamage(context: TurnContext, spot: Spot): void {
   const creature = combatantAt(context.state, spot);
   const status = creature.statusSlug;

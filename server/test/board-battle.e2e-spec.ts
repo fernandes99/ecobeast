@@ -17,8 +17,6 @@ import { createTestPrisma } from './support/db.js';
 import { createTestTokens, TestTokens } from './support/tokens.js';
 import { HERE, placeWild } from './support/wild.js';
 
-// As rotas da luta no tabuleiro (.specs/board-battle/03-board-api.md).
-
 const RUVO = 1;
 const NO_BATTLE = 'Nenhuma batalha em andamento.';
 const CANNOT_REACH = 'Não dá para chegar lá.';
@@ -109,7 +107,6 @@ describe('Rotas da luta no tabuleiro (e2e)', () => {
 
   type User = Awaited<ReturnType<typeof userWithStarter>>;
 
-  /** Uma cópia do inicial na vaga dada da equipe, com os campos pedidos. */
   async function addCreature(
     user: User,
     partySlot: number,
@@ -167,7 +164,6 @@ describe('Rotas da luta no tabuleiro (e2e)', () => {
   /** Aguenta um Arranhão de nível 100, até crítico; pode jogar antes do jogador. */
   const TOUGH_ENEMY = { species_id: RUVO, level: 70 };
 
-  /** Joga as vezes do jogador até a luta sair do `choose_action`. */
   const playOut = (
     user: User,
     first: BoardBody,
@@ -182,7 +178,6 @@ describe('Rotas da luta no tabuleiro (e2e)', () => {
     });
   }
 
-  /** O HP e o PP do banco são os da resposta do fim. */
   async function expectTeamSaved(user: User, battle: Battle): Promise<void> {
     const rows = await team(user);
     expect(rows.map((row) => row.currentHp)).toEqual(

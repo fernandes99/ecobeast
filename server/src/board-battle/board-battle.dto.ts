@@ -28,8 +28,6 @@ import { MAX_SLOTS } from '../domain/battle/field.js';
 import type { BattleEvent, SideSlug } from '../domain/battle/types.js';
 import type { BoardAction } from '../domain/board/types.js';
 
-// O contrato da luta no tabuleiro (.specs/board-battle/03-board-api.md).
-
 const ACTION_TYPES: BoardAction['type'][] = [
   'skill',
   'emergency',
@@ -148,10 +146,6 @@ export class BoardEntryDto {
   cell: HexCoordDto;
 }
 
-/**
- * No `choose_action`: a vez do Ecobeast do jogador que está na vez, com
- * `position`, `move` (opcional) e `action`. No `choose_next`: só `entries`.
- */
 export class BoardVezBodyDto {
   @ApiPropertyOptional({
     description: 'A vaga de quem joga; tem de ser o primeiro da fila.',
@@ -257,7 +251,6 @@ export class BoardEnemySideDto extends EnemySideDto {
   cells: (HexCoordDto | null)[];
 }
 
-/** O Domador NPC da luta (.specs/npc-tamers/03-tamer-api.md). */
 export class BattleTamerDto {
   @ApiProperty({
     description: 'Id do nome, em `npc_tamer_names`.',

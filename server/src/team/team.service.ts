@@ -19,7 +19,6 @@ export const ALREADY_IN_TEAM = 'Esse Ecobeast já está na equipe.';
 export const ALREADY_STORED = 'Esse Ecobeast já está no Santuário.';
 export const TEAM_FULL = 'A equipe está cheia.';
 export const LAST_CREATURE = 'A equipe precisa de ao menos 1 Ecobeast.';
-/** Reordenar faz vários acessos ao banco, e cada um cruza a rede. */
 const TRANSACTION_TIMEOUT_MS = 20_000;
 
 type Tx = Prisma.TransactionClient;
@@ -35,7 +34,6 @@ function toParty(partySlot: number) {
   return { location: 'party', partySlot } as const;
 }
 
-/** A equipe e o Santuário (.specs/team-and-storage/architecture.md). */
 @Injectable()
 export class TeamService {
   constructor(
@@ -128,10 +126,6 @@ export class TeamService {
     });
   }
 
-  /**
-   * Toda escrita começa travando a linha do Domador: de dois pedidos ao mesmo
-   * tempo, o segundo espera o primeiro e lê a equipe já mudada.
-   */
   private async changeTeam(
     userId: string,
     write: (tx: Tx, team: Member[]) => Promise<void>,

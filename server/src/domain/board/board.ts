@@ -8,25 +8,21 @@ import {
 } from '../exploration/hex.js';
 import type { Board, BoardState } from './types.js';
 
-/** O tabuleiro de agora, fixo (.specs/board-battle/architecture.md). A revisar. */
 export const BOARD_COLUMNS = 3;
 export const BOARD_ROWS = 6;
 export const MOVE_RANGE = 1;
 
-/** As linhas de cada área, a da frente primeiro. */
 const ZONE_ROWS: Record<SideSlug, number[]> = {
   enemy: [1, 0],
   player: [4, 5],
 };
 
-/** As colunas de largada na linha da frente, por número de vagas. A revisar. */
 const START_COLUMNS: Record<number, number[]> = {
   1: [1],
   2: [0, 2],
   3: [0, 1, 2],
 };
 
-/** A casa da coluna e da linha: as linhas ímpares ficam meio hexágono à direita. */
 export function cellAt(column: number, row: number): HexCoord {
   return { q: column - Math.floor(row / 2), r: row };
 }
@@ -45,7 +41,6 @@ export function makeBoard(): Board {
   return { cells, zones: { player: zone('player'), enemy: zone('enemy') } };
 }
 
-/** O hexágono de largada da vaga, na linha da frente da área do lado. */
 export function startCell(
   side: SideSlug,
   position: number,
@@ -63,12 +58,10 @@ export function hasCell(state: BoardState, cell: HexCoord): boolean {
   return state.board.cells.some((boardCell) => sameCell(boardCell, cell));
 }
 
-/** Onde está quem ocupa a vaga; nulo fora do tabuleiro. */
 export function cellOf(state: BoardState, spot: Spot): HexCoord | null {
   return state.cells[spot.side][spot.position] ?? null;
 }
 
-/** Quem está no hexágono, dos dois lados; nulo com ele livre. */
 export function spotAt(state: BoardState, cell: HexCoord): Spot | null {
   for (const side of ['player', 'enemy'] as const) {
     const position = state.cells[side].findIndex(
@@ -79,7 +72,6 @@ export function spotAt(state: BoardState, cell: HexCoord): Spot | null {
   return null;
 }
 
-/** Quem ocupa a vaga, se estiver de pé no tabuleiro. */
 export function standingAt(state: BoardState, spot: Spot): boolean {
   const index = state[spot.side].activeIndices[spot.position];
   if (index === null || index === undefined) return false;
@@ -88,7 +80,6 @@ export function standingAt(state: BoardState, spot: Spot): boolean {
   );
 }
 
-/** As vagas de quem está de pé no tabuleiro, em ordem de posição. */
 export function standingOnBoard(state: BoardState, side: SideSlug): Spot[] {
   return state.cells[side].flatMap((_, position) =>
     standingAt(state, { side, position }) ? [{ side, position }] : [],
@@ -99,10 +90,6 @@ export function isFree(state: BoardState, cell: HexCoord): boolean {
   return hasCell(state, cell) && spotAt(state, cell) === null;
 }
 
-/**
- * Os hexágonos aonde se chega em até `steps` passos por hexágonos livres,
- * pela chave do `hexKey`, com um dos caminhos mais curtos, sem a origem.
- */
 export function reachable(
   state: BoardState,
   from: HexCoord,
@@ -130,10 +117,6 @@ export function reachable(
   return paths;
 }
 
-/**
- * Onde quem entra depois de uma queda pode ficar: os hexágonos livres da área
- * do lado, ou, com ela cheia, os livres mais perto dela.
- */
 export function entryCellsFor(state: BoardState, side: SideSlug): HexCoord[] {
   const zone = state.board.zones[side];
   const free = zone.filter((cell) => isFree(state, cell));

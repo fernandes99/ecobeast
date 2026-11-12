@@ -19,7 +19,6 @@ const known: KnownIds = {
   speciesIds: new Set([RUVO, NILU]),
 };
 
-/** Uma ilha pequena e válida: 3 hexágonos, um Refúgio, uma casa e uma área. */
 function island(): IslandDraft {
   return {
     name: 'Ilha das Brumas',

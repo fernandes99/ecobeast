@@ -2,14 +2,11 @@ import type { HexCoord } from '../exploration/hex.js';
 import type { UsableItem } from '../items/use-item.js';
 import type { StatBlock } from '../rules/types.js';
 
-/** Número em [0, 1): em produção vem do `crypto.randomInt`; nos testes, é fixo. */
 export type Random = () => number;
 
-/** Stats que aceitam estágios em batalha. */
 export type StageSlug =
   'atk' | 'def' | 'sp_atk' | 'sp_def' | 'spd' | 'accuracy' | 'evasion';
 
-/** Os stats de uma criatura que os estágios mudam. */
 export type BattleStatSlug = Exclude<StageSlug, 'accuracy' | 'evasion'>;
 
 export interface CombatantSkill {
@@ -24,30 +21,23 @@ export interface Combatant {
   elementIds: number[];
   level: number;
   traitSlug: string;
-  /** Calculados ao começar a luta. */
   stats: StatBlock;
   currentHp: number;
-  /** burn, poison, paralysis, sleep ou freeze. */
   statusSlug: string | null;
   sleepTurns: number;
-  /** 0 = não está confuso. */
   confusionTurns: number;
   isFeared: boolean;
   isTrapped: boolean;
   isProtected: boolean;
   stages: Record<StageSlug, number>;
   skills: CombatantSkill[];
-  /** Só no inimigo: os índices da equipe do jogador que estiveram em campo contra ele. */
   foughtBy: number[];
-  /** Só no jogador: o XP somado nesta luta, gravado no fim da vitória. */
   xpEarned: number;
-  /** Só no inimigo: capturado nesta luta; ele sai dela, como um desmaiado. */
   captured: boolean;
 }
 
 export interface BattleSkillEffect {
   effectSlug: string;
-  /** Porcentagem, de 0 a 100. */
   chance: number;
   targetSlug: string | null;
   statusSlug: string | null;
@@ -58,7 +48,6 @@ export interface BattleSkillEffect {
 
 export interface BattleSkill {
   id: number;
-  /** Nulos só no golpe de emergência, que não tem Elemento. */
   elementId: number | null;
   elementSlug: string | null;
   category: 'physical' | 'special' | 'support';
@@ -70,41 +59,30 @@ export interface BattleSkill {
   critStage: number;
   targetSlug: string;
   effects: BattleSkillEffect[];
-  /** No tabuleiro (board-battle/01): um hexágono a até `range`, ou linha reta. */
   areaShape: AreaShape;
   range: number;
-  /** Só na linha: atravessa os inimigos em vez de parar no primeiro. */
   pierces: boolean;
-  /** A marca que fica no chão; nulos juntos sem marca. */
   groundEffectId: number | null;
   groundTurns: number | null;
 }
 
 export type AreaShape = 'single' | 'line';
 
-/** O que uma marca no chão faz a quem está nela, depois de cada vez da fila. */
 export interface BattleGroundEffect {
-  /** % do HP máximo; nulo sem dano. */
   damagePercent: number | null;
   statusSlug: string | null;
 }
 
 export interface BattleItem extends UsableItem {
-  /** Nulo em quem não é Esfera. */
   captureBonus: number | null;
 }
 
-/** O que as regras precisam do catálogo. */
 export interface BattleCatalog {
   skills: Map<number, BattleSkill>;
-  /** "atacante:defensor" → multiplicador; par ausente vale 1. */
   efficacy: Map<string, number>;
-  /** Slug do status → ids dos Elementos imunes. */
   statusImmunities: Map<string, number[]>;
   items: Map<number, BattleItem>;
-  /** Id da espécie → `capture_rate`, de 0 a 100. */
   captureRates: Map<number, number>;
-  /** Id da espécie → `base_xp_yield`. */
   xpYields: Map<number, number>;
   groundEffects: Map<number, BattleGroundEffect>;
 }
@@ -123,50 +101,35 @@ export interface BattleSide {
   activeIndices: (number | null)[];
 }
 
-/** Um lugar em campo (.specs/battle-slots/architecture.md, "Vagas"). */
 export interface Spot {
   side: SideSlug;
   position: number;
 }
 
-/** Um item da Mochila na luta; `used` é o que o fim dela grava no banco. */
 export interface BattleBagItem {
   itemId: number;
   quantity: number;
   used: number;
 }
 
-/** Contra quem é a luta: um selvagem ou um Domador NPC (npc-tamers/02). */
 export type Opponent = 'wild' | 'tamer';
 
 export interface BattleState {
   phase: BattlePhase;
   result: BattleResult | null;
   turn: number;
-  /** Falso contra Domadores. */
   canFlee: boolean;
-  /** Contra Domador: sem Esfera, sem fuga, XP e moedas maiores. */
   opponent: Opponent;
   player: BattleSide;
   enemy: BattleSide;
-  /** No `choose_next`: as vagas do jogador que esperam quem entra. */
   pendingPositions: number[];
   bag: BattleBagItem[];
-  /** Depuração: todo golpe do jogador que acerta derruba o inimigo. */
   godMode: boolean;
-  /** As moedas do Domador no começo: a derrota não tira mais do que isso. */
   coins: number;
-  /** O que o fim da luta soma às moedas; negativo na derrota. */
   coinsChange: number;
-  /** Vagas livres na equipe: cada captura ocupa uma, e depois vai para o Santuário. */
   partyFree: number;
 }
 
-/**
- * Ações e eventos já têm o formato da API: passam sem tradução. `position` é a
- * vaga de quem age, 0 por padrão. `target` é a posição do adversário e só é
- * obrigatório com mais de um de pé.
- */
 export type BattleAction = { position?: number } & (
   | { type: 'skill'; slot: number; target?: number }
   | { type: 'emergency'; target?: number }
@@ -194,7 +157,6 @@ export type BattleEvent =
       max_hp: number;
       hp: number;
       status: string | null;
-      /** Só no tabuleiro: onde ele entrou. */
       cell?: HexCoord;
     }
   | {
@@ -202,7 +164,6 @@ export type BattleEvent =
       side: SideSlug;
       position: number;
       skill_id: number | null;
-      /** Só no tabuleiro: os hexágonos da área. */
       cells?: HexCoord[];
     }
   | {
@@ -289,7 +250,6 @@ export type BattleEvent =
   | { type: 'creature_left'; side: SideSlug; position: number }
   | { type: 'flee_failed' }
   | { type: 'battle_ended'; result: BattleResult }
-  // Só na luta no tabuleiro (.specs/board-battle/architecture.md, "Eventos").
   | { type: 'round_started'; round: number; queue: Spot[] }
   | { type: 'vez_started'; side: SideSlug; position: number }
   | { type: 'moved'; side: SideSlug; position: number; path: HexCoord[] }
@@ -310,7 +270,6 @@ export type BattleEvent =
       ground_effect_id: number;
     };
 
-/** O que cada passo do turno recebe; `state` já é uma cópia. */
 export interface TurnContext {
   state: BattleState;
   catalog: BattleCatalog;

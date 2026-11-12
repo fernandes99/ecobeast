@@ -5,7 +5,6 @@ import { catalogVersion } from './catalog-version.js';
 
 const START = new Date('2026-10-24T12:00:00Z').getTime();
 
-/** Um Prisma de mentira: cada tabela tem uma linha e conta as leituras. */
 function fakePrisma(options: { fail?: () => boolean } = {}) {
   const reads = { loads: 0, orderBy: {} as Record<string, unknown> };
   const prisma: Record<string, unknown> = {};

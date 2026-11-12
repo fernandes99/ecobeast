@@ -22,7 +22,6 @@ import { TeamModule } from './team/team.module.js';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true, validate: validateEnv }),
-    // THROTTLE_LIMIT chamadas por IP a cada 60 s; acima disso, 429.
     ThrottlerModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService<Env, true>) => ({

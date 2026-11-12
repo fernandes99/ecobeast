@@ -4,7 +4,6 @@ import { PrismaService } from '../../prisma/prisma.service.js';
 import { CATALOG_TABLES } from '../catalog-tables.js';
 import { CatalogTables, catalogVersion } from './catalog-version.js';
 
-/** Por quanto tempo o catálogo montado fica em memória (RF-05). */
 export const CATALOG_CACHE_TTL_MS = 60_000;
 
 export interface CatalogBundle {
@@ -12,16 +11,10 @@ export interface CatalogBundle {
   tables: CatalogTables;
 }
 
-/** O pedaço de cada delegate do Prisma que o catálogo inteiro usa. */
 interface ReadDelegate {
   findMany(args: { orderBy: object[] }): Promise<Record<string, unknown>[]>;
 }
 
-/**
- * Monta o catálogo inteiro (.specs/backend-api/06-catalog-bundle.md): as 25
- * tabelas no formato dos JSON do cliente, com a versão. Guarda o resultado por
- * 60 s; uma mudança feita no painel aparece em até 1 minuto.
- */
 @Injectable()
 export class BundleService {
   private cached?: { at: number; bundle: Promise<CatalogBundle> };

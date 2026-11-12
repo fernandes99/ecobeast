@@ -2,15 +2,12 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Env } from '../config/env.js';
 
-/** A sessão do Supabase que o jogo guarda. */
 export interface AuthTokens {
   access_token: string;
   refresh_token: string;
-  /** Segundos até o access token vencer. */
   expires_in: number;
 }
 
-/** Resposta do Supabase Auth fora de 2xx (ou sem os tokens esperados). */
 export class SupabaseAuthError extends Error {
   constructor(
     readonly status: number,
@@ -21,10 +18,6 @@ export class SupabaseAuthError extends Error {
   }
 }
 
-/**
- * As chamadas REST ao Supabase Auth (.specs/auth-google/01-auth-server.md,
- * RF-03 e RF-04), sem o supabase-js. Trocado por um dublê nos testes.
- */
 @Injectable()
 export class SupabaseAuthClient {
   private readonly authUrl: string;
@@ -35,7 +28,6 @@ export class SupabaseAuthClient {
     this.key = config.get('SUPABASE_PUBLISHABLE_KEY', { infer: true });
   }
 
-  /** A página do Supabase que leva ao Google e volta em `redirectTo`. */
   authorizeUrl(redirectTo: string, codeChallenge: string): string {
     const params = new URLSearchParams({
       provider: 'google',

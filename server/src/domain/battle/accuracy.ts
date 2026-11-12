@@ -15,7 +15,6 @@ export function hitChance(
   return Math.min(1, (accuracy / 100) * stageMultiplier(stage));
 }
 
-/** Chance de crítico contra um alvo com esse Traço, de 0 a 1. */
 export function critChance(critStage: number, targetTraitSlug: string): number {
   if (targetTraitSlug === NO_CRIT_TRAIT) return 0;
   return CRIT_CHANCES[Math.min(critStage, CRIT_CHANCES.length - 1)]!;

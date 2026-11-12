@@ -1,12 +1,5 @@
 import { STAT_SLUGS, StatBlock, StatSlug, TemperamentEffect } from './types.js';
 
-/**
- * Stats de uma criatura (fórmulas do GDD; .specs/auth-google/02-player-rules.md,
- * RF-02):
- * HP = floor((2·base + genes + floor(treino/4)) · nível / 100) + nível + 10
- * Outros = floor((floor((2·base + genes + floor(treino/4)) · nível / 100) + 5) · T),
- * com T = 1,1 no stat aumentado, 0,9 no diminuído e 1,0 nos demais.
- */
 export function calculateStats(
   base: StatBlock,
   genes: StatBlock,

@@ -20,7 +20,6 @@ export interface BattleRefusal {
   error: string;
 }
 
-/** Cada vaga recebe, em ordem, o próximo de pé da equipe; sobrando vaga, ela fica vazia. */
 export function newSide(team: Combatant[], slots: number): BattleSide {
   const copy = structuredClone(team);
   const standing = copy.flatMap((creature, index) =>
@@ -98,7 +97,6 @@ export function spendItem(state: BattleState, itemId: number): void {
   slot.used += 1;
 }
 
-/** Vitória se algum inimigo desmaiou; com todos capturados, captura. */
 export function resultWithoutEnemies(state: BattleState): BattleResult {
   const anyFainted = state.enemy.team.some(
     (enemy) => enemy.currentHp === 0 && !enemy.captured,

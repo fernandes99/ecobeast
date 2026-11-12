@@ -4,13 +4,11 @@ import type { StatSlug } from '../domain/rules/types.js';
 
 const MAX_IDLE_MS = 30 * 60 * 1000;
 
-/** O que o combate não usa, mas a captura grava. Nunca vai para o cliente. */
 export interface WildCreature {
   creature: NewCreature;
   statIds: Record<StatSlug, number>;
 }
 
-/** O Domador NPC da luta: o nome e de onde ele veio, o mapa ou o Desafiar (npc-tamers/03). */
 export interface BattleTamer {
   nameId: number;
   source: 'map' | 'challenge';
@@ -20,9 +18,7 @@ export interface BattleTamer {
 export interface StoredBattle {
   state: BattleState;
   catalog: BattleCatalog;
-  /** Um por Ecobeast da equipe inimiga, na mesma ordem. */
   wilds: WildCreature[];
-  /** Contra um Domador NPC; nulo ou ausente contra selvagem. */
   tamer?: BattleTamer | null;
 }
 
@@ -31,10 +27,6 @@ interface Entry {
   lastActionAt: number;
 }
 
-/**
- * Uma batalha por jogador, na memória deste processo: reiniciar o servidor as
- * perde. Quem passa 30 minutos sem agir abandona a sua, sem gravar nada.
- */
 export class BattleStore {
   private readonly entries = new Map<string, Entry>();
 

@@ -8,17 +8,11 @@ import {
   maxVariant,
 } from '../exploration/map-generator.js';
 
-/**
- * O rascunho de uma ilha e as conferências de salvar e de publicar
- * (.specs/map-editor/architecture.md, "Contrato").
- */
-
 export const MAX_ISLAND_TILES = 20_000;
 const MAX_NAME_LENGTH = 40;
 const MIN_LEVEL = 1;
 const MAX_LEVEL = 100;
 const COLOR_HEX = /^#[0-9A-Fa-f]{6}$/;
-/** Quantos Ecobeasts uma área pode ter (islands/01). */
 export const MIN_AREA_SPAWNS = 1;
 export const MAX_AREA_SPAWNS = 200;
 
@@ -26,9 +20,7 @@ export interface DraftTile extends HexCoord {
   biome: Biome;
   height: number;
   variant: number;
-  /** O slug do tipo de chão; sem ele, o hexágono não tem chão (island-villages/01). */
   ground?: string;
-  /** A `key` da área do hexágono; sem ela, o hexágono não tem área. */
   area?: number;
 }
 
@@ -41,7 +33,6 @@ export interface DraftObjectTile extends HexCoord {
   blocks: boolean;
 }
 
-/** Um objeto posto: `(q, r)` é o hexágono de apoio, e os hexágonos são os dele. */
 export interface DraftObject extends HexCoord {
   objectTypeId: number;
   variant: number;
@@ -57,11 +48,9 @@ export interface DraftAreaSpecies {
 }
 
 export interface DraftArea {
-  /** Um número do próprio rascunho, só para os hexágonos apontarem para a área. */
   key: number;
   name: string;
   colorHex: string;
-  /** Quantos Ecobeasts nascem nela a cada entrada na ilha (islands/01). */
   spawnCount: number;
   species: DraftAreaSpecies[];
 }
@@ -75,7 +64,6 @@ export interface IslandDraft {
   areas: DraftArea[];
 }
 
-/** Os ids e slugs do catálogo que o rascunho pode usar. */
 export interface KnownIds {
   actionTypeIds: ReadonlySet<number>;
   objectTypeIds: ReadonlySet<number>;
@@ -174,7 +162,6 @@ function objectsError(
   return null;
 }
 
-/** Os hexágonos que o Domador não atravessa: os de objeto com `blocks`. */
 export function blockedKeys(
   draft: Pick<IslandDraft, 'objects'>,
 ): ReadonlySet<string> {
@@ -267,7 +254,6 @@ export function draftError(draft: IslandDraft, known: KnownIds): string | null {
   return null;
 }
 
-/** A primeira coisa errada para publicar: tudo de salvar, e a ilha pronta para jogar. */
 export function publishError(
   draft: IslandDraft,
   known: KnownIds,
@@ -349,7 +335,6 @@ export function canonicalDraft(draft: IslandDraft): string {
   });
 }
 
-/** O sha-256, em hexadecimal, do JSON canônico do rascunho. */
 export function draftHash(draft: IslandDraft): string {
   return createHash('sha256').update(canonicalDraft(draft)).digest('hex');
 }

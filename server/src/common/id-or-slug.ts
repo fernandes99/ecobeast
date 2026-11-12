@@ -1,6 +1,5 @@
 import { NotFoundException } from '@nestjs/common';
 
-/** Maior valor de uma coluna integer do Postgres. */
 const MAX_INT = 2_147_483_647;
 
 /**
@@ -18,7 +17,6 @@ export function parseIdOrSlug(
   return { slug: param.toLowerCase() };
 }
 
-/** `notFound('Espécie não encontrada', 'xyz')` → 404 "Espécie não encontrada: xyz". */
 export function notFound(message: string, param: string): NotFoundException {
   return new NotFoundException(`${message}: ${param}`);
 }

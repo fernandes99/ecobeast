@@ -12,10 +12,6 @@ import type {
 /** Efeitos que valem sempre no autor, sem coluna de alvo no catálogo. */
 const AUTHOR_EFFECTS = new Set(['heal', 'drain', 'recoil', 'self_damage']);
 
-/**
- * `dealt` é o HP que a Técnica tirou do alvo. `foe` é o adversário que ela
- * atingiu; nulo sem nenhum de pé.
- */
 export function applyEffects(
   context: TurnContext,
   author: Spot,
@@ -76,7 +72,6 @@ function applyEffect(
   }
 }
 
-/** Muda o estágio dentro dos limites; devolve falso se já estava no limite. */
 export function changeStage(
   context: TurnContext,
   spot: Spot,
@@ -102,7 +97,6 @@ function portion(value: number, percent: number): number {
   return Math.max(1, Math.floor((value * percent) / 100));
 }
 
-/** Devolve falso se a criatura já estava com o HP cheio. */
 function restoreHp(context: TurnContext, spot: Spot, amount: number): boolean {
   const creature = combatantAt(context.state, spot);
   const healed = Math.min(amount, creature.stats.hp - creature.currentHp);

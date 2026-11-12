@@ -11,7 +11,6 @@ import type {
   BoardVezBodyDto,
 } from './board-battle.dto.js';
 
-/** O que o jogador vê da luta no tabuleiro: a luta de hoje, mais o tabuleiro. */
 export function toBoardBattleDto(
   state: BoardState,
   tamer: BattleTamer | null = null,
@@ -37,7 +36,6 @@ export function toBoardBattleDto(
   };
 }
 
-/** O corpo validado vira a entrada do motor, só com os campos de cada tipo. */
 export function toBoardInput(body: BoardVezBodyDto): BoardInput {
   if (body.entries) {
     return {

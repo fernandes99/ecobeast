@@ -17,7 +17,6 @@ import { SpeciesModule } from './species/species.module.js';
 import { StartersController } from './starters/starters.controller.js';
 import { TraitsController } from './traits/traits.resource.js';
 
-/** Todas as rotas de leitura do catálogo (backend-api/04 e 05). */
 @Module({
   imports: [SpeciesModule],
   controllers: [

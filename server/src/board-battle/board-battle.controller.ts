@@ -38,7 +38,6 @@ const NO_TEAM_RESPONSES =
   'Sem Domador ou sem equipe: "Crie seu Domador primeiro." ' +
   'Sem nenhum Ecobeast com HP: "Cure sua equipe no Refúgio."';
 
-/** A luta no tabuleiro do jogador (.specs/board-battle/03-board-api.md). */
 @ApiTags('Luta no tabuleiro')
 @ApiBearerAuth()
 @ApiUnauthorizedResponse({

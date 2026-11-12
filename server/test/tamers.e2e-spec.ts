@@ -10,8 +10,6 @@ import { createTestPrisma } from './support/db.js';
 import { createTestTokens, TestTokens } from './support/tokens.js';
 import { HERE, placeWild } from './support/wild.js';
 
-// Os Domadores NPC no servidor (.specs/npc-tamers/03-tamer-api.md).
-
 const RUVO = 1;
 const NO_TAMER_HERE = 'Nenhum Domador por aqui.';
 const TAMER_WAITING = 'Um Domador está esperando você aqui.';

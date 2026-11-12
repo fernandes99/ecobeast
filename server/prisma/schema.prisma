@@ -25,9 +25,6 @@ datasource db {
   schemas  = ["ecobeasts"]
 }
 
-// ─── Referência ──────────────────────────────────────────────────────────────
-
-/// Os Elementos (Fogo, Água…) e a cor de cada um na interface.
 model Element {
   id       Int     @id @default(autoincrement())
   /// CHECK ^[a-z0-9_]+$ (migration init)
@@ -47,7 +44,6 @@ model Element {
   @@schema("ecobeasts")
 }
 
-/// Multiplicador de dano de um Elemento atacante contra um defensor; só os diferentes de 1.
 model ElementEfficacy {
   attackerElementId Int   @map("attacker_element_id")
   defenderElementId Int   @map("defender_element_id")
@@ -63,7 +59,6 @@ model ElementEfficacy {
   @@schema("ecobeasts")
 }
 
-/// Os stats (HP, Ataque… e os exclusivos de batalha, como precisão).
 model Stat {
   id           Int     @id @default(autoincrement())
   /// CHECK ^[a-z0-9_]+$ (migration init)
@@ -82,7 +77,6 @@ model Stat {
   @@schema("ecobeasts")
 }
 
-/// Curvas de XP: o multiplicador de nível³ que dá o XP total de cada nível.
 model GrowthRate {
   id           Int    @id @default(autoincrement())
   /// CHECK ^[a-z0-9_]+$ (migration init)
@@ -97,7 +91,6 @@ model GrowthRate {
   @@schema("ecobeasts")
 }
 
-/// Raridades das espécies (comum… Ancestral), em ordem.
 model Rarity {
   id        Int    @id @default(autoincrement())
   /// CHECK ^[a-z0-9_]+$ (migration init)
@@ -126,7 +119,6 @@ model Biome {
   @@schema("ecobeasts")
 }
 
-/// Os nomes que um Domador NPC sorteado pode ter (npc-tamers/01).
 model NpcTamerName {
   id   Int    @id @default(autoincrement())
   /// CHECK 1–20 caracteres (migration npc_tamer_texts)
@@ -136,7 +128,6 @@ model NpcTamerName {
   @@schema("ecobeasts")
 }
 
-/// Os tipos de ação que o editor pinta nas ilhas (island-villages/01; era building_types).
 model ActionType {
   id       Int    @id @default(autoincrement())
   /// CHECK ^[a-z0-9_]+$ (migration islands)
@@ -153,7 +144,6 @@ model ActionType {
   @@schema("ecobeasts")
 }
 
-/// Os tipos de chão das ilhas: trilha ou piso (island-villages/01).
 model GroundType {
   id   Int    @id @default(autoincrement())
   /// CHECK ^[a-z0-9_]+$ (migration island_villages)
@@ -168,7 +158,6 @@ model GroundType {
   @@schema("ecobeasts")
 }
 
-/// Os tipos de objeto das ilhas, como casas e árvores grandes (island-villages/01).
 model MapObjectType {
   id       Int    @id @default(autoincrement())
   /// CHECK ^[a-z0-9_]+$ (migration island_villages)
@@ -184,7 +173,6 @@ model MapObjectType {
   @@schema("ecobeasts")
 }
 
-/// O formato de um tipo de objeto, a partir do hexágono de apoio (0, 0), com o bloqueio padrão.
 model MapObjectTypeTile {
   objectTypeId Int     @map("object_type_id")
   dq           Int
@@ -198,7 +186,6 @@ model MapObjectTypeTile {
   @@schema("ecobeasts")
 }
 
-/// As falas do desafio de um Domador NPC, sem o nome na frente (npc-tamers/01).
 model NpcTamerGreeting {
   id   Int    @id @default(autoincrement())
   /// CHECK 1–120 caracteres (migration npc_tamer_texts)
@@ -208,7 +195,6 @@ model NpcTamerGreeting {
   @@schema("ecobeasts")
 }
 
-/// Os 25 Temperamentos: um stat aumentado e um diminuído.
 model Temperament {
   id              Int    @id @default(autoincrement())
   /// CHECK ^[a-z0-9_]+$ (migration init)
@@ -227,7 +213,6 @@ model Temperament {
   @@schema("ecobeasts")
 }
 
-/// Categorias de Técnica: física, especial, status.
 model SkillCategory {
   id   Int    @id @default(autoincrement())
   /// CHECK ^[a-z0-9_]+$ (migration init)
@@ -240,7 +225,6 @@ model SkillCategory {
   @@schema("ecobeasts")
 }
 
-/// Alvos de Técnica e de efeito: um oponente, si mesmo, todos…
 model SkillTarget {
   id   Int    @id @default(autoincrement())
   /// CHECK ^[a-z0-9_]+$ (migration init)
@@ -254,7 +238,6 @@ model SkillTarget {
   @@schema("ecobeasts")
 }
 
-/// Forma da área de uma Técnica no tabuleiro: um alvo ou linha reta (board-battle/01).
 model AreaShape {
   id   Int    @id @default(autoincrement())
   /// CHECK ^[a-z0-9_]+$ (migration board_skill_areas)
@@ -267,7 +250,6 @@ model AreaShape {
   @@schema("ecobeasts")
 }
 
-/// Como uma espécie aprende uma Técnica: por nível, ao evoluir, ensinável.
 model SkillLearnMethod {
   id   Int    @id @default(autoincrement())
   /// CHECK ^[a-z0-9_]+$ (migration init)
@@ -280,7 +262,6 @@ model SkillLearnMethod {
   @@schema("ecobeasts")
 }
 
-/// Status (queimado, envenenado…); os voláteis acabam ao sair da batalha.
 model StatusCondition {
   id         Int     @id @default(autoincrement())
   /// CHECK ^[a-z0-9_]+$ (migration init)
@@ -297,7 +278,6 @@ model StatusCondition {
   @@schema("ecobeasts")
 }
 
-/// O que uma marca no chão do tabuleiro faz a quem está nela, depois de cada vez (board-battle/01).
 model GroundEffect {
   id                Int    @id @default(autoincrement())
   /// CHECK ^[a-z0-9_]+$ (migration board_skill_areas)
@@ -317,7 +297,6 @@ model GroundEffect {
   @@schema("ecobeasts")
 }
 
-/// Elementos imunes a um status (ex.: Fogo não fica queimado).
 model StatusConditionImmunity {
   statusConditionId Int @map("status_condition_id")
   elementId         Int @map("element_id")
@@ -331,7 +310,6 @@ model StatusConditionImmunity {
   @@schema("ecobeasts")
 }
 
-/// Tipos de efeito de Técnica; cada um usa certas colunas de skill_effects.
 model EffectType {
   id   Int    @id @default(autoincrement())
   /// CHECK ^[a-z0-9_]+$ (migration init)
@@ -344,7 +322,6 @@ model EffectType {
   @@schema("ecobeasts")
 }
 
-/// Gatilhos de Evolução: nível, item, Vínculo, horário, zona…
 model EvolutionTrigger {
   id   Int    @id @default(autoincrement())
   /// CHECK ^[a-z0-9_]+$ (migration init)
@@ -357,9 +334,6 @@ model EvolutionTrigger {
   @@schema("ecobeasts")
 }
 
-// ─── Espécies ────────────────────────────────────────────────────────────────
-
-/// As espécies do Bestiário; o id é o número no Bestiário.
 model Species {
   id                   Int    @id @default(autoincrement())
   /// CHECK ^[a-z0-9_]+$ (migration init)
@@ -403,7 +377,6 @@ model Species {
   @@schema("ecobeasts")
 }
 
-/// Elementos de cada espécie: slot 1 e, se houver, slot 2.
 model SpeciesElement {
   speciesId Int @map("species_id")
   /// CHECK IN (1, 2) (migration init)
@@ -419,7 +392,6 @@ model SpeciesElement {
   @@schema("ecobeasts")
 }
 
-/// Onde cada espécie nasce: sem linha para um bioma, ela não nasce nele.
 model SpeciesBiome {
   speciesId Int @map("species_id")
   biomeId   Int @map("biome_id")
@@ -435,7 +407,6 @@ model SpeciesBiome {
   @@schema("ecobeasts")
 }
 
-/// Stats base de cada espécie e o Treino que ela dá ao ser derrotada.
 model SpeciesStat {
   speciesId     Int @map("species_id")
   statId        Int @map("stat_id")
@@ -453,7 +424,6 @@ model SpeciesStat {
   @@schema("ecobeasts")
 }
 
-/// Traços (habilidades passivas).
 model Trait {
   id          Int    @id @default(autoincrement())
   /// CHECK ^[a-z0-9_]+$ (migration init)
@@ -468,7 +438,6 @@ model Trait {
   @@schema("ecobeasts")
 }
 
-/// Traços possíveis de cada espécie; o slot 3 é o oculto.
 model SpeciesTrait {
   speciesId Int     @map("species_id")
   traitId   Int     @map("trait_id")
@@ -485,7 +454,6 @@ model SpeciesTrait {
   @@schema("ecobeasts")
 }
 
-/// Regras de Evolução: de uma espécie para outra, com o gatilho e as condições.
 model Evolution {
   id                 Int     @id @default(autoincrement())
   speciesId          Int     @map("species_id")
@@ -513,7 +481,6 @@ model Evolution {
   @@schema("ecobeasts")
 }
 
-/// As espécies que o jogador pode escolher como inicial, em ordem.
 model StarterOption {
   speciesId Int @id @map("species_id")
   sortOrder Int @unique @map("sort_order")
@@ -524,9 +491,6 @@ model StarterOption {
   @@schema("ecobeasts")
 }
 
-// ─── Técnicas ────────────────────────────────────────────────────────────────
-
-/// As Técnicas (ataques e movimentos de status).
 model Skill {
   id              Int     @id @default(autoincrement())
   /// CHECK ^[a-z0-9_]+$ (migration init)
@@ -577,7 +541,6 @@ model Skill {
   @@schema("ecobeasts")
 }
 
-/// Efeitos de uma Técnica, em ordem; as colunas usadas dependem do tipo de efeito.
 model SkillEffect {
   id                Int  @id @default(autoincrement())
   skillId           Int  @map("skill_id")
@@ -615,7 +578,6 @@ model SkillEffect {
   @@schema("ecobeasts")
 }
 
-/// O que cada espécie aprende: Técnica, método e nível (nulo para ensináveis).
 model SpeciesSkill {
   speciesId          Int  @map("species_id")
   skillId            Int  @map("skill_id")
@@ -634,9 +596,6 @@ model SpeciesSkill {
   @@schema("ecobeasts")
 }
 
-// ─── Itens ───────────────────────────────────────────────────────────────────
-
-/// As categorias de item, que viram as abas da Loja.
 model ItemCategory {
   id        Int    @id @default(autoincrement())
   /// CHECK ^[a-z0-9_]+$ (migration items)
@@ -650,7 +609,6 @@ model ItemCategory {
   @@schema("ecobeasts")
 }
 
-/// Os itens que o jogo vende (.specs/inventory-shop/architecture.md).
 model Item {
   id             Int     @id @default(autoincrement())
   /// CHECK ^[a-z0-9_]+$ (migration items)
@@ -675,11 +633,6 @@ model Item {
   @@schema("ecobeasts")
 }
 
-// ─── Jogador ─────────────────────────────────────────────────────────────────
-// O cliente nunca lê estas tabelas: recebe o jogador pronto, no formato do
-// contrato em .specs/onboarding/architecture.md.
-
-/// Gênero de uma criatura.
 enum Gender {
   male
   female
@@ -689,7 +642,6 @@ enum Gender {
   @@schema("ecobeasts")
 }
 
-/// Onde uma criatura está: na equipe ou no Santuário.
 enum CreatureLocation {
   party
   storage
@@ -698,7 +650,6 @@ enum CreatureLocation {
   @@schema("ecobeasts")
 }
 
-/// O Domador.
 model Player {
   id        String   @id @default(uuid()) @db.Uuid
   name      String
@@ -716,7 +667,6 @@ model Player {
   @@schema("ecobeasts")
 }
 
-/// Um Ecobeast de um Domador.
 model CreatureInstance {
   uid               String           @id @default(uuid()) @db.Uuid
   playerId          String           @map("player_id") @db.Uuid
@@ -764,7 +714,6 @@ model CreatureInstance {
   @@schema("ecobeasts")
 }
 
-/// Genes e Treino de uma criatura em cada stat.
 model CreatureInstanceStat {
   creatureUid    String @map("creature_uid") @db.Uuid
   statId         Int    @map("stat_id")
@@ -782,7 +731,6 @@ model CreatureInstanceStat {
   @@schema("ecobeasts")
 }
 
-/// As até 4 Técnicas de uma criatura e o PP atual de cada uma.
 model CreatureInstanceSkill {
   creatureUid String @map("creature_uid") @db.Uuid
   /// CHECK 1–4 (migration init)
@@ -800,7 +748,6 @@ model CreatureInstanceSkill {
   @@schema("ecobeasts")
 }
 
-/// Itens da Mochila. A linha só existe com pelo menos uma unidade.
 model InventoryItem {
   playerId String @map("player_id") @db.Uuid
   itemId   Int    @map("item_id")
@@ -816,7 +763,6 @@ model InventoryItem {
   @@schema("ecobeasts")
 }
 
-/// O Bestiário: uma linha por espécie que o Domador já viu numa luta (.specs/codex/architecture.md).
 model CodexEntry {
   playerId  String    @map("player_id") @db.Uuid
   speciesId Int       @map("species_id")
@@ -833,11 +779,9 @@ model CodexEntry {
   @@schema("ecobeasts")
 }
 
-/// Uma ilha feita no editor (.specs/map-editor/architecture.md, "Tabelas").
 model Island {
   id          Int       @id @default(autoincrement())
   createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
-  /// A última publicação; nula se a ilha nunca foi publicada.
   publishedAt DateTime? @map("published_at") @db.Timestamptz(3)
 
   maps IslandMap[]
@@ -846,7 +790,6 @@ model Island {
   @@schema("ecobeasts")
 }
 
-/// Uma versão de uma ilha: o rascunho (`draft`) ou a publicada (`published`).
 model IslandMap {
   id          Int      @id @default(autoincrement())
   islandId    Int      @map("island_id")
@@ -856,7 +799,6 @@ model IslandMap {
   name        String
   startQ      Int      @map("start_q")
   startR      Int      @map("start_r")
-  /// sha-256 desta versão em JSON canônico: compara o rascunho com a publicada.
   contentHash String   @map("content_hash")
   updatedAt   DateTime @map("updated_at") @db.Timestamptz(3)
 
@@ -873,7 +815,6 @@ model IslandMap {
   @@schema("ecobeasts")
 }
 
-/// Um hexágono de uma versão de ilha.
 model IslandTile {
   islandMapId  Int  @map("island_map_id")
   q            Int
@@ -900,7 +841,6 @@ model IslandTile {
   @@schema("ecobeasts")
 }
 
-/// Uma ação de uma versão de ilha; os hexágonos dela ficam em `island_action_tiles` (era island_buildings).
 model IslandAction {
   id           Int @id @default(autoincrement())
   islandMapId  Int @map("island_map_id")
@@ -932,7 +872,6 @@ model IslandActionTile {
   @@schema("ecobeasts")
 }
 
-/// Um objeto posto numa versão de ilha; (q, r) é o hexágono de apoio.
 model IslandObject {
   id           Int     @id @default(autoincrement())
   islandMapId  Int     @map("island_map_id")
@@ -970,7 +909,6 @@ model IslandObjectTile {
   @@schema("ecobeasts")
 }
 
-/// Uma área de Ecobeasts de uma versão de ilha: os hexágonos dela dizem onde, a lista diz quem.
 model IslandArea {
   id          Int    @id @default(autoincrement())
   islandMapId Int    @map("island_map_id")
@@ -990,7 +928,6 @@ model IslandArea {
   @@schema("ecobeasts")
 }
 
-/// Uma espécie de uma área, com o peso no sorteio e o nível fixo.
 model IslandAreaSpecies {
   areaId    Int @map("area_id")
   speciesId Int @map("species_id")
@@ -1010,7 +947,6 @@ model IslandAreaSpecies {
   @@schema("ecobeasts")
 }
 
-/// Andamento de um login pelo navegador (.specs/auth-google/architecture.md).
 enum LoginStatus {
   pending
   complete
@@ -1020,16 +956,11 @@ enum LoginStatus {
   @@schema("ecobeasts")
 }
 
-/// Um login com Google em andamento. Vale 10 minutos; a linha é apagada quando
-/// o jogo busca a sessão.
 model AuthLoginSession {
   id             String      @id @default(uuid()) @db.Uuid
-  /// SHA-256 (base64url) do segredo que o jogo usa para perguntar.
   pollSecretHash String      @map("poll_secret_hash")
-  /// Verificador do PKCE; o desafio (SHA-256 dele) vai para o Supabase.
   codeVerifier   String      @map("code_verifier")
   status         LoginStatus @default(pending)
-  /// A ida (GET /auth/google/go) já foi usada.
   opened         Boolean     @default(false)
   accessToken    String?     @map("access_token")
   refreshToken   String?     @map("refresh_token")

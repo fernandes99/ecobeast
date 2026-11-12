@@ -11,7 +11,6 @@ import { AuthGuard } from '../auth/auth.guard.js';
 import { PlayerIslandsResponseDto } from './islands.dto.js';
 import { IslandsService } from './islands.service.js';
 
-/** As ilhas do jogador (.specs/islands/02-island-exploration.md). */
 @ApiTags('Ilhas')
 @ApiBearerAuth()
 @ApiUnauthorizedResponse({

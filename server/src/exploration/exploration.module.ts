@@ -5,7 +5,6 @@ import { ExplorationController } from './exploration.controller.js';
 import { ExplorationService } from './exploration.service.js';
 import { ExplorationStore } from './exploration.store.js';
 
-/** O mapa de exploração do usuário logado. */
 @Module({
   imports: [AuthModule, IslandsModule],
   controllers: [ExplorationController],

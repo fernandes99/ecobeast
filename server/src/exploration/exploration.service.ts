@@ -47,7 +47,6 @@ import {
 export const NO_PLAYER = 'Crie seu Domador primeiro.';
 const SEED_RANGE = 2 ** 32;
 
-/** O Domador como o mapa o mostra: sem a equipe nem o tamanho da luta. */
 function toMapTamerDto({
   id,
   q,
@@ -58,15 +57,10 @@ function toMapTamerDto({
   return { id, q, r, name_id: nameId, greeting_id: greetingId };
 }
 
-/** O Ecobeast como o mapa o mostra: sem o nível, que só aparece na luta. */
 function toMapCreatureDto({ id, speciesId, q, r }: MapSpawn): MapCreatureDto {
   return { id, species_id: speciesId, q, r };
 }
 
-/**
- * Gera um mapa por exploração, com os Ecobeasts (biome-encounters/03) e os
- * Domadores NPC dele (npc-tamers/03).
- */
 @Injectable()
 export class ExplorationService {
   constructor(
@@ -76,7 +70,6 @@ export class ExplorationService {
     private readonly islands: IslandsService,
   ) {}
 
-  /** Sem ilha, o mapa sorteado; com ela, a versão publicada (islands/02). */
   async start(
     userId: string,
     islandId?: number,
@@ -117,11 +110,6 @@ export class ExplorationService {
     };
   }
 
-  /**
-   * A versão publicada da ilha, com os Ecobeasts sorteados pelas áreas e sem
-   * Domadores NPC. A exploração fica guardada como a sorteada: Procurar, a luta
-   * e a captura não mudam.
-   */
   private async startIsland(
     userId: string,
     islandId: number,
@@ -243,7 +231,6 @@ export class ExplorationService {
     return { tamer: toMapTamerDto(tamer) };
   }
 
-  /** Tira da exploração todos os Ecobeasts e Domadores da depuração, e só eles. */
   debugClear(userId: string): DebugClearResponseDto {
     this.requireTestRoutes();
     const exploration = this.store.get(userId);
@@ -265,7 +252,6 @@ export class ExplorationService {
     }
   }
 
-  /** A média de nível da equipe principal, arredondada, de 1 a 100. */
   private async teamAverageLevel(userId: string): Promise<number> {
     const average = await partyAverageLevel(this.prisma, userId);
     if (average === null) return 1;

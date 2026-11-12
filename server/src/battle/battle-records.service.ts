@@ -59,7 +59,6 @@ import type { WildCreature } from './battle.store.js';
 
 const NO_PLAYER = 'Crie seu Domador primeiro.';
 const NO_HEALTHY_CREATURE = 'Cure sua equipe no Refúgio.';
-/** Um passo no cliente leva 360 ms; a diferença é a folga para o relógio. */
 const MIN_STEP_MS = 300;
 
 export interface Team {
@@ -77,21 +76,17 @@ export interface Enemy extends WildCreature {
   combatant: Combatant;
 }
 
-/** O que o fim da luta gravou, já no formato da resposta. */
 export interface BattleFinish {
   capturedTo: CapturedTo | null;
   progression: CreatureProgressDto[];
-  /** As espécies que ficaram capturadas pela primeira vez no Bestiário. */
   registeredSpeciesIds: number[];
 }
 
-/** Quem ganhou XP na luta, já com o nível, o XP e o HP que vão para o banco. */
 interface ProgressedCreature {
   uid: string;
   teamIndex: number;
   xpGained: number;
   progress: CreatureProgress;
-  /** Só em quem subiu de nível. */
   plan: VictoryPlan | null;
 }
 
@@ -126,7 +121,6 @@ function isAt({ q, r }: HexCoord, position: HexCoord): boolean {
   return q === position.q && r === position.r;
 }
 
-/** O inimigo como o fim da luta o deixou. */
 function capturedCreature(wild: WildCreature, enemy: Combatant): NewCreature {
   const { creature } = wild;
   return {
@@ -139,11 +133,6 @@ function capturedCreature(wild: WildCreature, enemy: Combatant): NewCreature {
   };
 }
 
-/**
- * O que as duas lutas, a de hoje e a do tabuleiro, leem e gravam no banco: a
- * equipe, o inimigo, o encontro do hexágono e o fim. A luta em si fica na
- * memória, e o banco só muda no fim dela.
- */
 @Injectable()
 export class BattleRecordsService {
   constructor(
@@ -227,7 +216,6 @@ export class BattleRecordsService {
     return spawn;
   }
 
-  /** Tira do mapa o Domador do hexágono do jogador, como o `takeSpawn` (npc-tamers/03). */
   takeTamer(userId: string, position: HexCoord): MapTamer {
     const exploration = this.confirmPosition(userId, position);
     const tamer = [...exploration.tamers.values()].find((candidate) =>
@@ -238,15 +226,10 @@ export class BattleRecordsService {
     return tamer;
   }
 
-  /** A derrota contra um Domador do mapa leva ao Hub: o mapa não volta (npc-tamers/03). */
   endExploration(userId: string): void {
     this.explorations.delete(userId);
   }
 
-  /**
-   * Aceita a posição se o Domador podia ter andado até ela desde a última
-   * confirmação, e a grava (biome-encounters/architecture.md, "Conferir a posição").
-   */
   private confirmPosition(
     userId: string,
     position: HexCoord,
@@ -267,10 +250,6 @@ export class BattleRecordsService {
     return exploration;
   }
 
-  /**
-   * Grava o fim da luta: XP, nível, Técnicas, HP, PP, status, itens, moedas e
-   * os capturados. Na vitória, guarda as escolhas de Técnica e de Evolução.
-   */
   async finish(
     userId: string,
     state: BattleState,
@@ -296,11 +275,6 @@ export class BattleRecordsService {
     };
   }
 
-  /**
-   * O nível, o XP, os stats e o HP de quem ganhou XP, a partir do que está no
-   * banco, e as Técnicas e a evolução de quem subiu de nível. Só a vitória dá
-   * XP; nos outros fins, as listas são vazias.
-   */
   private async progressTeam(
     userId: string,
     state: BattleState,
@@ -359,12 +333,6 @@ export class BattleRecordsService {
     return { progressed, leveled };
   }
 
-  /**
-   * Grava HP, status, PP, XP, nível, itens gastos, moedas e o capturado de uma vez. Com `updateMany`,
-   * um Domador apagado no meio da luta não encontra nada, e a batalha termina
-   * sem erro. Devolve para onde foi o último capturado e as espécies que ele
-   * registrou no Bestiário.
-   */
   private async saveTeam(
     userId: string,
     state: BattleState,
@@ -441,8 +409,6 @@ export class BattleRecordsService {
             }),
           ];
         }),
-      // Quem gastou moedas em outra tela durante a luta e ficou com menos do
-      // que a derrota tira não perde nada: as moedas nunca ficam negativas.
       ...(state.coinsChange !== 0
         ? [
             this.prisma.player.updateMany({
@@ -483,11 +449,6 @@ export class BattleRecordsService {
     };
   }
 
-  /**
-   * A vaga de cada capturado, em ordem: a equipe enquanto houver lugar, e
-   * depois o Santuário. Todo Domador tem equipe: sem ela, ele foi apagado, e
-   * ninguém é gravado.
-   */
   private async capturePlaces(
     userId: string,
     count: number,

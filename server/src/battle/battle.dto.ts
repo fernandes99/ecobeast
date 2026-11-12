@@ -23,7 +23,6 @@ export const NOTHING_HERE = 'Nada por aqui.';
 export const NO_TAMER_HERE = 'Nenhum Domador por aqui.';
 export const TAMER_WAITING = 'Um Domador está esperando você aqui.';
 export const NO_CHALLENGER = 'Nenhum Domador quer lutar agora.';
-/** No máximo, a equipe inteira de um Domador. */
 export const MAX_TEST_ENEMIES = 6;
 
 export type { CapturedTo };
@@ -218,7 +217,6 @@ export class EvolutionOfferDto {
   species_id: number;
 }
 
-/** .specs/progression/architecture.md, "Contrato". */
 export class CreatureProgressDto {
   @ApiProperty({ example: '7f9c2a1e-…' })
   uid: string;

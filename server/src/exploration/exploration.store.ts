@@ -4,13 +4,9 @@ import type { MapTamer } from '../domain/tamers/tamers.js';
 
 const MAX_IDLE_MS = 2 * 60 * 60 * 1000;
 
-/** O que o servidor lembra de uma exploração. Os hexágonos não ficam guardados. */
 export interface StoredExploration {
-  /** Por id. Um Ecobeast sai daqui quando a luta contra ele começa. */
   spawns: Map<number, MapSpawn>;
-  /** Os Domadores NPC, por id. Um sai daqui quando a luta contra ele começa. */
   tamers: Map<number, MapTamer>;
-  /** A última posição confirmada, e quando. */
   position: HexCoord;
   positionAt: number;
 }
@@ -20,10 +16,6 @@ interface Entry {
   lastUsedAt: number;
 }
 
-/**
- * Uma exploração por jogador, na memória deste processo: reiniciar o servidor as
- * perde, e o jogador só precisa entrar de novo. Sai depois de 2 horas sem uso.
- */
 export class ExplorationStore {
   private readonly entries = new Map<string, Entry>();
 
@@ -39,7 +31,6 @@ export class ExplorationStore {
     this.entries.set(userId, { exploration, lastUsedAt: this.now() });
   }
 
-  /** A derrota contra um Domador do mapa encerra a exploração (npc-tamers/03). */
   delete(userId: string): void {
     this.entries.delete(userId);
   }

@@ -16,9 +16,6 @@ import {
   resourceController,
 } from '../resource-controller.js';
 
-// Recursos de referência (.specs/backend-api/05-catalog-api.md, RF-02):
-// temperamentos, stats, curvas de XP, raridades, status e os que só têm nome.
-
 export class TemperamentDetailDto extends NamedResourceDto {
   @ApiProperty({
     example: { id: 2, slug: 'atk', name: 'Ataque', url: '/v1/stats/2' },
@@ -196,7 +193,6 @@ export const StatusConditionsController = resourceController<
   }),
 });
 
-/** Recursos que só têm id, slug e nome. */
 const namedResource = (
   path: string,
   model: string,

@@ -1,6 +1,3 @@
-// Recalcula o content_hash de cada versão de ilha pelo formato atual do
-// rascunho (.specs/terrain-height/01, RF-06b). Pode rodar de novo sem mudar nada.
-// Rodar com: npx tsx prisma/recompute-island-hashes.ts
 import 'dotenv/config';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../src/generated/prisma/client.js';

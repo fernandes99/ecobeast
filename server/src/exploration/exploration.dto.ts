@@ -73,7 +73,6 @@ export class MapTamerDto extends HexCoordDto {
   greeting_id: number;
 }
 
-/** A ilha do mapa (islands/02). */
 export class MapIslandDto {
   @ApiProperty({ example: 7 })
   id: number;
@@ -85,7 +84,6 @@ export class MapIslandDto {
   name: string;
 }
 
-/** Uma ação da ilha: o tipo do catálogo e os hexágonos dela (island-villages/01). */
 export class MapActionDto {
   @ApiProperty({ description: 'Id em `action_types`.', example: 1 })
   action_type_id: number;
@@ -102,7 +100,6 @@ export class MapObjectTileDto extends HexCoordDto {
   blocks: boolean;
 }
 
-/** Um objeto da ilha, como uma casa ou uma árvore grande (island-villages/01). */
 export class MapObjectDto extends HexCoordDto {
   @ApiProperty({ description: 'Id em `map_object_types`.', example: 1 })
   object_type_id: number;
@@ -167,7 +164,6 @@ export class ExplorationMapDto {
   objects: MapObjectDto[];
 }
 
-/** O corpo de começar uma exploração (islands/02): sem ilha, o mapa sorteado. */
 export class StartExplorationBodyDto {
   @ApiPropertyOptional({
     description:
@@ -195,7 +191,6 @@ export class ExplorationResponseDto {
   map: ExplorationMapDto;
 }
 
-/** O spawn de depuração (.specs/biome-encounters/05-debug-spawn-battle.md). */
 export class DebugSpawnBodyDto {
   @ApiProperty({ description: 'Id da espécie.', example: 2 })
   @IsInt({ message: INVALID_ENEMY })
@@ -259,7 +254,6 @@ export class DebugClearResponseDto {
   removed_tamer_ids: number[];
 }
 
-/** O Domador de depuração (.specs/npc-tamers/03-tamer-api.md, RF-10). */
 export class DebugTamerBodyDto {
   @ApiProperty({
     description: 'Coluna do hexágono, em coordenadas axiais.',
@@ -293,7 +287,6 @@ export class DebugTamerResponseDto {
   tamer: MapTamerDto;
 }
 
-/** Um objeto do rascunho no formato da resposta, para o editor e para o jogador. */
 export function toObjectDto(object: DraftObject): MapObjectDto {
   return {
     object_type_id: object.objectTypeId,

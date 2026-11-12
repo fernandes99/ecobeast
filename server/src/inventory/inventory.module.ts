@@ -5,7 +5,6 @@ import { PlayerModule } from '../player/player.module.js';
 import { InventoryController } from './inventory.controller.js';
 import { InventoryService } from './inventory.service.js';
 
-/** A Loja e a Mochila do usuário logado. */
 @Module({
   imports: [AuthModule, BattleModule, PlayerModule],
   controllers: [InventoryController],

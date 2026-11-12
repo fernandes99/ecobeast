@@ -13,9 +13,6 @@ import type {
   TurnContext,
 } from './types.js';
 
-/** Ajudantes dos testes da batalha; o código do jogo não usa este arquivo. */
-
-/** Um Ruvo nível 5, sem Genes nem Temperamento, com HP cheio. */
 export function makeCombatant(overrides: Partial<Combatant> = {}): Combatant {
   return {
     creatureUid: 'c1',
@@ -45,7 +42,6 @@ export const WATER = 2;
 export const FLORA = 3;
 export const INSTINCT = 13;
 
-/** Arranhão: físico, Poder 40, Instinto. */
 export function makeSkill(overrides: Partial<BattleSkill> = {}): BattleSkill {
   return {
     id: 1,
@@ -85,7 +81,6 @@ export function makeEffect(
 
 type TestItem = UsableItem & { captureBonus?: number };
 
-/** `multipliers`: "atacante:defensor" → multiplicador. */
 export function makeCatalog(
   multipliers: Record<string, number> = {},
   skills: BattleSkill[] = [],
@@ -113,7 +108,6 @@ export function makeCatalog(
   };
 }
 
-/** Devolve os valores na ordem dada e falha se faltar sorteio. */
 export function sequence(...values: number[]): Random {
   const queue = [...values];
   return () => {
@@ -123,7 +117,6 @@ export function sequence(...values: number[]): Random {
   };
 }
 
-/** Sempre o mesmo valor: com 0 toda chance vale, e com 0,9 quase nenhuma. */
 export function always(value: number): Random {
   return () => value;
 }
@@ -139,7 +132,6 @@ export function contextOf(
   return { state: structuredClone(state), catalog, random, events: [] };
 }
 
-/** O autor usa a Técnica no adversário, numa cópia do estado, sem a luta em volta. */
 export function cast(
   state: BattleState,
   skill: BattleSkill,
@@ -163,11 +155,6 @@ export function eventsOf<Type extends BattleEvent['type']>(
   );
 }
 
-/**
- * Uma batalha em andamento, com as primeiras criaturas de cada lado em campo,
- * uma por vaga. Cada inimigo em campo sem `foughtBy` começa com quem está em
- * campo do outro lado.
- */
 export function makeState(
   player: Combatant | Combatant[],
   enemy: Combatant | Combatant[],

@@ -13,14 +13,12 @@ const BURN_PHYSICAL = 0.5;
 const FURY = 1.5;
 const MIN_RANDOM_FACTOR = 0.85;
 
-/** Traços que aumentam um Elemento com o HP em 1/3 ou menos. */
 const FURY_ELEMENTS: Record<string, string> = {
   blazing_fury: 'fire',
   tidal_fury: 'water',
   rooted_fury: 'flora',
 };
 
-/** O Aleatório da fórmula: de 0,85 a 1. */
 export function rollDamageFactor(random: Random): number {
   return MIN_RANDOM_FACTOR + random() * (1 - MIN_RANDOM_FACTOR);
 }
@@ -31,11 +29,9 @@ export interface DamageInput {
   skill: BattleSkill;
   catalog: BattleCatalog;
   isCritical: boolean;
-  /** De 0,85 a 1. */
   randomFactor: number;
 }
 
-/** O produto dos multiplicadores; sem Elemento, ou par sem linha, vale 1. */
 export function typeMultiplier(
   skillElementId: number | null,
   defenderElementIds: number[],
@@ -49,7 +45,6 @@ export function typeMultiplier(
   );
 }
 
-/** A fórmula de dano do GDD; com Tipo 0, o dano é 0. */
 export function calculateDamage(input: DamageInput): number {
   const { attacker, defender, skill, catalog, isCritical, randomFactor } =
     input;

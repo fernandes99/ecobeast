@@ -5,7 +5,6 @@ import {
   LearnsetEntry,
 } from './creature-factory.js';
 
-/** Devolve os valores na ordem; acabar a sequência é erro do teste. */
 function sequence(...values: number[]): () => number {
   const queue = [...values];
   return () => {

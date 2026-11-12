@@ -42,7 +42,6 @@ type Where = {
   expiresAt?: { lt?: Date; gt?: Date };
 };
 
-/** O pedaço do Prisma que o serviço usa, em memória. */
 function fakePrisma() {
   const rows = new Map<string, Row>();
   let counter = 0;

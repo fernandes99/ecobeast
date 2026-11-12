@@ -1,10 +1,8 @@
-/** Posição na grade hexagonal, em coordenadas axiais. */
 export interface HexCoord {
   q: number;
   r: number;
 }
 
-/** As 6 direções, a partir de um hexágono. */
 export const HEX_DIRECTIONS: readonly HexCoord[] = [
   { q: 1, r: 0 },
   { q: -1, r: 0 },
@@ -25,7 +23,6 @@ export function hexNeighbors({ q, r }: HexCoord): HexCoord[] {
   }));
 }
 
-/** Quantos passos pela grade separam duas posições. */
 export function hexDistance(a: HexCoord, b: HexCoord): number {
   const dq = a.q - b.q;
   const dr = a.r - b.r;

@@ -5,17 +5,11 @@ import { uniqueIds } from '../domain/codex/codex.js';
 import type { Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 
-/** Uma espécie que o jogador conhece. */
 export interface CodexEntryView {
   speciesId: number;
   caught: boolean;
 }
 
-/**
- * O Bestiário de cada jogador (.specs/codex/architecture.md): as espécies que
- * ele viu numa luta e as que capturou. As datas nunca voltam: ver ou capturar
- * de novo não muda nada.
- */
 @Injectable()
 export class CodexService {
   constructor(
@@ -23,7 +17,6 @@ export class CodexService {
     private readonly config: ConfigService<Env, true>,
   ) {}
 
-  /** As espécies conhecidas, na ordem do número. */
   async list(userId: string): Promise<CodexEntryView[]> {
     const rows = await this.prisma.codexEntry.findMany({
       where: { playerId: userId },
@@ -36,13 +29,11 @@ export class CodexService {
     }));
   }
 
-  /** Cria a linha de quem ainda não tem; quem já tem não muda. */
   async recordSeen(userId: string, speciesIds: number[]): Promise<void> {
     if (speciesIds.length === 0) return;
     await this.seenWrite(userId, speciesIds);
   }
 
-  /** A escrita do visto, para entrar no `$transaction([...])` de quem chama. */
   seenWrite(
     userId: string,
     speciesIds: number[],
@@ -79,7 +70,6 @@ export class CodexService {
       RETURNING "species_id"`;
   }
 
-  /** As espécies da escrita do capturado, na ordem pedida e sem repetir. */
   newlyCaught(
     speciesIds: number[],
     written: { species_id: number }[],
@@ -88,7 +78,6 @@ export class CodexService {
     return uniqueIds(speciesIds).filter((id) => fresh.has(id));
   }
 
-  /** Grava o capturado sozinho e devolve as espécies capturadas agora. */
   async recordCaught(userId: string, speciesIds: number[]): Promise<number[]> {
     if (speciesIds.length === 0) return [];
     return this.newlyCaught(
@@ -97,7 +86,6 @@ export class CodexService {
     );
   }
 
-  /** Só para testar o aviso de registro: apaga o Bestiário do jogador. */
   async clear(userId: string): Promise<void> {
     if (!this.config.get('ENABLE_TEST_BATTLE', { infer: true })) {
       throw new NotFoundException('Rota não encontrada.');

@@ -131,7 +131,6 @@ describe('Bestiário (e2e)', () => {
   const entryOf = (entries: Entry[], speciesId: number) =>
     entries.find((entry) => entry.species_id === speciesId);
 
-  /** Uma luta de teste contra um Ecobeast de nível 1, capturado de primeira. */
   async function capture(user: User, speciesId: number): Promise<Body> {
     await prisma.inventoryItem.upsert({
       where: { playerId_itemId: { playerId: user.id, itemId: sphere.id } },
@@ -230,7 +229,6 @@ describe('Bestiário (e2e)', () => {
   });
 
   describe('Evolução', () => {
-    /** Ruvo a 1 XP do nível 16, que vence um Ruvo de nível 1 e ganha a oferta. */
     async function offered(): Promise<{ user: User; uid: string }> {
       const user = await userWithStarter({
         level: 15,

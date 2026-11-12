@@ -75,7 +75,6 @@ describe('Rota de cura (e2e)', () => {
     return user;
   }
 
-  /** Uma cópia do inicial, na equipe ou no Santuário. */
   async function addCreature(
     user: User,
     place: Pick<
@@ -119,7 +118,6 @@ describe('Rota de cura (e2e)', () => {
     });
   }
 
-  /** Todas as criaturas do jogador com 1 de HP, com status e sem PP. */
   async function hurtAll(user: User): Promise<void> {
     await prisma.creatureInstance.updateMany({
       where: { playerId: user.id },

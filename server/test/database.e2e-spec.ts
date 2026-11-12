@@ -367,7 +367,6 @@ describe('restrições do banco (e2e)', () => {
   });
 
   describe('ilhas do editor (map-editor/01)', () => {
-    /** Uma ilha com o rascunho vazio, só para pendurar linhas nele. */
     async function draftMap(tx: Tx) {
       const island = await tx.island.create({ data: {} });
       return tx.islandMap.create({

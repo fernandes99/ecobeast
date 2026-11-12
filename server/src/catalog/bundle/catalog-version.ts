@@ -1,6 +1,5 @@
 import { createHash } from 'node:crypto';
 
-/** As tabelas do catálogo como o jogo recebe: nome → linhas em snake_case. */
 export type CatalogTables = Record<string, Record<string, unknown>[]>;
 
 /**

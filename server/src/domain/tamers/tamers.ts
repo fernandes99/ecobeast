@@ -19,11 +19,9 @@ import {
   type TamerSize,
 } from './tamer-config.js';
 
-/** Nenhum Domador nasce na água. */
 const WATER: ReadonlySet<Biome> = new Set(['wshallow', 'wdeep']);
 const SIZES: readonly TamerSize[] = [1, 2, 3];
 
-/** Os ids do catálogo que um Domador pode receber (npc_tamer_names e npc_tamer_greetings). */
 export interface TamerTexts {
   nameIds: number[];
   greetingIds: number[];
@@ -39,18 +37,14 @@ export interface TamerCreature {
  * A equipe nasce junto, para o Domador não mudar entre o mapa e a luta.
  */
 export interface RolledTamer {
-  /** Único na exploração; 0 no Desafiar. */
   id: number;
   nameId: number;
   greetingId: number;
-  /** O tamanho da luta, e o da equipe dele. */
   size: TamerSize;
   team: TamerCreature[];
 }
 
-/** Um Domador no mapa. */
 export interface MapTamer extends RolledTamer, HexCoord {
-  /** Posto pelo botão de depuração, e não pelo sorteio. */
   debug?: boolean;
 }
 
@@ -64,7 +58,6 @@ interface WeightedSpecies {
   weight: number;
 }
 
-/** As espécies que podem estar na equipe, com o peso de cada uma; só as com peso. */
 function candidates(
   species: SpawnSpecies[],
   weightOf: (entry: SpawnSpecies) => number,
@@ -117,12 +110,6 @@ function rollTamer(
   };
 }
 
-/**
- * Os Domadores de um mapa já gerado (.specs/npc-tamers/architecture.md, "No
- * mapa"): em terra, longe da largada, um por hexágono, com a equipe sorteada
- * pelas taxas do bioma de encontro do hexágono. Sem hexágono livre, o mapa fica
- * com menos.
- */
 export function rollMapTamers(
   tiles: MapTile[],
   start: HexCoord,
@@ -184,15 +171,9 @@ export function rollMapTamers(
 }
 
 export interface ChallengerOptions extends TamerRollOptions {
-  /** Um tamanho fixo, no lugar do sorteio (o Domador da depuração). */
   size?: TamerSize;
 }
 
-/**
- * O desafiante do Hub (.specs/npc-tamers/architecture.md, "No Desafiar"): o
- * peso de cada espécie é a soma dos pesos nos 7 biomas de encontro. Sem
- * espécie com peso ou sem textos, não há desafiante.
- */
 export function rollChallenger(
   species: SpawnSpecies[],
   teamAverage: number,

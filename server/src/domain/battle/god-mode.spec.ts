@@ -21,7 +21,6 @@ function fighter(overrides: Partial<Combatant> = {}): Combatant {
   });
 }
 
-/** Um inimigo que aguenta muitos golpes normais. */
 function tank(): Combatant {
   return fighter({
     creatureUid: null,

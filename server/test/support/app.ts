@@ -10,20 +10,12 @@ import { Env, validateEnv } from '../../src/config/env.js';
 import { PrismaService } from '../../src/prisma/prisma.service.js';
 
 export interface TestAppOptions {
-  /** Troca o PrismaService (ex.: um banco que falha). */
   prisma?: Partial<PrismaService>;
-  /** Sobrescreve variáveis do config (ex.: THROTTLE_LIMIT baixo). */
   env?: Partial<Env>;
-  /** Troca o cliente do Supabase Auth (os e2e nunca falam com o de verdade). */
   supabaseAuth?: Partial<SupabaseAuthClient>;
-  /** Troca o verificador de tokens (ex.: o de test/support/tokens.ts). */
   tokenVerifier?: TokenVerifier;
 }
 
-/**
- * Sobe a aplicação como o main.ts (prefixo e docs). Os e2e rodam com
- * THROTTLE_LIMIT alto (vitest.config.e2e.ts), menos o teste do próprio limite.
- */
 export async function createTestApp(
   options: TestAppOptions = {},
 ): Promise<INestApplication<App>> {

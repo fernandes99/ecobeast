@@ -19,7 +19,6 @@ export interface ItemEffect {
   curesStatus: boolean;
 }
 
-/** O que um item faz em um alvo, no mapa ou na luta. Não muda nada. */
 export function resolveItem(
   item: UsableItem,
   target: ItemTarget,

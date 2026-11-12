@@ -7,18 +7,12 @@ import {
 import type { Request } from 'express';
 import { TokenVerifier } from './token-verifier.js';
 
-/** Requisição que passou pelo AuthGuard. */
 export interface AuthenticatedRequest extends Request {
   userId: string;
 }
 
 const BEARER = /^Bearer (\S+)$/;
 
-/**
- * Exige `Authorization: Bearer <access_token>` válido
- * (.specs/auth-google/01-auth-server.md, RF-16) e põe o id do usuário na
- * requisição, lido pelo @CurrentUser().
- */
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(private readonly verifier: TokenVerifier) {}

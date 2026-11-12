@@ -36,7 +36,6 @@ export const EVOLVE_FIRST = 'Escolha primeiro se ele vai evoluir.';
 
 const SLOTS = [1, 2, 3, 4];
 
-/** Quem subiu de nível na vitória, como está no banco antes de gravar o fim. */
 export interface LeveledCreature {
   uid: string;
   speciesId: number;
@@ -51,7 +50,6 @@ export interface LearnedSkill {
   currentPp: number;
 }
 
-/** O que a vitória faz com as Técnicas e a evolução de um Ecobeast. */
 export interface VictoryPlan {
   evolutionSpeciesId: number | null;
   learned: LearnedSkill[];
@@ -69,7 +67,6 @@ interface Learning {
   evolutions: EvolutionRule[];
 }
 
-/** As primeiras vagas livres, de 1 a 4, para as Técnicas aprendidas. */
 function fillSlots(
   usedSlots: number[],
   skillIds: number[],
@@ -83,10 +80,6 @@ function fillSlots(
   }));
 }
 
-/**
- * Técnicas novas e evolução depois da vitória, e as escolhas do jogador
- * (.specs/progression/architecture.md).
- */
 @Injectable()
 export class ProgressionService {
   constructor(
@@ -95,10 +88,6 @@ export class ProgressionService {
     private readonly codex: CodexService,
   ) {}
 
-  /**
-   * A oferta de evolução de cada um e, sem oferta, as Técnicas aprendidas e as
-   * pendentes. Não grava nada: o `BattleService` grava junto com o fim da luta.
-   */
   async planVictory(
     creatures: LeveledCreature[],
   ): Promise<Map<string, VictoryPlan>> {
@@ -140,7 +129,6 @@ export class ProgressionService {
     return plans;
   }
 
-  /** Substitui as escolhas pendentes do jogador pelas desta vitória. */
   remember(
     userId: string,
     creatures: LeveledCreature[],
@@ -275,7 +263,6 @@ export class ProgressionService {
     const evolved = accept
       ? await this.evolvedData(row, targetId, learning)
       : null;
-    // A espécie nova entra no Bestiário junto com a troca (.specs/codex).
     const codexWrite = evolved
       ? this.codex.caughtWrite(userId, [targetId])
       : null;
@@ -313,7 +300,6 @@ export class ProgressionService {
     };
   }
 
-  /** Espécie e Traço novos, e o HP atual subindo o mesmo tanto que o máximo. */
   private async evolvedData(
     row: CreatureWithSkills,
     targetId: number,
@@ -355,7 +341,6 @@ export class ProgressionService {
     };
   }
 
-  /** O Ecobeast deste Domador; sem ele, a escolha não existe mais. */
   private async loadCreature(
     userId: string,
     uid: string,

@@ -87,7 +87,6 @@ describe('Rota de uso de item (e2e)', () => {
 
   type User = Awaited<ReturnType<typeof newUser>>;
 
-  /** Um usuário com inicial; devolve a criatura como a API a mostra. */
   async function userWithStarter() {
     const user = await newUser();
     await user.create().expect(201);
@@ -125,7 +124,6 @@ describe('Rota de uso de item (e2e)', () => {
     return row.currentHp;
   }
 
-  /** Um segundo Ecobeast do jogador, no Santuário. */
   async function addToStorage(user: User) {
     const row = await prisma.creatureInstance.findFirstOrThrow({
       where: { playerId: user.id },

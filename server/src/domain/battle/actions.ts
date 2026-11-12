@@ -1,23 +1,11 @@
 import { critChance, hitChance } from './accuracy.js';
 import { calculateDamage, rollDamageFactor, typeMultiplier } from './damage.js';
 import { applyEffects } from './effects.js';
-import {
-  combatantAt,
-  rollChance,
-} from './field.js';
-import type {
-  BattleSkill,
-  Spot,
-  TurnContext,
-} from './types.js';
+import { combatantAt, rollChance } from './field.js';
+import type { BattleSkill, Spot, TurnContext } from './types.js';
 
 const PROTECT_EFFECT = 'protect';
 
-/**
- * O que a Técnica faz depois de anunciada: proteção, bloqueio, precisão, dano
- * e efeitos, contra um adversário. `foe` é nulo numa Técnica em si mesmo sem
- * adversário. Não gasta PP nem confere desmaio.
- */
 export function resolveSkill(
   context: TurnContext,
   spot: Spot,
@@ -54,7 +42,6 @@ export function resolveSkill(
   if (dealt !== null) applyEffects(context, spot, foe, skill, dealt);
 }
 
-/** Aplica o dano no alvo; devolve o HP que ele perdeu, ou nulo se for imune. */
 function strike(
   context: TurnContext,
   spot: Spot,

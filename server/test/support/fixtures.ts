@@ -1,7 +1,5 @@
 import { testSlug, Tx } from './db.js';
 
-/** Linhas mínimas e válidas, criadas dentro de uma transação de teste. */
-
 export function createElement(tx: Tx) {
   return tx.element.create({
     data: {
@@ -116,7 +114,6 @@ export function skillData(
   };
 }
 
-/** Domador com uma criatura na equipe (slot 1). */
 export async function createPlayerWithCreature(tx: Tx) {
   const species = await createSpecies(tx);
   const up = await createStat(tx);

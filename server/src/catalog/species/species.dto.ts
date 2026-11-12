@@ -1,9 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { ResourceRef } from '../../common/resource-ref.js';
 
-// Formatos das respostas de espécies (.specs/backend-api/04-species-api.md,
-// RF-07 a RF-09). Campos em snake_case, como a PokeAPI.
-
 export class SpeciesElementDto {
   @ApiProperty({ example: 1 })
   slot: number;

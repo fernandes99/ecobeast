@@ -10,22 +10,16 @@ const PUBLISHED = 'published';
 
 type Tx = Prisma.TransactionClient;
 
-/** A versão publicada de uma ilha, como o jogador a recebe (islands/02). */
 export interface PublishedIsland {
   id: number;
   name: string;
   draft: IslandDraft;
 }
 
-/**
- * A leitura das ilhas, compartilhada pelo editor (map-editor) e pela exploração
- * numa ilha (.specs/islands/architecture.md, "Ler a ilha publicada").
- */
 @Injectable()
 export class IslandsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  /** As ilhas com versão publicada, em ordem de id, com o nome publicado. */
   async listPublished(): Promise<{ id: number; name: string }[]> {
     const maps = await this.prisma.islandMap.findMany({
       where: { kind: PUBLISHED },
@@ -35,7 +29,6 @@ export class IslandsService {
     return maps.map(({ islandId, name }) => ({ id: islandId, name }));
   }
 
-  /** A versão publicada da ilha, ou `null` se ela não existe ou nunca foi publicada. */
   async readPublished(islandId: number): Promise<PublishedIsland | null> {
     const map = await this.prisma.islandMap.findUnique({
       where: { islandId_kind: { islandId, kind: PUBLISHED } },
@@ -46,7 +39,6 @@ export class IslandsService {
     return { id: islandId, name: draft.name, draft };
   }
 
-  /** Uma versão guardada como o rascunho das regras, com as áreas numeradas de 1 em diante. */
   async readVersion(
     client: Tx | PrismaService,
     islandMapId: number,

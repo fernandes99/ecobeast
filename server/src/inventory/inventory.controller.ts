@@ -26,7 +26,6 @@ import {
   NOT_ENOUGH_COINS,
 } from './inventory.service.js';
 
-/** A Loja e a Mochila (.specs/inventory-shop/architecture.md). */
 @ApiTags('Mochila e Loja')
 @ApiBearerAuth()
 @ApiUnauthorizedResponse({

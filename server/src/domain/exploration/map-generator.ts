@@ -4,7 +4,6 @@ import { DEFAULT_MAP_CONFIG, MapConfig } from './map-config.js';
 import { createNoise, Noise2D } from './noise.js';
 import { seededRandom } from './seeded-random.js';
 
-/** Os biomas de um hexágono, os mesmos slugs da tabela `biomes`. */
 export const BIOMES = [
   'temperate',
   'boreal',
@@ -16,7 +15,6 @@ export const BIOMES = [
 ] as const;
 export type Biome = (typeof BIOMES)[number];
 
-/** Os biomas que o gerador sorteia antes de converter a forma (terrain-height). */
 export const SHAPED_BIOMES = [
   'temperate',
   'boreal',
@@ -55,7 +53,6 @@ export interface ShapedMap {
   tiles: ShapedTile[];
 }
 
-/** Um hexágono enquanto o mapa é montado; os campos são percentis em [0, 1). */
 interface Cell extends HexCoord {
   elevation: number;
   moisture: number;
@@ -67,7 +64,6 @@ interface Cell extends HexCoord {
 }
 
 const ORIGIN: HexCoord = { q: 0, r: 0 };
-/** Altura de uma linha de hexágonos, para o ruído não esticar na vertical. */
 const ROW_HEIGHT = Math.sqrt(3) / 2;
 const BASIC_VARIANTS = 3;
 
@@ -75,14 +71,12 @@ export function isWater(biome: Biome): boolean {
   return biome === 'wshallow' || biome === 'wdeep';
 }
 
-/** Colina e Montanha têm 3 variantes; os outros biomas, 6. */
 export function maxVariant(biome: Biome): number {
   return biome === 'hill' || biome === 'mountain'
     ? BASIC_VARIANTS
     : BASIC_VARIANTS * 2;
 }
 
-/** O bioma e a altura de um hexágono com forma (.specs/terrain-height/01, RF-05). */
 export function terrainOf(
   biome: ShapedBiome,
   shape: TerrainShape,
@@ -94,7 +88,6 @@ export function terrainOf(
   return { biome, height: isWater(biome) ? 0 : 1 };
 }
 
-/** O mapa de uma seed (.specs/wild-battle/architecture.md, "Gerador"). */
 export function generateMap(
   seed: number,
   config: MapConfig = DEFAULT_MAP_CONFIG,
@@ -112,7 +105,6 @@ export function generateMap(
   };
 }
 
-/** O mapa antes de a forma virar bioma e altura; exportado para os testes. */
 export function generateShapedMap(
   seed: number,
   config: MapConfig = DEFAULT_MAP_CONFIG,
@@ -184,7 +176,6 @@ function growRegion(edge: Noise2D, config: MapConfig): HexCoord[] {
   return region;
 }
 
-/** A posição de cada valor na ordem de todos, para medir frações do mapa. */
 function percentiles(values: number[]): number[] {
   const result = values.map(() => 0);
   values
@@ -264,7 +255,6 @@ function placeShapes(cells: Cell[], random: Random, config: MapConfig): void {
   }
 }
 
-/** Montanha de terra sem montanha ao lado vira colina, até não sobrar nenhuma. */
 function gatherMountains(cells: Cell[]): void {
   const isLonely = (cell: Cell): boolean =>
     cell.shape === 'mont' &&
@@ -278,7 +268,6 @@ function gatherMountains(cells: Cell[]): void {
   }
 }
 
-/** Um bioma de terra sem vizinho igual assume o mais comum entre os vizinhos. */
 function gatherBiomes(cells: Cell[], config: MapConfig): void {
   for (let pass = 0; pass < config.cleanupPasses; pass += 1) {
     for (const cell of cells) {

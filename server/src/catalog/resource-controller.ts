@@ -6,43 +6,30 @@ import { page, Page, PaginationQueryDto } from '../common/pagination.js';
 import { ref, ResourceRef } from '../common/resource-ref.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 
-/** Linha com o mínimo de um recurso do catálogo. */
 export interface NamedRow {
   id: number;
   slug: string;
   name: string;
 }
 
-/** O pedaço de um delegate do Prisma que as rotas de recurso usam. */
 interface ResourceDelegate {
   count(): Promise<number>;
   findMany(args: object): Promise<NamedRow[]>;
   findUnique(args: object): Promise<NamedRow | null>;
 }
 
-/** Um recurso do catálogo com lista paginada e detalhe por id ou slug. */
 export interface ResourceDefinition<Row extends NamedRow, Dto> {
-  /** Caminho sob /v1 (ex.: 'skill-categories'). */
   path: string;
-  /** Delegate do Prisma (ex.: 'skillCategory'). */
   model: string;
-  /** Tag da Scalar (ex.: 'Categorias de Técnica'). */
   tag: string;
-  /** Início da mensagem de 404 (ex.: 'Categoria de Técnica não encontrada'). */
   notFound: string;
   list: { summary: string; description: string };
   detail: { summary: string; description: string; example: string };
   dto: Type<Dto>;
-  /** O `include` do Prisma para o detalhe. */
   include?: object;
   toDto(row: Row): Dto;
 }
 
-/**
- * Monta o controller de um recurso do catálogo (.specs/backend-api/05-catalog-api.md,
- * RF-01 e RF-05): GET /v1/<path> e GET /v1/<path>/{idOrSlug}, com a mesma
- * paginação, referências e erros das espécies.
- */
 export function resourceController<Row extends NamedRow, Dto>(
   def: ResourceDefinition<Row, Dto>,
 ): Type<unknown> {
@@ -101,7 +88,6 @@ export function resourceController<Row extends NamedRow, Dto>(
   return ResourceController;
 }
 
-/** Recurso que só tem id, slug e nome. */
 export class NamedResourceDto {
   @ApiProperty({ example: 1 })
   id: number;

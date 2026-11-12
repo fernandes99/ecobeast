@@ -54,7 +54,6 @@ describe('gainXp', () => {
 });
 
 describe('progressCreature', () => {
-  /** HP sobe 3 por nível; os outros stats, 2. */
   const statsAt = (level: number) => ({
     hp: 3 * level,
     atk: 2 * level,

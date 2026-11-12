@@ -35,7 +35,6 @@ import {
 } from './player.dto.js';
 import { CREATURE_NOT_FOUND, PlayerService } from './player.service.js';
 
-/** O Domador do usuário logado (.specs/auth-google/03-player-api.md). */
 @ApiTags('Jogador')
 @ApiBearerAuth()
 @ApiUnauthorizedResponse({

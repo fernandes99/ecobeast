@@ -13,7 +13,6 @@ const TOO_MANY = ApiTooManyRequestsResponse({
   description: 'Limite de chamadas por minuto excedido.',
 });
 
-/** Documentação de uma rota de lista paginada. */
 export function ApiListRoute(summary: string, description: string) {
   return applyDecorators(
     ApiOperation({ summary, description }),
@@ -23,7 +22,6 @@ export function ApiListRoute(summary: string, description: string) {
   );
 }
 
-/** Documentação de uma rota que recebe `{idOrSlug}`. */
 export function ApiDetailRoute(
   summary: string,
   description: string,

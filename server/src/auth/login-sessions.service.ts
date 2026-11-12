@@ -6,10 +6,8 @@ import { Env } from '../config/env.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { AuthTokens, SupabaseAuthClient } from './supabase-auth.client.js';
 
-/** Quanto tempo um login pelo navegador vale. */
 export const LOGIN_TTL_MS = 600_000;
 
-/** 32 bytes aleatórios em base64url (o segredo do poll e o verificador do PKCE). */
 export function randomToken(): string {
   return randomBytes(32).toString('base64url');
 }
@@ -18,12 +16,10 @@ export function sha256Base64url(value: string): string {
   return createHash('sha256').update(value).digest('base64url');
 }
 
-/** O desafio S256 do PKCE: SHA-256 do verificador em base64url. */
 export function codeChallenge(codeVerifier: string): string {
   return sha256Base64url(codeVerifier);
 }
 
-/** O login não existe, venceu, já foi usado ou não está na etapa certa. */
 export class LoginUnavailableError extends Error {
   constructor() {
     super('login indisponível');
@@ -40,10 +36,6 @@ export interface LoginStart {
 export type PollResult =
   { status: 'pending' } | { status: 'complete'; tokens: AuthTokens };
 
-/**
- * O login com Google pelo navegador (.specs/auth-google/01-auth-server.md,
- * RF-05 a RF-08): começar, ida, retorno e perguntar.
- */
 @Injectable()
 export class LoginSessionsService {
   private readonly publicBaseUrl: string;
@@ -76,7 +68,6 @@ export class LoginSessionsService {
     };
   }
 
-  /** Marca a ida como usada (só uma vez) e devolve a URL de autorização. */
   async go(loginId: string): Promise<string> {
     if (!isUUID(loginId)) throw new LoginUnavailableError();
     // A condição na própria atualização garante uma ida só, mesmo com dois
@@ -103,7 +94,6 @@ export class LoginSessionsService {
     );
   }
 
-  /** Troca o código do retorno pela sessão e a guarda no login. */
   async complete(loginId: string, code: string): Promise<void> {
     const login = isUUID(loginId)
       ? await this.prisma.authLoginSession.findUnique({
@@ -136,7 +126,6 @@ export class LoginSessionsService {
     });
   }
 
-  /** Marca um login pendente como falho (o jogador recusou, ou a troca falhou). */
   async fail(loginId: string): Promise<void> {
     if (!isUUID(loginId)) return;
     await this.prisma.authLoginSession.updateMany({
@@ -179,7 +168,6 @@ export class LoginSessionsService {
   }
 }
 
-/** Compara dois hashes em tempo constante. */
 function sameHash(a: string, b: string): boolean {
   const left = Buffer.from(a);
   const right = Buffer.from(b);

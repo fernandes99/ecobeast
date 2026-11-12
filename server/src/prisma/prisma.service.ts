@@ -9,7 +9,6 @@ import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../generated/prisma/client.js';
 import { Env } from '../config/env.js';
 
-/** O cliente do Prisma, ligado ao Postgres do Supabase pelo pooler (DATABASE_URL). */
 @Injectable()
 export class PrismaService
   extends PrismaClient

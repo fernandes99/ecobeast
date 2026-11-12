@@ -10,10 +10,6 @@ import {
   wildLevel,
 } from './spawns.js';
 
-/**
- * Fixa, separada de `DEFAULT_SPAWN_CONFIG`: o dono ajusta os valores do jogo sem
- * reprovar estes testes, que conferem o algoritmo, e não o balanceamento.
- */
 const CONFIG: SpawnConfig = {
   count: 500,
   missingLevelFactor: 0.5,

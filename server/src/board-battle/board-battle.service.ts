@@ -72,18 +72,11 @@ function toResponse(
 
 interface BeginOptions {
   godMode?: boolean;
-  /** Vagas do inimigo; as do jogador são estas, ou menos se faltar quem lute. */
   slots?: number;
   opponent?: Opponent;
   tamer?: BattleTamer | null;
 }
 
-/**
- * A luta no tabuleiro do jogador (.specs/board-battle/03-board-api.md), contra
- * selvagem ou contra Domador NPC (.specs/npc-tamers/03-tamer-api.md). Fica
- * na memória, no mesmo `BattleStore` da luta de hoje: começar uma descarta a
- * outra. O banco só muda no fim, como na luta de hoje.
- */
 @Injectable()
 export class BoardBattleService {
   private readonly logger = new Logger(BoardBattleService.name);
@@ -96,7 +89,6 @@ export class BoardBattleService {
     private readonly config: ConfigService<Env, true>,
   ) {}
 
-  /** A luta de teste: a equipe inimiga e as vagas vêm do corpo. */
   async start(
     userId: string,
     choices: EnemyChoice[],
@@ -110,7 +102,6 @@ export class BoardBattleService {
     return this.begin(userId, team, enemies, { slots });
   }
 
-  /** O encontro de Explorar zona, como o da luta de hoje, com 1 vaga. */
   async startWild(
     userId: string,
     position: HexCoord,
@@ -127,7 +118,6 @@ export class BoardBattleService {
     };
   }
 
-  /** A luta contra o Domador NPC do hexágono do jogador; ele sai do mapa. */
   async startTamer(
     userId: string,
     position: HexCoord,
@@ -147,7 +137,6 @@ export class BoardBattleService {
     };
   }
 
-  /** O Desafiar do Hub: um Domador sorteado na hora, sem mexer na exploração. */
   async startChallenge(userId: string): Promise<BoardBattleResponseDto> {
     const team = await this.records.loadTeam(userId);
     const [species, texts, teamAverage] = await Promise.all([
@@ -170,10 +159,6 @@ export class BoardBattleService {
     });
   }
 
-  /**
-   * Da leitura à escrita no `store` não há `await`: dois pedidos ao mesmo
-   * tempo não jogam a mesma vez, nem gravam o fim duas vezes.
-   */
   async act(
     userId: string,
     input: BoardInput,
@@ -233,7 +218,6 @@ export class BoardBattleService {
     );
   }
 
-  /** Grava o fim. A derrota para um Domador do mapa encerra a exploração. */
   private async finish(
     userId: string,
     state: BoardState,
@@ -259,7 +243,6 @@ export class BoardBattleService {
     }: BeginOptions = {},
   ): Promise<BoardBattleResponseDto> {
     const catalog = await loadBattleCatalog(this.prisma);
-    // Quem tem menos Ecobeasts de pé do que as vagas luta com os que tem.
     const standing = team.creatures.filter(
       (creature) => creature.currentHp > 0,
     ).length;
@@ -289,7 +272,6 @@ export class BoardBattleService {
       const finish = await this.finish(userId, state, wilds, tamer);
       return toResponse(state, events, tamer, finish);
     }
-    // Substitui a luta anterior, de qualquer tipo, sem gravar nada dela.
     this.store.set(userId, { state, catalog, wilds, tamer });
     await this.recordSeen(userId, events);
     return toResponse(state, events, tamer);

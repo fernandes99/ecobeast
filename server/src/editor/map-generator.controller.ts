@@ -35,11 +35,9 @@ import {
   MapGeneratorResponseDto,
 } from './islands-editor.dto.js';
 
-/** O nome do parâmetro na API: `tileCount` → `tile_count`. */
 const snake = (field: string): string =>
   Object.keys(camelToSnakeKeys({ [field]: null }))[0]!;
 
-/** Os parâmetros do corpo, em camelCase, ou 400 com o primeiro errado. */
 function configOf(raw: Record<string, unknown> = {}): Partial<MapConfig> {
   const config = snakeToCamelKeys(raw);
   for (const [field, value] of Object.entries(config)) {
@@ -58,7 +56,6 @@ function configOf(raw: Record<string, unknown> = {}): Partial<MapConfig> {
   return valid;
 }
 
-/** O gerador de mapas para o editor (.specs/map-editor/architecture.md, "Rotas"). */
 @ApiTags('Editor de ilhas')
 @ApiBearerAuth()
 @ApiUnauthorizedResponse({

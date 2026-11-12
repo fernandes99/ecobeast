@@ -17,20 +17,15 @@ import { cellAt, makeBoard, startCell } from './board.js';
 import { applyBoardVez, type BoardOutcome } from './board-engine.js';
 import type { BoardInput, BoardState } from './types.js';
 
-/** Ajudantes dos testes do tabuleiro; o código do jogo não usa este arquivo. */
-
-/** O hexágono da coluna e da linha, como no desenho do tabuleiro. */
 export const at = cellAt;
 
 export const SCRATCH = makeSkill({ id: 1 });
-/** Faísca Rápida: linha reta de 3, sem atravessar. */
 export const SPARK = makeSkill({
   id: 5,
   category: 'special',
   areaShape: 'line',
   range: 3,
 });
-/** Chama Espiral: um hexágono a até 3, com o chão em chamas por 6 vezes. */
 export const SPIRAL = makeSkill({
   id: 9,
   category: 'special',
@@ -55,7 +50,6 @@ export function boardCatalog(skills: BattleSkill[] = []): BattleCatalog {
   return catalog;
 }
 
-/** Um Ecobeast com muito HP, que sabe Arranhão, Faísca Rápida, Chama Espiral e Rugido. */
 export function fighter(
   spd: number,
   overrides: Partial<Combatant> = {},
@@ -82,17 +76,10 @@ export function wild(
 
 export interface BoardSetup {
   slots?: { player: number; enemy: number };
-  /** Onde cada um começa, no lugar da largada. */
   cells?: Partial<Record<SideSlug, (HexCoord | null)[]>>;
-  /** A fila da rodada; por padrão, o jogador na vaga 0 joga agora. */
   queue?: Spot[];
 }
 
-/**
- * Uma luta já em andamento, sem rodar nada: cada um no hexágono de largada
- * (ou no de `cells`), com a fila dada. Os inimigos já lutaram contra quem está
- * no tabuleiro.
- */
 export function makeBoardState(
   player: Combatant[],
   enemy: Combatant[],
@@ -149,7 +136,6 @@ export function makeBoardState(
   return state;
 }
 
-/** `applyBoardVez` que falha o teste se a vez for recusada. */
 export function playVez(
   state: BoardState,
   input: BoardInput,

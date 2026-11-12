@@ -1,4 +1,3 @@
-/** Uma linha de `evolutions`, com o slug do gatilho. */
 export interface EvolutionRule {
   id: number;
   speciesId: number;

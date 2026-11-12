@@ -10,7 +10,6 @@ import { toStatBlock } from './player.mapper.js';
 export interface CreatureBlueprint {
   params: CreateCreatureParams;
   statIds: Record<StatSlug, number>;
-  /** Na ordem dos slots da espécie. */
   elementIds: number[];
   traitSlugs: ReadonlyMap<number, string>;
 }
@@ -19,7 +18,6 @@ export type CreaturePlace =
   | { location: 'party'; partySlot: number }
   | { location: 'storage'; partySlot: null };
 
-/** A linha de uma criatura nova do jogador, com Genes, Treino e Técnicas. */
 export function newCreatureData(
   playerId: string,
   creature: NewCreature,
@@ -51,7 +49,6 @@ export function newCreatureData(
   } satisfies Prisma.CreatureInstanceUncheckedCreateInput;
 }
 
-/** O que as regras precisam do catálogo para criar uma criatura; nulo sem a espécie. */
 export async function loadCreatureBlueprint(
   prisma: PrismaService,
   speciesId: number,
@@ -64,7 +61,6 @@ export async function loadCreatureBlueprint(
         growthRate: true,
         elements: { orderBy: { slot: 'asc' } },
         stats: { include: { stat: true } },
-        // Os normais e o oculto: a chance de nascer com o oculto (hidden-traits/01).
         traits: {
           orderBy: { slot: 'asc' },
           include: { trait: true },

@@ -34,10 +34,6 @@ import { ExplorationService, NO_PLAYER } from './exploration.service.js';
 const CLOSED =
   '`ENABLE_TEST_BATTLE` desligada, ou sem exploração: "' + NO_EXPLORATION + '"';
 
-/**
- * O mapa de exploração (.specs/wild-battle/02-map-generator.md) e os Ecobeasts
- * dele (.specs/biome-encounters/03-exploration-session.md).
- */
 @ApiTags('Exploração')
 @ApiBearerAuth()
 @ApiUnauthorizedResponse({

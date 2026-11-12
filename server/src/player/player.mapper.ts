@@ -5,7 +5,6 @@ import { MAX_LEVEL, totalXpForLevel } from '../domain/rules/xp-curve.js';
 import { Prisma } from '../generated/prisma/client.js';
 import { CreatureDto, PlayerDto } from './player.dto.js';
 
-/** O que o JSON de um Ecobeast precisa ler do banco. */
 export const CREATURE_INCLUDE = {
   stats: { include: { stat: { select: { slug: true } } } },
   skills: { orderBy: { slot: 'asc' } },
@@ -25,7 +24,6 @@ export const CREATURE_INCLUDE = {
   },
 } satisfies Prisma.CreatureInstanceInclude;
 
-/** O que uma resposta do jogador precisa ler do banco. */
 export const PLAYER_INCLUDE = {
   creatures: {
     where: { location: 'party' },
@@ -41,7 +39,6 @@ export type PlayerRow = Prisma.PlayerGetPayload<{
 
 type CreatureRow = PlayerRow['creatures'][number];
 
-/** Monta os 6 stats a partir de linhas com o slug do stat. */
 export function toStatBlock<Row extends { stat: { slug: string } }>(
   rows: Row[],
   value: (row: Row) => number,
@@ -71,7 +68,6 @@ export function creatureStats(
   );
 }
 
-/** O JSON do jogador (.specs/auth-google/03-player-api.md, RF-07). */
 export function toPlayerDto(row: PlayerRow): PlayerDto {
   return {
     id: row.id,

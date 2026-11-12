@@ -19,7 +19,6 @@ import {
 } from './testing.js';
 import type { BoardState } from './types.js';
 
-/** Dorme a luta inteira: perde todas as vezes, sem andar nem agir. */
 const ASLEEP: Partial<Combatant> = { statusSlug: 'sleep', sleepTurns: 99 };
 const SCRATCH_SLOT = 1;
 const SPARK_SLOT = 2;
@@ -289,7 +288,6 @@ describe('marca no chão', () => {
 });
 
 describe('queda e entrada', () => {
-  /** Dois do jogador e uma reserva; o da vaga 0 está a 1 HP, no fogo. */
   function burning(): BoardState {
     return makeBoardState(
       [fighter(10, { currentHp: 1 }), fighter(30), fighter(5)],
@@ -481,7 +479,6 @@ describe('Esfera, fuga e fim', () => {
 });
 
 describe('uma luta inteira', () => {
-  /** Sorteio repetível, para a luta sair igual em toda rodada do teste. */
   function seeded(seed: number): () => number {
     let a = seed;
     return () => {

@@ -38,12 +38,10 @@ import {
 import { ISLAND_NOT_FOUND } from '../islands/islands.service.js';
 import { IslandsEditorService } from './islands-editor.service.js';
 
-/** Um id de ilha; um texto que não é número responde como ilha que não existe. */
 const islandId = new ParseIntPipe({
   exceptionFactory: () => new NotFoundException(ISLAND_NOT_FOUND),
 });
 
-/** As ilhas do editor (.specs/map-editor/architecture.md, "Rotas"). */
 @ApiTags('Editor de ilhas')
 @ApiBearerAuth()
 @ApiUnauthorizedResponse({

@@ -1,9 +1,3 @@
-/**
- * Conversão mecânica entre os nomes de coluna do banco e dos JSON (snake_case)
- * e os campos do Prisma (camelCase). Funciona porque todo @map do
- * schema.prisma segue essa regra (.specs/backend-api/02-database-schema.md, RF-01).
- */
-
 type Row = Record<string, unknown>;
 
 const toCamel = (key: string): string =>
@@ -19,12 +13,10 @@ function renameKeys(row: Row, rename: (key: string) => string): Row {
   return result;
 }
 
-/** `{ growth_rate_id: 2 }` → `{ growthRateId: 2 }`; valores e ordem iguais. */
 export function snakeToCamelKeys(row: Row): Row {
   return renameKeys(row, toCamel);
 }
 
-/** `{ growthRateId: 2 }` → `{ growth_rate_id: 2 }`; valores e ordem iguais. */
 export function camelToSnakeKeys(row: Row): Row {
   return renameKeys(row, toSnake);
 }

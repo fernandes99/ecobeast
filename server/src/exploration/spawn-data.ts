@@ -7,12 +7,6 @@ import {
 import type { TamerTexts } from '../domain/tamers/tamers.js';
 import type { PrismaService } from '../prisma/prisma.service.js';
 
-/**
- * O que os sorteios de Ecobeasts e de Domadores leem do banco: a exploração
- * (biome-encounters/03) e o Desafiar (npc-tamers/03) usam as mesmas leituras.
- */
-
-/** As espécies com taxa em algum bioma, com o nível natural de cada uma. */
 export async function loadSpawnSpecies(
   prisma: PrismaService,
 ): Promise<SpawnSpecies[]> {
@@ -35,7 +29,6 @@ export async function loadSpawnSpecies(
   return [...bySpecies.values()];
 }
 
-/** Os ids dos nomes e das falas que um Domador NPC pode receber. */
 export async function loadTamerTexts(
   prisma: PrismaService,
 ): Promise<TamerTexts> {
@@ -49,7 +42,6 @@ export async function loadTamerTexts(
   };
 }
 
-/** A média de nível da equipe principal, sem arredondar; nula sem equipe. */
 export async function partyAverageLevel(
   prisma: PrismaService,
   userId: string,

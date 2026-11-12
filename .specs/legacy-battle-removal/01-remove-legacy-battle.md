@@ -58,7 +58,7 @@ godot --headless -d --path client --quit-after 60
 ```
 
 Feita em 2026-11-11:
-- **Servidor:** lint e tipos limpos; 739 testes de unidade e E2E_COUNT e2e passando.
+- **Servidor:** lint e tipos limpos; 739 testes de unidade passando. A contagem dos e2e não foi anotada no dia; em 2026-11-12, depois das fases seguintes, eram 486: 485 passaram na suíte, e o "as Técnicas vêm com o PP cheio" do player.e2e-spec estourou os 5 s com a máquina carregada e passou sozinho.
 - **Testes de unidade:** eram 802. Os cerca de 198 que passavam pelo laço antigo viraram 131 em `domain/battle/` e 40 em `domain/board/board-rules.spec.ts`. Os que saíram sem substituto são os do RF-08.
 - **Jogo:** o projeto abre sem erro de script; com `-d`, os avisos são os de antes. Uma cena temporária, já apagada, carregou todas as telas do `Router` e todos os arquivos de `screens/board_battle/`.
 - **Para o dono:** no F5, uma luta de Explorar zona com item, troca e Esfera, e um Desafiar.

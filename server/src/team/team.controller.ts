@@ -41,7 +41,6 @@ const NO_PLAYER_RESPONSE = `Sem Domador ou sem equipe: "${NO_PLAYER}"`;
 const KEEPS_STATE =
   'HP, status e PP não mudam. A batalha aberta é descartada, sem gravar nada dela.';
 
-/** A equipe e o Santuário (.specs/team-and-storage/architecture.md). */
 @ApiTags('Equipe e Santuário')
 @ApiBearerAuth()
 @ApiUnauthorizedResponse({

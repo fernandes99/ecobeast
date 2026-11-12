@@ -6,7 +6,6 @@ import { ResourceRef } from './resource-ref.js';
 const LIMIT_MESSAGE = 'limit deve ser um inteiro de 1 a 100';
 const OFFSET_MESSAGE = 'offset deve ser um inteiro maior ou igual a 0';
 
-/** `?limit=&offset=` das listas (.specs/backend-api/04-species-api.md, RF-01). */
 export class PaginationQueryDto {
   @ApiPropertyOptional({
     description: 'Quantos itens por página (1 a 100).',
@@ -33,7 +32,6 @@ export class PaginationQueryDto {
   offset: number = 0;
 }
 
-/** Uma página de lista, no formato da PokeAPI. */
 export interface Page<T> {
   count: number;
   next: string | null;
@@ -41,7 +39,6 @@ export interface Page<T> {
   results: T[];
 }
 
-/** O formato de `Page<ResourceRef>` para a documentação. */
 export class ResourceRefPage implements Page<ResourceRef> {
   @ApiProperty({ description: 'Total de itens.', example: 9 })
   count: number;
@@ -66,7 +63,6 @@ export class ResourceRefPage implements Page<ResourceRef> {
   results: ResourceRef[];
 }
 
-/** Monta a página: `next` e `previous` são caminhos com o mesmo `limit`, ou `null`. */
 export function page<T>(
   path: string,
   total: number,

@@ -101,7 +101,6 @@ const TOO_MANY = ApiTooManyRequestsResponse({
   description: 'Limite de chamadas por minuto excedido.',
 });
 
-/** Login, renovação e saída (.specs/auth-google/01-auth-server.md, RF-09 a RF-12). */
 @ApiTags('Login')
 @Controller('auth')
 export class AuthController {

@@ -40,7 +40,6 @@ interface IslandMap {
   }[];
 }
 
-/** Os hexágonos de um hexágono de raio `radius` em volta de (0, 0). */
 function hexagon(radius: number): Tile[] {
   const tiles: Tile[] = [];
   for (let q = -radius; q <= radius; q++) {
@@ -63,11 +62,6 @@ describe('Ilhas do jogador (e2e)', () => {
   const users: string[] = [];
   const islands: number[] = [];
 
-  /**
-   * Uma ilha de 7 hexágonos com a chegada em (0, 0), um Refúgio em (0, 1), uma
-   * casa bloqueada em (1, 0), com trilha, e duas áreas: o Campo, com a chegada
-   * e a casa, e o Lago, com (-1, 0) e o hexágono do Refúgio.
-   */
   function draft(name: string) {
     const tiles = hexagon(1);
     const at = (q: number, r: number) =>
@@ -256,7 +250,6 @@ describe('Ilhas do jogador (e2e)', () => {
       const lake = map.creatures.filter((c) => c.species_id === NILU);
       expect(field).toHaveLength(3);
       expect(lake).toHaveLength(5);
-      // A casa bloqueia (1, 0), e o Refúgio é uma ação: nenhum dos dois recebe Ecobeast.
       for (const creature of field) {
         expect(`${creature.q},${creature.r}`).toBe('0,0');
       }

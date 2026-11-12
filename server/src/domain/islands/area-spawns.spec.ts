@@ -7,7 +7,6 @@ const RUVO = 1;
 const NILU = 4;
 const ELU = 7;
 
-/** 4 hexágonos: dois da área 1 (um deles do Refúgio), um da área 2 e um sem área. */
 function island(): IslandDraft {
   return {
     name: 'Ilha',

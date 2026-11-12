@@ -6,7 +6,6 @@ export interface TurnAction {
   combatant: Combatant;
 }
 
-/** Maior prioridade, depois maior Velocidade; um empate total é sorteado. */
 export function orderActions<Action extends TurnAction>(
   first: Action,
   second: Action,
@@ -17,11 +16,6 @@ export function orderActions<Action extends TurnAction>(
   return firstGoesFirst ? [first, second] : [second, first];
 }
 
-/**
- * A mesma ordem para qualquer número de ações. Com duas, sorteia como
- * `orderActions`. Num empate de mais, cada lugar sorteia quem o ocupa entre
- * os empatados que sobraram.
- */
 export function orderTurn<Action extends TurnAction>(
   actions: Action[],
   random: Random,

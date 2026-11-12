@@ -83,7 +83,6 @@ describe('Equipe e Santuário (e2e)', () => {
     return user;
   }
 
-  /** Uma cópia do inicial no lugar pedido; devolve o `uid`. */
   async function addCreature(
     user: User,
     place: Place,
@@ -313,7 +312,6 @@ describe('Equipe e Santuário (e2e)', () => {
       expect(await snapshot(user)).toEqual(before);
     });
 
-    /** O segundo `update` dentro da transação falha, e ela volta de verdade. */
     function failOnSecondUpdate() {
       const service = app.get(PrismaService);
       const original = service.$transaction.bind(service) as (

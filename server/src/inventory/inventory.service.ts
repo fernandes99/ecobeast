@@ -15,10 +15,8 @@ import { INVALID_ITEM } from './inventory.dto.js';
 
 export const NO_PLAYER = 'Crie seu Domador primeiro.';
 export const NOT_ENOUGH_COINS = 'Moedas insuficientes.';
-/** O maior `id` que o banco guarda: acima dele, o Prisma daria erro. */
 const MAX_ITEM_ID = 2_147_483_647;
 
-/** A Loja e a Mochila do jogador (.specs/inventory-shop/architecture.md). */
 @Injectable()
 export class InventoryService {
   constructor(
@@ -27,10 +25,6 @@ export class InventoryService {
     private readonly battles: BattleStore,
   ) {}
 
-  /**
-   * O `coins >= price` fica no próprio `update`: de dois pedidos ao mesmo tempo,
-   * o segundo espera o primeiro e encontra o saldo já descontado.
-   */
   async buy(userId: string, itemId: number): Promise<PlayerDto> {
     await this.requireTeam(userId);
     const { price } = await this.findItem(itemId);
@@ -93,7 +87,6 @@ export class InventoryService {
     return (await this.players.get(userId))!;
   }
 
-  /** Dois pedidos pela última unidade: o segundo espera e não acha mais nada. */
   private async spendItem(
     tx: Prisma.TransactionClient,
     playerId: string,

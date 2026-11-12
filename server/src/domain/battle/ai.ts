@@ -1,10 +1,5 @@
 import { calculateDamage } from './damage.js';
-import type {
-  BattleCatalog,
-  BattleSkill,
-  Combatant,
-  Random,
-} from './types.js';
+import type { BattleCatalog, BattleSkill, Combatant, Random } from './types.js';
 
 const SUPPORT_WEIGHT = 20;
 const MIN_WEIGHT = 1;
@@ -15,7 +10,6 @@ export interface SkillOption {
   weight: number;
 }
 
-/** O dano estimado como porcentagem do HP atual do alvo. */
 export function skillWeight(
   attacker: Combatant,
   defender: Combatant,

@@ -76,8 +76,6 @@ import type {
   BoardVez,
 } from './types.js';
 
-// O juiz da luta no tabuleiro (.specs/board-battle/02-board-engine.md).
-
 export const NOT_YOUR_VEZ = 'Não é a vez desse Ecobeast.';
 export const CANNOT_REACH = 'Não dá para chegar lá.';
 export const FLEE_NO_MOVE = 'Fugir não combina com andar.';
@@ -95,11 +93,9 @@ export interface BoardOutcome {
 export interface BoardOptions {
   godMode?: boolean;
   coins?: number;
-  /** Vagas de cada lado, de 1 a 3; 1 e 1 por padrão. */
   slots?: { player: number; enemy: number };
   partyFree?: number;
   canFlee?: boolean;
-  /** Contra Domador, a fuga fica sempre desligada (npc-tamers/02). */
   opponent?: Opponent;
 }
 
@@ -158,10 +154,6 @@ export function startBoardBattle(
   return { state: context.state, events: context.events };
 }
 
-/**
- * A vez do jogador, ou quem entra no `choose_next`. Confere tudo, joga numa
- * cópia do estado e segue com os selvagens até a próxima vez do jogador.
- */
 export function applyBoardVez(
   state: BoardState,
   input: BoardInput,
@@ -185,8 +177,6 @@ export function applyBoardVez(
   advance(context);
   return { state: context.state, events: context.events };
 }
-
-// --- Recusas ------------------------------------------------------------------
 
 function refusalFor(
   state: BoardState,
@@ -277,7 +267,6 @@ function areaRefusal(
   return 'error' in area ? area.error : null;
 }
 
-/** Sem alvo escolhido, vale o único selvagem de pé no tabuleiro. */
 function onlyEnemyCell(state: BoardState): HexCoord | undefined {
   const enemies = standingOnBoard(state, 'enemy');
   return enemies.length === 1 ? cellOf(state, enemies[0]!)! : undefined;
@@ -329,12 +318,6 @@ function entriesRefusal(
   return null;
 }
 
-// --- Rodada e vez -------------------------------------------------------------
-
-/**
- * Joga as vezes dos selvagens até chegar a uma vez do jogador, um
- * `choose_next` ou o fim. A vez que começa avisa com `vez_started`.
- */
 function advance(context: BoardContext): void {
   const { state, catalog, random } = context;
   while (state.phase === 'choose_action') {
@@ -353,7 +336,6 @@ function advance(context: BoardContext): void {
   }
 }
 
-/** Quem caiu, saiu ou foi trocado depois que a rodada começou perde o lugar. */
 function dropStale(state: BoardState): void {
   while (state.queue.length > 0) {
     const head = state.queue[0]!;
@@ -412,7 +394,6 @@ function playVez(context: BoardContext, spot: Spot, vez: BoardVez): void {
       useItem(context, spot, action);
       break;
     case 'switch':
-      // Quem entra fica no hexágono de quem saiu.
       state[spot.side].activeIndices[spot.position] = action.team_index;
       enterBoard(context, spot, cellOf(state, spot)!);
       break;
@@ -433,10 +414,6 @@ function playVez(context: BoardContext, spot: Spot, vez: BoardVez): void {
   endVez(context, spot);
 }
 
-/**
- * Gasta o PP uma vez e atinge cada inimigo da área, com os próprios sorteios,
- * na ordem do caminho. A marca fica em toda a área.
- */
 function useSkill(
   context: BoardContext,
   spot: Spot,
@@ -510,7 +487,6 @@ function useItem(
   });
 }
 
-/** A Esfera é gasta com ou sem sucesso; o capturado sai no fim da vez. */
 function tryCapture(
   context: BoardContext,
   action: Extract<BoardAction, { type: 'capture' }>,
@@ -542,12 +518,6 @@ function tryCapture(
   });
 }
 
-// --- Fim da vez ---------------------------------------------------------------
-
-/**
- * Status de quem jogou, marcas, envelhecer as marcas, quem caiu sai do
- * tabuleiro e as vagas são repostas, e o fim da luta.
- */
 function endVez(context: BoardContext, actor: Spot): void {
   const { state } = context;
   state.queue.shift();
@@ -580,7 +550,6 @@ function endVez(context: BoardContext, actor: Spot): void {
   }
 }
 
-/** Quem desmaiou ou foi capturado sai do tabuleiro; devolve as vagas que ficaram vazias. */
 function leaveFallen(context: BoardContext): Record<SideSlug, number[]> {
   const { state, events } = context;
   const vacated: Record<SideSlug, number[]> = { player: [], enemy: [] };
@@ -597,7 +566,6 @@ function leaveFallen(context: BoardContext): Record<SideSlug, number[]> {
   return vacated;
 }
 
-/** A reserva do inimigo entra no primeiro hexágono livre da área dele. */
 function refillEnemy(context: BoardContext, positions: number[]): void {
   const { state } = context;
   for (const position of positions) {
@@ -626,12 +594,10 @@ function sendEntries(context: BoardContext, entries: BoardEntry[]): void {
   }
 }
 
-/** Quem ocupa as vagas de um lado agora, de pé ou não. */
 function fieldedCreatures(state: BoardState, side: SideSlug): Combatant[] {
   return occupiedSpots(state, side).map((spot) => combatantAt(state, spot));
 }
 
-/** `fielders`: quem estava em campo no fim da última vez, para as moedas. */
 function endBattle(
   context: BoardContext,
   result: BattleResult,
@@ -652,7 +618,6 @@ function endBattle(
   events.push({ type: 'battle_ended', result });
 }
 
-/** Quem entra no tabuleiro, como o `enterField` da luta de hoje, com o hexágono. */
 function enterBoard(context: BoardContext, spot: Spot, cell: HexCoord): void {
   const { state } = context;
   state.cells[spot.side][spot.position] = cell;

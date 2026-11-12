@@ -27,7 +27,6 @@ const STARTER_TAKEN = 'Você já escolheu seu Ecobeast.';
 const NOT_A_STARTER = 'Esse Ecobeast não pode ser escolhido.';
 export const CREATURE_NOT_FOUND = 'Ecobeast não encontrado.';
 
-/** A equipe, com o que a cura precisa para achar os máximos. */
 const HEAL_INCLUDE = {
   creatures: {
     ...PLAYER_INCLUDE.creatures,
@@ -38,7 +37,6 @@ const HEAL_INCLUDE = {
   },
 } satisfies Prisma.PlayerInclude;
 
-/** Pontas sem espaço e sequências de espaço viram uma. */
 function normalizeName(raw: string): string {
   return raw.trim().replace(/\s+/g, ' ');
 }
@@ -50,7 +48,6 @@ function isUniqueViolation(error: unknown): boolean {
   );
 }
 
-/** O jogador no banco (.specs/auth-google/03-player-api.md). */
 @Injectable()
 export class PlayerService {
   constructor(
@@ -104,8 +101,6 @@ export class PlayerService {
       STARTER_LEVEL,
     ))!;
     const creature = createCreature(params, secureRandom);
-    // O Bestiário (.specs/codex): o escolhido fica capturado, e os outros
-    // iniciais da escolha, vistos.
     const others = (
       await this.prisma.starterOption.findMany({
         where: { speciesId: { not: speciesId } },
@@ -185,10 +180,6 @@ export class PlayerService {
     return (await this.get(userId))!;
   }
 
-  /**
-   * Só para testar a progressão (progression/04): deixa cada um da equipe abaixo
-   * do nível 100 a 1 XP do próximo nível. Só existe com `ENABLE_TEST_BATTLE`.
-   */
   async almostLevelUp(userId: string): Promise<PlayerDto> {
     if (!this.config.get('ENABLE_TEST_BATTLE', { infer: true })) {
       throw new NotFoundException('Rota não encontrada.');

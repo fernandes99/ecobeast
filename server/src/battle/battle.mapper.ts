@@ -7,7 +7,6 @@ import type { BattleDto, EnemyCreatureDto } from './battle.dto.js';
 
 const { creatures: PARTY } = PLAYER_INCLUDE;
 
-/** O que a batalha lê da equipe, além do que a resposta do jogador já lê. */
 export const BATTLE_PLAYER_INCLUDE = {
   creatures: {
     ...PARTY,
@@ -60,7 +59,6 @@ export function toCombatant(row: BattleCreatureRow): Combatant {
   };
 }
 
-/** O inimigo selvagem só existe nesta batalha. */
 export function toEnemyCombatant(
   creature: NewCreature,
   elementIds: number[],

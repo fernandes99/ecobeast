@@ -16,8 +16,6 @@ import { BIOMES, MAX_HEIGHT } from '../domain/exploration/map-generator.js';
 import type { Biome } from '../domain/exploration/map-generator.js';
 import { MapTileDto } from '../exploration/exploration.dto.js';
 
-/** O rascunho de uma ilha e as respostas do editor (.specs/map-editor/architecture.md, "Contrato"). */
-
 const integer = (field: string) => ({
   message: `${field} precisa ser um número inteiro.`,
 });

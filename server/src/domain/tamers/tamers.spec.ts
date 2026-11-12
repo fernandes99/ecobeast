@@ -6,10 +6,6 @@ import type { SpawnSpecies } from '../exploration/spawns.js';
 import type { TamerConfig } from './tamer-config.js';
 import { rollChallenger, rollMapTamers, type TamerTexts } from './tamers.js';
 
-/**
- * Fixas, separadas das do jogo: o dono ajusta `TAMER_CONFIG` e
- * `DEFAULT_SPAWN_CONFIG` sem reprovar estes testes, que conferem o algoritmo.
- */
 const CONFIG: TamerConfig = {
   count: 25,
   minStartDistance: 3,

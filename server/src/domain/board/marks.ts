@@ -5,8 +5,6 @@ import type { HexCoord } from '../exploration/hex.js';
 import { cellOf, sameCell, standingOnBoard } from './board.js';
 import type { BoardContext, BoardState, GroundMark } from './types.js';
 
-// As marcas no chão (.specs/board-battle/architecture.md, "Marcas no chão").
-
 export function markAt(
   state: BoardState,
   cell: HexCoord,
@@ -14,7 +12,6 @@ export function markAt(
   return state.marks.find((mark) => sameCell(mark.cell, cell));
 }
 
-/** Uma marca em cada hexágono; a nova substitui a que já estiver lá. */
 export function placeMarks(
   context: BoardContext,
   cells: HexCoord[],
@@ -80,7 +77,6 @@ function applyMark(context: BoardContext, spot: Spot, mark: GroundMark): void {
   }
 }
 
-/** Cada marca perde uma vez; a que chega a 0 some. */
 export function ageMarks(context: BoardContext): void {
   const { state, events } = context;
   const kept: GroundMark[] = [];

@@ -1,6 +1,5 @@
 import type { BattleSkill, Combatant } from './types.js';
 
-/** O "Golpe de Esforço": a saída de quem ficou sem PP. Valores a revisar. */
 export const EMERGENCY_SKILL: BattleSkill = {
   id: 0,
   elementId: null,

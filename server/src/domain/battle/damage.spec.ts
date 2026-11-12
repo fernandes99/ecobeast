@@ -13,7 +13,6 @@ import type { Combatant } from './types.js';
 
 const NO_CATALOG = makeCatalog();
 
-/** Atq 10 contra Def 9, nível 5, Arranhão, sem nada mais. */
 function damage(
   options: {
     attacker?: Partial<Combatant>;

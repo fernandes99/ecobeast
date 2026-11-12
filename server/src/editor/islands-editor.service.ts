@@ -34,11 +34,8 @@ export const PUBLISHED_CANNOT_BE_DELETED =
 
 const DRAFT = 'draft';
 const PUBLISHED = 'published';
-/** O maior id que cabe numa coluna `int` do Postgres. */
 const MAX_ID = 2_147_483_647;
-/** Hexágonos por INSERT: 7 colunas cada, longe do limite de parâmetros do Postgres. */
 const TILE_CHUNK = 5_000;
-/** Uma ilha de 20.000 hexágonos leva alguns segundos pela rede até o Supabase. */
 const TRANSACTION = { maxWait: 10_000, timeout: 60_000 };
 
 type Tx = Prisma.TransactionClient;
@@ -55,7 +52,6 @@ function statusOf(maps: MapVersion[]): IslandStatus {
   return draft?.contentHash === published.contentHash ? 'published' : 'changed';
 }
 
-/** O corpo da rota, em snake_case, como o rascunho das regras. */
 export function toDraft(dto: IslandDraftDto): IslandDraft {
   return {
     name: dto.name,
@@ -96,7 +92,6 @@ export function toDraft(dto: IslandDraftDto): IslandDraft {
   };
 }
 
-/** O rascunho das regras no formato da resposta. */
 function toDto(draft: IslandDraft): IslandDraftDto {
   return {
     name: draft.name,
@@ -122,11 +117,6 @@ function toDto(draft: IslandDraft): IslandDraftDto {
   };
 }
 
-/**
- * As ilhas do editor (.specs/map-editor/architecture.md). Cada ilha tem o
- * rascunho e, depois da primeira publicação, a versão publicada. Salvar e
- * publicar trocam todas as linhas de uma versão numa transação só.
- */
 @Injectable()
 export class IslandsEditorService {
   constructor(
@@ -228,7 +218,6 @@ export class IslandsEditorService {
     await this.prisma.island.delete({ where: { id } });
   }
 
-  /** A ilha, com o id do rascunho e as versões; 404 se ela não existe. */
   private async island(id: number) {
     const island =
       id >= 1 && id <= MAX_ID
@@ -271,7 +260,6 @@ export class IslandsEditorService {
     };
   }
 
-  /** O rascunho do corpo, ou 400 com a primeira coisa errada. */
   private async checked(dto: IslandDraftDto): Promise<IslandDraft> {
     const draft = toDraft(dto);
     const error = draftError(draft, await this.knownIds());
@@ -279,7 +267,6 @@ export class IslandsEditorService {
     return draft;
   }
 
-  /** Troca a versão `kind` da ilha pelo rascunho, criando-a se faltar. */
   private async writeVersion(
     tx: Tx,
     islandId: number,

@@ -1,11 +1,5 @@
 import type { BattleEvent } from '../battle/types.js';
 
-/**
- * Regras do Bestiário (.specs/codex/architecture.md): o que uma resposta da
- * luta deixa o jogador ver.
- */
-
-/** Os ids sem repetição, na ordem da primeira vez de cada um. */
 export function uniqueIds(ids: readonly number[]): number[] {
   return [...new Set(ids)];
 }

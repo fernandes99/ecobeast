@@ -8,23 +8,15 @@ import {
 import { hasCell, sameCell, spotAt, standingAt } from './board.js';
 import type { BoardState } from './types.js';
 
-// As áreas das Técnicas (.specs/board-battle/architecture.md, "Técnicas no tabuleiro").
-
 export const OUT_OF_RANGE = 'Esse hexágono está fora do alcance.';
 export const NO_ENEMY_THERE = 'Não há inimigo nesse hexágono.';
 export const STRAIGHT_LINE = 'A linha só anda em linha reta.';
 
 export interface SkillArea {
-  /** Os hexágonos que a Técnica cobre, para o jogo desenhar e a marca ficar. */
   cells: HexCoord[];
-  /** Os inimigos atingidos, na ordem do caminho. */
   foes: Spot[];
 }
 
-/**
- * A área da Técnica de quem está na vaga `spot`, jogando de `from` (onde ele
- * fica depois de andar), contra o hexágono `target`. Não muda nada.
- */
 export function areaOf(
   state: BoardState,
   spot: Spot,
@@ -41,7 +33,6 @@ export function areaOf(
     : singleArea(state, spot, skill, target);
 }
 
-/** O inimigo de pé no hexágono, se houver. */
 function foeAt(state: BoardState, spot: Spot, cell: HexCoord): Spot | null {
   const occupant = spotAt(state, cell);
   return occupant &&
@@ -62,10 +53,6 @@ function singleArea(
   return { cells: [target], foes: foe ? [foe] : [] };
 }
 
-/**
- * O alvo escolhe uma das 6 direções. A linha anda `range` hexágonos ou até a
- * borda; aliados não a param. Sem `pierces`, ela para no primeiro inimigo.
- */
 function lineArea(
   state: BoardState,
   spot: Spot,

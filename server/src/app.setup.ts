@@ -10,10 +10,8 @@ import { json, type Request, type Response } from 'express';
 
 export const API_PREFIX = 'v1';
 export const OPENAPI_PATH = '/docs/openapi.json';
-/** Uma ilha de 20.000 hexágonos passa de 1 MB em JSON (map-editor/01). */
 const EDITOR_BODY_LIMIT = '5mb';
 
-/** As mensagens de um campo e, numa lista de objetos, as de cada item. */
 function messagesOf(error: ValidationError): string[] {
   return [
     ...Object.values(error.constraints ?? {}),
@@ -21,12 +19,6 @@ function messagesOf(error: ValidationError): string[] {
   ];
 }
 
-/**
- * O que main.ts e os testes e2e montam igual: prefixo /v1 (menos /health e as
- * páginas do login no navegador, /auth/google/*),
- * validação dos parâmetros (400 com a mensagem em pt-BR) e a documentação — OpenAPI em /docs/openapi.json e a Scalar em /docs.
- * Chamar antes de app.init() / app.listen().
- */
 export function configureApp(app: INestApplication): void {
   // Antes do leitor de JSON do Nest, que entra no init() com o limite padrão
   // de 100 KB: o corpo das rotas do editor chega a ele já lido. O nome próprio
@@ -44,7 +36,6 @@ export function configureApp(app: INestApplication): void {
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
-      // Um texto só, com as mensagens dos DTOs (já em pt-BR).
       exceptionFactory: (errors) =>
         new BadRequestException(errors.flatMap(messagesOf).join('; ')),
     }),

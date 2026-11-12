@@ -59,7 +59,6 @@ describe('Rotas do jogador (e2e)', () => {
     await app.close();
   });
 
-  /** Um usuário novo, com as chamadas já assinadas por ele. */
   async function newUser() {
     const id = randomUUID();
     users.push(id);
@@ -77,7 +76,6 @@ describe('Rotas do jogador (e2e)', () => {
     };
   }
 
-  /** Um usuário novo com Domador e inicial; devolve o `uid` da criatura. */
   async function userWithStarter() {
     const user = await newUser();
     await user.create({ name: 'Ana' }).expect(201);

@@ -7,11 +7,6 @@ import {
 } from './login-sessions.service.js';
 import { ERROR_PAGE, SUCCESS_PAGE } from './pages.js';
 
-/**
- * As duas páginas abertas no navegador do jogador
- * (.specs/auth-google/01-auth-server.md, RF-13 e RF-14). Ficam fora do /v1
- * e da documentação: quem as chama é o navegador, não o jogo.
- */
 @ApiExcludeController()
 @Controller('auth/google')
 export class GoogleRedirectController {
@@ -19,7 +14,6 @@ export class GoogleRedirectController {
 
   constructor(private readonly logins: LoginSessionsService) {}
 
-  /** A ida: leva ao Google pelo Supabase. Vale uma vez por login. */
   @Get('go')
   async go(
     @Query('login') loginId: unknown,
@@ -33,7 +27,6 @@ export class GoogleRedirectController {
     }
   }
 
-  /** O retorno do Google: troca o código pela sessão e guarda no login. */
   @Get('callback')
   async callback(
     @Query('login') loginId: unknown,

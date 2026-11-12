@@ -36,12 +36,10 @@ import {
 } from './progression.service.js';
 
 const NO_CHOICE_RESPONSE = `Nada pendente para esse Ecobeast, de outro Domador ou de uma luta anterior: "${NO_CHOICE}"`;
-/** Um uid malformado é só uma escolha que não existe. */
 const UID_PIPE = new ParseUUIDPipe({
   exceptionFactory: () => new NotFoundException(NO_CHOICE),
 });
 
-/** As escolhas depois da vitória (.specs/progression/architecture.md, "Contrato"). */
 @ApiTags('Progressão')
 @ApiBearerAuth()
 @ApiUnauthorizedResponse({

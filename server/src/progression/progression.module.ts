@@ -5,7 +5,6 @@ import { ProgressionController } from './progression.controller.js';
 import { ProgressionService } from './progression.service.js';
 import { ProgressionStore } from './progression.store.js';
 
-/** Técnicas novas, evolução e as escolhas do jogador depois da vitória. */
 @Module({
   imports: [AuthModule, CodexModule],
   controllers: [ProgressionController],

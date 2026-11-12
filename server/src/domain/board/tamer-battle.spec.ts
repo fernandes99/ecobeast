@@ -11,13 +11,10 @@ import {
   wild,
 } from './testing.js';
 
-/** A luta contra um Domador NPC (.specs/npc-tamers/02-tamer-rules.md). */
-
 const SCRATCH_SLOT = 1;
 const SPHERE = 50;
 const TAMER: Partial<BattleState> = { opponent: 'tamer', canFlee: false };
 
-/** Um catálogo com Esfera, captura e XP para o Ecobeast 7 dos testes. */
 function rewardingCatalog() {
   const catalog = boardCatalog();
   catalog.xpYields.set(7, 50);
@@ -30,7 +27,6 @@ function rewardingCatalog() {
   return catalog;
 }
 
-/** O jogador derruba o último inimigo, com 1 de HP, ao lado dele. */
 function finishingBlow(overrides: Partial<BattleState>) {
   return playVez(
     makeBoardState(
@@ -47,7 +43,6 @@ function finishingBlow(overrides: Partial<BattleState>) {
   );
 }
 
-/** O jogador, com 1 de HP, espera; o inimigo ao lado age e derruba ele. */
 function knockedOut(overrides: Partial<BattleState>) {
   return playVez(
     makeBoardState(

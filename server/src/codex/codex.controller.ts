@@ -14,7 +14,6 @@ import { CurrentUser } from '../auth/current-user.decorator.js';
 import { CodexResponseDto } from './codex.dto.js';
 import { CodexService } from './codex.service.js';
 
-/** O Bestiário (.specs/codex/architecture.md, "Contrato"). */
 @ApiTags('Bestiário')
 @ApiBearerAuth()
 @ApiUnauthorizedResponse({

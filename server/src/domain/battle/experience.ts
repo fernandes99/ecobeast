@@ -23,11 +23,6 @@ import type {
   TurnContext,
 } from './types.js';
 
-/**
- * Anota quem está em campo contra quem. O inimigo que entra começa com os
- * Ecobeasts do jogador de pé em campo; o do jogador que entra passa a contar
- * para cada inimigo em campo.
- */
 export function recordEntry(context: TurnContext, spot: Spot): void {
   const { state } = context;
   if (spot.side === 'enemy') {
@@ -43,10 +38,6 @@ export function recordEntry(context: TurnContext, spot: Spot): void {
   }
 }
 
-/**
- * Reparte o XP do inimigo que acabou de desmaiar entre quem esteve em campo
- * contra ele, está de pé e não chegou ao nível 100.
- */
 export function awardXp(context: TurnContext, enemy: Combatant): void {
   const { state, catalog, events } = context;
   const receivers = [...enemy.foughtBy]
@@ -72,11 +63,6 @@ export function awardXp(context: TurnContext, enemy: Combatant): void {
   }
 }
 
-/**
- * A vitória dá moedas por inimigo desmaiado, e a derrota tira, pela razão
- * entre os níveis de quem está em campo no fim (progression/05 e
- * battle-slots/architecture.md, "XP e moedas"). Fuga e captura não mexem.
- */
 export function settleCoins(
   context: TurnContext,
   result: BattleResult,
@@ -120,7 +106,6 @@ export function settleCoins(
   }
 }
 
-/** Quem está em campo no fim, mesmo desmaiado; o capturado já saiu. */
 function fieldCreatures(state: BattleState, side: SideSlug): Combatant[] {
   return occupiedSpots(state, side)
     .map((spot) => activeAt(state, spot)!)

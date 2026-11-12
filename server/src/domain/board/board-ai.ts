@@ -12,14 +12,11 @@ import { cellOf, MOVE_RANGE, reachable, standingOnBoard } from './board.js';
 import { markAt } from './marks.js';
 import type { BoardAction, BoardState, BoardVez } from './types.js';
 
-// A vez de um selvagem (.specs/board-battle/architecture.md, "A vez dos selvagens").
-
 interface Attack {
   target: HexCoord;
   foe: Spot;
 }
 
-/** Sorteia só quando há mais de um. */
 function pick<Item>(items: Item[], random: Random): Item {
   return items.length > 1
     ? items[Math.floor(random() * items.length)]!
@@ -74,10 +71,6 @@ export function chooseEnemyVez(
   return { position, ...move, action };
 }
 
-/**
- * O hexágono alcançável mais perto do alvo, ficando onde está se nenhum for
- * melhor. No empate, os sem marca primeiro, e depois o sorteio.
- */
 function approach(
   state: BoardState,
   from: HexCoord,
@@ -97,7 +90,6 @@ function approach(
   return pick(unmarked.length > 0 ? unmarked : closest, random);
 }
 
-/** Como a Técnica atinge alguém do jogador de `cell`: o alvo escolhido primeiro. */
 function attackFrom(
   state: BoardState,
   spot: Spot,

@@ -5,7 +5,6 @@ import { BattleModule } from '../battle/battle.module.js';
 import { BoardBattleController } from './board-battle.controller.js';
 import { BoardBattleService } from './board-battle.service.js';
 
-/** A luta no tabuleiro do usuário logado: começar, jogar a vez e gravar o fim. */
 @Module({
   imports: [AuthModule, CodexModule, BattleModule],
   controllers: [BoardBattleController],

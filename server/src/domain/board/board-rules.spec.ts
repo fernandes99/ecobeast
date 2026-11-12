@@ -59,7 +59,6 @@ catalog.items.set(SPHERE, {
 catalog.captureRates.set(WILD_SPECIES, 45);
 catalog.captureRates.set(RARE_SPECIES, 0);
 
-/** O selvagem fica ao lado do jogador, ao alcance do Arranhão. */
 const TARGET = at(2, 4);
 const NEAR = { cells: { enemy: [TARGET] } };
 const SCRATCH: BoardVez = {
@@ -73,7 +72,6 @@ const knowing = (skillId: number, currentPp = 10) => ({
   skills: [{ skillId, currentPp }],
 });
 
-/** Um contra um, com o selvagem dormindo ao lado. */
 function duel(
   player: Partial<Combatant> = {},
   enemy: Partial<Combatant> = {},

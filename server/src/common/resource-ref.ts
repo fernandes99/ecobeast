@@ -1,6 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-/** Referência curta a outro recurso, como na PokeAPI (RF-03). */
 export class ResourceRef {
   @ApiProperty({ example: 1 })
   id: number;
@@ -18,7 +17,6 @@ export class ResourceRef {
   url: string;
 }
 
-/** `ref('elements', fogo)` → `{ id: 1, slug: 'fire', name: 'Fogo', url: '/v1/elements/1' }`. */
 export function ref(
   resource: string,
   row: { id: number; slug: string; name: string },

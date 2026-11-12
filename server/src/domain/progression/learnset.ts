@@ -6,7 +6,6 @@ function byLevelThenId(a: LearnsetEntry, b: LearnsetEntry): number {
   return (a.level ?? 0) - (b.level ?? 0) || a.skillId - b.skillId;
 }
 
-/** As Técnicas por nível em `levelBefore < nível ≤ levelAfter`, por nível e id. */
 export function skillsBetween(
   learnset: LearnsetEntry[],
   levelBefore: number,
@@ -24,7 +23,6 @@ export function skillsBetween(
     .map(({ skillId }) => skillId);
 }
 
-/** As Técnicas que a espécie aprende ao evoluir para ela, por id. */
 export function evolutionSkills(learnset: LearnsetEntry[]): number[] {
   return learnset
     .filter(({ method }) => method === 'evolution')
@@ -32,10 +30,6 @@ export function evolutionSkills(learnset: LearnsetEntry[]): number[] {
     .map(({ skillId }) => skillId);
 }
 
-/**
- * Sem as que ele já conhece e sem repetição, as primeiras entram nas vagas
- * livres; as que sobram esperam a escolha do jogador.
- */
 export function learnNewSkills(
   known: number[],
   candidates: number[],

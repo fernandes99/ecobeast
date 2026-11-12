@@ -5,10 +5,8 @@ import { BIOMES, type Biome, type MapTile } from './map-generator.js';
 import { DEFAULT_SPAWN_CONFIG, SpawnConfig } from './spawn-config.js';
 
 const MIN_LEVEL = 1;
-/** A base de uma linha, que não vem de nenhuma evolução. */
 const BASE_NATURAL_LEVEL = 1;
 
-/** O bioma de encontro é o próprio bioma do hexágono (terrain-height). */
 export const ENCOUNTER_BIOMES = BIOMES;
 export type EncounterBiome = Biome;
 
@@ -24,12 +22,10 @@ export interface SpawnSpecies {
   rates: Partial<Record<EncounterBiome, number>>;
 }
 
-/** Um Ecobeast no mapa. O resto dele é sorteado quando a luta começa. */
 export interface MapSpawn extends HexCoord {
   id: number;
   speciesId: number;
   level: number;
-  /** Posto pelo spawn de depuração (biome-encounters/05), e não pelo sorteio. */
   debug?: boolean;
 }
 
@@ -38,11 +34,9 @@ interface WeightedSpecies {
   weight: number;
 }
 
-/** O que o sorteio precisa saber de um bioma que pode receber Ecobeasts. */
 interface BiomeRoll {
   tiles: MapTile[];
   candidates: WeightedSpecies[];
-  /** Hexágonos do bioma × soma dos pesos: a chance dele levar a vaga. */
   weight: number;
 }
 
@@ -70,7 +64,6 @@ export function naturalLevel(
   return BASE_NATURAL_LEVEL + gap;
 }
 
-/** A taxa, reduzida a cada nível que falta ao time para o nível natural. */
 export function spawnWeight(
   rate: number,
   natural: number,
@@ -81,7 +74,6 @@ export function spawnWeight(
   return rate * config.missingLevelFactor ** (natural - teamAverage);
 }
 
-/** Parte do nível natural e é puxado pela média do time. */
 export function wildLevel(
   natural: number,
   teamAverage: number,
@@ -95,7 +87,6 @@ export function wildLevel(
   return Math.min(MAX_LEVEL, Math.max(MIN_LEVEL, level));
 }
 
-/** Um sorteio por peso. Com um arredondamento azarado, fica com o último, que também tem peso. */
 export function pickWeighted<T extends { weight: number }>(
   items: T[],
   random: Random,
@@ -141,7 +132,6 @@ function biomeRolls(
   });
 }
 
-/** Os Ecobeasts de um mapa (.specs/biome-encounters/architecture.md, "Sorteio do mapa"). */
 export function rollSpawns(
   tiles: MapTile[],
   species: SpawnSpecies[],

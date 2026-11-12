@@ -8,7 +8,6 @@ import { LoginSessionsService } from './login-sessions.service.js';
 import { SupabaseAuthClient } from './supabase-auth.client.js';
 import { TokenVerifier } from './token-verifier.js';
 
-/** Login com Google pelo Supabase Auth e a guarda das rotas do jogador. */
 @Module({
   controllers: [AuthController, GoogleRedirectController],
   providers: [

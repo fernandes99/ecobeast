@@ -3,10 +3,8 @@ import type { App } from 'supertest/types.js';
 import type { MapTamer } from '../../src/domain/tamers/tamers.js';
 import { ExplorationStore } from '../../src/exploration/exploration.store.js';
 
-/** Onde os testes deixam o Domador e o Ecobeast. */
 export const HERE = { q: 0, r: 0 };
 
-/** Um Domador posto à mão; por padrão, Lia, 1×1, com um Ruvo de nível 5, em `HERE`. */
 export type PlacedTamer = Partial<MapTamer>;
 
 interface WildCreature {

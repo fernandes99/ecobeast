@@ -1,9 +1,3 @@
-/**
- * As duas páginas que o navegador mostra no fim do login
- * (.specs/auth-google/01-auth-server.md, RF-14), nas cores do jogo
- * (.specs/visual-theme/README.md). Textos fixos: nada vindo da URL entra aqui.
- */
-
 function page(title: string, text: string, accent: string): string {
   return `<!doctype html>
 <html lang="pt-BR">

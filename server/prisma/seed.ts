@@ -1,7 +1,3 @@
-// Carga inicial do catálogo (.specs/backend-api/03-catalog-seed.md).
-// Copia os JSON de SEED_DATA_DIR para as tabelas vazias e nunca apaga nem
-// sobrescreve linhas. Depois dela, o banco é o dono do que foi carregado.
-// Rodar com: npm run db:seed
 import 'dotenv/config';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -15,7 +11,6 @@ import { snakeToCamelKeys } from '../src/common/case.js';
 import { seedPlan } from './seed-plan.js';
 
 type Row = Record<string, unknown>;
-/** O pedaço de cada delegate do Prisma que o seed usa. */
 interface Delegate {
   count(): Promise<number>;
   createMany(args: { data: Row[] }): Promise<unknown>;

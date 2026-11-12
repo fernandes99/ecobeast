@@ -1,7 +1,5 @@
 import { hexDistance, hexNeighbors } from '../../src/domain/exploration/hex.js';
 
-/** Jogar uma luta no tabuleiro até o fim, nos e2e (board-battle e npc-tamers). */
-
 const ARRANHAO_SLOT = 1;
 /** Bem mais vezes do que uma luta precisa; só evita um teste sem fim. */
 const MAX_VEZES = 80;
@@ -11,7 +9,6 @@ export interface Cell {
   r: number;
 }
 
-/** O que estas jogadas leem da luta. */
 export interface PlayableBattle {
   phase: string;
   board: { cells: Cell[] };
@@ -71,7 +68,6 @@ export const fleeVez = (battle: PlayableBattle) => ({
   action: { type: 'flee' },
 });
 
-/** Joga as vezes do jogador, com `act`, até a luta sair do `choose_action`. */
 export async function playOut<T extends { battle: PlayableBattle }>(
   act: (body: object) => Promise<T>,
   first: T,

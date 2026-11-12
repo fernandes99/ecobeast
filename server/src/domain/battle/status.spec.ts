@@ -59,7 +59,6 @@ function context(
   };
 }
 
-/** A vez do jogador começando: o que o `canAct` decide e o que ele conta. */
 function tryToAct(player: Combatant, random: Random = sequence()) {
   const turn = contextOf(makeState(player, idle()), catalog, random);
   const acts = canAct(turn, PLAYER);

@@ -5,7 +5,6 @@ import { PlayerModule } from '../player/player.module.js';
 import { TeamController } from './team.controller.js';
 import { TeamService } from './team.service.js';
 
-/** A equipe e o Santuário do usuário logado. */
 @Module({
   imports: [AuthModule, BattleModule, PlayerModule],
   controllers: [TeamController],

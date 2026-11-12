@@ -14,10 +14,6 @@ function lerp(from: number, to: number, t: number): number {
   return from + (to - from) * t;
 }
 
-/**
- * Ruído suave em [0, 1]: valores sorteados numa grade, misturados entre os
- * pontos, somando oitavas cada vez mais finas. Consome `random` só aqui.
- */
 export function createNoise(random: Random): Noise2D {
   const values = Array.from({ length: TABLE_SIZE }, () => random());
   const order = values.map((_, index) => index);
