@@ -20,7 +20,7 @@ São 26 Técnicas com ícone. Faltavam 22: 6 de Fogo, 9 de Água e 7 de Flora.
 
 ## Fora do escopo
 
-- Os sons: uma Técnica sem arquivo de som não toca nada, como hoje (a [09](09-hit-feedback.md), RF-09). Cada som chega quando o dono pedir.
+- Os sons: uma Técnica sem arquivo de som não toca nada, como hoje (a [09](09-hit-feedback.md), RF-09). Vieram depois, na [19](19-element-skill-sounds.md).
 - Mudar os quatro efeitos de antes: foram escolhas do dono, e já estão na cor do Elemento.
 - As Técnicas sem ícone: entram quando ganharem o ícone, com uma linha no gerador.
 - Pintar as folhas ou mudar os pixels.

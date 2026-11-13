@@ -73,6 +73,7 @@ A luta nova substitui a de hoje em Explorar zona. A luta atual deixa de ser usad
 | 16 | [16-status-icons](16-status-icons.md) | O ícone de cada estado em cima da vida do Ecobeast, desenhado pelo Godot, nas cores do dono (queimado vermelho, envenenado verde, confuso rosa) | concluída (falta o dono ver no editor) |
 | 17 | [17-idle-facing](17-idle-facing.md) | O idle do Ruvo nas vistas de lado e o walk de frente e de costas, do PixelLab: parado, o Ecobeast olha para onde andou | concluída (falta o dono ver no editor) |
 | 18 | [18-element-skill-effects](18-element-skill-effects.md) | O efeito de toda Técnica com ícone, do kit de efeitos, na linha de cor do Elemento (Fogo vermelho, Água azul, Flora verde), o projétil da Chama Espiral e o efeito das Técnicas em si mesmo | concluída (falta o dono ver no editor) |
+| 19 | [19-element-skill-sounds](19-element-skill-sounds.md) | O som das 22 Técnicas da 18, gerado por síntese num script só | concluída (falta o dono ouvir no editor) |
 
 O desenho compartilhado está no [architecture.md](architecture.md).
 
