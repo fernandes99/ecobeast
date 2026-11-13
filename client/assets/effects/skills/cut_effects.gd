@@ -26,7 +26,7 @@ const EFFECTS := {
 	"presa_ignea": ["fire", "10/477"],
 	"chama_espiral": ["fire", "6/296"],
 	"couraca_de_cinzas": ["fire", "14/674"],
-	"erupcao_solar": ["fire", "11/527"],
+	"erupcao_solar": ["fire", "9/436"],
 	"jato_de_mare": ["water", "12/566"],
 	"espuma_densa": ["water", "11/519"],
 	"garra_de_mare": ["water", "11/509"],

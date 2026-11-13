@@ -9,7 +9,7 @@ Até a [17](17-idle-facing.md), só quatro Técnicas têm efeito: a Arranhão, a
 
 Cada folha do kit tem 9 linhas de cor, com os mesmos quadros de 64 × 64 em cada uma. Então a cor não precisa de pintura: basta escolher a linha do Elemento.
 
-Depois, no mesmo dia, o dono trocou a forma da Mordida Brasa: "na mordida brasa usa a 509.png" (a `Part 11/509.png`), e depois a da Presa Ígnea: "presa ignia voce vai usar a 477.png" (a `Part 10/477.png`).
+Depois, no mesmo dia, o dono trocou a forma da Mordida Brasa: "na mordida brasa usa a 509.png" (a `Part 11/509.png`), e depois a da Presa Ígnea: "presa ignia voce vai usar a 477.png" (a `Part 10/477.png`), e a da Erupção Solar: "a erupção dolar você vai usar a 436.png" (a `Part 9/436.png`).
 
 São 26 Técnicas com ícone. Faltavam 22: 6 de Fogo, 9 de Água e 7 de Flora.
 
@@ -54,7 +54,7 @@ São 26 Técnicas com ícone. Faltavam 22: 6 de Fogo, 9 de Água e 7 de Flora.
   | Presa Ígnea | Fogo | 10/477 | uma presa em meia-lua que cresce num golpe de fogo e se desfaz em brasas, pedido do dono; antes era a 13/622, duas mandíbulas que se encontram |
   | Chama Espiral | Fogo | 6/296 | espiral que gira e se fecha |
   | Couraça de Cinzas | Fogo | 14/674 | escudo de hexágono que se forma |
-  | Erupção Solar | Fogo | 11/527 | erupção que sobe do chão em pontas |
+  | Erupção Solar | Fogo | 9/436 | um sol que estoura em raios curvos e se desfaz, pedido do dono; antes era a 11/527, uma erupção que sobe do chão em pontas |
   | Jato de Maré | Água | 12/566 | jato de lado que estoura numa nuvem |
   | Espuma Densa | Água | 11/519 | bolhas que se juntam e estouram |
   | Garra de Maré | Água | 11/509 | três riscos curvos de garra |
