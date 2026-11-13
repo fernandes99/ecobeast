@@ -1,4 +1,4 @@
-"""Gera o som das Técnicas da board-battle/18 e /20 (board-battle/19 e /20), por síntese:
+"""Gera o som das Técnicas da board-battle/18, /20 e /21 (board-battle/19 a /21), por síntese:
 ruído em filtros, tons com a altura mudando e saturação leve. Cada som dura mais
 ou menos o efeito da Técnica, porque os dois começam juntos; o impacto fica com o
 som de dano. Tudo sai daqui: sem gravação de terceiros.
@@ -531,6 +531,86 @@ def ciclone(rng):
     return mix, 2.6
 
 
+def lamina_sombria(rng):
+    """Lâmina Sombria: um "shing" de lâmina, um corte que desce e um zumbido grave e
+    sombrio que pulsa e some."""
+    length = 0.5
+    mix = silence(length)
+    add(mix, ping(3200.0, 0.12, ((1.0, 1.0), (1.47, 0.6), (2.31, 0.3))), 0.0, 0.35)
+    cut = band(noise(rng, 0.2), [(0.0, 4500.0), (0.2, 900.0)], 2.5)
+    add(mix, shape(cut, [(0.0, 0.0), (0.04, 1.0), (0.2, 0.0)]), 0.02, 1.3)
+    add(mix, shape(low(noise(rng, 0.4), 300.0), [(0.0, 0.0), (0.06, 1.0), (0.4, 0.0)]), 0.02, 1.0)
+    dark = [a + b for a, b in zip(tone(0.45, 110.0, (1.0, 0.4)), tone(0.45, 116.0, (1.0, 0.4)))]
+    add(mix, shape(dark, [(0.0, 0.0), (0.08, 0.5), (0.45, 0.0)]), 0.05, 0.4)
+    return mix, 1.7
+
+
+def pinca_de_aco(rng):
+    """Pinça de Aço: um rangido de metal abrindo, o estalo da pinça fechando com um
+    tinido e o aperto rangendo."""
+    length = 0.7
+    mix = silence(length)
+    creak = band(noise(rng, 0.25), [(0.0, 900.0), (0.25, 1600.0)], 6.0)
+    add(mix, shape(creak, [(0.0, 0.0), (0.05, 1.0), (0.25, 0.6)]), 0.0, 2.0)
+    add(mix, ping(900.0, 0.3, ((1.0, 1.0), (1.49, 0.7), (2.33, 0.45))), 0.26, 0.8)
+    add(mix, thud(150.0, 60.0, 0.12), 0.26, 1.0)
+    add(mix, click(rng, 3000.0, 0.02, 1.2), 0.26, 1.4)
+    grind = band(noise(rng, 0.3), 2500.0, 3.0)
+    add(mix, flutter(rng, shape(grind, [(0.0, 0.0), (0.05, 1.0), (0.3, 0.0)]), 60.0, 0.7), 0.34, 0.8)
+    return mix, 1.8
+
+
+def garra_de_picareta(rng):
+    """Garra de Picareta: três garras de metal raspando, o golpe cravando na pedra e o
+    chão se partindo em lascas."""
+    length = 0.6
+    mix = silence(length)
+    for at in (0.0, 0.05, 0.1):
+        scrape = band(noise(rng, 0.08), [(0.0, 6000.0), (0.08, 2500.0)], 5.0)
+        add(mix, decay(scrape, 0.08, 0.002), at, 1.6)
+    add(mix, thud(130.0, 45.0, 0.2), 0.15, 1.4)
+    add(mix, click(rng, 1800.0, 0.03, 1.0), 0.15, 1.2)
+    add(mix, ping(1800.0, 0.2, ((1.0, 1.0), (2.7, 0.3))), 0.15, 0.3)
+    add(mix, crackles(rng, length, 90.0, 0.16, 0.45, freq=1500.0), 0.0, 1.0)
+    return mix, 2.0
+
+
+def beliscao(rng):
+    """Beliscão: o estalo seco de uma pinça pequena se fechando duas vezes, com um
+    guinchinho."""
+    length = 0.4
+    mix = silence(length)
+    for at in (0.02, 0.14):
+        add(mix, click(rng, 2800.0, 0.015, 1.5), at, 1.5)
+        add(mix, thud(240.0, 120.0, 0.05), at, 0.5)
+    add(mix, decay(tone(0.07, [(0.0, 1200.0), (0.07, 1800.0)]), 0.07, 0.005), 0.15, 0.25)
+    return mix, 3.2
+
+
+def couraca(rng):
+    """Couraça: um zumbido metálico que sobe enquanto o corpo endurece e uma batida de
+    bigorna no fim."""
+    length = 0.65
+    mix = silence(length)
+    hum = tone(0.36, [(0.0, 200.0), (0.34, 420.0)], (1.0, 0.5, 0.33, 0.25), (14.0, 0.01))
+    add(mix, shape(low(hum, 1800.0), [(0.0, 0.0), (0.1, 0.5), (0.34, 0.8), (0.36, 0.0)]), 0.0, 0.6)
+    add(mix, ping(600.0, 0.3, ((1.0, 1.0), (2.5, 0.6), (4.0, 0.3))), 0.35, 0.9)
+    add(mix, thud(120.0, 60.0, 0.12), 0.35, 1.0)
+    add(mix, click(rng, 2500.0, 0.02, 1.0), 0.35, 1.0)
+    return mix, 1.5
+
+
+def geada_silenciosa(rng):
+    """Geada Silenciosa: um chiado de gelo bem baixo se espalhando e tinidos de cristal
+    leves e soltos."""
+    length = 0.5
+    mix = shape(band(noise(rng, length), [(0.0, 6000.0), (0.5, 8000.0)], 2.0), [(0.0, 0.0), (0.1, 1.0), (0.5, 0.0)])
+    mix = [value * 0.35 for value in mix]
+    for _ in range(9):
+        add(mix, ping(rng.uniform(3000.0, 6000.0), 0.1, ((1.0, 1.0), (2.76, 0.3))), rng.uniform(0.0, 0.4), rng.uniform(0.15, 0.35))
+    return mix, 1.0
+
+
 SOUNDS = {
     "mordida_brasa": mordida_brasa,
     "fumaca_densa": fumaca_densa,
@@ -560,6 +640,12 @@ SOUNDS = {
     "lufada_cortante": lufada_cortante,
     "danca_do_vento": danca_do_vento,
     "ciclone": ciclone,
+    "lamina_sombria": lamina_sombria,
+    "pinca_de_aco": pinca_de_aco,
+    "garra_de_picareta": garra_de_picareta,
+    "beliscao": beliscao,
+    "couraca": couraca,
+    "geada_silenciosa": geada_silenciosa,
 }
 
 

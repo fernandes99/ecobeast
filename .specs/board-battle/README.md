@@ -75,6 +75,7 @@ A luta nova substitui a de hoje em Explorar zona. A luta atual deixa de ser usad
 | 18 | [18-element-skill-effects](18-element-skill-effects.md) | O efeito de toda Técnica com ícone, do kit de efeitos, na linha de cor do Elemento (Fogo vermelho, Água azul, Flora verde), o projétil da Chama Espiral e o efeito das Técnicas em si mesmo | concluída (falta o dono ver no editor) |
 | 19 | [19-element-skill-sounds](19-element-skill-sounds.md) | O som das 22 Técnicas da 18, gerado por síntese num script só | concluída (falta o dono ouvir no editor) |
 | 20 | [20-instinct-wind-skills](20-instinct-wind-skills.md) | Ícone, efeito e som do Uivo, da Patada, do Olhar Manhoso, da Lufada Cortante, da Dança do Vento e do Ciclone, com a linha do Vento tingida de verde-água | concluída (falta o dono ver e ouvir no editor) |
+| 21 | [21-metal-shadow-ice-skills](21-metal-shadow-ice-skills.md) | Ícone, efeito e som da Lâmina Sombria, da Pinça de Aço, da Garra de Picareta, do Beliscão, da Couraça e da Geada Silenciosa | concluída (falta o dono ver e ouvir no editor) |
 
 O desenho compartilhado está no [architecture.md](architecture.md).
 

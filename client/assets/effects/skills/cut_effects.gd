@@ -55,6 +55,12 @@ const EFFECTS := {
 	"lufada_cortante": ["wind", "9/438"],
 	"danca_do_vento": ["wind", "12/567"],
 	"ciclone": ["wind", "1/03"],
+	"lamina_sombria": ["shadow", "5/242"],
+	"pinca_de_aco": ["metal", "13/622"],
+	"garra_de_picareta": ["metal", "3/126"],
+	"beliscao": ["beast", "2/64"],
+	"couraca": ["metal", "13/623"],
+	"geada_silenciosa": ["ice", "4/176"],
 }
 
 const PROJECTILES := {
