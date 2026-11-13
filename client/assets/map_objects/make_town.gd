@@ -24,9 +24,20 @@ const TYPES := {
 	"town_house": ["one", 9],
 	"town_house_medium": ["pair", 12],
 	"town_house_large": ["triangle", 10],
+	"town_windmill": ["pair", 3, 9],
+	"town_garden": ["one", 6],
+	"town_fence": ["one", 2],
+	"town_well": ["one", 1],
+	"town_market_stall": ["one", 3],
+	"town_cart": ["one", 1],
+	"town_beast_stable": ["pair", 2],
+	"town_trough": ["one", 1],
+	"town_rune_shrine": ["one", 4, 16],
 }
 ## O pé das construções fica acima do canto de baixo da célula, na borda de baixo da linha da frente.
 const BASE_LIFT := 6
+## O pé dos objetos pequenos fica mais perto do centro do hexágono.
+const SMALL_LIFT := 17
 
 ## As paletas do guia: claro, base, escuro e contorno.
 const ROOF_RED: Array[Color] = [Color("#f8806c"), Color("#e8504c"), Color("#b83438"), Color("#7c2030")]
@@ -39,7 +50,9 @@ const ROOF_PURPLE: Array[Color] = [Color("#b490e0"), Color("#8a64c0"), Color("#6
 const ROOF_TEAL: Array[Color] = [Color("#78d0c8"), Color("#40a8a0"), Color("#2c7c78"), Color("#1c504e")]
 const ROOF_MUSTARD: Array[Color] = [Color("#f0d070"), Color("#d0a840"), Color("#a07c28"), Color("#64481a")]
 const BRICK: Array[Color] = [Color("#e08868"), Color("#b05838"), Color("#803c24"), Color("#4c2014")]
-const PLASTER: Array[Color] = [Color("#fffaf0"), Color("#f4ecd8"), Color("#d8ccb0"), Color("#5a4a3a")]
+const STRAW: Array[Color] = [Color("#f0ce7e"), Color("#d6aa5c"), Color("#a87c3c"), Color("#5c4020")]
+const SOIL: Array[Color] = [Color("#c08858"), Color("#9a6838"), Color("#74482a"), Color("#4a2c18")]
+const PLASTER: Array[Color] =[Color("#fffaf0"), Color("#f4ecd8"), Color("#d8ccb0"), Color("#5a4a3a")]
 const ARENA_STONE: Array[Color] = [Color("#f2eee2"), Color("#dcd6c6"), Color("#b4ac9a"), Color("#2a2e3c")]
 const STONE: Array[Color] = [Color("#eceaf2"), Color("#bcbccc"), Color("#84849c"), Color("#56566c")]
 const WOOD: Array[Color] = [Color("#e0a868"), Color("#b07840"), Color("#7a4a26"), Color("#3a2414")]
@@ -89,6 +102,10 @@ func _init() -> void:
 			DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("res://assets/map_objects/%s" % slug))
 			var error := art.save_png(OUT % [slug, variant])
 			print("%s/%d: %dx%d %s" % [slug, variant, art.get_width(), art.get_height(), "ok" if error == OK else error_string(error)])
+			if slug == "town_fence":
+				var parts := _strip_cells(_town_fence_parts(variant))
+				error = parts.save_png(HexFences.TOWN_PARTS_PATH % variant)
+				print("town_fence/parts_%d: %dx%d %s" % [variant, parts.get_width(), parts.get_height(), "ok" if error == OK else error_string(error)])
 	quit()
 
 
@@ -136,8 +153,8 @@ static func _top(image: Image) -> int:
 
 ## Põe a construção (já com o contorno) no meio da célula, com o pé acima do canto de
 ## baixo, e a sombra oval no chão por baixo dela.
-func _place_building(building: Image) -> void:
-	var foot := Vector2(_image.get_width() / 2.0, CANVAS_HEIGHT - BASE_LIFT)
+func _place_building(building: Image, lift := BASE_LIFT) -> void:
+	var foot := Vector2(_image.get_width() / 2.0, CANVAS_HEIGHT - lift)
 	_shadow(foot + Vector2(2.0, -1.0), Vector2(building.get_width() / 2.0 + 2.0, 4.0))
 	var at := Vector2i(roundi(foot.x - building.get_width() / 2.0), roundi(foot.y) - building.get_height())
 	_image.blend_rect(building, Rect2i(Vector2i.ZERO, building.get_size()), at)
@@ -706,3 +723,442 @@ static func _barrel(s: Image, at: Vector2i) -> void:
 	_fill(s, Rect2i(at.x, at.y + 2, 7, 1), IRON[1])
 	_fill(s, Rect2i(at.x, at.y + 6, 7, 1), IRON[1])
 	_fill(s, Rect2i(at.x + 1, at.y, 5, 1), WOOD[0])
+
+
+# --- Os objetos de vila da cidade ----------------------------------------------------
+
+const WINDMILL_ROOFS: Array = [ROOF_ORANGE, ROOF_GREEN, ROOF_BROWN]
+const STALL_AWNINGS: Array = [ROOF_ORANGE, ROOF_GREEN, ROOF_PURPLE]
+## Os minérios do santuário: azul, ouro, prata e carvão, em tons das paletas do guia.
+const ORES: Array = [
+	[GLASS_SHINE, GLASS, GLASS_DARK, Color("#1e3f8a")],
+	[Color("#fff090"), Color("#f8c838"), Color("#c8901c"), Color("#7a5410")],
+	[Color("#ffffff"), Color("#eceaf2"), Color("#bcbccc"), Color("#56566c")],
+	[Color("#7880a0"), Color("#50587a"), Color("#3a4058"), Color("#22263a")],
+]
+## O brilho em cada quadro do santuário: 0 é sem brilho, e os outros são o tamanho da cruz.
+const SHRINE_GLINT: Array[int] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 3, 2, 1]
+
+
+func _draw_town_windmill(variant: int, frame: int) -> void:
+	var roof: Array[Color] = []
+	roof.assign(WINDMILL_ROOFS[variant - 1])
+	var s := Image.create(76, 92, false, Image.FORMAT_RGBA8)
+	var cx := 38
+	for y: int in range(38, 92):
+		var half := roundi(13.0 + (y - 38) / 54.0 * 6.0)
+		var stone := y >= 72
+		var palette := STONE if stone else PLASTER
+		_fill(s, Rect2i(cx - half, y, half * 2, 1), palette[1])
+		_dot(s, cx - half, y, palette[0])
+		_dot(s, cx + half - 1, y, palette[2])
+		_dot(s, cx + half - 2, y, palette[2])
+		if stone and ((y - 72) % 5 == 4):
+			_fill(s, Rect2i(cx - half, y, half * 2, 1), STONE[2])
+		elif stone:
+			var offset := ((y - 72) / 5) % 2 * 4
+			for x: int in range(cx - half + offset + 2, cx + half - 2, 8):
+				_dot(s, x, y, STONE[2])
+	for y: int in [52, 62]:
+		var half := roundi(13.0 + (y - 38) / 54.0 * 6.0)
+		_fill(s, Rect2i(cx - half, y, half * 2, 1), WOOD[1])
+		_fill(s, Rect2i(cx - half, y + 1, half * 2, 1), WOOD[2])
+	_fill(s, Rect2i(cx - 13, 38, 26, 2), PLASTER[2])
+	_window(s, Rect2i(cx - 4, 44, 8, 7))
+	_wood_door(s, Rect2i(cx - 5, 76, 10, 15))
+	_hip_roof(s, Rect2i(cx - 17, 20, 34, 20), roof, 14)
+	var hub := Vector2(cx, 32)
+	var turn := frame / 9.0 * PI / 2.0
+	for blade: int in 4:
+		var angle := turn + blade * PI / 2.0 + PI / 4.0
+		var along := Vector2(cos(angle), sin(angle))
+		var across := Vector2(-along.y, along.x)
+		for t: int in range(16, 62):
+			for w: int in range(0, 15):
+				var p := hub + along * (t * 0.5) + across * (w * 0.5)
+				var lattice := t % 6 == 0 or w % 5 == 0
+				_dot(s, roundi(p.x), roundi(p.y), WOOD[1] if lattice else PLASTER[0])
+		for t: int in 64:
+			var p := hub + along * (t * 0.5)
+			_dot(s, roundi(p.x), roundi(p.y), WOOD[2])
+	_disc(s, hub, 2.5, IRON[1])
+	_dot(s, roundi(hub.x) - 1, roundi(hub.y) - 1, IRON[0])
+	_place_building(_outline(s, WOOD[3]))
+
+
+func _draw_town_garden(variant: int, _frame: int) -> void:
+	var s := Image.create(50, 38, false, Image.FORMAT_RGBA8)
+	_fill(s, Rect2i(0, 18, 50, 14), SOIL[1])
+	for y: int in [21, 25, 29]:
+		_fill(s, Rect2i(2, y, 46, 1), SOIL[2])
+		_fill(s, Rect2i(2, y - 1, 46, 1), SOIL[0])
+	_fill(s, Rect2i(0, 18, 2, 14), WOOD[1])
+	_fill(s, Rect2i(48, 18, 2, 14), WOOD[2])
+	_fill(s, Rect2i(0, 17, 50, 1), WOOD[0])
+	_fill(s, Rect2i(0, 32, 50, 6), WOOD[1])
+	_fill(s, Rect2i(0, 32, 50, 1), WOOD[0])
+	_fill(s, Rect2i(0, 37, 50, 1), WOOD[2])
+	for x: int in range(8, 50, 12):
+		_fill(s, Rect2i(x, 33, 1, 4), WOOD[2])
+	for row: int in 3:
+		for col: int in 4:
+			var foot := Vector2i(8 + col * 11 + (row % 2) * 2, 22 + row * 4)
+			call("_crop_%d" % variant, s, foot)
+	_place_building(_outline(s, WOOD[3]), 15)
+
+
+func _crop_1(s: Image, foot: Vector2i) -> void:
+	_stamp(s, foot - Vector2i(3, 5), [
+		".L.L..",
+		"LLLLL.",
+		".SOOS.",
+		"OLOOOD",
+		"OOOOOD",
+		".DDDD.",
+	], {"L": LEAF[1], "S": BANNER[0], "O": BANNER[1], "D": BANNER[2]})
+
+
+func _crop_2(s: Image, foot: Vector2i) -> void:
+	_stamp(s, foot - Vector2i(2, 6), [
+		"L.L.L",
+		".LLL.",
+		"L.D.L",
+		".LDL.",
+		"..O..",
+		".OSO.",
+	], {"L": LEAF[0], "D": LEAF[2], "O": BANNER[1], "S": BANNER[0]})
+
+
+func _crop_3(s: Image, foot: Vector2i) -> void:
+	_stamp(s, foot - Vector2i(2, 9), [
+		"G.G.G",
+		"Y.Y.Y",
+		"YGYGY",
+		"YDYDY",
+		"D.D.D",
+		"D.D.D",
+		"D.D.D",
+		".DDD.",
+		"..D..",
+	], {"G": GOLD[0], "Y": GOLD[1], "D": GOLD[2]})
+
+
+func _crop_4(s: Image, foot: Vector2i) -> void:
+	_stamp(s, foot - Vector2i(3, 13), [
+		"..Y.Y..",
+		".YYYYY.",
+		"YYBBBYY",
+		".YBDBY.",
+		"YYBBBYY",
+		".YYYYY.",
+		"..YLY..",
+		"...L...",
+		".LLL...",
+		"..LL.LL",
+		"...LLL.",
+		"...L...",
+		"...L...",
+	], {"Y": GOLD[1], "B": WOOD[2], "D": WOOD[3], "L": LEAF[1]})
+
+
+func _crop_5(s: Image, foot: Vector2i) -> void:
+	_stamp(s, foot - Vector2i(3, 6), [
+		"..P.P.",
+		".LLLLL",
+		"LLDLLL",
+		"LLLLDL",
+		".LDLL.",
+		"..SS..",
+	], {"P": ROOF_PURPLE[0], "L": LEAF[1], "D": LEAF[2], "S": SOIL[2]})
+
+
+func _crop_6(s: Image, foot: Vector2i) -> void:
+	_stamp(s, foot - Vector2i(1, 3), [
+		"L.L",
+		".D.",
+		".D.",
+	], {"L": LEAF[0], "D": LEAF[1]})
+
+
+func _draw_town_fence(variant: int, _frame: int) -> void:
+	var cell := HexFences.compose(_town_fence_parts(variant), 0)
+	var at := Vector2i((_centers[0] - HexFences.CELL_CENTER).round())
+	_image.blend_rect(cell, Rect2i(Vector2i.ZERO, cell.get_size()), at)
+
+
+## As 7 células da Cerca da cidade, no formato da island-villages/05: o poste do centro e
+## os braços dos lados 0 a 5. A madeira tem dois trilhos e um poste na ponta; a pedra,
+## um muro baixo com um pilar na ponta.
+func _town_fence_parts(variant: int) -> Array[Image]:
+	var cells: Array[Image] = []
+	var center := HexFences.CELL_CENTER
+	for index: int in 7:
+		var cell := Image.create(HexFences.CELL_SIZE.x, HexFences.CELL_SIZE.y, false, Image.FORMAT_RGBA8)
+		if index == 0:
+			if variant == 1:
+				_fence_post(cell, center)
+			else:
+				_fence_pillar(cell, center)
+		else:
+			var end := center + HexFences.EDGE_MIDPOINTS[index - 1]
+			if variant == 1:
+				_fence_rails(cell, center, end)
+				_fence_post(cell, end)
+			else:
+				_fence_wall(cell, center, end)
+				_fence_pillar(cell, end)
+		cells.append(cell)
+	return cells
+
+
+static func _fence_post(cell: Image, foot: Vector2) -> void:
+	var x := roundi(foot.x) - 2
+	var y := roundi(foot.y) + 2
+	_fill(cell, Rect2i(x - 1, y - 14, 6, 15), WOOD[3])
+	_fill(cell, Rect2i(x, y - 13, 4, 13), WOOD[1])
+	_fill(cell, Rect2i(x, y - 13, 1, 13), WOOD[0])
+	_fill(cell, Rect2i(x + 3, y - 13, 1, 13), WOOD[2])
+	_fill(cell, Rect2i(x, y - 13, 4, 1), WOOD[0])
+
+
+static func _fence_rails(cell: Image, from: Vector2, to: Vector2) -> void:
+	var steps := ceili(from.distance_to(to) * 2.0)
+	for rail: int in [-10, -5]:
+		for step: int in steps + 1:
+			var p := from.lerp(to, step / float(steps)) + Vector2(0, rail)
+			var x := roundi(p.x)
+			var y := roundi(p.y)
+			_dot(cell, x, y - 1, WOOD[3])
+			_dot(cell, x, y, WOOD[0])
+			_dot(cell, x, y + 1, WOOD[1])
+			_dot(cell, x, y + 2, WOOD[3])
+
+
+static func _fence_pillar(cell: Image, foot: Vector2) -> void:
+	var x := roundi(foot.x) - 4
+	var y := roundi(foot.y) + 3
+	_fill(cell, Rect2i(x - 1, y - 16, 10, 17), STONE[3])
+	_fill(cell, Rect2i(x, y - 15, 8, 15), STONE[1])
+	_fill(cell, Rect2i(x, y - 15, 1, 15), STONE[0])
+	_fill(cell, Rect2i(x + 6, y - 15, 2, 15), STONE[2])
+	_fill(cell, Rect2i(x - 1, y - 16, 10, 2), STONE[0])
+	_fill(cell, Rect2i(x - 1, y - 14, 10, 1), STONE[2])
+	_fill(cell, Rect2i(x, y - 8, 8, 1), STONE[2])
+
+
+static func _fence_wall(cell: Image, from: Vector2, to: Vector2) -> void:
+	var steps := ceili(from.distance_to(to) * 2.0)
+	var length := from.distance_to(to)
+	for step: int in steps + 1:
+		var t := step / float(steps)
+		var p := from.lerp(to, t)
+		var x := roundi(p.x)
+		var base := roundi(p.y) + 2
+		var seam := int(t * length) % 7 == 0
+		_dot(cell, x, base - 11, STONE[3])
+		_dot(cell, x, base - 10, STONE[0])
+		for y: int in range(base - 9, base):
+			var color := STONE[1]
+			if y == base - 5 or seam or y == base - 1:
+				color = STONE[2]
+			_dot(cell, x, y, color)
+		_dot(cell, x, base, STONE[3])
+
+
+static func _strip_cells(cells: Array[Image]) -> Image:
+	var size := cells[0].get_size()
+	var strip := Image.create(size.x * cells.size(), size.y, false, Image.FORMAT_RGBA8)
+	for index: int in cells.size():
+		strip.blit_rect(cells[index], Rect2i(Vector2i.ZERO, size), Vector2i(size.x * index, 0))
+	return strip
+
+
+func _draw_town_well(_variant: int, _frame: int) -> void:
+	var s := Image.create(40, 46, false, Image.FORMAT_RGBA8)
+	for x: int in [6, 31]:
+		_fill(s, Rect2i(x, 12, 3, 22), WOOD[1])
+		_fill(s, Rect2i(x, 12, 1, 22), WOOD[0])
+		_fill(s, Rect2i(x + 2, 12, 1, 22), WOOD[2])
+	_fill(s, Rect2i(6, 15, 28, 2), WOOD[1])
+	_fill(s, Rect2i(6, 16, 28, 1), WOOD[2])
+	_fill(s, Rect2i(19, 17, 1, 9), STRAW[2])
+	_fill(s, Rect2i(17, 26, 5, 4), WOOD[1])
+	_fill(s, Rect2i(17, 27, 5, 1), IRON[1])
+	_hip_roof(s, Rect2i(1, 0, 38, 14), ROOF_BROWN, 8)
+	_fill(s, Rect2i(4, 30, 32, 4), STONE[0])
+	_fill(s, Rect2i(8, 30, 24, 2), GLASS_DARK)
+	_fill(s, Rect2i(10, 30, 6, 1), GLASS)
+	_fill(s, Rect2i(4, 34, 32, 12), STONE[1])
+	_fill(s, Rect2i(4, 34, 1, 12), STONE[0])
+	_fill(s, Rect2i(34, 34, 2, 12), STONE[2])
+	for y: int in [38, 42]:
+		_fill(s, Rect2i(4, y, 32, 1), STONE[2])
+		var offset := 0 if y == 38 else 4
+		for x: int in range(8 + offset, 34, 8):
+			_fill(s, Rect2i(x, y - 3, 1, 3), STONE[2])
+	_fill(s, Rect2i(4, 45, 32, 1), STONE[2])
+	_place_building(_outline(s, STONE[3]), SMALL_LIFT)
+
+
+func _draw_town_market_stall(variant: int, _frame: int) -> void:
+	var awning: Array[Color] = []
+	awning.assign(STALL_AWNINGS[variant - 1])
+	var s := Image.create(46, 40, false, Image.FORMAT_RGBA8)
+	for x: int in [3, 41]:
+		_fill(s, Rect2i(x, 8, 2, 24), WOOD[1])
+		_fill(s, Rect2i(x + 1, 8, 1, 24), WOOD[2])
+	for i: int in 46:
+		var stripe: Color = awning[1] if (i / 5) % 2 == 0 else WHITE
+		_fill(s, Rect2i(i, 0, 1, 9), stripe)
+		_dot(s, i, 0, awning[0] if (i / 5) % 2 == 0 else WHITE)
+		if i % 5 in [1, 2, 3]:
+			_dot(s, i, 9, stripe)
+	_fill(s, Rect2i(0, 8, 46, 1), awning[2])
+	_fill(s, Rect2i(1, 26, 44, 14), WOOD[1])
+	_fill(s, Rect2i(1, 26, 44, 2), WOOD[0])
+	_fill(s, Rect2i(1, 39, 44, 1), WOOD[2])
+	for x: int in range(5, 45, 6):
+		_fill(s, Rect2i(x, 29, 1, 10), WOOD[2])
+	var fruits: Array[Color] = [FLOWERS[0], GOLD[1], LEAF[0], BANNER[1], ROOF_PURPLE[1]]
+	for i: int in 10:
+		var color := fruits[i % fruits.size()]
+		var x := 3 + i * 4
+		_fill(s, Rect2i(x, 22, 3, 3), color)
+		_dot(s, x, 22, WHITE)
+		_fill(s, Rect2i(x + 2, 19, 3, 3), fruits[(i + 2) % fruits.size()])
+	_place_building(_outline(s, WOOD[3]), SMALL_LIFT)
+
+
+func _draw_town_cart(_variant: int, _frame: int) -> void:
+	var s := Image.create(50, 32, false, Image.FORMAT_RGBA8)
+	_fill(s, Rect2i(0, 18, 12, 2), WOOD[1])
+	_fill(s, Rect2i(0, 19, 12, 1), WOOD[2])
+	_fill(s, Rect2i(16, 6, 10, 8), WOOD[0])
+	_fill(s, Rect2i(16, 6, 10, 1), WOOD[0])
+	_fill(s, Rect2i(16, 13, 10, 1), WOOD[2])
+	_fill(s, Rect2i(20, 6, 1, 8), WOOD[2])
+	_fill(s, Rect2i(28, 4, 12, 10), STRAW[1])
+	_fill(s, Rect2i(28, 4, 12, 2), STRAW[0])
+	_fill(s, Rect2i(38, 4, 2, 10), STRAW[2])
+	_fill(s, Rect2i(33, 3, 2, 2), STRAW[2])
+	_fill(s, Rect2i(10, 14, 38, 10), WOOD[1])
+	_fill(s, Rect2i(10, 14, 38, 1), WOOD[0])
+	_fill(s, Rect2i(10, 19, 38, 1), WOOD[2])
+	_fill(s, Rect2i(46, 14, 2, 10), WOOD[2])
+	for x: int in range(16, 46, 8):
+		_fill(s, Rect2i(x, 15, 1, 9), WOOD[2])
+	var wheel := Vector2(32, 25)
+	_disc(s, wheel, 7.0, IRON[2])
+	_disc(s, wheel, 6.0, WOOD[1])
+	_disc(s, wheel, 4.0, CLEAR)
+	for angle: int in 4:
+		var along := Vector2.RIGHT.rotated(angle * PI / 4.0)
+		for t: int in range(-4, 5):
+			var p := wheel + along * t
+			_dot(s, roundi(p.x), roundi(p.y), WOOD[2])
+	_disc(s, wheel, 1.5, IRON[1])
+	_place_building(_outline(s, WOOD[3]), SMALL_LIFT)
+
+
+func _draw_town_beast_stable(variant: int, _frame: int) -> void:
+	var wood := variant == 1
+	var walls: Array[Color] = WOOD if wood else STONE
+	var roof: Array[Color] = ROOF_BROWN if wood else ROOF_GREEN
+	var s := Image.create(104, 62, false, Image.FORMAT_RGBA8)
+	_roof(s, Rect2i(0, 0, 104, 26), roof)
+	_wall(s, Rect2i(3, 26, 98, 36), walls)
+	if wood:
+		for x: int in range(6, 100, 5):
+			_fill(s, Rect2i(x, 28, 1, 30), WOOD[2])
+	else:
+		for y: int in range(32, 58, 6):
+			_fill(s, Rect2i(4, y, 96, 1), STONE[2])
+	_fill(s, Rect2i(36, 34, 32, 26), WOOD[3])
+	_fill(s, Rect2i(37, 35, 30, 25), STRAW[2])
+	_fill(s, Rect2i(39, 50, 26, 10), STRAW[1])
+	_fill(s, Rect2i(39, 50, 26, 2), STRAW[0])
+	for door: int in [26, 68]:
+		_fill(s, Rect2i(door, 34, 10, 26), WOOD[1])
+		_fill(s, Rect2i(door, 34, 10, 1), WOOD[0])
+		for i: int in 10:
+			_dot(s, door + i, 35 + roundi(i * 2.4), WOOD[2])
+			_dot(s, door + 9 - i, 35 + roundi(i * 2.4), WOOD[2])
+		_fill(s, Rect2i(door, 34, 1, 26), WOOD[2])
+		_fill(s, Rect2i(door + 9, 34, 1, 26), WOOD[2])
+	_fill(s, Rect2i(43, 27, 18, 7), WOOD[0])
+	_fill(s, Rect2i(43, 33, 18, 1), WOOD[2])
+	_stamp(s, Vector2i(48, 28), [
+		".D.D.D.",
+		"...D...",
+		"..DDD..",
+		"..DDD..",
+	], {"D": WOOD[3]})
+	for x: int in [8, 84]:
+		_window(s, Rect2i(x, 36, 10, 8))
+	for x: int in [6, 86]:
+		_fill(s, Rect2i(x, 50, 12, 9), STRAW[1])
+		_fill(s, Rect2i(x, 50, 12, 2), STRAW[0])
+		_fill(s, Rect2i(x + 10, 50, 2, 9), STRAW[2])
+		_fill(s, Rect2i(x, 54, 12, 1), STRAW[2])
+	_place_building(_outline(s, roof[3]))
+
+
+func _draw_town_trough(_variant: int, _frame: int) -> void:
+	var s := Image.create(36, 16, false, Image.FORMAT_RGBA8)
+	_fill(s, Rect2i(0, 2, 36, 3), WOOD[0])
+	_fill(s, Rect2i(2, 3, 32, 2), GLASS)
+	_fill(s, Rect2i(4, 3, 6, 1), GLASS_SHINE)
+	_fill(s, Rect2i(0, 5, 36, 7), WOOD[1])
+	_fill(s, Rect2i(0, 5, 36, 1), WOOD[0])
+	_fill(s, Rect2i(0, 11, 36, 1), WOOD[2])
+	_fill(s, Rect2i(0, 8, 36, 1), WOOD[2])
+	for x: int in [3, 30]:
+		_fill(s, Rect2i(x, 12, 3, 4), WOOD[2])
+	_place_building(_outline(s, WOOD[3]), SMALL_LIFT)
+
+
+func _draw_town_rune_shrine(variant: int, frame: int) -> void:
+	var ore: Array[Color] = []
+	ore.assign(ORES[variant - 1])
+	var s := Image.create(24, 50, false, Image.FORMAT_RGBA8)
+	_fill(s, Rect2i(1, 45, 22, 5), STONE[1])
+	_fill(s, Rect2i(1, 45, 22, 1), STONE[0])
+	_fill(s, Rect2i(1, 49, 22, 1), STONE[2])
+	_fill(s, Rect2i(5, 22, 14, 23), STONE[1])
+	_fill(s, Rect2i(5, 22, 1, 23), STONE[0])
+	_fill(s, Rect2i(17, 22, 2, 23), STONE[2])
+	_fill(s, Rect2i(3, 19, 18, 3), STONE[0])
+	_fill(s, Rect2i(3, 21, 18, 1), STONE[2])
+	_stamp(s, Vector2i(9, 27), [
+		"RRRRR",
+		"..R..",
+		".R.R.",
+		"R...R",
+		".R.R.",
+		"..R..",
+		"RRRRR",
+		".....",
+		"R.R.R",
+		".RRR.",
+		"..R..",
+	], {"R": ore[2]})
+	for shard: Array in [[Vector2i(6, 8), 3, 11], [Vector2i(15, 10), 3, 9], [Vector2i(10, 2), 4, 17]]:
+		var at: Vector2i = shard[0]
+		var half: int = shard[1]
+		var height: int = shard[2]
+		for y: int in height:
+			var w := mini(half, 1 + y) if y < height - 2 else half
+			for x: int in range(-w, w):
+				var color: Color = ore[1]
+				if x < -w + 2:
+					color = ore[0]
+				elif x >= w - 1:
+					color = ore[2]
+				_dot(s, at.x + x, at.y + y, color)
+	var glint := SHRINE_GLINT[frame % SHRINE_GLINT.size()]
+	if glint > 0:
+		var spark := Vector2i(14, 5)
+		for i: int in range(-glint, glint + 1):
+			_dot(s, spark.x + i, spark.y, WHITE if absi(i) < glint else LAMP_SHINE)
+			_dot(s, spark.x, spark.y + i, WHITE if absi(i) < glint else LAMP_SHINE)
+	_place_building(_outline(s, ore[3]), SMALL_LIFT)

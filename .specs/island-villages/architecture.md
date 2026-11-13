@@ -74,10 +74,19 @@ Os tipos depois da revisão da [03](03-map-objects.md#revisão-casas-árvores-pe
 | 24 | `town_house` | Casa (cidade) | um | 9: chalé, casa com chaminé e casa com varanda, em telhado laranja, verde e roxo | bloqueia |
 | 25 | `town_house_medium` | Casa média (cidade) | par | 12: casa comprida, sobrado e casa com oficina, em telhado laranja, marrom, verde e turquesa | os dois |
 | 26 | `town_house_large` | Casa grande (cidade) | triângulo | 10: casarão com torre e sobrado de dois andares, em telhado laranja, marrom, mostarda, roxo e turquesa | todos |
+| 27 | `town_windmill` | Moinho (cidade) | par | 3: telhado laranja, verde e marrom, com as pás girando | os dois |
+| 28 | `town_garden` | Horta (cidade) | um | 6: abóbora, raízes, trigo, girassol, tubérculos e uma em crescimento | bloqueia |
+| 29 | `town_fence` | Cerca (cidade) | um | 2: madeira e pedra, ligando-se às vizinhas da cidade | bloqueia |
+| 30 | `town_well` | Poço (cidade) | um | 1 | bloqueia |
+| 31 | `town_market_stall` | Barraca de feira (cidade) | um | 3: toldo laranja, verde e roxo | bloqueia |
+| 32 | `town_cart` | Carroça (cidade) | um | 1 | bloqueia |
+| 33 | `town_beast_stable` | Estábulo de Ecobeasts (cidade) | par | 2: madeira e pedra | os dois |
+| 34 | `town_trough` | Bebedouro (cidade) | um | 1 | bloqueia |
+| 35 | `town_rune_shrine` | Santuário de runas (cidade) | um | 4: cristal azul, de ouro, de prata e de carvão, com brilho | bloqueia |
 
 Os tipos 21 em diante são da [town-art](../town-art/README.md): a arte deles vem do `make_town.gd`, no estilo do [guia](../town-art/style-guide.md), ao lado dos tipos de antes, que continuam como estão. Nos prédios do Refúgio, da Loja e da Arena, a ação continua pintada à parte.
 
-Depois da [05](05-connected-fences.md), a Cerca se liga sozinha: um poste no centro e um braço até o meio de cada lado cujo vizinho, na mesma altura, também tem cerca; sozinha, ela é reta. O `HexFences` monta a arte a partir de `fence/parts_<variante>.png` (7 células de 96×72: o poste e os braços dos lados 0 a 5), e o `<variante>.png` é só a prévia do editor.
+Depois da [05](05-connected-fences.md), a Cerca se liga sozinha: um poste no centro e um braço até o meio de cada lado cujo vizinho, na mesma altura, também tem cerca; sozinha, ela é reta. O `HexFences` monta a arte a partir de `fence/parts_<variante>.png` (7 células de 96×72: o poste e os braços dos lados 0 a 5), e o `<variante>.png` é só a prévia do editor. A Cerca da cidade (`town_fence`) é montada do mesmo jeito, com `town_fence/parts_<variante>.png`, e se liga só a outra Cerca da cidade (o `links` liga o mesmo tipo).
 
 Depois da [04](04-plants-and-animations.md), a casa na árvore (14) saiu, e a Vegetação não tem sprite: as plantas dela saem do `HexMapView`, como as do bioma. Os objetos animados têm os quadros lado a lado no PNG da variante, cada um com a largura da célula, e o `MapObjectSprite` anda neles na velocidade do tipo. Um objeto é desenhado depois do chão da linha seguinte à da frente dele (por baixo das decorações e dos atores dela), para a arte que desce da borda, como a pá do moinho, não ser cortada; só com um hexágono da frente mais alto ele fica antes das decorações da frente da própria linha.
 
@@ -203,14 +212,18 @@ Tamanhos da arte de agora, na variante 1 (em pixels da arte, como as texturas do
 | `well` | 64×59 | `refuge_building` | 128×88 |
 | `shop_building` | 128×84 | `arena_building` | 192×114 |
 | `town_house` | 64×50 a 64×56 | `town_house_medium` | 128×62 a 128×78 |
-| `town_house_large` | 128×98 a 128×100 | | |
+| `town_house_large` | 128×98 a 128×100 | `town_windmill` | 128×99 (9 quadros) |
+| `town_garden` | 64×38 a 64×46 | `town_fence` | 64×41 (só a prévia) |
+| `town_well` | 64×65 | `town_market_stall` | 64×59 |
+| `town_cart` | 64×48 | `town_beast_stable` | 128×70 |
+| `town_trough` | 64×33 | `town_rune_shrine` | 64×68 (16 quadros) |
 
 A altura pode mudar na arte final, desde que o pé continue no mesmo lugar. A escala é a do pacote Sunnyside em 1x: uma casa tem uns 48 px de largura num hexágono de 64, e o Domador tem 25 px de altura.
 
 **Arte de agora:** gerada pelo próprio Godot, para gerar de novo quando quiser:
 
 - `res://assets/map_objects/make_objects.gd` monta os objetos a partir do pacote Sunnyside World, que o dono tem na máquina e passa como argumento. Ele lê o tileset, os sprites e o mapa de exemplo do pacote (`Room1`, do GameMaker), onde as casas, o moinho e as barracas já estão montados peça por peça. A cor do telhado das variantes troca o bloco de cor do tileset, que repete as mesmas peças em azul, verde, laranja, vermelho e roxo. Peças que só existem num bloco de cor, como a cumeeira da casa grande, mudam de matiz nos outros. As árvores, as pedras e as hortas são compostas com os sprites e as peças do pacote, e a carroça, que ele não tem, é desenhada no estilo dele.
-- `res://assets/map_objects/make_town.gd` desenha a cidade só por código, no estilo do [guia da town-art](../town-art/style-guide.md), sem pacote de fora: hoje os prédios do Refúgio, da Loja e da Arena e as casas da cidade (`town_house`, `town_house_medium` e `town_house_large`). Da pasta `client/`: `godot --headless -s res://assets/map_objects/make_town.gd`, ou com slugs depois de `--` para gerar só esses.
+- `res://assets/map_objects/make_town.gd` desenha a cidade só por código, no estilo do [guia da town-art](../town-art/style-guide.md), sem pacote de fora: hoje os prédios do Refúgio, da Loja e da Arena as casas da cidade e os objetos de vila da cidade (os tipos `town_...`). Da pasta `client/`: `godot --headless -s res://assets/map_objects/make_town.gd`, ou com slugs depois de `--` para gerar só esses.
 - `res://assets/terrain/grounds/make_grounds.gd` gera as texturas de chão.
 
 Da pasta `client/`: `godot --headless -s res://assets/map_objects/make_objects.gd -- <pasta do pacote>`, a pasta que tem `Sunnyside_World_Assets` e `Sunnyside_World_Gamemaker`.

@@ -1,6 +1,6 @@
 # 03. Os objetos de vila da cidade
 
-- **Status:** rascunho
+- **Status:** concluída
 - **Depende de:** [02-houses](02-houses.md)
 
 ## Contexto
@@ -37,9 +37,9 @@ Os tipos novos, cada um com o formato, o bloqueio e o número de variantes do ti
 
 ## Critérios de aceite
 
-- [ ] O gerador grava todos os tipos da tabela, com as variantes e os quadros, e os PNGs dos tipos de hoje não mudam.
-- [ ] Numa imagem com todos lado a lado e o Domador, o traço é o mesmo das casas e das construções-chave da cidade.
-- [ ] Uma fileira e um anel de Cercas da cidade, de madeira e de pedra, se emendam; uma Cerca da cidade ao lado de uma de hoje não se liga a ela.
+- [x] O gerador grava todos os tipos da tabela, com as variantes e os quadros, e os PNGs dos tipos de hoje não mudam.
+- [x] Numa imagem com todos lado a lado e o Domador, o traço é o mesmo das casas e das construções-chave da cidade.
+- [x] Uma fileira e um anel de Cercas da cidade, de madeira e de pedra, se emendam; uma Cerca da cidade ao lado de uma de hoje não se liga a ela.
 - [ ] As pás do moinho giram e o santuário brilha no jogo, sem pulo entre os quadros.
 - [ ] O catálogo traz os tipos, e o editor os põe (com o dono, no F2).
 
@@ -63,10 +63,17 @@ cd server && npx prisma migrate deploy && npm run lint && npm run typecheck && n
 
 Uma cena temporária com todos os objetos, uma fileira e um anel de cercas das duas versões lado a lado e o Domador, e um olhar no jogo para as animações.
 
+Feita em 2026-11-12:
+- **Arte:** o `make_town.gd` gravou os 9 tipos, com as variantes, os 9 quadros do moinho, os 16 do santuário e as folhas `town_fence/parts_1.png` e `parts_2.png` (672×72). A horta usa a paleta nova Terra de canteiro, posta antes no guia. Os PNGs dos tipos de antes não mudaram.
+- **Imagens:** numa folha com todos, e num pedaço de ilha com o Domador (cena temporária, já apagada), o traço é o das casas da cidade. Um anel de 6 Cercas da cidade (3 de madeira e 3 de pedra) fechou o cercado, uma fileira reta e uma diagonal emendaram, e duas Cercas de antes ao lado da fileira ficaram ligadas só entre si. Os quadros do moinho giram as pás um quarto de volta, e o 9º emenda no 1º.
+- **Servidor:** a migração foi aplicada, a carga inicial ganhou os 9 tipos e o teste da carga conta 30 objetos. `lint`, `typecheck`, `npm test` e `npm run test:e2e` passam.
+- **Projeto:** abre sem erro de script.
+- **Falta o dono:** ver as pás girando e o brilho no jogo, e pôr os objetos no F2.
+
 ## Tarefas
 
-- [ ] A migração, a carga inicial e o teste da carga.
-- [ ] Moinho, horta, poço, barraca, carroça, estábulo, bebedouro e santuário.
-- [ ] A Cerca da cidade: a folha de peças, o `HexFences` e o `HexMapView`.
-- [ ] As velocidades no `MapObjectSprite`.
-- [ ] Conferir nas imagens e no jogo, e atualizar o `architecture.md` da island-villages e o `client/CLAUDE.md`.
+- [x] A migração, a carga inicial e o teste da carga.
+- [x] Moinho, horta, poço, barraca, carroça, estábulo, bebedouro e santuário.
+- [x] A Cerca da cidade: a folha de peças, o `HexFences` e o `HexMapView`.
+- [x] As velocidades no `MapObjectSprite`.
+- [x] Conferir nas imagens e no jogo, e atualizar o `architecture.md` da island-villages e o `client/CLAUDE.md`.

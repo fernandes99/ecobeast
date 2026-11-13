@@ -9,8 +9,14 @@ const ART_PATH := "res://assets/map_objects/%s/%d.png"
 const CENTER_TO_BOTTOM := 29.0
 const HIT_ALPHA := 0.5
 const HEX_HALF_WIDTH := 32.0
-## Quadros por segundo dos objetos animados, os do pacote de arte.
-const FRAME_RATES: Dictionary[String, float] = {"windmill": 10.0, "tree": 4.0, "rune_shrine": 8.0}
+## Quadros por segundo dos objetos animados.
+const FRAME_RATES: Dictionary[String, float] = {
+	"windmill": 10.0,
+	"tree": 4.0,
+	"rune_shrine": 8.0,
+	"town_windmill": 10.0,
+	"town_rune_shrine": 8.0,
+}
 const DEFAULT_FRAME_RATE := 6.0
 
 var object: MapObject

@@ -194,7 +194,7 @@ func set_objects(objects: Array[MapObject]) -> void:
 			continue
 		var sprite := MapObjectSprite.new()
 		var slug := str(row.get("slug", ""))
-		var fence_art := _fence_art(object) if slug == HexFences.SLUG else null
+		var fence_art := _fence_art(object) if HexFences.is_fence(slug) else null
 		if fence_art != null:
 			sprite.setup_fence(object, fence_art)
 		elif not sprite.setup(object, slug):
@@ -216,7 +216,8 @@ func object_hit(point: Vector2) -> MapObject:
 
 
 func _fence_art(object: MapObject) -> Texture2D:
-	return HexFences.texture(object.variant, HexFences.links(_map, object.coord, object.object_type_id))
+	var slug := str(GameData.get_row("map_object_types", object.object_type_id).get("slug", ""))
+	return HexFences.texture(slug, object.variant, HexFences.links(_map, object.coord, object.object_type_id))
 
 
 func _clear_objects() -> void:

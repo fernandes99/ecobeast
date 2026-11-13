@@ -2,10 +2,13 @@ class_name HexFences
 extends RefCounted
 ## A Cerca que se liga sozinha (.specs/island-villages/05-connected-fences.md): um
 ## poste no centro e um braço até o meio de cada lado cujo vizinho, na mesma altura,
-## também tem cerca. Sozinha, ela tem os braços da esquerda e da direita.
+## também tem cerca. Sozinha, ela tem os braços da esquerda e da direita. A Cerca da
+## cidade (town-art/03) é montada do mesmo jeito, com a folha de peças dela.
 
 const SLUG := "fence"
 const PARTS_PATH := "res://assets/map_objects/fence/parts_%d.png"
+const TOWN_PARTS_PATH := "res://assets/map_objects/town_fence/parts_%d.png"
+const PARTS_PATHS := {SLUG: PARTS_PATH, "town_fence": TOWN_PARTS_PATH}
 const CELL_SIZE := Vector2i(96, 72)
 const CELL_CENTER := Vector2(48.0, 43.0)
 ## Os lados na ordem de HexGrounds.EDGE_NEIGHBORS, sem depender dela: ela usa o
@@ -30,8 +33,12 @@ const EDGE_MIDPOINTS: Array[Vector2] = [
 const STRAIGHT := (1 << 1) | (1 << 4)
 const DRAW_ORDER: Array[int] = [5, 0, 4, 1, 3, 2]
 
-static var _cells: Dictionary[int, Array] = {}
-static var _textures: Dictionary[Vector2i, Texture2D] = {}
+static var _cells: Dictionary[String, Array] = {}
+static var _textures: Dictionary[String, Texture2D] = {}
+
+
+static func is_fence(slug: String) -> bool:
+	return PARTS_PATHS.has(slug)
 
 
 ## Os lados ligados, um bit por lado: o vizinho tem um objeto do mesmo tipo e a mesma altura.
@@ -61,12 +68,12 @@ static func compose(cells: Array[Image], mask: int) -> Image:
 	return image
 
 
-## A arte montada de uma variante e uma combinação de lados, ou `null` sem a folha.
-static func texture(variant: int, mask: int) -> Texture2D:
-	var key := Vector2i(variant, mask)
+## A arte montada de uma cerca, variante e combinação de lados, ou `null` sem a folha.
+static func texture(slug: String, variant: int, mask: int) -> Texture2D:
+	var key := "%s/%d/%d" % [slug, variant, mask]
 	if _textures.has(key):
 		return _textures[key]
-	var cells := _cells_of(variant)
+	var cells := _cells_of(slug, variant)
 	if cells.is_empty():
 		return null
 	var art := ImageTexture.create_from_image(compose(cells, mask))
@@ -74,13 +81,14 @@ static func texture(variant: int, mask: int) -> Texture2D:
 	return art
 
 
-static func _cells_of(variant: int) -> Array[Image]:
+static func _cells_of(slug: String, variant: int) -> Array[Image]:
 	var result: Array[Image] = []
-	if _cells.has(variant):
-		result.assign(_cells[variant])
+	var key := "%s/%d" % [slug, variant]
+	if _cells.has(key):
+		result.assign(_cells[key])
 		return result
 	for candidate: int in range(variant, 0, -1):
-		var path := PARTS_PATH % candidate
+		var path: String = PARTS_PATHS.get(slug, PARTS_PATH) % candidate
 		if not ResourceLoader.exists(path):
 			continue
 		var sheet := (load(path) as Texture2D).get_image()
@@ -90,5 +98,5 @@ static func _cells_of(variant: int) -> Array[Image]:
 		for index: int in 7:
 			result.append(sheet.get_region(Rect2i(Vector2i(CELL_SIZE.x * index, 0), CELL_SIZE)))
 		break
-	_cells[variant] = result
+	_cells[key] = result
 	return result

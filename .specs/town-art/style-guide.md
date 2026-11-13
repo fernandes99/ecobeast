@@ -66,6 +66,7 @@ Cada material tem 4 tons: claro, base, escuro e contorno. Um objeto usa só as c
 | Ferro (poste, grade) | `#7880a0` | `#50587a` | `#3a4058` | `#22263a` |
 | Tijolo (chaminé) | `#e08868` | `#b05838` | `#803c24` | `#4c2014` |
 | Palha | `#f0ce7e` | `#d6aa5c` | `#a87c3c` | `#5c4020` |
+| Terra de canteiro | `#c08858` | `#9a6838` | `#74482a` | `#4a2c18` |
 
 ### Detalhes
 

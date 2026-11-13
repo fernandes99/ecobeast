@@ -124,5 +124,59 @@
 		"slug": "town_house_large",
 		"name": "Casa grande (cidade)",
 		"variants": 10
+	},
+	{
+		"id": 27,
+		"slug": "town_windmill",
+		"name": "Moinho (cidade)",
+		"variants": 3
+	},
+	{
+		"id": 28,
+		"slug": "town_garden",
+		"name": "Horta (cidade)",
+		"variants": 6
+	},
+	{
+		"id": 29,
+		"slug": "town_fence",
+		"name": "Cerca (cidade)",
+		"variants": 2
+	},
+	{
+		"id": 30,
+		"slug": "town_well",
+		"name": "Poço (cidade)",
+		"variants": 1
+	},
+	{
+		"id": 31,
+		"slug": "town_market_stall",
+		"name": "Barraca de feira (cidade)",
+		"variants": 3
+	},
+	{
+		"id": 32,
+		"slug": "town_cart",
+		"name": "Carroça (cidade)",
+		"variants": 1
+	},
+	{
+		"id": 33,
+		"slug": "town_beast_stable",
+		"name": "Estábulo de Ecobeasts (cidade)",
+		"variants": 2
+	},
+	{
+		"id": 34,
+		"slug": "town_trough",
+		"name": "Bebedouro (cidade)",
+		"variants": 1
+	},
+	{
+		"id": 35,
+		"slug": "town_rune_shrine",
+		"name": "Santuário de runas (cidade)",
+		"variants": 4
 	}
 ]
