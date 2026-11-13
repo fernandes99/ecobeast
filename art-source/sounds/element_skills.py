@@ -1,4 +1,4 @@
-"""Gera o som das 22 Técnicas da board-battle/18 (board-battle/19), por síntese:
+"""Gera o som das Técnicas da board-battle/18 e /20 (board-battle/19 e /20), por síntese:
 ruído em filtros, tons com a altura mudando e saturação leve. Cada som dura mais
 ou menos o efeito da Técnica, porque os dois começam juntos; o impacto fica com o
 som de dano. Tudo sai daqui: sem gravação de terceiros.
@@ -455,6 +455,82 @@ def explosao_florida(rng):
     return mix, 1.4
 
 
+def uivo(rng):
+    """Uivo de lobo: uma voz que sobe, segura com vibrato e cai no fim, com cor de "u"
+    e um sopro por cima."""
+    length = 0.9
+    pitch = [(0.0, 300.0), (0.18, 560.0), (0.55, 640.0), (0.9, 420.0)]
+    voice = tone(length, pitch, (1.0, 0.45, 0.2, 0.08), (5.5, 0.015))
+    mix = [value * 0.4 for value in voice]
+    for freq, q, weight in ((380.0, 2.5, 2.0), (900.0, 3.0, 0.8)):
+        add(mix, band(voice, freq, q), 0.0, weight)
+    add(mix, band(noise(rng, length), [(0.0, 900.0), (0.9, 1400.0)], 1.5), 0.0, 0.35)
+    return shape(mix, [(0.0, 0.0), (0.08, 0.7), (0.2, 1.0), (0.65, 0.9), (0.9, 0.0)]), 1.0
+
+
+def patada(rng):
+    """Patada: um zunido curto da pata vindo, um baque pesado e um estalo de impacto."""
+    length = 0.45
+    mix = silence(length)
+    swing = band(noise(rng, 0.1), [(0.0, 600.0), (0.1, 1800.0)], 1.5)
+    add(mix, shape(swing, [(0.0, 0.0), (0.09, 1.0), (0.1, 0.0)]), 0.0, 0.8)
+    add(mix, thud(140.0, 45.0, 0.2), 0.1, 1.5)
+    add(mix, decay(low(noise(rng, 0.12), 900.0), 0.1, 0.001), 0.1, 1.2)
+    add(mix, click(rng, 2400.0, 0.02, 1.0), 0.1, 1.0)
+    add(mix, crackles(rng, length, 40.0, 0.12, 0.3, freq=2000.0), 0.0, 0.5)
+    return mix, 2.2
+
+
+def olhar_manhoso(rng):
+    """Olhar Manhoso: um brilho agudo do olhar, um tom grave e sinuoso que desce e a
+    defesa trincando em cacos."""
+    length = 0.9
+    mix = silence(length)
+    add(mix, ping(2637.0, 0.25, ((1.0, 1.0), (1.5, 0.4))), 0.0, 0.5)
+    sly = tone(0.6, [(0.0, 330.0), (0.6, 196.0)], (1.0, 0.3), (3.0, 0.03))
+    add(mix, shape(sly, [(0.0, 0.0), (0.1, 0.6), (0.45, 0.5), (0.6, 0.0)]), 0.05, 0.6)
+    add(mix, click(rng, 3800.0, 0.03, 1.2), 0.45, 1.3)
+    for _ in range(7):
+        add(mix, ping(rng.uniform(2800.0, 5200.0), 0.08, ((1.0, 1.0), (2.4, 0.3))), rng.uniform(0.46, 0.62), 0.3)
+    add(mix, decay(band(noise(rng, 0.2), 5000.0, 1.0), 0.15, 0.002), 0.45, 0.5)
+    return mix, 1.3
+
+
+def lufada_cortante(rng):
+    """Lufada Cortante: uma rajada que corta rápido do agudo para o médio, com um
+    assobio de lâmina."""
+    length = 0.45
+    mix = silence(length)
+    gust = band(noise(rng, 0.4), [(0.0, 5500.0), (0.4, 1400.0)], 2.5)
+    add(mix, shape(gust, [(0.0, 0.0), (0.04, 1.0), (0.2, 0.6), (0.4, 0.0)]), 0.0, 1.4)
+    add(mix, shape(tone(0.3, [(0.0, 2200.0), (0.3, 900.0)]), [(0.0, 0.0), (0.03, 1.0), (0.3, 0.0)]), 0.0, 0.25)
+    add(mix, shape(low(noise(rng, 0.4), 500.0), [(0.0, 0.0), (0.05, 1.0), (0.4, 0.0)]), 0.0, 0.5)
+    return mix, 1.6
+
+
+def danca_do_vento(rng):
+    """Dança do Vento: um vento que gira em volta, com o filtro indo e vindo, e notas leves
+    que sobem."""
+    length = 0.7
+    swirl = [(t, 1300.0 + 700.0 * math.sin(2.0 * math.pi * 5.0 * t)) for t in [i / 200.0 for i in range(141)]]
+    mix = shape(band(noise(rng, length), swirl, 2.0), [(0.0, 0.0), (0.1, 1.0), (0.5, 0.8), (0.7, 0.0)])
+    for index, freq in enumerate((1318.5, 1568.0, 1760.0, 2093.0)):
+        add(mix, ping(freq, 0.18), 0.1 + index * 0.1, 0.22)
+    return mix, 2.0
+
+
+def ciclone(rng):
+    """Ciclone: um redemoinho que ronca e gira rápido, com um assobio que sobe."""
+    length = 0.7
+    spin = [(t, 900.0 + 600.0 * math.sin(2.0 * math.pi * 11.0 * t)) for t in [i / 200.0 for i in range(141)]]
+    roar = band(noise(rng, length), spin, 1.5)
+    mix = shape(roar, [(0.0, 0.0), (0.08, 1.0), (0.5, 0.9), (0.7, 0.0)])
+    add(mix, shape(low(noise(rng, length), 160.0), [(0.0, 0.0), (0.1, 1.0), (0.7, 0.0)]), 0.0, 1.5)
+    whistle = tone(length, [(0.0, 700.0), (0.6, 1500.0)], (1.0,), (11.0, 0.03))
+    add(mix, shape(whistle, [(0.0, 0.0), (0.15, 0.6), (0.55, 0.6), (0.7, 0.0)]), 0.0, 0.18)
+    return mix, 2.6
+
+
 SOUNDS = {
     "mordida_brasa": mordida_brasa,
     "fumaca_densa": fumaca_densa,
@@ -478,6 +554,12 @@ SOUNDS = {
     "banho_de_sol": banho_de_sol,
     "tempestade_de_petalas": tempestade_de_petalas,
     "explosao_florida": explosao_florida,
+    "uivo": uivo,
+    "patada": patada,
+    "olhar_manhoso": olhar_manhoso,
+    "lufada_cortante": lufada_cortante,
+    "danca_do_vento": danca_do_vento,
+    "ciclone": ciclone,
 }
 
 

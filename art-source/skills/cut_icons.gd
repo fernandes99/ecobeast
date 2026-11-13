@@ -10,6 +10,9 @@ extends SceneTree
 ##
 ## Uso, na raiz do repositório:
 ##   godot --headless --path client -s ../art-source/skills/cut_icons.gd
+## Para outra imagem, passe o nome dela (em art-source/skills/) e os slugs na ordem de
+## leitura, da esquerda para a direita e de cima para baixo ("-" pula um quadro):
+##   godot --headless --path client -s ../art-source/skills/cut_icons.gd -- instinto_vento_icons.jpg uivo patada ...
 ## Depois, `godot --headless --path client --import` cria os `.import`.
 
 const SOURCE := "../art-source/skills/instinto_icons.jpg"
@@ -30,7 +33,16 @@ const ICONS: Dictionary[String, Vector2i] = {
 
 
 func _initialize() -> void:
-	var path := ProjectSettings.globalize_path("res://").path_join(SOURCE)
+	var source := SOURCE
+	var icons := ICONS
+	var args := OS.get_cmdline_user_args()
+	if not args.is_empty():
+		source = "../art-source/skills/" + args[0]
+		icons = {}
+		for index: int in range(1, args.size()):
+			if args[index] != "-":
+				icons[args[index]] = Vector2i((index - 1) % 3, (index - 1) / 3)
+	var path := ProjectSettings.globalize_path("res://").path_join(source)
 	var image := Image.load_from_file(path)
 	if image == null:
 		push_error("Não abriu %s" % path)
@@ -40,8 +52,8 @@ func _initialize() -> void:
 	var columns := _spans(image, true)
 	var rows := _spans(image, false)
 	print("quadros: %d colunas %s, %d linhas %s" % [columns.size(), columns, rows.size(), rows])
-	for slug: String in ICONS:
-		var cell: Vector2i = ICONS[slug]
+	for slug: String in icons:
+		var cell: Vector2i = icons[slug]
 		if cell.x >= columns.size() or cell.y >= rows.size():
 			push_error("A imagem não tem o quadro %s para %s." % [cell, slug])
 			quit(1)

@@ -19,6 +19,12 @@ const ELEMENT_ROWS := {
 	"shadow": 9, "arcane": 9,
 }
 
+## Elementos cuja linha é tingida pela cor deles no catálogo (board-battle/20): a
+## cinza do Vento vira o verde-água dele.
+const ELEMENT_TINTS := {
+	"wind": Color("#7CC9B8"),
+}
+
 ## slug da Técnica: [Elemento, "Part/número"]
 const EFFECTS := {
 	"mordida_brasa": ["fire", "11/509"],
@@ -43,6 +49,12 @@ const EFFECTS := {
 	"banho_de_sol": ["flora", "14/652"],
 	"tempestade_de_petalas": ["flora", "4/174"],
 	"explosao_florida": ["flora", "2/79"],
+	"uivo": ["beast", "12/586"],
+	"patada": ["beast", "2/71"],
+	"olhar_manhoso": ["beast", "15/703"],
+	"lufada_cortante": ["wind", "9/438"],
+	"danca_do_vento": ["wind", "12/567"],
+	"ciclone": ["wind", "1/03"],
 }
 
 const PROJECTILES := {
@@ -83,5 +95,11 @@ func _cut(kit: String, entry: Array, name: String) -> void:
 	var count: int = frames[-1] - first + 1
 	var strip := Image.create(count * CELL, CELL, false, Image.FORMAT_RGBA8)
 	strip.blit_rect(sheet, Rect2i(first * CELL, y, count * CELL, CELL), Vector2i.ZERO)
+	if ELEMENT_TINTS.has(entry[0]):
+		var tint: Color = ELEMENT_TINTS[entry[0]]
+		for py in CELL:
+			for px in strip.get_width():
+				var color := strip.get_pixel(px, py)
+				strip.set_pixel(px, py, Color(color.r * tint.r, color.g * tint.g, color.b * tint.b, color.a))
 	strip.save_png(ProjectSettings.globalize_path(OUT % name))
 	print("%s: %d quadros" % [name, count])
