@@ -43,7 +43,7 @@ São 26 Técnicas com ícone. Faltavam 22: 6 de Fogo, 9 de Água e 7 de Flora.
   | 8 | vermelho com miolo amarelo | Fogo |
   | 9 | azul-escuro e violeta | Sombra, Arcano |
 
-  Na [20](20-instinct-wind-skills.md), a 6ª linha passou a ser tingida com a cor do Vento (`#7CC9B8`) nas Técnicas de Vento; o Metal continua cinza.
+  Na [20](20-instinct-wind-skills.md), a 6ª linha passou a ser tingida com a cor do Vento (`#7CC9B8`) nas Técnicas de Vento; o Metal continua cinza. Na [22](22-earth-ice-mind-skills.md), a Terra saiu da 7ª linha, rosada demais, e passou para a 6ª, tingida com `#B07A43`.
 
   O Fogo é a 8ª, como a Faísca Rápida ([15](15-projectile-effects.md)), e o Instinto é a 5ª, como a Arranhão, a Rugido Feroz e a Investida Veloz.
 

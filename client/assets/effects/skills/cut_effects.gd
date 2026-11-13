@@ -13,16 +13,16 @@ const ELEMENT_ROWS := {
 	"water": 3, "ice": 3,
 	"flora": 4, "bug": 4,
 	"beast": 5,
-	"wind": 6, "metal": 6,
-	"earth": 7,
+	"wind": 6, "metal": 6, "earth": 6,
 	"fire": 8,
 	"shadow": 9, "arcane": 9,
 }
 
-## Elementos cuja linha é tingida pela cor deles no catálogo (board-battle/20): a
-## cinza do Vento vira o verde-água dele.
+## Elementos cuja linha é tingida pela cor deles no catálogo (board-battle/20 e /22):
+## a cinza vira o verde-água do Vento e o marrom da Terra.
 const ELEMENT_TINTS := {
 	"wind": Color("#7CC9B8"),
+	"earth": Color("#B07A43"),
 }
 
 ## slug da Técnica: [Elemento, "Part/número"]
@@ -61,6 +61,12 @@ const EFFECTS := {
 	"beliscao": ["beast", "2/64"],
 	"couraca": ["metal", "13/623"],
 	"geada_silenciosa": ["ice", "4/176"],
+	"nuvem_de_poeira": ["earth", "10/476"],
+	"floco_cortante": ["ice", "7/325"],
+	"arremesso_de_torrao": ["earth", "2/76"],
+	"manto_de_neve": ["ice", "1/26"],
+	"eco_mental": ["mind", "10/475"],
+	"garra_de_pedra": ["earth", "6/295"],
 }
 
 const PROJECTILES := {

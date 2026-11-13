@@ -1,4 +1,4 @@
-"""Gera o som das Técnicas da board-battle/18, /20 e /21 (board-battle/19 a /21), por síntese:
+"""Gera o som das Técnicas da board-battle/18 e /20 a /22 (board-battle/19 a /22), por síntese:
 ruído em filtros, tons com a altura mudando e saturação leve. Cada som dura mais
 ou menos o efeito da Técnica, porque os dois começam juntos; o impacto fica com o
 som de dano. Tudo sai daqui: sem gravação de terceiros.
@@ -611,6 +611,81 @@ def geada_silenciosa(rng):
     return mix, 1.0
 
 
+def nuvem_de_poeira(rng):
+    """Nuvem de Poeira: um sopro seco que levanta e se espalha, com grãos de areia
+    chiando."""
+    length = 0.6
+    puff = low(noise(rng, length), [(0.0, 500.0), (0.2, 2200.0), (0.6, 800.0)], 0.8)
+    mix = shape(puff, [(0.0, 0.0), (0.08, 1.0), (0.35, 0.6), (0.6, 0.0)])
+    add(mix, crackles(rng, length, 260.0, 0.03, 0.55, weight=0.25, freq=5000.0), 0.0, 1.0)
+    add(mix, shape(band(noise(rng, length), 3000.0, 1.0), [(0.0, 0.0), (0.1, 0.5), (0.6, 0.0)]), 0.0, 0.4)
+    return mix, 1.5
+
+
+def floco_cortante(rng):
+    """Floco Cortante: um "tsing" de cristal, um corte agudo e rápido e cacos de gelo
+    tilintando."""
+    length = 0.4
+    mix = silence(length)
+    add(mix, ping(4200.0, 0.2, ((1.0, 1.0), (1.41, 0.6), (2.76, 0.3))), 0.0, 0.6)
+    cut = band(noise(rng, 0.1), [(0.0, 8000.0), (0.1, 4000.0)], 4.0)
+    add(mix, decay(cut, 0.1, 0.002), 0.02, 1.5)
+    for _ in range(6):
+        add(mix, ping(rng.uniform(3500.0, 6500.0), 0.06, ((1.0, 1.0), (2.4, 0.3))), rng.uniform(0.08, 0.25), 0.3)
+    return mix, 1.6
+
+
+def arremesso_de_torrao(rng):
+    """Arremesso de Torrão: o zunido do torrão voando, o baque pesado de terra e o
+    torrão se desfazendo."""
+    length = 0.55
+    mix = silence(length)
+    throw = band(noise(rng, 0.16), [(0.0, 400.0), (0.16, 1200.0)], 1.5)
+    add(mix, shape(throw, [(0.0, 0.0), (0.14, 1.0), (0.16, 0.0)]), 0.0, 0.8)
+    add(mix, thud(120.0, 40.0, 0.22), 0.15, 1.5)
+    add(mix, decay(low(noise(rng, 0.15), 700.0), 0.12, 0.001), 0.15, 1.3)
+    add(mix, crackles(rng, length, 110.0, 0.16, 0.45, freq=900.0), 0.0, 0.9)
+    return mix, 2.2
+
+
+def manto_de_neve(rng):
+    """Manto de Neve: neve girando em volta, macia, com sininhos de gelo que descem."""
+    length = 0.7
+    swirl = [(t, 5000.0 + 1500.0 * math.sin(2.0 * math.pi * 4.0 * t)) for t in [i / 200.0 for i in range(141)]]
+    mix = shape(band(noise(rng, length), swirl, 1.8), [(0.0, 0.0), (0.12, 1.0), (0.5, 0.8), (0.7, 0.0)])
+    for index, freq in enumerate((2637.0, 2349.3, 2093.0, 1760.0)):
+        add(mix, ping(freq, 0.25, ((1.0, 1.0), (2.76, 0.25))), 0.08 + index * 0.11, 0.3)
+    add(mix, shape(low(noise(rng, length), 400.0), [(0.0, 0.0), (0.2, 1.0), (0.7, 0.0)]), 0.0, 0.3)
+    return mix, 1.2
+
+
+def eco_mental(rng):
+    """Eco Mental: um tom estranho e trêmulo que se repete três vezes, cada vez mais baixo
+    e mais longe."""
+    length = 0.6
+    mix = silence(length)
+    voice = tone(0.22, [(0.0, 520.0), (0.11, 780.0), (0.22, 600.0)], (1.0, 0.4, 0.2), (13.0, 0.03))
+    ring = [value * math.sin(2.0 * math.pi * 90.0 * index / RATE) for index, value in enumerate(voice)]
+    call = shape([a * 0.6 + b * 0.5 for a, b in zip(voice, ring)], [(0.0, 0.0), (0.03, 1.0), (0.18, 0.6), (0.22, 0.0)])
+    for index, weight in enumerate((1.0, 0.55, 0.3)):
+        add(mix, low(call, 4000.0 - index * 1200.0), index * 0.15, weight)
+    add(mix, shape(band(noise(rng, length), 6000.0, 1.5), [(0.0, 0.0), (0.2, 1.0), (0.6, 0.0)]), 0.0, 0.08)
+    return mix, 1.3
+
+
+def garra_de_pedra(rng):
+    """Garra de Pedra: um golpe pesado de garra e pedra rangendo e se partindo."""
+    length = 0.55
+    mix = silence(length)
+    swipe = band(noise(rng, 0.16), [(0.0, 2500.0), (0.16, 600.0)], 2.0)
+    add(mix, decay(swipe, 0.16, 0.004), 0.0, 1.3)
+    add(mix, thud(110.0, 45.0, 0.18), 0.08, 1.3)
+    add(mix, crackles(rng, length, 140.0, 0.08, 0.4, freq=1200.0), 0.0, 1.0)
+    grind = band(noise(rng, 0.25), 900.0, 3.0)
+    add(mix, flutter(rng, shape(grind, [(0.0, 0.0), (0.04, 1.0), (0.25, 0.0)]), 50.0, 0.7), 0.1, 0.8)
+    return mix, 2.2
+
+
 SOUNDS = {
     "mordida_brasa": mordida_brasa,
     "fumaca_densa": fumaca_densa,
@@ -646,6 +721,12 @@ SOUNDS = {
     "beliscao": beliscao,
     "couraca": couraca,
     "geada_silenciosa": geada_silenciosa,
+    "nuvem_de_poeira": nuvem_de_poeira,
+    "floco_cortante": floco_cortante,
+    "arremesso_de_torrao": arremesso_de_torrao,
+    "manto_de_neve": manto_de_neve,
+    "eco_mental": eco_mental,
+    "garra_de_pedra": garra_de_pedra,
 }
 
 
