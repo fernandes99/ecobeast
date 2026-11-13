@@ -21,6 +21,9 @@ const TYPES := {
 	"refuge_building": ["triangle", 1],
 	"shop_building": ["triangle", 1],
 	"arena_building": ["block", 1],
+	"town_house": ["one", 9],
+	"town_house_medium": ["pair", 12],
+	"town_house_large": ["triangle", 10],
 }
 ## O pé das construções fica acima do canto de baixo da célula, na borda de baixo da linha da frente.
 const BASE_LIFT := 6
@@ -29,6 +32,13 @@ const BASE_LIFT := 6
 const ROOF_RED: Array[Color] = [Color("#f8806c"), Color("#e8504c"), Color("#b83438"), Color("#7c2030")]
 const ROOF_BLUE: Array[Color] = [Color("#7cb4f8"), Color("#4a8ee8"), Color("#2e66c0"), Color("#1e3f8a")]
 const ROOF_SLATE: Array[Color] = [Color("#8a96ac"), Color("#5e687e"), Color("#434b5e"), Color("#2a3040")]
+const ROOF_ORANGE: Array[Color] = [Color("#f8a058"), Color("#e07838"), Color("#b85428"), Color("#7a3418")]
+const ROOF_BROWN: Array[Color] = [Color("#c89870"), Color("#a0704c"), Color("#785034"), Color("#4c3020")]
+const ROOF_GREEN: Array[Color] = [Color("#8cd07c"), Color("#58a858"), Color("#3c7c44"), Color("#24502c")]
+const ROOF_PURPLE: Array[Color] = [Color("#b490e0"), Color("#8a64c0"), Color("#644496"), Color("#402a64")]
+const ROOF_TEAL: Array[Color] = [Color("#78d0c8"), Color("#40a8a0"), Color("#2c7c78"), Color("#1c504e")]
+const ROOF_MUSTARD: Array[Color] = [Color("#f0d070"), Color("#d0a840"), Color("#a07c28"), Color("#64481a")]
+const BRICK: Array[Color] = [Color("#e08868"), Color("#b05838"), Color("#803c24"), Color("#4c2014")]
 const PLASTER: Array[Color] = [Color("#fffaf0"), Color("#f4ecd8"), Color("#d8ccb0"), Color("#5a4a3a")]
 const ARENA_STONE: Array[Color] = [Color("#f2eee2"), Color("#dcd6c6"), Color("#b4ac9a"), Color("#2a2e3c")]
 const STONE: Array[Color] = [Color("#eceaf2"), Color("#bcbccc"), Color("#84849c"), Color("#56566c")]
@@ -225,7 +235,7 @@ static func _wall(s: Image, rect: Rect2i, palette: Array[Color]) -> void:
 		_dot(s, i, y + h - 2, FOUNDATION_DARK)
 
 
-static func _window(s: Image, rect: Rect2i) -> void:
+static func _window(s: Image, rect: Rect2i, curtains := false) -> void:
 	var x := rect.position.x
 	var y := rect.position.y
 	var w := rect.size.x
@@ -237,6 +247,10 @@ static func _window(s: Image, rect: Rect2i) -> void:
 	_dot(s, x + 2, y + 1, GLASS_SHINE)
 	_dot(s, x + 1, y + 2, GLASS_SHINE)
 	_fill(s, Rect2i(x + w / 2, y, 1, h), FRAME)
+	if curtains:
+		for j: int in mini(4, h - 2):
+			_dot(s, x + j / 2, y + j, FLOWERS[3])
+			_dot(s, x + w - 1 - j / 2, y + j, FLOWERS[3])
 	_fill(s, Rect2i(x - 1, y + h + 1, w + 2, 1), SILL)
 
 
@@ -491,3 +505,204 @@ static func _brazier(s: Image, at: Vector2i) -> void:
 		".OOYOOO.",
 		"..OOOO..",
 	], {"F": BANNER[2], "O": BANNER[1], "Y": GOLD[1], "L": LAMP_SHINE})
+
+
+# --- As casas da cidade --------------------------------------------------------------
+
+const HOUSE_ROOFS: Array = [ROOF_ORANGE, ROOF_GREEN, ROOF_PURPLE]
+const MEDIUM_HOUSE_ROOFS: Array = [ROOF_ORANGE, ROOF_BROWN, ROOF_GREEN, ROOF_TEAL]
+const LARGE_HOUSE_ROOFS: Array = [ROOF_ORANGE, ROOF_BROWN, ROOF_MUSTARD, ROOF_PURPLE, ROOF_TEAL]
+const CLEAR := Color(0.0, 0.0, 0.0, 0.0)
+
+
+func _draw_town_house(variant: int, _frame: int) -> void:
+	var roof: Array[Color] = []
+	roof.assign(HOUSE_ROOFS[(variant - 1) / 3])
+	var s: Image
+	match (variant - 1) % 3:
+		0:
+			s = Image.create(44, 42, false, Image.FORMAT_RGBA8)
+			_hip_roof(s, Rect2i(0, 0, 44, 22), roof, 12)
+			_wall(s, Rect2i(3, 22, 38, 20), PLASTER)
+			_window(s, Rect2i(8, 27, 9, 7), true)
+			_flower_box(s, Vector2i(7, 35), 11)
+			_wood_door(s, Rect2i(25, 25, 10, 14))
+		1:
+			s = Image.create(46, 48, false, Image.FORMAT_RGBA8)
+			_chimney(s, Rect2i(32, 0, 6, 12))
+			_roof(s, Rect2i(0, 6, 46, 22), roof)
+			_wall(s, Rect2i(3, 28, 40, 20), PLASTER)
+			_window(s, Rect2i(7, 32, 9, 7))
+			_window(s, Rect2i(31, 32, 9, 7))
+			_wood_door(s, Rect2i(18, 31, 10, 14))
+		_:
+			s = Image.create(50, 46, false, Image.FORMAT_RGBA8)
+			_hip_roof(s, Rect2i(0, 0, 50, 24), roof, 20)
+			_wall(s, Rect2i(3, 24, 44, 22), PLASTER)
+			_window(s, Rect2i(8, 30, 10, 8), true)
+			_flower_box(s, Vector2i(7, 39), 12)
+			_wood_door(s, Rect2i(30, 29, 10, 14))
+			_porch(s, Rect2i(25, 26, 20, 17))
+	_place_building(_outline(s, roof[3]))
+
+
+func _draw_town_house_medium(variant: int, _frame: int) -> void:
+	var roof: Array[Color] = []
+	roof.assign(MEDIUM_HOUSE_ROOFS[(variant - 1) / 3])
+	var s: Image
+	match (variant - 1) % 3:
+		0:
+			s = Image.create(100, 56, false, Image.FORMAT_RGBA8)
+			_chimney(s, Rect2i(76, 0, 6, 12))
+			_roof(s, Rect2i(0, 6, 100, 24), roof)
+			_wall(s, Rect2i(3, 30, 94, 26), PLASTER)
+			for x: int in [10, 27, 64, 81]:
+				_window(s, Rect2i(x, 36, 10, 8), true)
+				_flower_box(s, Vector2i(x - 1, 46), 12)
+			_wood_door(s, Rect2i(44, 38, 12, 15))
+		1:
+			s = Image.create(84, 70, false, Image.FORMAT_RGBA8)
+			_hip_roof(s, Rect2i(0, 0, 84, 26), roof, 10)
+			_wall(s, Rect2i(3, 26, 78, 44), PLASTER)
+			_fill(s, Rect2i(3, 46, 78, 2), WOOD[1])
+			_fill(s, Rect2i(3, 47, 78, 1), WOOD[2])
+			for x: int in [12, 37, 62]:
+				_window(s, Rect2i(x, 31, 10, 9), x != 37)
+			_railing(s, Rect2i(33, 41, 18, 4))
+			for x: int in [12, 62]:
+				_window(s, Rect2i(x, 52, 10, 8))
+				_flower_box(s, Vector2i(x - 1, 62), 12)
+			_wood_door(s, Rect2i(36, 52, 12, 15))
+		_:
+			s = Image.create(108, 54, false, Image.FORMAT_RGBA8)
+			_roof(s, Rect2i(62, 18, 46, 18), WOOD)
+			_wall(s, Rect2i(64, 36, 41, 18), WOOD)
+			for x: int in range(67, 104, 4):
+				_fill(s, Rect2i(x, 38, 1, 13), WOOD[2])
+			_fill(s, Rect2i(72, 40, 28, 11), WOOD[3])
+			_fill(s, Rect2i(72, 40, 28, 1), WOOD[2])
+			_stamp(s, Vector2i(76, 44), [
+				"..IIIII.",
+				"IIIIIIII",
+				"..IJJI..",
+				".IIIIII.",
+			], {"I": IRON[1], "J": IRON[0]})
+			_barrel(s, Vector2i(90, 42))
+			_chimney(s, Rect2i(50, 0, 6, 12))
+			_roof(s, Rect2i(0, 6, 66, 24), roof)
+			_wall(s, Rect2i(3, 30, 60, 24), PLASTER)
+			_window(s, Rect2i(9, 36, 10, 8), true)
+			_flower_box(s, Vector2i(8, 46), 12)
+			_wood_door(s, Rect2i(33, 37, 12, 15))
+	_place_building(_outline(s, roof[3]))
+
+
+func _draw_town_house_large(variant: int, _frame: int) -> void:
+	var roof: Array[Color] = []
+	roof.assign(LARGE_HOUSE_ROOFS[(variant - 1) / 2])
+	var s: Image
+	if (variant - 1) % 2 == 0:
+		s = Image.create(112, 92, false, Image.FORMAT_RGBA8)
+		_chimney(s, Rect2i(92, 16, 6, 14))
+		_hip_roof(s, Rect2i(22, 26, 90, 30), roof, 10)
+		_wall(s, Rect2i(25, 56, 84, 36), PLASTER)
+		for x: int in [40, 88]:
+			_window(s, Rect2i(x, 63, 10, 9), true)
+			_flower_box(s, Vector2i(x - 1, 74), 12)
+		_double_wood_door(s, Rect2i(62, 70, 16, 19))
+		_wall(s, Rect2i(5, 26, 30, 66), PLASTER)
+		_hip_roof(s, Rect2i(1, 0, 38, 28), roof, 15)
+		for y: int in [34, 58]:
+			_window(s, Rect2i(15, y, 10, 9), y == 58)
+		_fill(s, Rect2i(6, 50, 27, 1), PLASTER[2])
+	else:
+		s = Image.create(112, 90, false, Image.FORMAT_RGBA8)
+		for x: int in [14, 92]:
+			_chimney(s, Rect2i(x, 0, 6, 14))
+		_roof(s, Rect2i(0, 8, 112, 30), roof)
+		_wall(s, Rect2i(3, 38, 106, 52), PLASTER)
+		_fill(s, Rect2i(3, 62, 106, 2), WOOD[1])
+		_fill(s, Rect2i(3, 63, 106, 1), WOOD[2])
+		for x: int in [12, 30, 72, 90]:
+			_window(s, Rect2i(x, 44, 10, 9), true)
+			_window(s, Rect2i(x, 69, 10, 8))
+			_flower_box(s, Vector2i(x - 1, 79), 12)
+		_wood_door(s, Rect2i(51, 43, 10, 18))
+		_railing(s, Rect2i(44, 54, 24, 7))
+		_double_wood_door(s, Rect2i(48, 69, 16, 18))
+	_place_building(_outline(s, roof[3]))
+
+
+## O telhado de quatro águas visto de frente: o de `_roof`, cortado em trapézio, com a
+## aresta da esquerda clara e a da direita escura.
+static func _hip_roof(s: Image, rect: Rect2i, palette: Array[Color], top_inset: int) -> void:
+	_roof(s, rect, palette)
+	var h := rect.size.y
+	for j: int in h:
+		var inset := roundi(top_inset * (1.0 - j / float(h - 1)))
+		var y := rect.position.y + j
+		_fill(s, Rect2i(rect.position.x, y, inset, 1), CLEAR)
+		_fill(s, Rect2i(rect.end.x - inset, y, inset, 1), CLEAR)
+		if j < h - 1:
+			_dot(s, rect.position.x + inset, y, palette[0])
+			_dot(s, rect.end.x - inset - 1, y, palette[2])
+
+
+static func _chimney(s: Image, rect: Rect2i) -> void:
+	_fill(s, rect, BRICK[1])
+	_fill(s, Rect2i(rect.position.x, rect.position.y + 2, 1, rect.size.y - 2), BRICK[0])
+	_fill(s, Rect2i(rect.end.x - 2, rect.position.y + 2, 2, rect.size.y - 2), BRICK[2])
+	_fill(s, Rect2i(rect.position.x - 1, rect.position.y, rect.size.x + 2, 2), BRICK[0])
+	_fill(s, Rect2i(rect.position.x - 1, rect.position.y + 1, rect.size.x + 2, 1), BRICK[2])
+	for y: int in range(rect.position.y + 5, rect.end.y, 4):
+		_fill(s, Rect2i(rect.position.x + 1, y, rect.size.x - 3, 1), BRICK[2])
+
+
+static func _wood_door(s: Image, rect: Rect2i) -> void:
+	_fill(s, rect, WOOD[3])
+	var inner := Rect2i(rect.position.x + 1, rect.position.y + 1, rect.size.x - 2, rect.size.y - 1)
+	_fill(s, inner, WOOD[1])
+	_fill(s, Rect2i(inner.position.x, inner.position.y, inner.size.x, 1), WOOD[0])
+	for x: int in range(inner.position.x + 2, inner.end.x - 1, 3):
+		_fill(s, Rect2i(x, inner.position.y + 1, 1, inner.size.y - 1), WOOD[2])
+	_dot(s, inner.end.x - 2, inner.position.y + inner.size.y / 2, GOLD[1])
+
+
+static func _double_wood_door(s: Image, rect: Rect2i) -> void:
+	_wood_door(s, rect)
+	var mid := rect.position.x + rect.size.x / 2
+	_fill(s, Rect2i(mid, rect.position.y + 1, 1, rect.size.y - 1), WOOD[3])
+	_dot(s, mid - 2, rect.position.y + rect.size.y / 2, GOLD[1])
+	_dot(s, mid + 2, rect.position.y + rect.size.y / 2, GOLD[1])
+
+
+## A varanda: o telhadinho de madeira sobre a porta, com dois esteios e um vaso em cada.
+static func _porch(s: Image, rect: Rect2i) -> void:
+	_fill(s, Rect2i(rect.position.x, rect.position.y, rect.size.x, 4), WOOD[1])
+	_fill(s, Rect2i(rect.position.x, rect.position.y, rect.size.x, 1), WOOD[0])
+	_fill(s, Rect2i(rect.position.x, rect.position.y + 3, rect.size.x, 1), WOOD[3])
+	for x: int in [rect.position.x + 1, rect.end.x - 3]:
+		_fill(s, Rect2i(x, rect.position.y + 4, 2, rect.size.y - 4), WOOD[1])
+		_fill(s, Rect2i(x + 1, rect.position.y + 4, 1, rect.size.y - 4), WOOD[2])
+		_fill(s, Rect2i(x - 1, rect.end.y - 4, 4, 3), BRICK[1])
+		_fill(s, Rect2i(x - 1, rect.end.y - 4, 4, 1), BRICK[0])
+		_dot(s, x, rect.end.y - 5, LEAF[1])
+		_dot(s, x + 1, rect.end.y - 6, LEAF[0])
+		_dot(s, x + 1, rect.end.y - 5, FLOWERS[0])
+
+
+## O parapeito de madeira de uma sacada, com os balaústres por cima da parede.
+static func _railing(s: Image, rect: Rect2i) -> void:
+	_fill(s, Rect2i(rect.position.x, rect.position.y, rect.size.x, 1), WOOD[0])
+	for x: int in range(rect.position.x, rect.end.x, 3):
+		_fill(s, Rect2i(x, rect.position.y + 1, 1, rect.size.y - 2), WOOD[1])
+	_fill(s, Rect2i(rect.position.x, rect.end.y - 1, rect.size.x, 1), WOOD[2])
+
+
+static func _barrel(s: Image, at: Vector2i) -> void:
+	_fill(s, Rect2i(at.x, at.y, 7, 9), WOOD[1])
+	_fill(s, Rect2i(at.x, at.y, 1, 9), WOOD[0])
+	_fill(s, Rect2i(at.x + 5, at.y, 2, 9), WOOD[2])
+	_fill(s, Rect2i(at.x, at.y + 2, 7, 1), IRON[1])
+	_fill(s, Rect2i(at.x, at.y + 6, 7, 1), IRON[1])
+	_fill(s, Rect2i(at.x + 1, at.y, 5, 1), WOOD[0])

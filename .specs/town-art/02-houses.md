@@ -1,6 +1,6 @@
 # 02. As casas da cidade
 
-- **Status:** rascunho
+- **Status:** concluída
 - **Depende de:** [01-key-buildings](01-key-buildings.md)
 
 ## Contexto
@@ -33,9 +33,9 @@ As casas de hoje (Casa, Casa média e Casa grande) vêm do pacote Sunnyside, de 
 
 ## Critérios de aceite
 
-- [ ] O gerador grava as 9, 12 e 10 variantes, e os PNGs de `house`, `house_medium` e `house_large` não mudam.
-- [ ] Numa imagem com todas as variantes lado a lado, nenhuma tem telhado vermelho, azul ou ardósia, e nenhuma tem emblema.
-- [ ] Numa imagem do mapa com uma casa de cada tipo ao lado do Refúgio, da Loja e do Domador, as construções-chave se destacam e a porta cabe no Domador.
+- [x] O gerador grava as 9, 12 e 10 variantes, e os PNGs de `house`, `house_medium` e `house_large` não mudam.
+- [x] Numa imagem com todas as variantes lado a lado, nenhuma tem telhado vermelho, azul ou ardósia, e nenhuma tem emblema.
+- [x] Numa imagem do mapa com uma casa de cada tipo ao lado do Refúgio, da Loja e do Domador, as construções-chave se destacam e a porta cabe no Domador.
 - [ ] O catálogo traz os três tipos, e o editor os põe (com o dono, no F2).
 
 ## Desenho técnico
@@ -55,8 +55,15 @@ cd server && npx prisma migrate deploy && npm run lint && npm run typecheck && n
 
 Uma cena temporária com todas as variantes e outra com uma casa de cada tipo ao lado do Refúgio, da Loja e do Domador, conferidas pelo guia.
 
+Feita em 2026-11-12:
+- **Arte:** o `make_town.gd` gravou as 9 variantes da Casa (64×50 a 64×56), as 12 da Casa média (128×62 a 128×78) e as 10 da Casa grande (128×98 a 128×100). Os PNGs de `house`, `house_medium` e `house_large` não mudaram.
+- **Imagens:** numa folha com todas as variantes, nenhuma tem telhado vermelho, azul ou ardósia, nem emblema. Num pedaço de ilha, numa cena temporária já apagada, uma casa de cada tipo ficou ao lado do Refúgio e da Loja, com o Domador na frente: as construções-chave se destacam, e as portas (14 a 19 px) cabem no Domador.
+- **Servidor:** a migração foi aplicada com `prisma migrate deploy`, a carga inicial ganhou os três tipos, e o teste da carga conta 21 objetos. `lint`, `typecheck`, `npm test` e `npm run test:e2e` passam.
+- **Projeto:** abre sem erro de script.
+- **Editor:** falta o dono pôr as casas no F2.
+
 ## Tarefas
 
-- [ ] A migração, a carga inicial e o teste da carga.
-- [ ] Os modelos e a tabela de telhados no `make_town.gd`.
-- [ ] Conferir nas imagens e atualizar o `architecture.md` da island-villages e o `client/CLAUDE.md`.
+- [x] A migração, a carga inicial e o teste da carga.
+- [x] Os modelos e a tabela de telhados no `make_town.gd`.
+- [x] Conferir nas imagens e atualizar o `architecture.md` da island-villages e o `client/CLAUDE.md`.

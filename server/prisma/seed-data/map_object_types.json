@@ -106,5 +106,23 @@
 		"slug": "arena_building",
 		"name": "Prédio da Arena",
 		"variants": 1
+	},
+	{
+		"id": 24,
+		"slug": "town_house",
+		"name": "Casa (cidade)",
+		"variants": 9
+	},
+	{
+		"id": 25,
+		"slug": "town_house_medium",
+		"name": "Casa média (cidade)",
+		"variants": 12
+	},
+	{
+		"id": 26,
+		"slug": "town_house_large",
+		"name": "Casa grande (cidade)",
+		"variants": 10
 	}
 ]

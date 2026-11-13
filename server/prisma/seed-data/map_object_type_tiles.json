@@ -184,5 +184,41 @@
 		"dq": 2,
 		"dr": -1,
 		"blocks": true
+	},
+	{
+		"object_type_id": 24,
+		"dq": 0,
+		"dr": 0,
+		"blocks": true
+	},
+	{
+		"object_type_id": 25,
+		"dq": 0,
+		"dr": 0,
+		"blocks": true
+	},
+	{
+		"object_type_id": 25,
+		"dq": 1,
+		"dr": 0,
+		"blocks": true
+	},
+	{
+		"object_type_id": 26,
+		"dq": 0,
+		"dr": 0,
+		"blocks": true
+	},
+	{
+		"object_type_id": 26,
+		"dq": 1,
+		"dr": 0,
+		"blocks": true
+	},
+	{
+		"object_type_id": 26,
+		"dq": 1,
+		"dr": -1,
+		"blocks": true
 	}
 ]
