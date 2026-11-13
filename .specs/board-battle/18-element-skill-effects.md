@@ -9,7 +9,7 @@ Até a [17](17-idle-facing.md), só quatro Técnicas têm efeito: a Arranhão, a
 
 Cada folha do kit tem 9 linhas de cor, com os mesmos quadros de 64 × 64 em cada uma. Então a cor não precisa de pintura: basta escolher a linha do Elemento.
 
-Depois, no mesmo dia, o dono trocou a forma da Mordida Brasa: "na mordida brasa usa a 509.png" (a `Part 11/509.png`), e depois a da Presa Ígnea: "presa ignia voce vai usar a 477.png" (a `Part 10/477.png`), e a da Erupção Solar: "a erupção dolar você vai usar a 436.png" (a `Part 9/436.png`).
+Depois, no mesmo dia, o dono trocou a forma da Mordida Brasa: "na mordida brasa usa a 509.png" (a `Part 11/509.png`), e depois a da Presa Ígnea: "presa ignia voce vai usar a 477.png" (a `Part 10/477.png`), e a da Erupção Solar: "a erupção dolar você vai usar a 436.png" (a `Part 9/436.png`), e a da Lâmina d'Água: "lamina de agua você usa a 589.png" (a `Part 12/589.png`).
 
 São 26 Técnicas com ícone. Faltavam 22: 6 de Fogo, 9 de Água e 7 de Flora.
 
@@ -59,7 +59,7 @@ São 26 Técnicas com ícone. Faltavam 22: 6 de Fogo, 9 de Água e 7 de Flora.
   | Espuma Densa | Água | 11/519 | bolhas que se juntam e estouram |
   | Garra de Maré | Água | 11/509 | três riscos curvos de garra |
   | Casca Fechada | Água | 11/528 | cúpula que se fecha sobre o corpo |
-  | Lâmina d'Água | Água | 3/114 | lâmina em meia-lua |
+  | Lâmina d'Água | Água | 12/589 | um corte em meia-lua que varre na diagonal e se desfaz, pedido do dono; antes era a 3/114, uma lâmina em meia-lua |
   | Maré Restauradora | Água | 14/673 | brilhos e bolhas que se espalham |
   | Torrente | Água | 10/484 | coluna de água que sobe e cai |
   | Muralha de Coral | Água | 15/712 | favos de hexágono que crescem |

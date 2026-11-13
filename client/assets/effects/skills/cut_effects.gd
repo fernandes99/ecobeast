@@ -31,7 +31,7 @@ const EFFECTS := {
 	"espuma_densa": ["water", "11/519"],
 	"garra_de_mare": ["water", "11/509"],
 	"casca_fechada": ["water", "11/528"],
-	"lamina_d_agua": ["water", "3/114"],
+	"lamina_d_agua": ["water", "12/589"],
 	"mare_restauradora": ["water", "14/673"],
 	"torrente": ["water", "10/484"],
 	"muralha_de_coral": ["water", "15/712"],
