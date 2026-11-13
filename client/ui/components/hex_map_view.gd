@@ -76,8 +76,17 @@ func _init() -> void:
 func _ready() -> void:
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
+
+
+## O mapa fora da árvore não tem janela: a escala só acompanha a janela enquanto ele
+## está nela.
+func _enter_tree() -> void:
 	get_viewport().size_changed.connect(_update_scale)
 	_update_scale()
+
+
+func _exit_tree() -> void:
+	get_viewport().size_changed.disconnect(_update_scale)
 
 
 func _process(_delta: float) -> void:
