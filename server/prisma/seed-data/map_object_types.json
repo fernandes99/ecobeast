@@ -178,5 +178,29 @@
 		"slug": "town_rune_shrine",
 		"name": "Santuário de runas (cidade)",
 		"variants": 4
+	},
+	{
+		"id": 36,
+		"slug": "lamp_post",
+		"name": "Poste de luz",
+		"variants": 2
+	},
+	{
+		"id": 37,
+		"slug": "sign",
+		"name": "Placa",
+		"variants": 2
+	},
+	{
+		"id": 38,
+		"slug": "flower_bed",
+		"name": "Canteiro de flores",
+		"variants": 3
+	},
+	{
+		"id": 39,
+		"slug": "bench",
+		"name": "Banco",
+		"variants": 2
 	}
 ]

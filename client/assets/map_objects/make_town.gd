@@ -33,6 +33,10 @@ const TYPES := {
 	"town_beast_stable": ["pair", 2],
 	"town_trough": ["one", 1],
 	"town_rune_shrine": ["one", 4, 16],
+	"lamp_post": ["one", 2],
+	"sign": ["one", 2],
+	"flower_bed": ["one", 3],
+	"bench": ["one", 2],
 }
 ## O pé das construções fica acima do canto de baixo da célula, na borda de baixo da linha da frente.
 const BASE_LIFT := 6
@@ -1162,3 +1166,146 @@ func _draw_town_rune_shrine(variant: int, frame: int) -> void:
 			_dot(s, spark.x + i, spark.y, WHITE if absi(i) < glint else LAMP_SHINE)
 			_dot(s, spark.x, spark.y + i, WHITE if absi(i) < glint else LAMP_SHINE)
 	_place_building(_outline(s, ore[3]), SMALL_LIFT)
+
+
+# --- As decorações de rua ------------------------------------------------------------
+
+## O canteiro fica na metade da frente do hexágono, abaixo do pé do Domador: o objeto é
+## desenhado depois dos atores da linha dele e cobriria o Domador.
+const BED_LIFT := 12
+const BED_FLOWERS: Array = [
+	[Color("#f05050"), Color("#f8d040")],
+	[Color("#f890c0"), Color("#ffffff")],
+	[Color("#f05050"), Color("#f8d040"), Color("#ffffff"), Color("#f890c0")],
+]
+
+
+func _draw_lamp_post(variant: int, _frame: int) -> void:
+	var s := Image.create(16, 42, false, Image.FORMAT_RGBA8)
+	if variant == 1:
+		_fill(s, Rect2i(5, 39, 6, 3), IRON[2])
+		_fill(s, Rect2i(5, 39, 6, 1), IRON[0])
+		_fill(s, Rect2i(6, 36, 4, 3), IRON[1])
+		_fill(s, Rect2i(7, 12, 2, 24), IRON[1])
+		_fill(s, Rect2i(7, 12, 1, 24), IRON[0])
+		_fill(s, Rect2i(6, 20, 4, 1), IRON[2])
+		_fill(s, Rect2i(5, 10, 6, 2), IRON[2])
+		_lantern(s, Vector2i(4, 1))
+	else:
+		_fill(s, Rect2i(2, 38, 8, 4), STONE[1])
+		_fill(s, Rect2i(2, 38, 8, 1), STONE[0])
+		_fill(s, Rect2i(4, 6, 3, 32), WOOD[1])
+		_fill(s, Rect2i(4, 6, 1, 32), WOOD[0])
+		_fill(s, Rect2i(6, 6, 1, 32), WOOD[2])
+		_fill(s, Rect2i(4, 6, 10, 2), WOOD[1])
+		_fill(s, Rect2i(4, 7, 10, 1), WOOD[2])
+		_fill(s, Rect2i(11, 8, 1, 2), IRON[2])
+		_lantern(s, Vector2i(8, 10))
+	_place_building(_outline(s, IRON[3] if variant == 1 else WOOD[3]), SMALL_LIFT)
+
+
+## A lanterna de 8×10: o chapéu de ferro, o vidro aceso e a base.
+static func _lantern(s: Image, at: Vector2i) -> void:
+	_fill(s, Rect2i(at.x + 3, at.y, 2, 1), IRON[2])
+	_fill(s, Rect2i(at.x + 1, at.y + 1, 6, 2), IRON[2])
+	_fill(s, Rect2i(at.x + 1, at.y + 1, 6, 1), IRON[1])
+	_fill(s, Rect2i(at.x, at.y + 3, 8, 6), IRON[2])
+	_fill(s, Rect2i(at.x + 1, at.y + 3, 6, 5), LAMP)
+	_fill(s, Rect2i(at.x + 4, at.y + 3, 1, 5), IRON[2])
+	_dot(s, at.x + 2, at.y + 4, LAMP_SHINE)
+	_dot(s, at.x + 2, at.y + 5, LAMP_SHINE)
+	_fill(s, Rect2i(at.x + 1, at.y + 9, 6, 1), IRON[2])
+
+
+func _draw_sign(variant: int, _frame: int) -> void:
+	var s: Image
+	if variant == 1:
+		s = Image.create(22, 24, false, Image.FORMAT_RGBA8)
+		for x: int in [4, 16]:
+			_fill(s, Rect2i(x, 8, 2, 16), WOOD[2])
+			_fill(s, Rect2i(x, 8, 1, 16), WOOD[1])
+		_fill(s, Rect2i(0, 2, 22, 13), WOOD[1])
+		_fill(s, Rect2i(0, 2, 22, 1), WOOD[0])
+		_fill(s, Rect2i(0, 14, 22, 1), WOOD[2])
+		_fill(s, Rect2i(0, 8, 22, 1), WOOD[2])
+		_stamp(s, Vector2i(5, 4), [
+			".......D....",
+			"DDDDDDDDD...",
+			".......D....",
+			"............",
+			"....D.......",
+			"...DDDDDDDDD",
+			"....D.......",
+		], {"D": WOOD[3]})
+		_place_building(_outline(s, WOOD[3]), SMALL_LIFT)
+	else:
+		s = Image.create(16, 22, false, Image.FORMAT_RGBA8)
+		for y: int in 22:
+			var inset: int = 0 if y >= 4 else [5, 3, 2, 1][y]
+			_fill(s, Rect2i(inset, y, 16 - inset * 2, 1), STONE[1])
+			_dot(s, inset, y, STONE[0])
+			_dot(s, 15 - inset, y, STONE[2])
+			_dot(s, 14 - inset, y, STONE[2])
+		_fill(s, Rect2i(0, 19, 16, 3), STONE[2])
+		_fill(s, Rect2i(0, 19, 16, 1), STONE[0])
+		_stamp(s, Vector2i(3, 6), [
+			"....D.....",
+			"....DD....",
+			"DDDDDDD...",
+			"....DD....",
+			"....D.....",
+			"..........",
+			".D.D.D.D..",
+		], {"D": STONE[3]})
+		_place_building(_outline(s, STONE[3]), SMALL_LIFT)
+
+
+func _draw_flower_bed(variant: int, _frame: int) -> void:
+	var colors: Array = BED_FLOWERS[variant - 1]
+	var s := Image.create(44, 14, false, Image.FORMAT_RGBA8)
+	_fill(s, Rect2i(1, 6, 42, 5), SOIL[1])
+	_fill(s, Rect2i(1, 6, 42, 1), SOIL[0])
+	_fill(s, Rect2i(0, 10, 44, 4), BRICK[1])
+	_fill(s, Rect2i(0, 10, 44, 1), BRICK[0])
+	_fill(s, Rect2i(0, 13, 44, 1), BRICK[2])
+	for x: int in range(5, 44, 6):
+		_fill(s, Rect2i(x, 11, 1, 2), BRICK[2])
+	var index := 0
+	for row: int in 2:
+		for x: int in range(3 + row * 3, 42, 6):
+			var y := 3 + row * 3
+			var color: Color = colors[index % colors.size()]
+			index += 1
+			_dot(s, x - 1, y + 2, LEAF[1])
+			_dot(s, x + 1, y + 2, LEAF[2])
+			_dot(s, x, y + 3, LEAF[2])
+			for d: Vector2i in [Vector2i(0, -1), Vector2i(-1, 0), Vector2i(1, 0), Vector2i(0, 1)]:
+				_dot(s, x + d.x, y + d.y, color)
+			_dot(s, x, y, FLOWER_HEART)
+	_place_building(_outline(s, BRICK[3]), BED_LIFT)
+
+
+func _draw_bench(variant: int, _frame: int) -> void:
+	var s := Image.create(34, 18, false, Image.FORMAT_RGBA8)
+	if variant == 1:
+		for x: int in [3, 28]:
+			_fill(s, Rect2i(x, 0, 3, 18), IRON[1])
+			_fill(s, Rect2i(x, 0, 1, 18), IRON[0])
+		for y: int in [1, 5]:
+			_fill(s, Rect2i(1, y, 32, 3), WOOD[1])
+			_fill(s, Rect2i(1, y, 32, 1), WOOD[0])
+			_fill(s, Rect2i(1, y + 2, 32, 1), WOOD[2])
+		_fill(s, Rect2i(0, 10, 34, 4), WOOD[0])
+		_fill(s, Rect2i(0, 12, 34, 2), WOOD[1])
+		_fill(s, Rect2i(0, 13, 34, 1), WOOD[2])
+		_place_building(_outline(s, WOOD[3]), SMALL_LIFT)
+	else:
+		for x: int in [3, 24]:
+			_fill(s, Rect2i(x, 12, 7, 6), STONE[1])
+			_fill(s, Rect2i(x, 12, 1, 6), STONE[0])
+			_fill(s, Rect2i(x + 5, 12, 2, 6), STONE[2])
+		_fill(s, Rect2i(0, 7, 34, 5), STONE[0])
+		_fill(s, Rect2i(0, 9, 34, 3), STONE[1])
+		_fill(s, Rect2i(0, 11, 34, 1), STONE[2])
+		_fill(s, Rect2i(16, 9, 1, 2), STONE[2])
+		_place_building(_outline(s, STONE[3]), SMALL_LIFT)

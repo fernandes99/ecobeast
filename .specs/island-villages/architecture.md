@@ -83,6 +83,10 @@ Os tipos depois da revisão da [03](03-map-objects.md#revisão-casas-árvores-pe
 | 33 | `town_beast_stable` | Estábulo de Ecobeasts (cidade) | par | 2: madeira e pedra | os dois |
 | 34 | `town_trough` | Bebedouro (cidade) | um | 1 | bloqueia |
 | 35 | `town_rune_shrine` | Santuário de runas (cidade) | um | 4: cristal azul, de ouro, de prata e de carvão, com brilho | bloqueia |
+| 36 | `lamp_post` | Poste de luz | um | 2: de ferro e de madeira | bloqueia |
+| 37 | `sign` | Placa | um | 2: de madeira e de pedra, com setas, sem texto | bloqueia |
+| 38 | `flower_bed` | Canteiro de flores | um | 3: vermelho e amarelo, rosa e branco, e misturado | não bloqueia |
+| 39 | `bench` | Banco | um | 2: de madeira e de pedra | bloqueia |
 
 Os tipos 21 em diante são da [town-art](../town-art/README.md): a arte deles vem do `make_town.gd`, no estilo do [guia](../town-art/style-guide.md), ao lado dos tipos de antes, que continuam como estão. Nos prédios do Refúgio, da Loja e da Arena, a ação continua pintada à parte.
 
@@ -217,13 +221,15 @@ Tamanhos da arte de agora, na variante 1 (em pixels da arte, como as texturas do
 | `town_well` | 64×65 | `town_market_stall` | 64×59 |
 | `town_cart` | 64×48 | `town_beast_stable` | 128×70 |
 | `town_trough` | 64×33 | `town_rune_shrine` | 64×68 (16 quadros) |
+| `lamp_post` | 64×55 a 64×60 | `sign` | 64×41 |
+| `flower_bed` | 64×26 | `bench` | 64×30 a 64×37 |
 
 A altura pode mudar na arte final, desde que o pé continue no mesmo lugar. A escala é a do pacote Sunnyside em 1x: uma casa tem uns 48 px de largura num hexágono de 64, e o Domador tem 25 px de altura.
 
 **Arte de agora:** gerada pelo próprio Godot, para gerar de novo quando quiser:
 
 - `res://assets/map_objects/make_objects.gd` monta os objetos a partir do pacote Sunnyside World, que o dono tem na máquina e passa como argumento. Ele lê o tileset, os sprites e o mapa de exemplo do pacote (`Room1`, do GameMaker), onde as casas, o moinho e as barracas já estão montados peça por peça. A cor do telhado das variantes troca o bloco de cor do tileset, que repete as mesmas peças em azul, verde, laranja, vermelho e roxo. Peças que só existem num bloco de cor, como a cumeeira da casa grande, mudam de matiz nos outros. As árvores, as pedras e as hortas são compostas com os sprites e as peças do pacote, e a carroça, que ele não tem, é desenhada no estilo dele.
-- `res://assets/map_objects/make_town.gd` desenha a cidade só por código, no estilo do [guia da town-art](../town-art/style-guide.md), sem pacote de fora: hoje os prédios do Refúgio, da Loja e da Arena as casas da cidade e os objetos de vila da cidade (os tipos `town_...`). Da pasta `client/`: `godot --headless -s res://assets/map_objects/make_town.gd`, ou com slugs depois de `--` para gerar só esses.
+- `res://assets/map_objects/make_town.gd` desenha a cidade só por código, no estilo do [guia da town-art](../town-art/style-guide.md), sem pacote de fora: hoje os prédios do Refúgio, da Loja e da Arena as casas e os objetos de vila da cidade (os tipos `town_...`) e as decorações de rua (poste, placa, canteiro e banco). Da pasta `client/`: `godot --headless -s res://assets/map_objects/make_town.gd`, ou com slugs depois de `--` para gerar só esses.
 - `res://assets/terrain/grounds/make_grounds.gd` gera as texturas de chão.
 
 Da pasta `client/`: `godot --headless -s res://assets/map_objects/make_objects.gd -- <pasta do pacote>`, a pasta que tem `Sunnyside_World_Assets` e `Sunnyside_World_Gamemaker`.

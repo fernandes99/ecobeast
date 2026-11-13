@@ -286,5 +286,29 @@
 		"dq": 0,
 		"dr": 0,
 		"blocks": true
+	},
+	{
+		"object_type_id": 36,
+		"dq": 0,
+		"dr": 0,
+		"blocks": true
+	},
+	{
+		"object_type_id": 37,
+		"dq": 0,
+		"dr": 0,
+		"blocks": true
+	},
+	{
+		"object_type_id": 38,
+		"dq": 0,
+		"dr": 0,
+		"blocks": false
+	},
+	{
+		"object_type_id": 39,
+		"dq": 0,
+		"dr": 0,
+		"blocks": true
 	}
 ]
