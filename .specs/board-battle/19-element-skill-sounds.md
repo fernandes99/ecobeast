@@ -7,6 +7,8 @@
 
 Na [18](18-element-skill-effects.md), as 22 Técnicas com ícone que faltavam ganharam efeito, e os sons ficaram de fora. Em 2026-11-13, o dono pediu: "agora coloca todos os sons".
 
+Depois, no mesmo dia, o dono pediu um som mais agressivo para a Mordida Brasa, "lembrando uma mordida de lobo", junto com a forma nova do efeito (a 509, na [18](18-element-skill-effects.md)). O efeito novo dura 0,65 s, então o som também.
+
 Os quatro sons de antes (Arranhão, Rugido Feroz, Investida Veloz e Faísca Rápida) são gerados por síntese em Python, sem gravação de terceiros, um script por som em `art-source/sounds/`. Os 22 novos seguem o mesmo caminho, num script só.
 
 ## Escopo
@@ -28,7 +30,7 @@ Os quatro sons de antes (Arranhão, Rugido Feroz, Investida Veloz e Faísca Ráp
 
   | Técnica | Duração | Som |
   | --- | --- | --- |
-  | Mordida Brasa | 0,4 s | um estalo de mordida, grave e seco, com um chiado de brasa |
+  | Mordida Brasa | 0,65 s | uma mordida de lobo, pedido do dono: um rosnado áspero que sobe, o estalo dos dentes se fechando com um baque, o rosnado que volta mais baixo e a brasa chiando |
   | Fumaça Densa | 0,6 s | um sopro abafado que sobe e se espalha |
   | Presa Ígnea | 0,7 s | uma mordida mais forte, com um estalo agudo e um rugido de fogo |
   | Chama Espiral | 0,4 s | o lançamento de uma bola de fogo: um sopro que sobe, com crepitar |
@@ -90,5 +92,6 @@ Em 2026-11-13, sem janela:
 - **Arquivos:** o `element_skills.py` gravou os 22 sons em 2 s, cada um com a duração da tabela, a 44,1 kHz, mono, 16 bits, com o pico em 0,7. Rodar de novo grava os mesmos arquivos.
 - **Volume:** o resumo em pedaços de 0,05 s mostrou o ataque e o fim esperados em cada um. Os sons curtos e secos (Mordida Brasa, Garra de Maré, Chicote de Raiz e Folha Navalha) ficavam baixos perto dos outros, como a Arranhão. Eles ganharam mais saturação e ficaram mais perto do resto.
 - **Luta:** uma cena temporária (já apagada) carregou os 22 como áudio e tocou a Garra de Maré, a Casca Fechada e a Chama Espiral numa luta montada à mão. O som de cada uma estava tocando no quadro em que o efeito (ou o projétil, na Chama Espiral) apareceu.
+- **Mordida Brasa, refeita:** o resumo em pedaços de 0,025 s mostra o rosnado crescendo até 0,2 s, o pico no estalo dos dentes entre 0,22 e 0,27 s e o rosnado e a brasa sumindo até 0,6 s.
 - **Projeto:** importa sem erros, e o jogo sem janela abre sem erros de script.
 - **Falta o dono:** os sons não foram ouvidos aqui. O dono ouve numa luta com F5 e pede para mudar os de que não gostar.

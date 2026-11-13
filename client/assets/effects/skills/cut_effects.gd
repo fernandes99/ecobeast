@@ -21,7 +21,7 @@ const ELEMENT_ROWS := {
 
 ## slug da Técnica: [Elemento, "Part/número"]
 const EFFECTS := {
-	"mordida_brasa": ["fire", "2/64"],
+	"mordida_brasa": ["fire", "11/509"],
 	"fumaca_densa": ["fire", "10/476"],
 	"presa_ignea": ["fire", "13/622"],
 	"chama_espiral": ["fire", "6/296"],

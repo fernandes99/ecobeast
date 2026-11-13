@@ -9,6 +9,8 @@ Até a [17](17-idle-facing.md), só quatro Técnicas têm efeito: a Arranhão, a
 
 Cada folha do kit tem 9 linhas de cor, com os mesmos quadros de 64 × 64 em cada uma. Então a cor não precisa de pintura: basta escolher a linha do Elemento.
 
+Depois, no mesmo dia, o dono trocou a forma da Mordida Brasa: "na mordida brasa usa a 509.png" (a `Part 11/509.png`).
+
 São 26 Técnicas com ícone. Faltavam 22: 6 de Fogo, 9 de Água e 7 de Flora.
 
 ## Escopo
@@ -47,7 +49,7 @@ São 26 Técnicas com ícone. Faltavam 22: 6 de Fogo, 9 de Água e 7 de Flora.
 
   | Técnica | Elemento | Folha | Forma |
   | --- | --- | --- | --- |
-  | Mordida Brasa | Fogo | 2/64 | duas presas que se fecham |
+  | Mordida Brasa | Fogo | 11/509 | três riscos curvos de dentes (a mesma forma da Garra de Maré, em vermelho), pedido do dono; antes era a 2/64, duas presas que se fecham |
   | Fumaça Densa | Fogo | 10/476 | nuvem de fumaça que sobe e se desfaz |
   | Presa Ígnea | Fogo | 13/622 | duas mandíbulas, de cima e de baixo, que se encontram |
   | Chama Espiral | Fogo | 6/296 | espiral que gira e se fecha |

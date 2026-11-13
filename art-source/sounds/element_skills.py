@@ -176,15 +176,43 @@ def silence(length):
 
 
 def mordida_brasa(rng):
-    length = 0.4
+    """Mordida de lobo: um rosnado áspero que sobe, o estalo dos dentes se fechando com
+    um baque, o rosnado que volta mais baixo e a brasa chiando."""
+    length = 0.65
     mix = silence(length)
-    add(mix, shape(band(noise(rng, 0.06), [(0.0, 900.0), (0.06, 2200.0)], 1.5), [(0.0, 0.0), (0.05, 1.0), (0.06, 0.0)]), 0.0, 0.5)
-    add(mix, thud(150.0, 55.0, 0.12), 0.06, 1.0)
-    add(mix, click(rng, 2600.0, 0.02), 0.06, 1.4)
-    sizzle = shape(band(noise(rng, 0.32), 4500.0, 1.5), [(0.0, 0.0), (0.03, 1.0), (0.32, 0.0)])
-    add(mix, flutter(rng, sizzle, 40.0, 0.6), 0.08, 0.7)
-    add(mix, crackles(rng, length, 45.0, 0.08, 0.36), 0.0, 0.7)
-    return mix, 2.2
+    growl = growl_voice(rng, 0.26, [(0.0, 95.0), (0.18, 150.0), (0.26, 175.0)])
+    add(mix, shape(growl, [(0.0, 0.0), (0.04, 0.7), (0.2, 1.0), (0.26, 0.2)]), 0.0, 0.7)
+    add(mix, click(rng, 3200.0, 0.02, 1.5), 0.22, 1.8)
+    add(mix, click(rng, 4600.0, 0.015, 1.5), 0.236, 1.2)
+    add(mix, thud(170.0, 50.0, 0.15), 0.22, 1.4)
+    add(mix, decay(band(noise(rng, 0.09), 1800.0, 0.9), 0.08, 0.001), 0.22, 0.9)
+    snarl = growl_voice(rng, 0.3, [(0.0, 130.0), (0.3, 80.0)])
+    add(mix, shape(snarl, [(0.0, 0.0), (0.05, 0.6), (0.3, 0.0)]), 0.3, 0.7)
+    sizzle = shape(band(noise(rng, 0.38), 4500.0, 1.5), [(0.0, 0.0), (0.03, 1.0), (0.38, 0.0)])
+    add(mix, flutter(rng, sizzle, 40.0, 0.6), 0.25, 0.45)
+    add(mix, crackles(rng, length, 50.0, 0.25, 0.6), 0.0, 0.7)
+    return mix, 2.4
+
+
+def growl_voice(rng, seconds, pitch):
+    """Rosnado: dente de serra com a altura tremendo, volume vibrando (aspereza) e duas
+    faixas de garganta, com um ruído rouco por cima."""
+    voice = []
+    phase = 0.0
+    wobble = 0.0
+    for index in range(count_of(seconds)):
+        t = index / RATE
+        wobble = wobble * 0.999 + rng.uniform(-1.0, 1.0) * 0.002
+        phase = (phase + curve(pitch, t) * (1.0 + wobble) / RATE) % 1.0
+        rasp = 1.0 - 0.55 * (0.5 + 0.5 * math.sin(2.0 * math.pi * 38.0 * t))
+        voice.append((2.0 * phase - 1.0) * rasp)
+    out = [value * 0.35 for value in voice]
+    for freq, q, weight in ((500.0, 2.0, 3.0), (1300.0, 3.0, 1.6)):
+        for index, value in enumerate(band(voice, freq, q)):
+            out[index] += value * weight
+    for index, value in enumerate(band(noise(rng, seconds), 1200.0, 1.2)):
+        out[index] += value * 0.9
+    return out
 
 
 def fumaca_densa(rng):
