@@ -23,7 +23,7 @@ const ELEMENT_ROWS := {
 const EFFECTS := {
 	"mordida_brasa": ["fire", "11/509"],
 	"fumaca_densa": ["fire", "10/476"],
-	"presa_ignea": ["fire", "13/622"],
+	"presa_ignea": ["fire", "10/477"],
 	"chama_espiral": ["fire", "6/296"],
 	"couraca_de_cinzas": ["fire", "14/674"],
 	"erupcao_solar": ["fire", "11/527"],
