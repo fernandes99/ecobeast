@@ -35,7 +35,7 @@ const EFFECTS := {
 	"mare_restauradora": ["water", "14/673"],
 	"torrente": ["water", "10/484"],
 	"muralha_de_coral": ["water", "15/712"],
-	"maremoto": ["water", "3/124"],
+	"maremoto": ["water", "14/654"],
 	"chicote_de_raiz": ["flora", "11/516"],
 	"esporos_sonolentos": ["flora", "12/568"],
 	"seiva_vital": ["flora", "3/135"],

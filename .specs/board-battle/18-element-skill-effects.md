@@ -9,7 +9,7 @@ Até a [17](17-idle-facing.md), só quatro Técnicas têm efeito: a Arranhão, a
 
 Cada folha do kit tem 9 linhas de cor, com os mesmos quadros de 64 × 64 em cada uma. Então a cor não precisa de pintura: basta escolher a linha do Elemento.
 
-Depois, no mesmo dia, o dono trocou a forma da Mordida Brasa: "na mordida brasa usa a 509.png" (a `Part 11/509.png`), e depois a da Presa Ígnea: "presa ignia voce vai usar a 477.png" (a `Part 10/477.png`), e a da Erupção Solar: "a erupção dolar você vai usar a 436.png" (a `Part 9/436.png`), e a da Lâmina d'Água: "lamina de agua você usa a 589.png" (a `Part 12/589.png`).
+Depois, no mesmo dia, o dono trocou a forma da Mordida Brasa: "na mordida brasa usa a 509.png" (a `Part 11/509.png`), e depois a da Presa Ígnea: "presa ignia voce vai usar a 477.png" (a `Part 10/477.png`), e a da Erupção Solar: "a erupção dolar você vai usar a 436.png" (a `Part 9/436.png`), e a da Lâmina d'Água: "lamina de agua você usa a 589.png" (a `Part 12/589.png`), e a do Maremoto: "maremoto vai ser a 654.png" (a `Part 14/654.png`).
 
 São 26 Técnicas com ícone. Faltavam 22: 6 de Fogo, 9 de Água e 7 de Flora.
 
@@ -63,7 +63,7 @@ São 26 Técnicas com ícone. Faltavam 22: 6 de Fogo, 9 de Água e 7 de Flora.
   | Maré Restauradora | Água | 14/673 | brilhos e bolhas que se espalham |
   | Torrente | Água | 10/484 | coluna de água que sobe e cai |
   | Muralha de Coral | Água | 15/712 | favos de hexágono que crescem |
-  | Maremoto | Água | 3/124 | onda que se enrola e quebra |
+  | Maremoto | Água | 14/654 | uma onda que cai de cima, cobre o alvo numa cúpula escorrendo e se desfaz, pedido do dono; antes era a 3/124, uma onda que se enrola e quebra |
   | Chicote de Raiz | Flora | 11/516 | chicote que sobe ondulando |
   | Esporos Sonolentos | Flora | 12/568 | nuvem de esporos |
   | Seiva Vital | Flora | 3/135 | raízes que se enroscam no alvo |
