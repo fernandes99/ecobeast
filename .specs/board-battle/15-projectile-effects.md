@@ -21,7 +21,7 @@ A cor é a 8ª linha das duas folhas, vermelha com o miolo amarelo (decisão de 
 
 ## Fora do escopo
 
-- O projétil das outras Técnicas, como a Chama Espiral: cada uma chega com os arquivos dela, sem mudar código.
+- O projétil das outras Técnicas, como a Chama Espiral: cada uma chega com os arquivos dela, sem mudar código. A Chama Espiral ganhou o dela na [18](18-element-skill-effects.md).
 - O projétil no visualizador de conteúdo (F1): quase nenhuma Técnica tem, e uma linha "projétil · falta" em todas só faria barulho. Veio depois, como arquivo opcional, na [content-viewer/05](../content-viewer/05-skill-projectile.md), a pedido do dono.
 - Girar o impacto na direção do golpe: ele só espelha, como na 09.
 

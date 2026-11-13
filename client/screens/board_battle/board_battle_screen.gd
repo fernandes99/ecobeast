@@ -349,6 +349,9 @@ func _play_event(event: Dictionary) -> void:
 				_board.light([], Color.TRANSPARENT)
 				return
 			_board.light([], Color.TRANSPARENT)
+			# A proteção e a cura em si mesmo não geram evento com efeito (board-battle/18).
+			if _targets_self():
+				await _play_skill_effect(key)
 		"fainted":
 			_board.fade(key)
 		"creature_left":
@@ -432,6 +435,11 @@ func _projectile_texture() -> Texture2D:
 		return null
 	var path := ContentFiles.SKILL_PROJECTILE_PATH % skill.slug
 	return load(path) as Texture2D if ResourceLoader.exists(path) else null
+
+
+func _targets_self() -> bool:
+	var skill := GameData.get_skill(_attack_skill_id) if _attack_skill_id >= 0 else null
+	return skill != null and GameData.get_row("skill_targets", skill.skill_target_id).get("slug", "") == "self"
 
 
 func _fly_projectile(area: Array[Vector2i], texture: Texture2D) -> void:
