@@ -240,9 +240,13 @@ func _go_to(art_point: Vector2) -> void:
 			if action >= 0:
 				_run_action(action)
 			return
+	elif target != _player_coord and _map.is_center_walled(target):
+		# Uma parede passa pelo centro (free-fences/02): o Domador chega por um vizinho
+		# e anda até o ponto tocado, parando rente a ela.
+		goals = _map.approach_goals(target, finish)
 	var hexes: Array[Vector2i] = [_player_coord]
-	if not goals.has(_player_coord):
-		var path := _map.path_to_any(_player_coord, goals)
+	if not goals.has(_player_coord) and target != _player_coord:
+		var path := _map.path_to_any(_player_coord, goals, _player_point)
 		if path.is_empty():
 			_show_message(NO_PATH_TEXT, &"SecondaryLabel")
 			return
@@ -469,7 +473,7 @@ func _go_to_npc(npc: NpcSprite) -> void:
 	for coord: Vector2i in [npc.coord] + _map.neighbors(npc.coord):
 		if _map.has(coord) and not _map.is_blocked(coord):
 			goals[coord] = true
-	var path := _map.path_to_any(_player_coord, goals)
+	var path := _map.path_to_any(_player_coord, goals, _player_point)
 	if path.is_empty():
 		_show_message(NO_PATH_TEXT, &"SecondaryLabel")
 		return
@@ -759,7 +763,7 @@ func _add_creature_sprite(slug: String, coord: Vector2i) -> CreatureSprite:
 func _place_wanderer(sprite: WanderingSprite, coord: Vector2i) -> void:
 	_map_view.add_child(sprite)
 	_map_view.set_actor_row(sprite, coord.y)
-	sprite.wander_in(coord, _map_view.surface_center(coord))
+	sprite.wander_in(coord, _map_view.surface_center(coord), _map)
 	sprite.scale = _marker.scale
 
 

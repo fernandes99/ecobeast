@@ -5,10 +5,10 @@ signal message(text: String)
 signal brush_changed
 signal edited(step: EditorHistory.Step, merge: bool)
 
-enum Tool { BIOME, HEIGHT, GROUND, ADD, REMOVE, START, OBJECT, ACTION, AREA, STAMP, ERASER, PATH, VEGETATION, NPC }
+enum Tool { BIOME, HEIGHT, GROUND, ADD, REMOVE, START, OBJECT, ACTION, AREA, STAMP, ERASER, PATH, VEGETATION, NPC, FENCE }
 
-const TOOL_NAMES: Array[String] = ["Bioma", "Altura", "Chão", "Pôr hexágono", "Tirar hexágono", "Chegada", "Peças", "Ação", "Área", "Carimbo", "Borracha", "Caminho", "Vegetação", "NPC"]
-const TOOL_ICONS: Array[String] = ["biome", "height", "ground", "hex_add", "hex_remove", "flag", "object", "action", "area", "stamp", "eraser", "path", "vegetation", "npc"]
+const TOOL_NAMES: Array[String] = ["Bioma", "Altura", "Chão", "Pôr hexágono", "Tirar hexágono", "Chegada", "Peças", "Ação", "Área", "Carimbo", "Borracha", "Caminho", "Vegetação", "NPC", "Cerca"]
+const TOOL_ICONS: Array[String] = ["biome", "height", "ground", "hex_add", "hex_remove", "flag", "object", "action", "area", "stamp", "eraser", "path", "vegetation", "npc", "fence"]
 const TOOL_HINTS: Array[String] = [
 	"Troca o bioma dos hexágonos que já existem. A altura só muda se você escolher uma abaixo.",
 	"Troca só a altura dos hexágonos que já existem.",
@@ -24,12 +24,13 @@ const TOOL_HINTS: Array[String] = [
 	"Arraste para desenhar um caminho. Clique num caminho para escolher, trocar ou apagar.",
 	"Pinta vegetação e pedras do grupo escolhido. Botão direito apaga as peças soltas.",
 	"Põe o NPC da lista num hexágono, ou escolhe o que está nele. Botão direito escolhe ou solta.",
+	"Clique para pôr os pontos da cerca. Enter, clicar de novo no último ponto ou o botão direito terminam; Esc desiste. Clique numa cerca para escolher, trocar o tipo ou apagar.",
 ]
 ## Os grupos da coluna (map-editor/06): as ferramentas parecidas viram abas do grupo.
 const GROUPS: Array[Dictionary] = [
 	{"name": "Terreno", "icon": "biome", "tools": [Tool.BIOME, Tool.HEIGHT, Tool.ADD, Tool.REMOVE]},
 	{"name": "Chão", "icon": "ground", "tools": [Tool.GROUND, Tool.PATH]},
-	{"name": "Peças", "icon": "object", "tools": [Tool.OBJECT, Tool.VEGETATION, Tool.STAMP, Tool.ERASER]},
+	{"name": "Peças", "icon": "object", "tools": [Tool.OBJECT, Tool.VEGETATION, Tool.STAMP, Tool.ERASER, Tool.FENCE]},
 	{"name": "Jogo", "icon": "flag", "tools": [Tool.START, Tool.ACTION, Tool.AREA, Tool.NPC]},
 ]
 const TAB_ICON_WIDTH := 18
@@ -62,6 +63,9 @@ const PATH_SPACING := 12.0
 const PATH_CLICK := 4.0
 const PATH_TOLERANCE := 2.0
 const MAX_PATH_POINTS := 256
+## A Cerca (free-fences/03): a distância de um clique até uma parede ou até o último ponto.
+const FENCE_PICK := 6.0
+const MAX_FENCE_POINTS := 128
 
 var tool := Tool.BIOME
 var group := 0
@@ -109,6 +113,10 @@ var npc_panel: NpcPanel
 var _npc_section: Control
 var _vegetation_section: Control
 var _path: MapTrail = null
+var fence_panel: FencePanel
+var _fence_section: Control
+## A parede sendo desenhada, fora do rascunho até terminar.
+var _fence: MapWall = null
 var _path_start := Vector2.ZERO
 
 var _step: EditorHistory.Step = null
@@ -260,6 +268,12 @@ func _init() -> void:
 	path_panel.edited.connect(func(step: EditorHistory.Step) -> void: edited.emit(step, false))
 	paths_box.add_child(path_panel)
 
+	var fences_box := _section("Cerca")
+	_fence_section = fences_box.get_parent()
+	fence_panel = FencePanel.new()
+	fence_panel.edited.connect(func(step: EditorHistory.Step) -> void: edited.emit(step, false))
+	fences_box.add_child(fence_panel)
+
 	var vegetation_box := _section("Vegetação")
 	_vegetation_section = vegetation_box.get_parent()
 	vegetation_panel = VegetationPanel.new()
@@ -296,6 +310,9 @@ func _init() -> void:
 
 func set_tool(value: int) -> void:
 	tool = value as Tool
+	_fence = null
+	if tool != Tool.FENCE and fence_panel.selected >= 0:
+		fence_panel.select(-1)
 	group = group_of(tool)
 	_last_in_group[group] = tool
 	if tool != Tool.AREA:
@@ -378,6 +395,8 @@ func set_draft(draft: IslandDraft) -> void:
 	area_panel.set_draft(draft)
 	stamp_panel.set_draft(draft)
 	path_panel.set_draft(draft)
+	fence_panel.set_draft(draft)
+	_fence = null
 	npc_panel.set_draft(draft)
 
 
@@ -763,6 +782,57 @@ func _path_point_ok(draft: IslandDraft, flat: Vector2) -> bool:
 	return draft.tiles.has(coord) and editable(draft, coord)
 
 
+func drawing_fence() -> bool:
+	return _fence != null
+
+
+func fence_points() -> PackedVector2Array:
+	return _fence.points if _fence != null else PackedVector2Array()
+
+
+## Um clique com a Cerca: sem parede em desenho, escolhe a de perto, solta a escolha ou
+## começa uma; desenhando, põe um ponto ou, no último ponto ou com o botão direito, termina.
+func fence_click(draft: IslandDraft, flat: Vector2, secondary: bool) -> void:
+	if tool != Tool.FENCE or draft == null:
+		return
+	if _fence != null:
+		if secondary or flat.distance_to(_fence.points[_fence.points.size() - 1]) <= FENCE_PICK:
+			finish_fence(draft)
+		elif _fence.points.size() < MAX_FENCE_POINTS and _path_point_ok(draft, flat):
+			_fence.points.append(flat.round())
+		return
+	if secondary:
+		fence_panel.select(-1)
+		return
+	var near := draft.wall_at(flat, FENCE_PICK)
+	if near >= 0 or fence_panel.selected >= 0:
+		fence_panel.select(near)
+		return
+	if not _path_point_ok(draft, flat):
+		return
+	_fence = MapWall.new()
+	_fence.type = fence_panel.type
+	_fence.points.append(flat.round())
+
+
+## Enter, o último ponto ou o botão direito: a parede entra no rascunho com 2 pontos ou mais.
+func finish_fence(draft: IslandDraft) -> void:
+	var wall := _fence
+	_fence = null
+	if wall == null or wall.points.size() < 2:
+		return
+	var step := EditorHistory.Step.new()
+	step.label = TOOL_NAMES[Tool.FENCE]
+	step.walls_before = IslandDraft.copy_walls(draft.walls)
+	draft.walls.append(wall)
+	step.walls_after = IslandDraft.copy_walls(draft.walls)
+	edited.emit(step, false)
+
+
+func cancel_fence() -> void:
+	_fence = null
+
+
 ## Ao soltar: o traço desenhado fica com os pontos simplificados, sem escolha, para a
 ## próxima amostra valer para o próximo; um clique escolhe o traço de cima no ponto, ou
 ## solta a escolha.
@@ -915,9 +985,10 @@ func _refresh() -> void:
 	_area_section.visible = tool == Tool.AREA
 	_stamp_section.visible = tool == Tool.STAMP
 	_path_section.visible = tool == Tool.PATH
+	_fence_section.visible = tool == Tool.FENCE
 	_vegetation_section.visible = tool == Tool.VEGETATION
 	_npc_section.visible = tool == Tool.NPC
-	_brush_section.visible = tool != Tool.START and tool != Tool.OBJECT and tool != Tool.PATH and tool != Tool.NPC and not (tool == Tool.STAMP and stamp_panel.mode == StampPanel.Mode.PLACE)
+	_brush_section.visible = tool != Tool.START and tool != Tool.OBJECT and tool != Tool.PATH and tool != Tool.NPC and tool != Tool.FENCE and not (tool == Tool.STAMP and stamp_panel.mode == StampPanel.Mode.PLACE)
 	for slug: String in _biome_buttons:
 		_biome_buttons[slug].set_pressed_no_signal(slug == biome)
 		_biome_buttons[slug].queue_redraw()

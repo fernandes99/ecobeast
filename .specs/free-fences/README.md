@@ -75,8 +75,8 @@ Escolhas de Claude (corrigíveis; ao mudar uma, atualize aqui e no `architecture
 | # | Fase | Entrega | Status |
 | --- | --- | --- | --- |
 | 1 | [01-wall-records](01-wall-records.md) | Servidor e jogo: o catálogo `wall_types`, as paredes no banco, no contrato do editor e de Explorar, e desenhadas no jogo e no editor | concluída (falta o dono ver no editor e no jogo) |
-| 2 | 02-wall-blocking | Jogo: o Domador e os NPC não atravessam as paredes | rascunho |
-| 3 | 03-fence-tool | Editor: a ferramenta Cerca, para desenhar, selecionar, trocar e apagar paredes, com desfazer | rascunho |
+| 2 | [02-wall-blocking](02-wall-blocking.md) | Jogo: o Domador e os NPC não atravessam as paredes | concluída (falta o dono jogar numa ilha com cercas) |
+| 3 | [03-fence-tool](03-fence-tool.md) | Editor: a ferramenta Cerca, para desenhar, selecionar, trocar e apagar paredes, com desfazer | concluída (falta o dono usar no F2) |
 | 4 | 04-fence-conversion | Servidor e cliente: as cercas de grade viram paredes, e a Cerca (cidade) sai | rascunho |
 
 As specs das fases são escritas antes de cada uma. O desenho compartilhado está no [architecture.md](architecture.md).

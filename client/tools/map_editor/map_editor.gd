@@ -140,6 +140,7 @@ func _show_island(draft: IslandDraft, status: String) -> void:
 	_canvas.selected_object = -1
 	_canvas.selected_npc = -1
 	_canvas.selected_trail = -1
+	_canvas.selected_wall = -1
 	_canvas.show_draft(draft)
 	_tools.set_draft(draft)
 	_history.reset(draft)
@@ -208,8 +209,11 @@ func save() -> bool:
 	_save_button.disabled = true
 	_set_message("Salvando...")
 	var clipped := _draft.clip_trails()
+	_tools.finish_fence(_draft)
 	var clipped_walls := _draft.clip_walls()
 	if clipped_walls > 0:
+		_tools.fence_panel.refresh()
+		_canvas.selected_wall = _tools.fence_panel.selected
 		_canvas.refresh_walls()
 	if clipped > 0:
 		_tools.path_panel.refresh()
@@ -301,12 +305,16 @@ func _on_stroke_started(coord: Vector2i, secondary: bool) -> void:
 	if not _can_paint():
 		return
 	_tools.pointer = _canvas.pointer_flat()
+	if _tools.tool == EditorTools.Tool.FENCE:
+		_tools.fence_click(_draft, _tools.pointer, secondary)
+		_canvas.set_fence_mouse(_tools.pointer)
+		return
 	_tools.begin_stroke(_draft, secondary)
 	_paint(coord)
 
 
 func _paint(coord: Vector2i) -> void:
-	if not _can_paint():
+	if not _can_paint() or _tools.tool == EditorTools.Tool.FENCE:
 		return
 	_tools.pointer = _canvas.pointer_flat()
 	var changed := _tools.paint(_draft, coord)
@@ -365,6 +373,8 @@ func _on_tools_edited(step: EditorHistory.Step, merge: bool) -> void:
 	_canvas.refresh_objects()
 	_canvas.refresh_props()
 	_canvas.refresh_trails()
+	_canvas.selected_wall = _tools.fence_panel.selected
+	_canvas.refresh_walls()
 	_canvas.refresh_npcs()
 	_update_dirty()
 	_place_object_bar()
@@ -395,7 +405,7 @@ func _on_layers_toggled(_on: bool) -> void:
 
 
 func _on_stroke_ended() -> void:
-	if not _can_paint():
+	if not _can_paint() or _tools.tool == EditorTools.Tool.FENCE:
 		return
 	_history.record(_tools.end_stroke(_draft))
 	if _tools.tool == EditorTools.Tool.PATH:
@@ -411,6 +421,9 @@ func _on_history_applied(coords: Array[Vector2i]) -> void:
 	_tools.path_panel.refresh()
 	_canvas.selected_trail = _tools.path_panel.selected
 	_canvas.refresh_trails()
+	_tools.fence_panel.refresh()
+	_canvas.selected_wall = _tools.fence_panel.selected
+	_canvas.refresh_walls()
 	_canvas.refresh_npcs()
 	_tools.refresh_panels()
 	if _name_edit.text.strip_edges() != _draft.name:
@@ -511,6 +524,26 @@ func _on_window_input(event: InputEvent) -> void:
 		_tools.set_radius(_tools.radius + 1)
 
 
+## Enter termina a cerca em desenho; Esc desiste dela ou solta a escolhida; Delete apaga.
+func _fence_key(key: InputEventKey) -> bool:
+	var handled := false
+	if key.keycode == KEY_ENTER or key.keycode == KEY_KP_ENTER:
+		handled = _tools.drawing_fence()
+		_tools.finish_fence(_draft)
+	elif key.keycode == KEY_ESCAPE:
+		handled = _tools.drawing_fence() or _tools.fence_panel.selected >= 0
+		if _tools.drawing_fence():
+			_tools.cancel_fence()
+		else:
+			_tools.fence_panel.select(-1)
+	elif key.keycode == KEY_DELETE or key.keycode == KEY_BACKSPACE:
+		handled = _tools.fence_panel.selected >= 0
+		_tools.fence_panel.delete_selected()
+	if handled:
+		_canvas.refresh_brush()
+	return handled
+
+
 ## As teclas que dependem da ferramenta: alturas, o objeto escolhido e o foco da área.
 func _tool_key(key: InputEventKey) -> bool:
 	if _draft == null or key.ctrl_pressed:
@@ -530,6 +563,8 @@ func _tool_key(key: InputEventKey) -> bool:
 		if key.keycode == KEY_ESCAPE:
 			_tools.npc_panel.select(-1)
 			return true
+	if _tools.tool == EditorTools.Tool.FENCE and _fence_key(key):
+		return true
 	if _tools.tool == EditorTools.Tool.PATH and _tools.path_panel.selected >= 0:
 		if key.keycode == KEY_DELETE or key.keycode == KEY_BACKSPACE:
 			_tools.path_panel.delete_selected()
@@ -689,6 +724,9 @@ func _build() -> void:
 	_tools.path_panel.changed.connect(func() -> void:
 		_canvas.selected_trail = _tools.path_panel.selected
 		_canvas.refresh_brush())
+	_tools.fence_panel.changed.connect(func() -> void:
+		_canvas.selected_wall = _tools.fence_panel.selected
+		_canvas.refresh_brush())
 	body.add_child(_tools.tool_column)
 	_side = VBoxContainer.new()
 	_side.custom_minimum_size.x = SIDE_WIDTH
@@ -712,6 +750,7 @@ func _build() -> void:
 	_canvas.hovered.connect(_on_hovered)
 	_canvas.brush = _tools.brush_coords
 	_canvas.marked = _tools.marked_coords
+	_canvas.fence_preview = _tools.fence_points
 	_canvas.brush_color = func(coord: Vector2i) -> Color: return _tools.brush_color(_draft, coord)
 	for row: Dictionary in GameData.get_rows("action_types"):
 		var type_id := int(row.get("id", 0))

@@ -37,6 +37,10 @@ var brush_color: Callable = Callable()
 var selected_object := -1
 var selected_prop := -1
 var selected_trail := -1
+## A parede escolhida pela Cerca, ou -1, e a que está sendo desenhada (free-fences/03).
+var selected_wall := -1
+var fence_preview := Callable()
+var _mouse_flat := Vector2.ZERO
 var action_colors: Dictionary[int, Color] = {}
 var action_names: Dictionary[int, String] = {}
 var selected_action := -1
@@ -217,20 +221,27 @@ func refresh_trails() -> void:
 func refresh_walls() -> void:
 	if _draft == null or _map == null:
 		return
-	var before := IslandDraft.walls_state(_shown_walls)
-	var now := IslandDraft.walls_state(_draft.walls)
+	var before := _state_counts(_shown_walls)
+	var now := _state_counts(_draft.walls)
 	var changed: Array[MapWall] = []
-	for index: int in _shown_walls.size():
-		if not now.has(before[index]):
-			changed.append(_shown_walls[index])
-	for index: int in _draft.walls.size():
-		if not before.has(now[index]):
-			changed.append(_draft.walls[index])
+	for wall: MapWall in _shown_walls:
+		if not now.has(JSON.stringify(wall.to_dict())):
+			changed.append(wall)
+	for wall: MapWall in _draft.walls:
+		if not before.has(JSON.stringify(wall.to_dict())):
+			changed.append(wall)
 	_shown_walls = IslandDraft.copy_walls(_draft.walls)
 	if not changed.is_empty():
 		_map_view.set_walls(_draft.walls.duplicate(), changed)
 		_overview.set_walls(_map.walls)
 	_overlay.queue_redraw()
+
+
+static func _state_counts(walls: Array[MapWall]) -> Dictionary[String, bool]:
+	var states: Dictionary[String, bool] = {}
+	for wall: MapWall in walls:
+		states[JSON.stringify(wall.to_dict())] = true
+	return states
 
 
 ## Enquanto um caminho é desenhado: só o pedaço novo.
@@ -467,6 +478,9 @@ func _gui_input(event: InputEvent) -> void:
 			_apply_view()
 		elif _painting:
 			_continue_stroke(motion.position)
+		if _draft != null and fence_preview.is_valid() and not (fence_preview.call() as PackedVector2Array).is_empty():
+			_mouse_flat = _flat_at(_art_point(motion.position))
+			_overlay.queue_redraw()
 		_update_hover(motion.position)
 
 
@@ -618,6 +632,12 @@ func draw_overlay(node: Node2D) -> void:
 	if selected_trail >= 0 and selected_trail < _draft.trails.size():
 		_draw_trail(node, _draft.trails[selected_trail])
 	_draw_invisible_walls(node)
+	if selected_wall >= 0 and selected_wall < _draft.walls.size():
+		_draw_wall_line(node, _draft.walls[selected_wall].points, Vector2.INF)
+	if fence_preview.is_valid():
+		var drawing: PackedVector2Array = fence_preview.call()
+		if not drawing.is_empty():
+			_draw_wall_line(node, drawing, _mouse_flat)
 	if selected_prop >= 0:
 		var rect := prop_rect(selected_prop)
 		if rect.has_area():
@@ -648,6 +668,25 @@ func _draw_trail(node: Node2D, trail: MapTrail) -> void:
 	if line.size() >= 2:
 		node.draw_polyline(line, UiPalette.ACCENT, OUTLINE_WIDTH)
 	for point: Vector2 in trail.points:
+		node.draw_circle(_screen_point(point), 3.0, UiPalette.ACCENT)
+
+
+## O ponto do mouse para a prévia da cerca, logo depois de um clique.
+func set_fence_mouse(flat: Vector2) -> void:
+	_mouse_flat = flat
+	_overlay.queue_redraw()
+
+
+## Uma parede realçada e, desenhando, a reta do último ponto até o mouse.
+func _draw_wall_line(node: Node2D, points: PackedVector2Array, mouse: Vector2) -> void:
+	var line := PackedVector2Array()
+	for point: Vector2 in points:
+		line.append(_screen_point(point))
+	if mouse.is_finite():
+		line.append(_screen_point(mouse))
+	if line.size() >= 2:
+		node.draw_polyline(line, UiPalette.ACCENT, OUTLINE_WIDTH)
+	for point: Vector2 in points:
 		node.draw_circle(_screen_point(point), 3.0, UiPalette.ACCENT)
 
 

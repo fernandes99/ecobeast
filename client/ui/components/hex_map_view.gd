@@ -120,7 +120,7 @@ var _whole_map_area := Rect2()
 var _objects: Array[MapObjectSprite] = []
 var _props_by_chunk: Dictionary[Vector2i, Array] = {}
 ## Os pedaços das cercas (free-fences/01), `[hexágono onde é desenhado, HexWalls.Piece,
-## hexágono do pé]`, por pedaço de mapa.
+## hexágono do pé, MapWall]`, por pedaço de mapa.
 var _walls_by_chunk: Dictionary[Vector2i, Array] = {}
 ## Os pedaços de cada parede, montados uma vez: o índice é refeito ao mudar o terreno.
 var _wall_pieces: Dictionary[MapWall, Array] = {}
@@ -222,9 +222,8 @@ func update_tiles(coords: Array[Vector2i]) -> void:
 		return
 	ground_mask.update_tiles(coords)
 	# Apagar, pôr ou subir um hexágono muda onde cada pedaço de cerca é desenhado.
-	if not _map.walls.is_empty():
-		_walls_by_chunk.clear()
-		_index_walls()
+	_walls_by_chunk.clear()
+	_index_walls()
 	# Com pedaços, o vizinho de uma ponta pode estar no pedaço ao lado.
 	var spread: Array[int] = [0]
 	if chunk_columns > 0:
@@ -1065,6 +1064,8 @@ func set_walls(walls: Array[MapWall], changed: Array[MapWall]) -> void:
 			if _map.has(coord):
 				coords[coord] = true
 	_map.walls = walls
+	# O índice é refeito inteiro, com os pedaços guardados das paredes que não mudaram:
+	# as de `changed` podem ser cópias, e um objeto mudado não muda de chave.
 	var kept: Dictionary[MapWall, Array] = {}
 	for wall: MapWall in walls:
 		if _wall_pieces.has(wall) and not changed.has(wall):
@@ -1090,22 +1091,26 @@ func _wall_entries(key: Vector2i) -> Array:
 ## mais alto que o pé fica: ele deve cobrir a base.
 func _index_walls() -> void:
 	for wall: MapWall in _map.walls:
-		if not _wall_pieces.has(wall):
-			_wall_pieces[wall] = HexWalls.pieces(wall)
-		for piece: HexWalls.Piece in _wall_pieces[wall]:
-			var foot := grid_coord(Vector2(piece.flat))
-			if not _map.has(foot):
-				continue
-			var drawn := foot
-			var half := HexWalls.POST_HALF_WIDTH if piece.post else 0.0
-			for probe: Vector2 in [Vector2(-half, HexWalls.ART_BELOW), Vector2(half, HexWalls.ART_BELOW)]:
-				var under := grid_coord(Vector2(piece.flat) + probe)
-				if under.y > drawn.y and _map.has(under) and _level_at(under) <= _level_at(foot):
-					drawn = under
-			var key := _chunk_of(drawn)
-			if not _walls_by_chunk.has(key):
-				_walls_by_chunk[key] = []
-			_walls_by_chunk[key].append([drawn, piece, foot])
+		_index_wall(wall)
+
+
+func _index_wall(wall: MapWall) -> void:
+	if not _wall_pieces.has(wall):
+		_wall_pieces[wall] = HexWalls.pieces(wall)
+	for piece: HexWalls.Piece in _wall_pieces[wall]:
+		var foot := grid_coord(Vector2(piece.flat))
+		if not _map.has(foot):
+			continue
+		var drawn := foot
+		var half := HexWalls.POST_HALF_WIDTH if piece.post else 0.0
+		for probe: Vector2 in [Vector2(-half, HexWalls.ART_BELOW), Vector2(half, HexWalls.ART_BELOW)]:
+			var under := grid_coord(Vector2(piece.flat) + probe)
+			if under.y > drawn.y and _map.has(under) and _level_at(under) <= _level_at(foot):
+				drawn = under
+		var key := _chunk_of(drawn)
+		if not _walls_by_chunk.has(key):
+			_walls_by_chunk[key] = []
+		_walls_by_chunk[key].append([drawn, piece, foot, wall])
 
 
 ## Os pedaços de cerca de uma faixa, de trás para a frente, com o poste por cima das

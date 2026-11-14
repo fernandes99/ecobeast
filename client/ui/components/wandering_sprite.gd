@@ -18,6 +18,10 @@ var _pause_left := 0.0
 ## Só passeia no mapa, depois do `wander_in`. O Godot liga o `_process` sozinho
 ## quando o nó entra na árvore, e o `set_process(false)` do `_init` não basta.
 var _wandering: bool = false
+## Com o mapa, não cruza paredes (free-fences/02); `_flat_shift` leva um ponto da tela
+## ao chão plano, onde as paredes ficam.
+var _walls_map: ExplorationMap = null
+var _flat_shift := Vector2.ZERO
 
 
 func _process(delta: float) -> void:
@@ -26,7 +30,11 @@ func _process(delta: float) -> void:
 	if _pause_left > 0.0:
 		_pause_left -= delta
 		if _pause_left <= 0.0:
-			_walk_to(_next_spot())
+			var spot := _next_spot()
+			if spot == _exact:
+				_rest()
+			else:
+				_walk_to(spot)
 		return
 	_exact = _exact.move_toward(_target, WALK_SPEED * delta)
 	position = _exact.round()
@@ -34,10 +42,17 @@ func _process(delta: float) -> void:
 		_rest()
 
 
-func wander_in(coord: Vector2i, center: Vector2) -> void:
+func wander_in(coord: Vector2i, center: Vector2, map: ExplorationMap = null) -> void:
 	_coord = coord
 	_center = center
-	_exact = random_spot(center)
+	_walls_map = map
+	_flat_shift = HexMapView.flat_center(coord) - center
+	_exact = center
+	for _index: int in SPOT_TRIES:
+		var spot := random_spot(center)
+		if _is_free(spot, spot):
+			_exact = spot
+			break
 	position = _exact.round()
 	_rest()
 	_wandering = true
@@ -86,9 +101,12 @@ func _walk_to(spot: Vector2) -> void:
 
 
 func _next_spot() -> Vector2:
-	var spot := random_spot(_center)
 	for _index: int in SPOT_TRIES:
-		if spot.distance_to(_exact) >= MIN_TRIP:
-			break
-		spot = random_spot(_center)
-	return spot
+		var spot := random_spot(_center)
+		if spot.distance_to(_exact) >= MIN_TRIP and _is_free(_exact, spot):
+			return spot
+	return _exact
+
+
+func _is_free(from: Vector2, to: Vector2) -> bool:
+	return _walls_map == null or not _walls_map.crosses_wall(from + _flat_shift, to + _flat_shift)

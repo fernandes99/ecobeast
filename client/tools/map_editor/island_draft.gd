@@ -381,6 +381,16 @@ func clip_walls() -> int:
 	return changed
 
 
+## A parede de cima a até `reach` do ponto do chão plano, ou -1.
+func wall_at(flat: Vector2, reach: float) -> int:
+	for index: int in range(walls.size() - 1, -1, -1):
+		var points := walls[index].points
+		for at: int in range(1, points.size()):
+			if flat.distance_to(Geometry2D.get_closest_point_to_segment(flat, points[at - 1], points[at])) <= reach:
+				return index
+	return -1
+
+
 ## O traço de cima que passa no ponto do chão plano, ou -1.
 func trail_at(flat: Vector2) -> int:
 	for index: int in range(trails.size() - 1, -1, -1):

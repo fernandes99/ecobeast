@@ -10,12 +10,18 @@ const SAMPLE_STEP := 4.0
 
 
 ## O caminho de `from` até `to`, passando pelo centro dos `hexes` (o primeiro é o do
-## `from`, o último o do `to`) e esticado em retas que não cruzam bloqueados.
+## `from`, o último o do `to`) e esticado em retas que não cruzam bloqueados nem
+## paredes. Cada trecho de um centro ao seguinte já é livre pela busca; o centro do
+## próprio hexágono só entra quando alcançável, e o fim para rente à primeira parede
+## (free-fences/02).
 static func points(map: ExplorationMap, from: Vector2, hexes: Array[Vector2i], to: Vector2) -> PackedVector2Array:
 	var waypoints := PackedVector2Array([from])
-	for index: int in range(1, hexes.size() - 1):
+	var own := HexMapView.flat_center(hexes[0])
+	if not map.crosses_wall(from, own):
+		waypoints.append(own)
+	for index: int in range(1, hexes.size()):
 		waypoints.append(HexMapView.flat_center(hexes[index]))
-	waypoints.append(to)
+	waypoints.append(map.clip_to_walls(waypoints[waypoints.size() - 1], to))
 	var result := PackedVector2Array([from])
 	var at := 0
 	while at < waypoints.size() - 1:
@@ -35,7 +41,7 @@ static func is_clear(map: ExplorationMap, from: Vector2, to: Vector2) -> bool:
 		var coord := HexMapView.grid_coord(from.lerp(to, float(step) / steps))
 		if not map.has(coord) or map.is_blocked(coord):
 			return false
-	return true
+	return not map.crosses_wall(from, to)
 
 
 static func world(vector: Vector2) -> Vector2:
