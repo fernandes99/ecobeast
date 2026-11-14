@@ -81,6 +81,8 @@ var height_cut := -1:
 
 var chunk_columns := 0
 static var contour_visible := false
+## As pontas arredondadas onde a altura ou o bioma muda (terrain-height/04).
+static var rounded_corners := true
 ## O chão desenhado em páginas (free-trails/02), lido pelo shader do terreno.
 var ground_mask := GroundMask.new()
 
@@ -247,6 +249,13 @@ func set_contour_visible(on: bool) -> void:
 	if on == contour_visible:
 		return
 	contour_visible = on
+	_rebuild_all()
+
+
+func set_rounded_corners(on: bool) -> void:
+	if on == rounded_corners:
+		return
+	rounded_corners = on
 	_rebuild_all()
 
 
@@ -702,8 +711,9 @@ func _add_surface(row: HexRowView, texture_name: String, tiles: Array) -> void:
 	var ground := PackedVector2Array()
 	for tile: HexTile in tiles:
 		var origin := _tile_origin(tile.coord)
-		ground.append_array(Transform2D(0.0, origin) * _hex_triangles)
-		points.append_array(Transform2D(0.0, origin - _rise(tile.height)) * _hex_triangles)
+		var triangles := HexRounding.shape_of(tile, _map).triangles if rounded_corners else _hex_triangles
+		ground.append_array(Transform2D(0.0, origin) * triangles)
+		points.append_array(Transform2D(0.0, origin - _rise(tile.height)) * triangles)
 	var custom := PackedFloat32Array()
 	if HexTile.WATER_BIOMES.has(texture_name):
 		var deep := 1.0 if texture_name == "wdeep" else 0.0
@@ -724,20 +734,20 @@ func _add_waterfalls(row: HexRowView, tiles: Array) -> void:
 	var custom := PackedFloat32Array()
 	for tile: HexTile in tiles:
 		var origin := _tile_origin(tile.coord) - _rise(tile.height)
-		for edge: int in LOWER_NEIGHBORS.size():
-			var neighbor := tile.coord + LOWER_NEIGHBORS[edge]
+		for face: Array in _front_faces(tile):
+			var neighbor: Vector2i = face[2]
 			var height := _face_height(neighbor, tile.height)
 			if height <= 0.0:
 				continue
-			var from := origin + HEX_CORNERS[LOWER_EDGE_CORNERS[edge].x]
-			var to := origin + HEX_CORNERS[LOWER_EDGE_CORNERS[edge].y]
+			var from: Vector2 = origin + face[0]
+			var to: Vector2 = origin + face[1]
 			var down := Vector2(0.0, height)
 			points.append_array(_quad(from, to, down))
 			texture_points.append_array(_quad(Vector2(from.x, 0.0), Vector2(to.x, 0.0), down))
 			var off_map := 0.0 if _map.has(neighbor) else 1.0
 			custom.append_array(_repeated(PackedFloat32Array([height, off_map, 0.0, FALL_CODE]), 6))
 			for _vertex: int in 6:
-				colors.append(FACE_COLORS[edge])
+				colors.append(face[3])
 	_add_mesh(row, SURFACE_PATH % WATERFALL_TEXTURE, points, texture_points, colors, custom)
 
 
@@ -781,25 +791,49 @@ func _add_faces(row: HexRowView, texture_name: String, tiles: Array) -> void:
 	for tile: HexTile in tiles:
 		var level := tile.height
 		var origin := _tile_origin(tile.coord) - _rise(level)
-		for edge: int in LOWER_NEIGHBORS.size():
-			var height := _face_height(tile.coord + LOWER_NEIGHBORS[edge], level)
+		for face: Array in _front_faces(tile):
+			var height := _face_height(face[2], level)
 			if height <= 0.0:
 				continue
-			var from := origin + HEX_CORNERS[LOWER_EDGE_CORNERS[edge].x]
-			var to := origin + HEX_CORNERS[LOWER_EDGE_CORNERS[edge].y]
+			var from: Vector2 = origin + face[0]
+			var to: Vector2 = origin + face[1]
 			for segment: Vector3 in face_segments(height, texture_height):
 				var top := Vector2(0.0, segment.x)
 				var down := Vector2(0.0, segment.y - segment.x)
 				points.append_array(_quad(from + top, to + top, down))
 				texture_points.append_array(_quad(Vector2(from.x, segment.z), Vector2(to.x, segment.z), down))
 				for _vertex: int in 6:
-					colors.append(FACE_COLORS[edge])
+					colors.append(face[3])
 	_add_mesh(row, path, points, texture_points, colors)
 
 
 ## Os pedaços de um paredão, de cima para baixo: (início, fim, linha da textura).
 ## A textura inteira vai em cima, e o resto repete só a metade de baixo dela, para a
 ## borda clara de cima não aparecer de novo no meio de um paredão alto (terrain-height/02).
+## Os lados da frente, com a ponta arredondada: (de, até, vizinho, sombra).
+func _front_faces(tile: HexTile) -> Array[Array]:
+	var faces: Array[Array] = []
+	if not rounded_corners:
+		for edge: int in LOWER_NEIGHBORS.size():
+			faces.append([HEX_CORNERS[LOWER_EDGE_CORNERS[edge].x], HEX_CORNERS[LOWER_EDGE_CORNERS[edge].y], tile.coord + LOWER_NEIGHBORS[edge], FACE_COLORS[edge]])
+		return faces
+	for segment: HexRounding.Segment in HexRounding.shape_of(tile, _map).segments:
+		if segment.normal.y <= 0.01:
+			continue
+		var shade := clampf((segment.normal.x + 0.447) / 0.894, 0.0, 1.0)
+		faces.append([segment.from, segment.to, segment.owner, FACE_COLORS[0].lerp(FACE_COLORS[1], shade)])
+	return faces
+
+
+## A parte reta de um lado de baixo, de x a y, na posição do hexágono.
+func _straight_edge(tile: HexTile, edge: int) -> Vector2:
+	var index := HexGrounds.EDGE_NEIGHBORS.find(LOWER_NEIGHBORS[edge])
+	for segment: HexRounding.Segment in HexRounding.shape_of(tile, _map).segments:
+		if segment.edge == index:
+			return Vector2(minf(segment.from.x, segment.to.x), maxf(segment.from.x, segment.to.x))
+	return Vector2(HEX_CORNERS[LOWER_EDGE_CORNERS[edge].x].x, HEX_CORNERS[LOWER_EDGE_CORNERS[edge].y].x)
+
+
 static func face_segments(height: float, texture_height: int) -> Array[Vector3]:
 	var segments: Array[Vector3] = [Vector3(0.0, minf(height, texture_height), 0.0)]
 	var band := texture_height / 2.0
@@ -825,11 +859,14 @@ func _add_drips(row: HexRowView, tiles: Array) -> void:
 			if height <= 0.0 or cell == HexTransitions.NO_DRIP:
 				continue
 			var down := Vector2(0.0, minf(height, size.y))
-			var from := origin + HEX_CORNERS[LOWER_EDGE_CORNERS[edge].x]
-			var to := origin + HEX_CORNERS[LOWER_EDGE_CORNERS[edge].y]
-			var top_left := Vector2(cell) * size
+			var left := HEX_CORNERS[LOWER_EDGE_CORNERS[edge].x]
+			var right := HEX_CORNERS[LOWER_EDGE_CORNERS[edge].y]
+			var straight := _straight_edge(tile, edge) if rounded_corners else Vector2(left.x, right.x)
+			var from := origin + left.lerp(right, (straight.x - left.x) / (right.x - left.x))
+			var to := origin + left.lerp(right, (straight.y - left.x) / (right.x - left.x))
+			var top_left := Vector2(cell) * size + Vector2(straight.x - left.x, 0.0)
 			points.append_array(_quad(from, to, down))
-			texture_points.append_array(_quad(top_left, top_left + Vector2(size.x, 0.0), down))
+			texture_points.append_array(_quad(top_left, top_left + Vector2(straight.y - straight.x, 0.0), down))
 			for _vertex: int in 6:
 				colors.append(FACE_COLORS[edge])
 	_add_mesh(row, HexTransitions.DRIP_TEXTURE_PATH, points, texture_points, colors)

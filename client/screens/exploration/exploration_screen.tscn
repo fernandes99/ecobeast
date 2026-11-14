@@ -113,6 +113,13 @@ layout_mode = 2
 theme_type_variation = &"OutlineButton"
 text = "Contorno: desligado"
 
+[node name="DebugRoundedButton" type="Button" parent="SafeArea/Column/DebugMenu/Items/DebugMain"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+theme_type_variation = &"OutlineButton"
+text = "Pontas: arredondadas"
+
 [node name="DebugTestRow" type="HBoxContainer" parent="SafeArea/Column/DebugMenu/Items/DebugMain"]
 layout_mode = 2
 theme_override_constants/separation = 12

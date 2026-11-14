@@ -39,5 +39,5 @@ Números de partida: onda de 40 px de comprimento, a 0,25 volta por segundo; na 
 ## Resultado
 
 - Conferido numa cena temporária com um lago raso no meio da grama e um mar fundo, em fotos ampliadas com 0,7 s de intervalo, e com água entre um barranco de grama atrás e uma pedra de altura 3 na frente.
-- O contorno dos hexágonos, a pedido do dono, na mesma revisão: fica desligado, e o botão "Contorno" do menu Debug do mapa ([wild-battle/13](../wild-battle/13-debug-menu.md)) o liga e desliga na hora (`HexMapView.contour_visible`, estático, e `set_contour_visible`, que remonta as linhas). Ligado, ele tem metade da opacidade de antes (`CONTOUR_ALPHA`, 0,5). A escolha vale até fechar o jogo, também no editor, que não tem o botão.
+- O contorno dos hexágonos, a pedido do dono, na mesma revisão: fica desligado, e o botão "Contorno" do menu Debug do mapa ([wild-battle/13](../wild-battle/13-debug-menu.md)) o liga e desliga na hora (`HexMapView.contour_visible`, estático, e `set_contour_visible`, que remonta as linhas). Ligado, ele tem metade da opacidade de antes (`CONTOUR_ALPHA`, 0,5). A escolha vale até fechar o jogo, no jogo e no editor, que tem a mesma chave no painel Camadas (`EditorCanvas.set_contour`).
 - **Não conferido:** no editor e no celular.

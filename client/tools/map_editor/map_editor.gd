@@ -38,6 +38,7 @@ var _object_bar: ObjectBar
 var _areas_check: CheckButton
 var _actions_check: CheckButton
 var _blocks_check: CheckButton
+var _contour_check: CheckButton
 var _publish_dialog: ConfirmationDialog
 var _side: VBoxContainer
 var _list: IslandList
@@ -620,7 +621,7 @@ func _build() -> void:
 	_cut_button = header_button("Altura: tudo", "height", "Mostrar e editar só a altura de 0 a %d (H)." % HexMapView.CUT_HEIGHT)
 	_cut_button.pressed.connect(toggle_height_cut)
 	header.add_child(_cut_button)
-	_layers_button = header_button("Camadas", "eye", "Mostrar ou esconder áreas, ações e bloqueio.")
+	_layers_button = header_button("Camadas", "eye", "Mostrar ou esconder áreas, ações, bloqueio e contorno.")
 	_layers_button.pressed.connect(_open_layers)
 	header.add_child(_layers_button)
 	_save_button = Button.new()
@@ -645,6 +646,12 @@ func _build() -> void:
 	layers.add_child(_actions_check)
 	_blocks_check = _layer_check("Bloqueio", false)
 	layers.add_child(_blocks_check)
+	_contour_check = CheckButton.new()
+	_contour_check.text = "Contorno"
+	_contour_check.button_pressed = HexMapView.contour_visible
+	_contour_check.focus_mode = Control.FOCUS_NONE
+	_contour_check.toggled.connect(func(on: bool) -> void: _canvas.set_contour(on))
+	layers.add_child(_contour_check)
 
 	_islands_popup = _popup_panel()
 	_list = IslandList.new()
@@ -806,6 +813,7 @@ func _refresh_cut_button() -> void:
 
 
 func _open_layers() -> void:
+	_contour_check.set_pressed_no_signal(HexMapView.contour_visible)
 	_popup_below(_layers_popup, _layers_button)
 
 

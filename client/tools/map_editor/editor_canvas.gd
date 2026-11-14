@@ -282,6 +282,10 @@ func set_height_cut(value: int) -> void:
 	_overlay.queue_redraw()
 
 
+func set_contour(on: bool) -> void:
+	_map_view.set_contour_visible(on)
+
+
 func set_blocks(on: bool) -> void:
 	_show_blocks = on
 	_overlay.queue_redraw()

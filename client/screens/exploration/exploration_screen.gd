@@ -32,6 +32,8 @@ const GOD_ON_TEXT := "God: ligado"
 const GOD_OFF_TEXT := "God: desligado"
 const CONTOUR_ON_TEXT := "Contorno: ligado"
 const CONTOUR_OFF_TEXT := "Contorno: desligado"
+const ROUNDED_ON_TEXT := "Pontas: arredondadas"
+const ROUNDED_OFF_TEXT := "Pontas: retas"
 ## Até onde os Ecobeasts existem como nós, em hexágonos: passa da tela com folga,
 ## para eles nascerem e saírem sem ninguém ver. A revisar.
 const CREATURE_RADIUS := 16
@@ -79,6 +81,7 @@ var _debug_tamer_ids: Array[int] = []
 @onready var _debug_spawn_back_button: Button = %DebugSpawnBackButton
 @onready var _debug_god_button: Button = %DebugGodButton
 @onready var _debug_contour_button: Button = %DebugContourButton
+@onready var _debug_rounded_button: Button = %DebugRoundedButton
 @onready var _greeting: TamerGreetingPanel = %TamerGreeting
 @onready var _island_plate: Control = %IslandPlate
 @onready var _island_name: Label = %IslandName
@@ -102,6 +105,7 @@ func _ready() -> void:
 	_debug_spawn_back_button.pressed.connect(_show_debug_part.bind(false))
 	_debug_god_button.pressed.connect(_toggle_god)
 	_debug_contour_button.pressed.connect(_toggle_contour)
+	_debug_rounded_button.pressed.connect(_toggle_rounded)
 	%DebugTest2Button.pressed.connect(_open_board_test.bind(2))
 	%DebugTest3Button.pressed.connect(_open_board_test.bind(3))
 	for size: int in [1, 2, 3]:
@@ -109,6 +113,7 @@ func _ready() -> void:
 	_greeting.tapped.connect(_on_greeting_tapped)
 	_refresh_god_button()
 	_refresh_contour_button()
+	_refresh_rounded_button()
 	resized.connect(_fit_view.call_deferred)
 	visibility_changed.connect(_on_visibility_changed)
 	_begin()
@@ -555,6 +560,15 @@ func _refresh_god_button() -> void:
 func _toggle_contour() -> void:
 	_map_view.set_contour_visible(not HexMapView.contour_visible)
 	_refresh_contour_button()
+
+
+func _toggle_rounded() -> void:
+	_map_view.set_rounded_corners(not HexMapView.rounded_corners)
+	_refresh_rounded_button()
+
+
+func _refresh_rounded_button() -> void:
+	_debug_rounded_button.text = ROUNDED_ON_TEXT if HexMapView.rounded_corners else ROUNDED_OFF_TEXT
 
 
 func _refresh_contour_button() -> void:
