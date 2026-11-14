@@ -189,6 +189,11 @@ func prop_rect(index: int) -> Rect2:
 	return Rect2(base + art.position * _zoom, art.size * _zoom)
 
 
+func set_height_cut(value: int) -> void:
+	_map_view.height_cut = value
+	_overlay.queue_redraw()
+
+
 func set_blocks(on: bool) -> void:
 	_show_blocks = on
 	_overlay.queue_redraw()

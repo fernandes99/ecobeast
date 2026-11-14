@@ -89,6 +89,8 @@ var _grab := Vector2.ZERO
 var _full_warned := false
 var _secondary := false
 var _stroke_action := -2
+## A altura máxima editável, ou -1 sem corte (terrain-height/03).
+var height_cut := -1
 
 
 func _init() -> void:
@@ -258,6 +260,18 @@ func brush_coords(center: Vector2i) -> Array[Vector2i]:
 	return coords
 
 
+## Com o corte, nenhuma ferramenta muda um hexágono acima dele nem o que está nele.
+func editable(draft: IslandDraft, coord: Vector2i) -> bool:
+	if height_cut < 0:
+		return true
+	var tile: HexTile = draft.tiles.get(coord)
+	return tile == null or tile.height <= height_cut
+
+
+func _object_editable(draft: IslandDraft, index: int) -> bool:
+	return draft.object_tiles(index).all(func(coord: Vector2i) -> bool: return editable(draft, coord))
+
+
 func set_draft(draft: IslandDraft) -> void:
 	action_panel.set_draft(draft)
 	object_panel.set_draft(draft)
@@ -304,7 +318,7 @@ func paint(draft: IslandDraft, center: Vector2i) -> Array[Vector2i]:
 	if _secondary and tool != Tool.AREA:
 		return changed
 	if tool == Tool.START:
-		if draft.tiles.has(center) and draft.start != center:
+		if draft.tiles.has(center) and draft.start != center and editable(draft, center):
 			if _step.start_before == null:
 				_step.start_before = draft.start
 			changed.append(draft.start)
@@ -313,6 +327,8 @@ func paint(draft: IslandDraft, center: Vector2i) -> Array[Vector2i]:
 			changed.append(center)
 		return changed
 	for coord: Vector2i in brush_coords(center):
+		if not editable(draft, coord):
+			continue
 		var before := draft.snapshot(coord)
 		if not _change(draft, coord):
 			continue
@@ -433,7 +449,7 @@ func _paint_action(draft: IslandDraft, center: Vector2i) -> Array[Vector2i]:
 		return changed
 	var occupied: Array = draft.actions[target]["tiles"]
 	for coord: Vector2i in brush_coords(center):
-		if not draft.tiles.has(coord):
+		if not draft.tiles.has(coord) or not editable(draft, coord):
 			continue
 		var holder := draft.action_at(coord)
 		if action_panel.removing:
@@ -463,31 +479,33 @@ func _paint_object(draft: IslandDraft, center: Vector2i) -> Array[Vector2i]:
 	var art := pointer - Vector2(0.0, draft.rise_at(HexMapView.grid_coord(pointer)))
 	if _secondary:
 		var hit := draft.prop_at(art)
-		if hit >= 0:
+		if hit >= 0 and editable(draft, draft.prop_coord(hit)):
 			object_panel.select_prop(hit)
 		else:
-			object_panel.select(draft.object_at(center))
+			var index := draft.object_at(center)
+			object_panel.select(index if index < 0 or _object_editable(draft, index) else -1)
 		return changed
 	var chosen := object_panel.selected_prop
-	if chosen >= 0 and draft.prop_rect(chosen).has_point(art):
+	if chosen >= 0 and draft.prop_rect(chosen).has_point(art) and editable(draft, draft.prop_coord(chosen)):
 		_moving = chosen
 		_grab = draft.prop_foot(chosen) - pointer
 		return changed
 	if object_panel.placing_prop and not object_panel.editing_blocks:
 		var foot := pointer.round()
 		var coord := HexMapView.grid_coord(foot)
-		if not draft.tiles.has(coord):
+		if not draft.tiles.has(coord) or not editable(draft, coord):
 			return changed
 		draft.props.append(object_panel.new_prop(coord, Vector2i(foot - HexMapView.flat_center(coord))))
 		object_panel.select_prop(draft.props.size() - 1)
 		changed.append(coord)
 		return changed
 	if not object_panel.editing_blocks and draft.object_at(center) >= 0:
-		object_panel.select(draft.object_at(center))
+		if _object_editable(draft, draft.object_at(center)):
+			object_panel.select(draft.object_at(center))
 		return changed
 	if object_panel.editing_blocks:
 		var selected := object_panel.selected
-		if selected < 0 or draft.object_at(center) != selected:
+		if selected < 0 or draft.object_at(center) != selected or not _object_editable(draft, selected):
 			return changed
 		for at: Variant in (draft.objects[selected] as Dictionary).get("tiles", []):
 			if int(at.get("q", 0)) == center.x and int(at.get("r", 0)) == center.y:
@@ -496,7 +514,7 @@ func _paint_object(draft: IslandDraft, center: Vector2i) -> Array[Vector2i]:
 		return changed
 	var object := object_panel.new_object(center)
 	var coords := ObjectPanel.coords_of(object["tiles"])
-	if coords.is_empty() or not draft.object_fits(coords):
+	if coords.is_empty() or not draft.object_fits(coords) or not coords.all(func(coord: Vector2i) -> bool: return editable(draft, coord)):
 		return changed
 	draft.objects.append(object)
 	object_panel.select(draft.objects.size() - 1)
@@ -509,17 +527,18 @@ func _paint_stamp(draft: IslandDraft, center: Vector2i) -> Array[Vector2i]:
 	var changed: Array[Vector2i] = []
 	if stamp_panel.mode == StampPanel.Mode.SELECT:
 		for coord: Vector2i in brush_coords(center):
-			if draft.tiles.has(coord) and stamp_panel.mark(coord, not _secondary):
+			if draft.tiles.has(coord) and editable(draft, coord) and stamp_panel.mark(coord, not _secondary):
 				changed.append(coord)
 		stamp_panel.refresh_count()
 		return changed
 	if _secondary or _object_done or stamp_panel.stamp.is_empty():
 		return changed
 	_object_done = true
+	var allowed := func(coord: Vector2i) -> bool: return editable(draft, coord)
 	for coord: Vector2i in Stamp.targets(stamp_panel.stamp, center, stamp_panel.flip):
-		if draft.tiles.has(coord) and not _step.before.has(coord):
+		if draft.tiles.has(coord) and allowed.call(coord) and not _step.before.has(coord):
 			_step.before[coord] = draft.snapshot(coord)
-	changed = Stamp.place(draft, stamp_panel.stamp, center, stamp_panel.flip)
+	changed = Stamp.place(draft, stamp_panel.stamp, center, stamp_panel.flip, allowed)
 	for coord: Vector2i in changed:
 		_step.after[coord] = draft.snapshot(coord)
 	object_panel.select(-1)
@@ -542,7 +561,7 @@ func drag(draft: IslandDraft, flat: Vector2) -> Array[Vector2i]:
 		return changed
 	var foot := (flat + _grab).round()
 	var coord := HexMapView.grid_coord(foot)
-	if not draft.tiles.has(coord):
+	if not draft.tiles.has(coord) or not editable(draft, coord):
 		return changed
 	var prop: Dictionary = draft.props[_moving]
 	var offset := Vector2i(foot - HexMapView.flat_center(coord))
@@ -567,17 +586,19 @@ func is_moving() -> bool:
 ## vermelho se não; transparente nas outras ferramentas e com uma peça solta.
 func brush_color(draft: IslandDraft, center: Vector2i) -> Color:
 	if tool == Tool.STAMP and stamp_panel.mode == StampPanel.Mode.PLACE and draft != null and not stamp_panel.stamp.is_empty():
-		var all_in := brush_coords(center).all(func(coord: Vector2i) -> bool: return draft.tiles.has(coord))
+		var all_in := brush_coords(center).all(func(coord: Vector2i) -> bool: return draft.tiles.has(coord) and editable(draft, coord))
 		return UiPalette.HP_HIGH if all_in else UiPalette.WARNING
 	if tool != Tool.OBJECT or object_panel.editing_blocks or draft == null or object_panel.placing_prop:
 		return Color.TRANSPARENT
-	return UiPalette.HP_HIGH if draft.object_fits(brush_coords(center)) else UiPalette.DANGER
+	var coords := brush_coords(center)
+	var fits := draft.object_fits(coords) and coords.all(func(coord: Vector2i) -> bool: return editable(draft, coord))
+	return UiPalette.HP_HIGH if fits else UiPalette.DANGER
 
 
 func _stroke_target(draft: IslandDraft, center: Vector2i) -> int:
 	if action_panel.removing:
 		return action_panel.selected
-	if not draft.tiles.has(center):
+	if not draft.tiles.has(center) or not editable(draft, center):
 		return -1
 	var holder := draft.action_at(center)
 	if holder >= 0:

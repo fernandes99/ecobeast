@@ -31,6 +31,7 @@ var _islands_popup: PopupPanel
 var _undo_button: Button
 var _redo_button: Button
 var _layers_button: Button
+var _cut_button: Button
 var _layers_popup: PopupPanel
 var _tools_scroll: ScrollContainer
 var _object_bar: ObjectBar
@@ -448,6 +449,9 @@ func _on_window_input(event: InputEvent) -> void:
 	elif key.keycode == KEY_TAB:
 		set_input_as_handled()
 		_canvas.toggle_overview()
+	elif key.keycode == KEY_H and not key.ctrl_pressed:
+		set_input_as_handled()
+		toggle_height_cut()
 	elif key.ctrl_pressed and (key.keycode == KEY_Y or (key.keycode == KEY_Z and key.shift_pressed)):
 		set_input_as_handled()
 		_redo()
@@ -568,6 +572,9 @@ func _build() -> void:
 	_redo_button = header_button("", "redo", "Refazer (Ctrl+Y)")
 	_redo_button.pressed.connect(_redo)
 	header.add_child(_redo_button)
+	_cut_button = header_button("Altura: tudo", "height", "Mostrar e editar só a altura de 0 a %d (H)." % HexMapView.CUT_HEIGHT)
+	_cut_button.pressed.connect(toggle_height_cut)
+	header.add_child(_cut_button)
 	_layers_button = header_button("Camadas", "eye", "Mostrar ou esconder áreas, ações e bloqueio.")
 	_layers_button.pressed.connect(_open_layers)
 	header.add_child(_layers_button)
@@ -732,6 +739,19 @@ func _layer_check(text: String, on: bool) -> CheckButton:
 
 func _open_islands() -> void:
 	_popup_below(_islands_popup, _islands_button)
+
+
+## O corte de altura (terrain-height/03): só visual, sem passo de desfazer.
+func toggle_height_cut() -> void:
+	var cut := -1 if _tools.height_cut >= 0 else HexMapView.CUT_HEIGHT
+	_tools.height_cut = cut
+	_canvas.set_height_cut(cut)
+	_tools.object_panel.select(-1)
+	_refresh_cut_button()
+
+
+func _refresh_cut_button() -> void:
+	_cut_button.text = "Altura: tudo" if _tools.height_cut < 0 else "Altura: até %d" % HexMapView.CUT_HEIGHT
 
 
 func _open_layers() -> void:

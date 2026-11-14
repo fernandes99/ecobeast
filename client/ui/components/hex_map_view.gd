@@ -42,6 +42,15 @@ const BAND_HEIGHT := 14.5
 ## Os atores sem o pé exato (Ecobeasts e Domadores NPC) entram antes desta faixa.
 const MIDDLE_BAND := 2
 const PROP_PATH := "res://assets/props/%s/%d.png"
+## O corte de altura do editor: acima dele, o hexágono fica transparente (terrain-height/03).
+const CUT_HEIGHT := 4
+const GHOST_ALPHA := 0.25
+## A janela em volta do Domador: dentro dela, o terreno das linhas da frente fica
+## transparente. Um hexágono de altura 10 cobre o Domador até 4 linhas à frente:
+## (80 + 58) / 42, arredondado para cima.
+const REVEAL_ALPHA := 0.2
+const REVEAL_MARGIN := 4.0
+const REVEAL_ROWS := 4
 
 var fixed_scale := 0.0:
 	set(value):
@@ -51,6 +60,13 @@ var fixed_scale := 0.0:
 var allows_decoration := Callable()
 ## Numa ilha, só aparece o que o dono pôs (free-props/02).
 var random_decorations := true
+## A altura máxima editável, ou -1 sem corte. Mudar remonta os pedaços já montados.
+var height_cut := -1:
+	set(value):
+		if value == height_cut:
+			return
+		height_cut = value
+		_rebuild_all()
 
 var chunk_columns := 0
 
@@ -66,6 +82,9 @@ var _bands: Array[Dictionary] = []
 var _row_chunks: Dictionary[int, Array] = {}
 var _wind_material := ShaderMaterial.new()
 var _terrain_material := ShaderMaterial.new()
+var _reveal_material := ShaderMaterial.new()
+var _reveal_rect := Rect2()
+var _reveal_row := -1
 var _unbuilt_rows: Dictionary[Vector2i, Array] = {}
 var _highlighted_row: HexRowView = null
 var _hex_triangles := PackedVector2Array()
@@ -82,6 +101,9 @@ func _init() -> void:
 		_bands.append(views)
 	_wind_material.shader = load(HexDecorations.WIND_SHADER_PATH) as Shader
 	_terrain_material.shader = load(HexGrounds.SHADER_PATH) as Shader
+	_reveal_material.shader = _terrain_material.shader
+	_reveal_material.set_shader_parameter(&"reveal_on", true)
+	_reveal_material.set_shader_parameter(&"reveal_alpha", REVEAL_ALPHA)
 	for corner: int in range(1, HEX_CORNERS.size() - 1):
 		_hex_triangles.append_array(PackedVector2Array([HEX_CORNERS[0], HEX_CORNERS[corner], HEX_CORNERS[corner + 1]]))
 
@@ -148,6 +170,7 @@ func set_map(map: ExplorationMap) -> void:
 		for band: Dictionary in _bands:
 			for chunk: int in chunks:
 				band[Vector2i(chunk, row_number)] = _new_decoration_row()
+	_apply_reveal_materials()
 
 
 ## Os hexágonos mudaram no mapa (o editor de ilhas pinta, põe e tira, map-editor/03):
@@ -197,6 +220,31 @@ func update_tiles(coords: Array[Vector2i]) -> void:
 			var art := _fence_art(sprite.object)
 			if art != null:
 				sprite.set_fence_texture(art)
+	_fade_objects()
+
+
+func _rebuild_all() -> void:
+	if _map == null:
+		return
+	var by_chunk: Dictionary[Vector2i, Array] = {}
+	for tile: HexTile in _map.tiles.values():
+		var key := _chunk_of(tile.coord)
+		if not by_chunk.has(key):
+			by_chunk[key] = []
+		by_chunk[key].append(tile)
+	for key: Vector2i in by_chunk:
+		if _unbuilt_rows.has(key):
+			_unbuilt_rows[key] = by_chunk[key]
+		elif _rows.has(key):
+			_clear_views(key)
+			_build_row(key, by_chunk[key])
+	_fade_objects()
+
+
+func _fade_objects() -> void:
+	for sprite: MapObjectSprite in _objects:
+		var above := height_cut >= 0 and sprite.object.tiles.any(func(coord: Vector2i) -> bool: return _level_at(coord) > height_cut)
+		sprite.modulate.a = GHOST_ALPHA if above else 1.0
 
 
 ## Os objetos da ilha (island-villages/03): cada um entra logo depois do chão da linha
@@ -221,6 +269,7 @@ func set_objects(objects: Array[MapObject]) -> void:
 		add_child(sprite)
 		_objects.append(sprite)
 		_place_object(sprite)
+	_fade_objects()
 
 
 ## O objeto cuja arte está desenhada num ponto, em pixels da arte, da frente para
@@ -323,6 +372,8 @@ func _clear_views(key: Vector2i) -> void:
 	for view: HexRowView in views:
 		view.meshes.clear()
 		view.textures.clear()
+		view.ghost_meshes.clear()
+		view.ghost_textures.clear()
 		view.queue_redraw()
 
 
@@ -424,12 +475,48 @@ func surface_center(coord: Vector2i) -> Vector2:
 
 ## O hexágono visível em um ponto, em pixels da arte: a superfície mais alta que
 ## o contém ou, em um paredão, o dono dele. Não confere se ele existe no mapa.
+## Com o corte, passa pelos hexágonos acima dele; dentro da janela do Domador, pelas
+## linhas da frente que ela deixa transparentes.
 func coord_at(point: Vector2) -> Vector2i:
-	for level: int in range(LEVEL_HEIGHTS.size() - 1, -1, -1):
+	var top := LEVEL_HEIGHTS.size() - 1 if height_cut < 0 else mini(height_cut, LEVEL_HEIGHTS.size() - 1)
+	var revealed := _reveal_row >= 0 and _reveal_rect.has_point(point)
+	for level: int in range(top, -1, -1):
 		var coord := grid_coord(point + _rise(level))
+		if revealed and _is_revealed_row(coord.y):
+			continue
 		if _map != null and _map.has(coord) and _level_at(coord) == level:
 			return coord
 	return grid_coord(point)
+
+
+## A janela em volta do Domador (terrain-height/03): `rect` em pixels da arte, com a
+## borda de baixo nos pés, e `feet_row` a linha dos pés. Trocar só o ponto muda um
+## uniforme; trocar a linha troca o material das linhas da frente.
+func set_reveal(rect: Rect2, feet_row: int) -> void:
+	var pixel_rect := Rect2(rect.position.round(), rect.size.round())
+	if pixel_rect != _reveal_rect:
+		_reveal_rect = pixel_rect
+		_reveal_material.set_shader_parameter(&"reveal_rect", Vector4(pixel_rect.position.x, pixel_rect.position.y, pixel_rect.end.x, pixel_rect.end.y))
+	if feet_row != _reveal_row:
+		_reveal_row = feet_row
+		_apply_reveal_materials()
+
+
+func clear_reveal() -> void:
+	_reveal_row = -1
+	_reveal_rect = Rect2()
+	_apply_reveal_materials()
+
+
+func _is_revealed_row(row: int) -> bool:
+	return _reveal_row >= 0 and row > _reveal_row and row <= _reveal_row + REVEAL_ROWS
+
+
+func _apply_reveal_materials() -> void:
+	for key: Vector2i in _rows:
+		var wanted := _reveal_material if _is_revealed_row(key.y) else _terrain_material
+		if _rows[key].material != wanted:
+			_rows[key].material = wanted
 
 
 func pixel_scale() -> Vector2:
@@ -513,6 +600,29 @@ func _new_decoration_row() -> HexRowView:
 func _build_row(key: Vector2i, tiles: Array) -> void:
 	var row := _rows[key]
 	var bands := _bands_of(key)
+	var shown := tiles
+	var props: Array = _props_by_chunk.get(key, [])
+	if height_cut >= 0:
+		shown = tiles.filter(func(tile: HexTile) -> bool: return tile.height <= height_cut)
+		props = props.filter(func(prop: MapProp) -> bool: return _level_at(prop.coord) <= height_cut)
+		_add_terrain(row, tiles.filter(func(tile: HexTile) -> bool: return tile.height > height_cut))
+		row.ghost_meshes = row.meshes
+		row.ghost_textures = row.textures
+		row.ghost_color = Color(1.0, 1.0, 1.0, GHOST_ALPHA)
+		var no_meshes: Array[ArrayMesh] = []
+		var no_textures: Array[Texture2D] = []
+		row.meshes = no_meshes
+		row.textures = no_textures
+	_add_terrain(row, shown)
+	_add_decorations(bands, shown, props)
+	row.queue_redraw()
+	for band: HexRowView in bands:
+		band.queue_redraw()
+
+
+func _add_terrain(row: HexRowView, tiles: Array) -> void:
+	if tiles.is_empty():
+		return
 	var by_face := _grouped(tiles, func(tile: HexTile) -> String: return face_texture(tile.biome))
 	for face: String in by_face:
 		_add_faces(row, face, by_face[face])
@@ -523,10 +633,6 @@ func _build_row(key: Vector2i, tiles: Array) -> void:
 	_add_transitions(row, tiles)
 	_add_grounds(row, tiles)
 	_add_surface(row, CONTOUR_TEXTURE, tiles)
-	_add_decorations(bands, tiles, _props_by_chunk.get(key, []))
-	row.queue_redraw()
-	for band: HexRowView in bands:
-		band.queue_redraw()
 
 
 func _grouped(tiles: Array, key: Callable) -> Dictionary[String, Array]:

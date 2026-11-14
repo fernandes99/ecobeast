@@ -78,23 +78,28 @@ static func targets(stamp: Dictionary, anchor: Vector2i, flip: bool) -> Array[Ve
 ## Põe o carimbo com o apoio em `anchor`. Nos hexágonos dele que são da ilha, o chão
 ## dele troca o chão e os objetos que ocupam algum saem; entram os objetos dele que
 ## cabem inteiros e as peças com o pé na ilha. Devolve os hexágonos que mudaram.
-static func place(draft: IslandDraft, stamp: Dictionary, anchor: Vector2i, flip: bool) -> Array[Vector2i]:
+## `allowed`, se dado, diz quais hexágonos da ilha valem; os outros ficam como estão,
+## como se não fossem da ilha (o corte de altura, terrain-height/03).
+static func place(draft: IslandDraft, stamp: Dictionary, anchor: Vector2i, flip: bool, allowed := Callable()) -> Array[Vector2i]:
+	var inside := func(coord: Vector2i) -> bool: return draft.tiles.has(coord) and (not allowed.is_valid() or allowed.call(coord))
 	var changed: Array[Vector2i] = []
 	for tile: Variant in stamp.get("tiles", []):
 		var coord := _at(tile, anchor, flip)
-		if not draft.tiles.has(coord):
+		if not inside.call(coord):
 			continue
 		(draft.tiles[coord] as HexTile).ground = str((tile as Dictionary).get("ground", ""))
 		changed.append(coord)
 	for index: int in range(draft.objects.size() - 1, -1, -1):
-		if draft.object_tiles(index).any(func(coord: Vector2i) -> bool: return changed.has(coord)):
+		var tiles := draft.object_tiles(index)
+		if tiles.any(func(coord: Vector2i) -> bool: return changed.has(coord)) and tiles.all(inside):
 			draft.objects.remove_at(index)
 	for object: Variant in stamp.get("objects", []):
 		var tiles: Array = []
 		for at: Variant in object.get("tiles", []):
 			var coord := _at(at, anchor, flip)
 			tiles.append({"q": coord.x, "r": coord.y, "blocks": bool(at.get("blocks", true))})
-		if not draft.object_fits(ObjectPanel.coords_of(tiles)):
+		var coords := ObjectPanel.coords_of(tiles)
+		if not draft.object_fits(coords) or not coords.all(inside):
 			continue
 		var base := _at(object, anchor, flip)
 		draft.objects.append({
@@ -107,7 +112,7 @@ static func place(draft: IslandDraft, stamp: Dictionary, anchor: Vector2i, flip:
 		})
 	for prop: Variant in stamp.get("props", []):
 		var coord := _at(prop, anchor, flip)
-		if not draft.tiles.has(coord):
+		if not inside.call(coord):
 			continue
 		var dx := -int(prop["dx"]) if flip else int(prop["dx"])
 		# Na divisa, o espelho cairia no vizinho: o hexágono desempata pelo lado.

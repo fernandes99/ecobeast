@@ -10,6 +10,10 @@ uniform float rim = 2.0;
 uniform float rim_shade = 0.74;
 uniform float shadow = 0.2;
 uniform float fillet = 9.0;
+// A janela em volta do Domador (terrain-height/03): x, y, fim x e fim y, em pixels da arte.
+uniform bool reveal_on = false;
+uniform vec4 reveal_rect = vec4(0.0);
+uniform float reveal_alpha = 0.4;
 
 const vec2 CORNERS[6] = {
 	vec2(0.0, -29.0), vec2(32.0, -13.0), vec2(32.0, 13.0),
@@ -20,10 +24,12 @@ varying vec4 ground;
 // Quanto a ponta do braço dos lados 1 a 4 desce, para encontrar a do vizinho numa
 // altura diferente sem paredão (HexGrounds.arm_shift).
 varying vec4 shifts;
+varying vec2 art_point;
 
 void vertex() {
 	ground = CUSTOM0;
 	shifts = CUSTOM1;
+	art_point = VERTEX;
 }
 
 bool has_link(int links, int edge) {
@@ -111,5 +117,9 @@ void fragment() {
 		} else {
 			COLOR = color;
 		}
+	}
+	vec2 pixel = floor(art_point);
+	if (reveal_on && pixel.x >= reveal_rect.x && pixel.y >= reveal_rect.y && pixel.x < reveal_rect.z && pixel.y < reveal_rect.w) {
+		COLOR.a *= reveal_alpha;
 	}
 }

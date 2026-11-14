@@ -76,5 +76,6 @@ Escolhas do planejamento (corrigíveis; ao mudar uma, atualize aqui e na [01](01
 | --- | --- | --- | --- |
 | 1 | [01-terrain-height](01-terrain-height.md) | Servidor, jogo e editor: a altura em cada hexágono, Colina e Montanha como biomas e a ferramenta Altura | concluída |
 | 2 | [02-eleven-heights](02-eleven-heights.md) | A altura de 0 a 10, de 8 em 8 px, com o paredão alto sem a borda repetida e o editor com os 11 botões | concluída (falta o dono ver no editor) |
+| 3 | [03-height-visibility](03-height-visibility.md) | O corte de altura no editor (Tudo ou Até 4) e a janela transparente em volta do Domador no mapa | concluída (falta o dono usar) |
 
 É uma fase só porque o formato do hexágono muda no servidor e no jogo ao mesmo tempo: sem uma das metades, o jogo não abre o mapa.

@@ -130,6 +130,7 @@ func _begin() -> void:
 	_shown_rise = _rise_at(_player_coord)
 	_map_view.set_current(_player_coord)
 	_map_view.set_actor_depth(_marker, _player_point, _feet_row())
+	_reveal_player()
 	_show_island()
 	_refresh_wild_sprites()
 	_map_view.show()
@@ -273,7 +274,16 @@ func _walk(route: PackedVector2Array, action: int) -> void:
 func _place_player(delta: float) -> void:
 	_shown_rise = move_toward(_shown_rise, _rise_at(_player_coord), RISE_SPEED * delta)
 	_map_view.set_actor_depth(_marker, _player_point, _feet_row())
+	_reveal_player()
 	_move_map(_player_centered_position())
+
+
+## O terreno das linhas da frente que cobre o Domador fica transparente (terrain-height/03).
+func _reveal_player() -> void:
+	var cell := Vector2(SheetSprite.CELL_SIZE) * _marker.scale
+	var margin := HexMapView.REVEAL_MARGIN
+	var feet := _player_art_point()
+	_map_view.set_reveal(Rect2(feet - Vector2(cell.x / 2.0 + margin, cell.y + margin), Vector2(cell.x + margin * 2.0, cell.y + margin)), _feet_row())
 
 
 func _rise_at(coord: Vector2i) -> float:
