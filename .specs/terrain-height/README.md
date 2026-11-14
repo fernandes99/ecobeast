@@ -78,5 +78,6 @@ Escolhas do planejamento (corrigíveis; ao mudar uma, atualize aqui e na [01](01
 | 2 | [02-eleven-heights](02-eleven-heights.md) | A altura de 0 a 10, de 8 em 8 px, com o paredão alto sem a borda repetida e o editor com os 11 botões | concluída (falta o dono ver no editor) |
 | 3 | [03-height-visibility](03-height-visibility.md) | O corte de altura no editor (Tudo ou Até 4) e a janela transparente em volta do Domador no mapa | concluída (falta o dono usar) |
 | 4 | [04-rounded-corners](04-rounded-corners.md) | As pontas arredondadas onde a altura ou o bioma muda, com o paredão seguindo a curva | concluída (falta o dono ver no editor) |
+| 5 | [05-height-cues](05-height-cues.md) | A beirada clara no alto, a sombra no pé do paredão e o tom mais escuro em cada nível de baixo | concluída (falta o dono ver no jogo e no editor) |
 
 É uma fase só porque o formato do hexágono muda no servidor e no jogo ao mesmo tempo: sem uma das metades, o jogo não abre o mapa.

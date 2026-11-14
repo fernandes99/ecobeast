@@ -120,6 +120,27 @@ layout_mode = 2
 theme_type_variation = &"OutlineButton"
 text = "Pontas: arredondadas"
 
+[node name="DebugLipsButton" type="Button" parent="SafeArea/Column/DebugMenu/Items/DebugMain"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+theme_type_variation = &"OutlineButton"
+text = "Beirada: ligada"
+
+[node name="DebugShadowsButton" type="Button" parent="SafeArea/Column/DebugMenu/Items/DebugMain"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+theme_type_variation = &"OutlineButton"
+text = "Sombra no pé: ligada"
+
+[node name="DebugTintButton" type="Button" parent="SafeArea/Column/DebugMenu/Items/DebugMain"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+theme_type_variation = &"OutlineButton"
+text = "Tom por altura: ligado"
+
 [node name="DebugTestRow" type="HBoxContainer" parent="SafeArea/Column/DebugMenu/Items/DebugMain"]
 layout_mode = 2
 theme_override_constants/separation = 12

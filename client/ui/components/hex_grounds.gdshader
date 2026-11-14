@@ -48,6 +48,14 @@ const float SHORE_ALPHA = 0.55;
 const float SHORE_STEPS = 6.0;
 const float SHORE_SPEED = 0.25;
 const float SHORE_LENGTH = 40.0;
+// A leitura da altura (terrain-height/05): o código 8 é a beirada clara do alto; o 9, a
+// sombra no pé do paredão, com a distância até o pé no x, esmaecendo em pontilhado.
+const vec3 LIP_COLOR = vec3(1.0, 1.0, 0.82);
+const float LIP_OUTER = 0.34;
+const float LIP_INNER = 0.14;
+const float SHADOW_ALPHA = 0.28;
+const float SHADOW_SOLID = 2.0;
+const float SHADOW_WIDTH = 6.0;
 const float BAYER[16] = {
 	0.0, 8.0, 2.0, 10.0, 12.0, 4.0, 14.0, 6.0,
 	3.0, 11.0, 1.0, 9.0, 15.0, 7.0, 13.0, 5.0
@@ -162,6 +170,16 @@ void fragment() {
 			discard;
 		}
 		color.a *= SHORE_ALPHA;
+	} else if (code == 8) {
+		color.rgb = mix(color.rgb, LIP_COLOR * shade.rgb, ground.x < 1.0 ? LIP_OUTER : LIP_INNER);
+	} else if (code == 9) {
+		vec2 pixel = floor(art_point);
+		ivec2 cell = ivec2(mod(pixel, 4.0));
+		float fade = (ground.x - SHADOW_SOLID) / (SHADOW_WIDTH - SHADOW_SOLID);
+		if (BAYER[cell.y * 4 + cell.x] / 16.0 < fade) {
+			discard;
+		}
+		color = vec4(0.0, 0.0, 0.0, SHADOW_ALPHA);
 	} else if (code == 3) {
 		vec2 local = floor(ground.xy) + 0.5;
 		vec2 world = local + extra.zw * PAGE;

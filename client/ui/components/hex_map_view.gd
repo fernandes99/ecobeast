@@ -41,6 +41,14 @@ const FALL_CODE := 5.0
 const FOAM_CODE := 6.0
 const SHORE_CODE := 7.0
 const FOAM_WIDTH := 6.0
+## A leitura da altura (terrain-height/05): a beirada clara no alto dos lados sem
+## paredão, a sombra no pé do paredão e o tom mais escuro em cada nível de baixo.
+const LIP_CODE := 8.0
+const SHADOW_CODE := 9.0
+const LIP_WIDTH := 2.0
+const SHADOW_WIDTH := 6.0
+const TINT_STEP := 0.03
+const TINT_TOP := 5
 ## Os hexágonos de onde a água cai sobre este, e a borda de cima dele em cada caso.
 const FALL_SOURCES: Array[Vector2i] = [Vector2i(1, -1), Vector2i(0, -1)]
 const FALL_EDGE_CORNERS: Array[Vector2i] = [Vector2i(0, 1), Vector2i(5, 0)]
@@ -83,6 +91,9 @@ var chunk_columns := 0
 static var contour_visible := false
 ## As pontas arredondadas onde a altura ou o bioma muda (terrain-height/04).
 static var rounded_corners := true
+static var height_lips := true
+static var foot_shadows := true
+static var height_tint := true
 ## O chão desenhado em páginas (free-trails/02), lido pelo shader do terreno.
 var ground_mask := GroundMask.new()
 
@@ -256,6 +267,13 @@ func set_rounded_corners(on: bool) -> void:
 	if on == rounded_corners:
 		return
 	rounded_corners = on
+	_rebuild_all()
+
+
+func set_height_cues(lips: bool, shadows: bool, tint: bool) -> void:
+	height_lips = lips
+	foot_shadows = shadows
+	height_tint = tint
 	_rebuild_all()
 
 
@@ -686,9 +704,13 @@ func _add_terrain(row: HexRowView, tiles: Array) -> void:
 	var by_surface := _grouped(tiles, func(tile: HexTile) -> String: return tile.biome)
 	for surface: String in by_surface:
 		_add_surface(row, surface, by_surface[surface])
+	if height_lips:
+		_add_lips(row, tiles)
 	_add_transitions(row, tiles)
 	_add_grounds(row, tiles)
 	_add_fall_foam(row, tiles)
+	if foot_shadows:
+		_add_foot_shadows(row, tiles)
 	if contour_visible:
 		_add_surface(row, CONTOUR_TEXTURE, tiles)
 
@@ -709,19 +731,19 @@ func _grouped(tiles: Array, key: Callable) -> Dictionary[String, Array]:
 func _add_surface(row: HexRowView, texture_name: String, tiles: Array) -> void:
 	var points := PackedVector2Array()
 	var ground := PackedVector2Array()
+	var colors := PackedColorArray()
 	for tile: HexTile in tiles:
 		var origin := _tile_origin(tile.coord)
 		var triangles := HexRounding.shape_of(tile, _map).triangles if rounded_corners else _hex_triangles
 		ground.append_array(Transform2D(0.0, origin) * triangles)
 		points.append_array(Transform2D(0.0, origin - _rise(tile.height)) * triangles)
+		var tint := Color(1.0, 1.0, 1.0, CONTOUR_ALPHA) if texture_name == CONTOUR_TEXTURE else _tint(tile)
+		for _vertex: int in triangles.size():
+			colors.append(tint)
 	var custom := PackedFloat32Array()
 	if HexTile.WATER_BIOMES.has(texture_name):
 		var deep := 1.0 if texture_name == "wdeep" else 0.0
 		custom = _repeated(PackedFloat32Array([0.0, 0.0, deep, WATER_CODE]), points.size())
-	var colors := PackedColorArray()
-	if texture_name == CONTOUR_TEXTURE:
-		colors.resize(points.size())
-		colors.fill(Color(1.0, 1.0, 1.0, CONTOUR_ALPHA))
 	_add_mesh(row, SURFACE_PATH % texture_name, points, ground, colors, custom)
 
 
@@ -803,7 +825,7 @@ func _add_faces(row: HexRowView, texture_name: String, tiles: Array) -> void:
 				points.append_array(_quad(from + top, to + top, down))
 				texture_points.append_array(_quad(Vector2(from.x, segment.z), Vector2(to.x, segment.z), down))
 				for _vertex: int in 6:
-					colors.append(face[3])
+					colors.append(face[3] * _tint(tile))
 	_add_mesh(row, path, points, texture_points, colors)
 
 
@@ -868,13 +890,14 @@ func _add_drips(row: HexRowView, tiles: Array) -> void:
 			points.append_array(_quad(from, to, down))
 			texture_points.append_array(_quad(top_left, top_left + Vector2(straight.y - straight.x, 0.0), down))
 			for _vertex: int in 6:
-				colors.append(FACE_COLORS[edge])
+				colors.append(FACE_COLORS[edge] * _tint(tile))
 	_add_mesh(row, HexTransitions.DRIP_TEXTURE_PATH, points, texture_points, colors)
 
 
 func _add_transitions(row: HexRowView, tiles: Array) -> void:
 	var points := PackedVector2Array()
 	var texture_points := PackedVector2Array()
+	var colors := PackedColorArray()
 	var foam_points := PackedVector2Array()
 	var foam_texture_points := PackedVector2Array()
 	var size := Vector2(HexTransitions.CELL_SIZE)
@@ -891,7 +914,9 @@ func _add_transitions(row: HexRowView, tiles: Array) -> void:
 			else:
 				points.append_array(_quad(top_left, top_left + width, down))
 				texture_points.append_array(_quad(cell, cell + width, down))
-	_add_mesh(row, HexTransitions.TEXTURE_PATH, points, texture_points)
+				for _vertex: int in 6:
+					colors.append(_tint(tile))
+	_add_mesh(row, HexTransitions.TEXTURE_PATH, points, texture_points, colors)
 	if not foam_points.is_empty():
 		var custom := _repeated(PackedFloat32Array([0.0, 0.0, 0.0, SHORE_CODE]), foam_points.size())
 		_add_mesh(row, HexTransitions.TEXTURE_PATH, foam_points, foam_texture_points, PackedColorArray(), custom)
@@ -913,7 +938,11 @@ func _add_grounds(row: HexRowView, tiles: Array) -> void:
 		var faces: Dictionary[int, float] = {}
 		for neighbor: Vector2i in LOWER_NEIGHBORS:
 			faces[HexGrounds.EDGE_NEIGHBORS.find(neighbor)] = _face_height(tile.coord + neighbor, tile.height)
+		var first := batches[page].colors.size()
 		HexGrounds.add_tile(batches[page], tile, _map, flat - _rise(tile.height), flat, faces, page)
+		var tint := _tint(tile)
+		for index: int in range(first, batches[page].colors.size()):
+			batches[page].colors[index] *= tint
 	for page: Vector2i in batches:
 		var batch := batches[page]
 		_add_texture_mesh(row, ground_mask.texture_of(page), batch.points, batch.points, batch.colors, batch.custom, batch.extra)
@@ -1064,6 +1093,82 @@ func _write_decoration(points: PackedVector2Array, texture_points: PackedVector2
 	texture_points[first + 3] = Vector2(left, top)
 	texture_points[first + 4] = Vector2(right, bottom)
 	texture_points[first + 5] = Vector2(left, bottom)
+
+
+## O tom de um hexágono de terra pela altura: cada nível abaixo do TINT_TOP, um pouco mais escuro.
+func _tint(tile: HexTile) -> Color:
+	if not height_tint or tile.is_water():
+		return Color.WHITE
+	var value := 1.0 - TINT_STEP * maxi(TINT_TOP - tile.height, 0)
+	return Color(value, value, value)
+
+
+## Os trechos da borda de um hexágono, com a normal para fora e o vizinho do outro lado.
+func _outline(tile: HexTile) -> Array[HexRounding.Segment]:
+	if rounded_corners:
+		return HexRounding.shape_of(tile, _map).segments
+	var segments: Array[HexRounding.Segment] = []
+	for edge: int in 6:
+		var segment := HexRounding.Segment.new()
+		segment.from = HEX_CORNERS[edge]
+		segment.to = HEX_CORNERS[(edge + 1) % 6]
+		var direction := segment.to - segment.from
+		segment.normal = Vector2(direction.y, -direction.x).normalized()
+		segment.owner = tile.coord + HexGrounds.EDGE_NEIGHBORS[edge]
+		segment.edge = edge
+		segments.append(segment)
+	return segments
+
+
+## A beirada clara do alto, por dentro da borda, onde o vizinho é mais baixo e não
+## há paredão à mostra: a textura do próprio chão, clareada pelo shader. O x do
+## CUSTOM0 é a distância até a borda, para o pixel de fora sair mais claro.
+func _add_lips(row: HexRowView, tiles: Array) -> void:
+	var by_biome: Dictionary[String, Array] = {}
+	for tile: HexTile in tiles:
+		if tile.is_water():
+			continue
+		var flat := _tile_origin(tile.coord)
+		var raised := flat - _rise(tile.height)
+		for segment: HexRounding.Segment in _outline(tile):
+			var neighbor := _map.tile_at(segment.owner)
+			if segment.normal.y > 0.01 or (neighbor != null and neighbor.height >= tile.height):
+				continue
+			if not by_biome.has(tile.biome):
+				by_biome[tile.biome] = [PackedVector2Array(), PackedVector2Array(), PackedColorArray()]
+			var inward := -segment.normal * LIP_WIDTH
+			var strip := PackedVector2Array([segment.from, segment.to, segment.to + inward, segment.from, segment.to + inward, segment.from + inward])
+			by_biome[tile.biome][0].append_array(Transform2D(0.0, raised) * strip)
+			by_biome[tile.biome][1].append_array(Transform2D(0.0, flat) * strip)
+			for _vertex: int in 6:
+				by_biome[tile.biome][2].append(_tint(tile))
+	for biome: String in by_biome:
+		var parts: Array = by_biome[biome]
+		var custom := PackedFloat32Array()
+		for index: int in parts[0].size():
+			var distance := LIP_WIDTH if index % 6 in [2, 4, 5] else 0.0
+			custom.append_array(PackedFloat32Array([distance, 0.0, 0.0, LIP_CODE]))
+		_add_mesh(row, SURFACE_PATH % biome, parts[0], parts[1], parts[2], custom)
+
+
+## A sombra no chão de baixo, junto ao pé do paredão de um vizinho mais alto. O x do
+## CUSTOM0 é a distância até o pé, para o shader esmaecer a sombra em pontilhado.
+func _add_foot_shadows(row: HexRowView, tiles: Array) -> void:
+	var points := PackedVector2Array()
+	var custom := PackedFloat32Array()
+	for tile: HexTile in tiles:
+		var raised := _tile_origin(tile.coord) - _rise(tile.height)
+		for segment: HexRounding.Segment in _outline(tile):
+			var neighbor := _map.tile_at(segment.owner)
+			if segment.normal.y > -0.01 or neighbor == null or neighbor.is_water() or neighbor.height <= tile.height:
+				continue
+			var inward := -segment.normal * SHADOW_WIDTH
+			var from := raised + segment.from
+			var to := raised + segment.to
+			points.append_array(PackedVector2Array([from, to, to + inward, from, to + inward, from + inward]))
+			for distance: float in [0.0, 0.0, SHADOW_WIDTH, 0.0, SHADOW_WIDTH, SHADOW_WIDTH]:
+				custom.append_array(PackedFloat32Array([distance, 0.0, 0.0, SHADOW_CODE]))
+	_add_mesh(row, SURFACE_PATH % CONTOUR_TEXTURE, points, points, PackedColorArray(), custom)
 
 
 func _face_height(neighbor: Vector2i, level: int) -> float:

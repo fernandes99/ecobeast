@@ -34,6 +34,9 @@ const CONTOUR_ON_TEXT := "Contorno: ligado"
 const CONTOUR_OFF_TEXT := "Contorno: desligado"
 const ROUNDED_ON_TEXT := "Pontas: arredondadas"
 const ROUNDED_OFF_TEXT := "Pontas: retas"
+const LIPS_TEXT := "Beirada: %s"
+const SHADOWS_TEXT := "Sombra no pé: %s"
+const TINT_TEXT := "Tom por altura: %s"
 ## Até onde os Ecobeasts existem como nós, em hexágonos: passa da tela com folga,
 ## para eles nascerem e saírem sem ninguém ver. A revisar.
 const CREATURE_RADIUS := 16
@@ -82,6 +85,9 @@ var _debug_tamer_ids: Array[int] = []
 @onready var _debug_god_button: Button = %DebugGodButton
 @onready var _debug_contour_button: Button = %DebugContourButton
 @onready var _debug_rounded_button: Button = %DebugRoundedButton
+@onready var _debug_lips_button: Button = %DebugLipsButton
+@onready var _debug_shadows_button: Button = %DebugShadowsButton
+@onready var _debug_tint_button: Button = %DebugTintButton
 @onready var _greeting: TamerGreetingPanel = %TamerGreeting
 @onready var _island_plate: Control = %IslandPlate
 @onready var _island_name: Label = %IslandName
@@ -106,6 +112,9 @@ func _ready() -> void:
 	_debug_god_button.pressed.connect(_toggle_god)
 	_debug_contour_button.pressed.connect(_toggle_contour)
 	_debug_rounded_button.pressed.connect(_toggle_rounded)
+	_debug_lips_button.pressed.connect(func() -> void: _toggle_height_cues(not HexMapView.height_lips, HexMapView.foot_shadows, HexMapView.height_tint))
+	_debug_shadows_button.pressed.connect(func() -> void: _toggle_height_cues(HexMapView.height_lips, not HexMapView.foot_shadows, HexMapView.height_tint))
+	_debug_tint_button.pressed.connect(func() -> void: _toggle_height_cues(HexMapView.height_lips, HexMapView.foot_shadows, not HexMapView.height_tint))
 	%DebugTest2Button.pressed.connect(_open_board_test.bind(2))
 	%DebugTest3Button.pressed.connect(_open_board_test.bind(3))
 	for size: int in [1, 2, 3]:
@@ -114,6 +123,7 @@ func _ready() -> void:
 	_refresh_god_button()
 	_refresh_contour_button()
 	_refresh_rounded_button()
+	_refresh_height_cue_buttons()
 	resized.connect(_fit_view.call_deferred)
 	visibility_changed.connect(_on_visibility_changed)
 	_begin()
@@ -565,6 +575,17 @@ func _toggle_contour() -> void:
 func _toggle_rounded() -> void:
 	_map_view.set_rounded_corners(not HexMapView.rounded_corners)
 	_refresh_rounded_button()
+
+
+func _toggle_height_cues(lips: bool, shadows: bool, tint: bool) -> void:
+	_map_view.set_height_cues(lips, shadows, tint)
+	_refresh_height_cue_buttons()
+
+
+func _refresh_height_cue_buttons() -> void:
+	_debug_lips_button.text = LIPS_TEXT % ("ligada" if HexMapView.height_lips else "desligada")
+	_debug_shadows_button.text = SHADOWS_TEXT % ("ligada" if HexMapView.foot_shadows else "desligada")
+	_debug_tint_button.text = TINT_TEXT % ("ligado" if HexMapView.height_tint else "desligado")
 
 
 func _refresh_rounded_button() -> void:
