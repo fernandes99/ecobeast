@@ -10,7 +10,7 @@ const CREATURE_CALL_PATH := "res://assets/creatures/%s/call.wav"
 const HIT_SOUND_PATH := "res://assets/sounds/hits/%s.wav"
 const HIT_SOUNDS: Dictionary[String, String] = {"normal": "normal", "super": "super efetivo", "weak": "pouco efetivo"}
 const TAMER_CREDITS_PATH := "res://assets/tamer/CREDITOS.md"
-const COMMON_SURFACES: Array[String] = ["cliff", "side", "contour", "highlight"]
+const COMMON_SURFACES: Array[String] = ["cliff", "side", "waterfall", "contour", "highlight"]
 const DECORATION_NAMES: Dictionary[String, String] = {
 	"tree": "árvore",
 	"pine": "pinheiro",

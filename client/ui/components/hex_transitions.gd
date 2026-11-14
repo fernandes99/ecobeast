@@ -49,9 +49,9 @@ static func transitions_of(tile: HexTile, map: ExplorationMap) -> Array[Transiti
 		var neighbor := map.tile_at(tile.coord + NEIGHBORS[edge])
 		if neighbor == null or SURFACE_ORDER.find(neighbor.biome) <= rank:
 			continue
-		# A borda de cima de um vizinho mais alto já fecha a divisa; só a água recebe aí.
+		# A borda de cima de um vizinho mais alto já fecha a divisa, também na água (water-motion/03).
 		var behind_higher := HexMapView.LOWER_NEIGHBORS.has(NEIGHBORS[edge]) and neighbor.height > tile.height
-		if behind_higher and not tile.is_water():
+		if behind_higher:
 			continue
 		var material := FOAM if tile.is_water() else neighbor.biome
 		var variant := hash([map.map_seed, tile.coord, edge]) % VARIANTS
@@ -60,6 +60,10 @@ static func transitions_of(tile: HexTile, map: ExplorationMap) -> Array[Transiti
 		transition.neighbor = NEIGHBORS[edge]
 		transitions.append(transition)
 	return transitions
+
+
+static func is_foam(transition: Transition) -> bool:
+	return transition.cell.y < (MATERIAL_ROWS[FOAM] + 1) * VARIANTS
 
 
 static func drip_cell(tile: HexTile, edge: int, height: float, map_seed: int) -> Vector2i:

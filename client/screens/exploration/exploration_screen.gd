@@ -30,6 +30,8 @@ const DEBUG_NAME_FONT_SIZE := 18
 const DEBUG_DISABLED_ALPHA := 0.35
 const GOD_ON_TEXT := "God: ligado"
 const GOD_OFF_TEXT := "God: desligado"
+const CONTOUR_ON_TEXT := "Contorno: ligado"
+const CONTOUR_OFF_TEXT := "Contorno: desligado"
 ## Até onde os Ecobeasts existem como nós, em hexágonos: passa da tela com folga,
 ## para eles nascerem e saírem sem ninguém ver. A revisar.
 const CREATURE_RADIUS := 16
@@ -76,6 +78,7 @@ var _debug_tamer_ids: Array[int] = []
 @onready var _debug_spawn_button: Button = %DebugSpawnButton
 @onready var _debug_spawn_back_button: Button = %DebugSpawnBackButton
 @onready var _debug_god_button: Button = %DebugGodButton
+@onready var _debug_contour_button: Button = %DebugContourButton
 @onready var _greeting: TamerGreetingPanel = %TamerGreeting
 @onready var _island_plate: Control = %IslandPlate
 @onready var _island_name: Label = %IslandName
@@ -98,12 +101,14 @@ func _ready() -> void:
 	_debug_spawn_button.pressed.connect(_show_debug_part.bind(true))
 	_debug_spawn_back_button.pressed.connect(_show_debug_part.bind(false))
 	_debug_god_button.pressed.connect(_toggle_god)
+	_debug_contour_button.pressed.connect(_toggle_contour)
 	%DebugTest2Button.pressed.connect(_open_board_test.bind(2))
 	%DebugTest3Button.pressed.connect(_open_board_test.bind(3))
 	for size: int in [1, 2, 3]:
 		(get_node("%%DebugTamer%dButton" % size) as Button).pressed.connect(_debug_tamer.bind(size))
 	_greeting.tapped.connect(_on_greeting_tapped)
 	_refresh_god_button()
+	_refresh_contour_button()
 	resized.connect(_fit_view.call_deferred)
 	visibility_changed.connect(_on_visibility_changed)
 	_begin()
@@ -545,6 +550,15 @@ func _toggle_god() -> void:
 
 func _refresh_god_button() -> void:
 	_debug_god_button.text = GOD_ON_TEXT if Session.debug_god else GOD_OFF_TEXT
+
+
+func _toggle_contour() -> void:
+	_map_view.set_contour_visible(not HexMapView.contour_visible)
+	_refresh_contour_button()
+
+
+func _refresh_contour_button() -> void:
+	_debug_contour_button.text = CONTOUR_ON_TEXT if HexMapView.contour_visible else CONTOUR_OFF_TEXT
 
 
 func _open_board_test(slots: int) -> void:

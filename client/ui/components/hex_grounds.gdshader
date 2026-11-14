@@ -26,6 +26,32 @@ const vec2 CORNERS[6] = {
 	vec2(0.0, -29.0), vec2(32.0, -13.0), vec2(32.0, 13.0),
 	vec2(0.0, 29.0), vec2(-32.0, 13.0), vec2(-32.0, -13.0)
 };
+// A água (water-motion): o código 4 é a superfície, com a funda no z; o 5, a
+// cachoeira, com a altura da lateral no x e a borda do mapa no y; o 6, a espuma do
+// pé; o 7, a espuma da praia. As velocidades fecham voltas inteiras em 3.600 s, quando o TIME
+// volta a zero, para não dar salto.
+const float WATER_STEPS = 6.0;
+const vec2 SHALLOW_DRIFT = vec2(21.0, 10.0) * 512.0 / 3600.0;
+const vec2 DEEP_DRIFT = vec2(14.0, 7.0) * 512.0 / 3600.0;
+const float WAVE_LENGTH = 16.0;
+const float WAVE_SPEED = 0.5;
+const float FALL_STEPS = 8.0;
+const float FALL_STEP = 4.0;
+const float LIP = 2.0;
+const float FALL_FOAM = 4.0;
+const float FALL_FADE = 8.0;
+const float FOAM_WIDTH = 6.0;
+const vec4 FOAM = vec4(0.93, 0.98, 1.0, 1.0);
+// A espuma da praia (código 7): mais fraca, e uma onda que corre pela costa a
+// apaga e acende pixel a pixel. 0,25 volta por segundo fecha no TIME de 3.600 s.
+const float SHORE_ALPHA = 0.55;
+const float SHORE_STEPS = 6.0;
+const float SHORE_SPEED = 0.25;
+const float SHORE_LENGTH = 40.0;
+const float BAYER[16] = {
+	0.0, 8.0, 2.0, 10.0, 12.0, 4.0, 14.0, 6.0,
+	3.0, 11.0, 1.0, 9.0, 15.0, 7.0, 13.0, 5.0
+};
 const vec2 DIRECTIONS[8] = {
 	vec2(1.0, 0.0), vec2(-1.0, 0.0), vec2(0.0, 1.0), vec2(0.0, -1.0),
 	vec2(0.7, 0.7), vec2(-0.7, 0.7), vec2(0.7, -0.7), vec2(-0.7, -0.7)
@@ -81,9 +107,62 @@ vec4 ground_color(vec2 world, int id) {
 	return texture(ground_textures, vec3(fract(world / TEXTURE_SIZE), float(id)));
 }
 
+vec4 water_texel(sampler2D tex, vec2 texel, vec2 pixel_size) {
+	return texture(tex, (texel + 0.5) * pixel_size);
+}
+
 void fragment() {
 	vec4 color = COLOR;
-	if (int(round(ground.w)) == 3) {
+	int code = int(round(ground.w));
+	vec2 texel = floor(UV / TEXTURE_PIXEL_SIZE);
+	if (code == 4) {
+		float t = floor(TIME * WATER_STEPS) / WATER_STEPS;
+		vec2 drift = floor(t * (ground.z > 0.5 ? DEEP_DRIFT : SHALLOW_DRIFT));
+		float wave = round(sin(6.2831853 * (texel.y / WAVE_LENGTH + t * WAVE_SPEED)));
+		color = water_texel(TEXTURE, texel - drift - vec2(wave, 0.0), TEXTURE_PIXEL_SIZE) * shade;
+	} else if (code == 5) {
+		float frame = floor(TIME * FALL_STEPS);
+		float height = ground.x;
+		bool off_map = ground.y > 0.5;
+		if (texel.y < LIP) {
+			color = mix(water_texel(TEXTURE, texel, TEXTURE_PIXEL_SIZE), FOAM, texel.y < 1.0 ? 0.6 : 0.3);
+		} else {
+			color = water_texel(TEXTURE, texel - vec2(0.0, frame * FALL_STEP), TEXTURE_PIXEL_SIZE);
+		}
+		float from_bottom = height - texel.y;
+		if (off_map && from_bottom <= FALL_FADE) {
+			ivec2 cell = ivec2(mod(texel, 4.0));
+			if (BAYER[cell.y * 4 + cell.x] / 16.0 >= (from_bottom - 1.0) / FALL_FADE) {
+				discard;
+			}
+		} else if (!off_map && from_bottom <= FALL_FOAM) {
+			float churn = hash(vec2(floor(texel.x / 2.0), texel.y) + floor(frame / 2.0) * 17.0);
+			if (churn < 0.35 + 0.5 * (1.0 - from_bottom / FALL_FOAM)) {
+				color = FOAM;
+			}
+		}
+		color.rgb *= shade.rgb;
+	} else if (code == 6) {
+		float frame = floor(TIME * WATER_STEPS);
+		float churn = hash(vec2(floor(texel.x / 2.0), floor(texel.y / 2.0)) + frame * 31.0);
+		float density = 0.9 - texel.y / FOAM_WIDTH * 0.75;
+		if (churn < density) {
+			color = FOAM;
+		} else if (churn < density + 0.15) {
+			color = vec4(FOAM.rgb, 0.5);
+		} else {
+			discard;
+		}
+		color *= shade;
+	} else if (code == 7) {
+		float t = floor(TIME * SHORE_STEPS) / SHORE_STEPS;
+		vec2 pixel = floor(art_point);
+		float swell = 0.5 + 0.5 * sin(6.2831853 * (t * SHORE_SPEED + (pixel.x + pixel.y * 0.5) / SHORE_LENGTH));
+		if (hash(pixel + vec2(57.0, 13.0)) > 0.25 + 0.75 * swell) {
+			discard;
+		}
+		color.a *= SHORE_ALPHA;
+	} else if (code == 3) {
 		vec2 local = floor(ground.xy) + 0.5;
 		vec2 world = local + extra.zw * PAGE;
 		vec2 warp = vec2(value_noise(world / 7.0), value_noise(world / 7.0 + 31.7)) * WARP * 2.0 - WARP;

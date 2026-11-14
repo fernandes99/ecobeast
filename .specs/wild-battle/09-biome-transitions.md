@@ -31,7 +31,7 @@ Como as decorações, o arremate é só enfeite e sai do cliente. Geometria e ar
 - **RF-04:** Água rasa e funda não têm arremate entre si, a pedido do dono.
 - **RF-05:** Cada material de terra tem um recorte próprio e discreto, sem linha nem sombra: grama em pontas curtas, solo seco irregular, e pedra e rocha em blocos baixos. A borda se desfaz em pontilhado.
 - **RF-06:** O arremate fica dentro do hexágono que o recebe, junto da borda, e deixa o centro livre.
-- **RF-07:** Terra com um vizinho mais alto na frente não recebe arremate nessa borda: a borda de cima dele já fecha a divisa. Água recebe, e a espuma sobe a diferença de altura, para encostar nela.
+- **RF-07:** Terra com um vizinho mais alto na frente não recebe arremate nessa borda: a borda de cima dele já fecha a divisa. Desde a [water-motion/03](../water-motion/03-shore-foam.md), a água também não.
 - **RF-08:** A borda do mapa não tem arremate.
 - **RF-09:** A variante sai da seed do mapa, da coordenada e da borda, e a mesma seed repete os mesmos arremates.
 - **RF-10:** Um hexágono de superfície desconhecida não quebra o mapa: ele só não entra na ordem.

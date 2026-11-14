@@ -33,7 +33,20 @@ const ROW_MARGIN := 4
 const ART_SCALE := 2.0
 const SURFACE_PATH := "res://assets/terrain/surfaces/%s.png"
 const CLIFF_BIOMES: Array[String] = ["stone", "mountain"]
+## A lateral da água é cachoeira, e o pé dela tem espuma no vizinho de baixo
+## (water-motion). Os códigos são os do shader do terreno, no CUSTOM0.w.
+const WATERFALL_TEXTURE := "waterfall"
+const WATER_CODE := 4.0
+const FALL_CODE := 5.0
+const FOAM_CODE := 6.0
+const SHORE_CODE := 7.0
+const FOAM_WIDTH := 6.0
+## Os hexágonos de onde a água cai sobre este, e a borda de cima dele em cada caso.
+const FALL_SOURCES: Array[Vector2i] = [Vector2i(1, -1), Vector2i(0, -1)]
+const FALL_EDGE_CORNERS: Array[Vector2i] = [Vector2i(0, 1), Vector2i(5, 0)]
 const CONTOUR_TEXTURE := "contour"
+## O contorno dos hexágonos, mais fraco e desligado; o menu Debug do mapa o liga (water-motion/03).
+const CONTOUR_ALPHA := 0.5
 const HIGHLIGHT_TEXTURE := "highlight"
 ## As faixas de decoração de cada linha, de cima para baixo, pela distância do pé ao
 ## centro do hexágono: os atores entram entre elas pela altura do pé (free-props/02).
@@ -67,6 +80,7 @@ var height_cut := -1:
 		_rebuild_all()
 
 var chunk_columns := 0
+static var contour_visible := false
 ## O chão desenhado em páginas (free-trails/02), lido pelo shader do terreno.
 var ground_mask := GroundMask.new()
 
@@ -227,6 +241,13 @@ func update_tiles(coords: Array[Vector2i]) -> void:
 			if art != null:
 				sprite.set_fence_texture(art)
 	_fade_objects()
+
+
+func set_contour_visible(on: bool) -> void:
+	if on == contour_visible:
+		return
+	contour_visible = on
+	_rebuild_all()
 
 
 func _rebuild_all() -> void:
@@ -554,6 +575,8 @@ func snapped_to_pixels(value: Vector2) -> Vector2:
 
 
 static func face_texture(biome: String) -> String:
+	if HexTile.WATER_BIOMES.has(biome):
+		return WATERFALL_TEXTURE
 	return "cliff" if CLIFF_BIOMES.has(biome) else "side"
 
 
@@ -646,14 +669,19 @@ func _add_terrain(row: HexRowView, tiles: Array) -> void:
 		return
 	var by_face := _grouped(tiles, func(tile: HexTile) -> String: return face_texture(tile.biome))
 	for face: String in by_face:
-		_add_faces(row, face, by_face[face])
+		if face == WATERFALL_TEXTURE:
+			_add_waterfalls(row, by_face[face])
+		else:
+			_add_faces(row, face, by_face[face])
 	_add_drips(row, tiles)
 	var by_surface := _grouped(tiles, func(tile: HexTile) -> String: return tile.biome)
 	for surface: String in by_surface:
 		_add_surface(row, surface, by_surface[surface])
 	_add_transitions(row, tiles)
 	_add_grounds(row, tiles)
-	_add_surface(row, CONTOUR_TEXTURE, tiles)
+	_add_fall_foam(row, tiles)
+	if contour_visible:
+		_add_surface(row, CONTOUR_TEXTURE, tiles)
 
 
 func _grouped(tiles: Array, key: Callable) -> Dictionary[String, Array]:
@@ -676,7 +704,71 @@ func _add_surface(row: HexRowView, texture_name: String, tiles: Array) -> void:
 		var origin := _tile_origin(tile.coord)
 		ground.append_array(Transform2D(0.0, origin) * _hex_triangles)
 		points.append_array(Transform2D(0.0, origin - _rise(tile.height)) * _hex_triangles)
-	_add_mesh(row, SURFACE_PATH % texture_name, points, ground)
+	var custom := PackedFloat32Array()
+	if HexTile.WATER_BIOMES.has(texture_name):
+		var deep := 1.0 if texture_name == "wdeep" else 0.0
+		custom = _repeated(PackedFloat32Array([0.0, 0.0, deep, WATER_CODE]), points.size())
+	var colors := PackedColorArray()
+	if texture_name == CONTOUR_TEXTURE:
+		colors.resize(points.size())
+		colors.fill(Color(1.0, 1.0, 1.0, CONTOUR_ALPHA))
+	_add_mesh(row, SURFACE_PATH % texture_name, points, ground, colors, custom)
+
+
+## A cachoeira de cada lateral da água, de uma peça só: a textura se repete para
+## baixo, e o shader a faz descer, com a espuma no pé ou o sumiço na borda do mapa.
+func _add_waterfalls(row: HexRowView, tiles: Array) -> void:
+	var points := PackedVector2Array()
+	var texture_points := PackedVector2Array()
+	var colors := PackedColorArray()
+	var custom := PackedFloat32Array()
+	for tile: HexTile in tiles:
+		var origin := _tile_origin(tile.coord) - _rise(tile.height)
+		for edge: int in LOWER_NEIGHBORS.size():
+			var neighbor := tile.coord + LOWER_NEIGHBORS[edge]
+			var height := _face_height(neighbor, tile.height)
+			if height <= 0.0:
+				continue
+			var from := origin + HEX_CORNERS[LOWER_EDGE_CORNERS[edge].x]
+			var to := origin + HEX_CORNERS[LOWER_EDGE_CORNERS[edge].y]
+			var down := Vector2(0.0, height)
+			points.append_array(_quad(from, to, down))
+			texture_points.append_array(_quad(Vector2(from.x, 0.0), Vector2(to.x, 0.0), down))
+			var off_map := 0.0 if _map.has(neighbor) else 1.0
+			custom.append_array(_repeated(PackedFloat32Array([height, off_map, 0.0, FALL_CODE]), 6))
+			for _vertex: int in 6:
+				colors.append(FACE_COLORS[edge])
+	_add_mesh(row, SURFACE_PATH % WATERFALL_TEXTURE, points, texture_points, colors, custom)
+
+
+## A espuma onde a cachoeira de um hexágono de trás bate neste. Fica na linha deste,
+## que se desenha depois da cachoeira, por cima da superfície e do chão dele.
+func _add_fall_foam(row: HexRowView, tiles: Array) -> void:
+	var points := PackedVector2Array()
+	var texture_points := PackedVector2Array()
+	var down := Vector2(0.0, FOAM_WIDTH)
+	for tile: HexTile in tiles:
+		var origin := _tile_origin(tile.coord) - _rise(tile.height)
+		for side: int in FALL_SOURCES.size():
+			var source := _map.tile_at(tile.coord + FALL_SOURCES[side])
+			if source == null or not source.is_water() or source.height <= tile.height:
+				continue
+			var from := origin + HEX_CORNERS[FALL_EDGE_CORNERS[side].x]
+			var to := origin + HEX_CORNERS[FALL_EDGE_CORNERS[side].y]
+			points.append_array(_quad(from, to, down))
+			texture_points.append_array(_quad(Vector2(from.x, 0.0), Vector2(to.x, 0.0), down))
+	if points.is_empty():
+		return
+	var custom := _repeated(PackedFloat32Array([0.0, 0.0, 0.0, FOAM_CODE]), points.size())
+	_add_mesh(row, SURFACE_PATH % WATERFALL_TEXTURE, points, texture_points, PackedColorArray(), custom)
+
+
+static func _repeated(values: PackedFloat32Array, count: int) -> PackedFloat32Array:
+	var repeated := PackedFloat32Array()
+	repeated.resize(values.size() * count)
+	for index: int in repeated.size():
+		repeated[index] = values[index % values.size()]
+	return repeated
 
 
 func _add_faces(row: HexRowView, texture_name: String, tiles: Array) -> void:
@@ -746,17 +838,26 @@ func _add_drips(row: HexRowView, tiles: Array) -> void:
 func _add_transitions(row: HexRowView, tiles: Array) -> void:
 	var points := PackedVector2Array()
 	var texture_points := PackedVector2Array()
+	var foam_points := PackedVector2Array()
+	var foam_texture_points := PackedVector2Array()
 	var size := Vector2(HexTransitions.CELL_SIZE)
 	var width := Vector2(size.x, 0.0)
 	var down := Vector2(0.0, size.y)
 	for tile: HexTile in tiles:
 		var origin := _tile_origin(tile.coord) - _rise(tile.height)
 		for transition: HexTransitions.Transition in HexTransitions.transitions_of(tile, _map):
-			var top_left := origin - _front_lift(tile, transition.neighbor)
-			points.append_array(_quad(top_left, top_left + width, down))
+			var top_left := origin
 			var cell := Vector2(transition.cell) * size
-			texture_points.append_array(_quad(cell, cell + width, down))
+			if HexTransitions.is_foam(transition):
+				foam_points.append_array(_quad(top_left, top_left + width, down))
+				foam_texture_points.append_array(_quad(cell, cell + width, down))
+			else:
+				points.append_array(_quad(top_left, top_left + width, down))
+				texture_points.append_array(_quad(cell, cell + width, down))
 	_add_mesh(row, HexTransitions.TEXTURE_PATH, points, texture_points)
+	if not foam_points.is_empty():
+		var custom := _repeated(PackedFloat32Array([0.0, 0.0, 0.0, SHORE_CODE]), foam_points.size())
+		_add_mesh(row, HexTransitions.TEXTURE_PATH, foam_points, foam_texture_points, PackedColorArray(), custom)
 
 
 ## A malha de chão dos hexágonos de terra que o chão toca, uma por página da máscara.
@@ -779,13 +880,6 @@ func _add_grounds(row: HexRowView, tiles: Array) -> void:
 	for page: Vector2i in batches:
 		var batch := batches[page]
 		_add_texture_mesh(row, ground_mask.texture_of(page), batch.points, batch.points, batch.colors, batch.custom, batch.extra)
-
-
-func _front_lift(tile: HexTile, neighbor: Vector2i) -> Vector2:
-	if not LOWER_NEIGHBORS.has(neighbor):
-		return Vector2.ZERO
-	var lift := _rise(_level_at(tile.coord + neighbor)) - _rise(tile.height)
-	return lift if lift.y > 0.0 else Vector2.ZERO
 
 
 func _add_decorations(bands: Array[HexRowView], tiles: Array, props: Array) -> void:

@@ -176,7 +176,7 @@ O recorte é discreto de propósito: sem linha nem sombra, e a borda da terra se
 
 **Desenho:** uma malha por linha do mapa, depois das superfícies e antes do contorno, para a grade continuar visível. A textura é a da folha, não a contínua do bioma: como o recorte é estreito e tem borda própria, a emenda não aparece.
 
-**Vizinho da frente mais alto:** ele cobre a borda de baixo do hexágono. A terra não recebe arremate nessa borda, porque a borda de cima do vizinho já fecha a divisa. A água recebe, e a espuma sobe a diferença de altura, para encostar na borda visível do vizinho. Com um vizinho muito mais alto, ela pode chegar ao centro, mas aí o próprio vizinho já cobre essa parte.
+**Vizinho da frente mais alto:** ele cobre a borda de baixo do hexágono. A terra não recebe arremate nessa borda, porque a borda de cima do vizinho já fecha a divisa. Desde a [water-motion/03](../water-motion/03-shore-foam.md), a água também não recebe: a espuma não sobe mais a diferença de altura.
 
 **Escorrido:** em um paredão, o bioma de cima desce pela face: musgo em tufos e fios em `temperate` e `boreal`, e areia em lóbulos com grãos soltos em `hill`. Pedra, montanha e água não escorrem. O arquivo é `res://assets/terrain/transitions/drips.png`, uma folha de 128×96 px, com células de 32×16 px, a largura de uma borda. As colunas são 4 variantes, e cada material de `DRIP_ROWS` tem duas linhas: a curta, que cabe em um paredão de 8 px, e a comprida, a partir de 16 px. A malha vem logo depois dos paredões, com a mesma inclinação, a linha 0 colada na superfície e a mesma cor de vértice da face. Ela é cortada na altura do paredão, então nunca passa do pé dele.
 
