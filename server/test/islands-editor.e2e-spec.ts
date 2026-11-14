@@ -150,7 +150,7 @@ describe('Editor de ilhas (e2e)', () => {
     ).id;
     house = (
       await prisma.mapObjectType.findUniqueOrThrow({
-        where: { slug: 'house' },
+        where: { slug: 'town_house' },
       })
     ).id;
   });

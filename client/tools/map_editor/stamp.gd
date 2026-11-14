@@ -135,6 +135,8 @@ static func place(draft: IslandDraft, stamp: Dictionary, anchor: Vector2i, flip:
 
 static func list(dir := DIR) -> Array[Dictionary]:
 	var stamps: Array[Dictionary] = []
+	if not DirAccess.dir_exists_absolute(dir):
+		return stamps
 	var files := DirAccess.get_files_at(dir)
 	files.sort()
 	for file: String in files:

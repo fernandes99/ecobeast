@@ -307,6 +307,8 @@ func _paint(coord: Vector2i) -> void:
 	elif _tools.tool == EditorTools.Tool.OBJECT:
 		_canvas.refresh_objects()
 		_canvas.refresh_props()
+	elif _tools.tool == EditorTools.Tool.VEGETATION:
+		_canvas.refresh_props_at(changed)
 	elif _tools.tool == EditorTools.Tool.STAMP:
 		if _tools.stamp_panel.mode == StampPanel.Mode.SELECT:
 			_canvas.refresh_brush()
@@ -703,7 +705,7 @@ func _build() -> void:
 	_hover_label.theme_type_variation = &"SecondaryLabel"
 	_hover_label.clip_text = true
 	_hover_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	_hover_label.text = "Botão esquerdo: pintar, pôr uma peça ou arrastar a escolhida. Botão direito: escolher peça ou ação, ou tirar área. Roda: zoom. Botão do meio, ou espaço e o botão esquerdo: arrastar. Tab: visão de cima. Ctrl+Z e Ctrl+Y: desfazer e refazer."
+	_hover_label.text = "Botão esquerdo: pintar, pôr uma peça ou arrastar a escolhida. Botão direito: escolher peça ou ação, tirar área ou apagar vegetação. Roda: zoom. Botão do meio, ou espaço e o botão esquerdo: arrastar. Tab: visão de cima. Ctrl+Z e Ctrl+Y: desfazer e refazer."
 	_editor.add_child(_hover_label)
 
 	_unsaved_dialog = ConfirmationDialog.new()

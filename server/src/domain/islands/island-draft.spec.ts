@@ -536,10 +536,13 @@ describe('as peças soltas no rascunho (free-props/01)', () => {
     );
   });
 
-  it(`recusa mais de ${MAX_PROPS} peças`, () => {
+  it('aceita até 20.000 peças e recusa a seguinte (vegetation-brush/02)', () => {
+    expect(MAX_PROPS).toBe(20_000);
     const draft = island();
-    draft.props = Array.from({ length: MAX_PROPS + 1 }, () => draft.props[0]!);
-    expect(draftError(draft, known)).toBe('A ilha pode ter até 6.000 peças.');
+    draft.props = Array.from({ length: MAX_PROPS }, () => draft.props[0]!);
+    expect(draftError(draft, known)).toBeNull();
+    draft.props.push(draft.props[0]!);
+    expect(draftError(draft, known)).toBe('A ilha pode ter até 20.000 peças.');
   });
 
   it('o rascunho canônico ordena as peças e muda com elas', () => {

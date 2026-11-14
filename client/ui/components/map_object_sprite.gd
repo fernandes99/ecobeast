@@ -10,13 +10,7 @@ const CENTER_TO_BOTTOM := 29.0
 const HIT_ALPHA := 0.5
 const HEX_HALF_WIDTH := 32.0
 ## Quadros por segundo dos objetos animados.
-const FRAME_RATES: Dictionary[String, float] = {
-	"windmill": 10.0,
-	"tree": 4.0,
-	"rune_shrine": 8.0,
-	"town_windmill": 10.0,
-	"town_rune_shrine": 8.0,
-}
+const FRAME_RATES: Dictionary[String, float] = {}
 const DEFAULT_FRAME_RATE := 6.0
 
 var object: MapObject
@@ -38,7 +32,7 @@ static func art_path(slug: String, variant: int) -> String:
 	return ""
 
 
-## A largura da célula de um quadro, a mesma do make_objects: simétrica em volta do
+## A largura da célula de um quadro, a mesma do make_town: simétrica em volta do
 ## ponto de apoio, cobrindo os hexágonos.
 static func cell_width(tiles: Array[Vector2i]) -> int:
 	var pivot := 0.0

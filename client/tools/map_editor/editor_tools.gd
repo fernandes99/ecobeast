@@ -5,10 +5,10 @@ signal message(text: String)
 signal brush_changed
 signal edited(step: EditorHistory.Step, merge: bool)
 
-enum Tool { BIOME, HEIGHT, GROUND, ADD, REMOVE, START, OBJECT, ACTION, AREA, STAMP, ERASER, PATH }
+enum Tool { BIOME, HEIGHT, GROUND, ADD, REMOVE, START, OBJECT, ACTION, AREA, STAMP, ERASER, PATH, VEGETATION }
 
-const TOOL_NAMES: Array[String] = ["Bioma", "Altura", "Chão", "Pôr hexágono", "Tirar hexágono", "Chegada", "Peças", "Ação", "Área", "Carimbo", "Borracha", "Caminho"]
-const TOOL_ICONS: Array[String] = ["biome", "height", "ground", "hex_add", "hex_remove", "flag", "object", "action", "area", "stamp", "eraser", "path"]
+const TOOL_NAMES: Array[String] = ["Bioma", "Altura", "Chão", "Pôr hexágono", "Tirar hexágono", "Chegada", "Peças", "Ação", "Área", "Carimbo", "Borracha", "Caminho", "Vegetação"]
+const TOOL_ICONS: Array[String] = ["biome", "height", "ground", "hex_add", "hex_remove", "flag", "object", "action", "area", "stamp", "eraser", "path", "vegetation"]
 const TOOL_HINTS: Array[String] = [
 	"Troca o bioma dos hexágonos que já existem. A altura só muda se você escolher uma abaixo.",
 	"Troca só a altura dos hexágonos que já existem.",
@@ -22,12 +22,13 @@ const TOOL_HINTS: Array[String] = [
 	"Põe um carimbo, com o apoio no hexágono clicado, ou escolhe uma área e a guarda como carimbo.",
 	"Apaga as decorações naturais e as peças soltas dos hexágonos. Botão direito devolve as decorações naturais.",
 	"Arraste para desenhar um caminho. Clique num caminho para escolher, trocar ou apagar.",
+	"Pinta vegetação e pedras do grupo escolhido. Botão direito apaga as peças soltas.",
 ]
 ## Os grupos da coluna (map-editor/06): as ferramentas parecidas viram abas do grupo.
 const GROUPS: Array[Dictionary] = [
 	{"name": "Terreno", "icon": "biome", "tools": [Tool.BIOME, Tool.HEIGHT, Tool.ADD, Tool.REMOVE]},
 	{"name": "Chão", "icon": "ground", "tools": [Tool.GROUND, Tool.PATH]},
-	{"name": "Peças", "icon": "object", "tools": [Tool.OBJECT, Tool.STAMP, Tool.ERASER]},
+	{"name": "Peças", "icon": "object", "tools": [Tool.OBJECT, Tool.VEGETATION, Tool.STAMP, Tool.ERASER]},
 	{"name": "Jogo", "icon": "flag", "tools": [Tool.START, Tool.ACTION, Tool.AREA]},
 ]
 const TAB_ICON_WIDTH := 18
@@ -102,6 +103,8 @@ var stamp_panel: StampPanel
 var _stamp_section: Control
 var path_panel: PathPanel
 var _path_section: Control
+var vegetation_panel: VegetationPanel
+var _vegetation_section: Control
 var _path: MapTrail = null
 var _path_start := Vector2.ZERO
 
@@ -254,6 +257,11 @@ func _init() -> void:
 	path_panel.edited.connect(func(step: EditorHistory.Step) -> void: edited.emit(step, false))
 	paths_box.add_child(path_panel)
 
+	var vegetation_box := _section("Vegetação")
+	_vegetation_section = vegetation_box.get_parent()
+	vegetation_panel = VegetationPanel.new()
+	vegetation_box.add_child(vegetation_panel)
+
 	var brush_box := _section("Pincel  ·  teclas [ e ]")
 	_brush_section = brush_box.get_parent()
 	var brush_row := HBoxContainer.new()
@@ -381,8 +389,10 @@ func begin_stroke(draft: IslandDraft, secondary: bool = false) -> void:
 	_stroke_action = -2
 	_object_done = false
 	_moving = -1
-	if draft.props.size() > 0 or tool == Tool.OBJECT or tool == Tool.STAMP or tool == Tool.ERASER:
+	if draft.props.size() > 0 or tool == Tool.OBJECT or tool == Tool.STAMP or tool == Tool.ERASER or tool == Tool.VEGETATION:
 		_step.props_before = draft.props.duplicate(true)
+	if tool == Tool.VEGETATION:
+		vegetation_panel.begin(draft)
 	if draft.actions.size() > 0 or tool == Tool.ACTION:
 		_step.actions_before = draft.actions.duplicate(true)
 	if draft.objects.size() > 0 or tool == Tool.OBJECT or tool == Tool.STAMP:
@@ -405,6 +415,8 @@ func paint(draft: IslandDraft, center: Vector2i) -> Array[Vector2i]:
 		return _paint_stamp(draft, center)
 	if tool == Tool.PATH:
 		return changed
+	if tool == Tool.VEGETATION:
+		return _paint_vegetation(draft, center)
 	if _secondary and tool != Tool.AREA and tool != Tool.ERASER:
 		return changed
 	if tool == Tool.START:
@@ -633,6 +645,24 @@ func _paint_object(draft: IslandDraft, center: Vector2i) -> Array[Vector2i]:
 	return coords
 
 
+## Põe (ou, com o botão direito, apaga) as peças soltas nos hexágonos do pincel.
+func _paint_vegetation(draft: IslandDraft, center: Vector2i) -> Array[Vector2i]:
+	var coords: Array[Vector2i] = []
+	for coord: Vector2i in brush_coords(center):
+		if draft.tiles.has(coord) and editable(draft, coord):
+			coords.append(coord)
+	if _secondary:
+		return vegetation_panel.erase(draft, coords)
+	var changed: Array[Vector2i] = []
+	for coord: Vector2i in coords:
+		if vegetation_panel.paint_tile(draft, coord, _rng) > 0:
+			changed.append(coord)
+	if vegetation_panel.full and not _full_warned:
+		_full_warned = true
+		message.emit(VegetationPanel.FULL_MESSAGE)
+	return changed
+
+
 ## Escolhendo a área, marca (ou, com o botão direito, desmarca) os hexágonos do pincel.
 ## Pondo, um carimbo por clique, com o apoio em `center`.
 func _paint_stamp(draft: IslandDraft, center: Vector2i) -> Array[Vector2i]:
@@ -841,6 +871,7 @@ func _refresh() -> void:
 	_area_section.visible = tool == Tool.AREA
 	_stamp_section.visible = tool == Tool.STAMP
 	_path_section.visible = tool == Tool.PATH
+	_vegetation_section.visible = tool == Tool.VEGETATION
 	_brush_section.visible = tool != Tool.START and tool != Tool.OBJECT and tool != Tool.PATH and not (tool == Tool.STAMP and stamp_panel.mode == StampPanel.Mode.PLACE)
 	for slug: String in _biome_buttons:
 		_biome_buttons[slug].set_pressed_no_signal(slug == biome)

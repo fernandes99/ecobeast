@@ -70,21 +70,6 @@ const RECIPES: Dictionary = {
 	"stone": [["spire", 0.2, 1, 1], ["boulder", 0.34, 1, 2], ["rock_pile", 0.3, 1, 2], ["moss", 0.2, 1, 2]],
 	"mountain": [["brown_rock", 0.3, 1, 2], ["moss", 0.06, 1, 1]],
 }
-## O objeto Vegetação (island-villages/04): as plantas de cada variante, tipo e
-## quantas, nos lugares que o sorteio do hexágono der.
-const PLANTS_SLUG := "plants"
-const PLANT_RECIPES: Array = [
-	[["tree", 1], ["tuft", 3]],
-	[["tree", 2], ["tuft", 2]],
-	[["pine", 1], ["fern", 2]],
-	[["pine", 3]],
-	[["bush", 2], ["tuft", 3]],
-	[["dark_bush", 2], ["fern", 2]],
-	[["flowers", 3], ["tuft", 3]],
-	[["tuft", 6]],
-	[["dry_shrub", 1], ["dry_tuft", 4]],
-	[["fern", 3], ["tuft", 2]],
-]
 const PLACE_TRIES := 8
 const MAX_X := 24
 const MAX_Y := 20
@@ -114,28 +99,9 @@ static func decorations_of(tile: HexTile, map_seed: int) -> Array[Decoration]:
 	return decorations
 
 
-## As plantas de uma Vegetação posta em `coord`: o sorteio depende só do hexágono e da
-## variante, para a mesma ilha mostrar sempre o mesmo. Espelhada, troca os lados.
-static func decorations_of_object(coord: Vector2i, variant: int, mirrored: bool) -> Array[Decoration]:
-	var decorations: Array[Decoration] = []
-	var random := RandomNumberGenerator.new()
-	random.seed = hash([PLANTS_SLUG, coord, variant])
-	var recipe: Array = PLANT_RECIPES[clampi(variant, 1, PLANT_RECIPES.size()) - 1]
-	for entry: Array in recipe:
-		for _index: int in int(entry[1]):
-			var decoration := _placed(entry[0], random, decorations)
-			if decoration != null:
-				decorations.append(decoration)
-	if mirrored:
-		for decoration: Decoration in decorations:
-			decoration.offset.x = -decoration.offset.x
-			decoration.flipped = not decoration.flipped
-	return decorations
-
-
 static func _placed(kind: String, random: RandomNumberGenerator, decorations: Array[Decoration]) -> Decoration:
 	for _index: int in PLACE_TRIES:
-		var spot := Vector2i(random.randi_range(-MAX_X, MAX_X), random.randi_range(-MAX_Y, MAX_Y))
+		var spot := random_spot(random)
 		if _is_free(spot, kind, decorations):
 			var decoration := Decoration.new()
 			decoration.kind = kind
@@ -147,10 +113,23 @@ static func _placed(kind: String, random: RandomNumberGenerator, decorations: Ar
 
 
 static func _is_free(spot: Vector2i, kind: String, decorations: Array[Decoration]) -> bool:
-	var radius: float = KIND_RADIUS[kind]
+	var taken: Array = []
+	for decoration: Decoration in decorations:
+		taken.append([decoration.offset, KIND_RADIUS[decoration.kind]])
+	return is_free_spot(spot, KIND_RADIUS[kind], taken)
+
+
+## Um ponto do hexágono, a partir do centro, que cabe uma coisa de raio `radius`: dentro
+## do hexágono, longe do centro e longe de cada `[ponto, raio]` de `taken`
+## (vegetation-brush/02 usa a mesma regra para as peças do pincel).
+static func is_free_spot(spot: Vector2i, radius: float, taken: Array) -> bool:
 	if absf(spot.x) / 2.0 + absf(spot.y) > MAX_EDGE_DISTANCE or Vector2(spot).length() < radius:
 		return false
-	for decoration: Decoration in decorations:
-		if Vector2(spot - decoration.offset).length() < maxf(radius, KIND_RADIUS[decoration.kind]):
+	for entry: Array in taken:
+		if Vector2(spot - (entry[0] as Vector2i)).length() < maxf(radius, entry[1] as float):
 			return false
 	return true
+
+
+static func random_spot(random: RandomNumberGenerator) -> Vector2i:
+	return Vector2i(random.randi_range(-MAX_X, MAX_X), random.randi_range(-MAX_Y, MAX_Y))

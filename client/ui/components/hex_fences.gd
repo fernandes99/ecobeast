@@ -1,18 +1,15 @@
 class_name HexFences
 extends RefCounted
-## A Cerca que se liga sozinha (.specs/island-villages/05-connected-fences.md): um
-## poste no centro e um braço até o meio de cada lado cujo vizinho, na mesma altura,
-## também tem cerca. Sozinha, ela tem os braços da esquerda e da direita. A Cerca da
-## cidade (town-art/03) é montada do mesmo jeito, com a folha de peças dela.
+## A Cerca da cidade que se liga sozinha (.specs/island-villages/05-connected-fences.md,
+## town-art/03): um poste no centro e um braço até o meio de cada lado cujo vizinho,
+## na mesma altura, também tem cerca. Sozinha, ela tem os braços da esquerda e da direita.
 
-const SLUG := "fence"
-const PARTS_PATH := "res://assets/map_objects/fence/parts_%d.png"
-const TOWN_PARTS_PATH := "res://assets/map_objects/town_fence/parts_%d.png"
-const PARTS_PATHS := {SLUG: PARTS_PATH, "town_fence": TOWN_PARTS_PATH}
+const SLUG := "town_fence"
+const PARTS_PATH := "res://assets/map_objects/town_fence/parts_%d.png"
 const CELL_SIZE := Vector2i(96, 72)
 const CELL_CENTER := Vector2(48.0, 43.0)
 ## Os lados na ordem de HexGrounds.EDGE_NEIGHBORS, sem depender dela: ela usa o
-## GameData, que o make_objects.gd não tem.
+## GameData, que o make_town.gd não tem.
 const EDGE_NEIGHBORS: Array[Vector2i] = [
 	Vector2i(1, -1),
 	Vector2i(1, 0),
@@ -38,7 +35,7 @@ static var _textures: Dictionary[String, Texture2D] = {}
 
 
 static func is_fence(slug: String) -> bool:
-	return PARTS_PATHS.has(slug)
+	return slug == SLUG
 
 
 ## Os lados ligados, um bit por lado: o vizinho tem um objeto do mesmo tipo e a mesma altura.
@@ -88,7 +85,7 @@ static func _cells_of(slug: String, variant: int) -> Array[Image]:
 		result.assign(_cells[key])
 		return result
 	for candidate: int in range(variant, 0, -1):
-		var path: String = PARTS_PATHS.get(slug, PARTS_PATH) % candidate
+		var path := PARTS_PATH % candidate
 		if not ResourceLoader.exists(path):
 			continue
 		var sheet := (load(path) as Texture2D).get_image()

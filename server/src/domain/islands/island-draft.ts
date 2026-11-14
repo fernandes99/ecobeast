@@ -16,7 +16,7 @@ const MAX_LEVEL = 100;
 const COLOR_HEX = /^#[0-9A-Fa-f]{6}$/;
 export const MIN_AREA_SPAWNS = 1;
 export const MAX_AREA_SPAWNS = 200;
-export const MAX_PROPS = 6_000;
+export const MAX_PROPS = 20_000;
 export const MAX_TRAILS = 500;
 const MAX_TRAIL_POINTS = 256;
 const MIN_TRAIL_WIDTH = 8;
@@ -201,7 +201,7 @@ function propsError(
   tiles: ReadonlySet<string>,
   known: KnownIds,
 ): string | null {
-  if (props.length > MAX_PROPS) return 'A ilha pode ter até 6.000 peças.';
+  if (props.length > MAX_PROPS) return 'A ilha pode ter até 20.000 peças.';
   for (const [index, prop] of props.entries()) {
     const number = index + 1;
     const variants = known.propVariants.get(prop.propTypeId);

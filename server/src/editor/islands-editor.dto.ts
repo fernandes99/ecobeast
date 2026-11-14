@@ -293,7 +293,7 @@ export class IslandDraftDto {
   @ApiPropertyOptional({
     type: [DraftPropDto],
     description:
-      'As peças soltas, só enfeite, até 6.000. Sem o campo, a ilha fica sem peças.',
+      'As peças soltas, só enfeite, até 20.000. Sem o campo, a ilha fica sem peças.',
   })
   @IsOptional()
   @IsArray(list('props'))

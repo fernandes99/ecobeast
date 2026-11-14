@@ -261,9 +261,6 @@ func set_objects(objects: Array[MapObject]) -> void:
 	_clear_objects()
 	for object: MapObject in objects:
 		var row := GameData.get_row("map_object_types", object.object_type_id)
-		# A Vegetação não tem arte própria: as plantas dela saem das decorações.
-		if str(row.get("slug", "")) == HexDecorations.PLANTS_SLUG:
-			continue
 		var sprite := MapObjectSprite.new()
 		var slug := str(row.get("slug", ""))
 		var fence_art := _fence_art(object) if HexFences.is_fence(slug) else null
@@ -356,6 +353,24 @@ static func band_of(dy: float) -> int:
 func set_props(props: Array[MapProp]) -> void:
 	_props_by_chunk.clear()
 	_prop_slugs.clear()
+	for prop: MapProp in props:
+		var key := _chunk_of(prop.coord)
+		if not _props_by_chunk.has(key):
+			_props_by_chunk[key] = []
+		_props_by_chunk[key].append(prop)
+		if not _prop_slugs.has(prop.prop_type_id):
+			_prop_slugs[prop.prop_type_id] = PropArt.slug_of(prop.prop_type_id)
+
+
+## Troca só as peças dos hexágonos de `coords` pelas de `props` (o pincel do editor,
+## vegetation-brush/02). Chame `update_tiles` com os mesmos hexágonos depois.
+func replace_props(coords: Dictionary[Vector2i, bool], props: Array[MapProp]) -> void:
+	var keys: Dictionary[Vector2i, bool] = {}
+	for coord: Vector2i in coords:
+		keys[_chunk_of(coord)] = true
+	for key: Vector2i in keys:
+		if _props_by_chunk.has(key):
+			_props_by_chunk[key] = _props_by_chunk[key].filter(func(prop: MapProp) -> bool: return not coords.has(prop.coord))
 	for prop: MapProp in props:
 		var key := _chunk_of(prop.coord)
 		if not _props_by_chunk.has(key):
@@ -783,20 +798,14 @@ func _add_decorations(bands: Array[HexRowView], tiles: Array, props: Array) -> v
 	var trails := _trails_near(tiles)
 	var no_trails: Array[MapTrail] = []
 	for tile: HexTile in tiles:
-		var plants := _plants_at(tile.coord)
-		if plants == null and (_map.object_at(tile.coord) >= 0 or tile.bare):
+		if _map.object_at(tile.coord) >= 0 or tile.bare:
 			continue
 		var center := Vector2i(_tile_origin(tile.coord) + SURFACE_CENTER - _rise(tile.height))
-		var decorations: Array[HexDecorations.Decoration] = []
-		if plants != null:
-			decorations = HexDecorations.decorations_of_object(tile.coord, plants.variant, plants.mirrored)
-		else:
-			decorations = HexDecorations.decorations_of(tile, _map.map_seed)
 		var tile_trails := trails if ground_mask.has_trail(tile.coord) else no_trails
-		for decoration: HexDecorations.Decoration in decorations:
-			if plants == null and allows_decoration.is_valid() and not allows_decoration.call(tile.coord, decoration.kind):
+		for decoration: HexDecorations.Decoration in HexDecorations.decorations_of(tile, _map.map_seed):
+			if allows_decoration.is_valid() and not allows_decoration.call(tile.coord, decoration.kind):
 				continue
-			if plants == null and not HexGrounds.allows_on(HexGrounds.ground_at(tile, flat_center(tile.coord) + Vector2(decoration.offset), tile_trails), decoration.kind):
+			if not HexGrounds.allows_on(HexGrounds.ground_at(tile, flat_center(tile.coord) + Vector2(decoration.offset), tile_trails), decoration.kind):
 				continue
 			decoration.base = center + decoration.offset
 			sheet[band_of(decoration.offset.y)].append(decoration)
@@ -879,18 +888,6 @@ func _add_file_props(row: HexRowView, path: String, placed: Array) -> void:
 		for _vertex: int in 6:
 			wind.append_array(PackedFloat32Array([base.x, base.y, HexDecorations.NO_SWAY.x, HexDecorations.NO_SWAY.y]))
 	_add_mesh(row, path, points, texture_points, PackedColorArray(), wind)
-
-
-## A Vegetação apoiada neste hexágono, ou `null`.
-func _plants_at(coord: Vector2i) -> MapObject:
-	var index := _map.object_at(coord)
-	if index < 0:
-		return null
-	var object := _map.objects[index]
-	if object.coord != coord:
-		return null
-	var row := GameData.get_row("map_object_types", object.object_type_id)
-	return object if str(row.get("slug", "")) == HexDecorations.PLANTS_SLUG else null
 
 
 func _add_decoration_mesh(row: HexRowView, decorations: Array[HexDecorations.Decoration]) -> void:

@@ -199,8 +199,42 @@ func refresh_trail_piece(piece: MapTrail) -> void:
 func _current_prop_tiles() -> Dictionary[Vector2i, String]:
 	var result: Dictionary[Vector2i, String] = {}
 	for prop: MapProp in _map.props:
-		result[prop.coord] = result.get(prop.coord, "") + "%d:%d:%d:%d:%s;" % [prop.prop_type_id, prop.offset.x, prop.offset.y, prop.variant, prop.mirrored]
+		result[prop.coord] = result.get(prop.coord, "") + _prop_key(prop)
 	return result
+
+
+static func _prop_key(prop: MapProp) -> String:
+	return "%d:%d:%d:%d:%s;" % [prop.prop_type_id, prop.offset.x, prop.offset.y, prop.variant, prop.mirrored]
+
+
+## Como o `refresh_props`, só nos hexágonos de `coords` (vegetation-brush/02): numa ilha
+## com milhares de peças, refazer a lista toda a cada passo do pincel pesa.
+func refresh_props_at(coords: Array[Vector2i]) -> void:
+	if _draft == null or _map == null or coords.is_empty():
+		return
+	var wanted: Dictionary[Vector2i, bool] = {}
+	for coord: Vector2i in coords:
+		wanted[coord] = true
+	var fresh: Array[MapProp] = []
+	for entry: Variant in _draft.props:
+		var data := entry as Dictionary
+		if wanted.has(Vector2i(int(data.get("q", 0)), int(data.get("r", 0)))):
+			var prop := MapProp.from_dict(data)
+			if prop != null:
+				fresh.append(prop)
+	var kept: Array[MapProp] = []
+	for prop: MapProp in _map.props:
+		if not wanted.has(prop.coord):
+			kept.append(prop)
+	kept.append_array(fresh)
+	_map.props = kept
+	_map_view.replace_props(wanted, fresh)
+	for coord: Vector2i in coords:
+		_prop_tiles.erase(coord)
+	for prop: MapProp in fresh:
+		_prop_tiles[prop.coord] = _prop_tiles.get(prop.coord, "") + _prop_key(prop)
+	update_tiles(coords)
+	_overlay.queue_redraw()
 
 
 ## O ponto do ponteiro no chão plano, sem a altura do hexágono embaixo dele.

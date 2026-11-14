@@ -292,8 +292,15 @@ describe('carga inicial do chão e dos objetos (island-villages/01)', () => {
     }
   });
 
-  it('tem os 31 objetos, cada um com o hexágono de apoio e pelo menos 1 variante', () => {
-    expect(objects).toHaveLength(31);
+  it('tem só os 6 objetos da cidade, cada um com o hexágono de apoio e pelo menos 1 variante (vegetation-brush/01)', () => {
+    expect(objects.map(({ id, slug }) => [id, slug])).toEqual([
+      [21, 'refuge_building'],
+      [22, 'shop_building'],
+      [24, 'town_house'],
+      [25, 'town_house_medium'],
+      [26, 'town_house_large'],
+      [29, 'town_fence'],
+    ]);
     for (const { id, variants } of objects) {
       expect(variants).toBeGreaterThanOrEqual(1);
       expect(
@@ -303,24 +310,21 @@ describe('carga inicial do chão e dos objetos (island-villages/01)', () => {
         ),
       ).toBe(true);
     }
+    expect(
+      tiles.every(({ object_type_id }) =>
+        objects.some(({ id }) => id === object_type_id),
+      ),
+    ).toBe(true);
   });
 
-  it('as casas têm 1, 2 e 3 hexágonos; a árvore e a pedra, 1', () => {
+  it('as casas da cidade têm 1, 2 e 3 hexágonos', () => {
     const size = (slug: string) => {
       const { id } = objects.find((object) => object.slug === slug)!;
       return tiles.filter(({ object_type_id }) => object_type_id === id).length;
     };
     expect(
-      ['house', 'house_medium', 'house_large', 'tree', 'rock'].map(size),
-    ).toEqual([1, 2, 3, 1, 1]);
-  });
-
-  it('a Vegetação ocupa 1 hexágono sem bloquear, e a casa na árvore saiu', () => {
-    const plants = objects.find((object) => object.slug === 'plants')!;
-    expect(
-      tiles.filter(({ object_type_id }) => object_type_id === plants.id),
-    ).toEqual([{ object_type_id: plants.id, dq: 0, dr: 0, blocks: false }]);
-    expect(objects.some(({ slug }) => slug === 'treehouse')).toBe(false);
+      ['town_house', 'town_house_medium', 'town_house_large'].map(size),
+    ).toEqual([1, 2, 3]);
   });
 });
 
@@ -342,14 +346,6 @@ describe('carga inicial das peças soltas (free-props/01)', () => {
     );
     for (const { variants } of props)
       expect(variants).toBeGreaterThanOrEqual(1);
-  });
-
-  it('a Fonte é um objeto de 1 hexágono que bloqueia (free-props/04)', () => {
-    const fountain = objects.find(({ slug }) => slug === 'fountain');
-    expect(fountain).toMatchObject({ id: 40, variants: 1 });
-    expect(
-      objectTiles.filter(({ object_type_id }) => object_type_id === 40),
-    ).toEqual([{ object_type_id: 40, dq: 0, dr: 0, blocks: true }]);
   });
 
   it('as decorações de rua viraram peças e saíram dos objetos', () => {
