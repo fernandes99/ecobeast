@@ -42,6 +42,16 @@ interface DraftProp {
   mirrored: boolean;
 }
 
+interface DraftNpc {
+  npc_id: number;
+  q: number;
+  r: number;
+  still: boolean;
+  tiles?: { q: number; r: number }[];
+  dialogue?: string;
+  action_type_id?: number | null;
+}
+
 interface Draft {
   name: string;
   start: { q: number; r: number };
@@ -50,6 +60,7 @@ interface Draft {
   objects: DraftObject[];
   props?: DraftProp[];
   trails?: { ground: string; width: number; points: number[] }[];
+  npcs?: DraftNpc[];
   areas: {
     key: number;
     name: string;
@@ -588,6 +599,121 @@ describe('Editor de ilhas (e2e)', () => {
       expect(response.body.message).toBe(
         'points precisa ter só números inteiros.',
       );
+    });
+  });
+
+  describe('os NPCs (island-npcs/01)', () => {
+    const walker = (): DraftNpc => ({
+      npc_id: 1,
+      q: 0,
+      r: 0,
+      still: false,
+      tiles: [
+        { q: 1, r: -1 },
+        { q: -1, r: 1 },
+      ],
+      dialogue: 'Bem-vindo!\n\nO Refúgio fica ali.',
+      action_type_id: refuge,
+    });
+
+    it('salva, lê de volta, publica e marca a mudança dos NPCs', async () => {
+      const body = draft();
+      body.npcs = [walker(), { npc_id: 2, q: -1, r: 0, still: true }];
+      const id = await create(body);
+      const read = (await call('get', `/islands/${id}`).expect(200))
+        .body as Draft;
+      expect(read.npcs).toEqual([
+        walker(),
+        {
+          npc_id: 2,
+          q: -1,
+          r: 0,
+          still: true,
+          tiles: [],
+          dialogue: '',
+          action_type_id: null,
+        },
+      ]);
+
+      await call('post', `/islands/${id}/publish`).expect(200);
+      body.npcs[0]!.dialogue = 'Outra fala.';
+      const saved = await call('put', `/islands/${id}/draft`)
+        .send(body)
+        .expect(200);
+      expect((saved.body as { status: string }).status).toBe('changed');
+    });
+
+    it('sem o campo npcs, devolve a lista vazia e mantém o hash de antes', async () => {
+      const id = await create();
+      const read = (await call('get', `/islands/${id}`).expect(200))
+        .body as Draft;
+      expect(read.npcs).toEqual([]);
+      await call('post', `/islands/${id}/publish`).expect(200);
+      const saved = await call('put', `/islands/${id}/draft`)
+        .send({ ...draft(), npcs: [] })
+        .expect(200);
+      expect((saved.body as { status: string }).status).toBe('published');
+    });
+
+    const many = Array.from({ length: 41 }, (_, q) => ({ q: q - 20, r: 30 }));
+
+    it.each<[string, Partial<DraftNpc> | null, string]>([
+      [
+        'fora do catálogo',
+        { npc_id: 999_999 },
+        'O NPC 2 não existe no catálogo.',
+      ],
+      [
+        'nascendo fora da ilha',
+        { q: 3, r: 1 },
+        'O NPC 2 fica em (3, 1), que não é da ilha.',
+      ],
+      [
+        'passeando fora da ilha',
+        { tiles: [{ q: 4, r: 1 }] },
+        'O NPC 2 passeia por (4, 1), que não é da ilha.',
+      ],
+      [
+        'repetindo o hexágono de nascimento',
+        { tiles: [{ q: 0, r: 0 }] },
+        'O NPC 2 repete o hexágono (0, 0) no passeio.',
+      ],
+      [
+        'passeando por mais de 40 hexágonos',
+        { tiles: many },
+        'O NPC 2 passeia por mais de 40 hexágonos.',
+      ],
+      [
+        'com diálogo de mais de 2.000 caracteres',
+        { dialogue: 'a'.repeat(2_001) },
+        'O diálogo do NPC 2 passa de 2.000 caracteres.',
+      ],
+      [
+        'com uma ação que não existe',
+        { action_type_id: 999_999 },
+        'O NPC 2 tem uma ação que não existe.',
+      ],
+      ['a mais na ilha', null, 'A ilha pode ter até 200 NPCs.'],
+    ])('recusa salvar um NPC %s (400)', async (_label, change, message) => {
+      const id = await create();
+      const body = draft();
+      body.tiles.push(
+        ...many.map(({ q, r }) => ({
+          q,
+          r,
+          biome: 'temperate',
+          height: 1,
+          variant: 1,
+        })),
+      );
+      body.npcs =
+        change === null
+          ? Array.from({ length: 201 }, walker)
+          : [walker(), { ...walker(), ...change }];
+      const response = await call('put', `/islands/${id}/draft`)
+        .send(body)
+        .expect(400);
+      expect(response.body.message).toBe(message);
     });
   });
 

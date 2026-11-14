@@ -139,6 +139,7 @@ model ActionType {
   kind     String
 
   actions IslandAction[]
+  npcs    IslandNpc[]
 
   @@map("action_types")
   @@schema("ecobeasts")
@@ -187,6 +188,23 @@ model PropType {
   props IslandProp[]
 
   @@map("prop_types")
+  @@schema("ecobeasts")
+}
+
+model Npc {
+  id          Int    @id @default(autoincrement())
+  /// CHECK ^[a-z0-9_]+$ (migration island_npcs)
+  slug        String @unique
+  /// O que a caixa de fala mostra.
+  name        String
+  /// Só para o editor.
+  description String
+  /// A pasta assets/creatures/<sprite>/ do jogo. CHECK ^[a-z0-9_]+$ (migration island_npcs)
+  sprite      String
+
+  islandNpcs IslandNpc[]
+
+  @@map("npcs")
   @@schema("ecobeasts")
 }
 
@@ -828,6 +846,7 @@ model IslandMap {
   areas       IslandArea[]
   props       IslandProp[]
   trails      IslandTrail[]
+  npcs        IslandNpc[]
 
   @@unique([islandId, kind])
   @@map("island_maps")
@@ -1037,5 +1056,45 @@ model IslandTrail {
   @@unique([islandMapId, position])
   @@index([groundTypeId])
   @@map("island_trails")
+  @@schema("ecobeasts")
+}
+
+/// Um NPC posto numa versão de ilha (.specs/island-npcs).
+model IslandNpc {
+  id           Int     @id @default(autoincrement())
+  islandMapId  Int     @map("island_map_id")
+  npcId        Int     @map("npc_id")
+  /// O hexágono onde ele nasce, que sempre faz parte do passeio.
+  q            Int
+  r            Int
+  /// Parado; com true, o passeio é ignorado.
+  still        Boolean
+  /// Vazio é sem diálogo. CHECK até 2.000 caracteres (migration island_npcs)
+  dialogue     String
+  /// Nulo é sem ação.
+  actionTypeId Int?    @map("action_type_id")
+
+  islandMap  IslandMap       @relation(fields: [islandMapId], references: [id], onDelete: Cascade)
+  npc        Npc             @relation(fields: [npcId], references: [id], onDelete: Restrict)
+  actionType ActionType?     @relation(fields: [actionTypeId], references: [id], onDelete: Restrict)
+  tiles      IslandNpcTile[]
+
+  @@index([islandMapId])
+  @@index([npcId])
+  @@index([actionTypeId])
+  @@map("island_npcs")
+  @@schema("ecobeasts")
+}
+
+/// Um hexágono do passeio de um NPC, fora o de nascimento.
+model IslandNpcTile {
+  islandNpcId Int @map("island_npc_id")
+  q           Int
+  r           Int
+
+  islandNpc IslandNpc @relation(fields: [islandNpcId], references: [id], onDelete: Cascade)
+
+  @@id([islandNpcId, q, r])
+  @@map("island_npc_tiles")
   @@schema("ecobeasts")
 }

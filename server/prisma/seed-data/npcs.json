@@ -1,0 +1,16 @@
+[
+	{
+		"id": 1,
+		"slug": "village_ruvo",
+		"name": "Ruvo da vila",
+		"description": "Mora na vila e conhece todo mundo.",
+		"sprite": "ruvo"
+	},
+	{
+		"id": 2,
+		"slug": "guard_ruvak",
+		"name": "Ruvak, o guardião",
+		"description": "Vigia a entrada da vila.",
+		"sprite": "ruvak"
+	}
+]

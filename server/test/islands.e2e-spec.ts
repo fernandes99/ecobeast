@@ -49,6 +49,16 @@ interface IslandMap {
     mirrored: boolean;
   }[];
   trails: { ground: string; width: number; points: number[] }[];
+  npcs: {
+    id: number;
+    npc_id: number;
+    q: number;
+    r: number;
+    still: boolean;
+    tiles: { q: number; r: number }[];
+    dialogue: string;
+    action_type_id: number | null;
+  }[];
 }
 
 function hexagon(radius: number): Tile[] {
@@ -113,6 +123,21 @@ describe('Ilhas do jogador (e2e)', () => {
       trails: [
         { ground: 'dirt_trail', width: 22, points: [0, 0, 64, 0] },
         { ground: 'gravel_trail', width: 14, points: [-32, 42, 0, 0, 32, -42] },
+      ],
+      npcs: [
+        {
+          npc_id: 1,
+          q: 0,
+          r: 0,
+          still: false,
+          tiles: [
+            { q: 1, r: -1 },
+            { q: -1, r: 1 },
+          ],
+          dialogue: 'Bem-vindo!\n\nO Refúgio fica ali.',
+          action_type_id: refuge,
+        },
+        { npc_id: 2, q: -1, r: 0, still: true },
       ],
       areas: [
         {
@@ -295,6 +320,31 @@ describe('Ilhas do jogador (e2e)', () => {
         { ground: 'dirt_trail', width: 22, points: [0, 0, 64, 0] },
         { ground: 'gravel_trail', width: 14, points: [-32, 42, 0, 0, 32, -42] },
       ]);
+      expect(map.npcs).toEqual([
+        {
+          id: 1,
+          npc_id: 1,
+          q: 0,
+          r: 0,
+          still: false,
+          tiles: [
+            { q: 1, r: -1 },
+            { q: -1, r: 1 },
+          ],
+          dialogue: 'Bem-vindo!\n\nO Refúgio fica ali.',
+          action_type_id: refuge,
+        },
+        {
+          id: 2,
+          npc_id: 2,
+          q: -1,
+          r: 0,
+          still: true,
+          tiles: [],
+          dialogue: '',
+          action_type_id: null,
+        },
+      ]);
       expect(map.tamers).toEqual([]);
 
       expect(map.creatures).toHaveLength(8);
@@ -386,6 +436,7 @@ describe('Ilhas do jogador (e2e)', () => {
       expect(map.objects).toEqual([]);
       expect(map.props).toEqual([]);
       expect(map.trails).toEqual([]);
+      expect(map.npcs).toEqual([]);
       expect(map.tiles.some((tile) => tile.ground !== undefined)).toBe(false);
       expect(map.tiles.length).toBeGreaterThan(1000);
     });

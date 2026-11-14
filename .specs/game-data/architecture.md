@@ -257,6 +257,8 @@ Como elas viram Ecobeasts no mapa está em [biome-encounters/architecture.md](..
 
 **`prop_types`** são os tipos de peça solta das ilhas (`slug`, `name` e `variants` ≥ 1): só enfeite, postas num ponto em pixels, nunca bloqueiam. A arte e o vento são do jogo, pelo `slug`. O desenho está em [free-props/architecture.md](../free-props/architecture.md).
 
+**`npcs`** são os NPCs que o editor põe nas ilhas (`slug` e `sprite` em `^[a-z0-9_]+$`, `name` e `description` em pt-BR): o `name` é o que a caixa de fala mostra, a `description` só aparece no editor e o `sprite` é a pasta `assets/creatures/<sprite>/` do jogo, com `idle.png` e `walk.png`. O diálogo e a ação são de cada NPC posto no mapa. O desenho está em [island-npcs/architecture.md](../island-npcs/architecture.md).
+
 ## Tabelas futuras (só documentadas)
 
 Entram com as iniciativas do [roadmap](../roadmap.md); não têm arquivo no MVP.

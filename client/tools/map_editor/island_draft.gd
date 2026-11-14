@@ -17,6 +17,9 @@ var objects: Array = []
 ## `dy`, `variant` e `mirrored`.
 var props: Array = []
 var areas: Array = []
+## Os NPCs (island-npcs/02), como o servidor manda: `npc_id`, `q`, `r`, `still`, `tiles`,
+## `dialogue` e `action_type_id`.
+var npcs: Array = []
 ## Os traços de caminho, na ordem de desenho (free-trails/04).
 var trails: Array[MapTrail] = []
 
@@ -65,6 +68,7 @@ static func from_dict(data: Dictionary) -> IslandDraft:
 		if trail != null:
 			draft.trails.append(trail)
 	draft.areas = DictFields.get_array(data, "areas").duplicate(true)
+	draft.npcs = DictFields.get_array(data, "npcs").duplicate(true)
 	return draft
 
 
@@ -88,6 +92,7 @@ func to_dict() -> Dictionary:
 		"props": props,
 		"trails": trails.map(func(trail: MapTrail) -> Dictionary: return trail.to_dict()),
 		"areas": areas,
+		"npcs": npcs,
 	}
 
 
@@ -155,7 +160,48 @@ func remove_tile(coord: Vector2i) -> bool:
 		if prop_coord(index) == coord:
 			props.remove_at(index)
 			changed = true
+	for index: int in range(npcs.size() - 1, -1, -1):
+		var npc: Dictionary = npcs[index]
+		if npc_coord(index) == coord:
+			npcs.remove_at(index)
+			changed = true
+			continue
+		var walk: Array = npc.get("tiles", [])
+		for spot: int in range(walk.size() - 1, -1, -1):
+			if int(walk[spot].get("q", 0)) == coord.x and int(walk[spot].get("r", 0)) == coord.y:
+				walk.remove_at(spot)
+				changed = true
 	return changed
+
+
+func npc_coord(index: int) -> Vector2i:
+	var npc: Dictionary = npcs[index]
+	return Vector2i(int(npc.get("q", 0)), int(npc.get("r", 0)))
+
+
+func npc_at(coord: Vector2i) -> int:
+	for index: int in npcs.size():
+		if npc_coord(index) == coord:
+			return index
+	return -1
+
+
+func npc_tiles(index: int) -> Array[Vector2i]:
+	var result: Array[Vector2i] = []
+	if index < 0 or index >= npcs.size():
+		return result
+	for at: Variant in (npcs[index] as Dictionary).get("tiles", []):
+		result.append(Vector2i(int((at as Dictionary).get("q", 0)), int((at as Dictionary).get("r", 0))))
+	return result
+
+
+func map_npcs() -> Array[MapNpc]:
+	var result: Array[MapNpc] = []
+	for entry: Variant in npcs:
+		var npc: MapNpc = MapNpc.from_dict(entry) if entry is Dictionary else null
+		if npc != null:
+			result.append(npc)
+	return result
 
 
 func touches_actions(coords: Array[Vector2i]) -> bool:

@@ -21,6 +21,9 @@ export const MAX_TRAILS = 500;
 const MAX_TRAIL_POINTS = 256;
 const MIN_TRAIL_WIDTH = 8;
 const MAX_TRAIL_WIDTH = 64;
+export const MAX_NPCS = 200;
+export const MAX_NPC_TILES = 40;
+export const MAX_DIALOGUE_LENGTH = 2_000;
 
 export interface DraftTile extends HexCoord {
   biome: Biome;
@@ -67,6 +70,16 @@ export interface DraftTrail {
   points: number[];
 }
 
+/** Um NPC do catálogo posto em `(q, r)`, que também faz parte do passeio. */
+export interface DraftNpc extends HexCoord {
+  npcId: number;
+  still: boolean;
+  /** O passeio, sem o hexágono de nascimento. */
+  tiles: HexCoord[];
+  dialogue: string;
+  actionTypeId: number | null;
+}
+
 export interface DraftAreaSpecies {
   speciesId: number;
   weight: number;
@@ -90,6 +103,7 @@ export interface IslandDraft {
   objects: DraftObject[];
   props: DraftProp[];
   trails?: DraftTrail[];
+  npcs?: DraftNpc[];
   areas: DraftArea[];
 }
 
@@ -100,6 +114,7 @@ export interface KnownIds {
   speciesIds: ReadonlySet<number>;
   /** O máximo de variantes de cada tipo de peça solta. */
   propVariants: ReadonlyMap<number, number>;
+  npcIds: ReadonlySet<number>;
 }
 
 const at = ({ q, r }: HexCoord): string => `(${q}, ${r})`;
@@ -272,6 +287,48 @@ function trailsError(
   return null;
 }
 
+function npcsError(
+  npcs: DraftNpc[],
+  tiles: ReadonlySet<string>,
+  known: KnownIds,
+): string | null {
+  if (npcs.length > MAX_NPCS) return 'A ilha pode ter até 200 NPCs.';
+  for (const [index, npc] of npcs.entries()) {
+    const number = index + 1;
+    if (!known.npcIds.has(npc.npcId)) {
+      return `O NPC ${number} não existe no catálogo.`;
+    }
+    if (!tiles.has(hexKey(npc))) {
+      return `O NPC ${number} fica em ${at(npc)}, que não é da ilha.`;
+    }
+    const walk = new Set([hexKey(npc)]);
+    for (const coord of npc.tiles) {
+      const key = hexKey(coord);
+      if (!tiles.has(key)) {
+        return `O NPC ${number} passeia por ${at(coord)}, que não é da ilha.`;
+      }
+      if (walk.has(key)) {
+        return `O NPC ${number} repete o hexágono ${at(coord)} no passeio.`;
+      }
+      walk.add(key);
+    }
+    if (npc.tiles.length > MAX_NPC_TILES) {
+      return `O NPC ${number} passeia por mais de 40 hexágonos.`;
+    }
+    // Em code points, como o char_length do banco e o length do Godot.
+    if ([...npc.dialogue].length > MAX_DIALOGUE_LENGTH) {
+      return `O diálogo do NPC ${number} passa de 2.000 caracteres.`;
+    }
+    if (
+      npc.actionTypeId !== null &&
+      !known.actionTypeIds.has(npc.actionTypeId)
+    ) {
+      return `O NPC ${number} tem uma ação que não existe.`;
+    }
+  }
+  return null;
+}
+
 export function blockedKeys(
   draft: Pick<IslandDraft, 'objects'>,
 ): ReadonlySet<string> {
@@ -350,6 +407,8 @@ export function draftError(draft: IslandDraft, known: KnownIds): string | null {
   if (props) return props;
   const trails = trailsError(draft.trails ?? [], tiles, known);
   if (trails) return trails;
+  const npcs = npcsError(draft.npcs ?? [], tiles, known);
+  if (npcs) return npcs;
 
   const keys = new Set<number>();
   for (const { key } of draft.areas) {
@@ -397,7 +456,8 @@ const byRowThenColumn = (a: HexCoord, b: HexCoord): number =>
  * (r, q), ações na ordem da lista (cada uma com os hexágonos em (r, q)),
  * objetos em ordem de (r, q) do apoio (cada um com os hexágonos em (r, q)),
  * peças em ordem de (r, q, dy, dx, tipo, variante, espelho), traços na ordem
- * da lista (só quando há algum),
+ * da lista (só quando há algum), NPCs em ordem de (r, q, npc_id), cada um com o
+ * passeio em (r, q) (só quando há algum),
  * áreas na ordem da `key`, numeradas de novo de 1 em diante, e espécies em
  * ordem de id. É o que o `content_hash` resume.
  */
@@ -465,6 +525,8 @@ export function canonicalDraft(draft: IslandDraft): string {
           })),
         }
       : {}),
+    // Só com NPCs: uma ilha sem NPC tem o hash de antes.
+    ...(draft.npcs?.length ? { npcs: canonicalNpcs(draft.npcs) } : {}),
     areas: areas.map(({ key, name, colorHex, spawnCount, species }) => ({
       key: renumber.get(key),
       name,
@@ -480,6 +542,27 @@ export function canonicalDraft(draft: IslandDraft): string {
         })),
     })),
   });
+}
+
+function canonicalNpcs(npcs: DraftNpc[]) {
+  return npcs
+    .map(({ npcId, q, r, still, tiles, dialogue, actionTypeId }) => ({
+      npcId,
+      q,
+      r,
+      still,
+      tiles: [...tiles].sort(byRowThenColumn).map(({ q, r }) => ({ q, r })),
+      dialogue,
+      actionTypeId,
+    }))
+    .map((npc) => ({ npc, text: JSON.stringify(npc) }))
+    .sort(
+      (a, b) =>
+        byRowThenColumn(a.npc, b.npc) ||
+        a.npc.npcId - b.npc.npcId ||
+        (a.text < b.text ? -1 : a.text > b.text ? 1 : 0),
+    )
+    .map(({ npc }) => npc);
 }
 
 export function draftHash(draft: IslandDraft): string {

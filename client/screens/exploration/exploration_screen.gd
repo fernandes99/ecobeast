@@ -49,6 +49,11 @@ var _showing_whole_map: bool = false
 var _wild_sprites: Dictionary[int, CreatureSprite] = {}
 var _tamer_sprites: Dictionary[int, TamerSprite] = {}
 var _challenger: MapTamer = null
+var _npc_sprites: Array[NpcSprite] = []
+var _npc_target: NpcSprite = null
+var _talking: NpcSprite = null
+var _talk_lines: Array[String] = []
+var _talk_index := 0
 var _debug_spawn_ids: Array[int] = []
 var _debug_tamer_ids: Array[int] = []
 
@@ -97,7 +102,7 @@ func _ready() -> void:
 	%DebugTest3Button.pressed.connect(_open_board_test.bind(3))
 	for size: int in [1, 2, 3]:
 		(get_node("%%DebugTamer%dButton" % size) as Button).pressed.connect(_debug_tamer.bind(size))
-	_greeting.tapped.connect(_fight_challenger)
+	_greeting.tapped.connect(_on_greeting_tapped)
 	_refresh_god_button()
 	resized.connect(_fit_view.call_deferred)
 	visibility_changed.connect(_on_visibility_changed)
@@ -105,7 +110,7 @@ func _ready() -> void:
 
 
 func handle_back() -> bool:
-	return _loading or _challenger != null
+	return _loading or _challenger != null or _talking != null
 
 
 func _exit_tree() -> void:
@@ -131,6 +136,7 @@ func _begin() -> void:
 	_map_view.set_actor_depth(_marker, _player_point, _feet_row())
 	_reveal_player()
 	_show_island()
+	_add_npcs()
 	_refresh_wild_sprites()
 	_map_view.show()
 	_marker.show()
@@ -156,7 +162,7 @@ func _on_map_input(event: InputEvent) -> void:
 
 
 func _tap(point: Vector2) -> void:
-	if _map == null or _showing_whole_map or _challenger != null:
+	if _map == null or _showing_whole_map or _challenger != null or _talking != null:
 		return
 	var art_point := (point - _map_view.position) / _map_view.pixel_scale()
 	if _walking:
@@ -191,6 +197,11 @@ func _closer(coord: Vector2i, than: Vector2i, art_point: Vector2) -> bool:
 ## Num livre, o Domador anda até o ponto tocado; num bloqueado, até o centro do lado
 ## livre mais perto, e executa a ação dele, se houver.
 func _go_to(art_point: Vector2) -> void:
+	_npc_target = null
+	var npc := _npc_hit(art_point)
+	if npc != null:
+		_go_to_npc(npc)
+		return
 	var target := _map_view.coord_at(art_point)
 	var object := _map_view.object_hit(art_point)
 	if object != null:
@@ -259,11 +270,17 @@ func _walk(route: PackedVector2Array, action: int) -> void:
 	_walking = false
 	if tamer != null:
 		_next_point = null
+		_npc_target = null
 		_challenge(tamer)
 	elif _next_point != null:
 		var next: Vector2 = _next_point
 		_next_point = null
 		_go_to(next)
+	elif _npc_target != null:
+		var npc := _npc_target
+		_npc_target = null
+		if ExplorationMap.distance(_player_coord, npc.coord) <= 1:
+			_talk(npc)
 	elif action >= 0:
 		_run_action(action)
 	else:
@@ -383,7 +400,13 @@ func _enter_action(from: int, to: int) -> void:
 
 
 func _run_action(index: int) -> void:
-	var type := GameData.get_row("action_types", _map.actions[index].action_type_id)
+	_run_action_type(_map.actions[index].action_type_id)
+
+
+func _run_action_type(type_id: int) -> void:
+	if type_id <= 0:
+		return
+	var type := GameData.get_row("action_types", type_id)
 	var screen: StringName = ACTION_SCREENS.get(str(type.get("slug", "")), &"")
 	if screen != &"":
 		_debug_menu.hide()
@@ -396,6 +419,82 @@ func _challenge(tamer: MapTamer) -> void:
 	_message.hide()
 	_set_controls_enabled(false)
 	_greeting.say("%s: %s" % [GameData.get_npc_tamer_name(tamer.name_id), GameData.get_npc_tamer_greeting(tamer.greeting_id)])
+
+
+func _add_npcs() -> void:
+	for npc: MapNpc in _map.npcs:
+		var slug := str(GameData.get_npc(npc.npc_id).get("sprite", ""))
+		if not CreatureSprite.has_sheets(slug):
+			continue
+		var sprite := NpcSprite.new(npc, slug)
+		sprite.place_on(_map_view, _map)
+		sprite.scale = _marker.scale
+		_npc_sprites.append(sprite)
+
+
+func _npc_hit(art_point: Vector2) -> NpcSprite:
+	for sprite: NpcSprite in _npc_sprites:
+		if sprite.npc.has_talk() and sprite.hits(art_point):
+			return sprite
+	return null
+
+
+## Perto, a conversa abre; longe, o Domador anda até o hexágono do NPC ou um vizinho
+## livre, o mais perto, e ela abre ao chegar.
+func _go_to_npc(npc: NpcSprite) -> void:
+	if ExplorationMap.distance(_player_coord, npc.coord) <= 1:
+		_talk(npc)
+		return
+	var goals: Dictionary[Vector2i, bool] = {}
+	for coord: Vector2i in [npc.coord] + _map.neighbors(npc.coord):
+		if _map.has(coord) and not _map.is_blocked(coord):
+			goals[coord] = true
+	var path := _map.path_to_any(_player_coord, goals)
+	if path.is_empty():
+		_show_message(NO_PATH_TEXT, &"SecondaryLabel")
+		return
+	var hexes: Array[Vector2i] = [_player_coord]
+	hexes.append_array(path)
+	_npc_target = npc
+	_walk(WalkRoute.points(_map, _player_point, hexes, HexMapView.flat_center(path[path.size() - 1])), -1)
+
+
+func _talk(npc: NpcSprite) -> void:
+	var lines := npc.npc.lines()
+	if lines.is_empty():
+		_run_action_type(npc.npc.action_type_id)
+		return
+	_talking = npc
+	_talk_lines = lines
+	_talk_index = 0
+	npc.hold(true, _player_art_point())
+	_marker.face_toward(npc.position - _player_art_point())
+	_marker.play_idle()
+	_debug_menu.hide()
+	_message.hide()
+	_set_controls_enabled(false)
+	_say_line()
+
+
+func _say_line() -> void:
+	var npc_name := str(GameData.get_npc(_talking.npc.npc_id).get("name", ""))
+	_greeting.say("%s: %s" % [npc_name, _talk_lines[_talk_index]])
+
+
+func _on_greeting_tapped() -> void:
+	if _talking == null:
+		_fight_challenger()
+		return
+	_talk_index += 1
+	if _talk_index < _talk_lines.size():
+		_say_line()
+		return
+	var npc := _talking
+	_talking = null
+	_greeting.close()
+	_set_controls_enabled(true)
+	npc.hold(false)
+	_run_action_type(npc.npc.action_type_id)
 
 
 func _fight_challenger() -> void:
@@ -631,6 +730,8 @@ func _fit_view() -> void:
 		creature.scale = _marker.scale
 	for tamer: TamerSprite in _tamer_sprites.values():
 		tamer.scale = _marker.scale
+	for npc: NpcSprite in _npc_sprites:
+		npc.scale = _marker.scale
 	_sync_building_names()
 
 

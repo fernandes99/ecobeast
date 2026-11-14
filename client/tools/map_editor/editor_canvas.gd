@@ -38,6 +38,8 @@ var selected_trail := -1
 var action_colors: Dictionary[int, Color] = {}
 var action_names: Dictionary[int, String] = {}
 var selected_action := -1
+var selected_npc := -1
+var _npc_sprites: Array[NpcSprite] = []
 
 var _map_view: HexMapView
 var _overview: IslandOverview
@@ -114,6 +116,7 @@ func show_draft(draft: IslandDraft, fit: bool = true) -> void:
 	_overview.set_map(_map)
 	_shown_trails = IslandDraft.copy_trails(draft.trails) if draft != null else []
 	_overview.set_trails(_map.trails)
+	refresh_npcs()
 	refresh_marks()
 	if fit and draft != null:
 		fit_whole_island()
@@ -143,6 +146,23 @@ func refresh_objects() -> void:
 			changed.append(coord)
 	_object_tiles = now
 	update_tiles(changed)
+	_overlay.queue_redraw()
+
+
+## Os NPCs mudaram no rascunho (island-npcs/02): cada um parado no hexágono dele.
+func refresh_npcs() -> void:
+	for sprite: NpcSprite in _npc_sprites:
+		sprite.queue_free()
+	_npc_sprites.clear()
+	if _draft == null:
+		return
+	for npc: MapNpc in _draft.map_npcs():
+		var slug := str(GameData.get_npc(npc.npc_id).get("sprite", ""))
+		if not CreatureSprite.has_sheets(slug) or not _draft.tiles.has(npc.coord):
+			continue
+		var sprite := NpcSprite.new(npc, slug)
+		sprite.place_on(_map_view, null)
+		_npc_sprites.append(sprite)
 	_overlay.queue_redraw()
 
 
@@ -560,6 +580,11 @@ func draw_overlay(node: Node2D) -> void:
 	if marked.is_valid():
 		for coord: Vector2i in marked.call():
 			_outline(node, coord, UiPalette.ACCENT)
+	if selected_npc >= 0 and selected_npc < _draft.npcs.size():
+		if not bool(_draft.npcs[selected_npc].get("still", false)):
+			for coord: Vector2i in _draft.npc_tiles(selected_npc):
+				_outline(node, coord, UiPalette.WARNING)
+		_outline(node, _draft.npc_coord(selected_npc), UiPalette.ACCENT)
 	if selected_trail >= 0 and selected_trail < _draft.trails.size():
 		_draw_trail(node, _draft.trails[selected_trail])
 	if selected_prop >= 0:

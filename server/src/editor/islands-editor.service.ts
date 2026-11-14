@@ -19,6 +19,7 @@ import {
 } from '../islands/islands.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import {
+  toNpcDto,
   toObjectDto,
   toPropDto,
   toTrailDto,
@@ -98,6 +99,15 @@ export function toDraft(dto: IslandDraftDto): IslandDraft {
       width,
       points: [...points],
     })),
+    npcs: (dto.npcs ?? []).map((npc) => ({
+      npcId: npc.npc_id,
+      q: npc.q,
+      r: npc.r,
+      still: npc.still,
+      tiles: (npc.tiles ?? []).map(({ q, r }) => ({ q, r })),
+      dialogue: npc.dialogue ?? '',
+      actionTypeId: npc.action_type_id ?? null,
+    })),
     areas: dto.areas.map(({ key, name, color_hex, spawn_count, species }) => ({
       key,
       name,
@@ -125,6 +135,7 @@ function toDto(draft: IslandDraft): IslandDraftDto {
     objects: draft.objects.map(toObjectDto),
     props: draft.props.map(toPropDto),
     trails: (draft.trails ?? []).map(toTrailDto),
+    npcs: (draft.npcs ?? []).map(toNpcDto),
     areas: draft.areas.map(({ key, name, colorHex, spawnCount, species }) => ({
       key,
       name,
@@ -269,19 +280,23 @@ export class IslandsEditorService {
   }
 
   private async knownIds(): Promise<KnownIds> {
-    const [actions, objects, grounds, species, props] = await Promise.all([
-      this.prisma.actionType.findMany({ select: { id: true } }),
-      this.prisma.mapObjectType.findMany({ select: { id: true } }),
-      this.prisma.groundType.findMany({ select: { slug: true } }),
-      this.prisma.species.findMany({ select: { id: true } }),
-      this.prisma.propType.findMany({ select: { id: true, variants: true } }),
-    ]);
+    const [actions, objects, grounds, species, props, npcs] = await Promise.all(
+      [
+        this.prisma.actionType.findMany({ select: { id: true } }),
+        this.prisma.mapObjectType.findMany({ select: { id: true } }),
+        this.prisma.groundType.findMany({ select: { slug: true } }),
+        this.prisma.species.findMany({ select: { id: true } }),
+        this.prisma.propType.findMany({ select: { id: true, variants: true } }),
+        this.prisma.npc.findMany({ select: { id: true } }),
+      ],
+    );
     return {
       actionTypeIds: new Set(actions.map(({ id }) => id)),
       objectTypeIds: new Set(objects.map(({ id }) => id)),
       groundSlugs: new Set(grounds.map(({ slug }) => slug)),
       speciesIds: new Set(species.map(({ id }) => id)),
       propVariants: new Map(props.map(({ id, variants }) => [id, variants])),
+      npcIds: new Set(npcs.map(({ id }) => id)),
     };
   }
 
@@ -434,6 +449,32 @@ export class IslandsEditorService {
       await tx.islandTrail.createMany({
         data: trails.slice(first, first + TILE_CHUNK),
       });
+    }
+
+    const npcs = draft.npcs ?? [];
+    if (npcs.length > 0) {
+      // O serial cresce na ordem da lista, e por isso o id ordenado acha cada NPC.
+      const created = await tx.islandNpc.createManyAndReturn({
+        data: npcs.map(({ npcId, q, r, still, dialogue, actionTypeId }) => ({
+          islandMapId: map.id,
+          npcId,
+          q,
+          r,
+          still,
+          dialogue,
+          actionTypeId,
+        })),
+        select: { id: true },
+      });
+      const ids = created.map(({ id }) => id).sort((a, b) => a - b);
+      const npcTiles = npcs.flatMap((npc, index) =>
+        npc.tiles.map(({ q, r }) => ({ islandNpcId: ids[index]!, q, r })),
+      );
+      for (let first = 0; first < npcTiles.length; first += TILE_CHUNK) {
+        await tx.islandNpcTile.createMany({
+          data: npcTiles.slice(first, first + TILE_CHUNK),
+        });
+      }
     }
     return map;
   }

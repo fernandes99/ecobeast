@@ -14,6 +14,7 @@ export const INVALID_TAMER = 'Domador de depuração inválido.';
 import { BIOMES, MAX_HEIGHT } from '../domain/exploration/map-generator.js';
 import type { Biome } from '../domain/exploration/map-generator.js';
 import type {
+  DraftNpc,
   DraftObject,
   DraftProp,
   DraftTrail,
@@ -173,6 +174,48 @@ export class MapPropDto extends HexCoordDto {
   mirrored: boolean;
 }
 
+export class MapNpcDto extends HexCoordDto {
+  @ApiProperty({
+    description: 'O NPC no mapa, de 1 em diante, na ordem da ilha.',
+    example: 1,
+  })
+  id: number;
+
+  @ApiProperty({
+    description: 'Id em `npcs`. (q, r) é o hexágono onde ele nasce.',
+    example: 1,
+  })
+  npc_id: number;
+
+  @ApiProperty({
+    description: 'Parado; com `true`, o passeio é ignorado.',
+    example: false,
+  })
+  still: boolean;
+
+  @ApiProperty({
+    type: [HexCoordDto],
+    description:
+      'Os hexágonos do passeio, sem o de nascimento, que sempre faz parte dele.',
+  })
+  tiles: HexCoordDto[];
+
+  @ApiProperty({
+    description: 'Cada parágrafo é uma fala; vazio é sem diálogo.',
+    example: 'Bem-vindo!\n\nO Refúgio fica ali.',
+  })
+  dialogue: string;
+
+  @ApiProperty({
+    description:
+      'Id em `action_types`, que roda depois da última fala; `null` é sem ação.',
+    example: 1,
+    nullable: true,
+    type: Number,
+  })
+  action_type_id: number | null;
+}
+
 export class ExplorationMapDto {
   @ApiProperty({ description: 'Reproduz o terreno.', example: 1234567 })
   seed: number;
@@ -231,6 +274,12 @@ export class ExplorationMapDto {
       'Os traços de caminho da ilha, só desenho, na ordem de desenho; vazio no mapa sorteado.',
   })
   trails: MapTrailDto[];
+
+  @ApiProperty({
+    type: [MapNpcDto],
+    description: 'Os NPCs da ilha; vazio no mapa sorteado.',
+  })
+  npcs: MapNpcDto[];
 }
 
 export class StartExplorationBodyDto {
@@ -369,6 +418,18 @@ export function toObjectDto(object: DraftObject): MapObjectDto {
 
 export function toTrailDto({ ground, width, points }: DraftTrail): MapTrailDto {
   return { ground, width, points: [...points] };
+}
+
+export function toNpcDto(npc: DraftNpc): Omit<MapNpcDto, 'id'> {
+  return {
+    npc_id: npc.npcId,
+    q: npc.q,
+    r: npc.r,
+    still: npc.still,
+    tiles: npc.tiles.map(({ q, r }) => ({ q, r })),
+    dialogue: npc.dialogue,
+    action_type_id: npc.actionTypeId,
+  };
 }
 
 export function toPropDto(prop: DraftProp): MapPropDto {

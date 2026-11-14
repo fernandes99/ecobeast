@@ -130,6 +130,11 @@ func get_npc_tamer_greeting(id: int) -> String:
 	return catalog.get_npc_tamer_greeting(id)
 
 
+## A linha do NPC no catálogo (`name`, `description`, `sprite`), ou vazia.
+func get_npc(id: int) -> Dictionary:
+	return catalog.get_row("npcs", id)
+
+
 func get_rows(table_name: String) -> Array[Dictionary]:
 	return catalog.get_rows(table_name)
 

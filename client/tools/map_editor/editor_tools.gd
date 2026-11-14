@@ -5,10 +5,10 @@ signal message(text: String)
 signal brush_changed
 signal edited(step: EditorHistory.Step, merge: bool)
 
-enum Tool { BIOME, HEIGHT, GROUND, ADD, REMOVE, START, OBJECT, ACTION, AREA, STAMP, ERASER, PATH, VEGETATION }
+enum Tool { BIOME, HEIGHT, GROUND, ADD, REMOVE, START, OBJECT, ACTION, AREA, STAMP, ERASER, PATH, VEGETATION, NPC }
 
-const TOOL_NAMES: Array[String] = ["Bioma", "Altura", "Chão", "Pôr hexágono", "Tirar hexágono", "Chegada", "Peças", "Ação", "Área", "Carimbo", "Borracha", "Caminho", "Vegetação"]
-const TOOL_ICONS: Array[String] = ["biome", "height", "ground", "hex_add", "hex_remove", "flag", "object", "action", "area", "stamp", "eraser", "path", "vegetation"]
+const TOOL_NAMES: Array[String] = ["Bioma", "Altura", "Chão", "Pôr hexágono", "Tirar hexágono", "Chegada", "Peças", "Ação", "Área", "Carimbo", "Borracha", "Caminho", "Vegetação", "NPC"]
+const TOOL_ICONS: Array[String] = ["biome", "height", "ground", "hex_add", "hex_remove", "flag", "object", "action", "area", "stamp", "eraser", "path", "vegetation", "npc"]
 const TOOL_HINTS: Array[String] = [
 	"Troca o bioma dos hexágonos que já existem. A altura só muda se você escolher uma abaixo.",
 	"Troca só a altura dos hexágonos que já existem.",
@@ -23,13 +23,14 @@ const TOOL_HINTS: Array[String] = [
 	"Apaga as decorações naturais e as peças soltas dos hexágonos. Botão direito devolve as decorações naturais.",
 	"Arraste para desenhar um caminho. Clique num caminho para escolher, trocar ou apagar.",
 	"Pinta vegetação e pedras do grupo escolhido. Botão direito apaga as peças soltas.",
+	"Põe o NPC da lista num hexágono, ou escolhe o que está nele. Botão direito escolhe ou solta.",
 ]
 ## Os grupos da coluna (map-editor/06): as ferramentas parecidas viram abas do grupo.
 const GROUPS: Array[Dictionary] = [
 	{"name": "Terreno", "icon": "biome", "tools": [Tool.BIOME, Tool.HEIGHT, Tool.ADD, Tool.REMOVE]},
 	{"name": "Chão", "icon": "ground", "tools": [Tool.GROUND, Tool.PATH]},
 	{"name": "Peças", "icon": "object", "tools": [Tool.OBJECT, Tool.VEGETATION, Tool.STAMP, Tool.ERASER]},
-	{"name": "Jogo", "icon": "flag", "tools": [Tool.START, Tool.ACTION, Tool.AREA]},
+	{"name": "Jogo", "icon": "flag", "tools": [Tool.START, Tool.ACTION, Tool.AREA, Tool.NPC]},
 ]
 const TAB_ICON_WIDTH := 18
 const NO_AREA_MESSAGE := "Crie ou escolha uma área no painel antes de pintar."
@@ -104,6 +105,8 @@ var _stamp_section: Control
 var path_panel: PathPanel
 var _path_section: Control
 var vegetation_panel: VegetationPanel
+var npc_panel: NpcPanel
+var _npc_section: Control
 var _vegetation_section: Control
 var _path: MapTrail = null
 var _path_start := Vector2.ZERO
@@ -262,6 +265,12 @@ func _init() -> void:
 	vegetation_panel = VegetationPanel.new()
 	vegetation_box.add_child(vegetation_panel)
 
+	var npcs_box := _section("NPC")
+	_npc_section = npcs_box.get_parent()
+	npc_panel = NpcPanel.new()
+	npc_panel.edited.connect(func(step: EditorHistory.Step, merge: bool) -> void: edited.emit(step, merge))
+	npcs_box.add_child(npc_panel)
+
 	var brush_box := _section("Pincel  ·  teclas [ e ]")
 	_brush_section = brush_box.get_parent()
 	var brush_row := HBoxContainer.new()
@@ -369,12 +378,14 @@ func set_draft(draft: IslandDraft) -> void:
 	area_panel.set_draft(draft)
 	stamp_panel.set_draft(draft)
 	path_panel.set_draft(draft)
+	npc_panel.set_draft(draft)
 
 
 func refresh_panels() -> void:
 	action_panel.refresh()
 	object_panel.refresh()
 	area_panel.refresh()
+	npc_panel.refresh()
 
 
 func paints_marks() -> bool:
@@ -397,6 +408,8 @@ func begin_stroke(draft: IslandDraft, secondary: bool = false) -> void:
 		_step.actions_before = draft.actions.duplicate(true)
 	if draft.objects.size() > 0 or tool == Tool.OBJECT or tool == Tool.STAMP:
 		_step.objects_before = draft.objects.duplicate(true)
+	if draft.npcs.size() > 0 or tool == Tool.NPC:
+		_step.npcs_before = draft.npcs.duplicate(true)
 	if tool == Tool.PATH:
 		_step.trails_before = IslandDraft.copy_trails(draft.trails)
 		_path = null
@@ -409,6 +422,8 @@ func paint(draft: IslandDraft, center: Vector2i) -> Array[Vector2i]:
 	var changed: Array[Vector2i] = []
 	if tool == Tool.ACTION:
 		return _paint_action(draft, center)
+	if tool == Tool.NPC:
+		return _paint_npc(draft, center)
 	if tool == Tool.OBJECT:
 		return _paint_object(draft, center)
 	if tool == Tool.STAMP:
@@ -471,6 +486,12 @@ func end_stroke(draft: IslandDraft) -> EditorHistory.Step:
 		step.props_after = draft.props.duplicate(true)
 	else:
 		step.props_before = null
+	if step.npcs_before != null and step.npcs_before != draft.npcs:
+		step.npcs_after = draft.npcs.duplicate(true)
+	else:
+		step.npcs_before = null
+	if tool == Tool.REMOVE:
+		npc_panel.refresh()
 	_moving = -1
 	if tool == Tool.OBJECT or tool == Tool.REMOVE:
 		object_panel.refresh()
@@ -590,6 +611,29 @@ func _paint_action(draft: IslandDraft, center: Vector2i) -> Array[Vector2i]:
 		draft.actions.remove_at(target)
 		_stroke_action = -1
 		action_panel.select(-1)
+	return changed
+
+
+## Uma coisa por clique: escolher (botão direito ou clique num NPC), marcar o passeio
+## ou pôr o NPC novo.
+func _paint_npc(draft: IslandDraft, center: Vector2i) -> Array[Vector2i]:
+	var changed: Array[Vector2i] = []
+	if _object_done or not draft.tiles.has(center):
+		return changed
+	_object_done = true
+	var holder := draft.npc_at(center)
+	if _secondary:
+		npc_panel.select(holder)
+		return changed
+	if npc_panel.marking and npc_panel.selected >= 0:
+		if npc_panel.toggle_walk_tile(center) != null:
+			changed.append(center)
+		return changed
+	if holder >= 0:
+		npc_panel.select(holder)
+		return changed
+	if npc_panel.place(center) != null:
+		changed.append(center)
 	return changed
 
 
@@ -872,7 +916,8 @@ func _refresh() -> void:
 	_stamp_section.visible = tool == Tool.STAMP
 	_path_section.visible = tool == Tool.PATH
 	_vegetation_section.visible = tool == Tool.VEGETATION
-	_brush_section.visible = tool != Tool.START and tool != Tool.OBJECT and tool != Tool.PATH and not (tool == Tool.STAMP and stamp_panel.mode == StampPanel.Mode.PLACE)
+	_npc_section.visible = tool == Tool.NPC
+	_brush_section.visible = tool != Tool.START and tool != Tool.OBJECT and tool != Tool.PATH and tool != Tool.NPC and not (tool == Tool.STAMP and stamp_panel.mode == StampPanel.Mode.PLACE)
 	for slug: String in _biome_buttons:
 		_biome_buttons[slug].set_pressed_no_signal(slug == biome)
 		_biome_buttons[slug].queue_redraw()

@@ -183,6 +183,10 @@ const TABLES := {
 			"blocks": {"type": "bool"},
 		},
 	},
+	"npcs": {
+		"key": ["id"],
+		"columns": {"id": ID, "slug": SLUG, "name": TEXT, "description": TEXT, "sprite": {"type": "string", "pattern": "^[a-z0-9_]+$"}},
+	},
 	"prop_types": {
 		"key": ["id"],
 		"columns": {"id": ID, "slug": SLUG, "name": TEXT, "variants": {"type": "int", "min": 1}},

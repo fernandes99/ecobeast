@@ -37,6 +37,7 @@ import {
   MapTamerDto,
   toObjectDto,
   toPropDto,
+  toNpcDto,
   toTrailDto,
 } from './exploration.dto.js';
 import { ExplorationStore } from './exploration.store.js';
@@ -110,6 +111,7 @@ export class ExplorationService {
         objects: [],
         props: [],
         trails: [],
+        npcs: [],
       },
     };
   }
@@ -156,6 +158,10 @@ export class ExplorationService {
         objects: draft.objects.map(toObjectDto),
         props: draft.props.map(toPropDto),
         trails: (draft.trails ?? []).map(toTrailDto),
+        npcs: (draft.npcs ?? []).map((npc, index) => ({
+          id: index + 1,
+          ...toNpcDto(npc),
+        })),
       },
     };
   }

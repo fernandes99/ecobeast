@@ -202,6 +202,53 @@ export class DraftTrailDto {
   points: number[];
 }
 
+export class DraftNpcDto extends EditorHexDto {
+  @ApiProperty({
+    description: 'Id em `npcs`. (q, r) é o hexágono onde ele nasce.',
+    example: 1,
+  })
+  @IsInt(integer('npc_id'))
+  npc_id: number;
+
+  @ApiProperty({
+    description: 'Parado; com `true`, o passeio é ignorado.',
+    example: false,
+  })
+  @IsBoolean({ message: 'still precisa ser verdadeiro ou falso.' })
+  still: boolean;
+
+  @ApiPropertyOptional({
+    type: [EditorHexDto],
+    description:
+      'Os hexágonos do passeio, até 40, sem o de nascimento, que sempre faz parte dele. Sem o campo, o passeio fica vazio.',
+  })
+  @IsOptional()
+  @IsArray(list('tiles'))
+  @ValidateNested({ each: true })
+  @Type(() => EditorHexDto)
+  tiles?: EditorHexDto[];
+
+  @ApiPropertyOptional({
+    description:
+      'Até 2.000 caracteres; cada parágrafo é uma fala. Vazio ou sem o campo, o NPC não fala.',
+    example: 'Bem-vindo!\n\nO Refúgio fica ali.',
+  })
+  @IsOptional()
+  @IsString(text('dialogue'))
+  dialogue?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Id em `action_types`, que roda depois da última fala. `null` ou sem o campo, sem ação.',
+    example: 1,
+    nullable: true,
+    type: Number,
+  })
+  @IsOptional()
+  @IsInt(integer('action_type_id'))
+  action_type_id?: number | null;
+}
+
 export class DraftAreaSpeciesDto {
   @ApiProperty({ example: 4 })
   @IsInt(integer('species_id'))
@@ -311,6 +358,17 @@ export class IslandDraftDto {
   @ValidateNested({ each: true })
   @Type(() => DraftTrailDto)
   trails?: DraftTrailDto[];
+
+  @ApiPropertyOptional({
+    type: [DraftNpcDto],
+    description:
+      'Os NPCs postos na ilha, até 200. Sem o campo, a ilha fica sem NPCs. Ao ler, sempre vem.',
+  })
+  @IsOptional()
+  @IsArray(list('npcs'))
+  @ValidateNested({ each: true })
+  @Type(() => DraftNpcDto)
+  npcs?: DraftNpcDto[];
 
   @ApiProperty({ type: [DraftAreaDto] })
   @IsArray(list('areas'))

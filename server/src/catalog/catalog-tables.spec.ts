@@ -5,9 +5,9 @@ import { CATALOG_TABLES, SEED_DATA_DIR } from './catalog-tables.js';
 describe('CATALOG_TABLES', () => {
   const names = CATALOG_TABLES.map((table) => table.name);
 
-  it('tem as 36 tabelas, sem repetição', () => {
-    expect(names).toHaveLength(36);
-    expect(new Set(names).size).toBe(36);
+  it('tem as 37 tabelas, sem repetição', () => {
+    expect(names).toHaveLength(37);
+    expect(new Set(names).size).toBe(37);
   });
 
   it('casa com os arquivos .json da pasta de dados do seed', () => {
@@ -361,5 +361,23 @@ describe('carga inicial das peças soltas (free-props/01)', () => {
     expect(
       objectTiles.some(({ object_type_id }) => gone.includes(object_type_id)),
     ).toBe(false);
+  });
+});
+
+describe('carga inicial dos NPCs (island-npcs/01)', () => {
+  const read = <T>(file: string): T =>
+    JSON.parse(readFileSync(join(SEED_DATA_DIR, file), 'utf8')) as T;
+  const npcs =
+    read<{ id: number; slug: string; sprite: string }[]>('npcs.json');
+  const species = read<{ slug: string }[]>('species.json');
+
+  it('tem os 2 NPCs de teste, com o sprite de um Ecobeast', () => {
+    expect(npcs.map(({ id, slug }) => [id, slug])).toEqual([
+      [1, 'village_ruvo'],
+      [2, 'guard_ruvak'],
+    ]);
+    for (const { sprite } of npcs) {
+      expect(species.some(({ slug }) => slug === sprite)).toBe(true);
+    }
   });
 });

@@ -2,9 +2,12 @@ import {
   canonicalDraft,
   draftError,
   draftHash,
+  type DraftNpc,
   type IslandDraft,
   type KnownIds,
   MAX_ISLAND_TILES,
+  MAX_NPC_TILES,
+  MAX_NPCS,
   MAX_PROPS,
   MAX_TRAILS,
   publishError,
@@ -25,6 +28,7 @@ const known: KnownIds = {
     [FLOWERS, 4],
     [BENCH, 2],
   ]),
+  npcIds: new Set([1, 2]),
 };
 
 function island(): IslandDraft {
@@ -668,5 +672,153 @@ describe('os traços de caminho (free-trails/03)', () => {
       width: 22,
       points: [0, 0, 30, -2, 64, 0],
     });
+  });
+});
+
+describe('os NPCs da ilha (island-npcs/01)', () => {
+  const npc = (): DraftNpc => ({
+    npcId: 1,
+    q: 0,
+    r: 0,
+    still: false,
+    tiles: [
+      { q: 1, r: 0 },
+      { q: 0, r: 1 },
+    ],
+    dialogue: 'Bem-vindo!\n\nO Refúgio fica ali.',
+    actionTypeId: REFUGE,
+  });
+  const withNpcs = (...npcs: DraftNpc[]): IslandDraft => ({
+    ...island(),
+    npcs,
+  });
+
+  it('aceita NPCs parados, passeando, sem diálogo e sem ação', () => {
+    expect(
+      draftError(
+        withNpcs(npc(), {
+          ...npc(),
+          npcId: 2,
+          still: true,
+          tiles: [],
+          dialogue: '',
+          actionTypeId: null,
+        }),
+        known,
+      ),
+    ).toBeNull();
+  });
+
+  it.each<[string, Partial<DraftNpc>, string]>([
+    ['fora do catálogo', { npcId: 9 }, 'O NPC 2 não existe no catálogo.'],
+    [
+      'nascendo fora da ilha',
+      { q: 3, r: 1 },
+      'O NPC 2 fica em (3, 1), que não é da ilha.',
+    ],
+    [
+      'passeando fora da ilha',
+      { tiles: [{ q: 4, r: 1 }] },
+      'O NPC 2 passeia por (4, 1), que não é da ilha.',
+    ],
+    [
+      'repetindo um hexágono do passeio',
+      {
+        tiles: [
+          { q: 1, r: 0 },
+          { q: 1, r: 0 },
+        ],
+      },
+      'O NPC 2 repete o hexágono (1, 0) no passeio.',
+    ],
+    [
+      'repetindo o hexágono de nascimento',
+      { tiles: [{ q: 0, r: 0 }] },
+      'O NPC 2 repete o hexágono (0, 0) no passeio.',
+    ],
+    [
+      'com diálogo de mais de 2.000 caracteres',
+      { dialogue: 'a'.repeat(2_001) },
+      'O diálogo do NPC 2 passa de 2.000 caracteres.',
+    ],
+    [
+      'com uma ação que não existe',
+      { actionTypeId: 9 },
+      'O NPC 2 tem uma ação que não existe.',
+    ],
+  ])('recusa um NPC %s', (_label, change, message) => {
+    expect(draftError(withNpcs(npc(), { ...npc(), ...change }), known)).toBe(
+      message,
+    );
+  });
+
+  it('conta o diálogo em caracteres, não em unidades de UTF-16', () => {
+    expect(
+      draftError(withNpcs({ ...npc(), dialogue: '😀'.repeat(2_000) }), known),
+    ).toBeNull();
+  });
+
+  it(`recusa mais de ${MAX_NPC_TILES} hexágonos no passeio`, () => {
+    const draft = withNpcs(npc());
+    const row = Array.from({ length: MAX_NPC_TILES + 1 }, (_, q) => ({
+      q: q + 10,
+      r: 5,
+    }));
+    draft.tiles.push(
+      ...row.map((coord) => ({
+        ...coord,
+        biome: 'temperate' as const,
+        height: 1,
+        variant: 1,
+      })),
+    );
+    draft.npcs = [npc(), { ...npc(), tiles: row.slice(0, MAX_NPC_TILES) }];
+    expect(draftError(draft, known)).toBeNull();
+    draft.npcs = [npc(), { ...npc(), tiles: row }];
+    expect(draftError(draft, known)).toBe(
+      'O NPC 2 passeia por mais de 40 hexágonos.',
+    );
+  });
+
+  it(`recusa mais de ${MAX_NPCS} NPCs`, () => {
+    const draft = withNpcs(...Array.from({ length: MAX_NPCS + 1 }, npc));
+    expect(draftError(draft, known)).toBe('A ilha pode ter até 200 NPCs.');
+  });
+
+  it('uma ilha sem NPC tem o hash de antes', () => {
+    const plain = draftHash(island());
+    expect(draftHash(withNpcs())).toBe(plain);
+    expect(draftHash(withNpcs(npc()))).not.toBe(plain);
+  });
+
+  it('ordena os NPCs por (r, q, npc_id) e o passeio por (r, q)', () => {
+    const later = { ...npc(), npcId: 2, q: 1, r: 0, tiles: [] };
+    const first = { ...npc(), npcId: 2 };
+    const draft = withNpcs(later, npc(), first);
+    const reversed = withNpcs(first, npc(), later);
+    expect(canonicalDraft(reversed)).toBe(canonicalDraft(draft));
+    const npcs = JSON.parse(canonicalDraft(draft)).npcs;
+    expect(npcs.map(({ npcId, q }: DraftNpc) => [npcId, q])).toEqual([
+      [1, 0],
+      [2, 0],
+      [2, 1],
+    ]);
+    expect(npcs[0]).toEqual({
+      npcId: 1,
+      q: 0,
+      r: 0,
+      still: false,
+      tiles: [
+        { q: 1, r: 0 },
+        { q: 0, r: 1 },
+      ],
+      dialogue: 'Bem-vindo!\n\nO Refúgio fica ali.',
+      actionTypeId: REFUGE,
+    });
+    const shuffled = withNpcs({ ...npc(), tiles: [...npc().tiles].reverse() });
+    expect(draftHash(shuffled)).toBe(draftHash(withNpcs(npc())));
+    expect(draftHash(withNpcs({ ...npc(), still: true }))).not.toBe(
+      draftHash(withNpcs(npc())),
+    );
   });
 });

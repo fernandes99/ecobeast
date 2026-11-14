@@ -38,10 +38,10 @@ describe('restrições do banco (e2e)', () => {
     expect(rows.map((row) => row.table_name)).toEqual([]);
   });
 
-  it('as 54 tabelas e o histórico de migrations ficam no schema ecobeasts', async () => {
+  it('as 57 tabelas e o histórico de migrations ficam no schema ecobeasts', async () => {
     const rows = await prisma.$queryRaw<{ n: number }[]>`
       SELECT count(*)::int AS n FROM information_schema.tables WHERE table_schema = 'ecobeasts'`;
-    expect(rows[0].n).toBe(55);
+    expect(rows[0].n).toBe(58);
   });
 
   it('recusa Técnica com precisão 150', async () => {
@@ -531,6 +531,38 @@ describe('restrições do banco (e2e)', () => {
         });
       });
       expectRejected(result, 'island_props_variant_check');
+    });
+
+    it('recusa NPC com slug ou sprite fora do formato (island-npcs/01)', async () => {
+      for (const [slug, sprite, check] of [
+        ['Guarda', 'ruvo', 'npcs_slug_check'],
+        ['guarda_teste', 'ruvo-2', 'npcs_sprite_check'],
+      ]) {
+        const result = await attempt(prisma, (tx) =>
+          tx.npc.create({
+            data: { slug, name: 'Guarda', description: 'Teste.', sprite },
+          }),
+        );
+        expectRejected(result, check);
+      }
+    });
+
+    it('recusa diálogo de NPC com mais de 2.000 caracteres (island-npcs/01)', async () => {
+      const result = await attempt(prisma, async (tx) => {
+        const map = await draftMap(tx);
+        const npc = await tx.npc.findFirstOrThrow();
+        await tx.islandNpc.create({
+          data: {
+            islandMapId: map.id,
+            npcId: npc.id,
+            q: 0,
+            r: 0,
+            still: true,
+            dialogue: 'a'.repeat(2_001),
+          },
+        });
+      });
+      expectRejected(result, 'island_npcs_dialogue_check');
     });
 
     it('recusa traço com largura 7 ou com um ponto só (free-trails/03)', async () => {

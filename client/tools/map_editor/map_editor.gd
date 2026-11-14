@@ -137,6 +137,7 @@ func _show_island(draft: IslandDraft, status: String) -> void:
 	_name_edit.editable = draft != null
 	_canvas.selected_action = -1
 	_canvas.selected_object = -1
+	_canvas.selected_npc = -1
 	_canvas.selected_trail = -1
 	_canvas.show_draft(draft)
 	_tools.set_draft(draft)
@@ -309,6 +310,8 @@ func _paint(coord: Vector2i) -> void:
 		_canvas.refresh_props()
 	elif _tools.tool == EditorTools.Tool.VEGETATION:
 		_canvas.refresh_props_at(changed)
+	elif _tools.tool == EditorTools.Tool.NPC:
+		_canvas.refresh_npcs()
 	elif _tools.tool == EditorTools.Tool.STAMP:
 		if _tools.stamp_panel.mode == StampPanel.Mode.SELECT:
 			_canvas.refresh_brush()
@@ -321,6 +324,7 @@ func _paint(coord: Vector2i) -> void:
 		if _tools.tool == EditorTools.Tool.REMOVE:
 			_canvas.refresh_objects()
 			_canvas.refresh_props()
+			_canvas.refresh_npcs()
 		elif _tools.tool == EditorTools.Tool.ERASER:
 			_canvas.refresh_props()
 	title = TITLE + " *"
@@ -352,6 +356,7 @@ func _on_tools_edited(step: EditorHistory.Step, merge: bool) -> void:
 	_canvas.refresh_objects()
 	_canvas.refresh_props()
 	_canvas.refresh_trails()
+	_canvas.refresh_npcs()
 	_update_dirty()
 	_place_object_bar()
 
@@ -397,6 +402,7 @@ func _on_history_applied(coords: Array[Vector2i]) -> void:
 	_tools.path_panel.refresh()
 	_canvas.selected_trail = _tools.path_panel.selected
 	_canvas.refresh_trails()
+	_canvas.refresh_npcs()
 	_tools.refresh_panels()
 	if _name_edit.text.strip_edges() != _draft.name:
 		_name_edit.text = _draft.name
@@ -508,6 +514,13 @@ func _tool_key(key: InputEventKey) -> bool:
 	if _tools.tool == EditorTools.Tool.STAMP and key.keycode == KEY_M:
 		_tools.stamp_panel.toggle_mirror()
 		return true
+	if _tools.tool == EditorTools.Tool.NPC and _tools.npc_panel.selected >= 0:
+		if key.keycode == KEY_DELETE or key.keycode == KEY_BACKSPACE:
+			_tools.npc_panel.delete_selected()
+			return true
+		if key.keycode == KEY_ESCAPE:
+			_tools.npc_panel.select(-1)
+			return true
 	if _tools.tool == EditorTools.Tool.PATH and _tools.path_panel.selected >= 0:
 		if key.keycode == KEY_DELETE or key.keycode == KEY_BACKSPACE:
 			_tools.path_panel.delete_selected()
@@ -539,7 +552,7 @@ func _tool_key(key: InputEventKey) -> bool:
 
 
 func _typing() -> bool:
-	return gui_get_focus_owner() is LineEdit
+	return gui_get_focus_owner() is LineEdit or gui_get_focus_owner() is TextEdit
 
 
 func _build() -> void:
@@ -655,6 +668,9 @@ func _build() -> void:
 		_canvas.selected_action = index
 		_canvas.refresh_brush())
 	_tools.object_panel.selection_changed.connect(_on_object_selected)
+	_tools.npc_panel.selection_changed.connect(func(index: int) -> void:
+		_canvas.selected_npc = index
+		_canvas.refresh_brush())
 	_tools.path_panel.changed.connect(func() -> void:
 		_canvas.selected_trail = _tools.path_panel.selected
 		_canvas.refresh_brush())

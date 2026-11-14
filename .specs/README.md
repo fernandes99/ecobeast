@@ -50,6 +50,7 @@ O Ecobeast é um jogo mobile (Android/iOS, retrato): o cliente em **Godot 4.7 co
 | [free-props](free-props/) | Arte livre nas ilhas: peças soltas em pixels, carimbos, a ferramenta Peças e a Borracha |
 | [free-trails](free-trails/) | Caminhos nas ilhas: tipos novos de chão, emendas naturais entre eles e traços livres desenhados no editor |
 | [vegetation-brush](vegetation-brush/) | A limpeza dos objetos de grade e o pincel de vegetação do editor |
+| [island-npcs](island-npcs/) | NPCs nas ilhas: o catálogo, a ferramenta NPC do editor, o passeio, a conversa e a ação |
 
 As próximas iniciativas estão no [roadmap.md](roadmap.md).
 
