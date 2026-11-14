@@ -24,6 +24,8 @@ export interface DraftTile extends HexCoord {
   variant: number;
   ground?: string;
   area?: number;
+  /** Sem as decorações naturais sorteadas (free-props/05). */
+  bare?: boolean;
 }
 
 export interface DraftAction {
@@ -117,6 +119,9 @@ function tileError(tile: DraftTile, known: KnownIds): string | null {
   }
   if (tile.ground !== undefined && !known.groundSlugs.has(tile.ground)) {
     return `O hexágono ${at(tile)} tem um chão que não existe.`;
+  }
+  if (tile.bare !== undefined && typeof tile.bare !== 'boolean') {
+    return `O hexágono ${at(tile)} tem a marca bare que não é verdadeira nem falsa.`;
   }
   return null;
 }
@@ -345,7 +350,7 @@ export function canonicalDraft(draft: IslandDraft): string {
     start: { q: draft.start.q, r: draft.start.r },
     tiles: [...draft.tiles]
       .sort(byRowThenColumn)
-      .map(({ q, r, biome, height, variant, ground, area }) => ({
+      .map(({ q, r, biome, height, variant, ground, area, bare }) => ({
         q,
         r,
         biome,
@@ -353,6 +358,8 @@ export function canonicalDraft(draft: IslandDraft): string {
         variant,
         ground: ground ?? null,
         area: area === undefined ? null : renumber.get(area),
+        // Só quando verdadeira: uma ilha sem marcas tem o hash de antes.
+        ...(bare === true ? { bare: true } : {}),
       })),
     actions: draft.actions.map(({ actionTypeId, tiles }) => ({
       actionTypeId,

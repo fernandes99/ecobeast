@@ -831,17 +831,19 @@ model IslandMap {
 }
 
 model IslandTile {
-  islandMapId  Int  @map("island_map_id")
+  islandMapId  Int     @map("island_map_id")
   q            Int
   r            Int
   /// Um dos 7 biomas; a variante de 1 a 3 em hill e mountain é conferida pela rota.
-  biomeId      Int  @map("biome_id")
+  biomeId      Int     @map("biome_id")
   /// CHECK 0–10 (migration terrain_height_ten)
   height       Int
   /// CHECK 1–6 (migration terrain_height)
   variant      Int
-  areaId       Int? @map("area_id")
-  groundTypeId Int? @map("ground_type_id")
+  areaId       Int?    @map("area_id")
+  groundTypeId Int?    @map("ground_type_id")
+  /// Sem as decorações naturais sorteadas do bioma (free-props/05).
+  bare         Boolean @default(false)
 
   islandMap  IslandMap   @relation(fields: [islandMapId], references: [id], onDelete: Cascade)
   biome      Biome       @relation(fields: [biomeId], references: [id], onDelete: Restrict)

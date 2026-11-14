@@ -133,14 +133,17 @@ export class ExplorationService {
         seed: island.id,
         start: draft.start,
         // A área de cada hexágono fica no servidor.
-        tiles: draft.tiles.map(({ q, r, biome, height, variant, ground }) => ({
-          q,
-          r,
-          biome,
-          height,
-          variant,
-          ...(ground === undefined ? {} : { ground }),
-        })),
+        tiles: draft.tiles.map(
+          ({ q, r, biome, height, variant, ground, bare }) => ({
+            q,
+            r,
+            biome,
+            height,
+            variant,
+            ...(ground === undefined ? {} : { ground }),
+            ...(bare === true ? { bare } : {}),
+          }),
+        ),
         creatures: spawns.map(toMapCreatureDto),
         tamers: [],
         island: { id: island.id, name: island.name },

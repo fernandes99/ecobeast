@@ -20,6 +20,7 @@ interface Tile {
   variant: number;
   ground?: string;
   area?: number;
+  bare?: boolean;
 }
 
 interface DraftObject {
@@ -520,6 +521,33 @@ describe('Editor de ilhas (e2e)', () => {
         expect(response.body.message).toBe(message);
       },
     );
+  });
+
+  describe('a marca sem decorações (free-props/05)', () => {
+    it('salva e lê de volta a marca só nos hexágonos marcados', async () => {
+      const body = draft();
+      body.tiles[0]!.bare = true;
+      body.tiles[1]!.bare = false;
+      const id = await create(body);
+      const read = (await call('get', `/islands/${id}`).expect(200))
+        .body as Draft;
+      const at = (tile: Tile) =>
+        read.tiles.find(({ q, r }) => q === tile.q && r === tile.r)!;
+      expect(at(body.tiles[0]!).bare).toBe(true);
+      expect('bare' in at(body.tiles[1]!)).toBe(false);
+    });
+
+    it('recusa uma marca que não é booleana (400)', async () => {
+      const id = await create();
+      const body = draft() as unknown as { tiles: Record<string, unknown>[] };
+      body.tiles[0]!.bare = 'sim';
+      const response = await call('put', `/islands/${id}/draft`)
+        .send(body)
+        .expect(400);
+      expect(response.body.message).toBe(
+        'bare precisa ser verdadeiro ou falso.',
+      );
+    });
   });
 
   describe('limite do corpo', () => {

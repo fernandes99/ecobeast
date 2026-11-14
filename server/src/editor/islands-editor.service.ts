@@ -56,15 +56,18 @@ export function toDraft(dto: IslandDraftDto): IslandDraft {
   return {
     name: dto.name,
     start: { q: dto.start.q, r: dto.start.r },
-    tiles: dto.tiles.map(({ q, r, biome, height, variant, ground, area }) => ({
-      q,
-      r,
-      biome,
-      height,
-      variant,
-      ...(ground === undefined || ground === null ? {} : { ground }),
-      ...(area === undefined || area === null ? {} : { area }),
-    })),
+    tiles: dto.tiles.map(
+      ({ q, r, biome, height, variant, ground, area, bare }) => ({
+        q,
+        r,
+        biome,
+        height,
+        variant,
+        ...(ground === undefined || ground === null ? {} : { ground }),
+        ...(area === undefined || area === null ? {} : { area }),
+        ...(bare === true ? { bare } : {}),
+      }),
+    ),
     actions: dto.actions.map(({ action_type_id, tiles }) => ({
       actionTypeId: action_type_id,
       tiles: tiles.map(({ q, r }) => ({ q, r })),
@@ -324,7 +327,7 @@ export class IslandsEditorService {
       ),
     );
     const tiles = draft.tiles.map(
-      ({ q, r, biome, height, variant, ground, area }) => ({
+      ({ q, r, biome, height, variant, ground, area, bare }) => ({
         islandMapId: map.id,
         q,
         r,
@@ -333,6 +336,7 @@ export class IslandsEditorService {
         variant,
         groundTypeId: ground === undefined ? null : groundIds.get(ground)!,
         areaId: area === undefined ? null : areaIds.get(area)!,
+        bare: bare === true,
       }),
     );
     for (let first = 0; first < tiles.length; first += TILE_CHUNK) {

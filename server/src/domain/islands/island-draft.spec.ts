@@ -558,3 +558,30 @@ describe('as peças soltas no rascunho (free-props/01)', () => {
     expect(draftHash(withProp({ variant: 3 }))).not.toBe(draftHash(draft));
   });
 });
+
+describe('a marca sem decorações (free-props/05)', () => {
+  it('aceita a marca bare verdadeira ou falsa', () => {
+    const draft = island();
+    draft.tiles[0]!.bare = true;
+    draft.tiles[1]!.bare = false;
+    expect(draftError(draft, known)).toBeNull();
+  });
+
+  it('recusa uma marca bare que não é booleana', () => {
+    const draft = island();
+    (draft.tiles[1] as { bare?: unknown }).bare = 'sim';
+    expect(draftError(draft, known)).toBe(
+      'O hexágono (1, 0) tem a marca bare que não é verdadeira nem falsa.',
+    );
+  });
+
+  it('leva a marca no hash só quando ela é verdadeira', () => {
+    const draft = island();
+    const plain = draftHash(draft);
+    draft.tiles[0]!.bare = false;
+    expect(draftHash(draft)).toBe(plain);
+    draft.tiles[0]!.bare = true;
+    expect(draftHash(draft)).not.toBe(plain);
+    expect(JSON.parse(canonicalDraft(draft)).tiles[0].bare).toBe(true);
+  });
+});

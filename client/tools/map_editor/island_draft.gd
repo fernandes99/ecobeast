@@ -68,6 +68,8 @@ func to_dict() -> Dictionary:
 		var entry := {"q": tile.coord.x, "r": tile.coord.y, "biome": tile.biome, "height": tile.height, "variant": tile.variant}
 		if not tile.ground.is_empty():
 			entry["ground"] = tile.ground
+		if tile.bare:
+			entry["bare"] = true
 		if tile_areas.has(tile.coord):
 			entry["area"] = tile_areas[tile.coord]
 		tile_list.append(entry)
@@ -82,13 +84,13 @@ func to_dict() -> Dictionary:
 	}
 
 
-## Um hexágono para o desfazer: `[bioma, altura, variante, área, chão]`, com área 0 e
-## chão vazio quando ele não tem; vazio quando o hexágono não existe.
+## Um hexágono para o desfazer: `[bioma, altura, variante, área, chão, sem decoração]`,
+## com área 0 e chão vazio quando ele não tem; vazio quando o hexágono não existe.
 func snapshot(coord: Vector2i) -> Array:
 	var tile: HexTile = tiles.get(coord)
 	if tile == null:
 		return []
-	return [tile.biome, tile.height, tile.variant, tile_areas.get(coord, 0), tile.ground]
+	return [tile.biome, tile.height, tile.variant, tile_areas.get(coord, 0), tile.ground, tile.bare]
 
 
 func restore(coord: Vector2i, state: Array) -> void:
@@ -105,6 +107,7 @@ func restore(coord: Vector2i, state: Array) -> void:
 	tile.height = state[1]
 	tile.variant = state[2]
 	tile.ground = state[4]
+	tile.bare = bool(state[5])
 	if int(state[3]) > 0:
 		tile_areas[coord] = int(state[3])
 	else:

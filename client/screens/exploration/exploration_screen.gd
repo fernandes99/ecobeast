@@ -123,7 +123,6 @@ func _begin() -> void:
 	_map = result.data
 	_player_coord = _map.start
 	_player_point = HexMapView.flat_center(_player_coord)
-	_map_view.random_decorations = _map.island_id <= 0
 	_map_view.set_map(_map)
 	_map_view.set_objects(_map.objects)
 	_map_view.set_props(_map.props)

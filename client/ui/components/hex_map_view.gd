@@ -58,8 +58,6 @@ var fixed_scale := 0.0:
 		if is_inside_tree():
 			_update_scale()
 var allows_decoration := Callable()
-## Numa ilha, só aparece o que o dono pôs (free-props/02).
-var random_decorations := true
 ## A altura máxima editável, ou -1 sem corte. Mudar remonta os pedaços já montados.
 var height_cut := -1:
 	set(value):
@@ -771,7 +769,7 @@ func _add_decorations(bands: Array[HexRowView], tiles: Array, props: Array) -> v
 		files.append({})
 	for tile: HexTile in tiles:
 		var plants := _plants_at(tile.coord)
-		if plants == null and (_map.object_at(tile.coord) >= 0 or not random_decorations):
+		if plants == null and (_map.object_at(tile.coord) >= 0 or tile.bare):
 			continue
 		var center := Vector2i(_tile_origin(tile.coord) + SURFACE_CENTER - _rise(tile.height))
 		var decorations: Array[HexDecorations.Decoration] = []

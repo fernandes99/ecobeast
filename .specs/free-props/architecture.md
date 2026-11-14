@@ -83,7 +83,7 @@ O `content_hash` do rascunho inclui as peças, em ordem de `(r, q, dy, dx, prop_
 - **Faixas:** cada linha de hexágonos tem um `HexRowView` de chão e `DEPTH_BANDS` (4) de decoração, de trás para a frente. Uma decoração (sorteada, da Vegetação ou peça solta) entra na faixa do pé dela, pela distância `dy` ao centro do hexágono (`HexMapView.band_of`: faixas de 14,5 pixels da arte, de −29 a 29).
 - **O Domador** entra na divisa de faixas mais perto do pé dele, na linha dos pés (`HexMapView.set_actor_depth`). Os Ecobeasts e os Domadores NPC entram antes da faixa do meio (`MIDDLE_BAND`, `set_actor_row`), como antes. Os objetos continuam depois de todas as faixas da linha da frente deles.
 - **A arte das peças:** os tipos com o `slug` de uma linha da folha `decorations.png` (`HexDecorations.KIND_ROWS`) usam a célula da variante (`variant - 1`), com o pé no `CELL_BASE` e o vento do `KIND_SWAY`. Os outros usam `assets/props/<slug>/<variante>.png`, com o pé no meio da borda de baixo, sem vento. Cada faixa de cada pedaço tem uma malha por textura.
-- **Ilhas:** com `HexMapView.random_decorations` desligado (numa ilha no jogo, e sempre no editor), as decorações sorteadas não aparecem; as da Vegetação continuam.
+- **Ilhas:** desde a [05](05-natural-decorations.md), as decorações sorteadas do bioma aparecem nas ilhas como no mapa sorteado, com a seed da ilha (o id dela), menos no hexágono com a marca `HexTile.bare`; as da Vegetação continuam.
 
 ## No editor
 
@@ -99,3 +99,14 @@ O `content_hash` do rascunho inclui as peças, em ordem de `(r, q, dy, dx, prop_
 - **Pôr** (`Stamp.place`): nos hexágonos do carimbo que são da ilha, o chão troca e os objetos que ocupam algum saem; entram os objetos que cabem inteiros e as peças com o pé na ilha. Espelhado, cada deslocamento `(dq, dr)` vira `(-dq - dr, dr)` (`ObjectPanel.mirror`), o `dx` das peças troca de sinal e o espelho de cada objeto e peça se inverte.
 - **A ferramenta Carimbo** (a 10, só pelo botão) tem o `StampPanel`, com os modos Pôr e Escolher área. O pôr é um passo de desfazer com o chão, os objetos e as peças de antes e de depois.
 - **A Fonte** (`fountain`, id 40) é um objeto de grade de 1 hexágono, com arte do `make_town.gd`.
+
+## A marca sem decorações
+
+- **No banco:** `island_tiles.bare` (`boolean NOT NULL DEFAULT false`), na migration `free_props_bare_tiles`.
+- **No contrato:** o hexágono do editor e o de Explorar numa ilha levam `bare: true` só quando marcado; sem o campo, vale falso. O `content_hash` também leva a marca só quando ela é verdadeira.
+- **No cliente:** o `HexTile.bare` faz o `HexMapView` pular o sorteio daquele hexágono; as peças soltas aparecem sempre.
+- **No editor:**
+  - **Hexágonos novos:** os do gerador, da ilha em branco e do Pôr hexágono vêm sem a marca, e o Bioma tira a marca de todo hexágono que pinta.
+  - **A Borracha** (a 11, só pelo botão): o botão esquerdo põe a marca e apaga as peças com o pé no pincel, e o direito tira a marca.
+  - **O carimbo** guarda e põe a marca; sem o campo, ele põe a marca.
+  - **O desfazer:** o `snapshot` leva a marca.

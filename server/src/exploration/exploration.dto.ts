@@ -46,6 +46,13 @@ export class MapTileDto extends HexCoordDto {
     example: 'dirt_trail',
   })
   ground?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Só nas ilhas, e só `true`: o hexágono não tem as decorações naturais sorteadas do bioma.',
+    example: true,
+  })
+  bare?: boolean;
 }
 
 export class MapCreatureDto extends HexCoordDto {

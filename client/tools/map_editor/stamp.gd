@@ -33,7 +33,8 @@ static func capture(draft: IslandDraft, area: Array[Vector2i], stamp_name: Strin
 	var anchor := anchor_of(coords)
 	var tiles: Array = []
 	for coord: Vector2i in coords:
-		tiles.append({"dq": coord.x - anchor.x, "dr": coord.y - anchor.y, "ground": (draft.tiles[coord] as HexTile).ground})
+		var tile: HexTile = draft.tiles[coord]
+		tiles.append({"dq": coord.x - anchor.x, "dr": coord.y - anchor.y, "ground": tile.ground, "bare": tile.bare})
 	var objects: Array = []
 	for object: Variant in draft.objects:
 		var occupied := ObjectPanel.coords_of((object as Dictionary).get("tiles", []))
@@ -88,6 +89,8 @@ static func place(draft: IslandDraft, stamp: Dictionary, anchor: Vector2i, flip:
 		if not inside.call(coord):
 			continue
 		(draft.tiles[coord] as HexTile).ground = str((tile as Dictionary).get("ground", ""))
+		# Os carimbos sem a marca foram montados numa ilha sem decorações (free-props/05).
+		(draft.tiles[coord] as HexTile).bare = bool((tile as Dictionary).get("bare", true))
 		changed.append(coord)
 	for index: int in range(draft.objects.size() - 1, -1, -1):
 		var tiles := draft.object_tiles(index)

@@ -5,10 +5,10 @@ signal message(text: String)
 signal brush_changed
 signal edited(step: EditorHistory.Step, merge: bool)
 
-enum Tool { BIOME, HEIGHT, GROUND, ADD, REMOVE, START, OBJECT, ACTION, AREA, STAMP }
+enum Tool { BIOME, HEIGHT, GROUND, ADD, REMOVE, START, OBJECT, ACTION, AREA, STAMP, ERASER }
 
-const TOOL_NAMES: Array[String] = ["Bioma", "Altura", "Chão", "Pôr hexágono", "Tirar hexágono", "Chegada", "Peças", "Ação", "Área", "Carimbo"]
-const TOOL_ICONS: Array[String] = ["biome", "height", "ground", "hex_add", "hex_remove", "flag", "object", "action", "area", "stamp"]
+const TOOL_NAMES: Array[String] = ["Bioma", "Altura", "Chão", "Pôr hexágono", "Tirar hexágono", "Chegada", "Peças", "Ação", "Área", "Carimbo", "Borracha"]
+const TOOL_ICONS: Array[String] = ["biome", "height", "ground", "hex_add", "hex_remove", "flag", "object", "action", "area", "stamp", "eraser"]
 const TOOL_HINTS: Array[String] = [
 	"Troca o bioma dos hexágonos que já existem. A altura só muda se você escolher uma abaixo.",
 	"Troca só a altura dos hexágonos que já existem.",
@@ -20,6 +20,7 @@ const TOOL_HINTS: Array[String] = [
 	"Pinta uma ação nova, ou aumenta a escolhida. Botão direito escolhe uma ação.",
 	"Pinta a área escolhida. Botão direito tira os hexágonos de qualquer área.",
 	"Põe um carimbo, com o apoio no hexágono clicado, ou escolhe uma área e a guarda como carimbo.",
+	"Apaga as decorações naturais e as peças soltas dos hexágonos. Botão direito devolve as decorações naturais.",
 ]
 const NO_AREA_MESSAGE := "Crie ou escolha uma área no painel antes de pintar."
 const BIOMES: Array[String] = ["temperate", "boreal", "stone", "hill", "mountain", "wshallow", "wdeep"]
@@ -297,7 +298,7 @@ func begin_stroke(draft: IslandDraft, secondary: bool = false) -> void:
 	_stroke_action = -2
 	_object_done = false
 	_moving = -1
-	if draft.props.size() > 0 or tool == Tool.OBJECT or tool == Tool.STAMP:
+	if draft.props.size() > 0 or tool == Tool.OBJECT or tool == Tool.STAMP or tool == Tool.ERASER:
 		_step.props_before = draft.props.duplicate(true)
 	if draft.actions.size() > 0 or tool == Tool.ACTION:
 		_step.actions_before = draft.actions.duplicate(true)
@@ -315,7 +316,7 @@ func paint(draft: IslandDraft, center: Vector2i) -> Array[Vector2i]:
 		return _paint_object(draft, center)
 	if tool == Tool.STAMP:
 		return _paint_stamp(draft, center)
-	if _secondary and tool != Tool.AREA:
+	if _secondary and tool != Tool.AREA and tool != Tool.ERASER:
 		return changed
 	if tool == Tool.START:
 		if draft.tiles.has(center) and draft.start != center and editable(draft, center):
@@ -392,6 +393,9 @@ func _change(draft: IslandDraft, coord: Vector2i) -> bool:
 			if biome_height != KEEP_HEIGHT and tile.height != biome_height:
 				tile.height = biome_height
 				changed = true
+			if tile.bare:
+				tile.bare = false
+				changed = true
 			return changed
 		Tool.HEIGHT:
 			if tile == null or tile.height == height:
@@ -416,6 +420,19 @@ func _change(draft: IslandDraft, coord: Vector2i) -> bool:
 			if tile == null or coord == draft.start:
 				return false
 			draft.remove_tile(coord)
+			return true
+		Tool.ERASER:
+			if tile == null:
+				return false
+			var erased := false
+			if not _secondary:
+				for index: int in range(draft.props.size() - 1, -1, -1):
+					if draft.prop_coord(index) == coord:
+						draft.props.remove_at(index)
+						erased = true
+			if tile.bare == not _secondary:
+				return erased
+			tile.bare = not _secondary
 			return true
 		Tool.AREA:
 			if tile == null:

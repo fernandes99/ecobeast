@@ -78,7 +78,7 @@ export class IslandsService {
       name: map.name,
       start: { q: map.startQ, r: map.startR },
       tiles: tiles.map(
-        ({ q, r, biome, height, variant, groundType, areaId }) => ({
+        ({ q, r, biome, height, variant, groundType, areaId, bare }) => ({
           q,
           r,
           biome: biome.slug as Biome,
@@ -86,6 +86,7 @@ export class IslandsService {
           variant,
           ...(groundType === null ? {} : { ground: groundType.slug }),
           ...(areaId === null ? {} : { area: keys.get(areaId)! }),
+          ...(bare ? { bare } : {}),
         }),
       ),
       actions: actions.map(({ actionTypeId, tiles: occupied }) => ({

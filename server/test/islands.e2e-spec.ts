@@ -19,6 +19,7 @@ interface Tile {
   height: number;
   variant: number;
   ground?: string;
+  bare?: boolean;
   area?: number;
 }
 
@@ -81,6 +82,7 @@ describe('Ilhas do jogador (e2e)', () => {
     at(-1, 0).area = 2;
     at(0, 1).area = 2;
     at(1, 0).ground = 'dirt_trail';
+    at(-1, 1).bare = true;
     return {
       name,
       start: { q: 0, r: 0 },
@@ -253,6 +255,12 @@ describe('Ilhas do jogador (e2e)', () => {
       ]);
       expect(map.tiles.find(({ q, r }) => q === 1 && r === 0)!.ground).toBe(
         'dirt_trail',
+      );
+      expect(map.tiles.find(({ q, r }) => q === -1 && r === 1)!.bare).toBe(
+        true,
+      );
+      expect(map.tiles.filter((tile) => tile.bare !== undefined)).toHaveLength(
+        1,
       );
       expect(map.actions).toEqual([
         { action_type_id: refuge, tiles: [{ q: 0, r: 1 }] },

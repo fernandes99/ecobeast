@@ -79,6 +79,15 @@ export class DraftTileDto extends EditorHexDto {
   @IsOptional()
   @IsInt(integer('area'))
   area?: number;
+
+  @ApiPropertyOptional({
+    description:
+      'Verdadeiro no hexágono sem as decorações naturais sorteadas do bioma. Sem ele, o hexágono tem as decorações.',
+    example: true,
+  })
+  @IsOptional()
+  @IsBoolean({ message: 'bare precisa ser verdadeiro ou falso.' })
+  bare?: boolean;
 }
 
 export class DraftActionDto {

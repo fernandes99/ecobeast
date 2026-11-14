@@ -53,7 +53,7 @@ Escolhas de Claude (corrigíveis; ao mudar uma, atualize aqui e no `architecture
 | O plano entre a peça solta e o Domador é pela altura do pé, em faixas de cerca de 10 pixels da arte (4 por linha de hexágonos), e não pixel a pixel | A comparação exata, com milhares de peças, pesaria; 10 pixels é menos que o pé do Domador. Um objeto conta como uma peça na borda da frente dele |
 | O Poste de luz, a Placa, o Canteiro e o Banco (objetos 36 a 39) saem de `map_object_types` e voltam como peças soltas, com ids novos; os ids velhos não são reaproveitados. O Poste, a Placa e o Banco deixam de bloquear | A regra da peça solta. Nenhuma ilha usa esses objetos, porque todas foram apagadas |
 | A praça usa o piso de pedra de hoje (chão) e uma Fonte nova, objeto de grade que bloqueia, com arte provisória no `make_town.gd` | Não existe arte de fonte, e a praça da referência tem uma |
-| As ilhas param de ter decorações sorteadas; o mapa sorteado continua com elas | Sem ilhas antigas, não precisa de chave por ilha. Até o pincel chegar, a Vegetação e as peças soltas cobrem a vegetação |
+| ~~As ilhas param de ter decorações sorteadas; o mapa sorteado continua com elas~~ Revista na [05](05-natural-decorations.md): as ilhas voltam a ter as decorações sorteadas do bioma, e uma marca por hexágono (`bare`), posta pela Borracha, as tira | O dono pediu as decorações de volta em 2026-11-14 e escolheu o sorteio com a marca, e não guardar cada decoração, porque uma ilha grande teria dezenas de milhares |
 | Os tipos de peça solta são uma tabela do catálogo (`prop_types`), como os de objeto | Regra dos dados de design: um tipo novo é uma linha no painel mais a arte |
 | A posição da peça é o ponto do pé dela no chão plano, em pixels inteiros da arte, sem a altura (como o `_player_point` da [wild-battle/15](../wild-battle/15-free-walk.md)); a altura vem do hexágono embaixo do pé. É guardado como o hexágono do pé mais o deslocamento a partir do centro dele | Mudar a altura de um hexágono leva as peças dele junto, sem regravar; o hexágono explícito deixa o servidor conferir e o editor achar as peças de um hexágono apagado |
 | A peça só pode ficar com o pé num hexágono que existe na ilha | Uma peça na água do fundo, fora do mapa, ninguém veria nem conseguiria apagar |
@@ -74,8 +74,9 @@ Escolhas de Claude (corrigíveis; ao mudar uma, atualize aqui e no `architecture
 | # | Fase | Entrega | Status |
 | --- | --- | --- | --- |
 | 1 | [01-prop-records](01-prop-records.md) | Servidor e contrato: o catálogo `prop_types`, a tabela `island_props`, as rotas do editor (salvar, publicar) e as peças na resposta de Explorar numa ilha. As decorações de rua passam de objeto a peça | concluída |
-| 2 | [02-props-in-game](02-props-in-game.md) | Jogo: as peças soltas desenhadas em lote por linha, na altura do hexágono, com o vento nas plantas e o plano certo com o Domador; as ilhas sem decorações sorteadas | concluída |
+| 2 | [02-props-in-game](02-props-in-game.md) | Jogo: as peças soltas desenhadas em lote por linha, na altura do hexágono, com o vento nas plantas e o plano certo com o Domador; as ilhas sem decorações sorteadas (revisto na 05) | concluída |
 | 3 | [03-pieces-tool](03-pieces-tool.md) | Editor: a ferramenta Peças, com a paleta única, pôr, mover, variante, espelho, apagar e desfazer, para conjuntos e peças soltas | concluída |
 | 4 | [04-stamps](04-stamps.md) | Editor: guardar uma seleção como carimbo e pôr um carimbo (espelhado ou não); a Fonte; os dois primeiros carimbos | concluída |
+| 5 | [05-natural-decorations](05-natural-decorations.md) | Servidor, jogo e editor: as decorações naturais sorteadas de volta nas ilhas, com a marca `bare` por hexágono e a ferramenta Borracha | concluída |
 
 O desenho compartilhado está no [architecture.md](architecture.md).

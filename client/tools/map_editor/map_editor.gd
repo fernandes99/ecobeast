@@ -313,6 +313,8 @@ func _paint(coord: Vector2i) -> void:
 		if _tools.tool == EditorTools.Tool.REMOVE:
 			_canvas.refresh_objects()
 			_canvas.refresh_props()
+		elif _tools.tool == EditorTools.Tool.ERASER:
+			_canvas.refresh_props()
 	title = TITLE + " *"
 
 
