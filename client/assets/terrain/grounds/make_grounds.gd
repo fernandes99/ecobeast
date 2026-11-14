@@ -1,5 +1,6 @@
 extends SceneTree
-## Texturas provisórias de chão das ilhas (.specs/island-villages/02-grounds.md), em
+## Texturas provisórias de chão das ilhas (.specs/island-villages/02-grounds.md e
+## .specs/free-trails/01-ground-types.md), em
 ## pixel art: poucos tons por textura, sem degradê, 512x512 e emendando nas quatro
 ## bordas. Da pasta client/:
 ## godot --headless -s res://assets/terrain/grounds/make_grounds.gd
@@ -21,6 +22,17 @@ const STONE_TRAIL: Array[Color] = [
 const COBBLE_FLOOR: Array[Color] = [
 	Color8(70, 64, 60), Color8(110, 106, 102), Color8(132, 128, 122), Color8(152, 148, 140), Color8(172, 168, 160), Color8(198, 194, 186),
 ]
+const GRAVEL_BED: Array[Color] = [
+	Color8(84, 78, 72), Color8(112, 104, 94), Color8(128, 120, 108), Color8(142, 134, 120), Color8(164, 156, 142),
+]
+const GRAVEL: Array[Color] = [Color8(78, 74, 70), Color8(118, 114, 108), Color8(150, 146, 138), Color8(184, 180, 170), Color8(210, 204, 192)]
+const STEPPING_STONES: Array[Color] = [
+	Color8(66, 62, 58), Color8(112, 108, 100), Color8(134, 130, 120), Color8(152, 148, 136), Color8(170, 166, 152), Color8(200, 196, 182),
+]
+const SAND: Array[Color] = [
+	Color8(170, 146, 102), Color8(204, 182, 132), Color8(216, 196, 146), Color8(226, 208, 160), Color8(238, 224, 182),
+]
+const GRASS: Array[Color] = [Color8(58, 104, 46), Color8(86, 140, 58), Color8(124, 172, 72)]
 
 
 func _init() -> void:
@@ -28,6 +40,10 @@ func _init() -> void:
 	_save("dirt_floor", _dirt(23, DIRT_FLOOR, 0.008, 160, 120))
 	_save("stone_trail", _stones(31, 46, 0.95, STONE_TRAIL))
 	_save("cobble_floor", _stones(47, 40, 0.35, COBBLE_FLOOR))
+	_save("gravel_trail", _gravel(53))
+	_save("stepping_stones", _stones(61, 26, 0.8, STEPPING_STONES, 2.2))
+	_save("sand_trail", _dirt(67, SAND, 0.005, 40, 520))
+	_save("worn_trail", _worn(71))
 	quit()
 
 
@@ -106,7 +122,9 @@ func _put(image: Image, at: Vector2i, color: Color) -> void:
 ## Pedras de um Voronoi que se repete nas bordas (`count` x `count` pontos). Tons:
 ## 0 é a junta; 1 a 4 o corpo da pedra (sorteado por pedra, com grão); 5 o brilho da
 ## borda de cima e da esquerda. A borda de baixo e da direita escurece um tom.
-func _stones(seed_value: int, count: int, jitter: float, tones: Array[Color]) -> Image:
+## Com `gap`, a junta mais larga que ele fica transparente: a grama aparece entre as
+## pedras (os Pisantes, free-trails/01).
+func _stones(seed_value: int, count: int, jitter: float, tones: Array[Color], gap := 0.0) -> Image:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_value
 	var points := PackedVector2Array()
@@ -152,13 +170,62 @@ func _stones(seed_value: int, count: int, jitter: float, tones: Array[Color]) ->
 				tone = mini(tone + 1, 4)
 			if rng.randf() < 0.05:
 				tone = clampi(tone + (1 if rng.randf() < 0.5 else -1), 1, 4)
-			if edge < 0.75:
+			if edge < gap:
+				image.set_pixel(x, y, Color.TRANSPARENT)
+				continue
+			if edge < gap + 0.75:
 				tone = 0
-			elif edge < 1.75:
+			elif edge < gap + 1.75:
 				var light := toward.x + toward.y * 1.4
 				if light < -0.4:
 					tone = 5
 				elif light > 0.4:
 					tone = maxi(tone - 1, 1)
 			image.set_pixel(x, y, tones[tone])
+	return image
+
+
+## Terra cinza coberta de pedrinhas soltas, claras e escuras.
+func _gravel(seed_value: int) -> Image:
+	var image := _dirt(seed_value, GRAVEL_BED, 0.012, 0, 200)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_value + 1
+	for _index: int in 15000:
+		var at := Vector2i(rng.randi_range(0, SIZE - 1), rng.randi_range(0, SIZE - 1))
+		var body := rng.randi_range(1, 3)
+		var width := rng.randi_range(1, 3)
+		var height := rng.randi_range(1, 2)
+		for dy: int in height + 1:
+			for dx: int in width + 1:
+				var tone := body
+				if dy == 0 and dx < width:
+					tone = body + 1
+				elif dy == height and dx > 0:
+					tone = body - 1
+				_put(image, at + Vector2i(dx, dy), GRAVEL[clampi(tone, 0, 4)])
+		_put(image, at + Vector2i(width + 1, height), GRAVEL_BED[0])
+	return image
+
+
+## A terra da trilha com tufos de grama no meio: cada tufo é um leque de 3 a 5 folhas.
+func _worn(seed_value: int) -> Image:
+	var image := _dirt(seed_value, DIRT_TRAIL, 0.007, 260, 260)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_value + 1
+	var patches := _noise(seed_value + 3, 0.018, 2)
+	for _index: int in 2600:
+		var at := Vector2i(rng.randi_range(0, SIZE - 1), rng.randi_range(0, SIZE - 1))
+		if patches.get_pixel(at.x, at.y).r < 0.48:
+			continue
+		for blade: int in rng.randi_range(3, 5):
+			var lean := blade - 2
+			var length := rng.randi_range(3, 6)
+			for step: int in length:
+				var tone := 2 if step >= length - 2 else (1 if step > 0 else 0)
+				var tip := at + Vector2i(lean * step / 2, -step)
+				_put(image, tip, GRASS[tone])
+				if step == 0:
+					_put(image, tip + Vector2i(1, 0), GRASS[0])
+		for dx: int in range(-2, 3):
+			_put(image, at + Vector2i(dx, 1), DIRT_TRAIL[0])
 	return image

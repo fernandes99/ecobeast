@@ -264,7 +264,10 @@ describe('carga inicial dos tipos de ação (island-villages/01)', () => {
 describe('carga inicial do chão e dos objetos (island-villages/01)', () => {
   const read = <T>(file: string): T =>
     JSON.parse(readFileSync(join(SEED_DATA_DIR, file), 'utf8')) as T;
-  const grounds = read<{ slug: string; kind: string }[]>('ground_types.json');
+  const grounds =
+    read<{ slug: string; kind: string; hardness: number }[]>(
+      'ground_types.json',
+    );
   const objects = read<{ id: number; slug: string; variants: number }[]>(
     'map_object_types.json',
   );
@@ -272,13 +275,21 @@ describe('carga inicial do chão e dos objetos (island-villages/01)', () => {
     { object_type_id: number; dq: number; dr: number; blocks: boolean }[]
   >('map_object_type_tiles.json');
 
-  it('tem duas trilhas e dois pisos', () => {
+  it('tem seis trilhas e dois pisos, cada um com a dureza (free-trails/01)', () => {
     expect(grounds.map(({ kind }) => kind)).toEqual([
       'trail',
       'trail',
       'floor',
       'floor',
+      'trail',
+      'trail',
+      'trail',
+      'trail',
     ]);
+    for (const { hardness } of grounds) {
+      expect(hardness).toBeGreaterThanOrEqual(1);
+      expect(hardness).toBeLessThanOrEqual(3);
+    }
   });
 
   it('tem os 31 objetos, cada um com o hexágono de apoio e pelo menos 1 variante', () => {

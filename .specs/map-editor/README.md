@@ -75,6 +75,7 @@ Escolhas do planejamento (corrigíveis; ao mudar uma, atualize aqui e no [archit
 | 3 | [03-terrain-tools](03-terrain-tools.md) | Jogo: os pincéis de bioma e forma, pôr e tirar hexágonos, o tamanho do pincel, a chegada, desfazer e refazer | concluída |
 | 4 | [04-buildings-and-areas](04-buildings-and-areas.md) | Jogo: as construções, as áreas de Ecobeasts e o publicar | concluída |
 | 5 | [05-editor-ux](05-editor-ux.md) | Jogo: topo com Ilhas, desfazer, refazer e Camadas; coluna de ferramentas; Bioma e Altura separados; prévia e barra dos objetos; foco na área | concluída |
+| 6 | [06-tool-groups](06-tool-groups.md) | Jogo: as 12 ferramentas em 4 grupos (Terreno, Chão, Peças e Jogo), com abas e as teclas 1 a 4 | concluída |
 
 O desenho compartilhado está no [architecture.md](architecture.md).
 

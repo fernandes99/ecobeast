@@ -17,6 +17,8 @@ var objects: Array = []
 ## `dy`, `variant` e `mirrored`.
 var props: Array = []
 var areas: Array = []
+## Os traços de caminho, na ordem de desenho (free-trails/04).
+var trails: Array[MapTrail] = []
 
 
 static func max_variant(biome: String) -> int:
@@ -58,6 +60,10 @@ static func from_dict(data: Dictionary) -> IslandDraft:
 	draft.actions = DictFields.get_array(data, "actions").duplicate(true)
 	draft.objects = DictFields.get_array(data, "objects").duplicate(true)
 	draft.props = DictFields.get_array(data, "props").duplicate(true)
+	for entry: Variant in DictFields.get_array(data, "trails"):
+		var trail: MapTrail = MapTrail.from_dict(entry) if entry is Dictionary else null
+		if trail != null:
+			draft.trails.append(trail)
 	draft.areas = DictFields.get_array(data, "areas").duplicate(true)
 	return draft
 
@@ -80,6 +86,7 @@ func to_dict() -> Dictionary:
 		"actions": actions,
 		"objects": objects,
 		"props": props,
+		"trails": trails.map(func(trail: MapTrail) -> Dictionary: return trail.to_dict()),
 		"areas": areas,
 	}
 
@@ -279,6 +286,47 @@ func area_tile_counts() -> Dictionary[int, int]:
 	return counts
 
 
+static func copy_trails(list: Array) -> Array[MapTrail]:
+	var copies: Array[MapTrail] = []
+	for trail: MapTrail in list:
+		copies.append(trail.copy())
+	return copies
+
+
+static func trails_state(list: Array) -> Array:
+	return list.map(func(trail: MapTrail) -> Dictionary: return trail.to_dict())
+
+
+## O traço de cima que passa no ponto do chão plano, ou -1.
+func trail_at(flat: Vector2) -> int:
+	for index: int in range(trails.size() - 1, -1, -1):
+		var trail := trails[index]
+		if HexGrounds.trail_distance(trail, flat) <= maxf(trail.width / 2.0, 6.0) + 2.0:
+			return index
+	return -1
+
+
+## Tira os pontos dos traços que caíram fora da ilha (um hexágono apagado) e apaga o
+## traço que fica com menos de 2. Devolve quantos traços mudaram (free-trails/04).
+func clip_trails() -> int:
+	var changed := 0
+	for index: int in range(trails.size() - 1, -1, -1):
+		var trail := trails[index]
+		var kept := PackedVector2Array()
+		for point: Vector2 in trail.points:
+			if tiles.has(HexMapView.grid_coord(point)):
+				kept.append(point)
+		if kept.size() == trail.points.size():
+			continue
+		changed += 1
+		if kept.size() < 2:
+			trails.remove_at(index)
+		else:
+			trail.points = kept
+			trail.smoothed = PackedVector2Array()
+	return changed
+
+
 ## O terreno como o `HexMapView` desenha. A seed só escolhe os escorridos dos
 ## paredões; com o id, cada ilha fica sempre igual.
 func to_map() -> ExplorationMap:
@@ -288,6 +336,7 @@ func to_map() -> ExplorationMap:
 	map.tiles = tiles
 	map.set_objects(map_objects())
 	map.props = map_props()
+	map.trails = trails.duplicate()
 	return map
 
 

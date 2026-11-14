@@ -38,10 +38,10 @@ describe('restrições do banco (e2e)', () => {
     expect(rows.map((row) => row.table_name)).toEqual([]);
   });
 
-  it('as 53 tabelas e o histórico de migrations ficam no schema ecobeasts', async () => {
+  it('as 54 tabelas e o histórico de migrations ficam no schema ecobeasts', async () => {
     const rows = await prisma.$queryRaw<{ n: number }[]>`
       SELECT count(*)::int AS n FROM information_schema.tables WHERE table_schema = 'ecobeasts'`;
-    expect(rows[0].n).toBe(54);
+    expect(rows[0].n).toBe(55);
   });
 
   it('recusa Técnica com precisão 150', async () => {
@@ -533,10 +533,37 @@ describe('restrições do banco (e2e)', () => {
       expectRejected(result, 'island_props_variant_check');
     });
 
+    it('recusa traço com largura 7 ou com um ponto só (free-trails/03)', async () => {
+      for (const [width, points, check] of [
+        [7, [0, 0, 10, 0], 'island_trails_width_check'],
+        [22, [0, 0], 'island_trails_points_check'],
+        [22, [0, 0, 10], 'island_trails_points_check'],
+      ] as const) {
+        const result = await attempt(prisma, async (tx) => {
+          const map = await draftMap(tx);
+          await tx.islandTrail.create({
+            data: {
+              islandMapId: map.id,
+              groundTypeId: 1,
+              position: 0,
+              width,
+              points: [...points],
+            },
+          });
+        });
+        expectRejected(result, check);
+      }
+    });
+
     it('recusa tipo de chão e de ação fora da lista', async () => {
       const ground = await attempt(prisma, (tx) =>
         tx.groundType.create({
-          data: { slug: 'teste_chao', name: 'Teste', kind: 'wall' },
+          data: {
+            slug: 'teste_chao',
+            name: 'Teste',
+            kind: 'wall',
+            hardness: 1,
+          },
         }),
       );
       expectRejected(ground, 'ground_types_kind_check');
@@ -551,6 +578,40 @@ describe('restrições do banco (e2e)', () => {
         }),
       );
       expectRejected(action, 'action_types_kind_check');
+    });
+
+    it('recusa dureza de chão fora de 1 a 3 (free-trails/01)', async () => {
+      const ground = await attempt(prisma, (tx) =>
+        tx.groundType.create({
+          data: {
+            slug: 'teste_chao',
+            name: 'Teste',
+            kind: 'trail',
+            hardness: 4,
+          },
+        }),
+      );
+      expectRejected(ground, 'ground_types_hardness_check');
+    });
+
+    it('tem os 8 tipos de chão, cada um com a dureza (free-trails/01)', async () => {
+      const grounds = await prisma.groundType.findMany({
+        orderBy: { id: 'asc' },
+      });
+      expect(grounds.map(({ slug }) => slug)).toEqual([
+        'dirt_trail',
+        'stone_trail',
+        'cobble_floor',
+        'dirt_floor',
+        'gravel_trail',
+        'stepping_stones',
+        'sand_trail',
+        'worn_trail',
+      ]);
+      for (const { hardness } of grounds) {
+        expect(hardness).toBeGreaterThanOrEqual(1);
+        expect(hardness).toBeLessThanOrEqual(3);
+      }
     });
   });
 });

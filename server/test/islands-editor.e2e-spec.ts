@@ -49,6 +49,7 @@ interface Draft {
   actions: { action_type_id: number; tiles: { q: number; r: number }[] }[];
   objects: DraftObject[];
   props?: DraftProp[];
+  trails?: { ground: string; width: number; points: number[] }[];
   areas: {
     key: number;
     name: string;
@@ -546,6 +547,46 @@ describe('Editor de ilhas (e2e)', () => {
         .expect(400);
       expect(response.body.message).toBe(
         'bare precisa ser verdadeiro ou falso.',
+      );
+    });
+  });
+
+  describe('os traços de caminho (free-trails/03)', () => {
+    it('salva e lê de volta os traços, na mesma ordem', async () => {
+      const body = draft();
+      body.trails = [
+        { ground: 'gravel_trail', width: 22, points: [0, 0, 64, 0] },
+        { ground: 'dirt_trail', width: 34, points: [64, 0, 0, 0] },
+      ];
+      const id = await create(body);
+      const read = (await call('get', `/islands/${id}`).expect(200))
+        .body as Draft;
+      expect(read.trails).toEqual(body.trails);
+    });
+
+    it('recusa um traço com ponto fora da ilha (400)', async () => {
+      const id = await create();
+      const body = draft();
+      body.trails = [
+        { ground: 'dirt_trail', width: 22, points: [0, 0, 5000, 0] },
+      ];
+      const response = await call('put', `/islands/${id}/draft`)
+        .send(body)
+        .expect(400);
+      expect(response.body.message).toBe(
+        'O traço 1 tem um ponto fora da ilha.',
+      );
+    });
+
+    it('recusa pontos que não são inteiros (400)', async () => {
+      const id = await create();
+      const body = draft() as unknown as { trails: unknown[] };
+      body.trails = [{ ground: 'dirt_trail', width: 22, points: [0, 'a'] }];
+      const response = await call('put', `/islands/${id}/draft`)
+        .send(body)
+        .expect(400);
+      expect(response.body.message).toBe(
+        'points precisa ter só números inteiros.',
       );
     });
   });

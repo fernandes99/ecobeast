@@ -41,6 +41,7 @@ O que vem depois do MVP de estrutura (entrada, escolha do inicial e Hub). Cada l
 | 25  | [`terrain-height`](terrain-height/) | A altura do terreno em cada hexágono, de 0 a 10 (de 0 a 4 até a 02), em qualquer bioma; Colina e Montanha viram biomas, e o editor ganha a ferramenta Altura no lugar da Forma; a 03 deixa ver o que a altura esconde, no editor e no jogo | map-editor, islands | concluída |
 | 26  | [`island-villages`](island-villages/) | Vilas nas ilhas: trilhas e pisos, objetos de 1 a 4 hexágonos com variante, espelho e bloqueio, e as construções viradas ações | terrain-height, islands | concluída |
 | 27  | [`free-props`](free-props/) | Arte livre nas ilhas: peças soltas em pixels, só enfeite, e carimbos que viram objetos, peças e chão; a ferramenta única Peças no editor; a 05 traz de volta as decorações naturais, com a Borracha | island-villages | concluída |
+| 28  | [`free-trails`](free-trails/) | Caminhos nas ilhas: 4 tipos novos de chão, a máscara de chão com borda irregular e emendas entre tipos, e os traços livres desenhados pela ferramenta Caminho | free-props | concluída |
 
 ## Pós-lançamento (do GDD)
 

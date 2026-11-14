@@ -18,7 +18,11 @@ import {
   IslandsService,
 } from '../islands/islands.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
-import { toObjectDto, toPropDto } from '../exploration/exploration.dto.js';
+import {
+  toObjectDto,
+  toPropDto,
+  toTrailDto,
+} from '../exploration/exploration.dto.js';
 import type {
   IslandCreatedResponseDto,
   IslandDraftDto,
@@ -89,6 +93,11 @@ export function toDraft(dto: IslandDraftDto): IslandDraft {
       variant: prop.variant,
       mirrored: prop.mirrored,
     })),
+    trails: (dto.trails ?? []).map(({ ground, width, points }) => ({
+      ground,
+      width,
+      points: [...points],
+    })),
     areas: dto.areas.map(({ key, name, color_hex, spawn_count, species }) => ({
       key,
       name,
@@ -115,6 +124,7 @@ function toDto(draft: IslandDraft): IslandDraftDto {
     })),
     objects: draft.objects.map(toObjectDto),
     props: draft.props.map(toPropDto),
+    trails: (draft.trails ?? []).map(toTrailDto),
     areas: draft.areas.map(({ key, name, colorHex, spawnCount, species }) => ({
       key,
       name,
@@ -408,6 +418,21 @@ export class IslandsEditorService {
     for (let first = 0; first < props.length; first += TILE_CHUNK) {
       await tx.islandProp.createMany({
         data: props.slice(first, first + TILE_CHUNK),
+      });
+    }
+
+    const trails = (draft.trails ?? []).map(
+      ({ ground, width, points }, position) => ({
+        islandMapId: map.id,
+        groundTypeId: groundIds.get(ground)!,
+        position,
+        width,
+        points,
+      }),
+    );
+    for (let first = 0; first < trails.length; first += TILE_CHUNK) {
+      await tx.islandTrail.createMany({
+        data: trails.slice(first, first + TILE_CHUNK),
       });
     }
     return map;

@@ -6,6 +6,7 @@ import {
   type KnownIds,
   MAX_ISLAND_TILES,
   MAX_PROPS,
+  MAX_TRAILS,
   publishError,
 } from './island-draft.js';
 
@@ -583,5 +584,86 @@ describe('a marca sem decorações (free-props/05)', () => {
     draft.tiles[0]!.bare = true;
     expect(draftHash(draft)).not.toBe(plain);
     expect(JSON.parse(canonicalDraft(draft)).tiles[0].bare).toBe(true);
+  });
+});
+
+describe('os traços de caminho (free-trails/03)', () => {
+  // Os pontos são a partir do centro do hexágono (0, 0); o (1, 0) fica em (64, 0).
+  const trail = () => ({
+    ground: 'dirt_trail',
+    width: 22,
+    points: [0, 0, 30, -2, 64, 0],
+  });
+
+  it('aceita um traço sobre a ilha', () => {
+    const draft = island();
+    draft.trails = [trail()];
+    expect(draftError(draft, known)).toBeNull();
+  });
+
+  it('recusa um traço com tipo de chão que não existe', () => {
+    const draft = island();
+    draft.trails = [trail(), { ...trail(), ground: 'lava' }];
+    expect(draftError(draft, known)).toBe(
+      'O traço 2 tem um tipo de chão que não existe.',
+    );
+  });
+
+  it('recusa largura fora de 8 a 64', () => {
+    const draft = island();
+    draft.trails = [{ ...trail(), width: 70 }];
+    expect(draftError(draft, known)).toBe(
+      'O traço 1 tem a largura 70: vai de 8 a 64.',
+    );
+    draft.trails = [{ ...trail(), width: 7.5 }];
+    expect(draftError(draft, known)).toBe(
+      'O traço 1 tem a largura 7.5: vai de 8 a 64.',
+    );
+  });
+
+  it('recusa um ponto só, mais de 256 pontos ou coordenada quebrada', () => {
+    const draft = island();
+    const message = 'O traço 1 precisa ter de 2 a 256 pontos inteiros.';
+    draft.trails = [{ ...trail(), points: [0, 0] }];
+    expect(draftError(draft, known)).toBe(message);
+    draft.trails = [
+      { ...trail(), points: Array.from({ length: 514 }, () => 0) },
+    ];
+    expect(draftError(draft, known)).toBe(message);
+    draft.trails = [{ ...trail(), points: [0, 0, 1] }];
+    expect(draftError(draft, known)).toBe(message);
+    draft.trails = [{ ...trail(), points: [0, 0, 1.5, 0] }];
+    expect(draftError(draft, known)).toBe(message);
+  });
+
+  it('recusa um ponto fora da ilha', () => {
+    const draft = island();
+    draft.trails = [trail(), { ...trail(), points: [0, 0, 400, 0] }];
+    expect(draftError(draft, known)).toBe(
+      'O traço 2 tem um ponto fora da ilha.',
+    );
+  });
+
+  it(`recusa mais de ${MAX_TRAILS} traços`, () => {
+    const draft = island();
+    draft.trails = Array.from({ length: MAX_TRAILS + 1 }, trail);
+    expect(draftError(draft, known)).toBe('A ilha pode ter até 500 traços.');
+  });
+
+  it('leva os traços no hash, na ordem, e uma ilha sem traços tem o hash de antes', () => {
+    const draft = island();
+    const plain = draftHash(draft);
+    draft.trails = [];
+    expect(draftHash(draft)).toBe(plain);
+    draft.trails = [trail(), { ...trail(), ground: 'cobble_floor' }];
+    const two = draftHash(draft);
+    expect(two).not.toBe(plain);
+    draft.trails.reverse();
+    expect(draftHash(draft)).not.toBe(two);
+    expect(JSON.parse(canonicalDraft(draft)).trails[0]).toEqual({
+      ground: 'cobble_floor',
+      width: 22,
+      points: [0, 0, 30, -2, 64, 0],
+    });
   });
 });

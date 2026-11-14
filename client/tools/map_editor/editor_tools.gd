@@ -5,10 +5,10 @@ signal message(text: String)
 signal brush_changed
 signal edited(step: EditorHistory.Step, merge: bool)
 
-enum Tool { BIOME, HEIGHT, GROUND, ADD, REMOVE, START, OBJECT, ACTION, AREA, STAMP, ERASER }
+enum Tool { BIOME, HEIGHT, GROUND, ADD, REMOVE, START, OBJECT, ACTION, AREA, STAMP, ERASER, PATH }
 
-const TOOL_NAMES: Array[String] = ["Bioma", "Altura", "Chão", "Pôr hexágono", "Tirar hexágono", "Chegada", "Peças", "Ação", "Área", "Carimbo", "Borracha"]
-const TOOL_ICONS: Array[String] = ["biome", "height", "ground", "hex_add", "hex_remove", "flag", "object", "action", "area", "stamp", "eraser"]
+const TOOL_NAMES: Array[String] = ["Bioma", "Altura", "Chão", "Pôr hexágono", "Tirar hexágono", "Chegada", "Peças", "Ação", "Área", "Carimbo", "Borracha", "Caminho"]
+const TOOL_ICONS: Array[String] = ["biome", "height", "ground", "hex_add", "hex_remove", "flag", "object", "action", "area", "stamp", "eraser", "path"]
 const TOOL_HINTS: Array[String] = [
 	"Troca o bioma dos hexágonos que já existem. A altura só muda se você escolher uma abaixo.",
 	"Troca só a altura dos hexágonos que já existem.",
@@ -21,11 +21,20 @@ const TOOL_HINTS: Array[String] = [
 	"Pinta a área escolhida. Botão direito tira os hexágonos de qualquer área.",
 	"Põe um carimbo, com o apoio no hexágono clicado, ou escolhe uma área e a guarda como carimbo.",
 	"Apaga as decorações naturais e as peças soltas dos hexágonos. Botão direito devolve as decorações naturais.",
+	"Arraste para desenhar um caminho. Clique num caminho para escolher, trocar ou apagar.",
 ]
+## Os grupos da coluna (map-editor/06): as ferramentas parecidas viram abas do grupo.
+const GROUPS: Array[Dictionary] = [
+	{"name": "Terreno", "icon": "biome", "tools": [Tool.BIOME, Tool.HEIGHT, Tool.ADD, Tool.REMOVE]},
+	{"name": "Chão", "icon": "ground", "tools": [Tool.GROUND, Tool.PATH]},
+	{"name": "Peças", "icon": "object", "tools": [Tool.OBJECT, Tool.STAMP, Tool.ERASER]},
+	{"name": "Jogo", "icon": "flag", "tools": [Tool.START, Tool.ACTION, Tool.AREA]},
+]
+const TAB_ICON_WIDTH := 18
 const NO_AREA_MESSAGE := "Crie ou escolha uma área no painel antes de pintar."
 const BIOMES: Array[String] = ["temperate", "boreal", "stone", "hill", "mountain", "wshallow", "wdeep"]
 const BIOME_SWATCH_HEIGHT := 1
-const TOOL_BUTTON_SIZE := Vector2(58.0, 58.0)
+const TOOL_BUTTON_SIZE := Vector2(76.0, 58.0)
 const TOOL_ICON_WIDTH := 26
 const HEIGHT_BUTTON_SIZE := Vector2(52.0, 44.0)
 const HEIGHT_COLUMNS := 6
@@ -44,8 +53,16 @@ const BIOME_NAMES: Dictionary[String, String] = {
 	"wdeep": "Água profunda",
 }
 const FULL_MESSAGE := "A ilha chegou a 20.000 hexágonos."
+## O traço ganha um ponto a cada `PATH_SPACING` pixels da arte; um arraste menor que
+## `PATH_CLICK` é um clique, e os pontos a menos de `PATH_TOLERANCE` da reta entre os
+## vizinhos saem ao soltar (free-trails/04).
+const PATH_SPACING := 12.0
+const PATH_CLICK := 4.0
+const PATH_TOLERANCE := 2.0
+const MAX_PATH_POINTS := 256
 
 var tool := Tool.BIOME
+var group := 0
 var biome := "temperate"
 var height := IslandDraft.BLANK_HEIGHT
 ## A altura que o Bioma também põe; KEEP_HEIGHT deixa a de cada hexágono.
@@ -57,6 +74,9 @@ var radius := 0
 var detail_chance := 0.0
 
 var _tool_buttons: Array[Button] = []
+var _group_buttons: Array[Button] = []
+var _tabs: HFlowContainer
+var _last_in_group: Array[int] = []
 var _tool_title: Label
 var _tool_hint: Label
 var _biome_buttons: Dictionary[String, TerrainSwatch] = {}
@@ -80,6 +100,10 @@ var _object_done := false
 var area_panel: AreaPanel
 var stamp_panel: StampPanel
 var _stamp_section: Control
+var path_panel: PathPanel
+var _path_section: Control
+var _path: MapTrail = null
+var _path_start := Vector2.ZERO
 
 var _step: EditorHistory.Step = null
 ## O ponto do ponteiro no chão plano, sem a altura, em pixels da arte: as peças soltas
@@ -98,10 +122,10 @@ func _init() -> void:
 	add_theme_constant_override(&"separation", 10)
 
 	tool_column.add_theme_constant_override(&"separation", 4)
-	var tools_group := ButtonGroup.new()
-	for index: int in TOOL_NAMES.size():
-		var button := tool_button(str(index + 1), tools_group)
-		button.icon = load(MapEditor.ICONS % TOOL_ICONS[index]) as Texture2D
+	var groups_group := ButtonGroup.new()
+	for index: int in GROUPS.size():
+		var button := tool_button(str(GROUPS[index]["name"]), groups_group)
+		button.icon = load(MapEditor.ICONS % str(GROUPS[index]["icon"])) as Texture2D
 		button.add_theme_constant_override(&"icon_max_width", TOOL_ICON_WIDTH)
 		button.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		button.vertical_icon_alignment = VERTICAL_ALIGNMENT_TOP
@@ -109,13 +133,33 @@ func _init() -> void:
 		button.custom_minimum_size = TOOL_BUTTON_SIZE
 		button.size_flags_horizontal = Control.SIZE_FILL
 		button.add_theme_font_size_override(&"font_size", TITLE_SIZE)
-		button.tooltip_text = "%d · %s\n%s" % [index + 1, TOOL_NAMES[index], TOOL_HINTS[index]]
-		button.pressed.connect(set_tool.bind(index))
+		var names: Array = (GROUPS[index]["tools"] as Array).map(func(member: int) -> String: return TOOL_NAMES[member])
+		button.tooltip_text = "%d · %s\n%s" % [index + 1, GROUPS[index]["name"], ", ".join(names)]
+		button.pressed.connect(set_group.bind(index))
 		tool_column.add_child(button)
-		_tool_buttons.append(button)
+		_group_buttons.append(button)
+		_last_in_group.append(int((GROUPS[index]["tools"] as Array)[0]))
 
 	var tools_box := _section("")
-	_tool_title = tools_box.get_child(0) as Label
+	_tabs = HFlowContainer.new()
+	_tabs.add_theme_constant_override(&"h_separation", 4)
+	_tabs.add_theme_constant_override(&"v_separation", 4)
+	tools_box.add_child(_tabs)
+	tools_box.move_child(_tabs, 0)
+	var tabs_group := ButtonGroup.new()
+	for index: int in TOOL_NAMES.size():
+		var tab := tool_button(TOOL_NAMES[index], tabs_group)
+		tab.icon = load(MapEditor.ICONS % TOOL_ICONS[index]) as Texture2D
+		tab.add_theme_constant_override(&"icon_max_width", TAB_ICON_WIDTH)
+		tab.size_flags_horizontal = Control.SIZE_FILL
+		tab.tooltip_text = TOOL_HINTS[index]
+		tab.pressed.connect(set_tool.bind(index))
+		_tabs.add_child(tab)
+		_tool_buttons.append(tab)
+	for group_index: int in GROUPS.size():
+		for member: int in GROUPS[group_index]["tools"]:
+			_tabs.move_child(_tool_buttons[member], -1)
+	_tool_title = tools_box.get_child(1) as Label
 	_tool_title.theme_type_variation = &"BoldLabel"
 	_tool_title.remove_theme_font_size_override(&"font_size")
 	_tool_title.remove_theme_color_override(&"font_color")
@@ -204,6 +248,12 @@ func _init() -> void:
 	stamp_panel.mode_changed.connect(_refresh)
 	stamps_box.add_child(stamp_panel)
 
+	var paths_box := _section("Caminho")
+	_path_section = paths_box.get_parent()
+	path_panel = PathPanel.new()
+	path_panel.edited.connect(func(step: EditorHistory.Step) -> void: edited.emit(step, false))
+	paths_box.add_child(path_panel)
+
 	var brush_box := _section("Pincel  ·  teclas [ e ]")
 	_brush_section = brush_box.get_parent()
 	var brush_row := HBoxContainer.new()
@@ -229,10 +279,42 @@ func _init() -> void:
 
 func set_tool(value: int) -> void:
 	tool = value as Tool
+	group = group_of(tool)
+	_last_in_group[group] = tool
 	if tool != Tool.AREA:
 		area_panel.set_focus(false)
 	_refresh()
 	brush_changed.emit()
+
+
+static func group_of(value: int) -> int:
+	for index: int in GROUPS.size():
+		if (GROUPS[index]["tools"] as Array).has(value):
+			return index
+	return 0
+
+
+func set_group(index: int) -> void:
+	set_tool(_last_in_group[clampi(index, 0, GROUPS.size() - 1)])
+
+
+## A tecla de um grupo: abre o grupo ou, se ele já está aberto, passa à próxima aba.
+func press_group_key(index: int) -> void:
+	if index < 0 or index >= GROUPS.size():
+		return
+	if index != group:
+		set_group(index)
+		return
+	var members: Array = GROUPS[index]["tools"]
+	set_tool(int(members[(members.find(tool) + 1) % members.size()]))
+
+
+## As abas do grupo aberto, na ordem.
+func group_tabs() -> Array[Button]:
+	var tabs: Array[Button] = []
+	for member: int in GROUPS[group]["tools"]:
+		tabs.append(_tool_buttons[member])
+	return tabs
 
 
 func set_radius(value: int) -> void:
@@ -243,7 +325,7 @@ func set_radius(value: int) -> void:
 
 ## O raio do contorno: a chegada pega um hexágono só, qualquer que seja o tamanho.
 func brush_radius() -> int:
-	return 0 if tool == Tool.START else radius
+	return 0 if tool == Tool.START or tool == Tool.PATH else radius
 
 
 func brush_coords(center: Vector2i) -> Array[Vector2i]:
@@ -278,6 +360,7 @@ func set_draft(draft: IslandDraft) -> void:
 	object_panel.set_draft(draft)
 	area_panel.set_draft(draft)
 	stamp_panel.set_draft(draft)
+	path_panel.set_draft(draft)
 
 
 func refresh_panels() -> void:
@@ -304,6 +387,10 @@ func begin_stroke(draft: IslandDraft, secondary: bool = false) -> void:
 		_step.actions_before = draft.actions.duplicate(true)
 	if draft.objects.size() > 0 or tool == Tool.OBJECT or tool == Tool.STAMP:
 		_step.objects_before = draft.objects.duplicate(true)
+	if tool == Tool.PATH:
+		_step.trails_before = IslandDraft.copy_trails(draft.trails)
+		_path = null
+		_path_start = pointer
 
 
 func paint(draft: IslandDraft, center: Vector2i) -> Array[Vector2i]:
@@ -316,6 +403,8 @@ func paint(draft: IslandDraft, center: Vector2i) -> Array[Vector2i]:
 		return _paint_object(draft, center)
 	if tool == Tool.STAMP:
 		return _paint_stamp(draft, center)
+	if tool == Tool.PATH:
+		return changed
 	if _secondary and tool != Tool.AREA and tool != Tool.ERASER:
 		return changed
 	if tool == Tool.START:
@@ -360,6 +449,12 @@ func end_stroke(draft: IslandDraft) -> EditorHistory.Step:
 		step.objects_after = draft.objects.duplicate(true)
 	else:
 		step.objects_before = null
+	if tool == Tool.PATH:
+		_finish_path(draft)
+	if step.trails_before != null and IslandDraft.trails_state(step.trails_before) != IslandDraft.trails_state(draft.trails):
+		step.trails_after = IslandDraft.copy_trails(draft.trails)
+	else:
+		step.trails_before = null
 	if step.props_before != null and step.props_before != draft.props:
 		step.props_after = draft.props.duplicate(true)
 	else:
@@ -562,6 +657,75 @@ func _paint_stamp(draft: IslandDraft, center: Vector2i) -> Array[Vector2i]:
 	return changed
 
 
+## Arrastando com o Caminho: o traço nasce depois de `PATH_CLICK` pixels e ganha um
+## ponto a cada `PATH_SPACING`, só sobre hexágonos da ilha que se podem editar; fora
+## deles, ele pausa. Devolve o pedaço novo, para redesenhar, ou `null`.
+func extend_path(draft: IslandDraft, flat: Vector2) -> MapTrail:
+	if tool != Tool.PATH or _step == null or _secondary:
+		return null
+	if _path == null:
+		if flat.distance_to(_path_start) < PATH_CLICK or not _path_point_ok(draft, _path_start):
+			return null
+		_path = MapTrail.new()
+		_path.ground = path_panel.ground
+		_path.width = path_panel.width
+		_path.points.append(_path_start.round())
+		draft.trails.append(_path)
+		path_panel.select(-1)
+	var last := _path.points[_path.points.size() - 1]
+	if _path.points.size() >= MAX_PATH_POINTS or flat.distance_to(last) < PATH_SPACING or not _path_point_ok(draft, flat):
+		return null
+	_path.points.append(flat.round())
+	_path.smoothed = PackedVector2Array()
+	var piece := MapTrail.new()
+	piece.ground = _path.ground
+	piece.width = _path.width
+	piece.points = _path.points.slice(maxi(0, _path.points.size() - 3))
+	return piece
+
+
+func _path_point_ok(draft: IslandDraft, flat: Vector2) -> bool:
+	var coord := HexMapView.grid_coord(flat)
+	return draft.tiles.has(coord) and editable(draft, coord)
+
+
+## Ao soltar: o traço desenhado fica com os pontos simplificados, sem escolha, para a
+## próxima amostra valer para o próximo; um clique escolhe o traço de cima no ponto, ou
+## solta a escolha.
+func _finish_path(draft: IslandDraft) -> void:
+	if _path == null:
+		path_panel.select(draft.trail_at(_path_start))
+		return
+	_path.points = simplified(_path.points, PATH_TOLERANCE)
+	_path.smoothed = PackedVector2Array()
+	if _path.points.size() < 2:
+		draft.trails.erase(_path)
+	path_panel.select(-1)
+	_path = null
+
+
+## Ramer-Douglas-Peucker: tira os pontos a menos de `tolerance` da reta entre os que ficam.
+static func simplified(points: PackedVector2Array, tolerance: float) -> PackedVector2Array:
+	if points.size() < 3:
+		return points
+	var first := points[0]
+	var last := points[points.size() - 1]
+	var farthest := 0
+	var distance := 0.0
+	for index: int in range(1, points.size() - 1):
+		var gap := points[index].distance_to(Geometry2D.get_closest_point_to_segment(points[index], first, last))
+		if gap > distance:
+			distance = gap
+			farthest = index
+	if distance <= tolerance:
+		return PackedVector2Array([first, last])
+	var left := simplified(points.slice(0, farthest + 1), tolerance)
+	var right := simplified(points.slice(farthest), tolerance)
+	left.remove_at(left.size() - 1)
+	left.append_array(right)
+	return left
+
+
 ## Os hexágonos da área marcada para o carimbo, enquanto ela está sendo escolhida.
 func marked_coords() -> Array[Vector2i]:
 	var coords: Array[Vector2i] = []
@@ -659,9 +823,14 @@ func pick_height_key(value: int) -> bool:
 
 
 func _refresh() -> void:
+	for index: int in _group_buttons.size():
+		_group_buttons[index].set_pressed_no_signal(index == group)
+	var members: Array = GROUPS[group]["tools"]
 	for index: int in _tool_buttons.size():
+		_tool_buttons[index].visible = members.has(index)
 		_tool_buttons[index].set_pressed_no_signal(index == tool)
-	_tool_title.text = "%d · %s" % [tool + 1, TOOL_NAMES[tool]]
+	var group_name := str(GROUPS[group]["name"])
+	_tool_title.text = "%d · %s" % [group + 1, group_name] if group_name == TOOL_NAMES[tool] else "%d · %s · %s" % [group + 1, group_name, TOOL_NAMES[tool]]
 	_tool_hint.text = TOOL_HINTS[tool]
 	_biome_section.visible = tool == Tool.BIOME or tool == Tool.ADD
 	_biome_height_section.visible = tool == Tool.BIOME
@@ -671,7 +840,8 @@ func _refresh() -> void:
 	_action_section.visible = tool == Tool.ACTION
 	_area_section.visible = tool == Tool.AREA
 	_stamp_section.visible = tool == Tool.STAMP
-	_brush_section.visible = tool != Tool.START and tool != Tool.OBJECT and not (tool == Tool.STAMP and stamp_panel.mode == StampPanel.Mode.PLACE)
+	_path_section.visible = tool == Tool.PATH
+	_brush_section.visible = tool != Tool.START and tool != Tool.OBJECT and tool != Tool.PATH and not (tool == Tool.STAMP and stamp_panel.mode == StampPanel.Mode.PLACE)
 	for slug: String in _biome_buttons:
 		_biome_buttons[slug].set_pressed_no_signal(slug == biome)
 		_biome_buttons[slug].queue_redraw()
@@ -730,9 +900,9 @@ func _swatch_grid(parent: Control) -> GridContainer:
 	return grid
 
 
-func _swatch(group: ButtonGroup) -> TerrainSwatch:
+func _swatch(button_group: ButtonGroup) -> TerrainSwatch:
 	var swatch := TerrainSwatch.new()
-	swatch.button_group = group
+	swatch.button_group = button_group
 	swatch.custom_minimum_size.x = SWATCH_WIDTH
 	return swatch
 
@@ -745,19 +915,19 @@ func _height_grid() -> GridContainer:
 	return grid
 
 
-func _height_button(text: String, group: ButtonGroup) -> Button:
-	var button := tool_button(text, group)
+func _height_button(text: String, button_group: ButtonGroup) -> Button:
+	var button := tool_button(text, button_group)
 	button.alignment = HORIZONTAL_ALIGNMENT_CENTER
 	button.custom_minimum_size = HEIGHT_BUTTON_SIZE
 	button.size_flags_horizontal = Control.SIZE_FILL
 	return button
 
 
-static func tool_button(text: String, group: ButtonGroup) -> Button:
+static func tool_button(text: String, button_group: ButtonGroup) -> Button:
 	var button := Button.new()
 	button.text = text
 	button.toggle_mode = true
-	button.button_group = group
+	button.button_group = button_group
 	button.focus_mode = Control.FOCUS_NONE
 	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL

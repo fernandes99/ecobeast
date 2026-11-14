@@ -3,24 +3,56 @@
 		"id": 1,
 		"slug": "dirt_trail",
 		"name": "Trilha de terra",
-		"kind": "trail"
+		"kind": "trail",
+		"hardness": 1
 	},
 	{
 		"id": 2,
 		"slug": "stone_trail",
 		"name": "Trilha de pedra",
-		"kind": "trail"
+		"kind": "trail",
+		"hardness": 3
 	},
 	{
 		"id": 3,
 		"slug": "cobble_floor",
 		"name": "Praça de pedra",
-		"kind": "floor"
+		"kind": "floor",
+		"hardness": 3
 	},
 	{
 		"id": 4,
 		"slug": "dirt_floor",
 		"name": "Chão de terra",
-		"kind": "floor"
+		"kind": "floor",
+		"hardness": 1
+	},
+	{
+		"id": 5,
+		"slug": "gravel_trail",
+		"name": "Cascalho",
+		"kind": "trail",
+		"hardness": 2
+	},
+	{
+		"id": 6,
+		"slug": "stepping_stones",
+		"name": "Pisantes",
+		"kind": "trail",
+		"hardness": 3
+	},
+	{
+		"id": 7,
+		"slug": "sand_trail",
+		"name": "Areia batida",
+		"kind": "trail",
+		"hardness": 1
+	},
+	{
+		"id": 8,
+		"slug": "worn_trail",
+		"name": "Trilha gasta",
+		"kind": "trail",
+		"hardness": 1
 	}
 ]

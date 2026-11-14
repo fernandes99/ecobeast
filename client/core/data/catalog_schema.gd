@@ -168,7 +168,7 @@ const TABLES := {
 	},
 	"ground_types": {
 		"key": ["id"],
-		"columns": {"id": ID, "slug": SLUG, "name": TEXT, "kind": {"type": "string", "values": GROUND_KINDS}},
+		"columns": {"id": ID, "slug": SLUG, "name": TEXT, "kind": {"type": "string", "values": GROUND_KINDS}, "hardness": {"type": "int", "min": 1, "max": 3}},
 	},
 	"map_object_types": {
 		"key": ["id"],

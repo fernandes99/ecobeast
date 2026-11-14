@@ -145,14 +145,17 @@ model ActionType {
 }
 
 model GroundType {
-  id   Int    @id @default(autoincrement())
+  id       Int    @id @default(autoincrement())
   /// CHECK ^[a-z0-9_]+$ (migration island_villages)
-  slug String @unique
-  name String
+  slug     String @unique
+  name     String
   /// CHECK trail ou floor (migration island_villages)
-  kind String
+  kind     String
+  /// CHECK 1 a 3 (migration free_trails_ground_types)
+  hardness Int    @db.SmallInt
 
-  tiles IslandTile[]
+  tiles  IslandTile[]
+  trails IslandTrail[]
 
   @@map("ground_types")
   @@schema("ecobeasts")
@@ -824,6 +827,7 @@ model IslandMap {
   objectTiles IslandObjectTile[]
   areas       IslandArea[]
   props       IslandProp[]
+  trails      IslandTrail[]
 
   @@unique([islandId, kind])
   @@map("island_maps")
@@ -1011,5 +1015,27 @@ model AuthLoginSession {
 
   @@index([expiresAt])
   @@map("auth_login_sessions")
+  @@schema("ecobeasts")
+}
+
+/// Um traço de caminho da ilha (free-trails/03): só desenho.
+model IslandTrail {
+  id           Int   @id @default(autoincrement())
+  islandMapId  Int   @map("island_map_id")
+  groundTypeId Int   @map("ground_type_id")
+  /// A ordem de desenho na ilha, de 0 em diante.
+  position     Int
+  /// CHECK 8 a 64 (migration free_trails_trails)
+  width        Int   @db.SmallInt
+  /// x0, y0, x1, y1, … em pixels da arte, a partir do centro plano do hexágono (0, 0).
+  /// CHECK tamanho par, de 4 a 512 (migration free_trails_trails)
+  points       Int[]
+
+  islandMap  IslandMap  @relation(fields: [islandMapId], references: [id], onDelete: Cascade)
+  groundType GroundType @relation(fields: [groundTypeId], references: [id], onDelete: Restrict)
+
+  @@unique([islandMapId, position])
+  @@index([groundTypeId])
+  @@map("island_trails")
   @@schema("ecobeasts")
 }

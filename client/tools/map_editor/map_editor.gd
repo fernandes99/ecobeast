@@ -137,6 +137,7 @@ func _show_island(draft: IslandDraft, status: String) -> void:
 	_name_edit.editable = draft != null
 	_canvas.selected_action = -1
 	_canvas.selected_object = -1
+	_canvas.selected_trail = -1
 	_canvas.show_draft(draft)
 	_tools.set_draft(draft)
 	_history.reset(draft)
@@ -204,13 +205,18 @@ func save() -> bool:
 	_busy = true
 	_save_button.disabled = true
 	_set_message("Salvando...")
+	var clipped := _draft.clip_trails()
+	if clipped > 0:
+		_tools.path_panel.refresh()
+		_canvas.selected_trail = _tools.path_panel.selected
+		_canvas.refresh_trails()
 	var response: ApiResponse = await EditorApi.save_island(_draft.id, _draft.to_dict())
 	_busy = false
 	_save_button.disabled = false
 	if not response.ok:
 		_set_message(response.error, true)
 		return false
-	_set_message("Salvo.")
+	_set_message("Salvo." if clipped == 0 else "Salvo. %d caminho(s) passavam fora da ilha e foram cortados." % clipped)
 	_status = DictFields.get_string(response.data, "status")
 	_mark_saved()
 	_update_header()
@@ -318,9 +324,18 @@ func _paint(coord: Vector2i) -> void:
 	title = TITLE + " *"
 
 
-## Arrastando a peça solta escolhida (free-props/03).
+## Arrastando a peça solta escolhida (free-props/03) ou desenhando um caminho
+## (free-trails/04).
 func _on_pointer_dragged(flat: Vector2) -> void:
-	if not _can_paint() or not _tools.is_moving():
+	if not _can_paint():
+		return
+	if _tools.tool == EditorTools.Tool.PATH:
+		var piece := _tools.extend_path(_draft, flat)
+		if piece != null:
+			_canvas.refresh_trail_piece(piece)
+			title = TITLE + " *"
+		return
+	if not _tools.is_moving():
 		return
 	if _tools.drag(_draft, flat).is_empty():
 		return
@@ -334,6 +349,7 @@ func _on_tools_edited(step: EditorHistory.Step, merge: bool) -> void:
 	_canvas.refresh_marks()
 	_canvas.refresh_objects()
 	_canvas.refresh_props()
+	_canvas.refresh_trails()
 	_update_dirty()
 	_place_object_bar()
 
@@ -366,6 +382,8 @@ func _on_stroke_ended() -> void:
 	if not _can_paint():
 		return
 	_history.record(_tools.end_stroke(_draft))
+	if _tools.tool == EditorTools.Tool.PATH:
+		_canvas.refresh_trails()
 	_update_dirty()
 
 
@@ -374,6 +392,9 @@ func _on_history_applied(coords: Array[Vector2i]) -> void:
 	_canvas.refresh_marks()
 	_canvas.refresh_objects()
 	_canvas.refresh_props()
+	_tools.path_panel.refresh()
+	_canvas.selected_trail = _tools.path_panel.selected
+	_canvas.refresh_trails()
 	_tools.refresh_panels()
 	if _name_edit.text.strip_edges() != _draft.name:
 		_name_edit.text = _draft.name
@@ -462,9 +483,9 @@ func _on_window_input(event: InputEvent) -> void:
 		_undo()
 	elif _tool_key(key):
 		set_input_as_handled()
-	elif key.keycode >= KEY_1 and key.keycode < KEY_1 + mini(EditorTools.TOOL_NAMES.size(), 9) and not key.ctrl_pressed:
+	elif key.keycode >= KEY_1 and key.keycode < KEY_1 + EditorTools.GROUPS.size() and not key.ctrl_pressed:
 		set_input_as_handled()
-		_tools.set_tool(key.keycode - KEY_1)
+		_tools.press_group_key(key.keycode - KEY_1)
 	elif key.keycode == KEY_BRACKETLEFT:
 		set_input_as_handled()
 		_tools.set_radius(_tools.radius - 1)
@@ -485,6 +506,13 @@ func _tool_key(key: InputEventKey) -> bool:
 	if _tools.tool == EditorTools.Tool.STAMP and key.keycode == KEY_M:
 		_tools.stamp_panel.toggle_mirror()
 		return true
+	if _tools.tool == EditorTools.Tool.PATH and _tools.path_panel.selected >= 0:
+		if key.keycode == KEY_DELETE or key.keycode == KEY_BACKSPACE:
+			_tools.path_panel.delete_selected()
+			return true
+		if key.keycode == KEY_ESCAPE:
+			_tools.path_panel.select(-1)
+			return true
 	var objects := _tools.object_panel
 	if _tools.tool != EditorTools.Tool.OBJECT:
 		return false
@@ -625,6 +653,9 @@ func _build() -> void:
 		_canvas.selected_action = index
 		_canvas.refresh_brush())
 	_tools.object_panel.selection_changed.connect(_on_object_selected)
+	_tools.path_panel.changed.connect(func() -> void:
+		_canvas.selected_trail = _tools.path_panel.selected
+		_canvas.refresh_brush())
 	body.add_child(_tools.tool_column)
 	_side = VBoxContainer.new()
 	_side.custom_minimum_size.x = SIDE_WIDTH

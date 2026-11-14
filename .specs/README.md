@@ -47,6 +47,8 @@ O Ecobeast é um jogo mobile (Android/iOS, retrato): o cliente em **Godot 4.7 co
 | [island-villages](island-villages/) | Vilas nas ilhas: trilhas e pisos, objetos com bloqueio e as construções viradas ações |
 | [town-art](town-art/) | O estilo de arte das cidades, com guia: Refúgio, Loja e Arena reconhecíveis, casas e objetos da cidade como tipos novos e decorações de rua |
 | [terrain-height](terrain-height/) | A altura do terreno em cada hexágono, Colina e Montanha como biomas e a ferramenta Altura no editor |
+| [free-props](free-props/) | Arte livre nas ilhas: peças soltas em pixels, carimbos, a ferramenta Peças e a Borracha |
+| [free-trails](free-trails/) | Caminhos nas ilhas: tipos novos de chão, emendas naturais entre eles e traços livres desenhados no editor |
 
 As próximas iniciativas estão no [roadmap.md](roadmap.md).
 

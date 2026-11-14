@@ -17,6 +17,10 @@ const COLOR_HEX = /^#[0-9A-Fa-f]{6}$/;
 export const MIN_AREA_SPAWNS = 1;
 export const MAX_AREA_SPAWNS = 200;
 export const MAX_PROPS = 6_000;
+export const MAX_TRAILS = 500;
+const MAX_TRAIL_POINTS = 256;
+const MIN_TRAIL_WIDTH = 8;
+const MAX_TRAIL_WIDTH = 64;
 
 export interface DraftTile extends HexCoord {
   biome: Biome;
@@ -53,6 +57,16 @@ export interface DraftProp extends HexCoord {
   mirrored: boolean;
 }
 
+/**
+ * Um traço de caminho (free-trails/03): `points` é `x0, y0, x1, y1, …`, em pixels
+ * da arte no chão plano, a partir do centro plano do hexágono (0, 0).
+ */
+export interface DraftTrail {
+  ground: string;
+  width: number;
+  points: number[];
+}
+
 export interface DraftAreaSpecies {
   speciesId: number;
   weight: number;
@@ -75,6 +89,7 @@ export interface IslandDraft {
   actions: DraftAction[];
   objects: DraftObject[];
   props: DraftProp[];
+  trails?: DraftTrail[];
   areas: DraftArea[];
 }
 
@@ -216,6 +231,47 @@ function propsError(
   return null;
 }
 
+function trailsError(
+  trails: DraftTrail[],
+  tiles: ReadonlySet<string>,
+  known: KnownIds,
+): string | null {
+  if (trails.length > MAX_TRAILS) return 'A ilha pode ter até 500 traços.';
+  const origin = flatCenter({ q: 0, r: 0 });
+  for (const [index, trail] of trails.entries()) {
+    const number = index + 1;
+    if (!known.groundSlugs.has(trail.ground)) {
+      return `O traço ${number} tem um tipo de chão que não existe.`;
+    }
+    if (
+      !Number.isInteger(trail.width) ||
+      trail.width < MIN_TRAIL_WIDTH ||
+      trail.width > MAX_TRAIL_WIDTH
+    ) {
+      return `O traço ${number} tem a largura ${trail.width}: vai de ${MIN_TRAIL_WIDTH} a ${MAX_TRAIL_WIDTH}.`;
+    }
+    const { points } = trail;
+    if (
+      points.length % 2 !== 0 ||
+      points.length < 4 ||
+      points.length > MAX_TRAIL_POINTS * 2 ||
+      !points.every(Number.isInteger)
+    ) {
+      return `O traço ${number} precisa ter de 2 a ${MAX_TRAIL_POINTS} pontos inteiros.`;
+    }
+    for (let at = 0; at < points.length; at += 2) {
+      const hex = gridCoord({
+        x: origin.x + points[at]!,
+        y: origin.y + points[at + 1]!,
+      });
+      if (!tiles.has(hexKey(hex))) {
+        return `O traço ${number} tem um ponto fora da ilha.`;
+      }
+    }
+  }
+  return null;
+}
+
 export function blockedKeys(
   draft: Pick<IslandDraft, 'objects'>,
 ): ReadonlySet<string> {
@@ -292,6 +348,8 @@ export function draftError(draft: IslandDraft, known: KnownIds): string | null {
   if (objects) return objects;
   const props = propsError(draft.props, tiles, known);
   if (props) return props;
+  const trails = trailsError(draft.trails ?? [], tiles, known);
+  if (trails) return trails;
 
   const keys = new Set<number>();
   for (const { key } of draft.areas) {
@@ -338,7 +396,8 @@ const byRowThenColumn = (a: HexCoord, b: HexCoord): number =>
  * O rascunho em JSON, sempre igual para o mesmo conteúdo: hexágonos em ordem de
  * (r, q), ações na ordem da lista (cada uma com os hexágonos em (r, q)),
  * objetos em ordem de (r, q) do apoio (cada um com os hexágonos em (r, q)),
- * peças em ordem de (r, q, dy, dx, tipo, variante, espelho),
+ * peças em ordem de (r, q, dy, dx, tipo, variante, espelho), traços na ordem
+ * da lista (só quando há algum),
  * áreas na ordem da `key`, numeradas de novo de 1 em diante, e espécies em
  * ordem de id. É o que o `content_hash` resume.
  */
@@ -396,6 +455,16 @@ export function canonicalDraft(draft: IslandDraft): string {
         variant,
         mirrored,
       })),
+    // Só com traços: uma ilha sem traços tem o hash de antes.
+    ...(draft.trails?.length
+      ? {
+          trails: draft.trails.map(({ ground, width, points }) => ({
+            ground,
+            width,
+            points: [...points],
+          })),
+        }
+      : {}),
     areas: areas.map(({ key, name, colorHex, spawnCount, species }) => ({
       key: renumber.get(key),
       name,

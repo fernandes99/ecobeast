@@ -43,36 +43,42 @@ export class IslandsService {
     client: Tx | PrismaService,
     islandMapId: number,
   ): Promise<IslandDraft> {
-    const [map, tiles, actions, objects, props, areas] = await Promise.all([
-      client.islandMap.findUniqueOrThrow({ where: { id: islandMapId } }),
-      client.islandTile.findMany({
-        where: { islandMapId },
-        orderBy: [{ r: 'asc' }, { q: 'asc' }],
-        include: {
-          biome: { select: { slug: true } },
-          groundType: { select: { slug: true } },
-        },
-      }),
-      client.islandAction.findMany({
-        where: { islandMapId },
-        orderBy: { id: 'asc' },
-        include: { tiles: { orderBy: [{ r: 'asc' }, { q: 'asc' }] } },
-      }),
-      client.islandObject.findMany({
-        where: { islandMapId },
-        orderBy: { id: 'asc' },
-        include: { tiles: { orderBy: [{ r: 'asc' }, { q: 'asc' }] } },
-      }),
-      client.islandProp.findMany({
-        where: { islandMapId },
-        orderBy: { id: 'asc' },
-      }),
-      client.islandArea.findMany({
-        where: { islandMapId },
-        orderBy: { id: 'asc' },
-        include: { species: { orderBy: { speciesId: 'asc' } } },
-      }),
-    ]);
+    const [map, tiles, actions, objects, props, trails, areas] =
+      await Promise.all([
+        client.islandMap.findUniqueOrThrow({ where: { id: islandMapId } }),
+        client.islandTile.findMany({
+          where: { islandMapId },
+          orderBy: [{ r: 'asc' }, { q: 'asc' }],
+          include: {
+            biome: { select: { slug: true } },
+            groundType: { select: { slug: true } },
+          },
+        }),
+        client.islandAction.findMany({
+          where: { islandMapId },
+          orderBy: { id: 'asc' },
+          include: { tiles: { orderBy: [{ r: 'asc' }, { q: 'asc' }] } },
+        }),
+        client.islandObject.findMany({
+          where: { islandMapId },
+          orderBy: { id: 'asc' },
+          include: { tiles: { orderBy: [{ r: 'asc' }, { q: 'asc' }] } },
+        }),
+        client.islandProp.findMany({
+          where: { islandMapId },
+          orderBy: { id: 'asc' },
+        }),
+        client.islandTrail.findMany({
+          where: { islandMapId },
+          orderBy: { position: 'asc' },
+          include: { groundType: { select: { slug: true } } },
+        }),
+        client.islandArea.findMany({
+          where: { islandMapId },
+          orderBy: { id: 'asc' },
+          include: { species: { orderBy: { speciesId: 'asc' } } },
+        }),
+      ]);
     const keys = new Map(areas.map((area, index) => [area.id, index + 1]));
     return {
       name: map.name,
@@ -109,6 +115,11 @@ export class IslandsService {
         dy,
         variant,
         mirrored,
+      })),
+      trails: trails.map(({ groundType, width, points }) => ({
+        ground: groundType.slug,
+        width,
+        points,
       })),
       areas: areas.map(({ id, name, colorHex, spawnCount, species }) => ({
         key: keys.get(id)!,

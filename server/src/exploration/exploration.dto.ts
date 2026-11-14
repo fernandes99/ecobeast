@@ -13,7 +13,11 @@ import { ISLAND_NOT_FOUND } from '../islands/islands.service.js';
 export const INVALID_TAMER = 'Domador de depuração inválido.';
 import { BIOMES, MAX_HEIGHT } from '../domain/exploration/map-generator.js';
 import type { Biome } from '../domain/exploration/map-generator.js';
-import type { DraftObject, DraftProp } from '../domain/islands/island-draft.js';
+import type {
+  DraftObject,
+  DraftProp,
+  DraftTrail,
+} from '../domain/islands/island-draft.js';
 
 export class HexCoordDto {
   @ApiProperty({ description: 'Coluna, em coordenadas axiais.', example: 0 })
@@ -124,6 +128,25 @@ export class MapObjectDto extends HexCoordDto {
   tiles: MapObjectTileDto[];
 }
 
+export class MapTrailDto {
+  @ApiProperty({
+    description: 'O `slug` em `ground_types`.',
+    example: 'gravel_trail',
+  })
+  ground: string;
+
+  @ApiProperty({ description: 'A largura, em pixels da arte.', example: 22 })
+  width: number;
+
+  @ApiProperty({
+    type: [Number],
+    description:
+      'x0, y0, x1, y1, …, em pixels da arte, no chão plano, a partir do centro plano do hexágono (0, 0).',
+    example: [12, -40, 30, -8, 31, 40],
+  })
+  points: number[];
+}
+
 export class MapPropDto extends HexCoordDto {
   @ApiProperty({ description: 'Id em `prop_types`.', example: 6 })
   prop_type_id: number;
@@ -201,6 +224,13 @@ export class ExplorationMapDto {
     description: 'As peças soltas da ilha, só enfeite; vazio no mapa sorteado.',
   })
   props: MapPropDto[];
+
+  @ApiProperty({
+    type: [MapTrailDto],
+    description:
+      'Os traços de caminho da ilha, só desenho, na ordem de desenho; vazio no mapa sorteado.',
+  })
+  trails: MapTrailDto[];
 }
 
 export class StartExplorationBodyDto {
@@ -335,6 +365,10 @@ export function toObjectDto(object: DraftObject): MapObjectDto {
     mirrored: object.mirrored,
     tiles: object.tiles.map(({ q, r, blocks }) => ({ q, r, blocks })),
   };
+}
+
+export function toTrailDto({ ground, width, points }: DraftTrail): MapTrailDto {
+  return { ground, width, points: [...points] };
 }
 
 export function toPropDto(prop: DraftProp): MapPropDto {

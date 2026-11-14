@@ -67,6 +67,8 @@ var height_cut := -1:
 		_rebuild_all()
 
 var chunk_columns := 0
+## O chão desenhado em páginas (free-trails/02), lido pelo shader do terreno.
+var ground_mask := GroundMask.new()
 
 var _map: ExplorationMap = null
 var _textures: Dictionary[String, Texture2D] = {}
@@ -104,6 +106,7 @@ func _init() -> void:
 	_reveal_material.set_shader_parameter(&"reveal_alpha", REVEAL_ALPHA)
 	for corner: int in range(1, HEX_CORNERS.size() - 1):
 		_hex_triangles.append_array(PackedVector2Array([HEX_CORNERS[0], HEX_CORNERS[corner], HEX_CORNERS[corner + 1]]))
+	add_child(ground_mask)
 
 
 func _ready() -> void:
@@ -148,6 +151,10 @@ func set_map(map: ExplorationMap) -> void:
 	_row_chunks.clear()
 	_unbuilt_rows.clear()
 	_highlighted_row = null
+	for shader_material: ShaderMaterial in [_terrain_material, _reveal_material]:
+		shader_material.set_shader_parameter(&"ground_textures", HexGrounds.texture_array())
+		shader_material.set_shader_parameter(&"hardness", HexGrounds.hardness())
+	ground_mask.set_map(map)
 	for tile: HexTile in map.tiles.values():
 		var key := _chunk_of(tile.coord)
 		if not _unbuilt_rows.has(key):
@@ -178,6 +185,7 @@ func set_map(map: ExplorationMap) -> void:
 func update_tiles(coords: Array[Vector2i]) -> void:
 	if _map == null or coords.is_empty():
 		return
+	ground_mask.update_tiles(coords)
 	# Com pedaços, o vizinho de uma ponta pode estar no pedaço ao lado.
 	var spread: Array[int] = [0]
 	if chunk_columns > 0:
@@ -736,21 +744,26 @@ func _add_transitions(row: HexRowView, tiles: Array) -> void:
 	_add_mesh(row, HexTransitions.TEXTURE_PATH, points, texture_points)
 
 
+## A malha de chão dos hexágonos de terra que o chão toca, uma por página da máscara.
 func _add_grounds(row: HexRowView, tiles: Array) -> void:
-	var batches: Dictionary[String, HexGrounds.Batch] = {}
+	var batches: Dictionary[Vector2i, HexGrounds.Batch] = {}
 	for tile: HexTile in tiles:
-		if tile.ground.is_empty():
+		if tile.is_water() or not ground_mask.covers(tile.coord):
 			continue
-		if not batches.has(tile.ground):
-			batches[tile.ground] = HexGrounds.Batch.new()
+		var page := GroundMask.page_of(flat_center(tile.coord))
+		var texture := ground_mask.texture_of(page)
+		if texture == null:
+			continue
+		if not batches.has(page):
+			batches[page] = HexGrounds.Batch.new()
 		var flat := _tile_origin(tile.coord)
 		var faces: Dictionary[int, float] = {}
 		for neighbor: Vector2i in LOWER_NEIGHBORS:
 			faces[HexGrounds.EDGE_NEIGHBORS.find(neighbor)] = _face_height(tile.coord + neighbor, tile.height)
-		HexGrounds.add_tile(batches[tile.ground], tile, _map, flat - _rise(tile.height), flat, faces)
-	for slug: String in batches:
-		var batch := batches[slug]
-		_add_mesh(row, HexGrounds.TEXTURE_PATH % slug, batch.points, batch.texture_points, batch.colors, batch.custom, batch.shifts)
+		HexGrounds.add_tile(batches[page], tile, _map, flat - _rise(tile.height), flat, faces, page)
+	for page: Vector2i in batches:
+		var batch := batches[page]
+		_add_texture_mesh(row, ground_mask.texture_of(page), batch.points, batch.points, batch.colors, batch.custom, batch.extra)
 
 
 func _front_lift(tile: HexTile, neighbor: Vector2i) -> Vector2:
@@ -767,6 +780,8 @@ func _add_decorations(bands: Array[HexRowView], tiles: Array, props: Array) -> v
 		var decorations: Array[HexDecorations.Decoration] = []
 		sheet.append(decorations)
 		files.append({})
+	var trails := _trails_near(tiles)
+	var no_trails: Array[MapTrail] = []
 	for tile: HexTile in tiles:
 		var plants := _plants_at(tile.coord)
 		if plants == null and (_map.object_at(tile.coord) >= 0 or tile.bare):
@@ -777,10 +792,11 @@ func _add_decorations(bands: Array[HexRowView], tiles: Array, props: Array) -> v
 			decorations = HexDecorations.decorations_of_object(tile.coord, plants.variant, plants.mirrored)
 		else:
 			decorations = HexDecorations.decorations_of(tile, _map.map_seed)
+		var tile_trails := trails if ground_mask.has_trail(tile.coord) else no_trails
 		for decoration: HexDecorations.Decoration in decorations:
 			if plants == null and allows_decoration.is_valid() and not allows_decoration.call(tile.coord, decoration.kind):
 				continue
-			if plants == null and not HexGrounds.allows_decoration(tile, decoration.kind):
+			if plants == null and not HexGrounds.allows_on(HexGrounds.ground_at(tile, flat_center(tile.coord) + Vector2(decoration.offset), tile_trails), decoration.kind):
 				continue
 			decoration.base = center + decoration.offset
 			sheet[band_of(decoration.offset.y)].append(decoration)
@@ -810,6 +826,37 @@ func _add_decorations(bands: Array[HexRowView], tiles: Array, props: Array) -> v
 		_add_decoration_mesh(bands[band], decorations)
 		for path: String in files[band]:
 			_add_file_props(bands[band], path, files[band][path])
+
+
+func _trails_near(tiles: Array) -> Array[MapTrail]:
+	var near: Array[MapTrail] = []
+	if _map.trails.is_empty() or tiles.is_empty():
+		return near
+	var area := Rect2(flat_center((tiles[0] as HexTile).coord), Vector2.ZERO)
+	for tile: HexTile in tiles:
+		area = area.expand(flat_center(tile.coord))
+	area = area.grow(STEP_X)
+	for trail: MapTrail in _map.trails:
+		if GroundMask.trail_bounds(trail).intersects(area):
+			near.append(trail)
+	return near
+
+
+## Os traços mudaram (o editor, free-trails/04): redesenha as páginas e refaz os
+## hexágonos que os traços de `changed` cortam, para a malha de chão e as decorações.
+func set_trails(trails: Array[MapTrail], changed: Array[MapTrail]) -> void:
+	if _map == null:
+		return
+	_map.trails = trails
+	ground_mask.set_trails(trails, changed)
+	var coords: Dictionary[Vector2i, bool] = {}
+	for trail: MapTrail in changed:
+		for coord: Vector2i in GroundMask.trail_coords(trail):
+			if _map.has(coord):
+				coords[coord] = true
+	var list: Array[Vector2i] = []
+	list.assign(coords.keys())
+	update_tiles(list)
 
 
 ## Peças com arte própria: o pé no meio da borda de baixo da imagem, sem vento.
@@ -898,7 +945,10 @@ func _face_height(neighbor: Vector2i, level: int) -> float:
 
 
 func _add_mesh(row: HexRowView, path: String, points: PackedVector2Array, texture_points: PackedVector2Array, colors := PackedColorArray(), custom := PackedFloat32Array(), custom1 := PackedFloat32Array()) -> void:
-	var texture := _texture(path)
+	_add_texture_mesh(row, _texture(path), points, texture_points, colors, custom, custom1)
+
+
+func _add_texture_mesh(row: HexRowView, texture: Texture2D, points: PackedVector2Array, texture_points: PackedVector2Array, colors := PackedColorArray(), custom := PackedFloat32Array(), custom1 := PackedFloat32Array()) -> void:
 	if texture == null or points.is_empty():
 		return
 	var to_uv := Transform2D(Vector2(1.0 / texture.get_width(), 0.0), Vector2(0.0, 1.0 / texture.get_height()), Vector2.ZERO)

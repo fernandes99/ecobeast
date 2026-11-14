@@ -16,6 +16,8 @@ class Step:
 	var objects_after: Variant = null
 	var props_before: Variant = null
 	var props_after: Variant = null
+	var trails_before: Variant = null
+	var trails_after: Variant = null
 	var areas_before: Variant = null
 	var areas_after: Variant = null
 	var start_before: Variant = null
@@ -24,7 +26,7 @@ class Step:
 	var name_after: Variant = null
 
 	func is_empty() -> bool:
-		return after.is_empty() and actions_after == null and objects_after == null and props_after == null and areas_after == null and start_after == null and name_after == null
+		return after.is_empty() and actions_after == null and objects_after == null and props_after == null and trails_after == null and areas_after == null and start_after == null and name_after == null
 
 
 var _undo_redo := UndoRedo.new()
@@ -97,6 +99,9 @@ func _apply(step: Step, forward: bool) -> void:
 	var props: Variant = step.props_after if forward else step.props_before
 	if props != null:
 		_draft.props = (props as Array).duplicate(true)
+	var trails: Variant = step.trails_after if forward else step.trails_before
+	if trails != null:
+		_draft.trails = IslandDraft.copy_trails(trails)
 	var areas: Variant = step.areas_after if forward else step.areas_before
 	if areas != null:
 		_draft.areas = (areas as Array).duplicate(true)

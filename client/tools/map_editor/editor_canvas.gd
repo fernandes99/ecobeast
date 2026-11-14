@@ -34,6 +34,7 @@ var marked: Callable = Callable()
 var brush_color: Callable = Callable()
 var selected_object := -1
 var selected_prop := -1
+var selected_trail := -1
 var action_colors: Dictionary[int, Color] = {}
 var action_names: Dictionary[int, String] = {}
 var selected_action := -1
@@ -53,6 +54,8 @@ var _show_blocks := false
 ## decorações dele, porque a Vegetação é desenhada com elas.
 var _object_tiles: Dictionary[Vector2i, String] = {}
 var _prop_tiles: Dictionary[Vector2i, String] = {}
+## Cópias dos traços como estão desenhados, para achar o que mudou.
+var _shown_trails: Array[MapTrail] = []
 var _draft: IslandDraft = null
 var _map: ExplorationMap = null
 var _zoom := OPEN_ZOOM
@@ -109,6 +112,8 @@ func show_draft(draft: IslandDraft, fit: bool = true) -> void:
 	_object_tiles = _current_object_tiles()
 	_prop_tiles = _current_prop_tiles()
 	_overview.set_map(_map)
+	_shown_trails = IslandDraft.copy_trails(draft.trails) if draft != null else []
+	_overview.set_trails(_map.trails)
 	refresh_marks()
 	if fit and draft != null:
 		fit_whole_island()
@@ -158,6 +163,36 @@ func refresh_props() -> void:
 			changed.append(coord)
 	_prop_tiles = now
 	update_tiles(changed)
+	_overlay.queue_redraw()
+
+
+## Os traços mudaram no rascunho (free-trails/04): redesenha os que entraram, saíram
+## ou mudaram, na versão de antes e na de agora.
+func refresh_trails() -> void:
+	if _draft == null or _map == null:
+		return
+	var before := IslandDraft.trails_state(_shown_trails)
+	var now := IslandDraft.trails_state(_draft.trails)
+	var changed: Array[MapTrail] = []
+	for index: int in _shown_trails.size():
+		if not now.has(before[index]):
+			changed.append(_shown_trails[index])
+	for index: int in _draft.trails.size():
+		if not before.has(now[index]):
+			changed.append(_draft.trails[index])
+	_shown_trails = IslandDraft.copy_trails(_draft.trails)
+	if not changed.is_empty() or before != now:
+		_map_view.set_trails(_draft.trails.duplicate(), changed)
+		_overview.set_trails(_map.trails)
+	_overlay.queue_redraw()
+
+
+## Enquanto um caminho é desenhado: só o pedaço novo.
+func refresh_trail_piece(piece: MapTrail) -> void:
+	if _draft == null or _map == null:
+		return
+	_map_view.set_trails(_draft.trails.duplicate(), [piece])
+	_overview.set_trails(_map.trails)
 	_overlay.queue_redraw()
 
 
@@ -491,6 +526,8 @@ func draw_overlay(node: Node2D) -> void:
 	if marked.is_valid():
 		for coord: Vector2i in marked.call():
 			_outline(node, coord, UiPalette.ACCENT)
+	if selected_trail >= 0 and selected_trail < _draft.trails.size():
+		_draw_trail(node, _draft.trails[selected_trail])
 	if selected_prop >= 0:
 		var rect := prop_rect(selected_prop)
 		if rect.has_area():
@@ -511,6 +548,23 @@ func draw_overlay(node: Node2D) -> void:
 		var top := foot - Vector2(0.0, FLAG_HEIGHT)
 		node.draw_line(foot, top, UiPalette.TEXT, 2.0)
 		node.draw_colored_polygon(PackedVector2Array([top, top + Vector2(FLAG_WIDTH, FLAG_HEIGHT * 0.25), top + Vector2(0.0, FLAG_HEIGHT * 0.5)]), UiPalette.WARNING)
+
+
+## O caminho escolhido: a linha do meio e os pontos guardados, na altura do chão.
+func _draw_trail(node: Node2D, trail: MapTrail) -> void:
+	var line := PackedVector2Array()
+	for point: Vector2 in HexGrounds.smoothed(trail):
+		line.append(_screen_point(point))
+	if line.size() >= 2:
+		node.draw_polyline(line, UiPalette.ACCENT, OUTLINE_WIDTH)
+	for point: Vector2 in trail.points:
+		node.draw_circle(_screen_point(point), 3.0, UiPalette.ACCENT)
+
+
+func _screen_point(flat: Vector2) -> Vector2:
+	if is_overview():
+		return _origin + flat * _zoom
+	return _origin + (flat - Vector2(0.0, _draft.rise_at(HexMapView.grid_coord(flat)))) * _zoom
 
 
 ## Um X vermelho em cada hexágono bloqueado.

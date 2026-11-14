@@ -7,6 +7,7 @@ var _multimesh := MultiMesh.new()
 var _index_of: Dictionary[Vector2i, int] = {}
 var _coord_at: Array[Vector2i] = []
 var _count := 0
+var _trails: Array[MapTrail] = []
 
 
 func _init() -> void:
@@ -33,6 +34,11 @@ func set_map(map: ExplorationMap) -> void:
 	for tile: HexTile in map.tiles.values():
 		_add(tile)
 	_multimesh.visible_instance_count = _count
+	queue_redraw()
+
+
+func set_trails(trails: Array[MapTrail]) -> void:
+	_trails = trails.duplicate()
 	queue_redraw()
 
 
@@ -109,3 +115,7 @@ static func _average_color(path: String) -> Color:
 func _draw() -> void:
 	if _count > 0:
 		draw_multimesh(_multimesh, null)
+	for trail: MapTrail in _trails:
+		var color := _average_color(HexGrounds.TEXTURE_PATH % trail.ground) if not _surface_colors.has(trail.ground) else _surface_colors[trail.ground]
+		_surface_colors[trail.ground] = color
+		draw_polyline(HexGrounds.smoothed(trail), color, trail.width)

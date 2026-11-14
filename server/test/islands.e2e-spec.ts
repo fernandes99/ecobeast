@@ -48,6 +48,7 @@ interface IslandMap {
     variant: number;
     mirrored: boolean;
   }[];
+  trails: { ground: string; width: number; points: number[] }[];
 }
 
 function hexagon(radius: number): Tile[] {
@@ -108,6 +109,10 @@ describe('Ilhas do jogador (e2e)', () => {
           variant: 2,
           mirrored: true,
         },
+      ],
+      trails: [
+        { ground: 'dirt_trail', width: 22, points: [0, 0, 64, 0] },
+        { ground: 'gravel_trail', width: 14, points: [-32, 42, 0, 0, 32, -42] },
       ],
       areas: [
         {
@@ -286,6 +291,10 @@ describe('Ilhas do jogador (e2e)', () => {
           mirrored: true,
         },
       ]);
+      expect(map.trails).toEqual([
+        { ground: 'dirt_trail', width: 22, points: [0, 0, 64, 0] },
+        { ground: 'gravel_trail', width: 14, points: [-32, 42, 0, 0, 32, -42] },
+      ]);
       expect(map.tamers).toEqual([]);
 
       expect(map.creatures).toHaveLength(8);
@@ -376,6 +385,7 @@ describe('Ilhas do jogador (e2e)', () => {
       expect(map.actions).toEqual([]);
       expect(map.objects).toEqual([]);
       expect(map.props).toEqual([]);
+      expect(map.trails).toEqual([]);
       expect(map.tiles.some((tile) => tile.ground !== undefined)).toBe(false);
       expect(map.tiles.length).toBeGreaterThan(1000);
     });

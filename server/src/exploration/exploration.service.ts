@@ -37,6 +37,7 @@ import {
   MapTamerDto,
   toObjectDto,
   toPropDto,
+  toTrailDto,
 } from './exploration.dto.js';
 import { ExplorationStore } from './exploration.store.js';
 import {
@@ -108,6 +109,7 @@ export class ExplorationService {
         actions: [],
         objects: [],
         props: [],
+        trails: [],
       },
     };
   }
@@ -153,6 +155,7 @@ export class ExplorationService {
         })),
         objects: draft.objects.map(toObjectDto),
         props: draft.props.map(toPropDto),
+        trails: (draft.trails ?? []).map(toTrailDto),
       },
     };
   }

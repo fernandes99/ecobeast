@@ -175,6 +175,33 @@ export class DraftPropDto extends EditorHexDto {
   mirrored: boolean;
 }
 
+export class DraftTrailDto {
+  @ApiProperty({
+    description: 'O `slug` em `ground_types`.',
+    example: 'gravel_trail',
+  })
+  @IsString(text('ground'))
+  ground: string;
+
+  @ApiProperty({
+    description: 'A largura, em pixels da arte, de 8 a 64.',
+    example: 22,
+  })
+  @IsInt(integer('width'))
+  width: number;
+
+  @ApiProperty({
+    type: [Number],
+    description:
+      'x0, y0, x1, y1, …: de 2 a 256 pontos, em pixels da arte, no chão plano, ' +
+      'a partir do centro plano do hexágono (0, 0). Todo ponto cai num hexágono da ilha.',
+    example: [12, -40, 30, -8, 31, 40],
+  })
+  @IsArray(list('points'))
+  @IsInt({ each: true, message: 'points precisa ter só números inteiros.' })
+  points: number[];
+}
+
 export class DraftAreaSpeciesDto {
   @ApiProperty({ example: 4 })
   @IsInt(integer('species_id'))
@@ -273,6 +300,17 @@ export class IslandDraftDto {
   @ValidateNested({ each: true })
   @Type(() => DraftPropDto)
   props?: DraftPropDto[];
+
+  @ApiPropertyOptional({
+    type: [DraftTrailDto],
+    description:
+      'Os traços de caminho, só desenho, até 500, na ordem de desenho. Sem o campo, a ilha fica sem traços.',
+  })
+  @IsOptional()
+  @IsArray(list('trails'))
+  @ValidateNested({ each: true })
+  @Type(() => DraftTrailDto)
+  trails?: DraftTrailDto[];
 
   @ApiProperty({ type: [DraftAreaDto] })
   @IsArray(list('areas'))
