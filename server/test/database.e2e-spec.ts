@@ -38,10 +38,10 @@ describe('restrições do banco (e2e)', () => {
     expect(rows.map((row) => row.table_name)).toEqual([]);
   });
 
-  it('as 57 tabelas e o histórico de migrations ficam no schema ecobeasts', async () => {
+  it('as 59 tabelas e o histórico de migrations ficam no schema ecobeasts', async () => {
     const rows = await prisma.$queryRaw<{ n: number }[]>`
       SELECT count(*)::int AS n FROM information_schema.tables WHERE table_schema = 'ecobeasts'`;
-    expect(rows[0].n).toBe(58);
+    expect(rows[0].n).toBe(60);
   });
 
   it('recusa Técnica com precisão 150', async () => {
@@ -585,6 +585,27 @@ describe('restrições do banco (e2e)', () => {
         });
         expectRejected(result, check);
       }
+    });
+
+    it('recusa parede com um ponto só ou com 3 números (free-fences/01)', async () => {
+      for (const points of [[0, 0], [0, 0, 10]]) {
+        const result = await attempt(prisma, async (tx) => {
+          const map = await draftMap(tx);
+          await tx.islandWall.create({
+            data: { islandMapId: map.id, wallTypeId: 1, position: 0, points },
+          });
+        });
+        expectRejected(result, 'island_walls_points_check');
+      }
+    });
+
+    it('recusa tipo de parede com slug fora do formato (free-fences/01)', async () => {
+      const result = await attempt(prisma, (tx) =>
+        tx.wallType.create({
+          data: { slug: 'Muro Alto', name: 'Teste', visible: true },
+        }),
+      );
+      expectRejected(result, 'wall_types_slug_check');
     });
 
     it('recusa tipo de chão e de ação fora da lista', async () => {

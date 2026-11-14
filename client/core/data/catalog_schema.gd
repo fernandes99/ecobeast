@@ -191,6 +191,10 @@ const TABLES := {
 		"key": ["id"],
 		"columns": {"id": ID, "slug": SLUG, "name": TEXT, "variants": {"type": "int", "min": 1}},
 	},
+	"wall_types": {
+		"key": ["id"],
+		"columns": {"id": ID, "slug": SLUG, "name": TEXT, "visible": {"type": "bool"}},
+	},
 	"species": {
 		"key": ["id"],
 		"columns": {

@@ -208,6 +208,9 @@ func save() -> bool:
 	_save_button.disabled = true
 	_set_message("Salvando...")
 	var clipped := _draft.clip_trails()
+	var clipped_walls := _draft.clip_walls()
+	if clipped_walls > 0:
+		_canvas.refresh_walls()
 	if clipped > 0:
 		_tools.path_panel.refresh()
 		_canvas.selected_trail = _tools.path_panel.selected
@@ -218,7 +221,12 @@ func save() -> bool:
 	if not response.ok:
 		_set_message(response.error, true)
 		return false
-	_set_message("Salvo." if clipped == 0 else "Salvo. %d caminho(s) passavam fora da ilha e foram cortados." % clipped)
+	var message := "Salvo."
+	if clipped > 0:
+		message += " %d caminho(s) passavam fora da ilha e foram cortados." % clipped
+	if clipped_walls > 0:
+		message += " %d parede(s) passavam fora da ilha e foram cortadas." % clipped_walls
+	_set_message(message)
 	_status = DictFields.get_string(response.data, "status")
 	_mark_saved()
 	_update_header()

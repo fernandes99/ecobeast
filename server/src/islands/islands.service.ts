@@ -43,7 +43,7 @@ export class IslandsService {
     client: Tx | PrismaService,
     islandMapId: number,
   ): Promise<IslandDraft> {
-    const [map, tiles, actions, objects, props, trails, npcs, areas] =
+    const [map, tiles, actions, objects, props, trails, walls, npcs, areas] =
       await Promise.all([
         client.islandMap.findUniqueOrThrow({ where: { id: islandMapId } }),
         client.islandTile.findMany({
@@ -72,6 +72,11 @@ export class IslandsService {
           where: { islandMapId },
           orderBy: { position: 'asc' },
           include: { groundType: { select: { slug: true } } },
+        }),
+        client.islandWall.findMany({
+          where: { islandMapId },
+          orderBy: { position: 'asc' },
+          include: { wallType: { select: { slug: true } } },
         }),
         client.islandNpc.findMany({
           where: { islandMapId },
@@ -124,6 +129,10 @@ export class IslandsService {
       trails: trails.map(({ groundType, width, points }) => ({
         ground: groundType.slug,
         width,
+        points,
+      })),
+      walls: walls.map(({ wallType, points }) => ({
+        type: wallType.slug,
         points,
       })),
       npcs: npcs.map((npc) => ({

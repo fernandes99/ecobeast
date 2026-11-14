@@ -10,6 +10,7 @@ import {
   MAX_NPCS,
   MAX_PROPS,
   MAX_TRAILS,
+  MAX_WALLS,
   publishError,
 } from './island-draft.js';
 
@@ -29,6 +30,7 @@ const known: KnownIds = {
     [BENCH, 2],
   ]),
   npcIds: new Set([1, 2]),
+  wallSlugs: new Set(['wood_fence', 'invisible_wall']),
 };
 
 function island(): IslandDraft {
@@ -671,6 +673,68 @@ describe('os traços de caminho (free-trails/03)', () => {
       ground: 'cobble_floor',
       width: 22,
       points: [0, 0, 30, -2, 64, 0],
+    });
+  });
+});
+
+describe('as paredes (free-fences/01)', () => {
+  const wall = () => ({ type: 'wood_fence', points: [0, 0, 64, 0] });
+
+  it('aceita uma parede sobre a ilha', () => {
+    const draft = island();
+    draft.walls = [wall(), { type: 'invisible_wall', points: [0, 0, 30, 4] }];
+    expect(draftError(draft, known)).toBeNull();
+  });
+
+  it('recusa uma parede com tipo que não existe', () => {
+    const draft = island();
+    draft.walls = [wall(), wall(), { ...wall(), type: 'lava_wall' }];
+    expect(draftError(draft, known)).toBe(
+      'A parede 3 tem um tipo que não existe.',
+    );
+  });
+
+  it('recusa um ponto só, mais de 128 pontos ou coordenada quebrada', () => {
+    const draft = island();
+    const message = 'A parede 1 precisa ter de 2 a 128 pontos inteiros.';
+    for (const points of [
+      [0, 0],
+      Array.from({ length: 258 }, () => 0),
+      [0, 0, 1],
+      [0, 0, 1.5, 0],
+    ]) {
+      draft.walls = [{ ...wall(), points }];
+      expect(draftError(draft, known)).toBe(message);
+    }
+  });
+
+  it('recusa um ponto fora da ilha', () => {
+    const draft = island();
+    draft.walls = [wall(), { ...wall(), points: [0, 0, 400, 0] }];
+    expect(draftError(draft, known)).toBe(
+      'A parede 2 tem um ponto fora da ilha.',
+    );
+  });
+
+  it(`recusa mais de ${MAX_WALLS} paredes`, () => {
+    const draft = island();
+    draft.walls = Array.from({ length: MAX_WALLS + 1 }, wall);
+    expect(draftError(draft, known)).toBe('A ilha pode ter até 2.000 paredes.');
+  });
+
+  it('leva as paredes no hash, na ordem, e uma ilha sem paredes tem o hash de antes', () => {
+    const draft = island();
+    const plain = draftHash(draft);
+    draft.walls = [];
+    expect(draftHash(draft)).toBe(plain);
+    draft.walls = [wall(), { ...wall(), type: 'invisible_wall' }];
+    const two = draftHash(draft);
+    expect(two).not.toBe(plain);
+    draft.walls.reverse();
+    expect(draftHash(draft)).not.toBe(two);
+    expect(JSON.parse(canonicalDraft(draft)).walls[0]).toEqual({
+      type: 'invisible_wall',
+      points: [0, 0, 64, 0],
     });
   });
 });

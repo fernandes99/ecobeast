@@ -23,6 +23,7 @@ import {
   toObjectDto,
   toPropDto,
   toTrailDto,
+  toWallDto,
 } from '../exploration/exploration.dto.js';
 import type {
   IslandCreatedResponseDto,
@@ -99,6 +100,10 @@ export function toDraft(dto: IslandDraftDto): IslandDraft {
       width,
       points: [...points],
     })),
+    walls: (dto.walls ?? []).map(({ type, points }) => ({
+      type,
+      points: [...points],
+    })),
     npcs: (dto.npcs ?? []).map((npc) => ({
       npcId: npc.npc_id,
       q: npc.q,
@@ -135,6 +140,7 @@ function toDto(draft: IslandDraft): IslandDraftDto {
     objects: draft.objects.map(toObjectDto),
     props: draft.props.map(toPropDto),
     trails: (draft.trails ?? []).map(toTrailDto),
+    walls: (draft.walls ?? []).map(toWallDto),
     npcs: (draft.npcs ?? []).map(toNpcDto),
     areas: draft.areas.map(({ key, name, colorHex, spawnCount, species }) => ({
       key,
@@ -280,16 +286,16 @@ export class IslandsEditorService {
   }
 
   private async knownIds(): Promise<KnownIds> {
-    const [actions, objects, grounds, species, props, npcs] = await Promise.all(
-      [
+    const [actions, objects, grounds, species, props, npcs, walls] =
+      await Promise.all([
         this.prisma.actionType.findMany({ select: { id: true } }),
         this.prisma.mapObjectType.findMany({ select: { id: true } }),
         this.prisma.groundType.findMany({ select: { slug: true } }),
         this.prisma.species.findMany({ select: { id: true } }),
         this.prisma.propType.findMany({ select: { id: true, variants: true } }),
         this.prisma.npc.findMany({ select: { id: true } }),
-      ],
-    );
+        this.prisma.wallType.findMany({ select: { slug: true } }),
+      ]);
     return {
       actionTypeIds: new Set(actions.map(({ id }) => id)),
       objectTypeIds: new Set(objects.map(({ id }) => id)),
@@ -297,6 +303,7 @@ export class IslandsEditorService {
       speciesIds: new Set(species.map(({ id }) => id)),
       propVariants: new Map(props.map(({ id, variants }) => [id, variants])),
       npcIds: new Set(npcs.map(({ id }) => id)),
+      wallSlugs: new Set(walls.map(({ slug }) => slug)),
     };
   }
 
@@ -448,6 +455,23 @@ export class IslandsEditorService {
     for (let first = 0; first < trails.length; first += TILE_CHUNK) {
       await tx.islandTrail.createMany({
         data: trails.slice(first, first + TILE_CHUNK),
+      });
+    }
+
+    const wallIds = new Map(
+      (await tx.wallType.findMany({ select: { id: true, slug: true } })).map(
+        ({ id, slug }) => [slug, id],
+      ),
+    );
+    const walls = (draft.walls ?? []).map(({ type, points }, position) => ({
+      islandMapId: map.id,
+      wallTypeId: wallIds.get(type)!,
+      position,
+      points,
+    }));
+    for (let first = 0; first < walls.length; first += TILE_CHUNK) {
+      await tx.islandWall.createMany({
+        data: walls.slice(first, first + TILE_CHUNK),
       });
     }
 

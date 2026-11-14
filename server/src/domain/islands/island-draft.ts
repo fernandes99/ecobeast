@@ -21,6 +21,8 @@ export const MAX_TRAILS = 500;
 const MAX_TRAIL_POINTS = 256;
 const MIN_TRAIL_WIDTH = 8;
 const MAX_TRAIL_WIDTH = 64;
+export const MAX_WALLS = 2000;
+const MAX_WALL_POINTS = 128;
 export const MAX_NPCS = 200;
 export const MAX_NPC_TILES = 40;
 export const MAX_DIALOGUE_LENGTH = 2_000;
@@ -70,6 +72,15 @@ export interface DraftTrail {
   points: number[];
 }
 
+/**
+ * Uma parede (free-fences/01): `type` é o slug de `wall_types`, e `points` é como o
+ * de um traço.
+ */
+export interface DraftWall {
+  type: string;
+  points: number[];
+}
+
 /** Um NPC do catálogo posto em `(q, r)`, que também faz parte do passeio. */
 export interface DraftNpc extends HexCoord {
   npcId: number;
@@ -103,6 +114,7 @@ export interface IslandDraft {
   objects: DraftObject[];
   props: DraftProp[];
   trails?: DraftTrail[];
+  walls?: DraftWall[];
   npcs?: DraftNpc[];
   areas: DraftArea[];
 }
@@ -115,6 +127,7 @@ export interface KnownIds {
   /** O máximo de variantes de cada tipo de peça solta. */
   propVariants: ReadonlyMap<number, number>;
   npcIds: ReadonlySet<number>;
+  wallSlugs: ReadonlySet<string>;
 }
 
 const at = ({ q, r }: HexCoord): string => `(${q}, ${r})`;
@@ -287,6 +300,40 @@ function trailsError(
   return null;
 }
 
+function wallsError(
+  walls: DraftWall[],
+  tiles: ReadonlySet<string>,
+  known: KnownIds,
+): string | null {
+  if (walls.length > MAX_WALLS) return 'A ilha pode ter até 2.000 paredes.';
+  const origin = flatCenter({ q: 0, r: 0 });
+  for (const [index, wall] of walls.entries()) {
+    const number = index + 1;
+    if (!known.wallSlugs.has(wall.type)) {
+      return `A parede ${number} tem um tipo que não existe.`;
+    }
+    const { points } = wall;
+    if (
+      points.length % 2 !== 0 ||
+      points.length < 4 ||
+      points.length > MAX_WALL_POINTS * 2 ||
+      !points.every(Number.isInteger)
+    ) {
+      return `A parede ${number} precisa ter de 2 a ${MAX_WALL_POINTS} pontos inteiros.`;
+    }
+    for (let at = 0; at < points.length; at += 2) {
+      const hex = gridCoord({
+        x: origin.x + points[at]!,
+        y: origin.y + points[at + 1]!,
+      });
+      if (!tiles.has(hexKey(hex))) {
+        return `A parede ${number} tem um ponto fora da ilha.`;
+      }
+    }
+  }
+  return null;
+}
+
 function npcsError(
   npcs: DraftNpc[],
   tiles: ReadonlySet<string>,
@@ -407,6 +454,8 @@ export function draftError(draft: IslandDraft, known: KnownIds): string | null {
   if (props) return props;
   const trails = trailsError(draft.trails ?? [], tiles, known);
   if (trails) return trails;
+  const walls = wallsError(draft.walls ?? [], tiles, known);
+  if (walls) return walls;
   const npcs = npcsError(draft.npcs ?? [], tiles, known);
   if (npcs) return npcs;
 
@@ -456,7 +505,8 @@ const byRowThenColumn = (a: HexCoord, b: HexCoord): number =>
  * (r, q), ações na ordem da lista (cada uma com os hexágonos em (r, q)),
  * objetos em ordem de (r, q) do apoio (cada um com os hexágonos em (r, q)),
  * peças em ordem de (r, q, dy, dx, tipo, variante, espelho), traços na ordem
- * da lista (só quando há algum), NPCs em ordem de (r, q, npc_id), cada um com o
+ * da lista (só quando há algum), paredes na ordem da lista (só quando há alguma),
+ * NPCs em ordem de (r, q, npc_id), cada um com o
  * passeio em (r, q) (só quando há algum),
  * áreas na ordem da `key`, numeradas de novo de 1 em diante, e espécies em
  * ordem de id. É o que o `content_hash` resume.
@@ -521,6 +571,15 @@ export function canonicalDraft(draft: IslandDraft): string {
           trails: draft.trails.map(({ ground, width, points }) => ({
             ground,
             width,
+            points: [...points],
+          })),
+        }
+      : {}),
+    // Só com paredes: uma ilha sem paredes tem o hash de antes.
+    ...(draft.walls?.length
+      ? {
+          walls: draft.walls.map(({ type, points }) => ({
+            type,
             points: [...points],
           })),
         }

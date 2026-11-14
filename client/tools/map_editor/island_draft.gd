@@ -22,6 +22,8 @@ var areas: Array = []
 var npcs: Array = []
 ## Os traços de caminho, na ordem de desenho (free-trails/04).
 var trails: Array[MapTrail] = []
+## As paredes, na ordem (free-fences/01).
+var walls: Array[MapWall] = []
 
 
 static func max_variant(biome: String) -> int:
@@ -67,6 +69,10 @@ static func from_dict(data: Dictionary) -> IslandDraft:
 		var trail: MapTrail = MapTrail.from_dict(entry) if entry is Dictionary else null
 		if trail != null:
 			draft.trails.append(trail)
+	for entry: Variant in DictFields.get_array(data, "walls"):
+		var wall: MapWall = MapWall.from_dict(entry) if entry is Dictionary else null
+		if wall != null:
+			draft.walls.append(wall)
 	draft.areas = DictFields.get_array(data, "areas").duplicate(true)
 	draft.npcs = DictFields.get_array(data, "npcs").duplicate(true)
 	return draft
@@ -91,6 +97,7 @@ func to_dict() -> Dictionary:
 		"objects": objects,
 		"props": props,
 		"trails": trails.map(func(trail: MapTrail) -> Dictionary: return trail.to_dict()),
+		"walls": walls.map(func(wall: MapWall) -> Dictionary: return wall.to_dict()),
 		"areas": areas,
 		"npcs": npcs,
 	}
@@ -343,6 +350,37 @@ static func trails_state(list: Array) -> Array:
 	return list.map(func(trail: MapTrail) -> Dictionary: return trail.to_dict())
 
 
+static func copy_walls(list: Array) -> Array[MapWall]:
+	var copies: Array[MapWall] = []
+	for wall: MapWall in list:
+		copies.append(wall.copy())
+	return copies
+
+
+static func walls_state(list: Array) -> Array:
+	return list.map(func(wall: MapWall) -> Dictionary: return wall.to_dict())
+
+
+## Tira os pontos das paredes que caíram fora da ilha e apaga a parede que fica com
+## menos de 2. Devolve quantas paredes mudaram.
+func clip_walls() -> int:
+	var changed := 0
+	for index: int in range(walls.size() - 1, -1, -1):
+		var wall := walls[index]
+		var kept := PackedVector2Array()
+		for point: Vector2 in wall.points:
+			if tiles.has(HexMapView.grid_coord(point)):
+				kept.append(point)
+		if kept.size() == wall.points.size():
+			continue
+		changed += 1
+		if kept.size() < 2:
+			walls.remove_at(index)
+		else:
+			wall.points = kept
+	return changed
+
+
 ## O traço de cima que passa no ponto do chão plano, ou -1.
 func trail_at(flat: Vector2) -> int:
 	for index: int in range(trails.size() - 1, -1, -1):
@@ -383,6 +421,7 @@ func to_map() -> ExplorationMap:
 	map.set_objects(map_objects())
 	map.props = map_props()
 	map.trails = trails.duplicate()
+	map.walls = walls.duplicate()
 	return map
 
 

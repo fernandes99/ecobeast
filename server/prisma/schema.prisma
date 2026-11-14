@@ -846,6 +846,7 @@ model IslandMap {
   areas       IslandArea[]
   props       IslandProp[]
   trails      IslandTrail[]
+  walls       IslandWall[]
   npcs        IslandNpc[]
 
   @@unique([islandId, kind])
@@ -1056,6 +1057,41 @@ model IslandTrail {
   @@unique([islandMapId, position])
   @@index([groundTypeId])
   @@map("island_trails")
+  @@schema("ecobeasts")
+}
+
+/// Um tipo de parede (free-fences/01): a cerca de madeira, o muro de pedra e a parede invisível.
+model WallType {
+  id      Int     @id @default(autoincrement())
+  /// CHECK ^[a-z0-9_]+$ (migration free_fences_walls)
+  slug    String  @unique
+  name    String
+  /// Desenhada no jogo; a invisível só bloqueia.
+  visible Boolean
+
+  walls IslandWall[]
+
+  @@map("wall_types")
+  @@schema("ecobeasts")
+}
+
+/// Uma parede da ilha (free-fences/01): a linha bloqueia o Domador.
+model IslandWall {
+  id          Int   @id @default(autoincrement())
+  islandMapId Int   @map("island_map_id")
+  wallTypeId  Int   @map("wall_type_id")
+  /// A ordem na ilha, de 0 em diante.
+  position    Int
+  /// x0, y0, x1, y1, … em pixels da arte, a partir do centro plano do hexágono (0, 0).
+  /// CHECK tamanho par, de 4 a 256 (migration free_fences_walls)
+  points      Int[]
+
+  islandMap IslandMap @relation(fields: [islandMapId], references: [id], onDelete: Cascade)
+  wallType  WallType  @relation(fields: [wallTypeId], references: [id], onDelete: Restrict)
+
+  @@unique([islandMapId, position])
+  @@index([wallTypeId])
+  @@map("island_walls")
   @@schema("ecobeasts")
 }
 

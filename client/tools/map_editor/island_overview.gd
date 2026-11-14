@@ -3,11 +3,15 @@ extends Node2D
 
 static var _surface_colors: Dictionary[String, Color] = {}
 
+## A largura das paredes na visão de cima, em pixels da arte.
+const WALL_WIDTH := 6.0
+
 var _multimesh := MultiMesh.new()
 var _index_of: Dictionary[Vector2i, int] = {}
 var _coord_at: Array[Vector2i] = []
 var _count := 0
 var _trails: Array[MapTrail] = []
+var _walls: Array[MapWall] = []
 
 
 func _init() -> void:
@@ -39,6 +43,11 @@ func set_map(map: ExplorationMap) -> void:
 
 func set_trails(trails: Array[MapTrail]) -> void:
 	_trails = trails.duplicate()
+	queue_redraw()
+
+
+func set_walls(walls: Array[MapWall]) -> void:
+	_walls = walls.duplicate()
 	queue_redraw()
 
 
@@ -119,3 +128,8 @@ func _draw() -> void:
 		var color := _average_color(HexGrounds.TEXTURE_PATH % trail.ground) if not _surface_colors.has(trail.ground) else _surface_colors[trail.ground]
 		_surface_colors[trail.ground] = color
 		draw_polyline(HexGrounds.smoothed(trail), color, trail.width)
+	for wall: MapWall in _walls:
+		var visible_wall := HexWalls.is_visible(wall.type)
+		if visible_wall and not _surface_colors.has(wall.type):
+			_surface_colors[wall.type] = _average_color(HexWalls.ART_PATH % wall.type)
+		draw_polyline(wall.points, _surface_colors[wall.type] if visible_wall else UiPalette.DANGER, WALL_WIDTH)

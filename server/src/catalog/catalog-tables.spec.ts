@@ -5,9 +5,9 @@ import { CATALOG_TABLES, SEED_DATA_DIR } from './catalog-tables.js';
 describe('CATALOG_TABLES', () => {
   const names = CATALOG_TABLES.map((table) => table.name);
 
-  it('tem as 37 tabelas, sem repetição', () => {
-    expect(names).toHaveLength(37);
-    expect(new Set(names).size).toBe(37);
+  it('tem as 38 tabelas, sem repetição', () => {
+    expect(names).toHaveLength(38);
+    expect(new Set(names).size).toBe(38);
   });
 
   it('casa com os arquivos .json da pasta de dados do seed', () => {
@@ -258,6 +258,20 @@ describe('carga inicial dos tipos de ação (island-villages/01)', () => {
     for (const { color_hex } of types) {
       expect(color_hex).toMatch(/^#[0-9A-Fa-f]{6}$/);
     }
+  });
+});
+
+describe('carga inicial dos tipos de parede (free-fences/01)', () => {
+  const walls = JSON.parse(
+    readFileSync(join(SEED_DATA_DIR, 'wall_types.json'), 'utf8'),
+  ) as { id: number; slug: string; name: string; visible: boolean }[];
+
+  it('tem a cerca de madeira, o muro de pedra e a parede invisível, com ids estáveis', () => {
+    expect(walls.map(({ id, slug, visible }) => [id, slug, visible])).toEqual([
+      [1, 'wood_fence', true],
+      [2, 'stone_fence', true],
+      [3, 'invisible_wall', false],
+    ]);
   });
 });
 

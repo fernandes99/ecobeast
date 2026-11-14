@@ -1,0 +1,20 @@
+[
+	{
+		"id": 1,
+		"slug": "wood_fence",
+		"name": "Cerca de madeira",
+		"visible": true
+	},
+	{
+		"id": 2,
+		"slug": "stone_fence",
+		"name": "Muro de pedra",
+		"visible": true
+	},
+	{
+		"id": 3,
+		"slug": "invisible_wall",
+		"name": "Parede invisível",
+		"visible": false
+	}
+]

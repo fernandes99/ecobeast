@@ -19,6 +19,8 @@ const FIT_MARGIN := 24.0
 const FLAG_HEIGHT := 22.0
 const FLAG_WIDTH := 12.0
 const OUTLINE_WIDTH := 2.0
+## O traço da parede invisível, em pixels da tela (free-fences/01).
+const WALL_DASH := 6.0
 const CHUNK_COLUMNS := 16
 ## Numa pincelada rápida, um ponto a cada tanto da arte, para não pular hexágonos.
 const STROKE_SPACING := 16.0
@@ -58,6 +60,7 @@ var _object_tiles: Dictionary[Vector2i, String] = {}
 var _prop_tiles: Dictionary[Vector2i, String] = {}
 ## Cópias dos traços como estão desenhados, para achar o que mudou.
 var _shown_trails: Array[MapTrail] = []
+var _shown_walls: Array[MapWall] = []
 var _draft: IslandDraft = null
 var _map: ExplorationMap = null
 var _zoom := OPEN_ZOOM
@@ -116,6 +119,8 @@ func show_draft(draft: IslandDraft, fit: bool = true) -> void:
 	_overview.set_map(_map)
 	_shown_trails = IslandDraft.copy_trails(draft.trails) if draft != null else []
 	_overview.set_trails(_map.trails)
+	_shown_walls = IslandDraft.copy_walls(draft.walls) if draft != null else []
+	_overview.set_walls(_map.walls)
 	refresh_npcs()
 	refresh_marks()
 	if fit and draft != null:
@@ -204,6 +209,27 @@ func refresh_trails() -> void:
 	if not changed.is_empty() or before != now:
 		_map_view.set_trails(_draft.trails.duplicate(), changed)
 		_overview.set_trails(_map.trails)
+	_overlay.queue_redraw()
+
+
+## As paredes mudaram no rascunho (free-fences/01): remonta as que entraram, saíram ou
+## mudaram, na versão de antes e na de agora.
+func refresh_walls() -> void:
+	if _draft == null or _map == null:
+		return
+	var before := IslandDraft.walls_state(_shown_walls)
+	var now := IslandDraft.walls_state(_draft.walls)
+	var changed: Array[MapWall] = []
+	for index: int in _shown_walls.size():
+		if not now.has(before[index]):
+			changed.append(_shown_walls[index])
+	for index: int in _draft.walls.size():
+		if not before.has(now[index]):
+			changed.append(_draft.walls[index])
+	_shown_walls = IslandDraft.copy_walls(_draft.walls)
+	if not changed.is_empty():
+		_map_view.set_walls(_draft.walls.duplicate(), changed)
+		_overview.set_walls(_map.walls)
 	_overlay.queue_redraw()
 
 
@@ -591,6 +617,7 @@ func draw_overlay(node: Node2D) -> void:
 		_outline(node, _draft.npc_coord(selected_npc), UiPalette.ACCENT)
 	if selected_trail >= 0 and selected_trail < _draft.trails.size():
 		_draw_trail(node, _draft.trails[selected_trail])
+	_draw_invisible_walls(node)
 	if selected_prop >= 0:
 		var rect := prop_rect(selected_prop)
 		if rect.has_area():
@@ -622,6 +649,15 @@ func _draw_trail(node: Node2D, trail: MapTrail) -> void:
 		node.draw_polyline(line, UiPalette.ACCENT, OUTLINE_WIDTH)
 	for point: Vector2 in trail.points:
 		node.draw_circle(_screen_point(point), 3.0, UiPalette.ACCENT)
+
+
+## A parede invisível só aparece no editor, tracejada (free-fences/01).
+func _draw_invisible_walls(node: Node2D) -> void:
+	for wall: MapWall in _draft.walls:
+		if HexWalls.is_visible(wall.type):
+			continue
+		for index: int in range(1, wall.points.size()):
+			node.draw_dashed_line(_screen_point(wall.points[index - 1]), _screen_point(wall.points[index]), UiPalette.DANGER, OUTLINE_WIDTH, WALL_DASH)
 
 
 func _screen_point(flat: Vector2) -> Vector2:

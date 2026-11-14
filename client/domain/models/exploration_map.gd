@@ -21,6 +21,7 @@ var actions: Array[MapAction] = []
 var objects: Array[MapObject] = []
 var props: Array[MapProp] = []
 var trails: Array[MapTrail] = []
+var walls: Array[MapWall] = []
 var npcs: Array[MapNpc] = []
 var _action_of: Dictionary[Vector2i, int] = {}
 var _object_of: Dictionary[Vector2i, int] = {}
@@ -167,6 +168,10 @@ static func from_dict(d: Dictionary) -> ExplorationMap:
 		var trail: MapTrail = MapTrail.from_dict(trail_dict) if trail_dict is Dictionary else null
 		if trail != null:
 			map.trails.append(trail)
+	for wall_dict: Variant in DictFields.get_array(d, "walls"):
+		var wall: MapWall = MapWall.from_dict(wall_dict) if wall_dict is Dictionary else null
+		if wall != null:
+			map.walls.append(wall)
 	for npc_dict: Variant in DictFields.get_array(d, "npcs"):
 		var npc: MapNpc = MapNpc.from_dict(npc_dict) if npc_dict is Dictionary else null
 		if npc != null:

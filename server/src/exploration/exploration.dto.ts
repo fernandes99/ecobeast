@@ -18,6 +18,7 @@ import type {
   DraftObject,
   DraftProp,
   DraftTrail,
+  DraftWall,
 } from '../domain/islands/island-draft.js';
 
 export class HexCoordDto {
@@ -127,6 +128,22 @@ export class MapObjectDto extends HexCoordDto {
 
   @ApiProperty({ type: [MapObjectTileDto] })
   tiles: MapObjectTileDto[];
+}
+
+export class MapWallDto {
+  @ApiProperty({
+    description: 'O `slug` em `wall_types`.',
+    example: 'wood_fence',
+  })
+  type: string;
+
+  @ApiProperty({
+    type: [Number],
+    description:
+      'x0, y0, x1, y1, …, em pixels da arte, no chão plano, a partir do centro plano do hexágono (0, 0).',
+    example: [12, -40, 30, -8, 31, 40],
+  })
+  points: number[];
 }
 
 export class MapTrailDto {
@@ -276,6 +293,13 @@ export class ExplorationMapDto {
   trails: MapTrailDto[];
 
   @ApiProperty({
+    type: [MapWallDto],
+    description:
+      'As paredes da ilha, na ordem: cercas e a parede invisível, que bloqueiam o Domador; vazio no mapa sorteado.',
+  })
+  walls: MapWallDto[];
+
+  @ApiProperty({
     type: [MapNpcDto],
     description: 'Os NPCs da ilha; vazio no mapa sorteado.',
   })
@@ -418,6 +442,10 @@ export function toObjectDto(object: DraftObject): MapObjectDto {
 
 export function toTrailDto({ ground, width, points }: DraftTrail): MapTrailDto {
   return { ground, width, points: [...points] };
+}
+
+export function toWallDto({ type, points }: DraftWall): MapWallDto {
+  return { type, points: [...points] };
 }
 
 export function toNpcDto(npc: DraftNpc): Omit<MapNpcDto, 'id'> {

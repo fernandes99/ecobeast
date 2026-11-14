@@ -119,6 +119,11 @@ var _window_scale := Vector2.ONE
 var _whole_map_area := Rect2()
 var _objects: Array[MapObjectSprite] = []
 var _props_by_chunk: Dictionary[Vector2i, Array] = {}
+## Os pedaços das cercas (free-fences/01), `[hexágono onde é desenhado, HexWalls.Piece,
+## hexágono do pé]`, por pedaço de mapa.
+var _walls_by_chunk: Dictionary[Vector2i, Array] = {}
+## Os pedaços de cada parede, montados uma vez: o índice é refeito ao mudar o terreno.
+var _wall_pieces: Dictionary[MapWall, Array] = {}
 var _prop_slugs: Dictionary[int, String] = {}
 
 
@@ -175,6 +180,8 @@ func set_map(map: ExplorationMap) -> void:
 		row.queue_free()
 	_rows.clear()
 	_props_by_chunk.clear()
+	_walls_by_chunk.clear()
+	_wall_pieces.clear()
 	_row_chunks.clear()
 	_unbuilt_rows.clear()
 	_highlighted_row = null
@@ -187,6 +194,7 @@ func set_map(map: ExplorationMap) -> void:
 		if not _unbuilt_rows.has(key):
 			_unbuilt_rows[key] = []
 		_unbuilt_rows[key].append(tile)
+	_index_walls()
 	for key: Vector2i in _unbuilt_rows:
 		if not _row_chunks.has(key.y):
 			_row_chunks[key.y] = []
@@ -213,6 +221,10 @@ func update_tiles(coords: Array[Vector2i]) -> void:
 	if _map == null or coords.is_empty():
 		return
 	ground_mask.update_tiles(coords)
+	# Apagar, pôr ou subir um hexágono muda onde cada pedaço de cerca é desenhado.
+	if not _map.walls.is_empty():
+		_walls_by_chunk.clear()
+		_index_walls()
 	# Com pedaços, o vizinho de uma ponta pode estar no pedaço ao lado.
 	var spread: Array[int] = [0]
 	if chunk_columns > 0:
@@ -685,7 +697,7 @@ func _build_row(key: Vector2i, tiles: Array) -> void:
 		row.meshes = no_meshes
 		row.textures = no_textures
 	_add_terrain(row, shown)
-	_add_decorations(bands, shown, props)
+	_add_decorations(bands, shown, props, _wall_entries(key))
 	row.queue_redraw()
 	for band: HexRowView in bands:
 		band.queue_redraw()
@@ -948,7 +960,7 @@ func _add_grounds(row: HexRowView, tiles: Array) -> void:
 		_add_texture_mesh(row, ground_mask.texture_of(page), batch.points, batch.points, batch.colors, batch.custom, batch.extra)
 
 
-func _add_decorations(bands: Array[HexRowView], tiles: Array, props: Array) -> void:
+func _add_decorations(bands: Array[HexRowView], tiles: Array, props: Array, walls: Array = []) -> void:
 	var sheet: Array[Array] = []
 	var files: Array[Dictionary] = []
 	for _band: int in DEPTH_BANDS:
@@ -989,12 +1001,25 @@ func _add_decorations(bands: Array[HexRowView], tiles: Array, props: Array) -> v
 			if not files[band].has(path):
 				files[band][path] = []
 			files[band][path].append([base, prop.mirrored])
+	var fences: Array[Dictionary] = []
+	for _band: int in DEPTH_BANDS:
+		fences.append({})
+	for entry: Array in walls:
+		var coord: Vector2i = entry[0]
+		var piece: HexWalls.Piece = entry[1]
+		var offset := Vector2(piece.flat) - flat_center(coord)
+		var band := band_of(offset.y)
+		if not fences[band].has(piece.slug):
+			fences[band][piece.slug] = []
+		fences[band][piece.slug].append([Vector2(piece.flat) - _rise(_level_at(entry[2])), piece])
 	for band: int in DEPTH_BANDS:
 		var decorations: Array[HexDecorations.Decoration] = []
 		decorations.assign(sheet[band])
 		_add_decoration_mesh(bands[band], decorations)
 		for path: String in files[band]:
 			_add_file_props(bands[band], path, files[band][path])
+		for slug: String in fences[band]:
+			_add_wall_mesh(bands[band], slug, fences[band][slug])
 
 
 func _trails_near(tiles: Array) -> Array[MapTrail]:
@@ -1026,6 +1051,94 @@ func set_trails(trails: Array[MapTrail], changed: Array[MapTrail]) -> void:
 	var list: Array[Vector2i] = []
 	list.assign(coords.keys())
 	update_tiles(list)
+
+
+## As paredes da ilha (free-fences/01): troca a lista e remonta os pedaços de mapa
+## que as paredes de `changed` tocavam ou tocam.
+func set_walls(walls: Array[MapWall], changed: Array[MapWall]) -> void:
+	if _map == null:
+		return
+	var coords: Dictionary[Vector2i, bool] = {}
+	for wall: MapWall in changed:
+		for piece: HexWalls.Piece in HexWalls.pieces(wall):
+			var coord := grid_coord(Vector2(piece.flat))
+			if _map.has(coord):
+				coords[coord] = true
+	_map.walls = walls
+	var kept: Dictionary[MapWall, Array] = {}
+	for wall: MapWall in walls:
+		if _wall_pieces.has(wall) and not changed.has(wall):
+			kept[wall] = _wall_pieces[wall]
+	_wall_pieces = kept
+	_walls_by_chunk.clear()
+	_index_walls()
+	var list: Array[Vector2i] = []
+	list.assign(coords.keys())
+	update_tiles(list)
+
+
+## Os pedaços de cerca de um pedaço de mapa, sem os de pé acima do corte de altura.
+func _wall_entries(key: Vector2i) -> Array:
+	var entries: Array = _walls_by_chunk.get(key, [])
+	if height_cut < 0:
+		return entries
+	return entries.filter(func(entry: Array) -> bool: return _level_at(entry[2]) <= height_cut)
+
+
+## Um pedaço vai na linha mais à frente que a base dele toca: na linha do pé, o chão
+## da linha seguinte cobriria a base de um poste perto da divisa. Um hexágono da frente
+## mais alto que o pé fica: ele deve cobrir a base.
+func _index_walls() -> void:
+	for wall: MapWall in _map.walls:
+		if not _wall_pieces.has(wall):
+			_wall_pieces[wall] = HexWalls.pieces(wall)
+		for piece: HexWalls.Piece in _wall_pieces[wall]:
+			var foot := grid_coord(Vector2(piece.flat))
+			if not _map.has(foot):
+				continue
+			var drawn := foot
+			var half := HexWalls.POST_HALF_WIDTH if piece.post else 0.0
+			for probe: Vector2 in [Vector2(-half, HexWalls.ART_BELOW), Vector2(half, HexWalls.ART_BELOW)]:
+				var under := grid_coord(Vector2(piece.flat) + probe)
+				if under.y > drawn.y and _map.has(under) and _level_at(under) <= _level_at(foot):
+					drawn = under
+			var key := _chunk_of(drawn)
+			if not _walls_by_chunk.has(key):
+				_walls_by_chunk[key] = []
+			_walls_by_chunk[key].append([drawn, piece, foot])
+
+
+## Os pedaços de cerca de uma faixa, de trás para a frente, com o poste por cima das
+## fatias do mesmo ponto: a fatia é a coluna da travessa, o poste a célula inteira.
+func _add_wall_mesh(row: HexRowView, slug: String, placed: Array) -> void:
+	var path := HexWalls.ART_PATH % slug
+	if _texture(path) == null:
+		return
+	placed.sort_custom(_wall_order)
+	var cell := Vector2(HexWalls.CELL_SIZE)
+	var foot := Vector2(HexWalls.CELL_FOOT)
+	var points := PackedVector2Array()
+	var texture_points := PackedVector2Array()
+	var wind := PackedFloat32Array()
+	for entry: Array in placed:
+		var base: Vector2 = entry[0]
+		var piece: HexWalls.Piece = entry[1]
+		var width := cell.x if piece.post else 1.0
+		var top_left := base - foot if piece.post else base - Vector2(0.0, foot.y)
+		var source := Vector2.ZERO if piece.post else Vector2(cell.x + piece.column, 0.0)
+		points.append_array(_quad(top_left, top_left + Vector2(width, 0.0), Vector2(0.0, cell.y)))
+		texture_points.append_array(_quad(source, source + Vector2(width, 0.0), Vector2(0.0, cell.y)))
+		for _vertex: int in 6:
+			wind.append_array(PackedFloat32Array([base.x, base.y, HexDecorations.NO_SWAY.x, HexDecorations.NO_SWAY.y]))
+	_add_mesh(row, path, points, texture_points, PackedColorArray(), wind)
+
+
+static func _wall_order(a: Array, b: Array) -> bool:
+	var a_y: float = (a[0] as Vector2).y
+	var b_y: float = (b[0] as Vector2).y
+	if a_y != b_y:
+		return a_y < b_y
+	return not (a[1] as HexWalls.Piece).post and (b[1] as HexWalls.Piece).post
 
 
 ## Peças com arte própria: o pé no meio da borda de baixo da imagem, sem vento.

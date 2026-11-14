@@ -60,6 +60,7 @@ interface Draft {
   objects: DraftObject[];
   props?: DraftProp[];
   trails?: { ground: string; width: number; points: number[] }[];
+  walls?: { type: string; points: number[] }[];
   npcs?: DraftNpc[];
   areas: {
     key: number;
@@ -598,6 +599,44 @@ describe('Editor de ilhas (e2e)', () => {
         .expect(400);
       expect(response.body.message).toBe(
         'points precisa ter só números inteiros.',
+      );
+    });
+  });
+
+  describe('as paredes (free-fences/01)', () => {
+    it('salva e lê de volta as paredes, na mesma ordem', async () => {
+      const body = draft();
+      body.walls = [
+        { type: 'stone_fence', points: [0, 0, 64, 0] },
+        { type: 'invisible_wall', points: [64, 0, 0, 0, 10, 4] },
+      ];
+      const id = await create(body);
+      const read = (await call('get', `/islands/${id}`).expect(200))
+        .body as Draft;
+      expect(read.walls).toEqual(body.walls);
+    });
+
+    it('recusa uma parede com ponto fora da ilha (400)', async () => {
+      const id = await create();
+      const body = draft();
+      body.walls = [{ type: 'wood_fence', points: [0, 0, 5000, 0] }];
+      const response = await call('put', `/islands/${id}/draft`)
+        .send(body)
+        .expect(400);
+      expect(response.body.message).toBe(
+        'A parede 1 tem um ponto fora da ilha.',
+      );
+    });
+
+    it('recusa um tipo de parede que não existe (400)', async () => {
+      const id = await create();
+      const body = draft();
+      body.walls = [{ type: 'lava_wall', points: [0, 0, 64, 0] }];
+      const response = await call('put', `/islands/${id}/draft`)
+        .send(body)
+        .expect(400);
+      expect(response.body.message).toBe(
+        'A parede 1 tem um tipo que não existe.',
       );
     });
   });

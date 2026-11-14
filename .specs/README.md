@@ -52,6 +52,7 @@ O Ecobeast é um jogo mobile (Android/iOS, retrato): o cliente em **Godot 4.7 co
 | [vegetation-brush](vegetation-brush/) | A limpeza dos objetos de grade e o pincel de vegetação do editor |
 | [island-npcs](island-npcs/) | NPCs nas ilhas: o catálogo, a ferramenta NPC do editor, o passeio, a conversa e a ação |
 | [water-motion](water-motion/) | A água se mexendo e as cachoeiras nas laterais da água alta, com espuma no pé |
+| [free-fences](free-fences/) | Cercas livres nas ilhas: traços em qualquer ângulo que são parede, a parede invisível e o fim da cerca de grade |
 
 As próximas iniciativas estão no [roadmap.md](roadmap.md).
 

@@ -107,6 +107,10 @@ func _init() -> void:
 				var parts := _strip_cells(_town_fence_parts(variant))
 				error = parts.save_png(HexFences.PARTS_PATH % variant)
 				print("town_fence/parts_%d: %dx%d %s" % [variant, parts.get_width(), parts.get_height(), "ok" if error == OK else error_string(error)])
+				var wall_path := WALL_PATH % WALL_SLUGS[variant - 1]
+				DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(wall_path.get_base_dir()))
+				error = _strip_cells(_wall_cells(variant)).save_png(wall_path)
+				print("%s: %s" % [wall_path, "ok" if error == OK else error_string(error)])
 	quit()
 
 
@@ -627,6 +631,45 @@ func _town_fence_parts(variant: int) -> Array[Image]:
 				_fence_pillar(cell, end)
 		cells.append(cell)
 	return cells
+
+
+## A folha das paredes (free-fences/01): o poste e uma travessa reta de ponta a ponta, sem
+## poste, para as fatias repetirem a cada HexWalls.RAIL_SPAN colunas. Os tamanhos repetem
+## os do HexWalls, que usa o GameData, que este script não tem.
+const WALL_SLUGS: Array[String] = ["wood_fence", "stone_fence"]
+const WALL_PATH := "res://assets/walls/%s.png"
+const WALL_CELL_SIZE := Vector2i(96, 72)
+const WALL_FOOT := Vector2i(48, 43)
+
+
+func _wall_cells(variant: int) -> Array[Image]:
+	var foot := Vector2(WALL_FOOT)
+	var post := Image.create(WALL_CELL_SIZE.x, WALL_CELL_SIZE.y, false, Image.FORMAT_RGBA8)
+	var rail := Image.create(WALL_CELL_SIZE.x, WALL_CELL_SIZE.y, false, Image.FORMAT_RGBA8)
+	var from := Vector2(0.0, foot.y)
+	var to := Vector2(WALL_CELL_SIZE.x - 1, foot.y)
+	if variant == 1:
+		_fence_post(post, foot)
+		_fence_rails(rail, from, to)
+	else:
+		_fence_pillar(post, foot)
+		_straight_wall(rail, foot.y)
+	return [post, rail]
+
+
+## O muro do _fence_wall, deitado, com a emenda exata a cada 7 colunas.
+static func _straight_wall(cell: Image, foot_y: float) -> void:
+	var base := roundi(foot_y) + 2
+	for x: int in cell.get_width():
+		var seam := x % 7 == 0
+		_dot(cell, x, base - 11, STONE[3])
+		_dot(cell, x, base - 10, STONE[0])
+		for y: int in range(base - 9, base):
+			var color := STONE[1]
+			if y == base - 5 or seam or y == base - 1:
+				color = STONE[2]
+			_dot(cell, x, y, color)
+		_dot(cell, x, base, STONE[3])
 
 
 static func _fence_post(cell: Image, foot: Vector2) -> void:

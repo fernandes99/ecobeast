@@ -202,6 +202,26 @@ export class DraftTrailDto {
   points: number[];
 }
 
+export class DraftWallDto {
+  @ApiProperty({
+    description: 'O `slug` em `wall_types`.',
+    example: 'wood_fence',
+  })
+  @IsString(text('type'))
+  type: string;
+
+  @ApiProperty({
+    type: [Number],
+    description:
+      'x0, y0, x1, y1, …: de 2 a 128 pontos, em pixels da arte, no chão plano, ' +
+      'a partir do centro plano do hexágono (0, 0). Todo ponto cai num hexágono da ilha.',
+    example: [12, -40, 30, -8, 31, 40],
+  })
+  @IsArray(list('points'))
+  @IsInt({ each: true, message: 'points precisa ter só números inteiros.' })
+  points: number[];
+}
+
 export class DraftNpcDto extends EditorHexDto {
   @ApiProperty({
     description: 'Id em `npcs`. (q, r) é o hexágono onde ele nasce.',
@@ -358,6 +378,17 @@ export class IslandDraftDto {
   @ValidateNested({ each: true })
   @Type(() => DraftTrailDto)
   trails?: DraftTrailDto[];
+
+  @ApiPropertyOptional({
+    type: [DraftWallDto],
+    description:
+      'As paredes, que bloqueiam o Domador: cercas e a parede invisível, até 2.000, na ordem. Sem o campo, a ilha fica sem paredes.',
+  })
+  @IsOptional()
+  @IsArray(list('walls'))
+  @ValidateNested({ each: true })
+  @Type(() => DraftWallDto)
+  walls?: DraftWallDto[];
 
   @ApiPropertyOptional({
     type: [DraftNpcDto],
