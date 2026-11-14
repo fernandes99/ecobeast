@@ -9,7 +9,7 @@ const PULSE_LOW := 0.45
 const OUTLINE_SIDES: Array[Vector2i] = [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN]
 const DOT_PIXELS: Array[Vector2i] = [Vector2i(-1, -1), Vector2i(0, -1), Vector2i(-1, 0), Vector2i(0, 0)]
 
-## Ordem na rota: o passo `n` tem o ponto do meio em `2n - 1` e o do hexágono em `2n`.
+## O número do ponto na rota, a partir de 1 (wild-battle/15).
 var order: int = 0
 var _ring: bool = false
 var _pixels: Array[Vector2i] = []

@@ -15,8 +15,11 @@ const NO_TARGET := Vector2i(2147483647, 2147483647)
 const ALMOST_LEVEL_UP_TEXT := "A equipe está a 1 XP do próximo nível."
 const SPAWNED_TEXT := "%s apareceu aqui. Toque em Procurar."
 const EXPLORE_MUSIC_FADE_IN := 1.0
-## Duração de um passo, em segundos: um ciclo inteiro da corrida do Domador.
-const STEP_SECONDS := TamerSprite.RUN_SECONDS
+## Pixels da arte por segundo ao subir ou descer de altura.
+const RISE_SPEED := 160.0
+## O plano é o da linha um pouco abaixo dos pés, para a linha da frente não cobri-los.
+const FEET_DEPTH := 6.0
+const ROUTE_DOT_SPACING := 16.0
 ## Até quanto o dedo pode correr, em pontos da tela lógica, para ainda ser um toque.
 const MAX_TAP_TRAVEL := 24.0
 const WHOLE_MAP_TEXT := "Debug: ver mapa inteiro"
@@ -34,9 +37,12 @@ const CREATURE_RADIUS := 16
 var _island_id: int = 0
 var _map: ExplorationMap = null
 var _player_coord := Vector2i.ZERO
+## O ponto dos pés no chão plano, sem a altura (wild-battle/15).
+var _player_point := Vector2.ZERO
+var _shown_rise := 0.0
 var _loading: bool = true
 var _walking: bool = false
-var _next_target := NO_TARGET
+var _next_point: Variant = null
 var _route: Array[RouteMark] = []
 var _press_position := Vector2.ZERO
 var _showing_whole_map: bool = false
@@ -116,10 +122,12 @@ func _begin() -> void:
 		return
 	_map = result.data
 	_player_coord = _map.start
+	_player_point = HexMapView.flat_center(_player_coord)
 	_map_view.set_map(_map)
 	_map_view.set_objects(_map.objects)
+	_shown_rise = _rise_at(_player_coord)
 	_map_view.set_current(_player_coord)
-	_map_view.set_actor_row(_marker, _player_coord.y)
+	_map_view.set_actor_row(_marker, _feet_row())
 	_show_island()
 	_refresh_wild_sprites()
 	_map_view.show()
@@ -149,16 +157,10 @@ func _tap(point: Vector2) -> void:
 	if _map == null or _showing_whole_map or _challenger != null:
 		return
 	var art_point := (point - _map_view.position) / _map_view.pixel_scale()
-	var target := _map_view.coord_at(art_point)
-	var object := _map_view.object_hit(art_point)
-	if object != null:
-		target = _object_target(object, art_point)
-	if not _map.has(target) or target == _player_coord:
-		return
 	if _walking:
-		_next_target = target
+		_next_point = art_point
 	else:
-		_go_to(target)
+		_go_to(art_point)
 
 
 ## A arte de um objeto cobre os hexágonos de trás: o toque nela vale para o hexágono
@@ -184,78 +186,125 @@ func _closer(coord: Vector2i, than: Vector2i, art_point: Vector2) -> bool:
 	return _map_view.surface_center(coord).distance_to(art_point) < _map_view.surface_center(than).distance_to(art_point)
 
 
-## Num livre, o Domador anda até ele; num bloqueado, até o lado livre mais perto, e
-## executa a ação dele, se houver.
-func _go_to(target: Vector2i) -> void:
+## Num livre, o Domador anda até o ponto tocado; num bloqueado, até o centro do lado
+## livre mais perto, e executa a ação dele, se houver.
+func _go_to(art_point: Vector2) -> void:
+	var target := _map_view.coord_at(art_point)
+	var object := _map_view.object_hit(art_point)
+	if object != null:
+		target = _object_target(object, art_point)
+	if not _map.has(target):
+		return
 	var action := -1
 	var goals: Dictionary[Vector2i, bool] = {target: true}
+	var finish := art_point + Vector2(0.0, _rise_at(target))
+	if HexMapView.grid_coord(finish) != target:
+		finish = HexMapView.flat_center(target)
 	if _map.is_blocked(target):
 		action = _map.action_at(target)
 		goals = _map.free_sides(target)
-	if goals.has(_player_coord):
-		if action >= 0:
-			_run_action(action)
+		if goals.has(_player_coord):
+			if action >= 0:
+				_run_action(action)
+			return
+	var hexes: Array[Vector2i] = [_player_coord]
+	if not goals.has(_player_coord):
+		var path := _map.path_to_any(_player_coord, goals)
+		if path.is_empty():
+			_show_message(NO_PATH_TEXT, &"SecondaryLabel")
+			return
+		hexes.append_array(path)
+		if _map.is_blocked(target):
+			finish = HexMapView.flat_center(path[path.size() - 1])
+	if finish.distance_to(_player_point) < 1.0:
 		return
-	var path := _map.path_to_any(_player_coord, goals)
-	if path.is_empty():
-		_show_message(NO_PATH_TEXT, &"SecondaryLabel")
-		return
-	_walk(path, action)
+	_walk(WalkRoute.points(_map, _player_point, hexes, finish), action)
 
 
-func _walk(path: Array[Vector2i], action: int) -> void:
+## Quadro a quadro: o hexágono muda quando os pés cruzam a borda (wild-battle/15).
+func _walk(route: PackedVector2Array, action: int) -> void:
 	_walking = true
 	_message.hide()
-	_show_route(path)
+	_show_route(route)
+	_marker.play_run()
+	var total := WalkRoute.length(route)
+	var traveled := 0.0
 	var origin := _player_coord
-	for index: int in path.size():
-		origin = _player_coord
-		_trim_route(2 * index + 2)
-		await _step_to(path[index])
-		_trim_route(2 * index + 3)
-		if _map.tamer_at(path[index]) != null or _next_target != NO_TARGET:
-			break
+	var tamer: MapTamer = null
+	while traveled < total and _next_point == null and tamer == null:
+		await get_tree().process_frame
+		var delta := get_process_delta_time()
+		traveled = minf(total, traveled + WalkRoute.WALK_SPEED * delta)
+		var at := WalkRoute.point_at(route, traveled)
+		if at != _player_point:
+			_marker.face_toward(WalkRoute.world(at - _player_point))
+		_player_point = at
+		var coord := HexMapView.grid_coord(at)
+		if coord != _player_coord and _map.has(coord):
+			origin = _player_coord
+			_player_coord = coord
+			_map_view.set_current(coord)
+			_refresh_wild_sprites()
+			tamer = _map.tamer_at(coord)
+		_place_player(delta)
+		_trim_route(traveled)
+	while _shown_rise != _rise_at(_player_coord):
+		await get_tree().process_frame
+		_place_player(get_process_delta_time())
 	_clear_route()
-	_marker.play_idle()
+	if _next_point == null or tamer != null:
+		_marker.play_idle()
 	_walking = false
-	var tamer := _map.tamer_at(_player_coord)
 	if tamer != null:
-		_next_target = NO_TARGET
+		_next_point = null
 		_challenge(tamer)
-	elif _next_target != NO_TARGET:
-		var next := _next_target
-		_next_target = NO_TARGET
-		if next != _player_coord:
-			_go_to(next)
+	elif _next_point != null:
+		var next: Vector2 = _next_point
+		_next_point = null
+		_go_to(next)
 	elif action >= 0:
 		_run_action(action)
 	else:
 		_enter_action(_map.action_at(origin), _map.action_at(_player_coord))
 
 
-## Um ponto em cada hexágono e outro entre dois da mesma altura; no fim, um anel.
-func _show_route(path: Array[Vector2i]) -> void:
+func _place_player(delta: float) -> void:
+	_shown_rise = move_toward(_shown_rise, _rise_at(_player_coord), RISE_SPEED * delta)
+	_map_view.set_actor_row(_marker, _feet_row())
+	_move_map(_player_centered_position())
+
+
+func _rise_at(coord: Vector2i) -> float:
+	var tile := _map.tile_at(coord)
+	return HexMapView.LEVEL_HEIGHTS[tile.height] if tile != null else 0.0
+
+
+func _feet_row() -> int:
+	return HexMapView.grid_coord(_player_point + Vector2(0.0, FEET_DEPTH)).y
+
+
+func _player_art_point() -> Vector2:
+	return _player_point - Vector2(0.0, _shown_rise)
+
+
+## Um ponto a cada `ROUTE_DOT_SPACING`, na altura do hexágono embaixo dele; no fim, um anel.
+func _show_route(route: PackedVector2Array) -> void:
 	_clear_route()
-	var previous := _player_coord
-	for index: int in path.size():
-		var coord := path[index]
-		var step := index + 1
-		if _map.tile_at(previous).height == _map.tile_at(coord).height:
-			var middle := (_map_view.surface_center(previous) + _map_view.surface_center(coord)) / 2.0
-			_add_route_mark(RouteMark.new(2 * step - 1, false), middle, maxi(previous.y, coord.y))
-		_add_route_mark(RouteMark.new(2 * step, step == path.size()), _map_view.surface_center(coord), coord.y)
-		previous = coord
+	var total := WalkRoute.length(route)
+	var count := maxi(1, floori(total / ROUTE_DOT_SPACING))
+	for index: int in range(1, count + 1):
+		var last := index == count
+		var at := route[route.size() - 1] if last else WalkRoute.point_at(route, index * ROUTE_DOT_SPACING)
+		var coord := HexMapView.grid_coord(at)
+		var mark := RouteMark.new(index, last)
+		mark.place(at - Vector2(0.0, _rise_at(coord)))
+		_map_view.set_ground_overlay(mark, coord.y)
+		_route.append(mark)
 
 
-func _add_route_mark(mark: RouteMark, center: Vector2, row: int) -> void:
-	mark.place(center)
-	_map_view.set_ground_overlay(mark, row)
-	_route.append(mark)
-
-
-## Tira as marcas de ordem menor que `order`.
-func _trim_route(order: int) -> void:
-	while not _route.is_empty() and _route[0].order < order:
+## Tira os pontos por onde o Domador já passou.
+func _trim_route(traveled: float) -> void:
+	while not _route.is_empty() and _route[0].order * ROUTE_DOT_SPACING <= traveled and _route.size() > 1:
 		_route.pop_front().queue_free()
 
 
@@ -289,22 +338,6 @@ func _on_visibility_changed() -> void:
 		_refresh_debug_clear()
 		_release_challenge()
 		_refresh_wild_sprites()
-
-
-func _step_to(target: Vector2i) -> void:
-	_marker.face(target - _player_coord)
-	_marker.play_run()
-	# Indo para a frente, ele muda de plano antes de sair: a linha nova cobriria os pés
-	# dele. Voltando, é a linha de onde ele veio que cobriria, então muda ao chegar.
-	if target.y > _player_coord.y:
-		_map_view.set_actor_row(_marker, target.y)
-	_player_coord = target
-	_map_view.set_current(target)
-	_refresh_wild_sprites()
-	var step := create_tween()
-	step.tween_method(_move_map, _map_view.position, _player_centered_position(), STEP_SECONDS)
-	await step.finished
-	_map_view.set_actor_row(_marker, target.y)
 
 
 func _show_island() -> void:
@@ -577,7 +610,7 @@ func _fit_view() -> void:
 	if _showing_whole_map:
 		var panel_top := _controls_panel.get_global_rect().position.y
 		_map_view.show_whole_map(Rect2(0.0, 0.0, size.x, panel_top))
-		_marker.position = _map_view.surface_center(_player_coord)
+		_marker.position = _player_art_point()
 	else:
 		_map_view.show_pixel_art()
 		_move_map(_player_centered_position())
@@ -597,7 +630,7 @@ func _sync_building_names() -> void:
 ## Parte do centro já arredondado: em uma tela de tamanho ímpar, ele cai no meio de
 ## um pixel, e arredondar depois da conta deixaria o Domador fora do hexágono.
 func _player_centered_position() -> Vector2:
-	return _map_view.snapped_to_pixels(size / 2.0) - _map_view.surface_center(_player_coord) * _map_view.pixel_scale()
+	return _map_view.snapped_to_pixels(size / 2.0) - _player_art_point() * _map_view.pixel_scale()
 
 
 ## Sempre em pixels reais inteiros, para a pixel art não borrar no caminho. O Domador

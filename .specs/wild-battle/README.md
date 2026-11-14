@@ -1,6 +1,6 @@
 # Wild battle
 
-Explorar zona passa a abrir um **mapa hexagonal gerado a cada exploração**, maior que a tela. O jogador anda um hexágono por vez (desde a [14](14-tap-to-walk.md), tocando longe, ele vai sozinho pelo caminho mais curto), com a câmera sempre nele, e procura Ecobeasts a partir dali. Cada bioma é uma superfície contínua, dividida pela grade, e os terrenos formam regiões coerentes, não uma mistura aleatória.
+Explorar zona passa a abrir um **mapa hexagonal gerado a cada exploração**, maior que a tela. O jogador anda um hexágono por vez (desde a [14](14-tap-to-walk.md), tocando longe, ele vai sozinho pelo caminho mais curto; desde a [15](15-free-walk.md), em reta até o ponto tocado, com o hexágono só por baixo), com a câmera sempre nele, e procura Ecobeasts a partir dali. Cada bioma é uma superfície contínua, dividida pela grade, e os terrenos formam regiões coerentes, não uma mistura aleatória.
 
 ## Contexto
 
@@ -93,5 +93,6 @@ Tomadas no planejamento (corrigíveis; ao mudar uma, atualize aqui e nas specs a
 | [12-plant-wind](12-plant-wind.md)                 | As plantas balançam com o vento, em uma onda pelo mapa                   | concluída |
 | [13-debug-menu](13-debug-menu.md)                 | Menu de depuração no mapa, com spawn de qualquer Ecobeast                | concluída |
 | [14-tap-to-walk](14-tap-to-walk.md)               | Tocar num hexágono distante e o Domador ir sozinho pelo caminho mais curto | concluída |
+| [15-free-walk](15-free-walk.md)                   | O Domador anda em reta até o ponto tocado, com o hexágono só por baixo   | concluída |
 
 O desenho compartilhado está em [architecture.md](architecture.md).
