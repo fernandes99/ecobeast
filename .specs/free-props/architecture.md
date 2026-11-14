@@ -77,3 +77,10 @@ O rascunho do editor (`IslandDraftDto`) e o mapa de Explorar numa ilha (`Explora
 No rascunho que o editor manda, `props` é opcional (vazio se faltar), para o editor de antes da fase 3 continuar salvando. Nas respostas, vem sempre. No mapa sorteado, vem vazio.
 
 O `content_hash` do rascunho inclui as peças, em ordem de `(r, q, dy, dx, prop_type_id, variant, mirrored)`.
+
+## O desenho no jogo
+
+- **Faixas:** cada linha de hexágonos tem um `HexRowView` de chão e `DEPTH_BANDS` (4) de decoração, de trás para a frente. Uma decoração (sorteada, da Vegetação ou peça solta) entra na faixa do pé dela, pela distância `dy` ao centro do hexágono (`HexMapView.band_of`: faixas de 14,5 pixels da arte, de −29 a 29).
+- **O Domador** entra na divisa de faixas mais perto do pé dele, na linha dos pés (`HexMapView.set_actor_depth`). Os Ecobeasts e os Domadores NPC entram antes da faixa do meio (`MIDDLE_BAND`, `set_actor_row`), como antes. Os objetos continuam depois de todas as faixas da linha da frente deles.
+- **A arte das peças:** os tipos com o `slug` de uma linha da folha `decorations.png` (`HexDecorations.KIND_ROWS`) usam a célula da variante (`variant - 1`), com o pé no `CELL_BASE` e o vento do `KIND_SWAY`. Os outros usam `assets/props/<slug>/<variante>.png`, com o pé no meio da borda de baixo, sem vento. Cada faixa de cada pedaço tem uma malha por textura.
+- **Ilhas:** com `HexMapView.random_decorations` desligado (numa ilha no jogo, e sempre no editor), as decorações sorteadas não aparecem; as da Vegetação continuam.

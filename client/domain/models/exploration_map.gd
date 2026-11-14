@@ -19,6 +19,7 @@ var island_id: int = 0
 var island_name: String = ""
 var actions: Array[MapAction] = []
 var objects: Array[MapObject] = []
+var props: Array[MapProp] = []
 var _action_of: Dictionary[Vector2i, int] = {}
 var _object_of: Dictionary[Vector2i, int] = {}
 var _blocked: Dictionary[Vector2i, bool] = {}
@@ -156,4 +157,8 @@ static func from_dict(d: Dictionary) -> ExplorationMap:
 		var object: MapObject = MapObject.from_dict(object_dict) if object_dict is Dictionary else null
 		if object != null:
 			map.add_object(object)
+	for prop_dict: Variant in DictFields.get_array(d, "props"):
+		var prop: MapProp = MapProp.from_dict(prop_dict) if prop_dict is Dictionary else null
+		if prop != null:
+			map.props.append(prop)
 	return map

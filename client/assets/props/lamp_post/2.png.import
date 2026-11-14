@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://br7h24n37b0t3"
-path="res://.godot/imported/1.png-5f7f2ac0026c1506d90230c0323526f8.ctex"
+uid="uid://dbu3wryii80td"
+path="res://.godot/imported/2.png-01349fa8cc661554c92387d0b1a6296b.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/map_objects/bench/1.png"
-dest_files=["res://.godot/imported/1.png-5f7f2ac0026c1506d90230c0323526f8.ctex"]
+source_file="res://assets/props/lamp_post/2.png"
+dest_files=["res://.godot/imported/2.png-01349fa8cc661554c92387d0b1a6296b.ctex"]
 
 [params]
 

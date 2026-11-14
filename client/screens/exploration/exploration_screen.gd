@@ -123,11 +123,13 @@ func _begin() -> void:
 	_map = result.data
 	_player_coord = _map.start
 	_player_point = HexMapView.flat_center(_player_coord)
+	_map_view.random_decorations = _map.island_id <= 0
 	_map_view.set_map(_map)
 	_map_view.set_objects(_map.objects)
+	_map_view.set_props(_map.props)
 	_shown_rise = _rise_at(_player_coord)
 	_map_view.set_current(_player_coord)
-	_map_view.set_actor_row(_marker, _feet_row())
+	_map_view.set_actor_depth(_marker, _player_point, _feet_row())
 	_show_island()
 	_refresh_wild_sprites()
 	_map_view.show()
@@ -270,7 +272,7 @@ func _walk(route: PackedVector2Array, action: int) -> void:
 
 func _place_player(delta: float) -> void:
 	_shown_rise = move_toward(_shown_rise, _rise_at(_player_coord), RISE_SPEED * delta)
-	_map_view.set_actor_row(_marker, _feet_row())
+	_map_view.set_actor_depth(_marker, _player_point, _feet_row())
 	_move_map(_player_centered_position())
 
 

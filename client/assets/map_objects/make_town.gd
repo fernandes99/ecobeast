@@ -1,12 +1,16 @@
 extends SceneTree
 ## A arte da cidade das ilhas, no estilo de .specs/town-art/style-guide.md, desenhada só
-## por código: um PNG por variante, em res://assets/map_objects/<slug>/<variante>.png.
+## por código: um PNG por variante, em res://assets/map_objects/<slug>/<variante>.png
+## (as peças soltas de PROP_TYPES, em res://assets/props/, free-props/02).
 ## Da pasta client/: godot --headless -s res://assets/map_objects/make_town.gd [-- <slug>...]
 ##
 ## A célula tem a largura do formato, simétrica em volta do ponto de apoio, e o pé dela é
 ## o canto de baixo da linha da frente, como no make_objects.gd.
 
 const OUT := "res://assets/map_objects/%s/%d.png"
+## Peças soltas: a imagem acaba no pé, sem a borda vazia de baixo.
+const PROP_TYPES: Array[String] = ["lamp_post", "sign", "flower_bed", "bench"]
+const PROP_OUT := "res://assets/props/%s/%d.png"
 const HEX_HALF_WIDTH := 32.0
 const CENTER_TO_BOTTOM := 29.0
 const CANVAS_HEIGHT := 320
@@ -103,8 +107,12 @@ func _init() -> void:
 				call("_draw_" + slug, variant, frame)
 				images.append(_image)
 			var art := _strip(images)
-			DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("res://assets/map_objects/%s" % slug))
-			var error := art.save_png(OUT % [slug, variant])
+			var path := OUT % [slug, variant]
+			if PROP_TYPES.has(slug):
+				art = art.get_region(Rect2i(0, 0, art.get_width(), art.get_used_rect().end.y))
+				path = PROP_OUT % [slug, variant]
+			DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(path.get_base_dir()))
+			var error := art.save_png(path)
 			print("%s/%d: %dx%d %s" % [slug, variant, art.get_width(), art.get_height(), "ok" if error == OK else error_string(error)])
 			if slug == "town_fence":
 				var parts := _strip_cells(_town_fence_parts(variant))

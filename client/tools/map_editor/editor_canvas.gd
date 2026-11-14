@@ -97,6 +97,7 @@ func show_draft(draft: IslandDraft, fit: bool = true) -> void:
 	_draft = draft
 	_pending.clear()
 	_map = draft.to_map() if draft != null else ExplorationMap.new()
+	_map_view.random_decorations = false
 	_map_view.set_map(_map)
 	_map_view.set_objects(_map.objects)
 	_object_tiles = _current_object_tiles()

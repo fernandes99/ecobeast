@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ctrtnp0qe6gqa"
-path="res://.godot/imported/2.png-74c0dddfac0087e6f9e5f7d0adb19e52.ctex"
+uid="uid://df5summa8pikl"
+path="res://.godot/imported/1.png-68892ef58699a797025f9b5b05601858.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/map_objects/lamp_post/2.png"
-dest_files=["res://.godot/imported/2.png-74c0dddfac0087e6f9e5f7d0adb19e52.ctex"]
+source_file="res://assets/props/sign/1.png"
+dest_files=["res://.godot/imported/1.png-68892ef58699a797025f9b5b05601858.ctex"]
 
 [params]
 

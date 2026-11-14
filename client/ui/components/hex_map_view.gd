@@ -1,7 +1,7 @@
 class_name HexMapView
 extends Node2D
-## O mapa de exploração na tela (wild-battle/04 a 12). Três HexRowView por linha, de
-## trás para a frente, com uma malha por textura: quem está na frente cobre quem
+## O mapa de exploração na tela (wild-battle/04 a 12). Um HexRowView de chão e
+## `DEPTH_BANDS` de decoração por linha, de trás para a frente, com uma malha por textura: quem está na frente cobre quem
 ## está atrás. O ponto da textura vem da posição no mapa, antes da altura, e não
 ## do hexágono, então cada bioma é uma superfície contínua. Uma linha só é montada
 ## quando chega perto da tela, porque criar as malhas do mapa inteiro de uma vez
@@ -35,6 +35,13 @@ const SURFACE_PATH := "res://assets/terrain/surfaces/%s.png"
 const CLIFF_BIOMES: Array[String] = ["stone", "mountain"]
 const CONTOUR_TEXTURE := "contour"
 const HIGHLIGHT_TEXTURE := "highlight"
+## As faixas de decoração de cada linha, de cima para baixo, pela distância do pé ao
+## centro do hexágono: os atores entram entre elas pela altura do pé (free-props/02).
+const DEPTH_BANDS := 4
+const BAND_HEIGHT := 14.5
+## Os atores sem o pé exato (Ecobeasts e Domadores NPC) entram antes desta faixa.
+const MIDDLE_BAND := 2
+const PROP_PATH := "res://assets/props/%s/%d.png"
 
 var fixed_scale := 0.0:
 	set(value):
@@ -42,6 +49,8 @@ var fixed_scale := 0.0:
 		if is_inside_tree():
 			_update_scale()
 var allows_decoration := Callable()
+## Numa ilha, só aparece o que o dono pôs (free-props/02).
+var random_decorations := true
 
 var chunk_columns := 0
 
@@ -49,13 +58,11 @@ var _map: ExplorationMap = null
 var _textures: Dictionary[String, Texture2D] = {}
 var _rows: Dictionary[Vector2i, HexRowView] = {}
 ## As decorações de cada pedaço, em nós próprios, porque o vento é um material e vale
-## para o nó inteiro. As da metade de cima dos hexágonos e as da metade de baixo, com
-## o ator entre as duas.
-var _back_rows: Dictionary[Vector2i, HexRowView] = {}
-var _front_rows: Dictionary[Vector2i, HexRowView] = {}
+## para o nó inteiro: um dicionário por faixa, de trás para a frente.
+var _bands: Array[Dictionary] = []
 ## Os pedaços de cada linha. Na árvore, uma linha tem primeiro o chão de todos os
-## pedaços, depois as decorações de trás e por último as da frente: uma árvore que
-## passa da borda do hexágono fica por cima do chão do pedaço ao lado.
+## pedaços, depois cada faixa de decoração de todos eles: uma árvore que passa da
+## borda do hexágono fica por cima do chão do pedaço ao lado.
 var _row_chunks: Dictionary[int, Array] = {}
 var _wind_material := ShaderMaterial.new()
 var _terrain_material := ShaderMaterial.new()
@@ -65,9 +72,14 @@ var _hex_triangles := PackedVector2Array()
 var _window_scale := Vector2.ONE
 var _whole_map_area := Rect2()
 var _objects: Array[MapObjectSprite] = []
+var _props_by_chunk: Dictionary[Vector2i, Array] = {}
+var _prop_slugs: Dictionary[int, String] = {}
 
 
 func _init() -> void:
+	for _band: int in DEPTH_BANDS:
+		var views: Dictionary[Vector2i, HexRowView] = {}
+		_bands.append(views)
 	_wind_material.shader = load(HexDecorations.WIND_SHADER_PATH) as Shader
 	_terrain_material.shader = load(HexGrounds.SHADER_PATH) as Shader
 	for corner: int in range(1, HEX_CORNERS.size() - 1):
@@ -104,12 +116,15 @@ func _process(_delta: float) -> void:
 func set_map(map: ExplorationMap) -> void:
 	_map = map
 	_clear_objects()
-	for row: HexRowView in _rows.values() + _back_rows.values() + _front_rows.values():
+	var views: Array = _rows.values()
+	for band: Dictionary in _bands:
+		views.append_array(band.values())
+		band.clear()
+	for row: HexRowView in views:
 		remove_child(row)
 		row.queue_free()
 	_rows.clear()
-	_back_rows.clear()
-	_front_rows.clear()
+	_props_by_chunk.clear()
 	_row_chunks.clear()
 	_unbuilt_rows.clear()
 	_highlighted_row = null
@@ -130,10 +145,9 @@ func set_map(map: ExplorationMap) -> void:
 		chunks.sort()
 		for chunk: int in chunks:
 			_rows[Vector2i(chunk, row_number)] = _new_terrain_row()
-		for chunk: int in chunks:
-			_back_rows[Vector2i(chunk, row_number)] = _new_decoration_row()
-		for chunk: int in chunks:
-			_front_rows[Vector2i(chunk, row_number)] = _new_decoration_row()
+		for band: Dictionary in _bands:
+			for chunk: int in chunks:
+				band[Vector2i(chunk, row_number)] = _new_decoration_row()
 
 
 ## Os hexágonos mudaram no mapa (o editor de ilhas pinta, põe e tira, map-editor/03):
@@ -174,15 +188,9 @@ func update_tiles(coords: Array[Vector2i]) -> void:
 		if _unbuilt_rows.has(key):
 			_unbuilt_rows[key] = tiles
 			continue
-		var row := _rows[key]
-		var back := _back_rows[key]
-		var front := _front_rows[key]
-		for view: HexRowView in [row, back, front]:
-			view.meshes.clear()
-			view.textures.clear()
-			view.queue_redraw()
+		_clear_views(key)
 		if not tiles.is_empty():
-			_build_row(row, back, front, tiles)
+			_build_row(key, tiles)
 	for sprite: MapObjectSprite in _objects:
 		sprite.place(_rise(_level_at(sprite.object.coord)))
 		if sprite.fence:
@@ -245,9 +253,9 @@ func _place_object(sprite: MapObjectSprite) -> void:
 	var row := sprite.front_row
 	if not _row_chunks.has(row):
 		return
-	var at := _last_index(_back_rows, row) + 1
+	var at := _last_index(_bands[MIDDLE_BAND - 1], row) + 1
 	if _row_chunks.has(row + 1) and not _front_is_higher(sprite.object, row):
-		at = _first_index(_back_rows, row + 1)
+		at = _first_index(_bands[0], row + 1)
 	move_child(sprite, at if sprite.get_index() > at else at - 1)
 
 
@@ -268,8 +276,62 @@ func build_all_rows() -> void:
 
 
 func set_actor_row(actor: Node2D, row: int) -> void:
-	var front := _first_index(_front_rows, row)
+	var front := _first_index(_bands[MIDDLE_BAND], row)
 	move_child(actor, front if actor.get_index() > front else front - 1)
+
+
+## O ator entra na `row` (a linha dos pés), na divisa de faixas mais perto do pé
+## dele, `foot` no chão plano: atrás das decorações com o pé à frente do dele.
+func set_actor_depth(actor: Node2D, foot: Vector2, row: int) -> void:
+	if not _row_chunks.has(row):
+		return
+	var dy := foot.y - (STEP_Y * row + SURFACE_CENTER.y)
+	var gap := clampi(roundi((dy + SURFACE_CENTER.y) / BAND_HEIGHT), 0, DEPTH_BANDS)
+	var at := _first_index(_bands[gap], row) if gap < DEPTH_BANDS else _last_index(_bands[DEPTH_BANDS - 1], row) + 1
+	move_child(actor, at if actor.get_index() > at else at - 1)
+
+
+## A faixa de uma decoração com o pé `dy` pixels da arte abaixo do centro do hexágono.
+static func band_of(dy: float) -> int:
+	return clampi(floori((dy + SURFACE_CENTER.y) / BAND_HEIGHT), 0, DEPTH_BANDS - 1)
+
+
+## As peças soltas da ilha (free-props/02). Chame depois do `set_map`.
+func set_props(props: Array[MapProp]) -> void:
+	_props_by_chunk.clear()
+	_prop_slugs.clear()
+	for prop: MapProp in props:
+		var key := _chunk_of(prop.coord)
+		if not _props_by_chunk.has(key):
+			_props_by_chunk[key] = []
+		_props_by_chunk[key].append(prop)
+		if not _prop_slugs.has(prop.prop_type_id):
+			_prop_slugs[prop.prop_type_id] = str(GameData.get_row("prop_types", prop.prop_type_id).get("slug", ""))
+	for key: Vector2i in _rows:
+		if _unbuilt_rows.has(key):
+			continue
+		var tiles: Array = []
+		for tile: HexTile in _map.tiles.values():
+			if _chunk_of(tile.coord) == key:
+				tiles.append(tile)
+		_clear_views(key)
+		_build_row(key, tiles)
+
+
+func _bands_of(key: Vector2i) -> Array[HexRowView]:
+	var views: Array[HexRowView] = []
+	for band: Dictionary in _bands:
+		views.append(band[key])
+	return views
+
+
+func _clear_views(key: Vector2i) -> void:
+	var views: Array[HexRowView] = [_rows[key]]
+	views.append_array(_bands_of(key))
+	for view: HexRowView in views:
+		view.meshes.clear()
+		view.textures.clear()
+		view.queue_redraw()
 
 
 ## Põe um filho deste nó logo por cima do terreno de uma linha: por baixo das
@@ -278,7 +340,7 @@ func set_actor_row(actor: Node2D, row: int) -> void:
 func set_ground_overlay(overlay: Node2D, row: int) -> void:
 	if overlay.get_parent() != self:
 		add_child(overlay)
-	var back := _first_index(_back_rows, row)
+	var back := _first_index(_bands[0], row)
 	move_child(overlay, back if overlay.get_index() > back else back - 1)
 
 
@@ -299,7 +361,7 @@ func _chunk_of(coord: Vector2i) -> Vector2i:
 
 
 func _build_chunk(key: Vector2i) -> void:
-	_build_row(_rows[key], _back_rows[key], _front_rows[key], _unbuilt_rows[key])
+	_build_row(key, _unbuilt_rows[key])
 	_unbuilt_rows.erase(key)
 
 
@@ -320,12 +382,16 @@ func _last_index(views: Dictionary[Vector2i, HexRowView], row: int) -> int:
 func _add_chunk_nodes(key: Vector2i) -> void:
 	var row := key.y
 	var terrain := _new_terrain_row()
-	var back := _new_decoration_row()
-	var front := _new_decoration_row()
+	var bands: Array[HexRowView] = []
+	for _band: int in DEPTH_BANDS:
+		bands.append(_new_decoration_row())
 	if _row_chunks.has(row):
-		move_child(terrain, _first_index(_back_rows, row))
-		move_child(back, _first_index(_front_rows, row))
-		move_child(front, _last_index(_front_rows, row) + 1)
+		move_child(terrain, _first_index(_bands[0], row))
+		for band: int in DEPTH_BANDS:
+			if band < DEPTH_BANDS - 1:
+				move_child(bands[band], _first_index(_bands[band + 1], row))
+			else:
+				move_child(bands[band], _last_index(_bands[band], row) + 1)
 		_row_chunks[row].append(key.x)
 	else:
 		var next_row := 2147483647
@@ -335,12 +401,12 @@ func _add_chunk_nodes(key: Vector2i) -> void:
 		if _row_chunks.has(next_row):
 			var at := _first_index(_rows, next_row)
 			move_child(terrain, at)
-			move_child(back, at + 1)
-			move_child(front, at + 2)
+			for band: int in DEPTH_BANDS:
+				move_child(bands[band], at + 1 + band)
 		_row_chunks[row] = [key.x]
 	_rows[key] = terrain
-	_back_rows[key] = back
-	_front_rows[key] = front
+	for band: int in DEPTH_BANDS:
+		_bands[band][key] = bands[band]
 	for sprite: MapObjectSprite in _objects:
 		if sprite.front_row == row or sprite.front_row == row - 1:
 			_place_object(sprite)
@@ -452,7 +518,9 @@ func _new_decoration_row() -> HexRowView:
 
 ## Numa linha, nada se sobrepõe: cada hexágono fica na sua coluna. Só as decorações
 ## vêm por cima, e por isso nos nós seguintes.
-func _build_row(row: HexRowView, back: HexRowView, front: HexRowView, tiles: Array) -> void:
+func _build_row(key: Vector2i, tiles: Array) -> void:
+	var row := _rows[key]
+	var bands := _bands_of(key)
 	var by_face := _grouped(tiles, func(tile: HexTile) -> String: return face_texture(tile.biome))
 	for face: String in by_face:
 		_add_faces(row, face, by_face[face])
@@ -463,10 +531,10 @@ func _build_row(row: HexRowView, back: HexRowView, front: HexRowView, tiles: Arr
 	_add_transitions(row, tiles)
 	_add_grounds(row, tiles)
 	_add_surface(row, CONTOUR_TEXTURE, tiles)
-	_add_decorations(back, front, tiles)
+	_add_decorations(bands, tiles, _props_by_chunk.get(key, []))
 	row.queue_redraw()
-	back.queue_redraw()
-	front.queue_redraw()
+	for band: HexRowView in bands:
+		band.queue_redraw()
 
 
 func _grouped(tiles: Array, key: Callable) -> Dictionary[String, Array]:
@@ -596,29 +664,78 @@ func _front_lift(tile: HexTile, neighbor: Vector2i) -> Vector2:
 	return lift if lift.y > 0.0 else Vector2.ZERO
 
 
-func _add_decorations(back: HexRowView, front: HexRowView, tiles: Array) -> void:
-	var behind: Array[HexDecorations.Decoration] = []
-	var ahead: Array[HexDecorations.Decoration] = []
+func _add_decorations(bands: Array[HexRowView], tiles: Array, props: Array) -> void:
+	var sheet: Array[Array] = []
+	var files: Array[Dictionary] = []
+	for _band: int in DEPTH_BANDS:
+		var decorations: Array[HexDecorations.Decoration] = []
+		sheet.append(decorations)
+		files.append({})
 	for tile: HexTile in tiles:
 		var plants := _plants_at(tile.coord)
-		if plants == null and _map.object_at(tile.coord) >= 0:
+		if plants == null and (_map.object_at(tile.coord) >= 0 or not random_decorations):
 			continue
 		var center := Vector2i(_tile_origin(tile.coord) + SURFACE_CENTER - _rise(tile.height))
-		var decorations := HexDecorations.decorations_of(tile, _map.map_seed)
+		var decorations: Array[HexDecorations.Decoration] = []
 		if plants != null:
 			decorations = HexDecorations.decorations_of_object(tile.coord, plants.variant, plants.mirrored)
+		else:
+			decorations = HexDecorations.decorations_of(tile, _map.map_seed)
 		for decoration: HexDecorations.Decoration in decorations:
 			if plants == null and allows_decoration.is_valid() and not allows_decoration.call(tile.coord, decoration.kind):
 				continue
 			if plants == null and not HexGrounds.allows_decoration(tile, decoration.kind):
 				continue
 			decoration.base = center + decoration.offset
-			if decoration.offset.y < 0:
-				behind.append(decoration)
-			else:
-				ahead.append(decoration)
-	_add_decoration_mesh(back, behind)
-	_add_decoration_mesh(front, ahead)
+			sheet[band_of(decoration.offset.y)].append(decoration)
+	for prop: MapProp in props:
+		var tile := _map.tile_at(prop.coord)
+		if tile == null:
+			continue
+		var base := Vector2i(flat_center(prop.coord) - _rise(tile.height)) + prop.offset
+		var band := band_of(prop.offset.y)
+		var slug: String = _prop_slugs.get(prop.prop_type_id, "")
+		if HexDecorations.KIND_ROWS.has(slug):
+			var decoration := HexDecorations.Decoration.new()
+			decoration.kind = slug
+			decoration.column = clampi(prop.variant - 1, 0, HexDecorations.VARIANTS - 1)
+			decoration.offset = prop.offset
+			decoration.flipped = prop.mirrored
+			decoration.base = base
+			sheet[band].append(decoration)
+		elif not slug.is_empty():
+			var path := PROP_PATH % [slug, prop.variant]
+			if not files[band].has(path):
+				files[band][path] = []
+			files[band][path].append([base, prop.mirrored])
+	for band: int in DEPTH_BANDS:
+		var decorations: Array[HexDecorations.Decoration] = []
+		decorations.assign(sheet[band])
+		_add_decoration_mesh(bands[band], decorations)
+		for path: String in files[band]:
+			_add_file_props(bands[band], path, files[band][path])
+
+
+## Peças com arte própria: o pé no meio da borda de baixo da imagem, sem vento.
+func _add_file_props(row: HexRowView, path: String, placed: Array) -> void:
+	var texture := _texture(path)
+	if texture == null:
+		return
+	placed.sort_custom(func(a: Array, b: Array) -> bool: return (a[0] as Vector2i).y < (b[0] as Vector2i).y)
+	var size := Vector2(texture.get_width(), texture.get_height())
+	var points := PackedVector2Array()
+	var texture_points := PackedVector2Array()
+	var wind := PackedFloat32Array()
+	for entry: Array in placed:
+		var base: Vector2i = entry[0]
+		var top_left := Vector2(base) - Vector2(floorf(size.x / 2.0), size.y)
+		points.append_array(_quad(top_left, top_left + Vector2(size.x, 0.0), Vector2(0.0, size.y)))
+		var left := size.x if entry[1] else 0.0
+		var right := 0.0 if entry[1] else size.x
+		texture_points.append_array(_quad(Vector2(left, 0.0), Vector2(right, 0.0), Vector2(0.0, size.y)))
+		for _vertex: int in 6:
+			wind.append_array(PackedFloat32Array([base.x, base.y, HexDecorations.NO_SWAY.x, HexDecorations.NO_SWAY.y]))
+	_add_mesh(row, path, points, texture_points, PackedColorArray(), wind)
 
 
 ## A Vegetação apoiada neste hexágono, ou `null`.

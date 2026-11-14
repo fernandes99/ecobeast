@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://buypl65sfs34s"
-path="res://.godot/imported/3.png-517785c9f028f9cfd7f1a8cea6627b84.ctex"
+uid="uid://d07y3jxp1bh3b"
+path="res://.godot/imported/1.png-77d0cf41659f8923b9f237e3d259682e.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/map_objects/flower_bed/3.png"
-dest_files=["res://.godot/imported/3.png-517785c9f028f9cfd7f1a8cea6627b84.ctex"]
+source_file="res://assets/props/bench/1.png"
+dest_files=["res://.godot/imported/1.png-77d0cf41659f8923b9f237e3d259682e.ctex"]
 
 [params]
 
