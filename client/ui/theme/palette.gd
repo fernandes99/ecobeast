@@ -85,6 +85,7 @@ const BOARD_ENEMY := BATTLE_LEVEL_ENEMY
 
 const HP_MID := WARNING
 const HP_LOW := DANGER
+const XP_LINE := Color("#7FD8FF")
 
 const STAT_UP := HP_HIGH
 const STAT_DOWN := DANGER

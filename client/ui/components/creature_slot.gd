@@ -6,7 +6,9 @@ const CORNER_RADIUS := 12
 const ELEMENT_DARKEN := 0.45
 const INFO_ALPHA := 0.85
 const EMPTY_ALPHA := 0.5
+const XP_HEIGHT := 3
 
+var _xp_line := XpLine.new(XP_HEIGHT)
 var _creature: CreatureInstance = null
 
 @onready var _content: VBoxContainer = %Content
@@ -31,6 +33,7 @@ func _ready() -> void:
 	info_style.content_margin_top = 4
 	info_style.content_margin_bottom = 6
 	_info.add_theme_stylebox_override(&"panel", info_style)
+	_hp_bar.add_sibling(_xp_line)
 	_refresh()
 
 
@@ -72,6 +75,7 @@ func _refresh() -> void:
 		_level_label.text = "Nv. %d" % _creature.level
 		_hp_label.text = "HP %d/%d" % [_creature.current_hp, _creature.stats.hp]
 		_hp_bar.set_hp(_creature.current_hp, _creature.stats.hp)
+		_xp_line.set_ratio(_creature.xp_ratio())
 	add_theme_stylebox_override(&"panel", style)
 
 

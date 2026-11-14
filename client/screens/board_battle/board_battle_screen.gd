@@ -73,6 +73,7 @@ var _enemy_focus: String = ""
 var _player_focus: String = ""
 var _marks: Dictionary[Vector2i, int] = {}
 var _stages: Dictionary[String, Dictionary] = {}
+var _xp_by_uid: Dictionary[String, float] = {}
 var _debug: BattleEffectsDebug = null
 var _debug_cell: Variant = null
 var _debug_key := ""
@@ -214,12 +215,28 @@ func _begin() -> void:
 		_show_exit(result.error, false)
 		return
 	var turn: BoardTurn = result.data
+	_remember_xp(turn.view)
 	_meet_tamer(turn.view)
 	_board.set_board(turn.view.board_cells, _biome, _height)
 	_fit_board()
 	BattleIntro.reveal()
 	await _show_turn(turn)
 	_narrator.begin_turns()
+
+
+func _remember_xp(view: BoardBattleView) -> void:
+	for creature: BattleCreature in view.team:
+		var party_creature := _party_creature(creature.uid)
+		if party_creature != null:
+			_xp_by_uid[creature.uid] = party_creature.xp_ratio()
+
+
+func _xp_of(key: String) -> float:
+	var view := _view if _view != null else _incoming
+	var index: int = _team_index.get(key, -1)
+	if view == null or index < 0 or index >= view.team.size():
+		return -1.0
+	return _xp_by_uid.get(view.team[index].uid, -1.0)
 
 
 func _meet_tamer(view: BoardBattleView) -> void:
@@ -633,6 +650,8 @@ func _show_card(card: BoardCreatureCard, key: String) -> void:
 		card.clear()
 		return
 	card.set_creature(_species[key], _names[key], _level.get(key, 1), _hp.get(key, 0), _max_hp.get(key, 0))
+	if card == _player_card:
+		card.set_xp(_xp_of(key))
 
 
 func _refresh_marks() -> void:
@@ -1075,33 +1094,46 @@ func _pick_entry_cell(cell: Vector2i) -> void:
 
 func _celebrate(progression: Array[CreatureProgress]) -> void:
 	for progress: CreatureProgress in progression:
-		if not progress.leveled_up():
+		if progress.xp_gained <= 0 and not progress.leveled_up():
 			continue
 		var creature: BattleCreature = _view.team[progress.team_index]
 		var display_name := _player_name(creature)
-		await _level_up_overlay.play(progress, creature.species_id, display_name)
-		var learned := progress.learned_skill_ids
-		var pending := progress.pending_skill_ids
-		var known := _known_skills(progress.uid, learned)
-		if progress.evolution_species_id >= 0:
-			var evolved := await _evolution_overlay.play(
-				progress.uid, creature.species_id, progress.evolution_species_id, display_name
-			)
-			if evolved == null:
-				continue
-			for species_id: int in evolved.registered_species_ids:
-				await _codex_overlay.play(species_id)
-			var species := GameData.get_species(evolved.creature.species_id)
-			display_name = evolved.creature.display_name(species)
-			learned = evolved.learned_skill_ids
-			pending = evolved.pending_skill_ids
-			known = evolved.creature.skills
-		for skill_id: int in learned:
-			await _skill_overlay.play_learned(display_name, skill_id)
-		for skill_id: int in pending:
-			var chosen := await _skill_overlay.play_choice(progress.uid, display_name, skill_id, known)
-			if chosen != null:
-				known = chosen.creature.skills
+		_player_card.set_creature(creature.species_id, display_name, progress.level_before, creature.hp, creature.max_hp)
+		_player_card.set_xp(_xp_by_uid.get(progress.uid, 0.0))
+		for level: int in range(progress.level_before + 1, progress.level_after + 1):
+			await _player_card.fill_xp(1.0)
+			await _player_card.level_up_to(level)
+		if progress.leveled_up():
+			await _celebrate_level(progress, creature, display_name)
+		await _player_card.fill_xp(progress.xp_ratio())
+		_xp_by_uid[progress.uid] = progress.xp_ratio()
+
+
+func _celebrate_level(progress: CreatureProgress, creature: BattleCreature, display_name: String) -> void:
+	await _level_up_overlay.play(progress, creature.species_id, display_name)
+	var learned := progress.learned_skill_ids
+	var pending := progress.pending_skill_ids
+	var known := _known_skills(progress.uid, learned)
+	if progress.evolution_species_id >= 0:
+		var evolved := await _evolution_overlay.play(
+			progress.uid, creature.species_id, progress.evolution_species_id, display_name
+		)
+		if evolved == null:
+			return
+		for species_id: int in evolved.registered_species_ids:
+			await _codex_overlay.play(species_id)
+		var species := GameData.get_species(evolved.creature.species_id)
+		display_name = evolved.creature.display_name(species)
+		_player_card.set_creature(species.id, display_name, progress.level_after, creature.hp, creature.max_hp)
+		learned = evolved.learned_skill_ids
+		pending = evolved.pending_skill_ids
+		known = evolved.creature.skills
+	for skill_id: int in learned:
+		await _skill_overlay.play_learned(display_name, skill_id)
+	for skill_id: int in pending:
+		var chosen := await _skill_overlay.play_choice(progress.uid, display_name, skill_id, known)
+		if chosen != null:
+			known = chosen.creature.skills
 
 
 func _known_skills(uid: String, learned: Array[int]) -> Array[SkillSlot]:

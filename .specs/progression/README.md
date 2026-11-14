@@ -52,5 +52,6 @@ Ecobeasts ganham XP ao vencer, sobem de nível, aprendem Técnicas novas e evolu
 | 3 | [03-level-up-screen](03-level-up-screen.md) | Jogo: XP no log, barra de XP enchendo e a tela de comemoração | concluída |
 | 4 | [04-evolution-and-skills-screens](04-evolution-and-skills-screens.md) | Jogo: tela da evolução com "Cancelar" e tela de escolher a Técnica | concluída |
 | 5 | [05-wild-coins](05-wild-coins.md) | Servidor e jogo: moedas ao vencer e ao perder para um selvagem, com a linha no log | concluída |
+| 6 | [06-xp-bar](06-xp-bar.md) | Jogo: a linha de XP no cartão da luta e no time do Hub, enchendo no fim da luta | concluída |
 
 O desenho compartilhado está no [architecture.md](architecture.md).

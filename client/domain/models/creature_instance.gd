@@ -32,6 +32,12 @@ func display_name(species: CreatureSpecies) -> String:
 	return nickname if not nickname.is_empty() else species.name
 
 
+func xp_ratio() -> float:
+	if next_level_xp < 0:
+		return 1.0
+	return clampf(float(current_xp - level_xp) / maxi(next_level_xp - level_xp, 1), 0.0, 1.0)
+
+
 static func from_dict(d: Dictionary) -> CreatureInstance:
 	var creature := CreatureInstance.new()
 	creature.uid = DictFields.get_string(d, "uid")

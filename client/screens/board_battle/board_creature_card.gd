@@ -9,6 +9,9 @@ const PORTRAIT_SIZE := 84
 const NAME_FONT_SIZE := 26
 const SMALL_FONT_SIZE := 18
 const BAR_HEIGHT := 14
+const XP_HEIGHT := 4
+const LEVEL_BUMP := Vector2(1.25, 1.25)
+const BUMP_TIME := 0.12
 
 @export var is_enemy: bool = false
 
@@ -18,6 +21,8 @@ var _level_label := Label.new()
 var _elements := HBoxContainer.new()
 var _hp_bar: HpBar = null
 var _hp_label := Label.new()
+var _pill: PanelContainer = null
+var _xp_line: XpLine = null
 
 
 func _ready() -> void:
@@ -44,13 +49,13 @@ func _ready() -> void:
 	_name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_name_label.clip_text = true
 	title.add_child(_name_label)
-	var pill := PanelContainer.new()
-	pill.theme_type_variation = BattleTheme.PILL
-	pill.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_pill = PanelContainer.new()
+	_pill.theme_type_variation = BattleTheme.PILL
+	_pill.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_level_label.theme_type_variation = &"BoldLabel"
 	_level_label.add_theme_font_size_override(&"font_size", SMALL_FONT_SIZE)
-	pill.add_child(_level_label)
-	title.add_child(pill)
+	_pill.add_child(_level_label)
+	title.add_child(_pill)
 
 	_elements.add_theme_constant_override(&"separation", 6)
 	info.add_child(_elements)
@@ -70,11 +75,17 @@ func _ready() -> void:
 	caption.theme_type_variation = &"BoldLabel"
 	caption.add_theme_font_size_override(&"font_size", SMALL_FONT_SIZE)
 	hp_row.add_child(caption)
+	var bars := VBoxContainer.new()
+	bars.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	bars.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	bars.add_theme_constant_override(&"separation", 3)
+	hp_row.add_child(bars)
 	_hp_bar = HpBarScene.instantiate()
 	_hp_bar.bar_height = BAR_HEIGHT
-	_hp_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_hp_bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	hp_row.add_child(_hp_bar)
+	bars.add_child(_hp_bar)
+	if not is_enemy:
+		_xp_line = XpLine.new(XP_HEIGHT)
+		bars.add_child(_xp_line)
 	_hp_label.theme_type_variation = &"BoldLabel"
 	_hp_label.add_theme_font_size_override(&"font_size", SMALL_FONT_SIZE)
 	_hp_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
@@ -104,6 +115,33 @@ func clear() -> void:
 func set_hp(hp: int, max_hp: int) -> void:
 	_hp_bar.set_hp(hp, max_hp)
 	_hp_label.text = "%d / %d" % [hp, max_hp]
+
+
+## Negativo esconde a linha, mas guarda o lugar dela.
+func set_xp(ratio: float) -> void:
+	if _xp_line == null:
+		return
+	_xp_line.modulate.a = 1.0 if ratio >= 0.0 else 0.0
+	_xp_line.set_ratio(maxf(ratio, 0.0))
+
+
+func fill_xp(ratio: float) -> void:
+	if _xp_line == null:
+		return
+	_xp_line.modulate.a = 1.0
+	await _xp_line.fill_to(ratio)
+
+
+func level_up_to(level: int) -> void:
+	if _xp_line == null:
+		return
+	_level_label.text = "Nv. %d" % level
+	_pill.pivot_offset = _pill.size / 2.0
+	var bump := create_tween()
+	bump.tween_property(_pill, ^"scale", LEVEL_BUMP, BUMP_TIME)
+	bump.tween_property(_pill, ^"scale", Vector2.ONE, BUMP_TIME)
+	await _xp_line.flash()
+	_xp_line.set_ratio(0.0)
 
 
 func _element_badge(element_id: int) -> ElementBadge:
