@@ -13,6 +13,9 @@ var tiles: Dictionary[Vector2i, HexTile] = {}
 var tile_areas: Dictionary[Vector2i, int] = {}
 var actions: Array = []
 var objects: Array = []
+## As peças soltas (free-props/03), como o servidor manda: `prop_type_id`, `q`, `r`, `dx`,
+## `dy`, `variant` e `mirrored`.
+var props: Array = []
 var areas: Array = []
 
 
@@ -54,6 +57,7 @@ static func from_dict(data: Dictionary) -> IslandDraft:
 	draft._read_terrain(data)
 	draft.actions = DictFields.get_array(data, "actions").duplicate(true)
 	draft.objects = DictFields.get_array(data, "objects").duplicate(true)
+	draft.props = DictFields.get_array(data, "props").duplicate(true)
 	draft.areas = DictFields.get_array(data, "areas").duplicate(true)
 	return draft
 
@@ -73,6 +77,7 @@ func to_dict() -> Dictionary:
 		"tiles": tile_list,
 		"actions": actions,
 		"objects": objects,
+		"props": props,
 		"areas": areas,
 	}
 
@@ -136,6 +141,10 @@ func remove_tile(coord: Vector2i) -> bool:
 	if holder >= 0:
 		objects.remove_at(holder)
 		changed = true
+	for index: int in range(props.size() - 1, -1, -1):
+		if prop_coord(index) == coord:
+			props.remove_at(index)
+			changed = true
 	return changed
 
 
@@ -201,6 +210,51 @@ func map_objects() -> Array[MapObject]:
 	return list
 
 
+func map_props() -> Array[MapProp]:
+	var list: Array[MapProp] = []
+	for entry: Variant in props:
+		var prop := MapProp.from_dict(entry as Dictionary)
+		if prop != null:
+			list.append(prop)
+	return list
+
+
+func prop_coord(index: int) -> Vector2i:
+	var prop: Dictionary = props[index]
+	return Vector2i(int(prop.get("q", 0)), int(prop.get("r", 0)))
+
+
+## O pé da peça no chão plano, sem a altura.
+func prop_foot(index: int) -> Vector2:
+	var prop: Dictionary = props[index]
+	return HexMapView.flat_center(prop_coord(index)) + Vector2(int(prop.get("dx", 0)), int(prop.get("dy", 0)))
+
+
+## O pé da peça como ele aparece, na altura do hexágono dela.
+func prop_art_foot(index: int) -> Vector2:
+	return prop_foot(index) - Vector2(0.0, rise_at(prop_coord(index)))
+
+
+func prop_rect(index: int) -> Rect2:
+	var prop: Dictionary = props[index]
+	var art := PropArt.rect(PropArt.slug_of(int(prop.get("prop_type_id", 0))), int(prop.get("variant", 1)))
+	return Rect2(prop_art_foot(index) + art.position, art.size)
+
+
+## A peça da frente cuja arte cobre `art_point` (com a altura), ou -1.
+func prop_at(art_point: Vector2) -> int:
+	var best := -1
+	for index: int in props.size():
+		if prop_rect(index).has_point(art_point) and (best < 0 or prop_foot(index).y >= prop_foot(best).y):
+			best = index
+	return best
+
+
+func rise_at(coord: Vector2i) -> float:
+	var tile: HexTile = tiles.get(coord)
+	return HexMapView.LEVEL_HEIGHTS[tile.height] if tile != null else 0.0
+
+
 func area_by_key(key: int) -> Dictionary:
 	for area: Variant in areas:
 		if int((area as Dictionary).get("key", 0)) == key:
@@ -230,6 +284,7 @@ func to_map() -> ExplorationMap:
 	map.start = start
 	map.tiles = tiles
 	map.set_objects(map_objects())
+	map.props = map_props()
 	return map
 
 

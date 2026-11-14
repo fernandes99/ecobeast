@@ -296,7 +296,8 @@ static func band_of(dy: float) -> int:
 	return clampi(floori((dy + SURFACE_CENTER.y) / BAND_HEIGHT), 0, DEPTH_BANDS - 1)
 
 
-## As peças soltas da ilha (free-props/02). Chame depois do `set_map`.
+## As peças soltas da ilha (free-props/02). Chame depois do `set_map`; depois de montadas
+## as linhas, quem muda as peças refaz os hexágonos delas com `update_tiles`.
 func set_props(props: Array[MapProp]) -> void:
 	_props_by_chunk.clear()
 	_prop_slugs.clear()
@@ -306,16 +307,7 @@ func set_props(props: Array[MapProp]) -> void:
 			_props_by_chunk[key] = []
 		_props_by_chunk[key].append(prop)
 		if not _prop_slugs.has(prop.prop_type_id):
-			_prop_slugs[prop.prop_type_id] = str(GameData.get_row("prop_types", prop.prop_type_id).get("slug", ""))
-	for key: Vector2i in _rows:
-		if _unbuilt_rows.has(key):
-			continue
-		var tiles: Array = []
-		for tile: HexTile in _map.tiles.values():
-			if _chunk_of(tile.coord) == key:
-				tiles.append(tile)
-		_clear_views(key)
-		_build_row(key, tiles)
+			_prop_slugs[prop.prop_type_id] = PropArt.slug_of(prop.prop_type_id)
 
 
 func _bands_of(key: Vector2i) -> Array[HexRowView]:

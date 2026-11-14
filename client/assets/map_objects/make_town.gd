@@ -8,7 +8,7 @@ extends SceneTree
 ## o canto de baixo da linha da frente, como no make_objects.gd.
 
 const OUT := "res://assets/map_objects/%s/%d.png"
-## Peças soltas: a imagem acaba no pé, sem a borda vazia de baixo.
+## Peças soltas: a imagem acaba no pé, sem as bordas vazias, com o pé no meio.
 const PROP_TYPES: Array[String] = ["lamp_post", "sign", "flower_bed", "bench"]
 const PROP_OUT := "res://assets/props/%s/%d.png"
 const HEX_HALF_WIDTH := 32.0
@@ -109,7 +109,10 @@ func _init() -> void:
 			var art := _strip(images)
 			var path := OUT % [slug, variant]
 			if PROP_TYPES.has(slug):
-				art = art.get_region(Rect2i(0, 0, art.get_width(), art.get_used_rect().end.y))
+				var used := art.get_used_rect()
+				var middle := floori(art.get_width() / 2.0)
+				var half := maxi(middle - used.position.x, used.end.x - middle)
+				art = art.get_region(Rect2i(middle - half, 0, half * 2, used.end.y))
 				path = PROP_OUT % [slug, variant]
 			DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(path.get_base_dir()))
 			var error := art.save_png(path)

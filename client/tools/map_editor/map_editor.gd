@@ -283,6 +283,7 @@ func _can_paint() -> bool:
 func _on_stroke_started(coord: Vector2i, secondary: bool) -> void:
 	if not _can_paint():
 		return
+	_tools.pointer = _canvas.pointer_flat()
 	_tools.begin_stroke(_draft, secondary)
 	_paint(coord)
 
@@ -290,6 +291,7 @@ func _on_stroke_started(coord: Vector2i, secondary: bool) -> void:
 func _paint(coord: Vector2i) -> void:
 	if not _can_paint():
 		return
+	_tools.pointer = _canvas.pointer_flat()
 	var changed := _tools.paint(_draft, coord)
 	if changed.is_empty():
 		return
@@ -297,10 +299,23 @@ func _paint(coord: Vector2i) -> void:
 		_canvas.refresh_marks(changed)
 	elif _tools.tool == EditorTools.Tool.OBJECT:
 		_canvas.refresh_objects()
+		_canvas.refresh_props()
 	else:
 		_canvas.update_tiles(changed)
 		if _tools.tool == EditorTools.Tool.REMOVE:
 			_canvas.refresh_objects()
+			_canvas.refresh_props()
+	title = TITLE + " *"
+
+
+## Arrastando a peça solta escolhida (free-props/03).
+func _on_pointer_dragged(flat: Vector2) -> void:
+	if not _can_paint() or not _tools.is_moving():
+		return
+	if _tools.drag(_draft, flat).is_empty():
+		return
+	_canvas.refresh_props()
+	_place_object_bar()
 	title = TITLE + " *"
 
 
@@ -308,6 +323,7 @@ func _on_tools_edited(step: EditorHistory.Step, merge: bool) -> void:
 	_history.record(step, merge)
 	_canvas.refresh_marks()
 	_canvas.refresh_objects()
+	_canvas.refresh_props()
 	_update_dirty()
 	_place_object_bar()
 
@@ -347,6 +363,7 @@ func _on_history_applied(coords: Array[Vector2i]) -> void:
 	_canvas.update_tiles(coords)
 	_canvas.refresh_marks()
 	_canvas.refresh_objects()
+	_canvas.refresh_props()
 	_tools.refresh_panels()
 	if _name_edit.text.strip_edges() != _draft.name:
 		_name_edit.text = _draft.name
@@ -463,11 +480,11 @@ func _tool_key(key: InputEventKey) -> bool:
 		KEY_M:
 			objects.toggle_mirror()
 		KEY_DELETE, KEY_BACKSPACE:
-			if objects.selected < 0:
+			if objects.selected < 0 and objects.selected_prop < 0:
 				return false
 			objects.delete_selected()
 		KEY_ESCAPE:
-			if objects.selected < 0:
+			if objects.selected < 0 and objects.selected_prop < 0:
 				return false
 			objects.select(-1)
 		_:
@@ -619,6 +636,7 @@ func _build() -> void:
 	_canvas.stroke_started.connect(_on_stroke_started)
 	_canvas.stroke_moved.connect(_paint)
 	_canvas.stroke_ended.connect(_on_stroke_ended)
+	_canvas.pointer_dragged.connect(_on_pointer_dragged)
 	_tools.brush_changed.connect(_on_brush_changed)
 	_canvas.view_changed.connect(_place_object_bar)
 	body.add_child(_canvas)
@@ -634,7 +652,7 @@ func _build() -> void:
 	_hover_label.theme_type_variation = &"SecondaryLabel"
 	_hover_label.clip_text = true
 	_hover_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	_hover_label.text = "Botão esquerdo: pintar, ou escolher um objeto posto. Botão direito: escolher objeto ou ação, ou tirar área. Roda: zoom. Botão do meio, ou espaço e o botão esquerdo: arrastar. Tab: visão de cima. Ctrl+Z e Ctrl+Y: desfazer e refazer."
+	_hover_label.text = "Botão esquerdo: pintar, pôr uma peça ou arrastar a escolhida. Botão direito: escolher peça ou ação, ou tirar área. Roda: zoom. Botão do meio, ou espaço e o botão esquerdo: arrastar. Tab: visão de cima. Ctrl+Z e Ctrl+Y: desfazer e refazer."
 	_editor.add_child(_hover_label)
 
 	_unsaved_dialog = ConfirmationDialog.new()
@@ -717,19 +735,24 @@ func _popup_below(panel: PopupPanel, button: Control) -> void:
 	panel.popup(Rect2i(Vector2i(Vector2(x, rect.end.y + 4.0).round()), Vector2i(popup_size.ceil())))
 
 
-func _on_object_selected(index: int) -> void:
-	_canvas.selected_object = index
+func _on_object_selected(_index: int) -> void:
+	_canvas.selected_object = _tools.object_panel.selected
+	_canvas.selected_prop = _tools.object_panel.selected_prop
 	_canvas.refresh_brush()
 	_place_object_bar()
 
 
 func _place_object_bar() -> void:
-	var index := _tools.object_panel.selected
-	if _draft == null or index < 0 or _tools.tool != EditorTools.Tool.OBJECT or _canvas.is_overview():
+	var panel := _tools.object_panel
+	var rect := Rect2()
+	if _draft != null and panel.selected >= 0:
+		rect = _canvas.object_rect(panel.selected)
+	elif _draft != null and panel.selected_prop >= 0:
+		rect = _canvas.prop_rect(panel.selected_prop)
+	if not rect.has_area() or _tools.tool != EditorTools.Tool.OBJECT or _canvas.is_overview():
 		_object_bar.visible = false
 		return
 	_object_bar.refresh()
-	var rect := _canvas.object_rect(index)
 	var bar_size := _object_bar.get_combined_minimum_size()
 	var at := (Vector2(rect.get_center().x - bar_size.x / 2.0, rect.end.y + 6.0)).round()
 	_object_bar.position = at

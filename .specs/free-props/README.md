@@ -75,7 +75,7 @@ Escolhas de Claude (corrigíveis; ao mudar uma, atualize aqui e no `architecture
 | --- | --- | --- | --- |
 | 1 | [01-prop-records](01-prop-records.md) | Servidor e contrato: o catálogo `prop_types`, a tabela `island_props`, as rotas do editor (salvar, publicar) e as peças na resposta de Explorar numa ilha. As decorações de rua passam de objeto a peça | concluída |
 | 2 | [02-props-in-game](02-props-in-game.md) | Jogo: as peças soltas desenhadas em lote por linha, na altura do hexágono, com o vento nas plantas e o plano certo com o Domador; as ilhas sem decorações sorteadas | concluída |
-| 3 | `03-pieces-tool` | Editor: a ferramenta Peças, com a paleta única, pôr, mover, variante, espelho, apagar e desfazer, para conjuntos e peças soltas | a fazer |
+| 3 | [03-pieces-tool](03-pieces-tool.md) | Editor: a ferramenta Peças, com a paleta única, pôr, mover, variante, espelho, apagar e desfazer, para conjuntos e peças soltas | concluída |
 | 4 | `04-stamps` | Editor: guardar uma seleção como carimbo e pôr um carimbo (espelhado ou não); a Fonte; os dois primeiros carimbos | a fazer |
 
 O desenho compartilhado está no [architecture.md](architecture.md).

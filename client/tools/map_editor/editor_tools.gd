@@ -7,7 +7,7 @@ signal edited(step: EditorHistory.Step, merge: bool)
 
 enum Tool { BIOME, HEIGHT, GROUND, ADD, REMOVE, START, OBJECT, ACTION, AREA }
 
-const TOOL_NAMES: Array[String] = ["Bioma", "Altura", "Chão", "Pôr hexágono", "Tirar hexágono", "Chegada", "Objeto", "Ação", "Área"]
+const TOOL_NAMES: Array[String] = ["Bioma", "Altura", "Chão", "Pôr hexágono", "Tirar hexágono", "Chegada", "Peças", "Ação", "Área"]
 const TOOL_ICONS: Array[String] = ["biome", "height", "ground", "hex_add", "hex_remove", "flag", "object", "action", "area"]
 const TOOL_HINTS: Array[String] = [
 	"Troca o bioma dos hexágonos que já existem. A altura só muda se você escolher uma abaixo.",
@@ -16,7 +16,7 @@ const TOOL_HINTS: Array[String] = [
 	"Cria hexágonos onde não há, com o bioma e a altura escolhidos abaixo.",
 	"Apaga hexágonos. A chegada nunca sai.",
 	"Move a chegada (a bandeira) para o hexágono clicado.",
-	"Põe objetos. Clicar num objeto posto escolhe ele.",
+	"Põe peças: as de grade num hexágono, as soltas no ponto do clique. Botão direito escolhe uma posta; arrastar a escolhida a move.",
 	"Pinta uma ação nova, ou aumenta a escolhida. Botão direito escolhe uma ação.",
 	"Pinta a área escolhida. Botão direito tira os hexágonos de qualquer área.",
 ]
@@ -78,6 +78,11 @@ var _object_done := false
 var area_panel: AreaPanel
 
 var _step: EditorHistory.Step = null
+## O ponto do ponteiro no chão plano, sem a altura, em pixels da arte: as peças soltas
+## ficam com o pé nele.
+var pointer := Vector2.ZERO
+var _moving := -1
+var _grab := Vector2.ZERO
 var _full_warned := false
 var _secondary := false
 var _stroke_action := -2
@@ -168,7 +173,7 @@ func _init() -> void:
 	if ground_slugs.size() > 1:
 		ground = ground_slugs[1]
 
-	var objects_box := _section("Objeto")
+	var objects_box := _section("Peças")
 	_object_section = objects_box.get_parent()
 	object_panel = ObjectPanel.new()
 	object_panel.edited.connect(func(step: EditorHistory.Step) -> void: edited.emit(step, false))
@@ -229,6 +234,8 @@ func brush_radius() -> int:
 
 
 func brush_coords(center: Vector2i) -> Array[Vector2i]:
+	if tool == Tool.OBJECT and object_panel.placing_prop and object_panel.selected < 0:
+		return [center]
 	if tool == Tool.OBJECT and not object_panel.editing_blocks:
 		return ObjectPanel.coords_of(ObjectPanel.footprint(object_panel.type_id, center, object_panel.mirrored))
 	var reach := brush_radius()
@@ -262,6 +269,9 @@ func begin_stroke(draft: IslandDraft, secondary: bool = false) -> void:
 	_secondary = secondary
 	_stroke_action = -2
 	_object_done = false
+	_moving = -1
+	if draft.props.size() > 0 or tool == Tool.OBJECT:
+		_step.props_before = draft.props.duplicate(true)
 	if draft.actions.size() > 0 or tool == Tool.ACTION:
 		_step.actions_before = draft.actions.duplicate(true)
 	if draft.objects.size() > 0 or tool == Tool.OBJECT:
@@ -318,6 +328,11 @@ func end_stroke(draft: IslandDraft) -> EditorHistory.Step:
 		step.objects_after = draft.objects.duplicate(true)
 	else:
 		step.objects_before = null
+	if step.props_before != null and step.props_before != draft.props:
+		step.props_after = draft.props.duplicate(true)
+	else:
+		step.props_before = null
+	_moving = -1
 	if tool == Tool.OBJECT or tool == Tool.REMOVE:
 		object_panel.refresh()
 	if step.start_after == step.start_before:
@@ -423,14 +438,36 @@ func _paint_action(draft: IslandDraft, center: Vector2i) -> Array[Vector2i]:
 	return changed
 
 
-## Uma coisa por clique: escolher (botão direito), trocar o bloqueio de um hexágono do
-## objeto escolhido ou pôr o objeto novo, se ele couber.
+## Uma coisa por clique: escolher (botão direito), começar a mover a peça solta
+## escolhida, trocar o bloqueio de um hexágono do objeto escolhido ou pôr a peça nova.
 func _paint_object(draft: IslandDraft, center: Vector2i) -> Array[Vector2i]:
 	var changed: Array[Vector2i] = []
 	if _object_done:
 		return changed
 	_object_done = true
-	if _secondary or (not object_panel.editing_blocks and draft.object_at(center) >= 0):
+	var art := pointer - Vector2(0.0, draft.rise_at(HexMapView.grid_coord(pointer)))
+	if _secondary:
+		var hit := draft.prop_at(art)
+		if hit >= 0:
+			object_panel.select_prop(hit)
+		else:
+			object_panel.select(draft.object_at(center))
+		return changed
+	var chosen := object_panel.selected_prop
+	if chosen >= 0 and draft.prop_rect(chosen).has_point(art):
+		_moving = chosen
+		_grab = draft.prop_foot(chosen) - pointer
+		return changed
+	if object_panel.placing_prop and not object_panel.editing_blocks:
+		var foot := pointer.round()
+		var coord := HexMapView.grid_coord(foot)
+		if not draft.tiles.has(coord):
+			return changed
+		draft.props.append(object_panel.new_prop(coord, Vector2i(foot - HexMapView.flat_center(coord))))
+		object_panel.select_prop(draft.props.size() - 1)
+		changed.append(coord)
+		return changed
+	if not object_panel.editing_blocks and draft.object_at(center) >= 0:
 		object_panel.select(draft.object_at(center))
 		return changed
 	if object_panel.editing_blocks:
@@ -451,10 +488,39 @@ func _paint_object(draft: IslandDraft, center: Vector2i) -> Array[Vector2i]:
 	return coords
 
 
-## A cor do contorno sob o ponteiro com a ferramenta Objeto: verde se o objeto cabe,
-## vermelho se não; transparente nas outras ferramentas.
+## Arrastando a peça solta escolhida: o pé segue o ponteiro, sem sair da ilha. Devolve
+## os hexágonos que mudaram.
+func drag(draft: IslandDraft, flat: Vector2) -> Array[Vector2i]:
+	var changed: Array[Vector2i] = []
+	if _moving < 0 or _moving >= draft.props.size():
+		return changed
+	var foot := (flat + _grab).round()
+	var coord := HexMapView.grid_coord(foot)
+	if not draft.tiles.has(coord):
+		return changed
+	var prop: Dictionary = draft.props[_moving]
+	var offset := Vector2i(foot - HexMapView.flat_center(coord))
+	var before := draft.prop_coord(_moving)
+	if before == coord and int(prop["dx"]) == offset.x and int(prop["dy"]) == offset.y:
+		return changed
+	prop["q"] = coord.x
+	prop["r"] = coord.y
+	prop["dx"] = offset.x
+	prop["dy"] = offset.y
+	changed.append(before)
+	if coord != before:
+		changed.append(coord)
+	return changed
+
+
+func is_moving() -> bool:
+	return _moving >= 0
+
+
+## A cor do contorno sob o ponteiro com a ferramenta Peças: verde se o objeto cabe,
+## vermelho se não; transparente nas outras ferramentas e com uma peça solta.
 func brush_color(draft: IslandDraft, center: Vector2i) -> Color:
-	if tool != Tool.OBJECT or object_panel.editing_blocks or draft == null:
+	if tool != Tool.OBJECT or object_panel.editing_blocks or draft == null or object_panel.placing_prop:
 		return Color.TRANSPARENT
 	return UiPalette.HP_HIGH if draft.object_fits(brush_coords(center)) else UiPalette.DANGER
 

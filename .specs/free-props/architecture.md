@@ -84,3 +84,10 @@ O `content_hash` do rascunho inclui as peças, em ordem de `(r, q, dy, dx, prop_
 - **O Domador** entra na divisa de faixas mais perto do pé dele, na linha dos pés (`HexMapView.set_actor_depth`). Os Ecobeasts e os Domadores NPC entram antes da faixa do meio (`MIDDLE_BAND`, `set_actor_row`), como antes. Os objetos continuam depois de todas as faixas da linha da frente deles.
 - **A arte das peças:** os tipos com o `slug` de uma linha da folha `decorations.png` (`HexDecorations.KIND_ROWS`) usam a célula da variante (`variant - 1`), com o pé no `CELL_BASE` e o vento do `KIND_SWAY`. Os outros usam `assets/props/<slug>/<variante>.png`, com o pé no meio da borda de baixo, sem vento. Cada faixa de cada pedaço tem uma malha por textura.
 - **Ilhas:** com `HexMapView.random_decorations` desligado (numa ilha no jogo, e sempre no editor), as decorações sorteadas não aparecem; as da Vegetação continuam.
+
+## No editor
+
+- **A ferramenta Peças** (a 7, que era Objeto) tem os tipos de grade (`map_object_types`) e os soltos (`prop_types`) na mesma paleta (`ObjectPanel`, com `placing_prop`, `selected` e `selected_prop`). O rascunho guarda as peças como o servidor manda (`IslandDraft.props`), e o desfazer guarda cópias de antes e depois (`EditorHistory.Step.props_before` e `props_after`).
+- **O ponto do ponteiro:** o `EditorCanvas` passa à ferramenta o ponto no chão plano (`pointer_flat`: o ponto da arte mais a altura do hexágono embaixo dele, `IslandDraft.rise_at`), e a peça nova fica com o pé nele, arredondado. A escolha com o botão direito compara o ponto da arte com o retângulo da arte de cada peça (`PropArt.rect`, em volta do pé levantado), e ganha a da frente (o pé mais embaixo).
+- **Arrastar:** começar o clique esquerdo sobre a arte da peça escolhida a arrasta; o canvas manda o ponto a cada movimento (`pointer_dragged`), e o pé segue o ponteiro, guardando a distância do começo, só para hexágonos da ilha.
+- **Redesenhar:** o `HexMapView.set_props` só indexa as peças; o canvas compara as peças de cada hexágono antes e depois (`refresh_props`) e refaz só os hexágonos que mudaram, com `update_tiles`.

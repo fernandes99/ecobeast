@@ -1,8 +1,9 @@
 class_name ObjectPanel
 extends VBoxContainer
-## O bloco Objeto do editor (island-villages/03, map-editor/05): a prévia grande com as
-## variantes, os tipos e, com um objeto escolhido, a variante, o espelho, o bloqueio e
-## apagar dele. A barra no mapa (ObjectBar) e as teclas chamam os mesmos métodos.
+## O bloco Peças do editor (island-villages/03, map-editor/05, free-props/03): a prévia
+## grande com as variantes, os tipos de grade e os soltos e, com uma peça escolhida, a
+## variante, o espelho, o bloqueio (só dos de grade) e apagar dela. A barra no mapa
+## (ObjectBar) e as teclas chamam os mesmos métodos.
 
 signal edited(step: EditorHistory.Step)
 signal selection_changed(index: int)
@@ -13,14 +14,20 @@ const TYPE_ICON_WIDTH := 40
 const CHIP_SIZE := Vector2(34.0, 30.0)
 
 var type_id := 0
+var prop_type_id := 0
+## O tipo novo escolhido é solto (peça) e não de grade (objeto).
+var placing_prop := false
 var variant := 1
 var mirrored := false
 var selected := -1
+var selected_prop := -1
 var editing_blocks := false
 
 var _draft: IslandDraft = null
 var _types: Array[Dictionary] = []
+var _prop_types: Array[Dictionary] = []
 var _type_buttons: Dictionary[int, Button] = {}
+var _prop_buttons: Dictionary[int, Button] = {}
 var _preview: TextureRect
 var _caption: Label
 var _variant_label: Label
@@ -112,23 +119,23 @@ func _init() -> void:
 	delete.text = "Apagar"
 	delete.icon = load(MapEditor.ICONS % "trash") as Texture2D
 	delete.add_theme_constant_override(&"icon_max_width", MapEditor.ICON_WIDTH)
-	delete.tooltip_text = "Apagar o objeto (Delete)"
+	delete.tooltip_text = "Apagar a peça (Delete)"
 	delete.theme_type_variation = &"DangerButton"
 	delete.focus_mode = Control.FOCUS_NONE
 	delete.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	delete.pressed.connect(delete_selected)
 	buttons.add_child(delete)
 	var release := Button.new()
-	release.text = "Voltar ao objeto novo  (Esc)"
+	release.text = "Voltar à peça nova  (Esc)"
 	release.focus_mode = Control.FOCUS_NONE
 	release.pressed.connect(select.bind(-1))
 	_selected_box.add_child(release)
 
-	var types_title := Label.new()
-	types_title.text = "Tipos"
-	EditorTools.section_title(types_title)
-	add_child(types_title)
 	var group := ButtonGroup.new()
+	var grid_title := Label.new()
+	grid_title.text = "Na grade (bloqueiam)"
+	EditorTools.section_title(grid_title)
+	add_child(grid_title)
 	for row: Dictionary in GameData.get_rows("map_object_types"):
 		_types.append(row)
 		var id := int(row.get("id", 0))
@@ -141,8 +148,23 @@ func _init() -> void:
 		button.pressed.connect(_pick_type.bind(id))
 		add_child(button)
 		_type_buttons[id] = button
+	var loose_title := Label.new()
+	loose_title.text = "Soltas (só enfeite)"
+	EditorTools.section_title(loose_title)
+	add_child(loose_title)
+	for row: Dictionary in GameData.get_rows("prop_types"):
+		_prop_types.append(row)
+		var id := int(row.get("id", 0))
+		var button := EditorTools.tool_button(str(row.get("name", "")), group)
+		button.add_theme_constant_override(&"icon_max_width", TYPE_ICON_WIDTH)
+		button.icon = PropArt.icon(str(row.get("slug", "")), 1)
+		button.pressed.connect(pick_prop_type.bind(id))
+		add_child(button)
+		_prop_buttons[id] = button
 	if not _types.is_empty():
 		type_id = int(_types[0].get("id", 0))
+	if not _prop_types.is_empty():
+		prop_type_id = int(_prop_types[0].get("id", 0))
 	refresh()
 
 
@@ -155,34 +177,62 @@ func select(index: int) -> void:
 	if _draft == null or index >= _draft.objects.size():
 		index = -1
 	selected = index
+	selected_prop = -1
 	_set_editing_blocks(editing_blocks and selected >= 0)
 	refresh()
 	selection_changed.emit(selected)
 
 
+func select_prop(index: int) -> void:
+	if _draft == null or index >= _draft.props.size():
+		index = -1
+	selected = -1
+	selected_prop = index
+	_set_editing_blocks(false)
+	refresh()
+	selection_changed.emit(-1)
+
+
 func refresh() -> void:
-	if _draft == null or selected < 0 or selected >= _draft.objects.size():
+	if _draft == null or selected >= _draft.objects.size():
 		selected = -1
-	var shown_type := type_id
+	if _draft == null or selected_prop >= _draft.props.size():
+		selected_prop = -1
+	var prop := placing_prop
+	var shown_type := prop_type_id if placing_prop else type_id
 	var shown_variant := variant
 	var shown_mirror := mirrored
 	if selected >= 0:
 		var object: Dictionary = _draft.objects[selected]
+		prop = false
 		shown_type = int(object.get("object_type_id", 0))
 		shown_variant = int(object.get("variant", 1))
 		shown_mirror = bool(object.get("mirrored", false))
+	elif selected_prop >= 0:
+		var piece: Dictionary = _draft.props[selected_prop]
+		prop = true
+		shown_type = int(piece.get("prop_type_id", 0))
+		shown_variant = int(piece.get("variant", 1))
+		shown_mirror = bool(piece.get("mirrored", false))
 	for id: int in _type_buttons:
-		_type_buttons[id].set_pressed_no_signal(id == shown_type)
-	var count := _variants(shown_type)
-	var path := MapObjectSprite.art_path(_slug(shown_type), shown_variant)
-	var art: Texture2D = load(path) as Texture2D if not path.is_empty() else null
-	_preview.texture = MapObjectSprite.first_frame(art, coords_of(footprint(shown_type, Vector2i.ZERO, false))) if art != null else null
+		_type_buttons[id].set_pressed_no_signal(not prop and id == shown_type)
+	for id: int in _prop_buttons:
+		_prop_buttons[id].set_pressed_no_signal(prop and id == shown_type)
+	var count := _variants(shown_type, prop)
+	if prop:
+		_preview.texture = PropArt.icon(_slug(shown_type, true), shown_variant)
+	else:
+		var path := MapObjectSprite.art_path(_slug(shown_type, false), shown_variant)
+		var art: Texture2D = load(path) as Texture2D if not path.is_empty() else null
+		_preview.texture = MapObjectSprite.first_frame(art, coords_of(footprint(shown_type, Vector2i.ZERO, false))) if art != null else null
 	_preview.flip_h = shown_mirror
-	_caption.text = ("Escolhido: %s" if selected >= 0 else "Novo: %s") % _type_name(shown_type)
+	var chosen := selected >= 0 or selected_prop >= 0
+	_caption.text = ("Escolhida: %s" if chosen else "Nova: %s") % _type_name(shown_type, prop)
 	_variant_label.text = "Variante %d de %d" % [shown_variant, count]
 	_rebuild_chips(count, shown_variant)
 	_mirror_button.set_pressed_no_signal(shown_mirror)
-	_selected_box.visible = selected >= 0
+	_selected_box.visible = chosen
+	_blocks_button.visible = selected >= 0
 	_blocks_button.set_pressed_no_signal(editing_blocks)
 
 
@@ -198,24 +248,38 @@ func new_object(anchor: Vector2i) -> Dictionary:
 	}
 
 
+## A peça solta nova, com o pé `offset` pixels da arte a partir do centro de `coord`.
+func new_prop(coord: Vector2i, offset: Vector2i) -> Dictionary:
+	return {
+		"prop_type_id": prop_type_id,
+		"q": coord.x,
+		"r": coord.y,
+		"dx": offset.x,
+		"dy": offset.y,
+		"variant": variant,
+		"mirrored": mirrored,
+	}
+
+
 func change_variant(delta: int) -> void:
-	if selected < 0:
-		set_variant(wrapi(variant - 1 + delta, 0, _variants(type_id)) + 1)
+	var piece := _selected_piece()
+	if piece.is_empty():
+		set_variant(wrapi(variant - 1 + delta, 0, _variants(prop_type_id if placing_prop else type_id, placing_prop)) + 1)
 		return
-	var count := _variants(int(_draft.objects[selected].get("object_type_id", 0)))
-	set_variant(wrapi(int(_draft.objects[selected].get("variant", 1)) - 1 + delta, 0, count) + 1)
+	var count := _variants(_piece_type(piece), selected_prop >= 0)
+	set_variant(wrapi(int(piece.get("variant", 1)) - 1 + delta, 0, count) + 1)
 
 
 func set_variant(value: int) -> void:
-	if selected < 0:
+	var piece := _selected_piece()
+	if piece.is_empty():
 		variant = value
 		refresh()
 		return
-	var object: Dictionary = _draft.objects[selected]
-	if int(object.get("variant", 1)) == value:
+	if int(piece.get("variant", 1)) == value:
 		return
 	var step := _step("Trocar a variante")
-	object["variant"] = value
+	piece["variant"] = value
 	_finish(step)
 
 
@@ -228,32 +292,63 @@ func toggle_blocks() -> void:
 
 
 func delete_selected() -> void:
-	if _draft == null or selected < 0:
+	if _draft == null or (selected < 0 and selected_prop < 0):
 		return
-	var step := _step("Apagar objeto")
-	_draft.objects.remove_at(selected)
-	select(-1)
+	var step := _step("Apagar peça")
+	if selected >= 0:
+		_draft.objects.remove_at(selected)
+		select(-1)
+	else:
+		_draft.props.remove_at(selected_prop)
+		select_prop(-1)
 	_finish(step)
 
 
 func variant_text() -> String:
-	if selected < 0:
+	var piece := _selected_piece()
+	if piece.is_empty():
 		return ""
-	var object: Dictionary = _draft.objects[selected]
-	return "%d / %d" % [int(object.get("variant", 1)), _variants(int(object.get("object_type_id", 0)))]
+	return "%d / %d" % [int(piece.get("variant", 1)), _variants(_piece_type(piece), selected_prop >= 0)]
 
 
 func is_mirrored() -> bool:
 	return _mirror_button.button_pressed
 
 
+func pick_prop_type(id: int) -> void:
+	placing_prop = true
+	prop_type_id = id
+	variant = 1
+	select(-1)
+
+
 func _pick_type(id: int) -> void:
+	placing_prop = false
 	type_id = id
 	variant = 1
 	select(-1)
 
 
+func _selected_piece() -> Dictionary:
+	if _draft == null:
+		return {}
+	if selected >= 0:
+		return _draft.objects[selected]
+	if selected_prop >= 0:
+		return _draft.props[selected_prop]
+	return {}
+
+
+func _piece_type(piece: Dictionary) -> int:
+	return int(piece.get("prop_type_id", piece.get("object_type_id", 0)))
+
+
 func _on_mirror_toggled(on: bool) -> void:
+	if selected_prop >= 0:
+		var prop_step := _step("Espelhar peça")
+		_draft.props[selected_prop]["mirrored"] = on
+		_finish(prop_step)
+		return
 	if selected < 0:
 		mirrored = on
 		refresh()
@@ -306,34 +401,34 @@ func _step(label: String) -> EditorHistory.Step:
 	var step := EditorHistory.Step.new()
 	step.label = label
 	step.objects_before = _draft.objects.duplicate(true)
+	step.props_before = _draft.props.duplicate(true)
 	return step
 
 
 func _finish(step: EditorHistory.Step) -> void:
 	step.objects_after = _draft.objects.duplicate(true)
+	step.props_after = _draft.props.duplicate(true)
 	refresh()
 	edited.emit(step)
 
 
-func _variants(id: int) -> int:
-	for row: Dictionary in _types:
+func _row(id: int, prop: bool) -> Dictionary:
+	for row: Dictionary in (_prop_types if prop else _types):
 		if int(row.get("id", 0)) == id:
-			return maxi(1, int(row.get("variants", 1)))
-	return 1
+			return row
+	return {}
 
 
-func _type_name(id: int) -> String:
-	for row: Dictionary in _types:
-		if int(row.get("id", 0)) == id:
-			return str(row.get("name", ""))
-	return "?"
+func _variants(id: int, prop: bool) -> int:
+	return maxi(1, int(_row(id, prop).get("variants", 1)))
 
 
-func _slug(id: int) -> String:
-	for row: Dictionary in _types:
-		if int(row.get("id", 0)) == id:
-			return str(row.get("slug", ""))
-	return ""
+func _type_name(id: int, prop: bool) -> String:
+	return str(_row(id, prop).get("name", "?"))
+
+
+func _slug(id: int, prop: bool) -> String:
+	return str(_row(id, prop).get("slug", ""))
 
 
 func _icon_button(icon_name: String, tip: String, action: Callable) -> Button:

@@ -1,7 +1,8 @@
 class_name ObjectBar
 extends PanelContainer
-## A barra logo abaixo do objeto escolhido no mapa (map-editor/05): variante, espelho,
-## bloqueio e apagar, pelos mesmos métodos do ObjectPanel.
+## A barra logo abaixo da peça escolhida no mapa (map-editor/05, free-props/03):
+## variante, espelho, bloqueio (só nos objetos) e apagar, pelos mesmos métodos do
+## ObjectPanel.
 
 var _panel: ObjectPanel
 var _variant: Label
@@ -42,6 +43,7 @@ func refresh() -> void:
 	_variant.text = _panel.variant_text()
 	_mirror.set_pressed_no_signal(_panel.is_mirrored())
 	_blocks.set_pressed_no_signal(_panel.editing_blocks)
+	_blocks.visible = _panel.selected >= 0
 
 
 func _toggle(icon_name: String, tip: String, action: Callable) -> Button:

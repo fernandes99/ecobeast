@@ -52,7 +52,7 @@ O desenho foi combinado com o dono a partir de rascunhos da tela.
 - **RF-10:** Pôr hexágono continua mostrando os biomas e as alturas, porque o hexágono novo precisa dos dois.
 - **RF-11:** Com o Bioma ou a Altura escolhidos, as teclas Shift+0 a Shift+4 escolhem a altura (Shift+0 a Shift+9 desde a [terrain-height/02](../terrain-height/02-eleven-heights.md)).
 
-**Objeto**
+**Objeto** (desde a [free-props/03](../free-props/03-pieces-tool.md), a ferramenta se chama Peças e põe também as peças soltas)
 
 - **RF-12:** Os tipos aparecem numa lista, um por linha, com o ícone, o nome inteiro e o tamanho em hexágonos.
 - **RF-13:** Em cima da lista, a prévia grande mostra a arte do objeto, com o espelho. Sem objeto escolhido no mapa, é o objeto novo: as setas e os números das variantes trocam a variante que será posta. Com um objeto escolhido, é ele, e as setas trocam a variante dele na hora.

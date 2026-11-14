@@ -7,6 +7,8 @@ signal stroke_moved(coord: Vector2i)
 signal stroke_ended
 ## O zoom ou o arrasto mudaram: o que acompanha o mapa se reposiciona.
 signal view_changed
+## O ponteiro andou com um botão apertado: o ponto no chão plano, para arrastar peças.
+signal pointer_dragged(flat: Vector2)
 
 const DETAIL_ZOOMS: Array[float] = [1.0, 2.0, 3.0, 4.0, 6.0]
 const OVERVIEW_BELOW := 1.0
@@ -29,6 +31,7 @@ var brush: Callable = Callable()
 ## A cor do contorno sob o ponteiro (Color.TRANSPARENT: a de sempre).
 var brush_color: Callable = Callable()
 var selected_object := -1
+var selected_prop := -1
 var action_colors: Dictionary[int, Color] = {}
 var action_names: Dictionary[int, String] = {}
 var selected_action := -1
@@ -47,6 +50,7 @@ var _show_blocks := false
 ## O que cada hexágono com objeto mostra (tipo, variante e espelho): mudou, refaz as
 ## decorações dele, porque a Vegetação é desenhada com elas.
 var _object_tiles: Dictionary[Vector2i, String] = {}
+var _prop_tiles: Dictionary[Vector2i, String] = {}
 var _draft: IslandDraft = null
 var _map: ExplorationMap = null
 var _zoom := OPEN_ZOOM
@@ -100,7 +104,9 @@ func show_draft(draft: IslandDraft, fit: bool = true) -> void:
 	_map_view.random_decorations = false
 	_map_view.set_map(_map)
 	_map_view.set_objects(_map.objects)
+	_map_view.set_props(_map.props)
 	_object_tiles = _current_object_tiles()
+	_prop_tiles = _current_prop_tiles()
 	_overview.set_map(_map)
 	refresh_marks()
 	if fit and draft != null:
@@ -132,6 +138,53 @@ func refresh_objects() -> void:
 	_object_tiles = now
 	update_tiles(changed)
 	_overlay.queue_redraw()
+
+
+## As peças soltas mudaram no rascunho: refaz os hexágonos que ganharam, perderam ou
+## mudaram alguma.
+func refresh_props() -> void:
+	if _draft == null or _map == null:
+		return
+	_map.props = _draft.map_props()
+	_map_view.set_props(_map.props)
+	var now := _current_prop_tiles()
+	var changed: Array[Vector2i] = []
+	for coord: Vector2i in now:
+		if _prop_tiles.get(coord, "") != now[coord]:
+			changed.append(coord)
+	for coord: Vector2i in _prop_tiles:
+		if not now.has(coord):
+			changed.append(coord)
+	_prop_tiles = now
+	update_tiles(changed)
+	_overlay.queue_redraw()
+
+
+func _current_prop_tiles() -> Dictionary[Vector2i, String]:
+	var result: Dictionary[Vector2i, String] = {}
+	for prop: MapProp in _map.props:
+		result[prop.coord] = result.get(prop.coord, "") + "%d:%d:%d:%d:%s;" % [prop.prop_type_id, prop.offset.x, prop.offset.y, prop.variant, prop.mirrored]
+	return result
+
+
+## O ponto do ponteiro no chão plano, sem a altura do hexágono embaixo dele.
+func pointer_flat() -> Vector2:
+	return _flat_at(_last_art_point)
+
+
+func _flat_at(art_point: Vector2) -> Vector2:
+	if is_overview() or _draft == null:
+		return art_point
+	return art_point + Vector2(0.0, _draft.rise_at(_map_view.coord_at(art_point)))
+
+
+## O retângulo, em pontos deste Control, da arte de uma peça solta.
+func prop_rect(index: int) -> Rect2:
+	if _draft == null or index < 0 or index >= _draft.props.size():
+		return Rect2()
+	var art := _draft.prop_rect(index)
+	var base := _map_view.position if not is_overview() else _origin
+	return Rect2(base + art.position * _zoom, art.size * _zoom)
 
 
 func set_blocks(on: bool) -> void:
@@ -314,6 +367,7 @@ func _paint_button(button: InputEventMouseButton) -> void:
 
 func _continue_stroke(at: Vector2) -> void:
 	var art_point := _art_point(at)
+	pointer_dragged.emit(_flat_at(art_point))
 	var distance := _last_art_point.distance_to(art_point)
 	var steps := maxi(1, ceili(distance / STROKE_SPACING))
 	for index: int in range(1, steps + 1):
@@ -428,6 +482,10 @@ func draw_overlay(node: Node2D) -> void:
 	if selected_object >= 0:
 		for coord: Vector2i in _draft.object_tiles(selected_object):
 			_outline(node, coord, UiPalette.ACCENT)
+	if selected_prop >= 0:
+		var rect := prop_rect(selected_prop)
+		if rect.has_area():
+			node.draw_rect(rect, UiPalette.ACCENT, false, OUTLINE_WIDTH)
 	if _show_blocks:
 		_draw_blocks(node)
 	if _has_hover:
