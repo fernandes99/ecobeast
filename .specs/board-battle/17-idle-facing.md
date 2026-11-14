@@ -23,7 +23,7 @@ O zip também tem o walk de frente e de costas, que o tabuleiro não usa, porque
 
 - Virar para o alvo de uma Técnica, ou para o inimigo mais perto.
 - Usar o walk de frente e de costas no tabuleiro: ele fica na folha, mas todo passo é para o lado ou numa diagonal.
-- As folhas do Ruvak, que continuam com o idle de 2 linhas.
+- As folhas do Ruvak, que continuam com o idle de 2 linhas (na [24](24-ruvak-idle.md), ele ganhou o idle de 5, do PixelLab).
 
 ## Requisitos
 

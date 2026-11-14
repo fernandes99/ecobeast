@@ -182,7 +182,9 @@ def main():
         lines = []
         for view in views:
             lines.append([renderer.render(view, *build(view, frame)) for frame in range(count)])
-        write_sheet(here / (name + ".png"), lines, CELL)
+        # O idle da luta veio do PixelLab (board-battle/24): o boneco só escreve o walk.
+        if name == "walk":
+            write_sheet(here / (name + ".png"), lines, CELL)
         if previews is not None:
             previews.mkdir(parents=True, exist_ok=True)
             write_preview(previews / (name + "_quadros.png"), lines, CELL)

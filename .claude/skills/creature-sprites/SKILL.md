@@ -88,6 +88,8 @@ O jogo tira tudo da imagem, então não há arquivo de dados ao lado. Elas apare
 
 **1. Do PixelLab.** O dono gera o personagem no site, com a vista "low top-down", a animação de idle (south e north, e de preferência também east, south-east e north-east) e o walk (east, south-east e north-east, e de preferência também south e north). A ferramenta põe as vistas a mais de uma folha quando o zip tem todas elas. O zip vai para `art-source/<slug>/pixellab.zip`; para baixar pela API, a chave fica em `PIXELLAB_API_KEY` no `server/.env`. Depois, rode `python -I S/battle_sheets.py <slug>`. Um `art-source/<slug>/battle.json` troca a fonte de uma vista, por exemplo `{"idle": {"north": "rotation"}}` para usar a imagem parada. Gerar no PixelLab gasta os créditos do dono: só gere com o ok dele.
 
+Quando o PixelLab exporta uma folha só (`<nome>.png` com um `<nome>.json` das linhas) e chega só o idle, rode `python -I S/idle_from_spritesheet.py <slug> <zip>` (board-battle/24): ele escreve só o `idle.png`, com as 5 vistas, na célula e na linha dos pés do `walk.png` que já existe. É assim com o Ruvak, que tem o idle do PixelLab e o walk do boneco; o `sprites.py` dele escreve só o walk.
+
 **2. À mão, com o boneco de peças** (`S/puppet.py`). O Ecobeast é montado com elipsoides: cabeça, focinho, corpo, patas de dois ossos, cauda e chamas. O renderizador:
 - vira o boneco para cada vista;
 - pinta cada peça em 3 tons de uma rampa;
