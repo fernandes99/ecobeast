@@ -59,8 +59,11 @@ function player(creatures: CreatureRow[] = []): PlayerRow {
     level: 1,
     coins: 1000,
     createdAt: new Date('2026-10-30T12:00:00.000Z'),
+    bodyTypeId: 1,
+    skinPaletteId: 1,
     creatures,
     inventory: [],
+    appearanceParts: [{ appearancePartId: 1, paletteId: null }],
   };
 }
 
@@ -74,6 +77,11 @@ describe('toPlayerDto', () => {
       created_at: '2026-10-30T12:00:00.000Z',
       party: [],
       inventory: [],
+      appearance: {
+        body_type_id: 1,
+        skin_palette_id: 1,
+        parts: [{ part_id: 1, palette_id: null }],
+      },
     });
   });
 

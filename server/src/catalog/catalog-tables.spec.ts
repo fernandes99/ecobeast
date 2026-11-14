@@ -5,9 +5,9 @@ import { CATALOG_TABLES, SEED_DATA_DIR } from './catalog-tables.js';
 describe('CATALOG_TABLES', () => {
   const names = CATALOG_TABLES.map((table) => table.name);
 
-  it('tem as 38 tabelas, sem repetição', () => {
-    expect(names).toHaveLength(38);
-    expect(new Set(names).size).toBe(38);
+  it('tem as 42 tabelas, sem repetição', () => {
+    expect(names).toHaveLength(42);
+    expect(new Set(names).size).toBe(42);
   });
 
   it('casa com os arquivos .json da pasta de dados do seed', () => {
@@ -393,5 +393,78 @@ describe('carga inicial dos NPCs (island-npcs/01)', () => {
     for (const { sprite } of npcs) {
       expect(species.some(({ slug }) => slug === sprite)).toBe(true);
     }
+  });
+});
+
+describe('carga inicial da aparência (tamer-appearance/01)', () => {
+  const read = <T>(file: string): T =>
+    JSON.parse(readFileSync(join(SEED_DATA_DIR, file), 'utf8')) as T;
+  const bodies = read<{ id: number; slug: string }[]>('body_types.json');
+  const slots = read<{ id: number; slug: string; layer: number }[]>(
+    'appearance_slots.json',
+  );
+  const palettes = read<Record<string, string | number>[]>('palettes.json');
+  const parts = read<{ id: number; appearance_slot_id: number }[]>(
+    'appearance_parts.json',
+  );
+
+  it('tem os 2 corpos e os 6 lugares na ordem de desenho, com ids estáveis', () => {
+    expect(bodies.map(({ id, slug }) => [id, slug])).toEqual([
+      [1, 'male'],
+      [2, 'female'],
+    ]);
+    expect(slots.map(({ id, slug, layer }) => [id, slug, layer])).toEqual([
+      [1, 'face', 1],
+      [2, 'bottom', 2],
+      [3, 'shoes', 3],
+      [4, 'top', 4],
+      [5, 'hair', 5],
+      [6, 'headwear', 6],
+    ]);
+  });
+
+  it('a aparência padrão existe: a pele 1 e o rosto 1', () => {
+    expect(palettes[0]).toMatchObject({ id: 1, kind: 'skin' });
+    expect(parts[0]).toEqual(
+      expect.objectContaining({ id: 1, appearance_slot_id: 1 }),
+    );
+  });
+
+  it('cada paleta tem 4 cores #rrggbb', () => {
+    for (const palette of palettes) {
+      for (const shade of [1, 2, 3, 4]) {
+        expect(palette[`color${shade}_hex`]).toMatch(/^#[0-9a-f]{6}$/);
+      }
+    }
+  });
+});
+
+describe('carga inicial do guarda-roupa (tamer-appearance/04)', () => {
+  const read = <T>(file: string): T =>
+    JSON.parse(readFileSync(join(SEED_DATA_DIR, file), 'utf8')) as T;
+  const parts = read<
+    {
+      slug: string;
+      appearance_slot_id: number;
+      body_type_id: number | null;
+      hair_cut: string;
+    }[]
+  >('appearance_parts.json');
+  const palettes = read<{ kind: string }[]>('palettes.json');
+
+  it('tem as 17 peças, só a saia presa a um corpo e só os chapéus escondendo cabelo', () => {
+    expect(parts).toHaveLength(17);
+    expect(parts.filter(({ body_type_id }) => body_type_id !== null)).toEqual([
+      expect.objectContaining({ slug: 'skirt', body_type_id: 2 }),
+    ]);
+    for (const { appearance_slot_id, hair_cut } of parts) {
+      if (appearance_slot_id !== 6) expect(hair_cut).toBe('none');
+    }
+  });
+
+  it('tem 6 peles, 8 cores de cabelo e 10 de roupa', () => {
+    const count = (kind: string) =>
+      palettes.filter((palette) => palette.kind === kind).length;
+    expect([count('skin'), count('hair'), count('cloth')]).toEqual([6, 8, 10]);
   });
 });

@@ -261,6 +261,8 @@ Como elas viram Ecobeasts no mapa está em [biome-encounters/architecture.md](..
 
 **`npcs`** são os NPCs que o editor põe nas ilhas (`slug` e `sprite` em `^[a-z0-9_]+$`, `name` e `description` em pt-BR): o `name` é o que a caixa de fala mostra, a `description` só aparece no editor e o `sprite` é a pasta `assets/creatures/<sprite>/` do jogo, com `idle.png` e `walk.png`. O diálogo e a ação são de cada NPC posto no mapa. O desenho está em [island-npcs/architecture.md](../island-npcs/architecture.md).
 
+**`body_types`**, **`appearance_slots`**, **`appearance_parts`** e **`palettes`** são a aparência do Domador: os corpos (`slug` é a pasta `assets/tamer/bodies/<slug>/`), os lugares do corpo na ordem de desenho (`layer` único, `palette_kind` `skin`, `hair`, `cloth` ou nulo para cor fixa, e `required`), as peças (`slug` é a pasta `assets/tamer/parts/<slug>/`, `appearance_slot_id`, `body_type_id` nulo para servir nos dois corpos e `hair_cut` `none`, `top` ou `all`) e as paletas (`kind` e as 4 cores `color1_hex` a `color4_hex`, da luz à sombra, em `^#[0-9a-f]{6}$`). O jogador guarda `players.body_type_id`, `players.skin_palette_id` e as peças vestidas em `player_appearance_parts`, uma por lugar. O desenho está em [tamer-appearance/architecture.md](../tamer-appearance/architecture.md).
+
 ## Tabelas futuras (só documentadas)
 
 Entram com as iniciativas do [roadmap](../roadmap.md); não têm arquivo no MVP.

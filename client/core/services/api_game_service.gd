@@ -4,6 +4,7 @@ extends GameService
 const ME_PATH := "/v1/me"
 const STARTER_PATH := "/v1/me/starter"
 const CREATURE_PATH := "/v1/me/creatures/%s"
+const APPEARANCE_PATH := "/v1/me/appearance"
 const HEAL_PATH := "/v1/me/heal"
 const SHOP_BUY_PATH := "/v1/me/shop/buy"
 const ITEM_USE_PATH := "/v1/me/items/use"
@@ -40,6 +41,10 @@ func choose_starter(species_id: int) -> Result:
 
 func set_nickname(uid: String, raw_nickname: String) -> Result:
 	return _player_result(await Api.request(HTTPClient.METHOD_PATCH, CREATURE_PATH % uid, {"nickname": raw_nickname}, true))
+
+
+func update_appearance(appearance: TamerAppearance) -> Result:
+	return _player_result(await Api.request(HTTPClient.METHOD_PUT, APPEARANCE_PATH, appearance.to_dict(), true))
 
 
 func heal_team() -> Result:

@@ -18,3 +18,4 @@ Celular, orientação retrato. Estilo fantasia leve, colorido e amigável. 15 el
 14. **Refúgio** — a equipe, com HP, PP e status, e o botão "Curar todos".
 15. **Arenas** — 8 emblemas (obtidos/bloqueados), mestre de cada Arena e "Desafiar"; Liga final.
 16. **Perfil / Configurações** — nome, estatísticas, conquistas, som, idioma, nuvem, remover anúncios.
+17. **Aparência** — o Domador grande, que gira, e as abas Corpo, Rosto, Parte de baixo, Calçado, Parte de cima, Cabelo e Chapéu, cada uma com as peças e as cores; Salvar. Abre depois do nome, na entrada, e pelo avatar do Hub (`.specs/tamer-appearance/`).

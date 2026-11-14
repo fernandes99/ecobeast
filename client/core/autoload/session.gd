@@ -76,6 +76,14 @@ func set_nickname(uid: String, raw_nickname: String) -> Result:
 	return result
 
 
+func update_appearance(appearance: TamerAppearance) -> Result:
+	@warning_ignore("redundant_await")
+	var result: Result = await _service.update_appearance(appearance)
+	if result.ok:
+		_set_player(result.data)
+	return result
+
+
 func heal_team() -> Result:
 	@warning_ignore("redundant_await")
 	var result: Result = await _service.heal_team()

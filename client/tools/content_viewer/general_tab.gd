@@ -29,6 +29,15 @@ func _init(content_viewer: ContentViewer) -> void:
 		tamer.add_child(ContentViewer.text("Créditos da arte", ContentViewer.SMALL_SIZE, UiPalette.ACCENT))
 		tamer.add_child(ContentViewer.paragraph(credits))
 
+	var wardrobe := ContentViewer.block(box, "Peças do Domador (nas cores-chave)")
+	for part: Dictionary in GameData.get_rows("appearance_parts"):
+		var slot := GameData.get_row("appearance_slots", part["appearance_slot_id"])
+		wardrobe.add_child(ContentViewer.text("%s · %s" % [part["name"], slot.get("name", "")], ContentViewer.SMALL_SIZE, UiPalette.ACCENT))
+		var sheets := ContentViewer.flow(14)
+		for entry: ContentFiles.Entry in ContentFiles.appearance_part_files(part["slug"]):
+			sheets.add_child(FilePreview.create_sheet(entry) if entry.exists() else FilePreview.create(entry))
+		wardrobe.add_child(sheets)
+
 	var sounds := ContentViewer.flow(14)
 	for entry: ContentFiles.Entry in ContentFiles.hit_sounds():
 		sounds.add_child(FilePreview.create(entry))

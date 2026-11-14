@@ -15,6 +15,9 @@ extends RefCounted
 @abstract func set_nickname(uid: String, raw_nickname: String) -> Result
 
 
+@abstract func update_appearance(appearance: TamerAppearance) -> Result
+
+
 @abstract func heal_team() -> Result
 
 

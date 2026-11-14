@@ -1,0 +1,242 @@
+[
+	{
+		"id": 1,
+		"slug": "skin_1",
+		"name": "Pele 1",
+		"kind": "skin",
+		"color1_hex": "#f6d3b3",
+		"color2_hex": "#e3ad86",
+		"color3_hex": "#c4845f",
+		"color4_hex": "#8f5a3e"
+	},
+	{
+		"id": 2,
+		"slug": "hair_brown",
+		"name": "Castanho",
+		"kind": "hair",
+		"color1_hex": "#8a5a3a",
+		"color2_hex": "#6b4329",
+		"color3_hex": "#4e2f1c",
+		"color4_hex": "#301b10"
+	},
+	{
+		"id": 3,
+		"slug": "cloth_blue",
+		"name": "Azul",
+		"kind": "cloth",
+		"color1_hex": "#6fa8dc",
+		"color2_hex": "#4a82bf",
+		"color3_hex": "#345f99",
+		"color4_hex": "#22406b"
+	},
+	{
+		"id": 4,
+		"slug": "skin_2",
+		"name": "Pele 2",
+		"kind": "skin",
+		"color1_hex": "#f0c49a",
+		"color2_hex": "#d9a06f",
+		"color3_hex": "#b97a4f",
+		"color4_hex": "#85543a"
+	},
+	{
+		"id": 5,
+		"slug": "skin_3",
+		"name": "Pele 3",
+		"kind": "skin",
+		"color1_hex": "#dba57a",
+		"color2_hex": "#c1855a",
+		"color3_hex": "#9c643f",
+		"color4_hex": "#6e4329"
+	},
+	{
+		"id": 6,
+		"slug": "skin_4",
+		"name": "Pele 4",
+		"kind": "skin",
+		"color1_hex": "#bd8558",
+		"color2_hex": "#a06a42",
+		"color3_hex": "#7e4f30",
+		"color4_hex": "#573420"
+	},
+	{
+		"id": 7,
+		"slug": "skin_5",
+		"name": "Pele 5",
+		"kind": "skin",
+		"color1_hex": "#9a6440",
+		"color2_hex": "#7f4f31",
+		"color3_hex": "#613a23",
+		"color4_hex": "#432716"
+	},
+	{
+		"id": 8,
+		"slug": "skin_6",
+		"name": "Pele 6",
+		"kind": "skin",
+		"color1_hex": "#6e4429",
+		"color2_hex": "#573420",
+		"color3_hex": "#412616",
+		"color4_hex": "#2b190e"
+	},
+	{
+		"id": 9,
+		"slug": "hair_black",
+		"name": "Preto",
+		"kind": "hair",
+		"color1_hex": "#4a4a58",
+		"color2_hex": "#33333f",
+		"color3_hex": "#23232c",
+		"color4_hex": "#15151b"
+	},
+	{
+		"id": 10,
+		"slug": "hair_red",
+		"name": "Ruivo",
+		"kind": "hair",
+		"color1_hex": "#d8703a",
+		"color2_hex": "#b0522a",
+		"color3_hex": "#85391e",
+		"color4_hex": "#5a2513"
+	},
+	{
+		"id": 11,
+		"slug": "hair_blond",
+		"name": "Loiro",
+		"kind": "hair",
+		"color1_hex": "#f4dc8a",
+		"color2_hex": "#dcb85a",
+		"color3_hex": "#b08f3c",
+		"color4_hex": "#7d6326"
+	},
+	{
+		"id": 12,
+		"slug": "hair_white",
+		"name": "Branco",
+		"kind": "hair",
+		"color1_hex": "#f4f4f0",
+		"color2_hex": "#d8d8d4",
+		"color3_hex": "#aeaeb0",
+		"color4_hex": "#7c7c84"
+	},
+	{
+		"id": 13,
+		"slug": "hair_blue",
+		"name": "Azul",
+		"kind": "hair",
+		"color1_hex": "#6fb7e8",
+		"color2_hex": "#4a8fd0",
+		"color3_hex": "#336aa6",
+		"color4_hex": "#22487a"
+	},
+	{
+		"id": 14,
+		"slug": "hair_green",
+		"name": "Verde",
+		"kind": "hair",
+		"color1_hex": "#8fd16a",
+		"color2_hex": "#63ad49",
+		"color3_hex": "#467f35",
+		"color4_hex": "#2f5524"
+	},
+	{
+		"id": 15,
+		"slug": "hair_pink",
+		"name": "Rosa",
+		"kind": "hair",
+		"color1_hex": "#f5a3c7",
+		"color2_hex": "#de7aa8",
+		"color3_hex": "#b45684",
+		"color4_hex": "#7f3a5e"
+	},
+	{
+		"id": 16,
+		"slug": "cloth_red",
+		"name": "Vermelho",
+		"kind": "cloth",
+		"color1_hex": "#e8655a",
+		"color2_hex": "#c44539",
+		"color3_hex": "#962f27",
+		"color4_hex": "#64201b"
+	},
+	{
+		"id": 17,
+		"slug": "cloth_orange",
+		"name": "Laranja",
+		"kind": "cloth",
+		"color1_hex": "#f2a05a",
+		"color2_hex": "#d97d36",
+		"color3_hex": "#a85c25",
+		"color4_hex": "#733e18"
+	},
+	{
+		"id": 18,
+		"slug": "cloth_yellow",
+		"name": "Amarelo",
+		"kind": "cloth",
+		"color1_hex": "#f6dc6a",
+		"color2_hex": "#e0b93c",
+		"color3_hex": "#b08d27",
+		"color4_hex": "#7a611a"
+	},
+	{
+		"id": 19,
+		"slug": "cloth_green",
+		"name": "Verde",
+		"kind": "cloth",
+		"color1_hex": "#7ccf72",
+		"color2_hex": "#53ab4f",
+		"color3_hex": "#3c823b",
+		"color4_hex": "#285828"
+	},
+	{
+		"id": 20,
+		"slug": "cloth_purple",
+		"name": "Roxo",
+		"kind": "cloth",
+		"color1_hex": "#a98ae0",
+		"color2_hex": "#8364c4",
+		"color3_hex": "#614699",
+		"color4_hex": "#422e6b"
+	},
+	{
+		"id": 21,
+		"slug": "cloth_pink",
+		"name": "Rosa",
+		"kind": "cloth",
+		"color1_hex": "#f19ac2",
+		"color2_hex": "#d8709f",
+		"color3_hex": "#ad4f7c",
+		"color4_hex": "#793654"
+	},
+	{
+		"id": 22,
+		"slug": "cloth_black",
+		"name": "Preto",
+		"kind": "cloth",
+		"color1_hex": "#5a5a66",
+		"color2_hex": "#3e3e48",
+		"color3_hex": "#2a2a32",
+		"color4_hex": "#18181d"
+	},
+	{
+		"id": 23,
+		"slug": "cloth_gray",
+		"name": "Cinza",
+		"kind": "cloth",
+		"color1_hex": "#c4c4c8",
+		"color2_hex": "#9c9ca4",
+		"color3_hex": "#76767e",
+		"color4_hex": "#50505a"
+	},
+	{
+		"id": 24,
+		"slug": "cloth_white",
+		"name": "Branco",
+		"kind": "cloth",
+		"color1_hex": "#fafafa",
+		"color2_hex": "#e2e2e6",
+		"color3_hex": "#b8b8c0",
+		"color4_hex": "#8a8a94"
+	}
+]

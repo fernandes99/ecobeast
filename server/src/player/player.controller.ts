@@ -9,6 +9,7 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Put,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -27,6 +28,7 @@ import {
 import { AuthGuard } from '../auth/auth.guard.js';
 import { CurrentUser } from '../auth/current-user.decorator.js';
 import {
+  AppearanceDto,
   ChooseStarterBodyDto,
   CreatePlayerBodyDto,
   MaybePlayerResponseDto,
@@ -140,6 +142,31 @@ export class PlayerController {
     @CurrentUser() userId: string,
   ): Promise<PlayerResponseDto> {
     return { player: await this.players.almostLevelUp(userId) };
+  }
+
+  @Put('appearance')
+  @ApiOperation({
+    summary: 'Trocar a aparência do Domador',
+    description:
+      'Troca a aparência inteira: o corpo, a pele e as peças vestidas, uma por lugar, ' +
+      'cada uma com a paleta do tipo do lugar. Toda peça do catálogo está liberada.',
+  })
+  @ApiOkResponse({ type: PlayerResponseDto })
+  @ApiBadRequestResponse({
+    description:
+      'Aparência inválida, com a mensagem do primeiro erro: "Esse corpo não existe.", ' +
+      '"Essa cor de pele não existe.", "A peça 9 não existe.", ' +
+      '"A peça Saia não serve no corpo Masculino.", "Duas peças no mesmo lugar: Cabelo.", ' +
+      '"Escolha um Rosto.", "Escolha uma cor para Cabelo." ou "A cor 30 não serve para Cabelo."',
+  })
+  @ApiConflictResponse({
+    description: 'Sem Domador: "Crie seu Domador primeiro."',
+  })
+  async setAppearance(
+    @CurrentUser() userId: string,
+    @Body() body: AppearanceDto,
+  ): Promise<PlayerResponseDto> {
+    return { player: await this.players.setAppearance(userId, body) };
   }
 
   @Patch('creatures/:uid')

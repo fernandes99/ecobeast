@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dxsbj5slb1gbv"
-path="res://.godot/imported/run.png-fe716e17f4aa6016328e180024f2a7dc.ctex"
+uid="uid://b0ilycaik46kl"
+path="res://.godot/imported/idle.png-671d5ccbb2ac85955de9a40d5c10d46e.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/tamer/run.png"
-dest_files=["res://.godot/imported/run.png-fe716e17f4aa6016328e180024f2a7dc.ctex"]
+source_file="res://assets/tamer/parts/tank_top/idle.png"
+dest_files=["res://.godot/imported/idle.png-671d5ccbb2ac85955de9a40d5c10d46e.ctex"]
 
 [params]
 

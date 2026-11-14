@@ -10,6 +10,7 @@ const CREATURE_CALL_PATH := "res://assets/creatures/%s/call.wav"
 const HIT_SOUND_PATH := "res://assets/sounds/hits/%s.wav"
 const HIT_SOUNDS: Dictionary[String, String] = {"normal": "normal", "super": "super efetivo", "weak": "pouco efetivo"}
 const TAMER_CREDITS_PATH := "res://assets/tamer/CREDITOS.md"
+const TAMER_EXTRA_SHEETS: Dictionary[String, String] = {"_back": "atrás do corpo", "_short": "sob chapéu"}
 const COMMON_SURFACES: Array[String] = ["cliff", "side", "waterfall", "contour", "highlight"]
 const DECORATION_NAMES: Dictionary[String, String] = {
 	"tree": "árvore",
@@ -159,10 +160,29 @@ static func skill_optional_files(slug: String) -> Array[Entry]:
 	return files
 
 
+## As folhas de cada corpo do Domador (tamer-appearance), nas cores-chave.
 static func tamer_files() -> Array[Entry]:
 	var files: Array[Entry] = []
+	for body: Dictionary in GameData.get_rows("body_types"):
+		files.append_array(_tamer_sheets(body["name"], TamerSprite.BODY_FOLDER % body["slug"], ""))
+	return files
+
+
+## As folhas de uma peça: as duas obrigatórias e as opcionais que existirem.
+static func appearance_part_files(slug: String) -> Array[Entry]:
+	var folder := TamerSprite.PART_FOLDER % slug
+	var files := _tamer_sheets("", folder, "")
+	for suffix: String in TAMER_EXTRA_SHEETS:
+		if exists("%s/%s%s.png" % [folder, TamerSprite.IDLE, suffix]):
+			files.append_array(_tamer_sheets(TAMER_EXTRA_SHEETS[suffix], folder, suffix))
+	return files
+
+
+static func _tamer_sheets(prefix: String, folder: String, suffix: String) -> Array[Entry]:
+	var files: Array[Entry] = []
 	for sheet_name: String in [TamerSprite.IDLE, TamerSprite.RUN]:
-		var entry := Entry.new(sheet_name, TamerSprite.SHEET_PATH % sheet_name, Kind.EXPLORE_SHEET, "", sheet_name)
+		var label := sheet_name if prefix.is_empty() else "%s · %s" % [prefix, sheet_name]
+		var entry := Entry.new(label, "%s/%s%s.png" % [folder, sheet_name, suffix], Kind.EXPLORE_SHEET, "", sheet_name)
 		entry.cycle = TamerSprite.IDLE_SECONDS if sheet_name == TamerSprite.IDLE else TamerSprite.RUN_SECONDS
 		files.append(entry)
 	return files

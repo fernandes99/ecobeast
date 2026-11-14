@@ -11,6 +11,7 @@ var coins: int = 0
 var created_at: String
 var party: Array[CreatureInstance] = []
 var inventory: Array[InventorySlot] = []
+var appearance := TamerAppearance.new()
 
 
 func has_starter() -> bool:
@@ -46,4 +47,5 @@ static func from_dict(d: Dictionary) -> Player:
 	for slot_dict: Variant in DictFields.get_array(d, "inventory"):
 		if slot_dict is Dictionary:
 			player.inventory.append(InventorySlot.from_dict(slot_dict))
+	player.appearance = TamerAppearance.from_dict(DictFields.get_dict(d, "appearance"))
 	return player

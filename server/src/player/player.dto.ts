@@ -1,5 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsInt, IsString } from 'class-validator';
+import { Type } from 'class-transformer';
+import {
+  ArrayMaxSize,
+  IsArray,
+  IsInt,
+  IsOptional,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
 import type { StatBlock } from '../domain/rules/types.js';
 
 export const INVALID_NAME = 'Use de 2 a 16 letras, números ou espaços.';
@@ -28,6 +36,51 @@ export class SetNicknameBodyDto {
   })
   @IsString({ message: INVALID_NAME })
   nickname: string;
+}
+
+const integer = (field: string) => ({
+  message: `\`${field}\` deve ser um número inteiro.`,
+});
+
+export class AppearancePartDto {
+  @ApiProperty({ description: 'Id da peça (`appearance_parts`).', example: 4 })
+  @IsInt(integer('part_id'))
+  part_id: number;
+
+  @ApiProperty({
+    description:
+      'Id da paleta (`palettes`) do tipo do lugar da peça. Nulo no lugar de cor fixa.',
+    type: 'integer',
+    nullable: true,
+    example: 2,
+  })
+  @IsOptional()
+  @IsInt(integer('palette_id'))
+  palette_id: number | null;
+}
+
+export class AppearanceDto {
+  @ApiProperty({ description: 'Id do corpo (`body_types`).', example: 1 })
+  @IsInt(integer('body_type_id'))
+  body_type_id: number;
+
+  @ApiProperty({
+    description: 'Id da paleta de pele (`palettes` de `kind` `skin`).',
+    example: 1,
+  })
+  @IsInt(integer('skin_palette_id'))
+  skin_palette_id: number;
+
+  @ApiProperty({
+    description:
+      'As peças vestidas, uma por lugar. Na resposta, na ordem de desenho (o `layer` do lugar).',
+    type: () => [AppearancePartDto],
+  })
+  @IsArray({ message: '`parts` deve ser uma lista.' })
+  @ArrayMaxSize(20, { message: '`parts` pode ter até 20 peças.' })
+  @ValidateNested({ each: true })
+  @Type(() => AppearancePartDto)
+  parts: AppearancePartDto[];
 }
 
 export const STAT_BLOCK = {
@@ -213,6 +266,12 @@ export class PlayerDto {
     type: () => [InventorySlotDto],
   })
   inventory: InventorySlotDto[];
+
+  @ApiProperty({
+    description: 'A aparência do Domador: corpo, pele e peças vestidas.',
+    type: () => AppearanceDto,
+  })
+  appearance: AppearanceDto;
 }
 
 export class PlayerResponseDto {

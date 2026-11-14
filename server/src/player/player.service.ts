@@ -9,12 +9,13 @@ import { BattleStore } from '../battle/battle.store.js';
 import { CodexService } from '../codex/codex.service.js';
 import { secureRandom } from '../common/secure-random.js';
 import { Env } from '../config/env.js';
+import { appearanceError } from '../domain/appearance/appearance.js';
 import { createCreature } from '../domain/rules/creature-factory.js';
 import { MAX_LEVEL, totalXpForLevel } from '../domain/rules/xp-curve.js';
 import { Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { loadCreatureBlueprint, newCreatureData } from './creature-params.js';
-import { INVALID_NAME, PlayerDto } from './player.dto.js';
+import { AppearanceDto, INVALID_NAME, PlayerDto } from './player.dto.js';
 import { creatureStats, PLAYER_INCLUDE, toPlayerDto } from './player.mapper.js';
 
 const NAME_PATTERN = /^[\p{L}\p{N} ]{2,16}$/u;
@@ -26,6 +27,8 @@ const NO_PLAYER = 'Crie seu Domador primeiro.';
 const STARTER_TAKEN = 'Você já escolheu seu Ecobeast.';
 const NOT_A_STARTER = 'Esse Ecobeast não pode ser escolhido.';
 export const CREATURE_NOT_FOUND = 'Ecobeast não encontrado.';
+/** O rosto 1, no lugar Rosto: a aparência padrão de quem é criado. */
+const DEFAULT_FACE = { appearanceSlotId: 1, appearancePartId: 1 };
 
 const HEAL_INCLUDE = {
   creatures: {
@@ -70,7 +73,12 @@ export class PlayerService {
     if (!NAME_PATTERN.test(name)) throw new BadRequestException(INVALID_NAME);
     try {
       const player = await this.prisma.player.create({
-        data: { id: userId, name, coins: START_COINS },
+        data: {
+          id: userId,
+          name,
+          coins: START_COINS,
+          appearanceParts: { create: DEFAULT_FACE },
+        },
         include: PLAYER_INCLUDE,
       });
       return toPlayerDto(player);
@@ -125,6 +133,73 @@ export class PlayerService {
       if (isUniqueViolation(error)) throw new ConflictException(STARTER_TAKEN);
       throw error;
     }
+    return (await this.get(userId))!;
+  }
+
+  async setAppearance(
+    userId: string,
+    appearance: AppearanceDto,
+  ): Promise<PlayerDto> {
+    const player = await this.prisma.player.findUnique({
+      where: { id: userId },
+      select: { id: true },
+    });
+    if (!player) throw new ConflictException(NO_PLAYER);
+
+    const [bodies, slots, parts, palettes] = await Promise.all([
+      this.prisma.bodyType.findMany({ select: { id: true, name: true } }),
+      this.prisma.appearanceSlot.findMany({
+        select: { id: true, name: true, paletteKind: true, required: true },
+      }),
+      this.prisma.appearancePart.findMany({
+        select: {
+          id: true,
+          name: true,
+          appearanceSlotId: true,
+          bodyTypeId: true,
+        },
+      }),
+      this.prisma.palette.findMany({ select: { id: true, kind: true } }),
+    ]);
+    const catalogParts = parts.map(({ appearanceSlotId, ...part }) => ({
+      ...part,
+      slotId: appearanceSlotId,
+    }));
+    const worn = appearance.parts.map(({ part_id, palette_id }) => ({
+      partId: part_id,
+      paletteId: palette_id ?? null,
+    }));
+    const error = appearanceError(
+      {
+        bodyTypeId: appearance.body_type_id,
+        skinPaletteId: appearance.skin_palette_id,
+        parts: worn,
+      },
+      { bodies, slots, parts: catalogParts, palettes },
+    );
+    if (error) throw new BadRequestException(error);
+
+    await this.prisma.$transaction([
+      this.prisma.player.update({
+        where: { id: userId },
+        data: {
+          bodyTypeId: appearance.body_type_id,
+          skinPaletteId: appearance.skin_palette_id,
+        },
+      }),
+      this.prisma.playerAppearancePart.deleteMany({
+        where: { playerId: userId },
+      }),
+      this.prisma.playerAppearancePart.createMany({
+        data: worn.map(({ partId, paletteId }) => ({
+          playerId: userId,
+          appearanceSlotId: catalogParts.find(({ id }) => id === partId)!
+            .slotId,
+          appearancePartId: partId,
+          paletteId,
+        })),
+      }),
+    ]);
     return (await this.get(userId))!;
   }
 

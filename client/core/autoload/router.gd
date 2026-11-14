@@ -5,6 +5,7 @@ signal screen_changed(id: StringName)
 const SCREEN_ID_META := &"screen_id"
 
 const SCREENS: Dictionary[StringName, String] = {
+	&"appearance": "res://screens/appearance/appearance_screen.tscn",
 	&"bag": "res://screens/bag/bag_screen.tscn",
 	&"board_battle": "res://screens/board_battle/board_battle_screen.tscn",
 	&"codex": "res://screens/codex/codex_screen.tscn",

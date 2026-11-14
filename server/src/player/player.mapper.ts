@@ -31,6 +31,10 @@ export const PLAYER_INCLUDE = {
     include: CREATURE_INCLUDE,
   },
   inventory: { orderBy: { itemId: 'asc' } },
+  appearanceParts: {
+    orderBy: { slot: { layer: 'asc' } },
+    select: { appearancePartId: true, paletteId: true },
+  },
 } satisfies Prisma.PlayerInclude;
 
 export type PlayerRow = Prisma.PlayerGetPayload<{
@@ -80,6 +84,14 @@ export function toPlayerDto(row: PlayerRow): PlayerDto {
       item_id: itemId,
       quantity,
     })),
+    appearance: {
+      body_type_id: row.bodyTypeId,
+      skin_palette_id: row.skinPaletteId,
+      parts: row.appearanceParts.map(({ appearancePartId, paletteId }) => ({
+        part_id: appearancePartId,
+        palette_id: paletteId,
+      })),
+    },
   };
 }
 

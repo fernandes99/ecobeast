@@ -94,8 +94,11 @@ describe('toCombatant', () => {
       level: 1,
       coins: 0,
       createdAt: new Date(),
+      bodyTypeId: 1,
+      skinPaletteId: 1,
       creatures: [row],
       inventory: [],
+      appearanceParts: [],
     });
     expect(toCombatant(row).stats).toEqual(party[0]!.stats);
   });

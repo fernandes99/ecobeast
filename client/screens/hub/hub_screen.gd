@@ -68,6 +68,9 @@ var _scene_texture: Texture2D = null
 
 
 func _ready() -> void:
+	var avatar := _avatar_initial.get_parent() as Control
+	avatar.mouse_filter = Control.MOUSE_FILTER_STOP
+	avatar.gui_input.connect(_on_avatar_input)
 	if ResourceLoader.exists(SCENE_PATH):
 		_scene_texture = load(SCENE_PATH) as Texture2D
 	_scene_art.texture = _scene_texture if _scene_texture != null else _sky_gradient()
@@ -176,6 +179,13 @@ func _open(label: String) -> void:
 		if not await BattleIntro.cover(center, &"tamer"):
 			return
 	Router.push(destination["id"], destination["params"])
+
+
+## Tocar no avatar abre a tela Aparência (tamer-appearance/03).
+func _on_avatar_input(event: InputEvent) -> void:
+	var button := event as InputEventMouseButton
+	if button != null and button.button_index == MOUSE_BUTTON_LEFT and not button.pressed:
+		Router.push(&"appearance")
 
 
 func _open_details(index: int) -> void:

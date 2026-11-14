@@ -25,18 +25,21 @@ func play_sheet(sheet: String) -> void:
 
 
 func _add_sheet(sheet: String, path: String, cycle_seconds: float) -> void:
-	var texture: Texture2D = load(path)
+	add_sheet_to(sprite_frames, sheet, load(path), cycle_seconds)
+
+
+static func add_sheet_to(frames: SpriteFrames, sheet: String, texture: Texture2D, cycle_seconds: float) -> void:
 	var columns := floori(texture.get_size().x / CELL_SIZE.x)
 	for row: int in SHEET_ROWS:
 		var clip := _animation_name(sheet, row)
-		sprite_frames.add_animation(clip)
-		sprite_frames.set_animation_speed(clip, columns / cycle_seconds)
+		frames.add_animation(clip)
+		frames.set_animation_speed(clip, columns / cycle_seconds)
 		for column: int in columns:
 			var cell := AtlasTexture.new()
 			cell.atlas = texture
 			cell.region = Rect2(Vector2i(column, row) * CELL_SIZE, CELL_SIZE)
-			sprite_frames.add_frame(clip, cell)
+			frames.add_frame(clip, cell)
 
 
-func _animation_name(sheet: String, row: int) -> StringName:
+static func _animation_name(sheet: String, row: int) -> StringName:
 	return StringName("%s_%d" % [sheet, row])

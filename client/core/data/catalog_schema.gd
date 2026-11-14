@@ -11,6 +11,8 @@ extends RefCounted
 const ID := {"type": "int", "min": 1}
 const SLUG := {"type": "string", "unique": true, "pattern": "^[a-z0-9_]+$"}
 const TEXT := {"type": "string"}
+const PALETTE_KINDS: Array[String] = ["skin", "hair", "cloth"]
+const PALETTE_COLOR := {"type": "string", "pattern": "^#[0-9a-f]{6}$"}
 
 ## Colunas de skill_effects que cada tipo de efeito usa. "required" precisa estar
 ## preenchida; "optional" pode estar; as demais colunas de parâmetro ficam null.
@@ -194,6 +196,45 @@ const TABLES := {
 	"wall_types": {
 		"key": ["id"],
 		"columns": {"id": ID, "slug": SLUG, "name": TEXT, "visible": {"type": "bool"}},
+	},
+	"body_types": {
+		"key": ["id"],
+		"columns": {"id": ID, "slug": SLUG, "name": TEXT},
+	},
+	"appearance_slots": {
+		"key": ["id"],
+		"columns": {
+			"id": ID,
+			"slug": SLUG,
+			"name": TEXT,
+			"layer": {"type": "int", "unique": true, "min": 1},
+			"palette_kind": {"type": "string", "nullable": true, "values": PALETTE_KINDS},
+			"required": {"type": "bool"},
+		},
+	},
+	"palettes": {
+		"key": ["id"],
+		"columns": {
+			"id": ID,
+			"slug": SLUG,
+			"name": TEXT,
+			"kind": {"type": "string", "values": PALETTE_KINDS},
+			"color1_hex": PALETTE_COLOR,
+			"color2_hex": PALETTE_COLOR,
+			"color3_hex": PALETTE_COLOR,
+			"color4_hex": PALETTE_COLOR,
+		},
+	},
+	"appearance_parts": {
+		"key": ["id"],
+		"columns": {
+			"id": ID,
+			"slug": SLUG,
+			"name": TEXT,
+			"appearance_slot_id": {"type": "int", "fk": "appearance_slots"},
+			"body_type_id": {"type": "int", "nullable": true, "fk": "body_types"},
+			"hair_cut": {"type": "string", "values": ["none", "top", "all"]},
+		},
 	},
 	"species": {
 		"key": ["id"],

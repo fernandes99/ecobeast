@@ -43,6 +43,7 @@ O que vem depois do MVP de estrutura (entrada, escolha do inicial e Hub). Cada l
 | 27  | [`free-props`](free-props/) | Arte livre nas ilhas: peças soltas em pixels, só enfeite, e carimbos que viram objetos, peças e chão; a ferramenta única Peças no editor; a 05 traz de volta as decorações naturais, com a Borracha | island-villages | concluída |
 | 28  | [`free-trails`](free-trails/) | Caminhos nas ilhas: 4 tipos novos de chão, a máscara de chão com borda irregular e emendas entre tipos, e os traços livres desenhados pela ferramenta Caminho | free-props | concluída |
 | 29  | [`vegetation-brush`](vegetation-brush/) | Só 6 objetos de grade ficam (as casas, os prédios do Refúgio e da Loja e a cerca da cidade), e o editor ganha a ferramenta Vegetação, um pincel que espalha peças soltas por grupo | free-trails | concluída |
+| 30  | [`tamer-appearance`](tamer-appearance/) | A aparência do Domador em camadas (boneca de papel): corpo masculino ou feminino, pele, rosto, cabelo, chapéu e roupas, cada peça com a cor da paleta, e a tela Aparência na entrada e pelo avatar do Hub | auth-google, islands | concluída |
 
 ## Pós-lançamento (do GDD)
 

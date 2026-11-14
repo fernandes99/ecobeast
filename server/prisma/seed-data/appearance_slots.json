@@ -1,0 +1,50 @@
+[
+	{
+		"id": 1,
+		"slug": "face",
+		"name": "Rosto",
+		"layer": 1,
+		"palette_kind": null,
+		"required": true
+	},
+	{
+		"id": 2,
+		"slug": "bottom",
+		"name": "Parte de baixo",
+		"layer": 2,
+		"palette_kind": "cloth",
+		"required": false
+	},
+	{
+		"id": 3,
+		"slug": "shoes",
+		"name": "Calçado",
+		"layer": 3,
+		"palette_kind": "cloth",
+		"required": false
+	},
+	{
+		"id": 4,
+		"slug": "top",
+		"name": "Parte de cima",
+		"layer": 4,
+		"palette_kind": "cloth",
+		"required": false
+	},
+	{
+		"id": 5,
+		"slug": "hair",
+		"name": "Cabelo",
+		"layer": 5,
+		"palette_kind": "hair",
+		"required": false
+	},
+	{
+		"id": 6,
+		"slug": "headwear",
+		"name": "Chapéu",
+		"layer": 6,
+		"palette_kind": "cloth",
+		"required": false
+	}
+]

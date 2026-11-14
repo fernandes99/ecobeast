@@ -99,6 +99,8 @@ func setup(params: Dictionary) -> void:
 
 
 func _ready() -> void:
+	if Session.player != null:
+		_marker.set_appearance(Session.player.appearance)
 	_map_area.gui_input.connect(_on_map_input)
 	_encounter_button.pressed.connect(_search)
 	_bag_button.pressed.connect(Router.push.bind(&"bag"))

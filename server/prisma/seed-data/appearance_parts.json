@@ -1,0 +1,138 @@
+[
+	{
+		"id": 1,
+		"slug": "face_1",
+		"name": "Rosto 1",
+		"appearance_slot_id": 1,
+		"body_type_id": null,
+		"hair_cut": "none"
+	},
+	{
+		"id": 2,
+		"slug": "face_2",
+		"name": "Rosto 2",
+		"appearance_slot_id": 1,
+		"body_type_id": null,
+		"hair_cut": "none"
+	},
+	{
+		"id": 3,
+		"slug": "hair_short",
+		"name": "Curto",
+		"appearance_slot_id": 5,
+		"body_type_id": null,
+		"hair_cut": "none"
+	},
+	{
+		"id": 4,
+		"slug": "hair_spiky",
+		"name": "Espetado",
+		"appearance_slot_id": 5,
+		"body_type_id": null,
+		"hair_cut": "none"
+	},
+	{
+		"id": 5,
+		"slug": "hair_ponytail",
+		"name": "Rabo de cavalo",
+		"appearance_slot_id": 5,
+		"body_type_id": null,
+		"hair_cut": "none"
+	},
+	{
+		"id": 6,
+		"slug": "hair_long",
+		"name": "Comprido",
+		"appearance_slot_id": 5,
+		"body_type_id": null,
+		"hair_cut": "none"
+	},
+	{
+		"id": 7,
+		"slug": "cap",
+		"name": "Boné",
+		"appearance_slot_id": 6,
+		"body_type_id": null,
+		"hair_cut": "top"
+	},
+	{
+		"id": 8,
+		"slug": "straw_hat",
+		"name": "Chapéu de palha",
+		"appearance_slot_id": 6,
+		"body_type_id": null,
+		"hair_cut": "top"
+	},
+	{
+		"id": 9,
+		"slug": "helmet",
+		"name": "Capacete",
+		"appearance_slot_id": 6,
+		"body_type_id": null,
+		"hair_cut": "all"
+	},
+	{
+		"id": 10,
+		"slug": "tshirt",
+		"name": "Camiseta",
+		"appearance_slot_id": 4,
+		"body_type_id": null,
+		"hair_cut": "none"
+	},
+	{
+		"id": 11,
+		"slug": "jacket",
+		"name": "Jaqueta",
+		"appearance_slot_id": 4,
+		"body_type_id": null,
+		"hair_cut": "none"
+	},
+	{
+		"id": 12,
+		"slug": "tank_top",
+		"name": "Regata",
+		"appearance_slot_id": 4,
+		"body_type_id": null,
+		"hair_cut": "none"
+	},
+	{
+		"id": 13,
+		"slug": "pants",
+		"name": "Calça",
+		"appearance_slot_id": 2,
+		"body_type_id": null,
+		"hair_cut": "none"
+	},
+	{
+		"id": 14,
+		"slug": "shorts",
+		"name": "Bermuda",
+		"appearance_slot_id": 2,
+		"body_type_id": null,
+		"hair_cut": "none"
+	},
+	{
+		"id": 15,
+		"slug": "skirt",
+		"name": "Saia",
+		"appearance_slot_id": 2,
+		"body_type_id": 2,
+		"hair_cut": "none"
+	},
+	{
+		"id": 16,
+		"slug": "sneakers",
+		"name": "Tênis",
+		"appearance_slot_id": 3,
+		"body_type_id": null,
+		"hair_cut": "none"
+	},
+	{
+		"id": 17,
+		"slug": "boots",
+		"name": "Bota",
+		"appearance_slot_id": 3,
+		"body_type_id": null,
+		"hair_cut": "none"
+	}
+]

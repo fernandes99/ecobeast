@@ -38,10 +38,10 @@ describe('restrições do banco (e2e)', () => {
     expect(rows.map((row) => row.table_name)).toEqual([]);
   });
 
-  it('as 59 tabelas e o histórico de migrations ficam no schema ecobeasts', async () => {
+  it('as 64 tabelas e o histórico de migrations ficam no schema ecobeasts', async () => {
     const rows = await prisma.$queryRaw<{ n: number }[]>`
       SELECT count(*)::int AS n FROM information_schema.tables WHERE table_schema = 'ecobeasts'`;
-    expect(rows[0].n).toBe(60);
+    expect(rows[0].n).toBe(65);
   });
 
   it('recusa Técnica com precisão 150', async () => {
@@ -588,7 +588,10 @@ describe('restrições do banco (e2e)', () => {
     });
 
     it('recusa parede com um ponto só ou com 3 números (free-fences/01)', async () => {
-      for (const points of [[0, 0], [0, 0, 10]]) {
+      for (const points of [
+        [0, 0],
+        [0, 0, 10],
+      ]) {
         const result = await attempt(prisma, async (tx) => {
           const map = await draftMap(tx);
           await tx.islandWall.create({
@@ -665,6 +668,80 @@ describe('restrições do banco (e2e)', () => {
         expect(hardness).toBeGreaterThanOrEqual(1);
         expect(hardness).toBeLessThanOrEqual(3);
       }
+    });
+  });
+
+  describe('a aparência do Domador (tamer-appearance/01)', () => {
+    it('recusa lugar com tipo de paleta fora da lista e camada menor que 1', async () => {
+      const kind = await attempt(prisma, (tx) =>
+        tx.appearanceSlot.create({
+          data: {
+            slug: 'teste_lugar',
+            name: 'Teste',
+            layer: 90,
+            paletteKind: 'eyes',
+            required: false,
+          },
+        }),
+      );
+      expectRejected(kind, 'appearance_slots_palette_kind_check');
+      const layer = await attempt(prisma, (tx) =>
+        tx.appearanceSlot.create({
+          data: {
+            slug: 'teste_lugar',
+            name: 'Teste',
+            layer: 0,
+            required: false,
+          },
+        }),
+      );
+      expectRejected(layer, 'appearance_slots_layer_check');
+    });
+
+    it('recusa peça com hair_cut fora da lista', async () => {
+      const result = await attempt(prisma, (tx) =>
+        tx.appearancePart.create({
+          data: {
+            slug: 'teste_peca',
+            name: 'Teste',
+            appearanceSlotId: 6,
+            hairCut: 'half',
+          },
+        }),
+      );
+      expectRejected(result, 'appearance_parts_hair_cut_check');
+    });
+
+    it('recusa paleta com tipo fora da lista ou cor fora do formato', async () => {
+      const colors = {
+        color1Hex: '#ffffff',
+        color2Hex: '#cccccc',
+        color3Hex: '#999999',
+        color4Hex: '#666666',
+      };
+      const kind = await attempt(prisma, (tx) =>
+        tx.palette.create({
+          data: {
+            slug: 'teste_paleta',
+            name: 'Teste',
+            kind: 'eyes',
+            ...colors,
+          },
+        }),
+      );
+      expectRejected(kind, 'palettes_kind_check');
+      const color = await attempt(prisma, (tx) =>
+        tx.palette.create({
+          data: {
+            slug: 'teste_paleta',
+            name: 'Teste',
+            kind: 'cloth',
+            ...colors,
+            color4Hex: '#FFF',
+          },
+        }),
+      );
+      expectRejected(color, 'palettes_colors_check');
     });
   });
 });

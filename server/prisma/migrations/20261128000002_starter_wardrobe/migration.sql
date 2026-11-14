@@ -1,0 +1,42 @@
+-- O primeiro guarda-roupa do Domador (.specs/tamer-appearance/04-starter-wardrobe.md).
+INSERT INTO "ecobeasts"."appearance_parts" ("id", "slug", "name", "appearance_slot_id", "body_type_id", "hair_cut") VALUES
+    (2, 'face_2', 'Rosto 2', 1, NULL, 'none'),
+    (3, 'hair_short', 'Curto', 5, NULL, 'none'),
+    (4, 'hair_spiky', 'Espetado', 5, NULL, 'none'),
+    (5, 'hair_ponytail', 'Rabo de cavalo', 5, NULL, 'none'),
+    (6, 'hair_long', 'Comprido', 5, NULL, 'none'),
+    (7, 'cap', 'Boné', 6, NULL, 'top'),
+    (8, 'straw_hat', 'Chapéu de palha', 6, NULL, 'top'),
+    (9, 'helmet', 'Capacete', 6, NULL, 'all'),
+    (10, 'tshirt', 'Camiseta', 4, NULL, 'none'),
+    (11, 'jacket', 'Jaqueta', 4, NULL, 'none'),
+    (12, 'tank_top', 'Regata', 4, NULL, 'none'),
+    (13, 'pants', 'Calça', 2, NULL, 'none'),
+    (14, 'shorts', 'Bermuda', 2, NULL, 'none'),
+    (15, 'skirt', 'Saia', 2, 2, 'none'),
+    (16, 'sneakers', 'Tênis', 3, NULL, 'none'),
+    (17, 'boots', 'Bota', 3, NULL, 'none');
+INSERT INTO "ecobeasts"."palettes" ("id", "slug", "name", "kind", "color1_hex", "color2_hex", "color3_hex", "color4_hex") VALUES
+    (4, 'skin_2', 'Pele 2', 'skin', '#f0c49a', '#d9a06f', '#b97a4f', '#85543a'),
+    (5, 'skin_3', 'Pele 3', 'skin', '#dba57a', '#c1855a', '#9c643f', '#6e4329'),
+    (6, 'skin_4', 'Pele 4', 'skin', '#bd8558', '#a06a42', '#7e4f30', '#573420'),
+    (7, 'skin_5', 'Pele 5', 'skin', '#9a6440', '#7f4f31', '#613a23', '#432716'),
+    (8, 'skin_6', 'Pele 6', 'skin', '#6e4429', '#573420', '#412616', '#2b190e'),
+    (9, 'hair_black', 'Preto', 'hair', '#4a4a58', '#33333f', '#23232c', '#15151b'),
+    (10, 'hair_red', 'Ruivo', 'hair', '#d8703a', '#b0522a', '#85391e', '#5a2513'),
+    (11, 'hair_blond', 'Loiro', 'hair', '#f4dc8a', '#dcb85a', '#b08f3c', '#7d6326'),
+    (12, 'hair_white', 'Branco', 'hair', '#f4f4f0', '#d8d8d4', '#aeaeb0', '#7c7c84'),
+    (13, 'hair_blue', 'Azul', 'hair', '#6fb7e8', '#4a8fd0', '#336aa6', '#22487a'),
+    (14, 'hair_green', 'Verde', 'hair', '#8fd16a', '#63ad49', '#467f35', '#2f5524'),
+    (15, 'hair_pink', 'Rosa', 'hair', '#f5a3c7', '#de7aa8', '#b45684', '#7f3a5e'),
+    (16, 'cloth_red', 'Vermelho', 'cloth', '#e8655a', '#c44539', '#962f27', '#64201b'),
+    (17, 'cloth_orange', 'Laranja', 'cloth', '#f2a05a', '#d97d36', '#a85c25', '#733e18'),
+    (18, 'cloth_yellow', 'Amarelo', 'cloth', '#f6dc6a', '#e0b93c', '#b08d27', '#7a611a'),
+    (19, 'cloth_green', 'Verde', 'cloth', '#7ccf72', '#53ab4f', '#3c823b', '#285828'),
+    (20, 'cloth_purple', 'Roxo', 'cloth', '#a98ae0', '#8364c4', '#614699', '#422e6b'),
+    (21, 'cloth_pink', 'Rosa', 'cloth', '#f19ac2', '#d8709f', '#ad4f7c', '#793654'),
+    (22, 'cloth_black', 'Preto', 'cloth', '#5a5a66', '#3e3e48', '#2a2a32', '#18181d'),
+    (23, 'cloth_gray', 'Cinza', 'cloth', '#c4c4c8', '#9c9ca4', '#76767e', '#50505a'),
+    (24, 'cloth_white', 'Branco', 'cloth', '#fafafa', '#e2e2e6', '#b8b8c0', '#8a8a94');
+SELECT setval('"ecobeasts"."appearance_parts_id_seq"', (SELECT MAX("id") FROM "ecobeasts"."appearance_parts"));
+SELECT setval('"ecobeasts"."palettes_id_seq"', (SELECT MAX("id") FROM "ecobeasts"."palettes"));

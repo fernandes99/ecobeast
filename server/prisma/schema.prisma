@@ -208,6 +208,86 @@ model Npc {
   @@schema("ecobeasts")
 }
 
+/// Os corpos do Domador (tamer-appearance/01).
+model BodyType {
+  id   Int    @id @default(autoincrement())
+  /// A pasta assets/tamer/bodies/<slug>/ do jogo. CHECK ^[a-z0-9_]+$ (migration tamer_appearance)
+  slug String @unique
+  name String
+
+  parts   AppearancePart[]
+  players Player[]
+
+  @@map("body_types")
+  @@schema("ecobeasts")
+}
+
+/// Os lugares do corpo, na ordem de desenho (tamer-appearance/01).
+model AppearanceSlot {
+  id          Int     @id @default(autoincrement())
+  /// O jogo conhece hair e headwear. CHECK ^[a-z0-9_]+$ (migration tamer_appearance)
+  slug        String  @unique
+  name        String
+  /// Ordem de desenho por cima do corpo. CHECK >= 1 (migration tamer_appearance)
+  layer       Int     @unique
+  /// O tipo de paleta que a peça aceita; nulo é cor fixa. CHECK skin, hair ou cloth (migration tamer_appearance)
+  paletteKind String? @map("palette_kind")
+  /// O jogador não pode ficar sem peça nesse lugar.
+  required    Boolean
+
+  parts       AppearancePart[]
+  playerParts PlayerAppearancePart[]
+
+  @@map("appearance_slots")
+  @@schema("ecobeasts")
+}
+
+/// As peças da aparência (tamer-appearance/01).
+model AppearancePart {
+  id               Int    @id @default(autoincrement())
+  /// A pasta assets/tamer/parts/<slug>/ do jogo. CHECK ^[a-z0-9_]+$ (migration tamer_appearance)
+  slug             String @unique
+  name             String
+  appearanceSlotId Int    @map("appearance_slot_id")
+  /// Nulo serve nos dois corpos.
+  bodyTypeId       Int?   @map("body_type_id")
+  /// Só o chapéu usa: o que ele esconde do cabelo. CHECK none, top ou all (migration tamer_appearance)
+  hairCut          String @default("none") @map("hair_cut")
+
+  slot        AppearanceSlot         @relation(fields: [appearanceSlotId], references: [id], onDelete: Restrict)
+  bodyType    BodyType?              @relation(fields: [bodyTypeId], references: [id], onDelete: Restrict)
+  playerParts PlayerAppearancePart[]
+
+  @@index([appearanceSlotId])
+  @@index([bodyTypeId])
+  @@map("appearance_parts")
+  @@schema("ecobeasts")
+}
+
+/// As paletas de cor da aparência, da luz à sombra (tamer-appearance/01).
+model Palette {
+  id        Int    @id @default(autoincrement())
+  /// CHECK ^[a-z0-9_]+$ (migration tamer_appearance)
+  slug      String @unique
+  name      String
+  /// CHECK skin, hair ou cloth (migration tamer_appearance)
+  kind      String
+  /// CHECK ^#[0-9a-f]{6}$ (migration tamer_appearance)
+  color1Hex String @map("color1_hex")
+  /// CHECK ^#[0-9a-f]{6}$ (migration tamer_appearance)
+  color2Hex String @map("color2_hex")
+  /// CHECK ^#[0-9a-f]{6}$ (migration tamer_appearance)
+  color3Hex String @map("color3_hex")
+  /// CHECK ^#[0-9a-f]{6}$ (migration tamer_appearance)
+  color4Hex String @map("color4_hex")
+
+  skinPlayers Player[]
+  playerParts PlayerAppearancePart[]
+
+  @@map("palettes")
+  @@schema("ecobeasts")
+}
+
 model MapObjectTypeTile {
   objectTypeId Int     @map("object_type_id")
   dq           Int
@@ -686,19 +766,47 @@ enum CreatureLocation {
 }
 
 model Player {
-  id        String   @id @default(uuid()) @db.Uuid
-  name      String
+  id            String   @id @default(uuid()) @db.Uuid
+  name          String
   /// CHECK 1–100 (migration init)
-  level     Int      @default(1)
+  level         Int      @default(1)
   /// CHECK ≥ 0 (migration init)
-  coins     Int      @default(0)
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  coins         Int      @default(0)
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  bodyTypeId    Int      @default(1) @map("body_type_id")
+  skinPaletteId Int      @default(1) @map("skin_palette_id")
 
-  creatures CreatureInstance[]
-  inventory InventoryItem[]
-  codex     CodexEntry[]
+  bodyType        BodyType               @relation(fields: [bodyTypeId], references: [id], onDelete: Restrict)
+  skinPalette     Palette                @relation(fields: [skinPaletteId], references: [id], onDelete: Restrict)
+  creatures       CreatureInstance[]
+  inventory       InventoryItem[]
+  codex           CodexEntry[]
+  appearanceParts PlayerAppearancePart[]
 
+  @@index([bodyTypeId])
+  @@index([skinPaletteId])
   @@map("players")
+  @@schema("ecobeasts")
+}
+
+/// Uma peça vestida pelo Domador (tamer-appearance/01). O lugar se repete
+/// aqui para a chave garantir uma peça por lugar.
+model PlayerAppearancePart {
+  playerId         String @map("player_id") @db.Uuid
+  appearanceSlotId Int    @map("appearance_slot_id")
+  appearancePartId Int    @map("appearance_part_id")
+  paletteId        Int?   @map("palette_id")
+
+  player  Player         @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  slot    AppearanceSlot @relation(fields: [appearanceSlotId], references: [id], onDelete: Restrict)
+  part    AppearancePart @relation(fields: [appearancePartId], references: [id], onDelete: Restrict)
+  palette Palette?       @relation(fields: [paletteId], references: [id], onDelete: Restrict)
+
+  @@id([playerId, appearanceSlotId])
+  @@index([appearanceSlotId])
+  @@index([appearancePartId])
+  @@index([paletteId])
+  @@map("player_appearance_parts")
   @@schema("ecobeasts")
 }
 

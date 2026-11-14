@@ -13,6 +13,11 @@ const RUVAK = 2;
 const INVALID_NAME = 'Use de 2 a 16 letras, números ou espaços.';
 const CREATURE_NOT_FOUND = 'Ecobeast não encontrado.';
 const STAT_KEYS = ['atk', 'def', 'hp', 'sp_atk', 'sp_def', 'spd'];
+const DEFAULT_APPEARANCE = {
+  body_type_id: 1,
+  skin_palette_id: 1,
+  parts: [{ part_id: 1, palette_id: null }],
+};
 
 interface Creature {
   uid: string;
@@ -73,6 +78,8 @@ describe('Rotas do jogador (e2e)', () => {
       remove: () => server().delete('/v1/me').set(auth),
       nickname: (uid: string, body: object) =>
         server().patch(`/v1/me/creatures/${uid}`).set(auth).send(body),
+      appearance: (body: object) =>
+        server().put('/v1/me/appearance').set(auth).send(body),
     };
   }
 
@@ -91,6 +98,7 @@ describe('Rotas do jogador (e2e)', () => {
       server().post('/v1/me/starter').send({ species_id: RUVO }),
       server().delete('/v1/me'),
       server().patch(`/v1/me/creatures/${randomUUID()}`).send({ nickname: '' }),
+      server().put('/v1/me/appearance').send(DEFAULT_APPEARANCE),
     ]);
     for (const res of responses) {
       expect(res.status).toBe(401);
@@ -151,6 +159,7 @@ describe('Rotas do jogador (e2e)', () => {
       ) as string,
       party: [],
       inventory: [],
+      appearance: DEFAULT_APPEARANCE,
     });
   });
 
@@ -429,6 +438,125 @@ describe('Rotas do jogador (e2e)', () => {
     await user.remove().expect(204);
   });
 
+  describe('a aparência (tamer-appearance/01)', () => {
+    it('o Domador novo vem com o corpo 1, a pele 1 e o rosto 1', async () => {
+      const user = await newUser();
+      const res = await user.create({ name: 'Ana' }).expect(201);
+      expect(res.body.player.appearance).toEqual(DEFAULT_APPEARANCE);
+      const read = await user.read().expect(200);
+      expect(read.body.player.appearance).toEqual(DEFAULT_APPEARANCE);
+    });
+
+    it('troca a aparência e a devolve igual na leitura', async () => {
+      const user = await newUser();
+      await user.create({ name: 'Ana' }).expect(201);
+      const female = { ...DEFAULT_APPEARANCE, body_type_id: 2 };
+      const res = await user.appearance(female).expect(200);
+      expect(res.body.player.appearance).toEqual(female);
+      const read = await user.read().expect(200);
+      expect(read.body.player.appearance).toEqual(female);
+    });
+
+    it('veste o guarda-roupa e devolve as peças na ordem de desenho (tamer-appearance/04)', async () => {
+      const user = await newUser();
+      await user.create({ name: 'Ana' }).expect(201);
+      const outfit = {
+        body_type_id: 2,
+        skin_palette_id: 6,
+        parts: [
+          { part_id: 6, palette_id: 11 },
+          { part_id: 15, palette_id: 20 },
+          { part_id: 2, palette_id: null },
+          { part_id: 12, palette_id: 24 },
+          { part_id: 17, palette_id: 22 },
+          { part_id: 8, palette_id: 18 },
+        ],
+      };
+      const res = await user.appearance(outfit).expect(200);
+      expect(
+        res.body.player.appearance.parts.map(
+          (p: { part_id: number }) => p.part_id,
+        ),
+      ).toEqual([2, 15, 17, 12, 6, 8]);
+    });
+
+    it('sem Domador dá 409', async () => {
+      const user = await newUser();
+      const res = await user.appearance(DEFAULT_APPEARANCE).expect(409);
+      expect(res.body.message).toBe('Crie seu Domador primeiro.');
+    });
+
+    it.each<[string, object, string]>([
+      ['corpo que não existe', { body_type_id: 999 }, 'Esse corpo não existe.'],
+      [
+        'pele que não é de pele',
+        { skin_palette_id: 2 },
+        'Essa cor de pele não existe.',
+      ],
+      [
+        'peça que não existe',
+        { parts: [...DEFAULT_APPEARANCE.parts, { part_id: 99999 }] },
+        'A peça 99999 não existe.',
+      ],
+      [
+        'duas peças no mesmo lugar',
+        { parts: [...DEFAULT_APPEARANCE.parts, ...DEFAULT_APPEARANCE.parts] },
+        'Duas peças no mesmo lugar: Rosto.',
+      ],
+      ['sem rosto', { parts: [] }, 'Escolha um Rosto.'],
+      [
+        'saia no corpo masculino',
+        {
+          parts: [...DEFAULT_APPEARANCE.parts, { part_id: 15, palette_id: 3 }],
+        },
+        'A peça Saia não serve no corpo Masculino.',
+      ],
+      [
+        'cabelo sem cor',
+        { parts: [...DEFAULT_APPEARANCE.parts, { part_id: 3 }] },
+        'Escolha uma cor para Cabelo.',
+      ],
+      [
+        'cabelo com cor de roupa',
+        { parts: [...DEFAULT_APPEARANCE.parts, { part_id: 3, palette_id: 3 }] },
+        'A cor 3 não serve para Cabelo.',
+      ],
+      [
+        'cor no lugar de cor fixa',
+        { parts: [{ part_id: 1, palette_id: 3 }] },
+        'A cor 3 não serve para Rosto.',
+      ],
+    ])('recusa %s e não muda nada', async (_name, change, message) => {
+      const user = await newUser();
+      await user.create({ name: 'Ana' }).expect(201);
+      const res = await user
+        .appearance({ ...DEFAULT_APPEARANCE, ...change })
+        .expect(400);
+      expect(res.body.message).toBe(message);
+      const read = await user.read().expect(200);
+      expect(read.body.player.appearance).toEqual(DEFAULT_APPEARANCE);
+    });
+
+    it('recusa corpo sem a lista de peças', async () => {
+      const user = await newUser();
+      await user.create({ name: 'Ana' }).expect(201);
+      const res = await user
+        .appearance({ body_type_id: 1, skin_palette_id: 1 })
+        .expect(400);
+      expect(res.body.message).toContain('`parts` deve ser uma lista.');
+    });
+
+    it('apagar o progresso apaga as peças vestidas', async () => {
+      const user = await newUser();
+      await user.create({ name: 'Ana' }).expect(201);
+      await user.remove().expect(204);
+      const count = await prisma.playerAppearancePart.count({
+        where: { playerId: user.id },
+      });
+      expect(count).toBe(0);
+    });
+  });
+
   it('as rotas aparecem na documentação com o cadeado', async () => {
     const doc = await request(app.getHttpServer())
       .get('/docs/openapi.json')
@@ -444,6 +572,15 @@ describe('Rotas do jogador (e2e)', () => {
     const nickname = doc.body.paths['/v1/me/creatures/{uid}'].patch;
     expect(nickname.tags).toEqual(['Jogador']);
     expect(nickname.security).toEqual([{ bearer: [] }]);
+    const appearance = doc.body.paths['/v1/me/appearance'].put;
+    expect(appearance.tags).toEqual(['Jogador']);
+    expect(appearance.security).toEqual([{ bearer: [] }]);
+    expect(appearance.responses['400'].description).toContain(
+      'Escolha um Rosto.',
+    );
+    expect(
+      doc.body.components.schemas.PlayerDto.properties.appearance,
+    ).toBeDefined();
     const creature = doc.body.components.schemas.CreatureDto.properties;
     expect(creature.level_xp.description).toBeTruthy();
     expect(creature.next_level_xp.nullable).toBe(true);
