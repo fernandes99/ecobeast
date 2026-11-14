@@ -212,7 +212,10 @@ func evolve(uid: String, accept: bool) -> Result:
 
 
 func learn_skill(uid: String, skill_id: int, forget_skill_id: int) -> Result:
-	var body := {"skill_id": skill_id, "forget_skill_id": forget_skill_id if forget_skill_id >= 0 else null}
+	var forget: Variant = null
+	if forget_skill_id >= 0:
+		forget = forget_skill_id
+	var body := {"skill_id": skill_id, "forget_skill_id": forget}
 	return _choice_result(await Api.request(HTTPClient.METHOD_POST, LEARN_SKILL_PATH % uid, body, true))
 
 

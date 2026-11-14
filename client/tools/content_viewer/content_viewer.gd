@@ -269,4 +269,4 @@ func _place_beside_game() -> Vector2i:
 	var left := game.position.x - GAP - size.x
 	if left >= screen.position.x:
 		return Vector2i(left, top)
-	return screen.position + (screen.size - size) / 2
+	return screen.position + Vector2i((Vector2(screen.size - size) / 2.0).floor())

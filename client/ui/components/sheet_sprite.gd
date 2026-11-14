@@ -28,14 +28,14 @@ func _add_sheet(sheet: String, path: String, cycle_seconds: float) -> void:
 	var texture: Texture2D = load(path)
 	var columns := floori(texture.get_size().x / CELL_SIZE.x)
 	for row: int in SHEET_ROWS:
-		var animation := _animation_name(sheet, row)
-		sprite_frames.add_animation(animation)
-		sprite_frames.set_animation_speed(animation, columns / cycle_seconds)
+		var clip := _animation_name(sheet, row)
+		sprite_frames.add_animation(clip)
+		sprite_frames.set_animation_speed(clip, columns / cycle_seconds)
 		for column: int in columns:
-			var frame := AtlasTexture.new()
-			frame.atlas = texture
-			frame.region = Rect2(Vector2i(column, row) * CELL_SIZE, CELL_SIZE)
-			sprite_frames.add_frame(animation, frame)
+			var cell := AtlasTexture.new()
+			cell.atlas = texture
+			cell.region = Rect2(Vector2i(column, row) * CELL_SIZE, CELL_SIZE)
+			sprite_frames.add_frame(clip, cell)
 
 
 func _animation_name(sheet: String, row: int) -> StringName:

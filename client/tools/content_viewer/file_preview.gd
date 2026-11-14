@@ -110,7 +110,7 @@ func _setup_frame(frame: Frame) -> void:
 	match entry.kind:
 		ContentFiles.Kind.EXPLORE_SHEET:
 			var cell := SheetSprite.CELL_SIZE
-			var frames := maxi(1, texture.get_width() / cell.x)
+			var frames := maxi(1, floori(texture.get_width() / float(cell.x)))
 			var cycle := CreatureSprite.IDLE_SECONDS if entry.sheet == CreatureSprite.IDLE else CreatureSprite.WALK_SECONDS
 			if entry.cycle > 0.0:
 				cycle = entry.cycle

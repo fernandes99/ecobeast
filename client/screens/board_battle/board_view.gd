@@ -516,7 +516,9 @@ func set_stages(key: String, stages: Dictionary) -> void:
 
 
 func token_position(key: String) -> Variant:
-	return _tokens[key].position if _tokens.has(key) else null
+	if not _tokens.has(key):
+		return null
+	return _tokens[key].position
 
 
 func _shake(token: Token, amount: float, seconds: float) -> void:
@@ -547,14 +549,14 @@ func vanish(key: String, coin: bool) -> void:
 func _pop_coin(at: Vector2) -> void:
 	var coin := Sprite2D.new()
 	coin.texture = load(COIN_PATH) as Texture2D
-	var size := COIN_SIZE / coin.texture.get_height()
-	coin.scale = Vector2.ONE * size
+	var coin_scale := COIN_SIZE / coin.texture.get_height()
+	coin.scale = Vector2.ONE * coin_scale
 	coin.position = at
 	add_child(coin)
 	var rise := create_tween()
 	rise.tween_method(func(t: float) -> void:
 		coin.position = at - Vector2(0.0, COIN_RISE * (1.0 - pow(1.0 - t, 2.0)))
-		coin.scale.x = size * cos(t * TAU * COIN_SPINS)
+		coin.scale.x = coin_scale * cos(t * TAU * COIN_SPINS)
 		coin.modulate.a = 1.0 - clampf((t - COIN_FADE_FROM) / (1.0 - COIN_FADE_FROM), 0.0, 1.0), 0.0, 1.0, COIN_SECONDS)
 	rise.finished.connect(coin.queue_free)
 
@@ -569,7 +571,9 @@ func _redraw() -> void:
 
 
 func _draw_overlay() -> void:
-	var active: Variant = _tokens[_active_key].cell if _tokens.has(_active_key) else null
+	var active: Variant = null
+	if _tokens.has(_active_key):
+		active = _tokens[_active_key].cell
 	var enemy_active := _tokens.has(_active_key) and _tokens[_active_key].side == "enemy"
 	for cell: Vector2i in _outside:
 		_overlay.draw_colored_polygon(_polygon(cell), UiPalette.BOARD_OUTSIDE)

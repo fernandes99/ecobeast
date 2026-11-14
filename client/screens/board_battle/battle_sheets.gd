@@ -95,7 +95,7 @@ static func _find_rows(sheets: BattleSheets, idle_height: int, walk_height: int)
 
 
 func columns(sheet: String) -> int:
-	return textures[sheet].get_width() / cell
+	return floori(textures[sheet].get_width() / float(cell))
 
 
 func frame_count(sheet: String, row: int) -> int:
