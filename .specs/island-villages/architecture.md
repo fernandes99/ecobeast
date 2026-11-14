@@ -87,6 +87,7 @@ Os tipos depois da revisão da [03](03-map-objects.md#revisão-casas-árvores-pe
 | 37 | `sign` | Placa | um | 2: de madeira e de pedra, com setas, sem texto | bloqueia |
 | 38 | `flower_bed` | Canteiro de flores | um | 3: vermelho e amarelo, rosa e branco, e misturado | não bloqueia |
 | 39 | `bench` | Banco | um | 2: de madeira e de pedra | bloqueia |
+| 40 | `fountain` | Fonte | um | 1: bacia de pedra com água e uma coluna ([free-props/04](../free-props/04-stamps.md)) | bloqueia |
 
 Os tipos 36 a 39 saíram na [free-props/01](../free-props/01-prop-records.md) e voltaram como peças soltas. Os tipos 21 em diante são da [town-art](../town-art/README.md): a arte deles vem do `make_town.gd`, no estilo do [guia](../town-art/style-guide.md), ao lado dos tipos de antes, que continuam como estão. Nos prédios do Refúgio, da Loja e da Arena, a ação continua pintada à parte.
 

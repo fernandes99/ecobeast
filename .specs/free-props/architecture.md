@@ -91,3 +91,11 @@ O `content_hash` do rascunho inclui as peças, em ordem de `(r, q, dy, dx, prop_
 - **O ponto do ponteiro:** o `EditorCanvas` passa à ferramenta o ponto no chão plano (`pointer_flat`: o ponto da arte mais a altura do hexágono embaixo dele, `IslandDraft.rise_at`), e a peça nova fica com o pé nele, arredondado. A escolha com o botão direito compara o ponto da arte com o retângulo da arte de cada peça (`PropArt.rect`, em volta do pé levantado), e ganha a da frente (o pé mais embaixo).
 - **Arrastar:** começar o clique esquerdo sobre a arte da peça escolhida a arrasta; o canvas manda o ponto a cada movimento (`pointer_dragged`), e o pé segue o ponteiro, guardando a distância do começo, só para hexágonos da ilha.
 - **Redesenhar:** o `HexMapView.set_props` só indexa as peças; o canvas compara as peças de cada hexágono antes e depois (`refresh_props`) e refaz só os hexágonos que mudaram, com `update_tiles`.
+
+## Os carimbos
+
+- **O arquivo:** `client/tools/map_editor/stamps/<slug>.json`, com o `name`, o chão de cada hexágono (`tiles`, com `dq`, `dr` e `ground`), os objetos (`objects`, como no rascunho, com `dq` e `dr` no lugar de `q` e `r`) e as peças (`props`, idem, com o `dx` e o `dy` de sempre). Tudo a partir do hexágono de apoio, o da área mais perto do meio dela. Não leva bioma nem altura.
+- **Guardar** (`Stamp.capture`): o chão dos hexágonos marcados, os objetos com todos os hexágonos dentro e as peças com o pé dentro.
+- **Pôr** (`Stamp.place`): nos hexágonos do carimbo que são da ilha, o chão troca e os objetos que ocupam algum saem; entram os objetos que cabem inteiros e as peças com o pé na ilha. Espelhado, cada deslocamento `(dq, dr)` vira `(-dq - dr, dr)` (`ObjectPanel.mirror`), o `dx` das peças troca de sinal e o espelho de cada objeto e peça se inverte.
+- **A ferramenta Carimbo** (a 10, só pelo botão) tem o `StampPanel`, com os modos Pôr e Escolher área. O pôr é um passo de desfazer com o chão, os objetos e as peças de antes e de depois.
+- **A Fonte** (`fountain`, id 40) é um objeto de grade de 1 hexágono, com arte do `make_town.gd`.

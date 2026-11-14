@@ -300,6 +300,13 @@ func _paint(coord: Vector2i) -> void:
 	elif _tools.tool == EditorTools.Tool.OBJECT:
 		_canvas.refresh_objects()
 		_canvas.refresh_props()
+	elif _tools.tool == EditorTools.Tool.STAMP:
+		if _tools.stamp_panel.mode == StampPanel.Mode.SELECT:
+			_canvas.refresh_brush()
+			return
+		_canvas.update_tiles(changed)
+		_canvas.refresh_objects()
+		_canvas.refresh_props()
 	else:
 		_canvas.update_tiles(changed)
 		if _tools.tool == EditorTools.Tool.REMOVE:
@@ -449,7 +456,7 @@ func _on_window_input(event: InputEvent) -> void:
 		_undo()
 	elif _tool_key(key):
 		set_input_as_handled()
-	elif key.keycode >= KEY_1 and key.keycode < KEY_1 + EditorTools.TOOL_NAMES.size() and not key.ctrl_pressed:
+	elif key.keycode >= KEY_1 and key.keycode < KEY_1 + mini(EditorTools.TOOL_NAMES.size(), 9) and not key.ctrl_pressed:
 		set_input_as_handled()
 		_tools.set_tool(key.keycode - KEY_1)
 	elif key.keycode == KEY_BRACKETLEFT:
@@ -468,6 +475,9 @@ func _tool_key(key: InputEventKey) -> bool:
 		return _tools.pick_height_key(key.keycode - KEY_0)
 	if _tools.tool == EditorTools.Tool.AREA and key.keycode == KEY_F:
 		_tools.area_panel.toggle_focus()
+		return true
+	if _tools.tool == EditorTools.Tool.STAMP and key.keycode == KEY_M:
+		_tools.stamp_panel.toggle_mirror()
 		return true
 	var objects := _tools.object_panel
 	if _tools.tool != EditorTools.Tool.OBJECT:
@@ -628,6 +638,7 @@ func _build() -> void:
 	_canvas.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_canvas.hovered.connect(_on_hovered)
 	_canvas.brush = _tools.brush_coords
+	_canvas.marked = _tools.marked_coords
 	_canvas.brush_color = func(coord: Vector2i) -> Color: return _tools.brush_color(_draft, coord)
 	for row: Dictionary in GameData.get_rows("action_types"):
 		var type_id := int(row.get("id", 0))

@@ -286,5 +286,11 @@
 		"dq": 0,
 		"dr": 0,
 		"blocks": true
+	},
+	{
+		"object_type_id": 40,
+		"dq": 0,
+		"dr": 0,
+		"blocks": true
 	}
 ]

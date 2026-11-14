@@ -178,5 +178,11 @@
 		"slug": "town_rune_shrine",
 		"name": "Santuário de runas (cidade)",
 		"variants": 4
+	},
+	{
+		"id": 40,
+		"slug": "fountain",
+		"name": "Fonte",
+		"variants": 1
 	}
 ]

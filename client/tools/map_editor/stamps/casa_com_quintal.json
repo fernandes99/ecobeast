@@ -1,0 +1,144 @@
+{
+	"name": "Casa com quintal",
+	"objects": [
+		{
+			"dq": 0,
+			"dr": 0,
+			"mirrored": false,
+			"object_type_id": 25,
+			"tiles": [
+				{
+					"blocks": true,
+					"dq": 0,
+					"dr": 0
+				},
+				{
+					"blocks": true,
+					"dq": 1,
+					"dr": 0
+				}
+			],
+			"variant": 2
+		},
+		{
+			"dq": -1,
+			"dr": 1,
+			"mirrored": false,
+			"object_type_id": 28,
+			"tiles": [
+				{
+					"blocks": true,
+					"dq": -1,
+					"dr": 1
+				}
+			],
+			"variant": 1
+		}
+	],
+	"props": [
+		{
+			"dq": -1,
+			"dr": 0,
+			"dx": -6,
+			"dy": -6,
+			"mirrored": false,
+			"prop_type_id": 1,
+			"variant": 2
+		},
+		{
+			"dq": -1,
+			"dr": 0,
+			"dx": 12,
+			"dy": 8,
+			"mirrored": false,
+			"prop_type_id": 3,
+			"variant": 1
+		},
+		{
+			"dq": 0,
+			"dr": 1,
+			"dx": -12,
+			"dy": 6,
+			"mirrored": false,
+			"prop_type_id": 6,
+			"variant": 1
+		},
+		{
+			"dq": 1,
+			"dr": 1,
+			"dx": 14,
+			"dy": 4,
+			"mirrored": false,
+			"prop_type_id": 6,
+			"variant": 3
+		},
+		{
+			"dq": 0,
+			"dr": 1,
+			"dx": 4,
+			"dy": -12,
+			"mirrored": false,
+			"prop_type_id": 20,
+			"variant": 2
+		},
+		{
+			"dq": 1,
+			"dr": 1,
+			"dx": -6,
+			"dy": -10,
+			"mirrored": false,
+			"prop_type_id": 21,
+			"variant": 1
+		},
+		{
+			"dq": 0,
+			"dr": 1,
+			"dx": 10,
+			"dy": 14,
+			"mirrored": false,
+			"prop_type_id": 5,
+			"variant": 2
+		},
+		{
+			"dq": -1,
+			"dr": 1,
+			"dx": 12,
+			"dy": 14,
+			"mirrored": false,
+			"prop_type_id": 5,
+			"variant": 1
+		}
+	],
+	"tiles": [
+		{
+			"dq": -1,
+			"dr": 0,
+			"ground": ""
+		},
+		{
+			"dq": 0,
+			"dr": 0,
+			"ground": ""
+		},
+		{
+			"dq": 1,
+			"dr": 0,
+			"ground": ""
+		},
+		{
+			"dq": -1,
+			"dr": 1,
+			"ground": ""
+		},
+		{
+			"dq": 0,
+			"dr": 1,
+			"ground": "dirt_floor"
+		},
+		{
+			"dq": 1,
+			"dr": 1,
+			"ground": "dirt_floor"
+		}
+	]
+}

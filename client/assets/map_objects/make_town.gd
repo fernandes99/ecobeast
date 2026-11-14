@@ -41,6 +41,7 @@ const TYPES := {
 	"sign": ["one", 2],
 	"flower_bed": ["one", 3],
 	"bench": ["one", 2],
+	"fountain": ["one", 1],
 }
 ## O pé das construções fica acima do canto de baixo da célula, na borda de baixo da linha da frente.
 const BASE_LIFT := 6
@@ -1320,3 +1321,32 @@ func _draw_bench(variant: int, _frame: int) -> void:
 		_fill(s, Rect2i(0, 11, 34, 1), STONE[2])
 		_fill(s, Rect2i(16, 9, 1, 2), STONE[2])
 		_place_building(_outline(s, STONE[3]), SMALL_LIFT)
+
+
+## A Fonte da praça (free-props/04): bacia de pedra com água e uma coluna com uma taça.
+func _draw_fountain(_variant: int, _frame: int) -> void:
+	var s := Image.create(48, 44, false, Image.FORMAT_RGBA8)
+	var center := Vector2(23.5, 32.0)
+	for y: int in range(20, 44):
+		for x: int in 48:
+			var d := Vector2((x + 0.5 - center.x) / 23.5, (y + 0.5 - center.y) / 11.0)
+			if d.length_squared() <= 1.0:
+				_dot(s, x, y, STONE[1] if y < 36 else STONE[2])
+	for y: int in range(22, 38):
+		for x: int in 48:
+			var d := Vector2((x + 0.5 - center.x) / 19.0, (y + 0.5 - 30.0) / 7.0)
+			if d.length_squared() <= 1.0:
+				_dot(s, x, y, GLASS if d.y < -0.2 else GLASS_DARK)
+	for x: int in range(8, 16):
+		_dot(s, x, 27, GLASS_SHINE)
+	_fill(s, Rect2i(21, 10, 6, 20), STONE[1])
+	_fill(s, Rect2i(21, 10, 1, 20), STONE[0])
+	_fill(s, Rect2i(26, 10, 1, 20), STONE[2])
+	_fill(s, Rect2i(14, 8, 20, 4), STONE[0])
+	_fill(s, Rect2i(15, 11, 18, 2), STONE[2])
+	_fill(s, Rect2i(17, 8, 14, 2), GLASS)
+	_fill(s, Rect2i(22, 2, 4, 7), GLASS_SHINE)
+	_fill(s, Rect2i(23, 0, 2, 3), GLASS_SHINE)
+	for x: int in [12, 35]:
+		_fill(s, Rect2i(x, 12, 1, 12), GLASS)
+	_place_building(_outline(s, STONE[3]), SMALL_LIFT)

@@ -5,10 +5,10 @@ signal message(text: String)
 signal brush_changed
 signal edited(step: EditorHistory.Step, merge: bool)
 
-enum Tool { BIOME, HEIGHT, GROUND, ADD, REMOVE, START, OBJECT, ACTION, AREA }
+enum Tool { BIOME, HEIGHT, GROUND, ADD, REMOVE, START, OBJECT, ACTION, AREA, STAMP }
 
-const TOOL_NAMES: Array[String] = ["Bioma", "Altura", "Chão", "Pôr hexágono", "Tirar hexágono", "Chegada", "Peças", "Ação", "Área"]
-const TOOL_ICONS: Array[String] = ["biome", "height", "ground", "hex_add", "hex_remove", "flag", "object", "action", "area"]
+const TOOL_NAMES: Array[String] = ["Bioma", "Altura", "Chão", "Pôr hexágono", "Tirar hexágono", "Chegada", "Peças", "Ação", "Área", "Carimbo"]
+const TOOL_ICONS: Array[String] = ["biome", "height", "ground", "hex_add", "hex_remove", "flag", "object", "action", "area", "stamp"]
 const TOOL_HINTS: Array[String] = [
 	"Troca o bioma dos hexágonos que já existem. A altura só muda se você escolher uma abaixo.",
 	"Troca só a altura dos hexágonos que já existem.",
@@ -19,6 +19,7 @@ const TOOL_HINTS: Array[String] = [
 	"Põe peças: as de grade num hexágono, as soltas no ponto do clique. Botão direito escolhe uma posta; arrastar a escolhida a move.",
 	"Pinta uma ação nova, ou aumenta a escolhida. Botão direito escolhe uma ação.",
 	"Pinta a área escolhida. Botão direito tira os hexágonos de qualquer área.",
+	"Põe um carimbo, com o apoio no hexágono clicado, ou escolhe uma área e a guarda como carimbo.",
 ]
 const NO_AREA_MESSAGE := "Crie ou escolha uma área no painel antes de pintar."
 const BIOMES: Array[String] = ["temperate", "boreal", "stone", "hill", "mountain", "wshallow", "wdeep"]
@@ -76,6 +77,8 @@ var object_panel: ObjectPanel
 var _object_section: Control
 var _object_done := false
 var area_panel: AreaPanel
+var stamp_panel: StampPanel
+var _stamp_section: Control
 
 var _step: EditorHistory.Step = null
 ## O ponto do ponteiro no chão plano, sem a altura, em pixels da arte: as peças soltas
@@ -191,6 +194,13 @@ func _init() -> void:
 	area_panel.edited.connect(func(step: EditorHistory.Step, merge: bool) -> void: edited.emit(step, merge))
 	areas_box.add_child(area_panel)
 
+	var stamps_box := _section("Carimbo")
+	_stamp_section = stamps_box.get_parent()
+	stamp_panel = StampPanel.new()
+	stamp_panel.changed.connect(brush_changed.emit)
+	stamp_panel.mode_changed.connect(_refresh)
+	stamps_box.add_child(stamp_panel)
+
 	var brush_box := _section("Pincel  ·  teclas [ e ]")
 	_brush_section = brush_box.get_parent()
 	var brush_row := HBoxContainer.new()
@@ -234,6 +244,8 @@ func brush_radius() -> int:
 
 
 func brush_coords(center: Vector2i) -> Array[Vector2i]:
+	if tool == Tool.STAMP and stamp_panel.mode == StampPanel.Mode.PLACE:
+		return Stamp.targets(stamp_panel.stamp, center, stamp_panel.flip) if not stamp_panel.stamp.is_empty() else [center]
 	if tool == Tool.OBJECT and object_panel.placing_prop and object_panel.selected < 0:
 		return [center]
 	if tool == Tool.OBJECT and not object_panel.editing_blocks:
@@ -250,6 +262,7 @@ func set_draft(draft: IslandDraft) -> void:
 	action_panel.set_draft(draft)
 	object_panel.set_draft(draft)
 	area_panel.set_draft(draft)
+	stamp_panel.set_draft(draft)
 
 
 func refresh_panels() -> void:
@@ -270,11 +283,11 @@ func begin_stroke(draft: IslandDraft, secondary: bool = false) -> void:
 	_stroke_action = -2
 	_object_done = false
 	_moving = -1
-	if draft.props.size() > 0 or tool == Tool.OBJECT:
+	if draft.props.size() > 0 or tool == Tool.OBJECT or tool == Tool.STAMP:
 		_step.props_before = draft.props.duplicate(true)
 	if draft.actions.size() > 0 or tool == Tool.ACTION:
 		_step.actions_before = draft.actions.duplicate(true)
-	if draft.objects.size() > 0 or tool == Tool.OBJECT:
+	if draft.objects.size() > 0 or tool == Tool.OBJECT or tool == Tool.STAMP:
 		_step.objects_before = draft.objects.duplicate(true)
 
 
@@ -286,6 +299,8 @@ func paint(draft: IslandDraft, center: Vector2i) -> Array[Vector2i]:
 		return _paint_action(draft, center)
 	if tool == Tool.OBJECT:
 		return _paint_object(draft, center)
+	if tool == Tool.STAMP:
+		return _paint_stamp(draft, center)
 	if _secondary and tool != Tool.AREA:
 		return changed
 	if tool == Tool.START:
@@ -488,6 +503,37 @@ func _paint_object(draft: IslandDraft, center: Vector2i) -> Array[Vector2i]:
 	return coords
 
 
+## Escolhendo a área, marca (ou, com o botão direito, desmarca) os hexágonos do pincel.
+## Pondo, um carimbo por clique, com o apoio em `center`.
+func _paint_stamp(draft: IslandDraft, center: Vector2i) -> Array[Vector2i]:
+	var changed: Array[Vector2i] = []
+	if stamp_panel.mode == StampPanel.Mode.SELECT:
+		for coord: Vector2i in brush_coords(center):
+			if draft.tiles.has(coord) and stamp_panel.mark(coord, not _secondary):
+				changed.append(coord)
+		stamp_panel.refresh_count()
+		return changed
+	if _secondary or _object_done or stamp_panel.stamp.is_empty():
+		return changed
+	_object_done = true
+	for coord: Vector2i in Stamp.targets(stamp_panel.stamp, center, stamp_panel.flip):
+		if draft.tiles.has(coord) and not _step.before.has(coord):
+			_step.before[coord] = draft.snapshot(coord)
+	changed = Stamp.place(draft, stamp_panel.stamp, center, stamp_panel.flip)
+	for coord: Vector2i in changed:
+		_step.after[coord] = draft.snapshot(coord)
+	object_panel.select(-1)
+	return changed
+
+
+## Os hexágonos da área marcada para o carimbo, enquanto ela está sendo escolhida.
+func marked_coords() -> Array[Vector2i]:
+	var coords: Array[Vector2i] = []
+	if tool == Tool.STAMP and stamp_panel.mode == StampPanel.Mode.SELECT:
+		coords.assign(stamp_panel.selection.keys())
+	return coords
+
+
 ## Arrastando a peça solta escolhida: o pé segue o ponteiro, sem sair da ilha. Devolve
 ## os hexágonos que mudaram.
 func drag(draft: IslandDraft, flat: Vector2) -> Array[Vector2i]:
@@ -520,6 +566,9 @@ func is_moving() -> bool:
 ## A cor do contorno sob o ponteiro com a ferramenta Peças: verde se o objeto cabe,
 ## vermelho se não; transparente nas outras ferramentas e com uma peça solta.
 func brush_color(draft: IslandDraft, center: Vector2i) -> Color:
+	if tool == Tool.STAMP and stamp_panel.mode == StampPanel.Mode.PLACE and draft != null and not stamp_panel.stamp.is_empty():
+		var all_in := brush_coords(center).all(func(coord: Vector2i) -> bool: return draft.tiles.has(coord))
+		return UiPalette.HP_HIGH if all_in else UiPalette.WARNING
 	if tool != Tool.OBJECT or object_panel.editing_blocks or draft == null or object_panel.placing_prop:
 		return Color.TRANSPARENT
 	return UiPalette.HP_HIGH if draft.object_fits(brush_coords(center)) else UiPalette.DANGER
@@ -583,7 +632,8 @@ func _refresh() -> void:
 	_object_section.visible = tool == Tool.OBJECT
 	_action_section.visible = tool == Tool.ACTION
 	_area_section.visible = tool == Tool.AREA
-	_brush_section.visible = tool != Tool.START and tool != Tool.OBJECT
+	_stamp_section.visible = tool == Tool.STAMP
+	_brush_section.visible = tool != Tool.START and tool != Tool.OBJECT and not (tool == Tool.STAMP and stamp_panel.mode == StampPanel.Mode.PLACE)
 	for slug: String in _biome_buttons:
 		_biome_buttons[slug].set_pressed_no_signal(slug == biome)
 		_biome_buttons[slug].queue_redraw()

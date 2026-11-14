@@ -281,8 +281,8 @@ describe('carga inicial do chão e dos objetos (island-villages/01)', () => {
     ]);
   });
 
-  it('tem os 30 objetos, cada um com o hexágono de apoio e pelo menos 1 variante', () => {
-    expect(objects).toHaveLength(30);
+  it('tem os 31 objetos, cada um com o hexágono de apoio e pelo menos 1 variante', () => {
+    expect(objects).toHaveLength(31);
     for (const { id, variants } of objects) {
       expect(variants).toBeGreaterThanOrEqual(1);
       expect(
@@ -318,10 +318,12 @@ describe('carga inicial das peças soltas (free-props/01)', () => {
     JSON.parse(readFileSync(join(SEED_DATA_DIR, file), 'utf8')) as T;
   const props =
     read<{ id: number; slug: string; variants: number }[]>('prop_types.json');
-  const objects = read<{ id: number }[]>('map_object_types.json');
-  const objectTiles = read<{ object_type_id: number }[]>(
-    'map_object_type_tiles.json',
+  const objects = read<{ id: number; slug: string; variants: number }[]>(
+    'map_object_types.json',
   );
+  const objectTiles = read<
+    { object_type_id: number; dq: number; dr: number; blocks: boolean }[]
+  >('map_object_type_tiles.json');
 
   it('tem os 21 tipos, de 1 a 21, com pelo menos 1 variante', () => {
     expect(props.map(({ id }) => id)).toEqual(
@@ -329,6 +331,14 @@ describe('carga inicial das peças soltas (free-props/01)', () => {
     );
     for (const { variants } of props)
       expect(variants).toBeGreaterThanOrEqual(1);
+  });
+
+  it('a Fonte é um objeto de 1 hexágono que bloqueia (free-props/04)', () => {
+    const fountain = objects.find(({ slug }) => slug === 'fountain');
+    expect(fountain).toMatchObject({ id: 40, variants: 1 });
+    expect(
+      objectTiles.filter(({ object_type_id }) => object_type_id === 40),
+    ).toEqual([{ object_type_id: 40, dq: 0, dr: 0, blocks: true }]);
   });
 
   it('as decorações de rua viraram peças e saíram dos objetos', () => {

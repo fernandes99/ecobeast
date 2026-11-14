@@ -28,6 +28,8 @@ const NAME_SIZE := 14
 const FOCUS_DIM := Color(UiPalette.BACKGROUND_DEEP, 0.72)
 
 var brush: Callable = Callable()
+## Os hexágonos marcados para um carimbo, contornados.
+var marked: Callable = Callable()
 ## A cor do contorno sob o ponteiro (Color.TRANSPARENT: a de sempre).
 var brush_color: Callable = Callable()
 var selected_object := -1
@@ -481,6 +483,9 @@ func draw_overlay(node: Node2D) -> void:
 		_draw_actions(node)
 	if selected_object >= 0:
 		for coord: Vector2i in _draft.object_tiles(selected_object):
+			_outline(node, coord, UiPalette.ACCENT)
+	if marked.is_valid():
+		for coord: Vector2i in marked.call():
 			_outline(node, coord, UiPalette.ACCENT)
 	if selected_prop >= 0:
 		var rect := prop_rect(selected_prop)
