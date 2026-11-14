@@ -5,6 +5,7 @@ import {
   type IslandDraft,
   type KnownIds,
   MAX_ISLAND_TILES,
+  MAX_PROPS,
   publishError,
 } from './island-draft.js';
 
@@ -12,11 +13,17 @@ const REFUGE = 1;
 const HOUSE = 1;
 const RUVO = 1;
 const NILU = 4;
+const FLOWERS = 6;
+const BENCH = 21;
 const known: KnownIds = {
   actionTypeIds: new Set([REFUGE, 2]),
   objectTypeIds: new Set([HOUSE, 2]),
   groundSlugs: new Set(['dirt_trail', 'cobble_floor']),
   speciesIds: new Set([RUVO, NILU]),
+  propVariants: new Map([
+    [FLOWERS, 4],
+    [BENCH, 2],
+  ]),
 };
 
 function island(): IslandDraft {
@@ -44,6 +51,17 @@ function island(): IslandDraft {
         variant: 2,
         mirrored: false,
         tiles: [{ q: 0, r: 1, blocks: true }],
+      },
+    ],
+    props: [
+      {
+        propTypeId: FLOWERS,
+        q: 1,
+        r: 0,
+        dx: -7,
+        dy: 4,
+        variant: 2,
+        mirrored: false,
       },
     ],
     areas: [
@@ -473,5 +491,70 @@ describe('canonicalDraft e draftHash', () => {
 
   it('é um sha-256 em hexadecimal', () => {
     expect(draftHash(island())).toMatch(/^[0-9a-f]{64}$/);
+  });
+});
+
+describe('as peças soltas no rascunho (free-props/01)', () => {
+  const withProp = (change: Partial<IslandDraft['props'][number]>) => {
+    const draft = island();
+    draft.props.push({ ...draft.props[0]!, ...change });
+    return draft;
+  };
+
+  it('aceita uma peça dentro do próprio hexágono', () => {
+    expect(draftError(island(), known)).toBeNull();
+  });
+
+  it('recusa um tipo que não existe', () => {
+    expect(draftError(withProp({ propTypeId: 99 }), known)).toBe(
+      'A peça 2 tem um tipo que não existe.',
+    );
+  });
+
+  it('recusa a variante fora de 1 até as variantes do tipo', () => {
+    expect(draftError(withProp({ variant: 5 }), known)).toBe(
+      'A peça 2 tem a variante 5: vai de 1 a 4.',
+    );
+    expect(draftError(withProp({ propTypeId: BENCH, variant: 0 }), known)).toBe(
+      'A peça 2 tem a variante 0: vai de 1 a 2.',
+    );
+  });
+
+  it('recusa um hexágono que não é da ilha', () => {
+    expect(draftError(withProp({ q: 2, r: 1 }), known)).toBe(
+      'A peça 2 fica em (2, 1), que não é da ilha.',
+    );
+  });
+
+  it('recusa o pé fora do próprio hexágono', () => {
+    expect(draftError(withProp({ dx: 0, dy: -30 }), known)).toBe(
+      'A peça 2 tem o pé fora do hexágono (1, 0).',
+    );
+    expect(draftError(withProp({ dx: 1.5 }), known)).toBe(
+      'A peça 2 tem o pé fora do hexágono (1, 0).',
+    );
+  });
+
+  it(`recusa mais de ${MAX_PROPS} peças`, () => {
+    const draft = island();
+    draft.props = Array.from({ length: MAX_PROPS + 1 }, () => draft.props[0]!);
+    expect(draftError(draft, known)).toBe('A ilha pode ter até 6.000 peças.');
+  });
+
+  it('o rascunho canônico ordena as peças e muda com elas', () => {
+    const draft = withProp({ q: 0, r: 0, dx: 3, dy: -2, mirrored: true });
+    const reversed = { ...draft, props: [...draft.props].reverse() };
+    expect(canonicalDraft(reversed)).toBe(canonicalDraft(draft));
+    const props = JSON.parse(canonicalDraft(draft)).props;
+    expect(props[0]).toEqual({
+      propTypeId: FLOWERS,
+      q: 0,
+      r: 0,
+      dx: 3,
+      dy: -2,
+      variant: 2,
+      mirrored: true,
+    });
+    expect(draftHash(withProp({ variant: 3 }))).not.toBe(draftHash(draft));
   });
 });

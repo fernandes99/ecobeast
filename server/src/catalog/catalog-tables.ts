@@ -17,7 +17,7 @@ const table = (
 });
 
 /**
- * As 35 tabelas do catálogo em ordem de dependência: cada FK aponta para uma
+ * As 36 tabelas do catálogo em ordem de dependência: cada FK aponta para uma
  * tabela que vem antes (a autorreferência de species é tratada no seed).
  * Usada pelo seed e pelo catálogo inteiro (GET /v1/catalog).
  */
@@ -45,6 +45,7 @@ export const CATALOG_TABLES: readonly CatalogTable[] = [
     'dq',
     'dr',
   ]),
+  table('prop_types', 'propType'),
   table('element_efficacy', 'elementEfficacy', [
     'attacker_element_id',
     'defender_element_id',

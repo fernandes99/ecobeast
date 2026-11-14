@@ -40,6 +40,7 @@ O que vem depois do MVP de estrutura (entrada, escolha do inicial e Hub). Cada l
 | 24  | [`legacy-battle-removal`](legacy-battle-removal/) | Apagar a luta antiga, que nenhuma tela abria desde a board-battle/05: a tela `battle`, as rotas `/v1/me/battle` e o laço de turno antigo, com os testes das regras compartilhadas portados para a luta no tabuleiro | board-battle | concluída |
 | 25  | [`terrain-height`](terrain-height/) | A altura do terreno em cada hexágono, de 0 a 10 (de 0 a 4 até a 02), em qualquer bioma; Colina e Montanha viram biomas, e o editor ganha a ferramenta Altura no lugar da Forma | map-editor, islands | concluída |
 | 26  | [`island-villages`](island-villages/) | Vilas nas ilhas: trilhas e pisos, objetos de 1 a 4 hexágonos com variante, espelho e bloqueio, e as construções viradas ações | terrain-height, islands | concluída |
+| 27  | [`free-props`](free-props/) | Arte livre nas ilhas: peças soltas em pixels, só enfeite, e carimbos que viram objetos, peças e chão; a ferramenta única Peças no editor | island-villages | em andamento |
 
 ## Pós-lançamento (do GDD)
 

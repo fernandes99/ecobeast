@@ -43,7 +43,7 @@ export class IslandsService {
     client: Tx | PrismaService,
     islandMapId: number,
   ): Promise<IslandDraft> {
-    const [map, tiles, actions, objects, areas] = await Promise.all([
+    const [map, tiles, actions, objects, props, areas] = await Promise.all([
       client.islandMap.findUniqueOrThrow({ where: { id: islandMapId } }),
       client.islandTile.findMany({
         where: { islandMapId },
@@ -62,6 +62,10 @@ export class IslandsService {
         where: { islandMapId },
         orderBy: { id: 'asc' },
         include: { tiles: { orderBy: [{ r: 'asc' }, { q: 'asc' }] } },
+      }),
+      client.islandProp.findMany({
+        where: { islandMapId },
+        orderBy: { id: 'asc' },
       }),
       client.islandArea.findMany({
         where: { islandMapId },
@@ -95,6 +99,15 @@ export class IslandsService {
         variant: object.variant,
         mirrored: object.mirrored,
         tiles: object.tiles.map(({ q, r, blocks }) => ({ q, r, blocks })),
+      })),
+      props: props.map(({ propTypeId, q, r, dx, dy, variant, mirrored }) => ({
+        propTypeId,
+        q,
+        r,
+        dx,
+        dy,
+        variant,
+        mirrored,
       })),
       areas: areas.map(({ id, name, colorHex, spawnCount, species }) => ({
         key: keys.get(id)!,

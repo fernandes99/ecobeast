@@ -88,7 +88,7 @@ Os tipos depois da revisão da [03](03-map-objects.md#revisão-casas-árvores-pe
 | 38 | `flower_bed` | Canteiro de flores | um | 3: vermelho e amarelo, rosa e branco, e misturado | não bloqueia |
 | 39 | `bench` | Banco | um | 2: de madeira e de pedra | bloqueia |
 
-Os tipos 21 em diante são da [town-art](../town-art/README.md): a arte deles vem do `make_town.gd`, no estilo do [guia](../town-art/style-guide.md), ao lado dos tipos de antes, que continuam como estão. Nos prédios do Refúgio, da Loja e da Arena, a ação continua pintada à parte.
+Os tipos 36 a 39 saíram na [free-props/01](../free-props/01-prop-records.md) e voltaram como peças soltas. Os tipos 21 em diante são da [town-art](../town-art/README.md): a arte deles vem do `make_town.gd`, no estilo do [guia](../town-art/style-guide.md), ao lado dos tipos de antes, que continuam como estão. Nos prédios do Refúgio, da Loja e da Arena, a ação continua pintada à parte.
 
 Depois da [05](05-connected-fences.md), a Cerca se liga sozinha: um poste no centro e um braço até o meio de cada lado cujo vizinho, na mesma altura, também tem cerca; sozinha, ela é reta. O `HexFences` monta a arte a partir de `fence/parts_<variante>.png` (7 células de 96×72: o poste e os braços dos lados 0 a 5), e o `<variante>.png` é só a prévia do editor. A Cerca da cidade (`town_fence`) é montada do mesmo jeito, com `town_fence/parts_<variante>.png`, e se liga só a outra Cerca da cidade (o `links` liga o mesmo tipo).
 

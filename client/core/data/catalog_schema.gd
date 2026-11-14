@@ -183,6 +183,10 @@ const TABLES := {
 			"blocks": {"type": "bool"},
 		},
 	},
+	"prop_types": {
+		"key": ["id"],
+		"columns": {"id": ID, "slug": SLUG, "name": TEXT, "variants": {"type": "int", "min": 1}},
+	},
 	"species": {
 		"key": ["id"],
 		"columns": {

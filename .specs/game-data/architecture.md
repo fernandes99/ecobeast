@@ -255,6 +255,8 @@ Como elas viram Ecobeasts no mapa está em [biome-encounters/architecture.md](..
 
 **`action_types`**, **`ground_types`**, **`map_object_types`** e **`map_object_type_tiles`** são os tipos das ilhas: o que uma ação faz (`kind` em `open_screen`; era `building_types`), as trilhas e os pisos (`kind` em `trail` ou `floor`), os objetos (`variants` ≥ 1) e o formato de cada objeto em coordenadas axiais a partir do hexágono de apoio `(0, 0)`, com o bloqueio padrão (`blocks`). O desenho deles está em [island-villages/architecture.md](../island-villages/architecture.md).
 
+**`prop_types`** são os tipos de peça solta das ilhas (`slug`, `name` e `variants` ≥ 1): só enfeite, postas num ponto em pixels, nunca bloqueiam. A arte e o vento são do jogo, pelo `slug`. O desenho está em [free-props/architecture.md](../free-props/architecture.md).
+
 ## Tabelas futuras (só documentadas)
 
 Entram com as iniciativas do [roadmap](../roadmap.md); não têm arquivo no MVP.

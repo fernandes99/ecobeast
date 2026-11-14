@@ -38,10 +38,10 @@ describe('restrições do banco (e2e)', () => {
     expect(rows.map((row) => row.table_name)).toEqual([]);
   });
 
-  it('as 51 tabelas e o histórico de migrations ficam no schema ecobeasts', async () => {
+  it('as 53 tabelas e o histórico de migrations ficam no schema ecobeasts', async () => {
     const rows = await prisma.$queryRaw<{ n: number }[]>`
       SELECT count(*)::int AS n FROM information_schema.tables WHERE table_schema = 'ecobeasts'`;
-    expect(rows[0].n).toBe(52);
+    expect(rows[0].n).toBe(54);
   });
 
   it('recusa Técnica com precisão 150', async () => {
@@ -511,6 +511,26 @@ describe('restrições do banco (e2e)', () => {
         });
       });
       expectRejected(result, 'island_objects_variant_check');
+    });
+
+    it('recusa variante 0 de peça solta (free-props/01)', async () => {
+      const result = await attempt(prisma, async (tx) => {
+        const map = await draftMap(tx);
+        const type = await tx.propType.findFirstOrThrow();
+        await tx.islandProp.create({
+          data: {
+            islandMapId: map.id,
+            propTypeId: type.id,
+            q: 0,
+            r: 0,
+            dx: 0,
+            dy: 0,
+            variant: 0,
+            mirrored: false,
+          },
+        });
+      });
+      expectRejected(result, 'island_props_variant_check');
     });
 
     it('recusa tipo de chão e de ação fora da lista', async () => {

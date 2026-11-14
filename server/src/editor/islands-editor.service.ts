@@ -18,7 +18,7 @@ import {
   IslandsService,
 } from '../islands/islands.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
-import { toObjectDto } from '../exploration/exploration.dto.js';
+import { toObjectDto, toPropDto } from '../exploration/exploration.dto.js';
 import type {
   IslandCreatedResponseDto,
   IslandDraftDto,
@@ -77,6 +77,15 @@ export function toDraft(dto: IslandDraftDto): IslandDraft {
       mirrored: object.mirrored,
       tiles: object.tiles.map(({ q, r, blocks }) => ({ q, r, blocks })),
     })),
+    props: (dto.props ?? []).map((prop) => ({
+      propTypeId: prop.prop_type_id,
+      q: prop.q,
+      r: prop.r,
+      dx: prop.dx,
+      dy: prop.dy,
+      variant: prop.variant,
+      mirrored: prop.mirrored,
+    })),
     areas: dto.areas.map(({ key, name, color_hex, spawn_count, species }) => ({
       key,
       name,
@@ -102,6 +111,7 @@ function toDto(draft: IslandDraft): IslandDraftDto {
       tiles,
     })),
     objects: draft.objects.map(toObjectDto),
+    props: draft.props.map(toPropDto),
     areas: draft.areas.map(({ key, name, colorHex, spawnCount, species }) => ({
       key,
       name,
@@ -246,17 +256,19 @@ export class IslandsEditorService {
   }
 
   private async knownIds(): Promise<KnownIds> {
-    const [actions, objects, grounds, species] = await Promise.all([
+    const [actions, objects, grounds, species, props] = await Promise.all([
       this.prisma.actionType.findMany({ select: { id: true } }),
       this.prisma.mapObjectType.findMany({ select: { id: true } }),
       this.prisma.groundType.findMany({ select: { slug: true } }),
       this.prisma.species.findMany({ select: { id: true } }),
+      this.prisma.propType.findMany({ select: { id: true, variants: true } }),
     ]);
     return {
       actionTypeIds: new Set(actions.map(({ id }) => id)),
       objectTypeIds: new Set(objects.map(({ id }) => id)),
       groundSlugs: new Set(grounds.map(({ slug }) => slug)),
       speciesIds: new Set(species.map(({ id }) => id)),
+      propVariants: new Map(props.map(({ id, variants }) => [id, variants])),
     };
   }
 
@@ -374,6 +386,24 @@ export class IslandsEditorService {
     for (let first = 0; first < objectTiles.length; first += TILE_CHUNK) {
       await tx.islandObjectTile.createMany({
         data: objectTiles.slice(first, first + TILE_CHUNK),
+      });
+    }
+
+    const props = draft.props.map(
+      ({ propTypeId, q, r, dx, dy, variant, mirrored }) => ({
+        islandMapId: map.id,
+        propTypeId,
+        q,
+        r,
+        dx,
+        dy,
+        variant,
+        mirrored,
+      }),
+    );
+    for (let first = 0; first < props.length; first += TILE_CHUNK) {
+      await tx.islandProp.createMany({
+        data: props.slice(first, first + TILE_CHUNK),
       });
     }
     return map;

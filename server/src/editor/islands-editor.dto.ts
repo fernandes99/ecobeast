@@ -132,6 +132,40 @@ export class DraftObjectDto extends EditorHexDto {
   tiles: DraftObjectTileDto[];
 }
 
+export class DraftPropDto extends EditorHexDto {
+  @ApiProperty({ description: 'Id em `prop_types`.', example: 6 })
+  @IsInt(integer('prop_type_id'))
+  prop_type_id: number;
+
+  @ApiProperty({
+    description:
+      'O pé, em pixels da arte, a partir do centro plano do hexágono (q, r), ' +
+      'para a direita. Precisa cair no próprio hexágono.',
+    example: -7,
+  })
+  @IsInt(integer('dx'))
+  dx: number;
+
+  @ApiProperty({
+    description:
+      'O pé, em pixels da arte, para baixo. Precisa cair no próprio hexágono.',
+    example: 4,
+  })
+  @IsInt(integer('dy'))
+  dy: number;
+
+  @ApiProperty({
+    description: 'A variante da arte, de 1 a `prop_types.variants`.',
+    example: 1,
+  })
+  @IsInt(integer('variant'))
+  variant: number;
+
+  @ApiProperty({ description: 'Se a arte está espelhada.', example: false })
+  @IsBoolean({ message: 'mirrored precisa ser verdadeiro ou falso.' })
+  mirrored: boolean;
+}
+
 export class DraftAreaSpeciesDto {
   @ApiProperty({ example: 4 })
   @IsInt(integer('species_id'))
@@ -219,6 +253,17 @@ export class IslandDraftDto {
   @ValidateNested({ each: true })
   @Type(() => DraftObjectDto)
   objects: DraftObjectDto[];
+
+  @ApiPropertyOptional({
+    type: [DraftPropDto],
+    description:
+      'As peças soltas, só enfeite, até 6.000. Sem o campo, a ilha fica sem peças.',
+  })
+  @IsOptional()
+  @IsArray(list('props'))
+  @ValidateNested({ each: true })
+  @Type(() => DraftPropDto)
+  props?: DraftPropDto[];
 
   @ApiProperty({ type: [DraftAreaDto] })
   @IsArray(list('areas'))

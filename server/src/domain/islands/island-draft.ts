@@ -7,6 +7,7 @@ import {
   MAX_HEIGHT,
   maxVariant,
 } from '../exploration/map-generator.js';
+import { flatCenter, gridCoord } from './hex-pixels.js';
 
 export const MAX_ISLAND_TILES = 20_000;
 const MAX_NAME_LENGTH = 40;
@@ -15,6 +16,7 @@ const MAX_LEVEL = 100;
 const COLOR_HEX = /^#[0-9A-Fa-f]{6}$/;
 export const MIN_AREA_SPAWNS = 1;
 export const MAX_AREA_SPAWNS = 200;
+export const MAX_PROPS = 6_000;
 
 export interface DraftTile extends HexCoord {
   biome: Biome;
@@ -40,6 +42,15 @@ export interface DraftObject extends HexCoord {
   tiles: DraftObjectTile[];
 }
 
+/** Uma peça solta: o pé em `(dx, dy)` pixels do centro plano de `(q, r)`. */
+export interface DraftProp extends HexCoord {
+  propTypeId: number;
+  dx: number;
+  dy: number;
+  variant: number;
+  mirrored: boolean;
+}
+
 export interface DraftAreaSpecies {
   speciesId: number;
   weight: number;
@@ -61,6 +72,7 @@ export interface IslandDraft {
   tiles: DraftTile[];
   actions: DraftAction[];
   objects: DraftObject[];
+  props: DraftProp[];
   areas: DraftArea[];
 }
 
@@ -69,6 +81,8 @@ export interface KnownIds {
   objectTypeIds: ReadonlySet<number>;
   groundSlugs: ReadonlySet<string>;
   speciesIds: ReadonlySet<number>;
+  /** O máximo de variantes de cada tipo de peça solta. */
+  propVariants: ReadonlyMap<number, number>;
 }
 
 const at = ({ q, r }: HexCoord): string => `(${q}, ${r})`;
@@ -162,6 +176,41 @@ function objectsError(
   return null;
 }
 
+function propsError(
+  props: DraftProp[],
+  tiles: ReadonlySet<string>,
+  known: KnownIds,
+): string | null {
+  if (props.length > MAX_PROPS) return 'A ilha pode ter até 6.000 peças.';
+  for (const [index, prop] of props.entries()) {
+    const number = index + 1;
+    const variants = known.propVariants.get(prop.propTypeId);
+    if (variants === undefined) {
+      return `A peça ${number} tem um tipo que não existe.`;
+    }
+    if (
+      !Number.isInteger(prop.variant) ||
+      prop.variant < 1 ||
+      prop.variant > variants
+    ) {
+      return `A peça ${number} tem a variante ${prop.variant}: vai de 1 a ${variants}.`;
+    }
+    if (!tiles.has(hexKey(prop))) {
+      return `A peça ${number} fica em ${at(prop)}, que não é da ilha.`;
+    }
+    const center = flatCenter(prop);
+    const foot = gridCoord({ x: center.x + prop.dx, y: center.y + prop.dy });
+    if (
+      !Number.isInteger(prop.dx) ||
+      !Number.isInteger(prop.dy) ||
+      hexKey(foot) !== hexKey(prop)
+    ) {
+      return `A peça ${number} tem o pé fora do hexágono ${at(prop)}.`;
+    }
+  }
+  return null;
+}
+
 export function blockedKeys(
   draft: Pick<IslandDraft, 'objects'>,
 ): ReadonlySet<string> {
@@ -236,6 +285,8 @@ export function draftError(draft: IslandDraft, known: KnownIds): string | null {
   if (actions) return actions;
   const objects = objectsError(draft.objects, tiles, known);
   if (objects) return objects;
+  const props = propsError(draft.props, tiles, known);
+  if (props) return props;
 
   const keys = new Set<number>();
   for (const { key } of draft.areas) {
@@ -282,6 +333,7 @@ const byRowThenColumn = (a: HexCoord, b: HexCoord): number =>
  * O rascunho em JSON, sempre igual para o mesmo conteúdo: hexágonos em ordem de
  * (r, q), ações na ordem da lista (cada uma com os hexágonos em (r, q)),
  * objetos em ordem de (r, q) do apoio (cada um com os hexágonos em (r, q)),
+ * peças em ordem de (r, q, dy, dx, tipo, variante, espelho),
  * áreas na ordem da `key`, numeradas de novo de 1 em diante, e espécies em
  * ordem de id. É o que o `content_hash` resume.
  */
@@ -317,6 +369,25 @@ export function canonicalDraft(draft: IslandDraft): string {
         tiles: [...tiles]
           .sort(byRowThenColumn)
           .map(({ q: tq, r: tr, blocks }) => ({ q: tq, r: tr, blocks })),
+      })),
+    props: [...draft.props]
+      .sort(
+        (a, b) =>
+          byRowThenColumn(a, b) ||
+          a.dy - b.dy ||
+          a.dx - b.dx ||
+          a.propTypeId - b.propTypeId ||
+          a.variant - b.variant ||
+          Number(a.mirrored) - Number(b.mirrored),
+      )
+      .map(({ propTypeId, q, r, dx, dy, variant, mirrored }) => ({
+        propTypeId,
+        q,
+        r,
+        dx,
+        dy,
+        variant,
+        mirrored,
       })),
     areas: areas.map(({ key, name, colorHex, spawnCount, species }) => ({
       key: renumber.get(key),

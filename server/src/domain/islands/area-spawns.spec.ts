@@ -19,6 +19,7 @@ function island(): IslandDraft {
     ],
     actions: [{ actionTypeId: 1, tiles: [{ q: 2, r: 0 }] }],
     objects: [],
+    props: [],
     areas: [
       {
         key: 2,

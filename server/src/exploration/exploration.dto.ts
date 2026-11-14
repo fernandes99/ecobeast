@@ -13,7 +13,7 @@ import { ISLAND_NOT_FOUND } from '../islands/islands.service.js';
 export const INVALID_TAMER = 'Domador de depuração inválido.';
 import { BIOMES, MAX_HEIGHT } from '../domain/exploration/map-generator.js';
 import type { Biome } from '../domain/exploration/map-generator.js';
-import type { DraftObject } from '../domain/islands/island-draft.js';
+import type { DraftObject, DraftProp } from '../domain/islands/island-draft.js';
 
 export class HexCoordDto {
   @ApiProperty({ description: 'Coluna, em coordenadas axiais.', example: 0 })
@@ -117,6 +117,32 @@ export class MapObjectDto extends HexCoordDto {
   tiles: MapObjectTileDto[];
 }
 
+export class MapPropDto extends HexCoordDto {
+  @ApiProperty({ description: 'Id em `prop_types`.', example: 6 })
+  prop_type_id: number;
+
+  @ApiProperty({
+    description: 'O pé, em pixels da arte, a partir do centro plano de (q, r).',
+    example: -7,
+  })
+  dx: number;
+
+  @ApiProperty({
+    description: 'O pé, em pixels da arte, para baixo.',
+    example: 4,
+  })
+  dy: number;
+
+  @ApiProperty({
+    description: 'A variante da arte, de 1 em diante.',
+    example: 1,
+  })
+  variant: number;
+
+  @ApiProperty({ description: 'Se a arte está espelhada.', example: false })
+  mirrored: boolean;
+}
+
 export class ExplorationMapDto {
   @ApiProperty({ description: 'Reproduz o terreno.', example: 1234567 })
   seed: number;
@@ -162,6 +188,12 @@ export class ExplorationMapDto {
     description: 'Os objetos da ilha; vazio no mapa sorteado.',
   })
   objects: MapObjectDto[];
+
+  @ApiProperty({
+    type: [MapPropDto],
+    description: 'As peças soltas da ilha, só enfeite; vazio no mapa sorteado.',
+  })
+  props: MapPropDto[];
 }
 
 export class StartExplorationBodyDto {
@@ -295,5 +327,17 @@ export function toObjectDto(object: DraftObject): MapObjectDto {
     variant: object.variant,
     mirrored: object.mirrored,
     tiles: object.tiles.map(({ q, r, blocks }) => ({ q, r, blocks })),
+  };
+}
+
+export function toPropDto(prop: DraftProp): MapPropDto {
+  return {
+    prop_type_id: prop.propTypeId,
+    q: prop.q,
+    r: prop.r,
+    dx: prop.dx,
+    dy: prop.dy,
+    variant: prop.variant,
+    mirrored: prop.mirrored,
   };
 }

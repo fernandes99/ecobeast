@@ -5,9 +5,9 @@ import { CATALOG_TABLES, SEED_DATA_DIR } from './catalog-tables.js';
 describe('CATALOG_TABLES', () => {
   const names = CATALOG_TABLES.map((table) => table.name);
 
-  it('tem as 35 tabelas, sem repetição', () => {
-    expect(names).toHaveLength(35);
-    expect(new Set(names).size).toBe(35);
+  it('tem as 36 tabelas, sem repetição', () => {
+    expect(names).toHaveLength(36);
+    expect(new Set(names).size).toBe(36);
   });
 
   it('casa com os arquivos .json da pasta de dados do seed', () => {
@@ -281,8 +281,8 @@ describe('carga inicial do chão e dos objetos (island-villages/01)', () => {
     ]);
   });
 
-  it('tem os 34 objetos, cada um com o hexágono de apoio e pelo menos 1 variante', () => {
-    expect(objects).toHaveLength(34);
+  it('tem os 30 objetos, cada um com o hexágono de apoio e pelo menos 1 variante', () => {
+    expect(objects).toHaveLength(30);
     for (const { id, variants } of objects) {
       expect(variants).toBeGreaterThanOrEqual(1);
       expect(
@@ -310,5 +310,39 @@ describe('carga inicial do chão e dos objetos (island-villages/01)', () => {
       tiles.filter(({ object_type_id }) => object_type_id === plants.id),
     ).toEqual([{ object_type_id: plants.id, dq: 0, dr: 0, blocks: false }]);
     expect(objects.some(({ slug }) => slug === 'treehouse')).toBe(false);
+  });
+});
+
+describe('carga inicial das peças soltas (free-props/01)', () => {
+  const read = <T>(file: string): T =>
+    JSON.parse(readFileSync(join(SEED_DATA_DIR, file), 'utf8')) as T;
+  const props =
+    read<{ id: number; slug: string; variants: number }[]>('prop_types.json');
+  const objects = read<{ id: number }[]>('map_object_types.json');
+  const objectTiles = read<{ object_type_id: number }[]>(
+    'map_object_type_tiles.json',
+  );
+
+  it('tem os 21 tipos, de 1 a 21, com pelo menos 1 variante', () => {
+    expect(props.map(({ id }) => id)).toEqual(
+      Array.from({ length: 21 }, (_, index) => index + 1),
+    );
+    for (const { variants } of props)
+      expect(variants).toBeGreaterThanOrEqual(1);
+  });
+
+  it('as decorações de rua viraram peças e saíram dos objetos', () => {
+    const slugs = props.map(({ slug }) => slug);
+    expect(slugs.slice(-4)).toEqual([
+      'lamp_post',
+      'sign',
+      'flower_bed',
+      'bench',
+    ]);
+    const gone = [36, 37, 38, 39];
+    expect(objects.some(({ id }) => gone.includes(id))).toBe(false);
+    expect(
+      objectTiles.some(({ object_type_id }) => gone.includes(object_type_id)),
+    ).toBe(false);
   });
 });

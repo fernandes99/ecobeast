@@ -38,6 +38,15 @@ interface IslandMap {
     mirrored: boolean;
     tiles: { q: number; r: number; blocks: boolean }[];
   }[];
+  props: {
+    prop_type_id: number;
+    q: number;
+    r: number;
+    dx: number;
+    dy: number;
+    variant: number;
+    mirrored: boolean;
+  }[];
 }
 
 function hexagon(radius: number): Tile[] {
@@ -57,6 +66,7 @@ describe('Ilhas do jogador (e2e)', () => {
   let tokens: TestTokens;
   let refuge: number;
   let house: number;
+  let bench: number;
   let editorToken: string;
   const editor = randomUUID();
   const users: string[] = [];
@@ -84,6 +94,17 @@ describe('Ilhas do jogador (e2e)', () => {
           variant: 1,
           mirrored: false,
           tiles: [{ q: 1, r: 0, blocks: true }],
+        },
+      ],
+      props: [
+        {
+          prop_type_id: bench,
+          q: 0,
+          r: 1,
+          dx: 5,
+          dy: -2,
+          variant: 2,
+          mirrored: true,
         },
       ],
       areas: [
@@ -170,6 +191,9 @@ describe('Ilhas do jogador (e2e)', () => {
         where: { slug: 'house' },
       })
     ).id;
+    bench = (
+      await prisma.propType.findUniqueOrThrow({ where: { slug: 'bench' } })
+    ).id;
     published = await createIsland('Ilha publicada de teste', true);
     draftOnly = await createIsland('Ilha em rascunho de teste', false);
   });
@@ -241,6 +265,17 @@ describe('Ilhas do jogador (e2e)', () => {
           variant: 1,
           mirrored: false,
           tiles: [{ q: 1, r: 0, blocks: true }],
+        },
+      ]);
+      expect(map.props).toEqual([
+        {
+          prop_type_id: bench,
+          q: 0,
+          r: 1,
+          dx: 5,
+          dy: -2,
+          variant: 2,
+          mirrored: true,
         },
       ]);
       expect(map.tamers).toEqual([]);
@@ -332,6 +367,7 @@ describe('Ilhas do jogador (e2e)', () => {
       expect(map.island).toBeNull();
       expect(map.actions).toEqual([]);
       expect(map.objects).toEqual([]);
+      expect(map.props).toEqual([]);
       expect(map.tiles.some((tile) => tile.ground !== undefined)).toBe(false);
       expect(map.tiles.length).toBeGreaterThan(1000);
     });

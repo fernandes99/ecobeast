@@ -31,12 +31,23 @@ interface DraftObject {
   tiles: { q: number; r: number; blocks: boolean }[];
 }
 
+interface DraftProp {
+  prop_type_id: number;
+  q: number;
+  r: number;
+  dx: number;
+  dy: number;
+  variant: number;
+  mirrored: boolean;
+}
+
 interface Draft {
   name: string;
   start: { q: number; r: number };
   tiles: Tile[];
   actions: { action_type_id: number; tiles: { q: number; r: number }[] }[];
   objects: DraftObject[];
+  props?: DraftProp[];
   areas: {
     key: number;
     name: string;
@@ -416,6 +427,99 @@ describe('Editor de ilhas (e2e)', () => {
       const response = await call('get', `/islands/${id}`).expect(200);
       expect((response.body as Draft).tiles).toHaveLength(19_927);
     });
+  });
+
+  describe('peças soltas (free-props/01)', () => {
+    async function flowersId(): Promise<number> {
+      return (
+        await prisma.propType.findUniqueOrThrow({ where: { slug: 'flowers' } })
+      ).id;
+    }
+
+    it('salva, lê de volta e publica as peças', async () => {
+      const flowers = await flowersId();
+      const body = draft();
+      body.props = [
+        {
+          prop_type_id: flowers,
+          q: 1,
+          r: 0,
+          dx: -7,
+          dy: 4,
+          variant: 2,
+          mirrored: true,
+        },
+        {
+          prop_type_id: flowers,
+          q: 0,
+          r: 0,
+          dx: 10,
+          dy: -3,
+          variant: 1,
+          mirrored: false,
+        },
+      ];
+      const id = await create(body);
+      const read = await call('get', `/islands/${id}`).expect(200);
+      const byFoot = (a: DraftProp, b: DraftProp) => a.r - b.r || a.q - b.q;
+      expect([...(read.body as Draft).props!].sort(byFoot)).toEqual(
+        [...body.props].sort(byFoot),
+      );
+      await call('post', `/islands/${id}/publish`).expect(200);
+      const published = await call('get', `/islands/${id}`).expect(200);
+      expect((published.body as { status: string }).status).toBe('published');
+
+      body.props[0]!.variant = 3;
+      await call('put', `/islands/${id}/draft`).send(body).expect(200);
+      const changed = await call('get', `/islands/${id}`).expect(200);
+      expect((changed.body as { status: string }).status).toBe('changed');
+    });
+
+    it('sem o campo props, salva sem peças e devolve a lista vazia', async () => {
+      const id = await create();
+      const read = await call('get', `/islands/${id}`).expect(200);
+      expect((read.body as Draft).props).toEqual([]);
+    });
+
+    it.each([
+      [
+        'a variante 5',
+        { variant: 5 },
+        'A peça 1 tem a variante 5: vai de 1 a 4.',
+      ],
+      [
+        'o pé fora do hexágono',
+        { dy: -30 },
+        'A peça 1 tem o pé fora do hexágono (0, 0).',
+      ],
+      [
+        'um hexágono fora da ilha',
+        { q: 5 },
+        'A peça 1 fica em (5, 0), que não é da ilha.',
+      ],
+    ])(
+      'recusa salvar uma peça com %s (400)',
+      async (_label, change, message) => {
+        const id = await create();
+        const body = draft();
+        body.props = [
+          {
+            prop_type_id: await flowersId(),
+            q: 0,
+            r: 0,
+            dx: 0,
+            dy: 0,
+            variant: 1,
+            mirrored: false,
+            ...change,
+          },
+        ];
+        const response = await call('put', `/islands/${id}/draft`)
+          .send(body)
+          .expect(400);
+        expect(response.body.message).toBe(message);
+      },
+    );
   });
 
   describe('limite do corpo', () => {

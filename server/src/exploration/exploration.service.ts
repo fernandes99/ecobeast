@@ -36,6 +36,7 @@ import {
   MapCreatureDto,
   MapTamerDto,
   toObjectDto,
+  toPropDto,
 } from './exploration.dto.js';
 import { ExplorationStore } from './exploration.store.js';
 import {
@@ -106,6 +107,7 @@ export class ExplorationService {
         island: null,
         actions: [],
         objects: [],
+        props: [],
       },
     };
   }
@@ -147,6 +149,7 @@ export class ExplorationService {
           tiles,
         })),
         objects: draft.objects.map(toObjectDto),
+        props: draft.props.map(toPropDto),
       },
     };
   }

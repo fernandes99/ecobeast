@@ -1,0 +1,128 @@
+[
+	{
+		"id": 1,
+		"slug": "tree",
+		"name": "Árvore",
+		"variants": 4
+	},
+	{
+		"id": 2,
+		"slug": "pine",
+		"name": "Pinheiro",
+		"variants": 4
+	},
+	{
+		"id": 3,
+		"slug": "bush",
+		"name": "Arbusto",
+		"variants": 4
+	},
+	{
+		"id": 4,
+		"slug": "dark_bush",
+		"name": "Arbusto escuro",
+		"variants": 4
+	},
+	{
+		"id": 5,
+		"slug": "tuft",
+		"name": "Tufo de grama",
+		"variants": 4
+	},
+	{
+		"id": 6,
+		"slug": "flowers",
+		"name": "Flores",
+		"variants": 4
+	},
+	{
+		"id": 7,
+		"slug": "fern",
+		"name": "Samambaia",
+		"variants": 4
+	},
+	{
+		"id": 8,
+		"slug": "dry_shrub",
+		"name": "Arbusto seco",
+		"variants": 4
+	},
+	{
+		"id": 9,
+		"slug": "dry_tuft",
+		"name": "Tufo seco",
+		"variants": 4
+	},
+	{
+		"id": 10,
+		"slug": "moss",
+		"name": "Musgo",
+		"variants": 4
+	},
+	{
+		"id": 11,
+		"slug": "pebbles",
+		"name": "Pedrinhas",
+		"variants": 4
+	},
+	{
+		"id": 12,
+		"slug": "rock",
+		"name": "Pedra",
+		"variants": 4
+	},
+	{
+		"id": 13,
+		"slug": "mossy_rock",
+		"name": "Pedra com musgo",
+		"variants": 4
+	},
+	{
+		"id": 14,
+		"slug": "brown_rock",
+		"name": "Pedra marrom",
+		"variants": 4
+	},
+	{
+		"id": 15,
+		"slug": "boulder",
+		"name": "Rochedo",
+		"variants": 4
+	},
+	{
+		"id": 16,
+		"slug": "rock_pile",
+		"name": "Monte de pedras",
+		"variants": 4
+	},
+	{
+		"id": 17,
+		"slug": "spire",
+		"name": "Agulha de pedra",
+		"variants": 4
+	},
+	{
+		"id": 18,
+		"slug": "lamp_post",
+		"name": "Poste de luz",
+		"variants": 2
+	},
+	{
+		"id": 19,
+		"slug": "sign",
+		"name": "Placa",
+		"variants": 2
+	},
+	{
+		"id": 20,
+		"slug": "flower_bed",
+		"name": "Canteiro de flores",
+		"variants": 3
+	},
+	{
+		"id": 21,
+		"slug": "bench",
+		"name": "Banco",
+		"variants": 2
+	}
+]
