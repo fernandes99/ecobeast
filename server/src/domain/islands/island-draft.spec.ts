@@ -121,11 +121,17 @@ describe('draftError', () => {
     expect(draftError(draft, known)).toBeNull();
   });
 
-  it.each([-1, 5, 1.5])('recusa a altura %d', (height) => {
+  it('aceita a altura 10 (terrain-height/02)', () => {
+    const draft = island();
+    draft.tiles[0] = { q: 0, r: 0, biome: 'temperate', height: 10, variant: 1 };
+    expect(draftError(draft, known)).toBeNull();
+  });
+
+  it.each([-1, 11, 1.5])('recusa a altura %d', (height) => {
     const draft = island();
     draft.tiles[0] = { q: 0, r: 0, biome: 'temperate', height, variant: 1 };
     expect(draftError(draft, known)).toBe(
-      `O hexágono (0, 0) tem a altura ${height}: vai de 0 a 4.`,
+      `O hexágono (0, 0) tem a altura ${height}: vai de 0 a 10.`,
     );
   });
 

@@ -27,7 +27,9 @@ export type ShapedBiome = (typeof SHAPED_BIOMES)[number];
 export const TERRAIN_SHAPES = ['flat', 'hill', 'mont'] as const;
 export type TerrainShape = (typeof TERRAIN_SHAPES)[number];
 
-export const MAX_HEIGHT = 4;
+export const MAX_HEIGHT = 10;
+/** O nível da montanha do mapa sorteado, abaixo do máximo das ilhas (terrain-height/02). */
+export const MOUNTAIN_HEIGHT = 4;
 
 export interface MapTile extends HexCoord {
   biome: Biome;
@@ -81,7 +83,7 @@ export function terrainOf(
   biome: ShapedBiome,
   shape: TerrainShape,
 ): { biome: Biome; height: number } {
-  if (shape === 'mont') return { biome: 'mountain', height: MAX_HEIGHT };
+  if (shape === 'mont') return { biome: 'mountain', height: MOUNTAIN_HEIGHT };
   if (biome === 'stone')
     return { biome: shape === 'hill' ? 'hill' : 'stone', height: 3 };
   if (shape === 'hill') return { biome: 'hill', height: 2 };

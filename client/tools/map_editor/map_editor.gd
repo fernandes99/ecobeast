@@ -447,7 +447,7 @@ func _on_window_input(event: InputEvent) -> void:
 func _tool_key(key: InputEventKey) -> bool:
 	if _draft == null or key.ctrl_pressed:
 		return false
-	if key.shift_pressed and key.keycode >= KEY_0 and key.keycode <= KEY_0 + HexTile.MAX_HEIGHT:
+	if key.shift_pressed and key.keycode >= KEY_0 and key.keycode <= mini(KEY_9, KEY_0 + HexTile.MAX_HEIGHT):
 		return _tools.pick_height_key(key.keycode - KEY_0)
 	if _tools.tool == EditorTools.Tool.AREA and key.keycode == KEY_F:
 		_tools.area_panel.toggle_focus()

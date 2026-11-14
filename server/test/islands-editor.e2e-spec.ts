@@ -271,7 +271,7 @@ describe('Editor de ilhas (e2e)', () => {
         (d: Draft) => (d.tiles[0]!.biome = 'lava'),
         'biome',
       ],
-      ['altura acima de 4', (d: Draft) => (d.tiles[0]!.height = 5), 'height'],
+      ['altura acima de 10', (d: Draft) => (d.tiles[0]!.height = 11), 'height'],
       [
         'hexágono sem altura',
         (d: Draft) => delete (d.tiles[0] as { height?: number }).height,

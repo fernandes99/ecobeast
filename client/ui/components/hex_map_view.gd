@@ -10,8 +10,9 @@ extends Node2D
 const STEP_X := 64
 const STEP_Y := 42
 const ROW_SHIFT := 32
-## Altura de cada HexTile.height, em pixels da arte: múltiplos de 8.
-const LEVEL_HEIGHTS: Array[float] = [0.0, 8.0, 16.0, 24.0, 32.0]
+## Altura de cada HexTile.height, em pixels da arte: múltiplos de 8, de 0 a 80
+## (terrain-height/02).
+const LEVEL_HEIGHTS: Array[float] = [0.0, 8.0, 16.0, 24.0, 32.0, 40.0, 48.0, 56.0, 64.0, 72.0, 80.0]
 const SIDE_HEIGHT := 26.0
 const TILE_SIZE := Vector2(64.0, 84.0)
 const SURFACE_CENTER := Vector2(32.0, 29.0)
@@ -28,7 +29,7 @@ const LOWER_EDGE_CORNERS: Array[Vector2i] = [Vector2i(4, 3), Vector2i(3, 2)]
 const FACE_COLORS: Array[Color] = [Color.WHITE, Color(0.76, 0.76, 0.76)]
 ## Quantas linhas além da borda da tela já ficam montadas: com a altura e as
 ## árvores, uma linha aparece bem antes de a posição dela chegar à tela.
-const ROW_MARGIN := 3
+const ROW_MARGIN := 4
 const ART_SCALE := 2.0
 const SURFACE_PATH := "res://assets/terrain/surfaces/%s.png"
 const CLIFF_BIOMES: Array[String] = ["stone", "mountain"]
@@ -492,6 +493,9 @@ func _add_surface(row: HexRowView, texture_name: String, tiles: Array) -> void:
 
 
 func _add_faces(row: HexRowView, texture_name: String, tiles: Array) -> void:
+	var path := SURFACE_PATH % texture_name
+	var texture := _texture(path)
+	var texture_height := texture.get_height() if texture != null else int(TILE_SIZE.y)
 	var points := PackedVector2Array()
 	var texture_points := PackedVector2Array()
 	var colors := PackedColorArray()
@@ -504,12 +508,28 @@ func _add_faces(row: HexRowView, texture_name: String, tiles: Array) -> void:
 				continue
 			var from := origin + HEX_CORNERS[LOWER_EDGE_CORNERS[edge].x]
 			var to := origin + HEX_CORNERS[LOWER_EDGE_CORNERS[edge].y]
-			var down := Vector2(0.0, height)
-			points.append_array(_quad(from, to, down))
-			texture_points.append_array(_quad(Vector2(from.x, 0.0), Vector2(to.x, 0.0), down))
-			for _vertex: int in 6:
-				colors.append(FACE_COLORS[edge])
-	_add_mesh(row, SURFACE_PATH % texture_name, points, texture_points, colors)
+			for segment: Vector3 in face_segments(height, texture_height):
+				var top := Vector2(0.0, segment.x)
+				var down := Vector2(0.0, segment.y - segment.x)
+				points.append_array(_quad(from + top, to + top, down))
+				texture_points.append_array(_quad(Vector2(from.x, segment.z), Vector2(to.x, segment.z), down))
+				for _vertex: int in 6:
+					colors.append(FACE_COLORS[edge])
+	_add_mesh(row, path, points, texture_points, colors)
+
+
+## Os pedaços de um paredão, de cima para baixo: (início, fim, linha da textura).
+## A textura inteira vai em cima, e o resto repete só a metade de baixo dela, para a
+## borda clara de cima não aparecer de novo no meio de um paredão alto (terrain-height/02).
+static func face_segments(height: float, texture_height: int) -> Array[Vector3]:
+	var segments: Array[Vector3] = [Vector3(0.0, minf(height, texture_height), 0.0)]
+	var band := texture_height / 2.0
+	var y := float(texture_height)
+	while y < height:
+		var end := minf(y + band, height)
+		segments.append(Vector3(y, end, texture_height - band))
+		y = end
+	return segments
 
 
 func _add_drips(row: HexRowView, tiles: Array) -> void:

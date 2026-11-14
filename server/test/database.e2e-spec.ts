@@ -393,7 +393,7 @@ describe('restrições do banco (e2e)', () => {
       expectRejected(result, 'island_maps_kind_check');
     });
 
-    it('recusa variante 7 e altura 5, e aceita variante 6 na altura 4', async () => {
+    it('recusa variante 7 e altura 11, e aceita variante 6 na altura 10', async () => {
       const biome = await prisma.biome.findFirstOrThrow();
       const tile = (height: number, variant: number) =>
         attempt(prisma, async (tx) => {
@@ -410,9 +410,9 @@ describe('restrições do banco (e2e)', () => {
           });
         });
       expectRejected(await tile(1, 7), 'island_tiles_variant_check');
-      expectRejected(await tile(5, 1), 'island_tiles_height_check');
+      expectRejected(await tile(11, 1), 'island_tiles_height_check');
       expectRejected(await tile(-1, 1), 'island_tiles_height_check');
-      expect(await tile(4, 6)).toBe('accepted');
+      expect(await tile(10, 6)).toBe('accepted');
     });
 
     it('recusa espécie de área com mínimo acima do máximo', async () => {

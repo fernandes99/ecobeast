@@ -26,6 +26,7 @@ const BIOME_SWATCH_HEIGHT := 1
 const TOOL_BUTTON_SIZE := Vector2(58.0, 58.0)
 const TOOL_ICON_WIDTH := 26
 const HEIGHT_BUTTON_SIZE := Vector2(52.0, 44.0)
+const HEIGHT_COLUMNS := 6
 const KEEP_HEIGHT := -1
 const MAX_RADIUS := 10
 const SWATCH_WIDTH := 64.0
@@ -124,11 +125,9 @@ func _init() -> void:
 		biomes_grid.add_child(swatch)
 		_biome_buttons[slug] = swatch
 
-	var biome_height_box := _section("Também pôr altura  ·  Shift+0 a 4")
+	var biome_height_box := _section("Também pôr altura  ·  Shift+0 a 9")
 	_biome_height_section = biome_height_box.get_parent()
-	var keep_row := HBoxContainer.new()
-	keep_row.add_theme_constant_override(&"separation", 4)
-	biome_height_box.add_child(keep_row)
+	var keep_grid := _height_grid()
 	var biome_height_group := ButtonGroup.new()
 	for value: int in range(KEEP_HEIGHT, HexTile.MAX_HEIGHT + 1):
 		var button := _height_button("Manter" if value == KEEP_HEIGHT else str(value), biome_height_group)
@@ -136,14 +135,16 @@ func _init() -> void:
 			button.custom_minimum_size.x = 0.0
 			button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			button.tooltip_text = "Pintar o bioma sem mudar a altura."
+			biome_height_box.add_child(button)
+			biome_height_box.add_child(keep_grid)
+		else:
+			keep_grid.add_child(button)
 		button.pressed.connect(_pick_biome_height.bind(value))
-		keep_row.add_child(button)
 		_biome_height_buttons.append(button)
 
-	var heights_box := _section("Altura  ·  Shift+0 a 4")
+	var heights_box := _section("Altura  ·  Shift+0 a 9")
 	_height_section = heights_box.get_parent()
-	var heights_row := HBoxContainer.new()
-	heights_row.add_theme_constant_override(&"separation", 4)
+	var heights_row := _height_grid()
 	heights_box.add_child(heights_row)
 	var height_group := ButtonGroup.new()
 	for value: int in HexTile.MAX_HEIGHT + 1:
@@ -493,7 +494,7 @@ func _pick_biome_height(value: int) -> void:
 	_refresh()
 
 
-## Shift+0 a 4: a altura da ferramenta escolhida, no Bioma a que ele também põe.
+## Shift+0 a 9: a altura da ferramenta escolhida, no Bioma a que ele também põe.
 func pick_height_key(value: int) -> bool:
 	if tool == Tool.BIOME:
 		_pick_biome_height(value)
@@ -580,6 +581,14 @@ func _swatch(group: ButtonGroup) -> TerrainSwatch:
 	swatch.button_group = group
 	swatch.custom_minimum_size.x = SWATCH_WIDTH
 	return swatch
+
+
+func _height_grid() -> GridContainer:
+	var grid := GridContainer.new()
+	grid.columns = HEIGHT_COLUMNS
+	grid.add_theme_constant_override(&"h_separation", 4)
+	grid.add_theme_constant_override(&"v_separation", 4)
+	return grid
 
 
 func _height_button(text: String, group: ButtonGroup) -> Button:

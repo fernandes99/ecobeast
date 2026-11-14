@@ -821,7 +821,7 @@ model IslandTile {
   r            Int
   /// Um dos 7 biomas; a variante de 1 a 3 em hill e mountain é conferida pela rota.
   biomeId      Int  @map("biome_id")
-  /// CHECK 0–4 (migration terrain_height)
+  /// CHECK 0–10 (migration terrain_height_ten)
   height       Int
   /// CHECK 1–6 (migration terrain_height)
   variant      Int

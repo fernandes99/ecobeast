@@ -39,7 +39,7 @@ Do dono, em 2026-11-11:
 | Colina e Montanha deixam de ser forma e passam a ser biomas, na lista de Biomas do editor | Pedido do dono: no mapa, a separação é de bioma e de altura, e não de bioma e de forma |
 | A forma some. No lugar dela entra a altura, que se pinta em qualquer bioma | Pedido do dono: subir uma Planície ou uma Boreal, e fazer uma Montanha baixa |
 | A altura é só visual. O Domador anda por qualquer nível, e a luta e os encontros não mudam | Pedido do dono: regras de altura serão planejadas depois |
-| Continuam 5 níveis, de 0 a 4, de 8 em 8 px | Pedido do dono |
+| Continuam 5 níveis, de 0 a 4, de 8 em 8 px. Na [02](02-eleven-heights.md), passaram a 11, de 0 a 10, com o mesmo degrau | Pedido do dono |
 | A água pode ficar em qualquer nível | Pedido do dono: lago no alto de um planalto |
 | A ferramenta Altura pinta um nível fixo, escolhido no painel, como a Forma faz hoje | Pedido do dono |
 
@@ -60,7 +60,7 @@ Escolhas do planejamento (corrigíveis; ao mudar uma, atualize aqui e na [01](01
 ## Fora do escopo
 
 - Qualquer regra de altura: bloquear subida, custo de andar, vantagem na luta, encontro por altura.
-- Mais de 5 níveis, rampas e cachoeiras (a água alta ao lado de uma mais baixa mostra o paredão comum).
+- Rampas e cachoeiras (mais níveis vieram na [02](02-eleven-heights.md)) (a água alta ao lado de uma mais baixa mostra o paredão comum).
 - Mudar o gerador: a quantidade e o formato das montanhas continuam como estão.
 - Arte nova: as texturas `hill.png` e `mont.png` passam a ser as dos biomas Colina e Montanha.
 - Mostrar a altura na visão de cima do editor.
@@ -75,5 +75,6 @@ Escolhas do planejamento (corrigíveis; ao mudar uma, atualize aqui e na [01](01
 | # | Fase | Entrega | Status |
 | --- | --- | --- | --- |
 | 1 | [01-terrain-height](01-terrain-height.md) | Servidor, jogo e editor: a altura em cada hexágono, Colina e Montanha como biomas e a ferramenta Altura | concluída |
+| 2 | [02-eleven-heights](02-eleven-heights.md) | A altura de 0 a 10, de 8 em 8 px, com o paredão alto sem a borda repetida e o editor com os 11 botões | concluída (falta o dono ver no editor) |
 
 É uma fase só porque o formato do hexágono muda no servidor e no jogo ao mesmo tempo: sem uma das metades, o jogo não abre o mapa.

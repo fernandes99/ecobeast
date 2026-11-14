@@ -48,9 +48,9 @@ O desenho foi combinado com o dono a partir de rascunhos da tela.
 **Bioma e Altura**
 
 - **RF-08:** O Bioma mostra os biomas e uma linha "Também pôr altura" com Manter, 0, 1, 2, 3 e 4. Com Manter (o padrão), pintar muda só o bioma; com um número, muda o bioma e a altura. Escolher um número não troca de ferramenta.
-- **RF-09:** A Altura mostra só os números de 0 a 4, sem os biomas, e pintar muda só a altura.
+- **RF-09:** A Altura mostra só os números de 0 a 4 (de 0 a 10 desde a [terrain-height/02](../terrain-height/02-eleven-heights.md)), sem os biomas, e pintar muda só a altura.
 - **RF-10:** Pôr hexágono continua mostrando os biomas e as alturas, porque o hexágono novo precisa dos dois.
-- **RF-11:** Com o Bioma ou a Altura escolhidos, as teclas Shift+0 a Shift+4 escolhem a altura.
+- **RF-11:** Com o Bioma ou a Altura escolhidos, as teclas Shift+0 a Shift+4 escolhem a altura (Shift+0 a Shift+9 desde a [terrain-height/02](../terrain-height/02-eleven-heights.md)).
 
 **Objeto**
 

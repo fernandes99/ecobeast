@@ -2,7 +2,7 @@ class_name HexTile
 extends RefCounted
 
 const WATER_BIOMES: Array[String] = ["wshallow", "wdeep"]
-const MAX_HEIGHT := 4
+const MAX_HEIGHT := 10
 
 var coord: Vector2i
 var biome: String
