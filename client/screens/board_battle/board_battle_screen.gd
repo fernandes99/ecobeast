@@ -35,6 +35,9 @@ const REFERENCE_BOARD_WIDTH := 624.0
 const EVENT_DELAY := 0.35
 const CHARS_PER_SECOND := 60.0
 const EMERGENCY_RANGE := 1
+const MIN_STAGE := -6
+const MAX_STAGE := 6
+const DEBUG_MARGIN := 16.0
 
 var _coord := Vector2i.ZERO
 var _test_slots := 0
@@ -69,6 +72,10 @@ var _hp: Dictionary[String, int] = {}
 var _enemy_focus: String = ""
 var _player_focus: String = ""
 var _marks: Dictionary[Vector2i, int] = {}
+var _stages: Dictionary[String, Dictionary] = {}
+var _debug: BattleEffectsDebug = null
+var _debug_cell: Variant = null
+var _debug_key := ""
 
 var _actor := -1
 var _origin := Vector2i.ZERO
@@ -151,6 +158,13 @@ func _ready() -> void:
 	_next_panel.chosen.connect(_on_creature_chosen)
 	_set_busy(true)
 	_begin()
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	var key := event as InputEventKey
+	if key != null and key.pressed and not key.echo and key.keycode == KEY_F3 and OS.has_feature("editor"):
+		get_viewport().set_input_as_handled()
+		_toggle_debug()
 
 
 func handle_back() -> bool:
@@ -352,8 +366,11 @@ func _play_event(event: Dictionary) -> void:
 			# A proteção e a cura em si mesmo não geram evento com efeito (board-battle/18).
 			if _targets_self():
 				await _play_skill_effect(key)
+			if _protects() and _statuses.protect(key):
+				_show_statuses([key])
 		"fainted":
 			_board.fade(key)
+			_set_stages(key, {})
 		"creature_left":
 			var defeated: bool = side == "enemy" and _hp.get(key, 1) <= 0
 			await _board.vanish(key, defeated)
@@ -373,6 +390,8 @@ func _play_event(event: Dictionary) -> void:
 				await _play_skill_effect(key)
 			_board.float_sign(key, BattleSign.from_event(event))
 			_show_statuses(_statuses.apply(event, key))
+			if type == "stat_changed":
+				_set_stage(key, DictFields.get_string(event, "stat"), DictFields.get_int(event, "value"))
 	if type != "status_applied":
 		_show_statuses(_statuses.apply(event, key))
 	if type in HP_EVENTS and _board.has_token(key):
@@ -437,6 +456,16 @@ func _projectile_texture() -> Texture2D:
 	return load(path) as Texture2D if ResourceLoader.exists(path) else null
 
 
+func _protects() -> bool:
+	var skill := GameData.get_skill(_attack_skill_id) if _attack_skill_id >= 0 else null
+	if skill == null:
+		return false
+	for effect: SkillEffect in skill.effects:
+		if effect.effect_slug == "protect":
+			return true
+	return false
+
+
 func _targets_self() -> bool:
 	var skill := GameData.get_skill(_attack_skill_id) if _attack_skill_id >= 0 else null
 	return skill != null and GameData.get_row("skill_targets", skill.skill_target_id).get("slug", "") == "self"
@@ -498,6 +527,7 @@ func _enter(key: String, side: String, event: Dictionary) -> void:
 	_team_index[key] = team_index
 	var cell := BoardBattleView.cell_of(DictFields.get_dict(event, "cell"))
 	_board.place(key, side, species_id, _hp[key], _max_hp[key], cell)
+	_set_stages(key, {})
 	_refresh_cards()
 
 
@@ -538,6 +568,7 @@ func _sync_board() -> void:
 			_board.remove(key)
 			_names.erase(key)
 			_statuses.erase(key)
+			_stages.erase(key)
 	_marks.clear()
 	for mark: GroundMark in _view.marks:
 		_marks[mark.cell] = mark.ground_effect_id
@@ -565,6 +596,11 @@ func _sync_token(key: String, side: String, creature: BattleCreature, cell: Vect
 	_board.set_hp(key, creature.hp, creature.max_hp)
 	_statuses.sync(key, creature.status, creature.confused)
 	_board.set_statuses(key, _statuses.of(key))
+	var stages: Dictionary = {}
+	for stat: String in creature.stages:
+		if creature.stages[stat] != 0:
+			stages[stat] = creature.stages[stat]
+	_set_stages(key, stages)
 
 
 func _focus(side: String, key: String) -> void:
@@ -601,16 +637,111 @@ func _show_card(card: BoardCreatureCard, key: String) -> void:
 
 func _refresh_marks() -> void:
 	var colors: Dictionary[Vector2i, Color] = {}
+	var kinds: Dictionary[Vector2i, String] = {}
 	for cell: Vector2i in _marks:
-		var color := GameData.get_ground_effect(_marks[cell]).color
+		var ground_effect := GameData.get_ground_effect(_marks[cell])
+		var color := ground_effect.color
 		color.a = 0.55
 		colors[cell] = color
-	_board.set_marks(colors)
+		kinds[cell] = ground_effect.slug
+	_board.set_marks(colors, kinds)
+	_refresh_debug()
+
+
+func _set_stage(key: String, stat: String, value: int) -> void:
+	var stages: Dictionary = _stages.get(key, {}).duplicate()
+	if value == 0:
+		stages.erase(stat)
+	else:
+		stages[stat] = value
+	_set_stages(key, stages)
+
+
+func _set_stages(key: String, stages: Dictionary) -> void:
+	_stages[key] = stages
+	_board.set_stages(key, stages)
+	_refresh_debug()
 
 
 func _show_statuses(keys: Array[String]) -> void:
 	for changed: String in keys:
 		_board.set_statuses(changed, _statuses.of(changed))
+	_refresh_debug()
+
+
+func _toggle_debug() -> void:
+	if _debug == null:
+		_debug = BattleEffectsDebug.new()
+		_debug.anchor_left = 0.0
+		_debug.anchor_right = 1.0
+		_debug.anchor_top = 1.0
+		_debug.anchor_bottom = 1.0
+		_debug.offset_left = DEBUG_MARGIN
+		_debug.offset_right = -DEBUG_MARGIN
+		_debug.offset_bottom = -DEBUG_MARGIN
+		_debug.grow_vertical = Control.GROW_DIRECTION_BEGIN
+		_debug.status_toggled.connect(_on_debug_status)
+		_debug.stage_changed.connect(_on_debug_stage)
+		_debug.mark_toggled.connect(_on_debug_mark)
+		_debug.cleared.connect(_on_debug_cleared)
+		add_child(_debug)
+		_debug.hide()
+	_debug.visible = not _debug.visible
+	if _debug.visible and _debug_cell != null:
+		_board.light([_debug_cell], UiPalette.BOARD_TARGET)
+	elif not _debug.visible and _view != null and _view.phase == "choose_action" and not _busy:
+		_light_reach()
+	elif not _debug.visible:
+		_board.light([], Color.TRANSPARENT)
+	_refresh_debug()
+
+
+func _pick_debug(cell: Vector2i) -> void:
+	_debug_cell = cell
+	_debug_key = ""
+	for key: String in _names:
+		if _board.has_token(key) and _board.token_cell(key) == cell:
+			_debug_key = key
+	_debug.select(cell, _debug_key, _names.get(_debug_key, ""))
+	_board.light([cell], UiPalette.BOARD_TARGET)
+	_refresh_debug()
+
+
+func _refresh_debug() -> void:
+	if _debug == null or not _debug.visible:
+		return
+	if not _debug_key.is_empty() and not _board.has_token(_debug_key):
+		_debug_key = ""
+		_debug.select(_debug_cell, "", "")
+	var mark_id: int = _marks.get(_debug_cell, -1) if _debug_cell != null else -1
+	_debug.show_state(_statuses.of(_debug_key), _stages.get(_debug_key, {}), mark_id)
+
+
+# A depuração é só visual (board-battle/23): o servidor não sabe dela.
+func _on_debug_status(key: String, slug: String) -> void:
+	_statuses.toggle(key, slug)
+	_show_statuses([key])
+
+
+func _on_debug_stage(key: String, stat: String, delta: int) -> void:
+	var level: int = _stages.get(key, {}).get(stat, 0)
+	_set_stage(key, stat, clampi(level + delta, MIN_STAGE, MAX_STAGE))
+
+
+func _on_debug_mark(cell: Vector2i, ground_effect_id: int) -> void:
+	if _marks.get(cell, -1) == ground_effect_id:
+		_marks.erase(cell)
+	else:
+		_marks[cell] = ground_effect_id
+	_refresh_marks()
+
+
+func _on_debug_cleared() -> void:
+	_show_statuses(_statuses.clear_all())
+	for key: String in _stages.keys():
+		_set_stages(key, {})
+	_marks.clear()
+	_refresh_marks()
 
 
 func _cure_team(team_index: int) -> void:
@@ -677,6 +808,9 @@ func _light_reach() -> void:
 
 
 func _on_cell_tapped(cell: Vector2i) -> void:
+	if _debug != null and _debug.visible:
+		_pick_debug(cell)
+		return
 	if _busy or _walking or _view == null:
 		return
 	if _view.phase == "choose_next":

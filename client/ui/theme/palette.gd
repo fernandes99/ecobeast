@@ -97,7 +97,13 @@ const STATUS_COLORS: Dictionary[String, Color] = {
 	"confusion": Color("#F28AD0"),
 	"fear": Color("#8C7AE6"),
 	"trapped": Color("#C9A66B"),
+	"protect": Color("#5AA9FF"),
 }
+## Os efeitos que duram no corpo e no chão (board-battle/23).
+const AURA_FLAME_CORE := Color("#FFE27A")
+const AURA_STAR := Color("#FFE27A")
+const AURA_SWEAT := Color("#BFE9FF")
+const AURA_SHINE := Color("#FFFFFF")
 
 ## Modulate de um painel tocável enquanto o dedo está nele: clareia, porque
 ## escurecer não aparece no fundo escuro.

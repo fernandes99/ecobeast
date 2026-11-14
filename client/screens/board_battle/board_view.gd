@@ -44,6 +44,7 @@ const HOP_HEIGHT := 12.0
 const BAR_HEIGHT := 8
 const STATUS_GAP := 3.0
 const BAR_WIDTH := HEX_WIDTH * 0.7
+const CHIPS_GAP := 8.0
 const NUMBER_FONT_SIZE := 34
 const NUMBER_RISE := 50.0
 ## O dono achou 1,2 s rápido demais: agora são 2 s, e o número só começa a sumir
@@ -121,6 +122,9 @@ class Token:
 	var sprite := Sprite2D.new()
 	var bar: HpBar = null
 	var statuses: StatusIcons = null
+	var aura: CreatureAura = null
+	var chips: StageChips = null
+	var speed := 1.0
 	var breath: Tween = null
 	var sheets: BattleSheets = null
 	var facing := BoardView.NO_FACING
@@ -142,10 +146,15 @@ class Token:
 	func _process(delta: float) -> void:
 		if sheets == null or _sheet == "":
 			return
-		_elapsed += delta
+		_elapsed += delta * speed
 		var count := sheets.frame_count(_sheet, _row)
 		var frame := int(_elapsed / BattleSheets.FRAME_SECONDS[_sheet]) % count
 		sprite.frame_coords = Vector2i(frame, _row)
+
+	func set_speed(value: float) -> void:
+		speed = value
+		if breath != null:
+			breath.set_speed_scale(value)
 
 	func _draw() -> void:
 		draw_set_transform(Vector2(0, BoardView.FEET_Y), 0.0, Vector2(1.0, BoardView.SHADOW_FLATTEN))
@@ -159,6 +168,7 @@ var _biome := DEFAULT_BIOME
 var _height := DEFAULT_HEIGHT
 var _outside: Array[Vector2i] = []
 var _overlay := Node2D.new()
+var _flames := GroundFlames.new()
 var _marks: Dictionary[Vector2i, Color] = {}
 var _lit: Dictionary[Vector2i, Color] = {}
 var _tokens: Dictionary[String, Token] = {}
@@ -167,13 +177,15 @@ var _origin := Vector2.ZERO
 var _board_size := Vector2.ZERO
 
 
-# Os dois nascem antes de qualquer Ecobeast: quem é filho antes é desenhado antes.
+# Os três nascem antes de qualquer Ecobeast: quem é filho antes é desenhado antes.
 func _init() -> void:
 	_ground.fixed_scale = GROUND_SCALE
 	_ground.allows_decoration = _allows_decoration
 	add_child(_ground)
 	_overlay.draw.connect(_draw_overlay)
 	add_child(_overlay)
+	_flames.board = self
+	add_child(_flames)
 
 
 func _ready() -> void:
@@ -239,8 +251,9 @@ func board_size() -> Vector2:
 	return _board_size
 
 
-func set_marks(marks: Dictionary[Vector2i, Color]) -> void:
+func set_marks(marks: Dictionary[Vector2i, Color], kinds: Dictionary[Vector2i, String] = {}) -> void:
 	_marks = marks
+	_flames.kinds = kinds
 	_redraw()
 
 
@@ -292,6 +305,8 @@ func place(key: String, side: String, species_id: int, hp: int, max_hp: int, cel
 	token.body.position = Vector2(0, FEET_Y)
 	token.body.add_child(token.sprite)
 	token.add_child(token.body)
+	token.aura = CreatureAura.new()
+	token.aura.attach(token)
 	_rest(token)
 
 	token.bar = HpBarScene.instantiate()
@@ -301,6 +316,11 @@ func place(key: String, side: String, species_id: int, hp: int, max_hp: int, cel
 	token.bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	token.bar.set_hp(hp, max_hp)
 	token.add_child(token.bar)
+	token.chips = StageChips.new()
+	token.chips.position = Vector2(0.0, FEET_Y + CHIPS_GAP)
+	# Por cima dos Ecobeasts da linha de baixo, que nascem depois e cobririam as plaquinhas.
+	token.chips.z_index = 1
+	token.add_child(token.chips)
 
 	_tokens[key] = token
 	add_child(token)
@@ -487,6 +507,12 @@ func set_statuses(key: String, slugs: Array[String]) -> void:
 		token.bar.position.y - StatusIcons.RADIUS - StatusIcons.OUTLINE - STATUS_GAP,
 	)
 	token.statuses.slugs = slugs.duplicate()
+	token.aura.effects = slugs.duplicate()
+
+
+func set_stages(key: String, stages: Dictionary) -> void:
+	if _tokens.has(key):
+		_tokens[key].chips.stages = stages.duplicate()
 
 
 func token_position(key: String) -> Variant:

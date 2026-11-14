@@ -52,6 +52,11 @@ func _icon(slug: String, at: Vector2) -> void:
 		"trapped":
 			draw_arc(at + Vector2(0.0, -1.5), 3.2, PI, TAU, 10, dark, LINE)
 			draw_rect(Rect2(at + Vector2(-5.0, -1.5), Vector2(10.0, 8.0)), dark)
+		"protect":
+			draw_colored_polygon(_moved(PackedVector2Array([
+				Vector2(0.0, -7.5), Vector2(6.0, -5.0), Vector2(5.0, 2.0),
+				Vector2(0.0, 7.5), Vector2(-5.0, 2.0), Vector2(-6.0, -5.0),
+			]), at), dark)
 
 
 func _flame() -> PackedVector2Array:

@@ -77,6 +77,7 @@ A luta nova substitui a de hoje em Explorar zona. A luta atual deixa de ser usad
 | 20 | [20-instinct-wind-skills](20-instinct-wind-skills.md) | Ícone, efeito e som do Uivo, da Patada, do Olhar Manhoso, da Lufada Cortante, da Dança do Vento e do Ciclone, com a linha do Vento tingida de verde-água | concluída (falta o dono ver e ouvir no editor) |
 | 21 | [21-metal-shadow-ice-skills](21-metal-shadow-ice-skills.md) | Ícone, efeito e som da Lâmina Sombria, da Pinça de Aço, da Garra de Picareta, do Beliscão, da Couraça e da Geada Silenciosa | concluída (falta o dono ver e ouvir no editor) |
 | 22 | [22-earth-ice-mind-skills](22-earth-ice-mind-skills.md) | Ícone, efeito e som da Nuvem de Poeira, do Floco Cortante, do Arremesso de Torrão, do Manto de Neve, do Eco Mental e da Garra de Pedra, com a Terra na linha cinza tingida de marrom | concluída (falta o dono ver e ouvir no editor) |
+| 23 | [23-battle-effect-states](23-battle-effect-states.md) | Os efeitos que duram: um efeito no corpo para cada estado e para o Protegido, o escudo, as plaquinhas dos atributos, as chamas do Chão em chamas e o painel de depuração F3 | concluída (falta o dono ver no editor) |
 
 O desenho compartilhado está no [architecture.md](architecture.md).
 

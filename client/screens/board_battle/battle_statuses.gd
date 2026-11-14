@@ -1,9 +1,9 @@
 class_name BattleStatuses
 extends RefCounted
 
-const ORDER: Array[String] = ["burn", "poison", "paralysis", "sleep", "freeze", "confusion", "fear", "trapped"]
+const ORDER: Array[String] = ["burn", "poison", "paralysis", "sleep", "freeze", "confusion", "fear", "trapped", "protect"]
 const MAIN: Array[String] = ["burn", "poison", "paralysis", "sleep", "freeze"]
-const VOLATILE: Array[String] = ["confusion", "fear", "trapped"]
+const VOLATILE: Array[String] = ["confusion", "fear", "trapped", "protect"]
 
 var _by_key: Dictionary[String, Array] = {}
 var _actor := ""
@@ -49,6 +49,8 @@ func apply(event: Dictionary, key: String) -> Array[String]:
 			# O servidor tira o medo no fim da vez de quem tinha.
 			if not _actor.is_empty() and _actor != key and _remove(_actor, "fear"):
 				changed.append(_actor)
+			if _remove(key, "protect"):
+				changed.append(key)
 			_actor = key
 		"fainted":
 			if not of(key).is_empty():
@@ -63,6 +65,27 @@ func apply(event: Dictionary, key: String) -> Array[String]:
 				for slug: String in VOLATILE:
 					if _remove(other, slug) and not changed.has(other):
 						changed.append(other)
+	return changed
+
+
+func protect(key: String) -> bool:
+	return _add(key, "protect")
+
+
+## A depuração da luta (board-battle/23): liga ou desliga o efeito.
+func toggle(key: String, slug: String) -> bool:
+	if _remove(key, slug):
+		return false
+	_add(key, slug)
+	return true
+
+
+func clear_all() -> Array[String]:
+	var changed: Array[String] = []
+	for key: String in _by_key:
+		if not _by_key[key].is_empty():
+			changed.append(key)
+		_by_key[key] = []
 	return changed
 
 
