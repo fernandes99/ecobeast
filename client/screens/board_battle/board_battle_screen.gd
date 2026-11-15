@@ -38,6 +38,11 @@ const EMERGENCY_RANGE := 1
 const MIN_STAGE := -6
 const MAX_STAGE := 6
 const DEBUG_MARGIN := 16.0
+## O zoom multiplica o ajuste do tabuleiro inteiro (camera-zoom/02).
+const MAX_ZOOM := 2.5
+const WHEEL_ZOOM_STEP := 1.25
+## Até quanto o dedo pode correr, em pontos da tela lógica, para ainda ser um toque.
+const MAX_TAP_TRAVEL := 24.0
 
 var _coord := Vector2i.ZERO
 var _test_slots := 0
@@ -91,6 +96,16 @@ var _flee_armed: bool = false
 
 var _entries: Array[Dictionary] = []
 var _entry_team := -1
+
+var _zoom := 1.0
+## O ponto do tabuleiro, sem escala, que fica no centro da área dele.
+var _view_focus := Vector2.ZERO
+var _pinch := PinchZoom.new()
+var _pinch_start_zoom := 1.0
+var _pinch_anchor := Vector2.ZERO
+var _press_at: Variant = null
+var _drag_last := Vector2.ZERO
+var _dragging := false
 
 @onready var _enemy_card: BoardCreatureCard = %EnemyCard
 @onready var _player_card: BoardCreatureCard = %PlayerCard
@@ -155,10 +170,88 @@ func _ready() -> void:
 	_log_box.gui_input.connect(_on_log_input)
 	_exit_button.pressed.connect(_leave)
 	_board.cell_tapped.connect(_on_cell_tapped)
+	_board.taps_blocked = func() -> bool: return _dragging or _pinch.blocks_tap()
+	_pinch.pinch_started.connect(_on_pinch_started)
+	_pinch.pinched.connect(_on_pinched)
 	_board_area.item_rect_changed.connect(_fit_board)
 	_next_panel.chosen.connect(_on_creature_chosen)
 	_set_busy(true)
 	_begin()
+
+
+func _input(event: InputEvent) -> void:
+	var area := _zoom_area()
+	if _pinch.feed(event, area):
+		get_viewport().set_input_as_handled()
+		return
+	var step := _pinch.wheel(event, area)
+	if step != 0:
+		get_viewport().set_input_as_handled()
+		var point := _to_layer((event as InputEventMouseButton).position)
+		_zoom_around(point, _board_point(point), _zoom * pow(WHEEL_ZOOM_STEP, step))
+		return
+	_drag(event, area)
+
+
+## A área do tabuleiro quando ele está na frente, sem janela por cima; senão, nenhuma.
+func _zoom_area() -> Rect2:
+	if _board.board_size() == Vector2.ZERO or _leaving:
+		return Rect2()
+	for panel: Control in [_history, _codex_overlay, _level_up_overlay, _evolution_overlay, _skill_overlay, _next_panel, _items_panel, _capture_overlay]:
+		if panel.visible:
+			return Rect2()
+	return _board_area.get_global_rect()
+
+
+func _drag(event: InputEvent, area: Rect2) -> void:
+	var button := event as InputEventMouseButton
+	if button != null and button.button_index == MOUSE_BUTTON_LEFT:
+		if button.pressed:
+			_dragging = false
+			_press_at = button.position if area.has_point(button.position) else null
+		else:
+			_press_at = null
+		return
+	var motion := event as InputEventMouseMotion
+	if motion == null or _press_at == null or _pinch.blocks_tap() or _zoom <= 1.0:
+		return
+	if not _dragging:
+		if motion.position.distance_to(_press_at) <= MAX_TAP_TRAVEL:
+			return
+		_dragging = true
+		_drag_last = _press_at
+	_view_focus -= (motion.position - _drag_last) / _board.scale.x
+	_drag_last = motion.position
+	_fit_board()
+
+
+func _on_pinch_started(center: Vector2) -> void:
+	_pinch_start_zoom = _zoom
+	_pinch_anchor = _board_point(_to_layer(center))
+
+
+func _on_pinched(ratio: float, center: Vector2) -> void:
+	_zoom_around(_to_layer(center), _pinch_anchor, _pinch_start_zoom * ratio)
+
+
+## Põe o ponto `board_point` do tabuleiro embaixo de `point`, da camada, no zoom novo.
+func _zoom_around(point: Vector2, board_point: Vector2, zoom: float) -> void:
+	var base := _base_ratio()
+	if base <= 0.0:
+		return
+	_zoom = clampf(zoom, 1.0, MAX_ZOOM)
+	var ratio := base * _zoom
+	var slot := _board_slot()
+	_view_focus = (slot.get_center() - (point - board_point * ratio)) / ratio
+	_fit_board()
+
+
+func _to_layer(point: Vector2) -> Vector2:
+	return _board_layer.get_global_transform().affine_inverse() * point
+
+
+func _board_point(layer_point: Vector2) -> Vector2:
+	return (layer_point - _board.position) / _board.scale.x
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -218,6 +311,7 @@ func _begin() -> void:
 	_remember_xp(turn.view)
 	_meet_tamer(turn.view)
 	_board.set_board(turn.view.board_cells, _biome, _height)
+	_zoom = 1.0
 	_fit_board()
 	BattleIntro.reveal()
 	await _show_turn(turn)
@@ -297,19 +391,39 @@ func _reserve_bottom() -> void:
 	_bottom.custom_minimum_size.y = _log_box.get_combined_minimum_size().y + _player_card.get_combined_minimum_size().y + tallest + gap * 2
 
 
-func _fit_board() -> void:
+func _base_ratio() -> float:
 	var board_size := _board.board_size()
 	if board_size == Vector2.ZERO:
-		return
+		return 0.0
 	var area := _board_area.size
-	var ratio := minf(minf(area.x / board_size.x, area.y / board_size.y), area.x / REFERENCE_BOARD_WIDTH)
+	return minf(minf(area.x / board_size.x, area.y / board_size.y), area.x / REFERENCE_BOARD_WIDTH)
+
+
+func _board_slot() -> Rect2:
+	return _board_layer.get_global_transform().affine_inverse() * _board_area.get_global_rect()
+
+
+## No eixo em que o tabuleiro aproximado passa da área, ele a cobre inteira; no outro,
+## fica centralizado.
+func _fit_board() -> void:
+	var base := _base_ratio()
 	# Antes de a coluna ter tamanho, não há onde pôr o tabuleiro.
-	if ratio <= 0.0:
+	if base <= 0.0:
 		return
-	var slot := _board_layer.get_global_transform().affine_inverse() * _board_area.get_global_rect()
+	var board_size := _board.board_size()
+	var ratio := base * _zoom
+	var scaled := board_size * ratio
+	var slot := _board_slot()
+	var at := slot.get_center() - _view_focus * ratio
+	for axis: int in 2:
+		if scaled[axis] > slot.size[axis]:
+			at[axis] = clampf(at[axis], slot.end[axis] - scaled[axis], slot.position[axis])
+		else:
+			at[axis] = slot.position[axis] + (slot.size[axis] - scaled[axis]) / 2.0
+	_view_focus = (slot.get_center() - at) / ratio
 	_board.scale = Vector2.ONE * ratio
 	_board.size = board_size
-	_board.position = slot.position + (area - board_size * ratio) / 2.0
+	_board.position = at
 	_board.cover_screen()
 
 

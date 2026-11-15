@@ -31,6 +31,10 @@ const FACE_COLORS: Array[Color] = [Color.WHITE, Color(0.76, 0.76, 0.76)]
 ## árvores, uma linha aparece bem antes de a posição dela chegar à tela.
 const ROW_MARGIN := 4
 const ART_SCALE := 2.0
+## Pixels da tela lógica por pixel da arte, só inteiros para não borrar (camera-zoom/01).
+const MIN_ZOOM := 1
+const MAX_ZOOM := 4
+const DEFAULT_ZOOM := 2
 const SURFACE_PATH := "res://assets/terrain/surfaces/%s.png"
 const CLIFF_BIOMES: Array[String] = ["stone", "mountain"]
 ## A lateral da água é cachoeira, e o pé dela tem espuma no vizinho de baixo
@@ -76,6 +80,11 @@ const REVEAL_ROWS := 4
 var fixed_scale := 0.0:
 	set(value):
 		fixed_scale = value
+		if is_inside_tree():
+			_update_scale()
+var zoom_level := DEFAULT_ZOOM:
+	set(value):
+		zoom_level = clampi(value, MIN_ZOOM, MAX_ZOOM)
 		if is_inside_tree():
 			_update_scale()
 var allows_decoration := Callable()
@@ -591,7 +600,7 @@ func pixel_scale() -> Vector2:
 
 
 func art_scale() -> Vector2:
-	var pixels := maxi(1, roundi(_window_scale.y * ART_SCALE))
+	var pixels := maxi(1, roundi(_window_scale.y * zoom_level))
 	return Vector2(pixels, pixels) / _window_scale
 
 

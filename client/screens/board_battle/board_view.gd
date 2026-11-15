@@ -161,6 +161,8 @@ class Token:
 		draw_circle(Vector2.ZERO, shadow_radius, BoardView.SHADOW_COLOR)
 
 
+## Quem usa diz quando o toque não vale, como depois de uma pinça ou de um arrasto.
+var taps_blocked := Callable()
 var _cells: Array[Vector2i] = []
 var _ground := HexMapView.new()
 var _ground_seed := 0
@@ -605,7 +607,7 @@ func _closed(points: PackedVector2Array) -> PackedVector2Array:
 
 func _on_gui_input(event: InputEvent) -> void:
 	var mouse := event as InputEventMouseButton
-	if mouse == null or mouse.button_index != MOUSE_BUTTON_LEFT or mouse.pressed:
+	if mouse == null or mouse.button_index != MOUSE_BUTTON_LEFT or mouse.pressed or (taps_blocked.is_valid() and taps_blocked.call()):
 		return
 	var cell: Variant = cell_at(mouse.position)
 	if cell != null:

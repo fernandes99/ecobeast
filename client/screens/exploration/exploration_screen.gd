@@ -37,8 +37,8 @@ const ROUNDED_OFF_TEXT := "Pontas: retas"
 const LIPS_TEXT := "Beirada: %s"
 const SHADOWS_TEXT := "Sombra no pé: %s"
 const TINT_TEXT := "Tom por altura: %s"
-## Até onde os Ecobeasts existem como nós, em hexágonos: passa da tela com folga,
-## para eles nascerem e saírem sem ninguém ver. A revisar.
+## Até onde os Ecobeasts existem como nós, em hexágonos, no zoom de partida: passa
+## da tela com folga, para eles nascerem e saírem sem ninguém ver. A revisar.
 const CREATURE_RADIUS := 16
 
 var _island_id: int = 0
@@ -63,6 +63,8 @@ var _talk_lines: Array[String] = []
 var _talk_index := 0
 var _debug_spawn_ids: Array[int] = []
 var _debug_tamer_ids: Array[int] = []
+var _pinch := PinchZoom.new()
+var _pinch_start_zoom := HexMapView.DEFAULT_ZOOM
 
 @onready var _map_area: Control = %MapArea
 @onready var _map_view: HexMapView = %MapView
@@ -101,6 +103,9 @@ func setup(params: Dictionary) -> void:
 func _ready() -> void:
 	if Session.player != null:
 		_marker.set_appearance(Session.player.appearance)
+	_map_view.zoom_level = ViewSettings.explore_zoom()
+	_pinch.pinch_started.connect(func(_center: Vector2) -> void: _pinch_start_zoom = _map_view.zoom_level)
+	_pinch.pinched.connect(func(ratio: float, _center: Vector2) -> void: _set_zoom(roundi(_pinch_start_zoom * ratio)))
 	_map_area.gui_input.connect(_on_map_input)
 	_encounter_button.pressed.connect(_search)
 	_bag_button.pressed.connect(Router.push.bind(&"bag"))
@@ -173,9 +178,40 @@ func _begin() -> void:
 	_fit_view.call_deferred()
 
 
+func _input(event: InputEvent) -> void:
+	if not is_visible_in_tree():
+		return
+	var area := _zoom_area()
+	if _pinch.feed(event, area):
+		get_viewport().set_input_as_handled()
+		return
+	var step := _pinch.wheel(event, area)
+	if step != 0:
+		get_viewport().set_input_as_handled()
+		_set_zoom(_map_view.zoom_level + step)
+
+
+## O mapa acima do painel de botões, quando o toque nele valeria; senão, nenhuma.
+func _zoom_area() -> Rect2:
+	if _map == null or _showing_whole_map or _challenger != null or _talking != null:
+		return Rect2()
+	var top := _map_area.get_global_rect().position
+	return Rect2(top, Vector2(_map_area.size.x, _controls_panel.get_global_rect().position.y - top.y))
+
+
+func _set_zoom(level: int) -> void:
+	level = clampi(level, HexMapView.MIN_ZOOM, HexMapView.MAX_ZOOM)
+	if level == _map_view.zoom_level:
+		return
+	_map_view.zoom_level = level
+	ViewSettings.set_explore_zoom(level)
+	_refresh_wild_sprites()
+	_fit_view()
+
+
 func _on_map_input(event: InputEvent) -> void:
 	var mouse := event as InputEventMouseButton
-	if mouse == null or mouse.button_index != MOUSE_BUTTON_LEFT:
+	if mouse == null or mouse.button_index != MOUSE_BUTTON_LEFT or _pinch.blocks_tap():
 		return
 	if mouse.pressed:
 		_press_position = mouse.position
@@ -381,6 +417,7 @@ func _search() -> void:
 ## Domador também. Se a luta contra o Domador nem começou, ele fica, e o mapa destrava
 ## até o jogador sair do hexágono e entrar de novo.
 func _on_visibility_changed() -> void:
+	_pinch.cancel()
 	if visible and _map != null:
 		Music.play_explore(EXPLORE_MUSIC_FADE_IN)
 		var fought := Session.take_fought_spawn()
@@ -753,7 +790,11 @@ func _is_near(creature: MapCreature) -> bool:
 
 
 func _is_near_coord(coord: Vector2i) -> bool:
-	return _showing_whole_map or ExplorationMap.distance(coord, _player_coord) <= CREATURE_RADIUS
+	return _showing_whole_map or ExplorationMap.distance(coord, _player_coord) <= _creature_radius()
+
+
+func _creature_radius() -> int:
+	return maxi(CREATURE_RADIUS, ceili(CREATURE_RADIUS * float(HexMapView.DEFAULT_ZOOM) / _map_view.zoom_level))
 
 
 func _add_creature_sprite(slug: String, coord: Vector2i) -> CreatureSprite:
