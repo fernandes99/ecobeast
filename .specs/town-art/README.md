@@ -65,5 +65,6 @@ Escolhas do planejamento, _a revisar_ (ao mudar uma, atualize aqui e na fase):
 | 3 | [03-village-objects](03-village-objects.md) | Moinho, horta, cerca, poço, barraca, carroça, estábulo, bebedouro e santuário da cidade, tipos novos | concluída |
 | 4 | [04-street-decorations](04-street-decorations.md) | Poste de luz, placa, canteiro de flores e banco, novos no catálogo | concluída |
 | 5 | [05-showcase-village](05-showcase-village.md) | Uma ilha nova, a partir da Vila da Fonte Azul, com a arte nova | concluída |
+| 6 | [06-observatory](06-observatory.md) | O Observatório, um prédio de 3 hexágonos com a arte do dono | concluída (falta o dono conferir numa ilha) |
 
 O estilo, com as cores, o traço e as regras, está no [style-guide.md](style-guide.md).

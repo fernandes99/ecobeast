@@ -70,5 +70,23 @@
 		"dq": 1,
 		"dr": -1,
 		"blocks": true
+	},
+	{
+		"object_type_id": 41,
+		"dq": 0,
+		"dr": 0,
+		"blocks": true
+	},
+	{
+		"object_type_id": 41,
+		"dq": 1,
+		"dr": 0,
+		"blocks": true
+	},
+	{
+		"object_type_id": 41,
+		"dq": 1,
+		"dr": -1,
+		"blocks": true
 	}
 ]
