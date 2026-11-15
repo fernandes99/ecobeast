@@ -15,7 +15,7 @@ var _renewing := false
 
 
 func _ready() -> void:
-	base_url = str(ProjectSettings.get_setting(GameData.BASE_URL_SETTING)).trim_suffix("/")
+	base_url = str(ProjectSettings.get_setting_with_override(GameData.BASE_URL_SETTING)).trim_suffix("/")
 	session = AuthSession.load_saved()
 
 
