@@ -14,7 +14,7 @@ import {
 } from 'class-validator';
 import { BIOMES, MAX_HEIGHT } from '../domain/exploration/map-generator.js';
 import type { Biome } from '../domain/exploration/map-generator.js';
-import { MapTileDto } from '../exploration/exploration.dto.js';
+import { MapBridgeDto, MapTileDto } from '../exploration/exploration.dto.js';
 
 const integer = (field: string) => ({
   message: `${field} precisa ser um número inteiro.`,
@@ -521,9 +521,9 @@ export class MapGeneratorBodyDto {
 
   @ApiPropertyOptional({
     description:
-      'Os parâmetros do gerador, em snake_case (`tile_count`, `water_fraction`…). ' +
+      'Os parâmetros do gerador, em snake_case (`tile_count`, `sea_fraction`…). ' +
       'O que faltar vem do padrão. As faixas estão no GET desta rota.',
-    example: { tile_count: 4000, water_fraction: 0.3 },
+    example: { tile_count: 4000, sea_fraction: 0.3 },
   })
   @IsOptional()
   @IsObject({ message: 'config precisa ser um objeto.' })
@@ -539,6 +539,13 @@ export class MapGeneratorResponseDto {
 
   @ApiProperty({ type: [MapTileDto] })
   tiles: MapTileDto[];
+
+  @ApiProperty({
+    type: [MapBridgeDto],
+    description:
+      'As pontes de madeira dos rios que atravessam o mapa (coast-rivers/03).',
+  })
+  bridges: MapBridgeDto[];
 }
 
 export class ConfigRangeDto {
@@ -555,7 +562,7 @@ export class ConfigRangeDto {
 export class MapGeneratorParamsResponseDto {
   @ApiProperty({
     description: 'Os parâmetros padrão, em snake_case.',
-    example: { tile_count: 10000, water_fraction: 0.2 },
+    example: { tile_count: 10000, sea_fraction: 0.3 },
   })
   defaults: Record<string, number>;
 

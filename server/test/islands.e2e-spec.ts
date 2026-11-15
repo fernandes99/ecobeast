@@ -439,7 +439,7 @@ describe('Ilhas do jogador (e2e)', () => {
       );
     });
 
-    it('sem corpo, sorteia o mapa de sempre, sem ilha, ações nem objetos', async () => {
+    it('sem corpo, sorteia o mapa de sempre, sem ilha, ações nem objetos, e só com as pontes dos rios', async () => {
       const user = await newUser();
       const { body } = await user.explore().expect(201);
       const map = (body as { map: IslandMap }).map;
@@ -448,7 +448,11 @@ describe('Ilhas do jogador (e2e)', () => {
       expect(map.props).toEqual([]);
       expect(map.trails).toEqual([]);
       expect(map.walls).toEqual([]);
-      expect(map.bridges).toEqual([]);
+      // As pontes de madeira dos rios que atravessam o mapa (coast-rivers/03).
+      for (const bridge of map.bridges) {
+        expect(bridge).toMatchObject({ type: 'wood_bridge', width: 28 });
+        expect(bridge.points).toHaveLength(4);
+      }
       expect(map.npcs).toEqual([]);
       expect(map.tiles.some((tile) => tile.ground !== undefined)).toBe(false);
       expect(map.tiles.length).toBeGreaterThan(1000);

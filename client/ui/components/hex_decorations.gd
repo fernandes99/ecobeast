@@ -53,6 +53,10 @@ const KIND_ROWS: Dictionary[String, int] = {
 	"ice_shards": 44,
 	"winter_berry": 45,
 	"snow_log": 46,
+	"shells": 47,
+	"starfish": 48,
+	"driftwood": 49,
+	"beach_rock": 50,
 }
 ## O espaço que cada tipo ocupa no chão, em pixels da arte. Ele também é a
 ## distância mínima do centro do hexágono, onde o jogador fica.
@@ -104,6 +108,10 @@ const KIND_RADIUS: Dictionary[String, float] = {
 	"ice_shards": 7.0,
 	"winter_berry": 10.0,
 	"snow_log": 11.0,
+	"shells": 6.0,
+	"starfish": 5.0,
+	"driftwood": 11.0,
+	"beach_rock": 9.0,
 }
 const WIND_SHADER_PATH := "res://ui/components/plant_wind.gdshader"
 ## O vento em cada tipo: quantos pixels da arte o topo anda e a altura da planta, a
@@ -148,6 +156,7 @@ const RECIPES: Dictionary = {
 	"mountain": [["brown_rock", 0.3, 1, 2], ["moss", 0.06, 1, 1], ["slab", 0.1, 1, 1], ["dry_branch", 0.05, 1, 1]],
 	"desert": [["cactus", 0.22, 1, 2], ["sand_rock", 0.14, 1, 1], ["dry_shrub", 0.18, 1, 1], ["pebbles", 0.12, 1, 2], ["dry_tuft", 0.3, 1, 3], ["tumbleweed", 0.12, 1, 1], ["bleached_branch", 0.1, 1, 1], ["desert_flower", 0.12, 1, 2], ["dune_grass", 0.3, 1, 3]],
 	"snow": [["snow_pine", 0.4, 1, 3], ["snow_rock", 0.14, 1, 1], ["snow_bush", 0.24, 1, 2], ["snow_tuft", 0.4, 1, 3], ["snow_log", 0.08, 1, 1], ["winter_berry", 0.14, 1, 1], ["frozen_branch", 0.12, 1, 1], ["ice_shards", 0.1, 1, 1]],
+	"beach": [["driftwood", 0.08, 1, 1], ["beach_rock", 0.1, 1, 1], ["dune_grass", 0.3, 1, 2], ["shells", 0.3, 1, 2], ["starfish", 0.08, 1, 1]],
 }
 const PLACE_TRIES := 8
 const MAX_X := 24

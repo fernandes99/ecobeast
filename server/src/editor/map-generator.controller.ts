@@ -101,6 +101,6 @@ export class MapGeneratorController {
   @ApiBadRequestResponse({ description: 'Um parâmetro fora da faixa.' })
   generate(@Body() body: MapGeneratorBodyDto): MapGeneratorResponseDto {
     const map = generateMap(body.seed, withDefaults(configOf(body.config)));
-    return { start: map.start, tiles: map.tiles };
+    return { start: map.start, tiles: map.tiles, bridges: map.bridges };
   }
 }

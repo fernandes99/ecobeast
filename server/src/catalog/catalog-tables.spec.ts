@@ -68,9 +68,10 @@ describe('carga inicial dos biomas (biome-encounters/01)', () => {
   const biomeId = (slug: string) => biomes.find((b) => b.slug === slug)!.id;
   const ELU = 7;
 
-  it('tem os 9 biomas de encontro', () => {
+  it('tem os 11 biomas de encontro', () => {
     expect(biomes.map(({ slug }) => slug).sort()).toEqual(
       [
+        'beach',
         'boreal',
         'desert',
         'snow',
@@ -79,6 +80,7 @@ describe('carga inicial dos biomas (biome-encounters/01)', () => {
         'stone',
         'temperate',
         'wdeep',
+        'wford',
         'wshallow',
       ].sort(),
     );
@@ -317,7 +319,7 @@ describe('carga inicial do chão (island-villages/01)', () => {
   });
 });
 
-describe('carga inicial das peças soltas (free-props/01, free-objects/04, vegetation-packs/01, nature-variety/02, home-pack/01 e 03)', () => {
+describe('carga inicial das peças soltas (free-props/01, free-objects/04, vegetation-packs/01, nature-variety/02, home-pack/01 e 03, coast-rivers/01)', () => {
   const read = <T>(file: string): T =>
     JSON.parse(readFileSync(join(SEED_DATA_DIR, file), 'utf8')) as T;
   const props =
@@ -332,13 +334,10 @@ describe('carga inicial das peças soltas (free-props/01, free-objects/04, veget
     }[]
   >('prop_type_blocks.json');
 
-  it('tem os tipos de 1 a 90 e as casas, de 95 a 97, com pelo menos 1 variante', () => {
-    expect(props.map(({ id }) => id)).toEqual([
-      ...Array.from({ length: 90 }, (_, index) => index + 1),
-      95,
-      96,
-      97,
-    ]);
+  it('tem os 97 tipos, de 1 a 97, com pelo menos 1 variante', () => {
+    expect(props.map(({ id }) => id)).toEqual(
+      Array.from({ length: 97 }, (_, index) => index + 1),
+    );
     for (const { variants } of props)
       expect(variants).toBeGreaterThanOrEqual(1);
   });
@@ -383,11 +382,18 @@ describe('carga inicial das peças soltas (free-props/01, free-objects/04, veget
     expect(nature.every(({ variants }) => variants === 4)).toBe(true);
   });
 
+  it('as decorações da Praia são as peças 91 a 94', () => {
+    expect(props.slice(90, 94).map(({ slug }) => slug)).toEqual([
+      'shells',
+      'starfish',
+      'driftwood',
+      'beach_rock',
+    ]);
+  });
+
   it('as casas do pacote Main Characters Home são as peças 95 a 97, em 8 cores (home-pack/01 e 03)', () => {
     expect(
-      props
-        .filter(({ id }) => id >= 95)
-        .map(({ id, slug, variants }) => [id, slug, variants]),
+      props.slice(94).map(({ id, slug, variants }) => [id, slug, variants]),
     ).toEqual([
       [95, 'big_house', 8],
       [96, 'small_house', 8],

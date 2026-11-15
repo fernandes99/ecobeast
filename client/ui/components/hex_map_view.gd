@@ -41,6 +41,9 @@ const CLIFF_BIOMES: Array[String] = ["stone", "mountain"]
 ## (water-motion). Os códigos são os do shader do terreno, no CUSTOM0.w.
 const WATERFALL_TEXTURE := "waterfall"
 const WATER_CODE := 4.0
+const FORD_BED_PATH := "res://assets/terrain/grounds/gravel_trail.png"
+const FORD_BED_SHADE := Color(0.82, 0.82, 0.82)
+const FORD_WATER_ALPHA := 0.45
 const FALL_CODE := 5.0
 const FOAM_CODE := 6.0
 const SHORE_CODE := 7.0
@@ -731,7 +734,23 @@ func _add_surface(row: HexRowView, texture_name: String, tiles: Array) -> void:
 	if HexTile.WATER_BIOMES.has(texture_name):
 		var deep := 1.0 if texture_name == "wdeep" else 0.0
 		custom = _repeated(PackedFloat32Array([0.0, 0.0, deep, WATER_CODE]), points.size())
+	if texture_name == HexTile.FORD:
+		_add_ford(row, points, ground, custom)
+		return
 	_add_mesh(row, SURFACE_PATH % texture_name, points, ground, colors, custom)
+
+
+## O vau: o cascalho do fundo e, por cima, a água rasa meio transparente, ondulando
+## como a do rio (coast-rivers/03).
+func _add_ford(row: HexRowView, points: PackedVector2Array, ground: PackedVector2Array, custom: PackedFloat32Array) -> void:
+	var bed := PackedColorArray()
+	bed.resize(points.size())
+	bed.fill(FORD_BED_SHADE)
+	_add_mesh(row, FORD_BED_PATH, points, ground, bed, PackedFloat32Array())
+	var water := PackedColorArray()
+	water.resize(points.size())
+	water.fill(Color(1.0, 1.0, 1.0, FORD_WATER_ALPHA))
+	_add_mesh(row, SURFACE_PATH % "wshallow", points, ground, water, custom)
 
 
 ## A cachoeira de cada lateral da água, de uma peça só: a textura se repete para

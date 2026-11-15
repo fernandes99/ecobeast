@@ -624,8 +624,9 @@ def main():
     file = path("decorations", "decorations.png")
     sheet = Image.open(file).convert("RGBA")
     needed = (FIRST_ROW + len(KINDS)) * CELL[1]
-    grown = Image.new("RGBA", (sheet.width, needed), (0, 0, 0, 0))
-    grown.paste(sheet.crop((0, 0, sheet.width, FIRST_ROW * CELL[1])), (0, 0))
+    grown = Image.new("RGBA", (sheet.width, max(needed, sheet.height)), (0, 0, 0, 0))
+    grown.paste(sheet, (0, 0))
+    grown.paste(Image.new("RGBA", (sheet.width, needed - FIRST_ROW * CELL[1]), (0, 0, 0, 0)), (0, FIRST_ROW * CELL[1]))
     for row, kind in enumerate(KINDS):
         for variant in range(4):
             cell = Cell(random.Random(f"{kind.__name__}:{variant}"))

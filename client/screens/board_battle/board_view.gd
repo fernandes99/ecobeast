@@ -20,7 +20,7 @@ const DEFAULT_BIOME := "temperate"
 const DEFAULT_HEIGHT := 1
 const LOW_DECORATIONS: Array[String] = [
 	"tuft", "flowers", "pebbles", "fern", "moss", "dry_tuft", "fallen_branch", "dry_branch", "bleached_branch",
-	"frozen_branch", "mushrooms", "clover", "wildflowers", "yellow_flowers", "desert_flower", "dune_grass",
+	"frozen_branch", "mushrooms", "clover", "wildflowers", "yellow_flowers", "desert_flower", "dune_grass", "shells", "starfish",
 ]
 const LOW_DECORATION_DISTANCE := 1
 const COVER_MARGIN := 2

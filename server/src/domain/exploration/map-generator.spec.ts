@@ -1,7 +1,9 @@
-import { hexKey, hexNeighbors } from './hex.js';
+import { flatCenter, gridCoord } from '../islands/hex-pixels.js';
+import { hexDistance, hexKey, hexNeighbors } from './hex.js';
 import { DEFAULT_MAP_CONFIG, MapConfig } from './map-config.js';
 import {
   BIOMES,
+  blocksWalking,
   generateMap,
   generateShapedMap,
   isWater,
@@ -24,15 +26,27 @@ const CONFIG: MapConfig = {
   tileCount: 300,
   edgeRoughness: 7,
   noiseScale: 0.14,
-  waterFraction: 0.22,
-  deepFraction: 0.4,
+  seaFraction: 0.3,
+  coastRoughness: 0.25,
+  shallowWidth: 2,
+  beachMinWidth: 1,
+  beachMaxWidth: 2,
+  lakeCount: 0,
+  lakeMinWidth: 6,
+  lakeMaxWidth: 6,
+  riverCount: 2,
+  riverMinWidth: 1,
+  riverMaxWidth: 2,
+  springLakeChance: 0,
+  throughRiverChance: 0.3,
+  crossingSpacing: 14,
+  fordShare: 0.5,
   wetLimit: 0.6,
   stoneFraction: 0.15,
   desertFraction: 0.12,
   snowFraction: 0.12,
   hillFrom: 0.8,
   mountainFrom: 0.9,
-  islandChance: 0.04,
   detailChance: 0.2,
   cleanupPasses: 3,
 };
@@ -69,6 +83,56 @@ function reachableFrom(map: ShapedMap): number {
 const waterShare = (map: ShapedMap) =>
   map.tiles.filter((tile) => isWater(tile.biome)).length / map.tiles.length;
 
+/** A água que não é lago nem rio. */
+function seaOf(map: ShapedMap): Set<string> {
+  const inland = new Set(
+    [...map.lakes, ...map.rivers.map(({ cells }) => cells)].flat().map(hexKey),
+  );
+  return new Set(
+    map.tiles
+      .filter((tile) => isWater(tile.biome) && !inland.has(hexKey(tile)))
+      .map(hexKey),
+  );
+}
+
+const seaShare = (map: ShapedMap) => seaOf(map).size / map.tiles.length;
+
+/** A distância de cada hexágono até o mais perto que `from` aceita. */
+function distanceTo(
+  map: ShapedMap,
+  from: (tile: ShapedTile) => boolean,
+): Map<string, number> {
+  const byKey = indexed(map);
+  const result = new Map<string, number>();
+  let ring = map.tiles.filter(from);
+  for (const tile of ring) result.set(hexKey(tile), 0);
+  for (let step = 1; ring.length > 0; step += 1) {
+    const next: ShapedTile[] = [];
+    for (const tile of ring) {
+      for (const neighbor of neighborsOf(tile, byKey)) {
+        if (!result.has(hexKey(neighbor))) {
+          result.set(hexKey(neighbor), step);
+          next.push(neighbor);
+        }
+      }
+    }
+    ring = next;
+  }
+  return result;
+}
+
+const point = ({ q, r }: ShapedTile): [number, number] => [
+  q + r / 2,
+  (r * Math.sqrt(3)) / 2,
+];
+
+function centerOf(tiles: ShapedTile[]): [number, number] {
+  const sum = tiles
+    .map(point)
+    .reduce(([x, y], [a, b]) => [x + a, y + b], [0, 0]);
+  return [sum[0] / tiles.length, sum[1] / tiles.length];
+}
+
 describe('generateShapedMap', () => {
   let maps: ShapedMap[];
 
@@ -76,15 +140,17 @@ describe('generateShapedMap', () => {
     maps = SEEDS.map((seed) => generateShapedMap(seed, CONFIG));
   });
 
-  it('só existem as sete regiões', () => {
+  it('só existem as nove regiões', () => {
     expect([...SHAPED_BIOMES].sort()).toEqual(
       [
+        'beach',
         'boreal',
         'desert',
         'snow',
         'stone',
         'temperate',
         'wdeep',
+        'wford',
         'wshallow',
       ].sort(),
     );
@@ -262,11 +328,103 @@ describe('generateShapedMap', () => {
     }
   });
 
-  it('a água fica perto de `waterFraction`', () => {
+  it('o mar fica perto de `seaFraction` (coast-rivers/01)', () => {
     const mean =
-      maps.map(waterShare).reduce((sum, share) => sum + share) / maps.length;
-    expect(mean).toBeGreaterThan(CONFIG.waterFraction - 0.03);
-    expect(mean).toBeLessThan(CONFIG.waterFraction + 0.03);
+      maps.map(seaShare).reduce((sum, share) => sum + share) / maps.length;
+    expect(mean).toBeGreaterThan(CONFIG.seaFraction - 0.05);
+    expect(mean).toBeLessThan(CONFIG.seaFraction + 0.03);
+  });
+
+  it('o mar é um só, ligado à borda e de um lado do mapa', () => {
+    for (const map of maps) {
+      const byKey = indexed(map);
+      const sea = seaOf(map);
+      const water = map.tiles.filter((tile) => sea.has(hexKey(tile)));
+      const seen = new Set([hexKey(water[0]!)]);
+      const pending = [water[0]!];
+      while (pending.length > 0) {
+        for (const neighbor of neighborsOf(pending.pop()!, byKey)) {
+          if (sea.has(hexKey(neighbor)) && !seen.has(hexKey(neighbor))) {
+            seen.add(hexKey(neighbor));
+            pending.push(neighbor);
+          }
+        }
+      }
+      expect(seen.size).toBe(water.length);
+      expect(water.some((tile) => neighborsOf(tile, byKey).length < 6)).toBe(
+        true,
+      );
+      const [mx, my] = centerOf(map.tiles);
+      const [sx, sy] = centerOf(water);
+      const reach = Math.max(
+        ...map.tiles.map((tile) =>
+          Math.hypot(point(tile)[0] - mx, point(tile)[1] - my),
+        ),
+      );
+      expect(Math.hypot(sx - mx, sy - my)).toBeGreaterThan(reach / 3);
+    }
+  });
+
+  it('a água rasa encosta na terra, e a funda fica longe dela', () => {
+    for (const map of maps) {
+      const sea = seaOf(map);
+      const fromLand = distanceTo(map, (tile) => !sea.has(hexKey(tile)));
+      const wrong = map.tiles.filter((tile) => {
+        const distance = fromLand.get(hexKey(tile))!;
+        return (
+          (sea.has(hexKey(tile)) &&
+            tile.biome === 'wshallow' &&
+            distance > CONFIG.shallowWidth) ||
+          (sea.has(hexKey(tile)) &&
+            tile.biome === 'wdeep' &&
+            distance <= CONFIG.shallowWidth)
+        );
+      });
+      expect(wrong).toEqual([]);
+    }
+  });
+
+  it('a terra encostada no mar é Praia, menos a montanha e a beira do rio, e a Praia não passa da largura', () => {
+    for (const map of maps) {
+      const byKey = indexed(map);
+      const sea = seaOf(map);
+      const river = new Set(
+        map.rivers.flatMap(({ cells }) => cells).map(hexKey),
+      );
+      const fromSea = distanceTo(map, (tile) => sea.has(hexKey(tile)));
+      const wrong = map.tiles.filter((tile) => {
+        const distance = fromSea.get(hexKey(tile))!;
+        const byRiver = neighborsOf(tile, byKey).some((n) =>
+          river.has(hexKey(n)),
+        );
+        return (
+          (distance === 1 &&
+            !isWater(tile.biome) &&
+            tile.shape !== 'mont' &&
+            !byRiver &&
+            tile.biome !== 'beach') ||
+          (tile.biome === 'beach' &&
+            (distance > CONFIG.beachMaxWidth || byRiver))
+        );
+      });
+      expect(wrong).toEqual([]);
+    }
+  });
+
+  it('sem mar, o mapa não tem mar nem Praia', () => {
+    const dry = { ...CONFIG, seaFraction: 0 };
+    for (const seed of SEEDS.slice(0, 20)) {
+      const map = generateShapedMap(seed, dry);
+      expect(seaOf(map).size).toBe(0);
+      expect(map.tiles.some(({ biome }) => biome === 'beach')).toBe(false);
+    }
+  });
+
+  it('sem mar, lago nem rio, o mapa não tem água', () => {
+    const dry = { ...CONFIG, seaFraction: 0, lakeCount: 0, riverCount: 0 };
+    for (const seed of SEEDS.slice(0, 20)) {
+      expect(waterShare(generateShapedMap(seed, dry))).toBe(0);
+    }
   });
 
   it('aparecem todos os biomas ao longo das seeds', () => {
@@ -346,20 +504,413 @@ describe('generateShapedMap', () => {
     expect(biomes.size).toBe(5);
   });
 
-  it('as ilhas são raras', () => {
-    const water = maps.flatMap(({ tiles }) =>
-      tiles.filter((tile) => isWater(tile.biome)),
+  it('a água é sempre plana, sem ilhotas', () => {
+    const shaped = maps.flatMap(({ tiles }) =>
+      tiles.filter((tile) => isWater(tile.biome) && tile.shape !== 'flat'),
     );
-    const islands = water.filter((tile) => tile.shape !== 'flat');
-    expect(islands.length).toBeGreaterThan(0);
-    expect(islands.length / water.length).toBeLessThan(CONFIG.islandChance * 2);
+    expect(shaped).toEqual([]);
   });
 
-  it('mais `waterFraction` dá mais água', () => {
-    const wetter: MapConfig = { ...CONFIG, waterFraction: 0.4 };
-    expect(waterShare(generateShapedMap(9, wetter))).toBeGreaterThan(
-      waterShare(generateShapedMap(9, CONFIG)),
+  it('mais `seaFraction` dá mais mar', () => {
+    const wetter: MapConfig = { ...CONFIG, seaFraction: 0.5 };
+    expect(seaShare(generateShapedMap(9, wetter))).toBeGreaterThan(
+      seaShare(generateShapedMap(9, CONFIG)),
     );
+  });
+});
+
+describe('os lagos e os rios (coast-rivers/02)', () => {
+  const WATERY: MapConfig = {
+    ...CONFIG,
+    tileCount: 900,
+    lakeCount: 3,
+    lakeMinWidth: 6,
+    lakeMaxWidth: 10,
+    riverCount: 4,
+    springLakeChance: 0.8,
+    riverMinWidth: 2,
+    riverMaxWidth: 4,
+    beachMinWidth: 2,
+    beachMaxWidth: 4,
+  };
+  let maps: ShapedMap[];
+
+  beforeAll(() => {
+    maps = SEEDS.slice(0, 60).map((seed) => generateShapedMap(seed, WATERY));
+  });
+
+  it('cada rio é uma linha de vizinhos, sem voltar, que termina encostado em outra água', () => {
+    for (const map of maps) {
+      const byKey = indexed(map);
+      map.rivers.forEach((river, index) => {
+        const keys = river.path.map(hexKey);
+        expect(new Set(keys).size).toBe(keys.length);
+        for (let step = 1; step < river.path.length; step += 1) {
+          expect(hexNeighbors(river.path[step - 1]!).map(hexKey)).toContain(
+            keys[step],
+          );
+        }
+        const own = new Set(river.cells.map(hexKey));
+        for (const key of keys) expect(own.has(key)).toBe(true);
+        const pond =
+          river.source === 'lake'
+            ? new Set(
+                map.lakes
+                  .filter((lake) =>
+                    lake.some((cell) =>
+                      hexNeighbors(river.path[0]!)
+                        .map(hexKey)
+                        .includes(hexKey(cell)),
+                    ),
+                  )
+                  .flat()
+                  .map(hexKey),
+              )
+            : new Set<string>();
+        const last = byKey.get(keys.at(-1)!)!;
+        const outside = neighborsOf(last, byKey).filter(
+          (neighbor) =>
+            isWater(neighbor.biome) &&
+            !own.has(hexKey(neighbor)) &&
+            !pond.has(hexKey(neighbor)),
+        );
+        expect(outside.length, `rio ${index}`).toBeGreaterThan(0);
+        for (const cell of river.cells) {
+          expect(['wshallow', 'wford']).toContain(
+            byKey.get(hexKey(cell))!.biome,
+          );
+        }
+      });
+    }
+  });
+
+  it('os lagos e os rios não passam do pedido', () => {
+    for (const map of maps) {
+      expect(map.rivers.length).toBeLessThanOrEqual(WATERY.riverCount);
+      const ponds = map.rivers.filter(({ source }) => source === 'lake').length;
+      expect(map.lakes.length).toBeLessThanOrEqual(WATERY.lakeCount + ponds);
+    }
+  });
+
+  it('há lagos sem rio e rios que nascem num lago pequeno', () => {
+    const touches = (lake: HexCoordList, river: HexCoordList) => {
+      const near = new Set(
+        lake.flatMap((cell) => hexNeighbors(cell).map(hexKey)),
+      );
+      return river.some((cell) => near.has(hexKey(cell)));
+    };
+    const lonely = maps.flatMap((map) =>
+      map.lakes.filter(
+        (lake) => !map.rivers.some(({ cells }) => touches(lake, cells)),
+      ),
+    );
+    expect(lonely.length).toBeGreaterThan(0);
+    expect(
+      maps.some((map) => map.rivers.some(({ source }) => source === 'lake')),
+    ).toBe(true);
+    expect(
+      maps.some((map) => map.rivers.some(({ source }) => source === 'spring')),
+    ).toBe(true);
+  });
+
+  it('toda terra que um rio toca continua ligada à chegada, por terra, vau ou ponte', () => {
+    for (const map of maps) {
+      const byKey = indexed(map);
+      const river = new Set(
+        map.rivers.flatMap(({ cells }) => cells).map(hexKey),
+      );
+      const seen = reachable(map);
+      const cutOff = map.tiles.filter(
+        (tile) =>
+          !isWater(tile.biome) &&
+          !seen.has(hexKey(tile)) &&
+          neighborsOf(tile, byKey).some((neighbor) =>
+            river.has(hexKey(neighbor)),
+          ),
+      );
+      expect(cutOff).toEqual([]);
+    }
+  });
+
+  it('todo lago é redondo, com pelo menos 6 hexágonos de largura nos 3 eixos', () => {
+    let lakes = 0;
+    for (const map of maps) {
+      for (const lake of map.lakes) {
+        lakes += 1;
+        const inside = new Set(lake.map(hexKey));
+        const [mx, my] = centerOf(lake as ShapedTile[]);
+        const center = lake.reduce((best, cell) =>
+          Math.hypot(
+            point(cell as ShapedTile)[0] - mx,
+            point(cell as ShapedTile)[1] - my,
+          ) <
+          Math.hypot(
+            point(best as ShapedTile)[0] - mx,
+            point(best as ShapedTile)[1] - my,
+          )
+            ? cell
+            : best,
+        );
+        for (const [dq, dr] of [
+          [1, 0],
+          [0, 1],
+          [1, -1],
+        ] as const) {
+          let across = 1;
+          for (const sign of [1, -1]) {
+            let step = 1;
+            while (
+              inside.has(
+                hexKey({
+                  q: center.q + dq * sign * step,
+                  r: center.r + dr * sign * step,
+                }),
+              )
+            ) {
+              across += 1;
+              step += 1;
+            }
+          }
+          expect(across).toBeGreaterThanOrEqual(6);
+        }
+      }
+    }
+    expect(lakes).toBeGreaterThan(0);
+  });
+
+  it('o rio fica com a largura pedida, de 1 a 4 hexágonos', () => {
+    let thin = 0;
+    let wide = 0;
+    let path = 0;
+    for (const seed of SEEDS.slice(0, 20)) {
+      for (const river of generateShapedMap(seed, {
+        ...WATERY,
+        riverMinWidth: 1,
+        riverMaxWidth: 1,
+      }).rivers) {
+        expect(river.cells).toHaveLength(river.path.length);
+        thin += 1;
+      }
+      for (const river of generateShapedMap(seed, {
+        ...WATERY,
+        riverMinWidth: 2,
+        riverMaxWidth: 4,
+      }).rivers) {
+        wide += river.cells.length;
+        path += river.path.length;
+      }
+    }
+    expect(thin).toBeGreaterThan(0);
+    expect(wide / path).toBeGreaterThan(2);
+  });
+
+  it('a Praia vai de `beachMinWidth` a `beachMaxWidth` hexágonos do mar', () => {
+    const wideBeach = { ...WATERY, beachMinWidth: 2, beachMaxWidth: 4 };
+    const reached = new Set<number>();
+    for (const seed of SEEDS.slice(0, 20)) {
+      const map = generateShapedMap(seed, wideBeach);
+      const sea = seaOf(map);
+      const fromSea = distanceTo(map, (tile) => sea.has(hexKey(tile)));
+      for (const tile of map.tiles.filter(({ biome }) => biome === 'beach')) {
+        reached.add(fromSea.get(hexKey(tile))!);
+      }
+    }
+    expect([...reached].sort()).toEqual([1, 2, 3, 4]);
+  });
+
+  it('sem lagos e sem rios, eles não aparecem', () => {
+    const none = { ...WATERY, lakeCount: 0, riverCount: 0 };
+    for (const seed of SEEDS.slice(0, 10)) {
+      const map = generateShapedMap(seed, none);
+      expect(map.lakes).toEqual([]);
+      expect(map.rivers).toEqual([]);
+    }
+  });
+});
+
+type HexCoordList = { q: number; r: number }[];
+
+/** As duas pontas de uma ponte, como hexágonos. */
+function bridgeEnds(points: number[]): [string, string] {
+  const origin = flatCenter({ q: 0, r: 0 });
+  const at = (x: number, y: number) =>
+    hexKey(gridCoord({ x: origin.x + x, y: origin.y + y }));
+  return [at(points[0]!, points[1]!), at(points[2]!, points[3]!)];
+}
+
+/** A terra que se alcança da chegada andando, pelos vaus e pelas pontes. */
+function reachable(map: ShapedMap): Set<string> {
+  const byKey = indexed(map);
+  const links = new Map<string, string[]>();
+  for (const { points } of map.bridges) {
+    const [a, b] = bridgeEnds(points);
+    links.set(a, [...(links.get(a) ?? []), b]);
+    links.set(b, [...(links.get(b) ?? []), a]);
+  }
+  const seen = new Set([hexKey(map.start)]);
+  const pending = [hexKey(map.start)];
+  while (pending.length > 0) {
+    const key = pending.pop()!;
+    const next = [
+      ...neighborsOf(byKey.get(key)!, byKey).map(hexKey),
+      ...(links.get(key) ?? []),
+    ];
+    for (const other of next) {
+      const tile = byKey.get(other)!;
+      if (seen.has(other) || blocksWalking(tile.biome)) continue;
+      seen.add(other);
+      pending.push(other);
+    }
+  }
+  return seen;
+}
+
+describe('os rios que atravessam e as travessias (coast-rivers/03)', () => {
+  const CROSSING: MapConfig = {
+    ...CONFIG,
+    tileCount: 900,
+    lakeCount: 2,
+    lakeMinWidth: 6,
+    lakeMaxWidth: 8,
+    riverCount: 4,
+    throughRiverChance: 0.6,
+    crossingSpacing: 8,
+    riverMinWidth: 2,
+    riverMaxWidth: 4,
+    beachMinWidth: 2,
+    beachMaxWidth: 4,
+  };
+  let maps: ShapedMap[];
+
+  beforeAll(() => {
+    maps = SEEDS.slice(0, 60).map((seed) => generateShapedMap(seed, CROSSING));
+  });
+
+  it('há rios que atravessam, vaus e pontes ao longo das seeds', () => {
+    expect(
+      maps.some((map) => map.rivers.some(({ source }) => source === 'edge')),
+    ).toBe(true);
+    expect(
+      maps.some((map) => map.tiles.some(({ biome }) => biome === 'wford')),
+    ).toBe(true);
+    expect(maps.some((map) => map.bridges.length > 0)).toBe(true);
+  });
+
+  it('toda terra de 3 hexágonos ou mais encostada num rio chega à chegada', () => {
+    for (const map of maps) {
+      const byKey = indexed(map);
+      const river = new Set(
+        map.rivers.flatMap(({ cells }) => cells).map(hexKey),
+      );
+      const seen = reachable(map);
+      const pieces = new Map<string, number>();
+      for (const tile of map.tiles) {
+        if (
+          isWater(tile.biome) ||
+          seen.has(hexKey(tile)) ||
+          pieces.has(hexKey(tile))
+        )
+          continue;
+        const piece = [hexKey(tile)];
+        pieces.set(hexKey(tile), 0);
+        for (let index = 0; index < piece.length; index += 1) {
+          for (const neighbor of neighborsOf(
+            byKey.get(piece[index]!)!,
+            byKey,
+          )) {
+            if (!isWater(neighbor.biome) && !pieces.has(hexKey(neighbor))) {
+              pieces.set(hexKey(neighbor), 0);
+              piece.push(hexKey(neighbor));
+            }
+          }
+        }
+        const touchesRiver = piece.some((key) =>
+          neighborsOf(byKey.get(key)!, byKey).some((n) => river.has(hexKey(n))),
+        );
+        if (piece.length >= 3) expect(touchesRiver).toBe(false);
+      }
+    }
+  });
+
+  it('cada ponte é uma reta de margem a margem, por cima só de rio ou da beira de um lago', () => {
+    for (const map of maps) {
+      const byKey = indexed(map);
+      const river = new Set(
+        map.rivers.flatMap(({ cells }) => cells).map(hexKey),
+      );
+      for (const { type, points, width } of map.bridges) {
+        expect(type).toBe('wood_bridge');
+        expect(width).toBe(28);
+        const [a, b] = bridgeEnds(points).map((key) => byKey.get(key)!);
+        expect(isWater(a!.biome)).toBe(false);
+        expect(isWater(b!.biome)).toBe(false);
+        const steps = hexDistance(a!, b!);
+        expect(steps).toBeGreaterThanOrEqual(2);
+        expect(steps).toBeLessThanOrEqual(7);
+        const dq = (b!.q - a!.q) / steps;
+        const dr = (b!.r - a!.r) / steps;
+        expect(Number.isInteger(dq) && Number.isInteger(dr)).toBe(true);
+        const inland = new Set([...river, ...map.lakes.flat().map(hexKey)]);
+        for (let step = 1; step < steps; step += 1) {
+          const key = hexKey({ q: a!.q + dq * step, r: a!.r + dr * step });
+          expect(inland.has(key)).toBe(true);
+          expect(blocksWalking(byKey.get(key)!.biome)).toBe(true);
+        }
+      }
+    }
+  });
+
+  it('o vau fica no rio e tem a variante de 1 a 3', () => {
+    for (const map of maps) {
+      const river = new Set(
+        map.rivers.flatMap(({ cells }) => cells).map(hexKey),
+      );
+      const inland = new Set([...river, ...map.lakes.flat().map(hexKey)]);
+      for (const tile of map.tiles.filter(({ biome }) => biome === 'wford')) {
+        expect(inland.has(hexKey(tile))).toBe(true);
+        expect(tile.variant).toBeLessThanOrEqual(3);
+      }
+    }
+  });
+
+  it('sem rio que atravessa, não há vau nem ponte; com 1, todo rio vem da borda', () => {
+    for (const seed of SEEDS.slice(0, 20)) {
+      const none = generateShapedMap(seed, {
+        ...CROSSING,
+        throughRiverChance: 0,
+      });
+      expect(none.bridges).toEqual([]);
+      expect(none.tiles.some(({ biome }) => biome === 'wford')).toBe(false);
+      expect(none.rivers.some(({ source }) => source === 'edge')).toBe(false);
+      const all = generateShapedMap(seed, {
+        ...CROSSING,
+        throughRiverChance: 1,
+      });
+      expect(all.rivers.every(({ source }) => source === 'edge')).toBe(true);
+    }
+  });
+
+  it('com `fordShare` 1, as travessias são só vaus; com 0, há mais pontes e menos vau', () => {
+    let fewBridges = 0;
+    let manyBridges = 0;
+    let fewFords = 0;
+    let manyFords = 0;
+    const fords = (map: ShapedMap) =>
+      map.tiles.filter(({ biome }) => biome === 'wford').length;
+    for (const seed of SEEDS.slice(0, 30)) {
+      const onlyFords = generateShapedMap(seed, { ...CROSSING, fordShare: 1 });
+      expect(onlyFords.bridges).toEqual([]);
+      manyFords += fords(onlyFords);
+      const mostlyBridges = generateShapedMap(seed, {
+        ...CROSSING,
+        fordShare: 0,
+      });
+      manyBridges += mostlyBridges.bridges.length;
+      fewFords += fords(mostlyBridges);
+      fewBridges += onlyFords.bridges.length;
+    }
+    expect(manyBridges).toBeGreaterThan(fewBridges);
+    expect(fewFords).toBeLessThan(manyFords);
   });
 });
 
@@ -415,6 +966,10 @@ describe('terrainOf', () => {
     ['temperate', 'mont', 'mountain', 4],
     ['stone', 'mont', 'mountain', 4],
     ['wdeep', 'mont', 'mountain', 4],
+    ['beach', 'flat', 'beach', 1],
+    ['beach', 'hill', 'beach', 2],
+    ['beach', 'mont', 'mountain', 4],
+    ['wford', 'flat', 'wford', 0],
   ] as const)('%s com %s vira %s na altura %d', (biome, shape, to, height) => {
     expect(terrainOf(biome, shape)).toEqual({ biome: to, height });
   });
@@ -427,9 +982,10 @@ describe('generateMap', () => {
     maps = SEEDS.slice(0, 40).map((seed) => generateMap(seed, CONFIG));
   });
 
-  it('são os 9 biomas do catálogo', () => {
+  it('são os 11 biomas do catálogo', () => {
     expect([...BIOMES].sort()).toEqual(
       [
+        'beach',
         'boreal',
         'desert',
         'snow',
@@ -438,6 +994,7 @@ describe('generateMap', () => {
         'stone',
         'temperate',
         'wdeep',
+        'wford',
         'wshallow',
       ].sort(),
     );
@@ -486,6 +1043,7 @@ describe('generateMap', () => {
     expect(sorted('boreal')).toEqual([1]);
     expect(sorted('desert')).toEqual([1, 2]);
     expect(sorted('snow')).toEqual([1, 2]);
+    expect(sorted('beach')).toEqual([1, 2]);
     expect(sorted('wshallow')).toEqual([0]);
     expect(sorted('wdeep')).toEqual([0]);
   });
@@ -495,9 +1053,14 @@ describe('generateMap', () => {
       const start = map.tiles.find(
         ({ q, r }) => q === map.start.q && r === map.start.r,
       );
-      expect(['temperate', 'boreal', 'stone', 'desert', 'snow']).toContain(
-        start!.biome,
-      );
+      expect([
+        'temperate',
+        'boreal',
+        'stone',
+        'desert',
+        'snow',
+        'beach',
+      ]).toContain(start!.biome);
     }
   });
 });

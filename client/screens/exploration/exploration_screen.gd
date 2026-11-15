@@ -261,7 +261,7 @@ func _go_to(art_point: Vector2) -> void:
 		goals = {HexMapView.grid_coord(bridge.from): true, HexMapView.grid_coord(bridge.to): true}
 		if _map.is_clear(_player_point, finish):
 			goals = {_player_coord: true}
-	elif _map.is_water_hex(target):
+	elif _map.is_blocked_hex(target):
 		# Na água: vai até a terra mais perto e para rente a ela.
 		goals = _map.shore_goals(target)
 	elif target != _player_coord and _map.is_center_walled(target):
@@ -269,7 +269,7 @@ func _go_to(art_point: Vector2) -> void:
 		# e anda até o ponto tocado, parando rente a ela.
 		goals = _map.approach_goals(target, finish)
 	var hexes: Array[Vector2i] = [_player_coord]
-	if not goals.has(_player_coord) and (target != _player_coord or _map.is_water_hex(target)):
+	if not goals.has(_player_coord) and (target != _player_coord or _map.is_blocked_hex(target)):
 		var path := _map.path_to_any(_player_coord, goals, _player_point)
 		if path.is_empty():
 			_show_message(NO_PATH_TEXT, &"SecondaryLabel")
@@ -406,7 +406,7 @@ func _search() -> void:
 	var nearest := Vector2i.ZERO
 	var best := INF
 	for next: Vector2i in _map.neighbors(_player_coord):
-		if not _map.is_water_hex(next) or not _map.has_creature(next):
+		if not _map.is_blocked_hex(next) or not _map.has_creature(next):
 			continue
 		var gap := HexMapView.flat_center(next).distance_to(_player_point)
 		if gap < best:

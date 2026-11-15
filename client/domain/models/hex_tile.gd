@@ -1,7 +1,9 @@
 class_name HexTile
 extends RefCounted
 
-const WATER_BIOMES: Array[String] = ["wshallow", "wdeep"]
+## O vau é água no desenho, mas o Domador anda nele (coast-rivers/03).
+const FORD := "wford"
+const WATER_BIOMES: Array[String] = ["wshallow", "wdeep", FORD]
 const MAX_HEIGHT := 10
 
 var coord: Vector2i
@@ -15,6 +17,10 @@ var bare := false
 
 func is_water() -> bool:
 	return WATER_BIOMES.has(biome)
+
+
+func blocks_walking() -> bool:
+	return is_water() and biome != FORD
 
 
 static func from_dict(d: Dictionary) -> HexTile:

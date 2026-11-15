@@ -540,6 +540,30 @@
 		"variants": 4
 	},
 	{
+		"id": 91,
+		"slug": "shells",
+		"name": "Conchas",
+		"variants": 4
+	},
+	{
+		"id": 92,
+		"slug": "starfish",
+		"name": "Estrela-do-mar",
+		"variants": 4
+	},
+	{
+		"id": 93,
+		"slug": "driftwood",
+		"name": "Tronco à deriva",
+		"variants": 4
+	},
+	{
+		"id": 94,
+		"slug": "beach_rock",
+		"name": "Pedra de praia",
+		"variants": 4
+	},
+	{
 		"id": 95,
 		"slug": "big_house",
 		"name": "Casa grande",

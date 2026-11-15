@@ -18,7 +18,7 @@ static func points(map: ExplorationMap, from: Vector2, hexes: Array[Vector2i], t
 	var waypoints := PackedVector2Array([from])
 	var own := HexMapView.flat_center(hexes[0])
 	var deck := map.deck_of(from)
-	if deck >= 0 and map.is_water_hex(hexes[0]) and hexes.size() > 1:
+	if deck >= 0 and map.is_blocked_hex(hexes[0]) and hexes.size() > 1:
 		# Em cima de uma ponte: sai pela ponta do hexágono seguinte (bridges/04).
 		var bridge := map.bridges[deck]
 		waypoints.append(bridge.from if HexMapView.grid_coord(bridge.from) == hexes[1] else bridge.to)

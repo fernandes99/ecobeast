@@ -66,6 +66,7 @@ O Ecobeast é um jogo mobile (Android/iOS, retrato): o cliente em **Godot 4.7 co
 | [fence-art](fence-art/) | A cerca de madeira e o muro de pedra com a arte do pacote Sunnyside World, com a travessa vista de cima nos trechos em pé |
 | [nature-variety](nature-variety/) | 24 tipos novos de decoração (árvores, galhos, troncos, mato, flores, cogumelos e pedras) no sorteio de cada bioma e como peças soltas |
 | [home-pack](home-pack/) | A casa grande do pacote Main Characters Home, com a fumaça da chaminé animada, a pequena e o sobrado pequeno, em 8 cores, e a cerca de estacas do mesmo pacote |
+| [coast-rivers](coast-rivers/) | O mar num lado do mapa, a Praia, os lagos, os rios e as travessias (pontes automáticas e vaus) |
 
 As próximas iniciativas estão no [roadmap.md](roadmap.md).
 

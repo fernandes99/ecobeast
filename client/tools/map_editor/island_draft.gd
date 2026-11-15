@@ -54,6 +54,10 @@ static func generated(island_name: String, data: Dictionary) -> IslandDraft:
 	var draft := IslandDraft.new()
 	draft.name = island_name
 	draft._read_terrain(data)
+	for entry: Variant in DictFields.get_array(data, "bridges"):
+		var bridge: MapBridge = MapBridge.from_dict(entry) if entry is Dictionary else null
+		if bridge != null:
+			draft.bridges.append(bridge)
 	return draft
 
 

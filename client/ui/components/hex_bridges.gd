@@ -163,7 +163,8 @@ static func _deck(slug: String, from: Vector2, to: Vector2, along: Vector2, acro
 			var v := offset.dot(across) + half
 			if u < 0.0 or u >= length or v < 0.0 or v >= width:
 				continue
-			var pick := _pick(floori(u), steps, lengths)
+			# Num comprimento quebrado, o último pixel passaria da última linha da arte.
+			var pick := _pick(mini(floori(u), steps - 1), steps, lengths)
 			if pick.x < 0:
 				continue
 			var column := art.y + _column(floori(v), width, inner, 0)

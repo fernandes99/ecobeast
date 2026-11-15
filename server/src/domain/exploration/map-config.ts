@@ -2,15 +2,27 @@ export interface MapConfig {
   tileCount: number;
   edgeRoughness: number;
   noiseScale: number;
-  waterFraction: number;
-  deepFraction: number;
+  seaFraction: number;
+  coastRoughness: number;
+  shallowWidth: number;
+  beachMinWidth: number;
+  beachMaxWidth: number;
+  lakeCount: number;
+  lakeMinWidth: number;
+  lakeMaxWidth: number;
+  riverCount: number;
+  riverMinWidth: number;
+  riverMaxWidth: number;
+  springLakeChance: number;
+  throughRiverChance: number;
+  crossingSpacing: number;
+  fordShare: number;
   wetLimit: number;
   stoneFraction: number;
   desertFraction: number;
   snowFraction: number;
   hillFrom: number;
   mountainFrom: number;
-  islandChance: number;
   detailChance: number;
   cleanupPasses: number;
 }
@@ -19,15 +31,27 @@ export const DEFAULT_MAP_CONFIG: MapConfig = {
   tileCount: 10000,
   edgeRoughness: 200, // 0 = Hexagano perfeito nas bordas
   noiseScale: 0.05,
-  waterFraction: 0.2,
-  deepFraction: 0.5,
+  seaFraction: 0.3,
+  coastRoughness: 0.25,
+  shallowWidth: 2,
+  beachMinWidth: 2,
+  beachMaxWidth: 4,
+  lakeCount: 4,
+  lakeMinWidth: 6,
+  lakeMaxWidth: 12,
+  riverCount: 5,
+  riverMinWidth: 2,
+  riverMaxWidth: 4,
+  springLakeChance: 0.35,
+  throughRiverChance: 0.3,
+  crossingSpacing: 14,
+  fordShare: 0.5,
   wetLimit: 0.5,
   stoneFraction: 0.15,
   desertFraction: 0.12,
   snowFraction: 0.12,
   hillFrom: 0.6,
   mountainFrom: 0.95,
-  islandChance: 0.05,
   detailChance: 0.2,
   cleanupPasses: 3,
 };
@@ -44,15 +68,27 @@ export const MAP_CONFIG_RANGES: Record<keyof MapConfig, ConfigRange> = {
   tileCount: { min: 100, max: 20_000, integer: true },
   edgeRoughness: { min: 0, max: 500, integer: false },
   noiseScale: { min: 0.005, max: 0.5, integer: false },
-  waterFraction: fraction,
-  deepFraction: fraction,
+  seaFraction: { min: 0, max: 0.8, integer: false },
+  coastRoughness: fraction,
+  shallowWidth: { min: 1, max: 6, integer: true },
+  beachMinWidth: { min: 1, max: 8, integer: true },
+  beachMaxWidth: { min: 1, max: 8, integer: true },
+  lakeCount: { min: 0, max: 20, integer: true },
+  lakeMinWidth: { min: 6, max: 40, integer: true },
+  lakeMaxWidth: { min: 6, max: 40, integer: true },
+  riverCount: { min: 0, max: 20, integer: true },
+  riverMinWidth: { min: 1, max: 6, integer: true },
+  riverMaxWidth: { min: 1, max: 6, integer: true },
+  springLakeChance: fraction,
+  throughRiverChance: fraction,
+  crossingSpacing: { min: 4, max: 60, integer: true },
+  fordShare: fraction,
   wetLimit: fraction,
   stoneFraction: fraction,
   desertFraction: fraction,
   snowFraction: fraction,
   hillFrom: fraction,
   mountainFrom: fraction,
-  islandChance: fraction,
   detailChance: fraction,
   cleanupPasses: { min: 0, max: 10, integer: true },
 };

@@ -888,15 +888,15 @@ describe('Editor de ilhas (e2e)', () => {
       });
     });
 
-    it('gera o mesmo mapa com a mesma seed e mais água com mais water_fraction', async () => {
+    it('gera o mesmo mapa com a mesma seed e mais água com mais sea_fraction', async () => {
       const ask = (config: object) =>
         call('post', '/map-generator')
           .send({ seed: 42, config: { tile_count: 500, ...config } })
           .expect(200)
           .then((response) => response.body as Generated);
-      const first = await ask({ water_fraction: 0.1 });
-      const again = await ask({ water_fraction: 0.1 });
-      const wetter = await ask({ water_fraction: 0.6 });
+      const first = await ask({ sea_fraction: 0.1 });
+      const again = await ask({ sea_fraction: 0.1 });
+      const wetter = await ask({ sea_fraction: 0.6 });
       expect(first.tiles).toHaveLength(500);
       expect(again).toEqual(first);
       expect(water(wetter)).toBeGreaterThan(water(first));

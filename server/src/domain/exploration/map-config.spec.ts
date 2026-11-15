@@ -26,13 +26,13 @@ describe('mapConfigError', () => {
   });
 
   it('aceita os limites das faixas', () => {
-    expect(mapConfigError({ tileCount: 100, waterFraction: 1 })).toBeNull();
-    expect(mapConfigError({ tileCount: 20_000, waterFraction: 0 })).toBeNull();
+    expect(mapConfigError({ tileCount: 100, coastRoughness: 1 })).toBeNull();
+    expect(mapConfigError({ tileCount: 20_000, coastRoughness: 0 })).toBeNull();
   });
 
   it.each([
     [{ tileCount: 99 }, 'tileCount precisa ficar entre 100 e 20000.'],
-    [{ waterFraction: 1.2 }, 'waterFraction precisa ficar entre 0 e 1.'],
+    [{ coastRoughness: 1.2 }, 'coastRoughness precisa ficar entre 0 e 1.'],
     [{ noiseScale: 0 }, 'noiseScale precisa ficar entre 0.005 e 0.5.'],
     [{ cleanupPasses: 11 }, 'cleanupPasses precisa ficar entre 0 e 10.'],
   ])('recusa %o', (config, message) => {
@@ -49,9 +49,9 @@ describe('mapConfigError', () => {
 
 describe('withDefaults', () => {
   it('completa o que falta com o padrão', () => {
-    expect(withDefaults({ waterFraction: 0.5 })).toEqual({
+    expect(withDefaults({ seaFraction: 0.5 })).toEqual({
       ...DEFAULT_MAP_CONFIG,
-      waterFraction: 0.5,
+      seaFraction: 0.5,
     });
   });
 });

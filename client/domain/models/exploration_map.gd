@@ -97,17 +97,17 @@ func path_to_any(from: Vector2i, goals: Dictionary[Vector2i, bool], from_point :
 	var links: Dictionary[Vector2i, Array] = {}
 	if use_bridges:
 		links = bridge_links()
-	if from_point.is_finite() and (is_water_hex(from) or not is_clear(from_point, HexMapView.flat_center(from))):
+	if from_point.is_finite() and (is_blocked_hex(from) or not is_clear(from_point, HexMapView.flat_center(from))):
 		index = 1
 		var starts: Array[Vector2i] = []
 		for next: Vector2i in neighbors(from):
-			if not is_water_hex(next) and is_clear(from_point, HexMapView.flat_center(next)):
+			if not is_blocked_hex(next) and is_clear(from_point, HexMapView.flat_center(next)):
 				starts.append(next)
 		var deck := deck_of(from_point)
 		if deck >= 0:
 			for end: Vector2 in [bridges[deck].from, bridges[deck].to]:
 				var coord := HexMapView.grid_coord(end)
-				if has(coord) and not is_water_hex(coord) and is_clear(end, HexMapView.flat_center(coord)):
+				if has(coord) and not is_blocked_hex(coord) and is_clear(end, HexMapView.flat_center(coord)):
 					starts.append(coord)
 		for next: Vector2i in starts:
 			if came_from.has(next):
@@ -121,7 +121,7 @@ func path_to_any(from: Vector2i, goals: Dictionary[Vector2i, bool], from_point :
 		index += 1
 		var nexts: Array[Vector2i] = []
 		for next: Vector2i in neighbors(coord):
-			if not is_water_hex(next) and not _wall_between(coord, next):
+			if not is_blocked_hex(next) and not _wall_between(coord, next):
 				nexts.append(next)
 		for link: Array in links.get(coord, []):
 			nexts.append(link[0])
@@ -193,7 +193,7 @@ func approach_goals(target: Vector2i, finish: Vector2) -> Dictionary[Vector2i, b
 	for next: Vector2i in neighbors(target):
 		if not has(next) or is_center_walled(next):
 			continue
-		if is_water_hex(next):
+		if is_blocked_hex(next):
 			continue
 		all[next] = true
 		if is_clear(HexMapView.flat_center(next), finish):
@@ -219,12 +219,13 @@ func is_clear(from: Vector2, to: Vector2) -> bool:
 
 ## Um ponto na água, fora do piso das pontes.
 func is_blocked(flat: Vector2) -> bool:
-	return is_water_hex(HexMapView.grid_coord(flat)) and deck_of(flat) < 0
+	return is_blocked_hex(HexMapView.grid_coord(flat)) and deck_of(flat) < 0
 
 
-func is_water_hex(coord: Vector2i) -> bool:
+## Um hexágono onde não se anda: água que não é vau.
+func is_blocked_hex(coord: Vector2i) -> bool:
 	var tile := tile_at(coord)
-	return tile != null and tile.is_water()
+	return tile != null and tile.blocks_walking()
 
 
 ## A ponte cujo piso tem o ponto, ou -1. O piso é o corredor reto entre as pontas, com a
@@ -277,7 +278,7 @@ func bridge_links() -> Dictionary[Vector2i, Array]:
 	for bridge: MapBridge in bridges:
 		var a := HexMapView.grid_coord(bridge.from)
 		var b := HexMapView.grid_coord(bridge.to)
-		if a == b or not has(a) or not has(b) or is_water_hex(a) or is_water_hex(b):
+		if a == b or not has(a) or not has(b) or is_blocked_hex(a) or is_blocked_hex(b):
 			continue
 		if not is_clear(HexMapView.flat_center(a), bridge.from) or not is_clear(bridge.to, HexMapView.flat_center(b)):
 			continue
@@ -310,7 +311,7 @@ func shore_goals(target: Vector2i) -> Dictionary[Vector2i, bool]:
 				if seen.has(next):
 					continue
 				seen[next] = true
-				if is_water_hex(next):
+				if is_blocked_hex(next):
 					next_ring.append(next)
 				else:
 					goals[next] = true

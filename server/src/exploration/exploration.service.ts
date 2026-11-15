@@ -112,7 +112,6 @@ export class ExplorationService {
         props: [],
         trails: [],
         walls: [],
-        bridges: [],
         npcs: [],
       },
     };
