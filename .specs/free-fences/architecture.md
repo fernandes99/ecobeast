@@ -18,7 +18,7 @@ Uma **parede** é uma linha de pontos com um tipo. A cerca de madeira e o muro d
 | 3 | `invisible_wall` | Parede invisível | false |
 
 - Os ids são estáveis. O `seed-data` ganha `wall_types.json`, e o catálogo (`GET /v1/catalog`) manda a tabela.
-- **A arte** de um tipo visível é `client/assets/walls/<slug>.png`. Desde a [fence-art/01](../fence-art/01-sunnyside-fences.md), ela vem do pacote Sunnyside World, em 3 células, com a travessa vista de cima nos trechos em pé, e os postes a cada 16 px; o que segue é o desenho da free-fences, de antes. Eram 2 células de 96×72 e o pé em (48, 43), geradas pelo `make_town.gd` com o desenho da Cerca (cidade):
+- **A arte** de um tipo visível é `client/assets/walls/<slug>.png`. Desde a [fence-art/01](../fence-art/01-sunnyside-fences.md), ela vem do pacote Sunnyside World, em 3 células, com a travessa vista de cima nos trechos em pé, e os postes a cada 16 px (a cerca de estacas da [home-pack/02](../home-pack/02-picket-fence.md), a cada 8 px); o que segue é o desenho da free-fences, de antes. Eram 2 células de 96×72 e o pé em (48, 43), geradas pelo `make_town.gd` com o desenho da Cerca (cidade):
   - a célula 0 é o poste (madeira) ou o pilar (pedra);
   - a célula 1 é a travessa reta, de ponta a ponta, sem poste. As fatias usam as colunas 0 a 27 dela (`HexWalls.RAIL_SPAN`), que se repetem: o muro de pedra tem uma emenda a cada 7 px, e 28 fecha as duas cercas (revisto na fase 1; antes, as colunas 50 a 73 do braço da direita, que quebravam a emenda).
   - A fase 4 apaga as folhas antigas da Cerca (cidade).

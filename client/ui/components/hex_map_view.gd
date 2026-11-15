@@ -77,6 +77,12 @@ const TREE_CANOPY: Array[String] = [
 	"leafy_tree", "moss_tree", "fruit_tree", "blossom_tree", "autumn_tree", "dead_tree",
 	"round_pine", "snowy_pine", "snowy_tree", "broadleaf_tree", "palm_tree",
 ]
+## A fumaça da chaminé (home-pack/01): os quadros em `smoke.png` ao lado da arte, o canto do
+## quadro em relação ao pé e quantos quadros por segundo.
+const SMOKE_PATH := "res://assets/props/%s/smoke.png"
+const PROP_SMOKE: Dictionary[String, Dictionary] = {
+	"big_house": {"offset": Vector2i(-63, -144), "size": 48, "frames": 6, "fps": 6.0},
+}
 const NO_PLACE := Vector2i(-2147483648, 0)
 ## O corte de altura do editor: acima dele, o hexágono fica transparente (terrain-height/03).
 const CUT_HEIGHT := 4
@@ -1269,7 +1275,7 @@ func _add_wall_mesh(row: HexRowView, slug: String, placed: Array) -> void:
 				size = Vector2(1.0, cell.y)
 				source = Vector2(cell.x + piece.column, 0.0)
 			HexWalls.Kind.TOP:
-				top_left = base - Vector2(floorf(top_width / 2.0), 0.0)
+				top_left = base - Vector2(floorf(top_width / 2.0), HexWalls.top_lift(slug))
 				size = Vector2(top_width, 1.0)
 				source = Vector2(cell.x * 2.0 + foot.x - floorf(top_width / 2.0), piece.column)
 		points.append_array(_quad(top_left, top_left + Vector2(size.x, 0.0), Vector2(0.0, size.y)))
@@ -1314,6 +1320,33 @@ func _add_file_props(row: HexRowView, path: String, placed: Array) -> void:
 		for _vertex: int in 6:
 			wind.append_array(PackedFloat32Array([base.x, base.y, push if sway > 0.0 else HexDecorations.NO_SWAY.x, size.y if sway > 0.0 else HexDecorations.NO_SWAY.y]))
 	_add_mesh(row, path, points, texture_points, PackedColorArray(), wind)
+	var slug := path.get_base_dir().get_file()
+	if PROP_SMOKE.has(slug):
+		_add_smoke(row, slug, int(size.x), placed)
+
+
+## Os quadros da fumaça trocam no shader, cada casa num ponto do ciclo.
+func _add_smoke(row: HexRowView, slug: String, width: int, placed: Array) -> void:
+	var smoke: Dictionary = PROP_SMOKE[slug]
+	var offset: Vector2i = smoke["offset"]
+	var frame := float(smoke["size"])
+	var points := PackedVector2Array()
+	var texture_points := PackedVector2Array()
+	var wind := PackedFloat32Array()
+	var frames := PackedFloat32Array()
+	for entry: Array in placed:
+		var base: Vector2i = entry[0]
+		var left := float(base.x + offset.x)
+		if entry[1]:
+			left = float(base.x + width % 2 - offset.x) - frame
+		var top_left := Vector2(left, base.y + offset.y)
+		points.append_array(_quad(top_left, top_left + Vector2(frame, 0.0), Vector2(0.0, frame)))
+		var from := frame if entry[1] else 0.0
+		texture_points.append_array(_quad(Vector2(from, 0.0), Vector2(frame - from, 0.0), Vector2(0.0, frame)))
+		for _vertex: int in 6:
+			wind.append_array(PackedFloat32Array([base.x, base.y, HexDecorations.NO_SWAY.x, HexDecorations.NO_SWAY.y]))
+			frames.append_array(PackedFloat32Array([2.0, float(smoke["frames"]), float(smoke["fps"]), 0.0]))
+	_add_texture_mesh(row, _texture(SMOKE_PATH % slug), points, texture_points, PackedColorArray(), wind, frames)
 
 
 ## As árvores: os pixels da copa, da base dela para cima, pegam a cor de um vizinho a

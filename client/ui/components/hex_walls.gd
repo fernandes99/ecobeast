@@ -1,12 +1,13 @@
 class_name HexWalls
 extends RefCounted
-## Os pedaços de uma cerca (free-fences/01, fence-art/01): postes a espaços iguais e, entre
+## Os pedaços de uma cerca (free-fences/01, fence-art/01, home-pack/02): postes a espaços iguais e, entre
 ## eles, fatias de 1 px da travessa deitada ou, num trecho em pé, linhas de 1 px da travessa
 ## vista de cima, no chão plano. A parede invisível não tem pedaços.
 
 const ART_PATH := "res://assets/walls/%s.png"
 ## A folha (make_walls.py): a célula 0 é o poste, a 1 a travessa deitada entre dois postes,
-## nas colunas 0 a RAIL_SPAN - 1, e a 2 a travessa vista de cima, centrada no pé.
+## nas colunas 0 a RAIL_SPAN - 1 (ou só até o espaço entre os postes, se for menor), e a 2
+## a travessa vista de cima, centrada no pé.
 const CELL_SIZE := Vector2i(96, 72)
 const CELL_FOOT := Vector2i(48, 43)
 const RAIL_SPAN := 16
@@ -14,12 +15,17 @@ const RAIL_SPAN := 16
 const ART_BELOW := 3.0
 const POST_HALF_WIDTH := 5.0
 const POST_GAP := 16.0
+## A cerca de estacas tem uma estaca a cada 8 px.
+const FLAT_GAP := {"picket_fence": 8.0}
 ## Acima de 60°, a travessa deitada empilha e vira uma faixa: vai a vista de cima.
 const STEEP_SLOPE := 1.73
-## Por tipo: os postes de um trecho em pé, a largura e as linhas da travessa vista de cima.
+## Por tipo: os postes de um trecho em pé, a largura e as linhas da travessa vista de cima e
+## quanto ela sobe do chão. As estacas já estão no trecho em pé da cerca de estacas: ela só
+## tem os postes das pontas.
 const STEEP := {
-	"wood_fence": {"gap": 16.0, "width": 4, "rows": 1},
-	"stone_fence": {"gap": 24.0, "width": 8, "rows": 8},
+	"wood_fence": {"gap": 16.0, "width": 4, "rows": 1, "lift": 0},
+	"stone_fence": {"gap": 24.0, "width": 8, "rows": 8, "lift": 0},
+	"picket_fence": {"gap": INF, "width": 7, "rows": 8, "lift": 8},
 }
 
 enum Kind { POST, RAIL, TOP }
@@ -50,11 +56,17 @@ static func top_width(slug: String) -> int:
 	return STEEP.get(slug, {}).get("width", 1)
 
 
+static func top_lift(slug: String) -> int:
+	return STEEP.get(slug, {}).get("lift", 0)
+
+
 static func pieces(wall: MapWall) -> Array[Piece]:
 	var result: Array[Piece] = []
 	if not is_visible(wall.type) or wall.points.is_empty():
 		return result
 	var steep_style: Dictionary = STEEP.get(wall.type, {"gap": POST_GAP, "rows": 1})
+	var flat_gap: float = FLAT_GAP.get(wall.type, POST_GAP)
+	var span := mini(int(flat_gap), RAIL_SPAN)
 	for index: int in range(1, wall.points.size()):
 		var from := wall.points[index - 1]
 		var to := wall.points[index]
@@ -63,7 +75,7 @@ static func pieces(wall: MapWall) -> Array[Piece]:
 			continue
 		var delta := to - from
 		var steep := absf(delta.y) > absf(delta.x) * STEEP_SLOPE
-		var posts := maxi(1, roundi(length / (float(steep_style["gap"]) if steep else POST_GAP)))
+		var posts := maxi(1, roundi(length / (float(steep_style["gap"]) if steep else flat_gap)))
 		var steps := ceili(maxf(absf(delta.x), absf(delta.y)))
 		for step: int in steps:
 			var t := float(step) / steps
@@ -71,7 +83,7 @@ static func pieces(wall: MapWall) -> Array[Piece]:
 				result.append(_piece(wall.type, from.lerp(to, t), Kind.TOP, step % int(steep_style["rows"])))
 			else:
 				var between := fposmod(t * posts, 1.0)
-				result.append(_piece(wall.type, from.lerp(to, t), Kind.RAIL, mini(int(between * RAIL_SPAN), RAIL_SPAN - 1)))
+				result.append(_piece(wall.type, from.lerp(to, t), Kind.RAIL, mini(int(between * span), span - 1)))
 		for post: int in posts:
 			result.append(_piece(wall.type, from.lerp(to, float(post) / posts), Kind.POST, 0))
 	result.append(_piece(wall.type, wall.points[wall.points.size() - 1], Kind.POST, 0))

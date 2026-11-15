@@ -538,5 +538,11 @@
 		"slug": "snow_log",
 		"name": "Tronco com neve",
 		"variants": 4
+	},
+	{
+		"id": 95,
+		"slug": "big_house",
+		"name": "Casa grande",
+		"variants": 1
 	}
 ]

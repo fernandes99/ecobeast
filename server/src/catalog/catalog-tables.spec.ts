@@ -268,11 +268,12 @@ describe('carga inicial dos tipos de parede (free-fences/01)', () => {
     readFileSync(join(SEED_DATA_DIR, 'wall_types.json'), 'utf8'),
   ) as { id: number; slug: string; name: string; visible: boolean }[];
 
-  it('tem a cerca de madeira, o muro de pedra e a parede invisível, com ids estáveis', () => {
+  it('tem a cerca de madeira, o muro de pedra, a parede invisível e a cerca de estacas, com ids estáveis', () => {
     expect(walls.map(({ id, slug, visible }) => [id, slug, visible])).toEqual([
       [1, 'wood_fence', true],
       [2, 'stone_fence', true],
       [3, 'invisible_wall', false],
+      [4, 'picket_fence', true],
     ]);
   });
 });
@@ -316,7 +317,7 @@ describe('carga inicial do chão (island-villages/01)', () => {
   });
 });
 
-describe('carga inicial das peças soltas (free-props/01, free-objects/04, vegetation-packs/01, nature-variety/02)', () => {
+describe('carga inicial das peças soltas (free-props/01, free-objects/04, vegetation-packs/01, nature-variety/02, home-pack/01)', () => {
   const read = <T>(file: string): T =>
     JSON.parse(readFileSync(join(SEED_DATA_DIR, file), 'utf8')) as T;
   const props =
@@ -331,10 +332,11 @@ describe('carga inicial das peças soltas (free-props/01, free-objects/04, veget
     }[]
   >('prop_type_blocks.json');
 
-  it('tem os 90 tipos, de 1 a 90, com pelo menos 1 variante', () => {
-    expect(props.map(({ id }) => id)).toEqual(
-      Array.from({ length: 90 }, (_, index) => index + 1),
-    );
+  it('tem os tipos de 1 a 90 e a casa grande, 95, com pelo menos 1 variante', () => {
+    expect(props.map(({ id }) => id)).toEqual([
+      ...Array.from({ length: 90 }, (_, index) => index + 1),
+      95,
+    ]);
     for (const { variants } of props)
       expect(variants).toBeGreaterThanOrEqual(1);
   });
@@ -365,7 +367,7 @@ describe('carga inicial das peças soltas (free-props/01, free-objects/04, veget
   });
 
   it('as decorações do Deserto, da Neve e da nature-variety são peças de 4 variantes', () => {
-    const nature = props.slice(60);
+    const nature = props.slice(60, 90);
     expect(nature.map(({ slug }) => slug).slice(0, 7)).toEqual([
       'cactus',
       'sand_rock',
@@ -379,10 +381,19 @@ describe('carga inicial das peças soltas (free-props/01, free-objects/04, veget
     expect(nature.every(({ variants }) => variants === 4)).toBe(true);
   });
 
+  it('a casa grande do pacote Main Characters Home é a peça 95 (home-pack/01)', () => {
+    expect(props.find(({ id }) => id === 95)).toEqual({
+      id: 95,
+      slug: 'big_house',
+      name: 'Casa grande',
+      variants: 1,
+    });
+  });
+
   it('os prédios bloqueiam em todas as variantes, e as pedras e árvores grandes dos pacotes nas variantes 1 e 2', () => {
     const all = blocks.filter(({ variant }) => variant === 0);
     expect(all.map(({ prop_type_id }) => prop_type_id)).toEqual([
-      22, 23, 24, 25, 26, 27,
+      22, 23, 24, 25, 26, 27, 95,
     ]);
     const packs = blocks.filter(({ variant }) => variant > 0);
     const large = [

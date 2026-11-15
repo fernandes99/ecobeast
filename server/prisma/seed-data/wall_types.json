@@ -16,5 +16,11 @@
 		"slug": "invisible_wall",
 		"name": "Parede invisível",
 		"visible": false
+	},
+	{
+		"id": 4,
+		"slug": "picket_fence",
+		"name": "Cerca de estacas",
+		"visible": true
 	}
 ]

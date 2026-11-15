@@ -18,6 +18,7 @@ uniform float vertical = 0.5;
 // porque a textura dela corre ao contrário. w: a altura da planta.
 varying flat vec4 plant;
 // A árvore dos pacotes (vegetation-wind/02): x é 1 e y a linha da base da copa na arte.
+// A fumaça da chaminé (home-pack/01): x é 2, y os quadros lado a lado e z os por segundo.
 varying flat vec4 canopy;
 varying float map_y;
 
@@ -45,7 +46,11 @@ void fragment() {
 	float along = dot(plant.xy, direction);
 	float sway = sin(TAU * (TIME / sway_period - along / sway_length));
 	float gust = 0.75 + 0.25 * sin(TAU * (TIME / gust_period - along / gust_length));
-	if (canopy.x > 0.5) {
+	if (canopy.x > 1.5) {
+		float frame = mod(floor(TIME * canopy.z + hash(plant.xy) * canopy.y), canopy.y);
+		vec2 uv = UV + vec2(frame / canopy.y, 0.0);
+		COLOR = textureGrad(TEXTURE, uv, dFdx(UV), dFdy(UV));
+	} else if (canopy.x > 0.5) {
 		vec2 size = 1.0 / TEXTURE_PIXEL_SIZE;
 		vec2 p = floor(UV * size);
 		float weight = clamp((canopy.y - p.y) / 4.0, 0.0, 1.0);
