@@ -1,8 +1,12 @@
 class_name IslandBlocks
 extends RefCounted
-## Os hexágonos que as linhas de bloqueio das peças e as paredes tocam, a mesma conta
-## do `blocked-hexes.ts` do servidor (free-objects): o caminho de cada linha em passos de
-## 1 px e, na fechada, os hexágonos de centro dentro dela. Só o editor usa, para mostrar.
+## Os hexágonos que as linhas de bloqueio das peças e as paredes bloqueiam, a mesma conta
+## do `blocked-hexes.ts` do servidor: os de centro a até CENTER_REACH de um trecho e, na
+## linha fechada, os de centro dentro dela (prop-depth-blocks/02). Só o editor usa, para
+## mostrar.
+
+const CENTER_REACH := 8.0
+const NEIGHBORS: Array[Vector2i] = [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1), Vector2i(1, -1), Vector2i(-1, 1)]
 
 
 ## `lines`: as linhas no chão plano, como `MapProp.world_lines` (a fechada repete o
@@ -13,9 +17,18 @@ static func blocked_hexes(lines: Array[PackedVector2Array]) -> Dictionary[Vector
 		for index: int in range(1, line.size()):
 			var from := line[index - 1]
 			var to := line[index]
-			var steps := maxi(1, ceili(maxf(absf(to.x - from.x), absf(to.y - from.y))))
+			var seen: Dictionary[Vector2i, bool] = {}
+			var steps := maxi(1, ceili(maxf(absf(to.x - from.x), absf(to.y - from.y)) / CENTER_REACH))
 			for step: int in steps + 1:
-				keys[HexMapView.grid_coord(from.lerp(to, float(step) / steps))] = true
+				var coord := HexMapView.grid_coord(from.lerp(to, float(step) / steps))
+				for shift: Vector2i in [Vector2i.ZERO] + NEIGHBORS:
+					var candidate := coord + shift
+					if seen.has(candidate):
+						continue
+					seen[candidate] = true
+					var center := HexMapView.flat_center(candidate)
+					if center.distance_to(Geometry2D.get_closest_point_to_segment(center, from, to)) <= CENTER_REACH:
+						keys[candidate] = true
 		if line.size() >= 4 and line[0] == line[line.size() - 1]:
 			_add_inside(line, keys)
 	return keys

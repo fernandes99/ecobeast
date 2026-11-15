@@ -1,6 +1,7 @@
 import { seededRandom } from '../exploration/seeded-random.js';
 import { hexKey } from '../exploration/hex.js';
 import { rollAreaSpawns, type SpawnArea, spawnAreas } from './area-spawns.js';
+import { typeBlockKey } from './blocked-hexes.js';
 import type { IslandDraft } from './island-draft.js';
 
 const RUVO = 1;
@@ -78,7 +79,9 @@ describe('spawnAreas com linhas de bloqueio (free-objects/01)', () => {
       variant: 1,
       mirrored: false,
     });
-    const blocks = new Map([[3, [{ closed: false, points: [-4, 0, 4, 0] }]]]);
+    const blocks = new Map([
+      [typeBlockKey(3, 0), [{ closed: false, points: [-4, 0, 4, 0] }]],
+    ]);
     expect(spawnAreas(draft, blocks)[0]!.tiles).toEqual([]);
     expect(spawnAreas(draft, NO_BLOCKS)[0]!.tiles).toEqual([{ q: 1, r: 0 }]);
     draft.props = [];

@@ -42,6 +42,8 @@ var fence_preview := Callable()
 ## O bloqueio da peça escolhida em edição (free-objects/02): os pontos aparecem, e a
 ## linha em desenho (no chão plano) segue o ponteiro.
 var editing_prop_block := false
+## A ferramenta Bloqueios mostra os pontos das linhas de todas as peças (prop-depth-blocks/03).
+var all_block_points := false
 var block_preview := Callable()
 var _mouse_flat := Vector2.ZERO
 var action_colors: Dictionary[int, Color] = {}
@@ -674,7 +676,7 @@ func _refresh_blocks() -> void:
 	if _draft == null:
 		_block_hexes.clear()
 		return
-	var typed := GameData.prop_blocks_by_type()
+	var typed := GameData.prop_block_types()
 	for index: int in _draft.props.size():
 		var prop: Dictionary = _draft.props[index]
 		var custom := prop.has("block")
@@ -704,6 +706,11 @@ func _draw_blocks(node: Node2D) -> void:
 		var color := UiPalette.ACCENT if _block_custom[index] else UiPalette.WARNING
 		for at: int in range(1, line.size()):
 			node.draw_dashed_line(_screen_point(line[at - 1]), _screen_point(line[at]), color, OUTLINE_WIDTH, WALL_DASH)
+	if all_block_points:
+		for index: int in _block_lines.size():
+			var color := UiPalette.ACCENT if _block_custom[index] else UiPalette.WARNING
+			for point: Vector2 in _block_lines[index]:
+				node.draw_circle(_screen_point(point), 2.5, color)
 	if editing_prop_block and selected_prop >= 0 and selected_prop < _draft.props.size():
 		for line: PackedVector2Array in _draft.prop_world_lines(selected_prop):
 			for point: Vector2 in line:

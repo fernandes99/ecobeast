@@ -309,6 +309,7 @@ describe('carga inicial das peças soltas (free-props/01, free-objects/04, veget
   const blocks = read<
     {
       prop_type_id: number;
+      variant: number;
       position: number;
       closed: boolean;
       points: number[];
@@ -348,10 +349,19 @@ describe('carga inicial das peças soltas (free-props/01, free-objects/04, veget
     expect(packs.slice(25).every(({ variants }) => variants === 5)).toBe(true);
   });
 
-  it('só os prédios bloqueiam, cada um com uma linha fechada de pontos pares', () => {
-    expect(blocks.map(({ prop_type_id }) => prop_type_id)).toEqual([
+  it('os prédios bloqueiam em todas as variantes, e as pedras e árvores grandes dos pacotes nas variantes 1 e 2', () => {
+    const all = blocks.filter(({ variant }) => variant === 0);
+    expect(all.map(({ prop_type_id }) => prop_type_id)).toEqual([
       22, 23, 24, 25, 26, 27,
     ]);
+    const packs = blocks.filter(({ variant }) => variant > 0);
+    const large = [
+      ...Array.from({ length: 11 }, (_, index) => 28 + index),
+      ...Array.from({ length: 8 }, (_, index) => 53 + index),
+    ];
+    expect(
+      packs.map(({ prop_type_id, variant }) => `${prop_type_id}:${variant}`),
+    ).toEqual(large.flatMap((id) => [`${id}:1`, `${id}:2`]));
     for (const { closed, points } of blocks) {
       expect(closed).toBe(true);
       expect(points.length % 2).toBe(0);

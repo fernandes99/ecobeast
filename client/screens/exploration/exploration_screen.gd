@@ -158,7 +158,7 @@ func _begin() -> void:
 		_show_message(result.error, &"DangerLabel")
 		return
 	_map = result.data
-	_map.set_prop_lines(GameData.prop_blocks_by_type())
+	_map.set_prop_lines(GameData.prop_blocks_by_key())
 	_player_coord = _map.start
 	_player_point = HexMapView.flat_center(_player_coord)
 	_map_view.set_map(_map)
@@ -500,13 +500,14 @@ func _go_to_npc(npc: NpcSprite) -> void:
 	_walk(WalkRoute.points(_map, _player_point, hexes, HexMapView.flat_center(path[path.size() - 1])))
 
 
-## A peça da frente com bloqueio ou ação cuja arte tem um pixel desenhado em
-## `art_point`, ou -1. As outras deixam o toque passar para o chão.
+## A peça da frente com ação cuja arte tem um pixel desenhado em `art_point`, ou -1.
+## As outras, mesmo com bloqueio, deixam o toque passar para o chão: tocar na copa de
+## uma árvore anda até o ponto tocado, atrás dela (prop-depth-blocks/04).
 func _prop_hit(art_point: Vector2) -> int:
 	var best := -1
 	for index: int in _map.props.size():
 		var prop := _map.props[index]
-		if prop.action_type_id <= 0 and _map.prop_world_lines(index).is_empty():
+		if prop.action_type_id <= 0:
 			continue
 		if best >= 0 and prop.foot().y < _map.props[best].foot().y:
 			continue
@@ -852,7 +853,7 @@ func _add_creature_sprite(slug: String, coord: Vector2i) -> CreatureSprite:
 
 func _place_wanderer(sprite: WanderingSprite, coord: Vector2i) -> void:
 	_map_view.add_child(sprite)
-	_map_view.set_actor_row(sprite, coord.y)
+	sprite.depth_view = _map_view
 	sprite.wander_in(coord, _map_view.surface_center(coord), _map)
 	sprite.scale = _marker.scale
 

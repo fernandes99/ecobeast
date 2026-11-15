@@ -1,5 +1,7 @@
 extends Node
 
+## A variante das linhas de bloqueio que vale para todas (prop-depth-blocks/02).
+const ALL_VARIANTS := 0
 const LOAD_OK := 0
 const LOAD_OFFLINE := 1
 const LOAD_INVALID := 2
@@ -139,29 +141,52 @@ func get_rows(table_name: String) -> Array[Dictionary]:
 	return catalog.get_rows(table_name)
 
 
-## As linhas de bloqueio padrão de um tipo de peça (free-objects), na ordem:
+## As linhas de bloqueio padrão de uma variante de um tipo de peça, na ordem: as dela ou,
+## sem elas, as da variante 0, que vale para todas (free-objects, prop-depth-blocks/02).
 ## `{"closed": bool, "points": Array[int]}`.
-func get_prop_blocks(prop_type_id: int) -> Array[Dictionary]:
+func get_prop_blocks(prop_type_id: int, variant: int = ALL_VARIANTS) -> Array[Dictionary]:
+	var lines := variant_prop_blocks(prop_type_id, variant)
+	if lines.is_empty() and variant != ALL_VARIANTS:
+		lines = variant_prop_blocks(prop_type_id, ALL_VARIANTS)
+	return lines
+
+
+## Só as linhas guardadas para a variante, sem cair na 0.
+func variant_prop_blocks(prop_type_id: int, variant: int) -> Array[Dictionary]:
 	var lines: Array[Dictionary] = []
-	var rows := get_rows("prop_type_blocks").filter(func(row: Dictionary) -> bool: return int(row["prop_type_id"]) == prop_type_id)
+	var rows := get_rows("prop_type_blocks").filter(func(row: Dictionary) -> bool: return int(row["prop_type_id"]) == prop_type_id and int(row.get("variant", ALL_VARIANTS)) == variant)
 	rows.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return int(a["position"]) < int(b["position"]))
 	for row: Dictionary in rows:
 		lines.append({"closed": row["closed"], "points": row["points"]})
 	return lines
 
 
-func set_prop_blocks(prop_type_id: int, lines: Array[Dictionary]) -> void:
-	catalog.replace_prop_blocks(prop_type_id, lines)
+func set_prop_blocks(prop_type_id: int, variant: int, lines: Array[Dictionary]) -> void:
+	catalog.replace_prop_blocks(prop_type_id, variant, lines)
 
 
-## As linhas de bloqueio de todos os tipos que têm alguma, por id do tipo.
-func prop_blocks_by_type() -> Dictionary:
-	var by_type := {}
+## As linhas guardadas de cada tipo e variante que têm alguma, por `prop_block_key`.
+func prop_blocks_by_key() -> Dictionary:
+	var by_key := {}
 	for row: Dictionary in get_rows("prop_type_blocks"):
-		by_type[int(row["prop_type_id"])] = true
-	for type_id: int in by_type.keys():
-		by_type[type_id] = get_prop_blocks(type_id)
-	return by_type
+		var type_id := int(row["prop_type_id"])
+		var variant := int(row.get("variant", ALL_VARIANTS))
+		var key := prop_block_key(type_id, variant)
+		if not by_key.has(key):
+			by_key[key] = variant_prop_blocks(type_id, variant)
+	return by_key
+
+
+## Os tipos de peça com alguma linha de bloqueio guardada, em qualquer variante.
+func prop_block_types() -> Dictionary[int, bool]:
+	var types: Dictionary[int, bool] = {}
+	for row: Dictionary in get_rows("prop_type_blocks"):
+		types[int(row["prop_type_id"])] = true
+	return types
+
+
+static func prop_block_key(prop_type_id: int, variant: int) -> String:
+	return "%d:%d" % [prop_type_id, variant]
 
 
 func get_row(table_name: String, id: int) -> Dictionary:

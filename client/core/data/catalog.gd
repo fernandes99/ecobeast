@@ -357,13 +357,13 @@ func _build_learnsets() -> void:
 			return file_order[a] < file_order[b])
 
 
-## Troca as linhas de bloqueio de um tipo de peça depois que o editor as salvou no
-## servidor (free-objects/02), sem baixar o catálogo de novo.
-func replace_prop_blocks(prop_type_id: int, lines: Array[Dictionary]) -> void:
+## Troca as linhas de bloqueio de uma variante de um tipo de peça depois que o editor as
+## salvou no servidor (free-objects/02, prop-depth-blocks/02), sem baixar o catálogo de novo.
+func replace_prop_blocks(prop_type_id: int, variant: int, lines: Array[Dictionary]) -> void:
 	var rows: Array[Dictionary] = []
-	rows.assign(_rows("prop_type_blocks").filter(func(row: Dictionary) -> bool: return int(row["prop_type_id"]) != prop_type_id))
+	rows.assign(_rows("prop_type_blocks").filter(func(row: Dictionary) -> bool: return int(row["prop_type_id"]) != prop_type_id or int(row.get("variant", 0)) != variant))
 	for position: int in lines.size():
-		rows.append({"id": 0, "prop_type_id": prop_type_id, "position": position, "closed": lines[position]["closed"], "points": lines[position]["points"]})
+		rows.append({"id": 0, "prop_type_id": prop_type_id, "variant": variant, "position": position, "closed": lines[position]["closed"], "points": lines[position]["points"]})
 	_tables["prop_type_blocks"] = rows
 
 

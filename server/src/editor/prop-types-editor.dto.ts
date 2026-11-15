@@ -1,13 +1,34 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsArray, ValidateNested } from 'class-validator';
+import {
+  IsArray,
+  IsInt,
+  IsOptional,
+  Max,
+  Min,
+  ValidateNested,
+} from 'class-validator';
+import { MAX_BLOCK_VARIANT } from '../domain/islands/blocked-hexes.js';
 import { DraftBlockLineDto } from './islands-editor.dto.js';
 
+const VARIANT_RANGE = `variant vai de 0 a ${MAX_BLOCK_VARIANT}.`;
+
 export class PropTypeBlocksDto {
+  @ApiPropertyOptional({
+    example: 1,
+    description:
+      'A variante das linhas (prop-depth-blocks/02). 0, ou sem o campo, vale para as variantes sem linhas próprias.',
+  })
+  @IsOptional()
+  @IsInt({ message: 'variant precisa ser um número inteiro.' })
+  @Min(0, { message: VARIANT_RANGE })
+  @Max(MAX_BLOCK_VARIANT, { message: VARIANT_RANGE })
+  variant?: number;
+
   @ApiProperty({
     type: [DraftBlockLineDto],
     description:
-      'As linhas de bloqueio padrão do tipo, até 8, na ordem; `[]` deixa o tipo sem bloqueio.',
+      'As linhas de bloqueio padrão do tipo nessa variante, até 8, na ordem; `[]` apaga as dela (a variante 0 fica sem bloqueio, as outras voltam à 0).',
   })
   @IsArray({ message: 'blocks precisa ser uma lista.' })
   @ValidateNested({ each: true })

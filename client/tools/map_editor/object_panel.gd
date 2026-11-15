@@ -9,7 +9,7 @@ signal edited(step: EditorHistory.Step)
 signal selection_changed(index: int)
 signal blocks_editing_changed(on: bool)
 ## "Salvar como do tipo" (free-objects/02): as linhas da peça escolhida viram as do tipo.
-signal type_block_save_requested(prop_type_id: int, lines: Array[Dictionary])
+signal type_block_save_requested(prop_type_id: int, variant: int, lines: Array[Dictionary])
 
 const PREVIEW_SIZE := Vector2(0.0, 170.0)
 const TYPE_ICON_WIDTH := 40
@@ -143,9 +143,13 @@ func _init() -> void:
 	var type_row := HBoxContainer.new()
 	type_row.add_theme_constant_override(&"separation", 6)
 	_block_box.add_child(type_row)
-	_type_block_button = _text_button("Usar o do tipo", "Volta a peça para as linhas do tipo.", use_type_block)
+	_type_block_button = _text_button("Usar o padrão", "Volta a peça para as linhas padrão da variante dela.", use_type_block)
 	type_row.add_child(_type_block_button)
-	type_row.add_child(_text_button("Salvar como do tipo", "As linhas desta peça viram as do tipo, em todas as ilhas. Não se desfaz.", request_type_save))
+	var save_row := HBoxContainer.new()
+	save_row.add_theme_constant_override(&"separation", 6)
+	_block_box.add_child(save_row)
+	save_row.add_child(_text_button("Salvar para esta variante", "As linhas desta peça viram o padrão desta variante do tipo, em todas as ilhas. Não se desfaz.", request_type_save.bind(false)))
+	save_row.add_child(_text_button("Salvar para todas", "As linhas desta peça viram o padrão das variantes do tipo sem padrão próprio, em todas as ilhas. Não se desfaz.", request_type_save.bind(true)))
 	var release := Button.new()
 	release.text = "Voltar à peça nova  (Esc)"
 	release.focus_mode = Control.FOCUS_NONE
@@ -174,6 +178,26 @@ func _init() -> void:
 func set_draft(draft: IslandDraft) -> void:
 	_draft = draft
 	select_prop(-1)
+
+
+func current_draft() -> IslandDraft:
+	return _draft
+
+
+## Escolhe a peça e liga a edição do bloqueio dela, ou solta com -1 (a ferramenta
+## Bloqueios, prop-depth-blocks/03).
+func edit_blocks_of(index: int) -> void:
+	select_prop(index)
+	_set_editing_blocks(selected_prop >= 0)
+	refresh()
+
+
+## Se a linha mexida por último está fechada.
+func active_line_closed() -> bool:
+	if _draft == null or selected_prop < 0:
+		return false
+	var lines := _draft.prop_lines(selected_prop)
+	return active_line >= 0 and active_line < lines.size() and bool(lines[active_line]["closed"])
 
 
 func select_prop(index: int) -> void:
@@ -328,7 +352,7 @@ func ensure_custom_block() -> Array:
 	var piece: Dictionary = _draft.props[selected_prop]
 	if not piece.has("block"):
 		var copies: Array = []
-		for line: Dictionary in GameData.get_prop_blocks(int(piece.get("prop_type_id", 0))):
+		for line: Dictionary in GameData.get_prop_blocks(int(piece.get("prop_type_id", 0)), int(piece.get("variant", 1))):
 			copies.append({"closed": line["closed"], "points": Array(line["points"])})
 		piece["block"] = copies
 	return piece["block"]
@@ -386,16 +410,19 @@ func toggle_closed() -> void:
 func use_type_block() -> void:
 	if selected_prop < 0 or not _draft.prop_is_custom(selected_prop):
 		return
-	var step := _step("Usar o bloqueio do tipo")
+	var step := _step("Usar o bloqueio padrão")
 	_draft.props[selected_prop].erase("block")
 	active_line = -1
 	_finish(step)
 
 
-func request_type_save() -> void:
+## Salvar o padrão: da variante da peça escolhida, ou de todas (a variante 0).
+func request_type_save(all_variants: bool) -> void:
 	if selected_prop < 0:
 		return
-	type_block_save_requested.emit(int(_draft.props[selected_prop].get("prop_type_id", 0)), _draft.prop_lines(selected_prop))
+	var piece: Dictionary = _draft.props[selected_prop]
+	var saved_variant := GameData.ALL_VARIANTS if all_variants else int(piece.get("variant", 1))
+	type_block_save_requested.emit(int(piece.get("prop_type_id", 0)), saved_variant, _draft.prop_lines(selected_prop))
 
 
 ## Depois de salvar no tipo: a peça escolhida volta a usar as linhas dele.

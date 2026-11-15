@@ -27,7 +27,7 @@ Do dono, em 2026-11-15:
 | --- | --- |
 | Os objetos ficam soltos, como as peças, e bloqueiam pela linha, como a cerca | A grade limita onde e como se põe um prédio |
 | O bloqueio é do tipo, e cada peça posta pode ser ajustada | Desenhar uma vez e acertar só onde precisar |
-| Todo hexágono que um bloqueio toca conta como bloqueado no servidor: nele não nasce Ecobeast nem fica a chegada. Vale também para as paredes | Nada nasce embaixo de um prédio ou em cima de uma cerca |
+| Todo hexágono que um bloqueio toca conta como bloqueado no servidor: nele não nasce Ecobeast nem fica a chegada. Vale também para as paredes. **Trocado na [prop-depth-blocks](../prop-depth-blocks/README.md#decisões):** só conta o hexágono cujo centro a linha pega | Nada nasce embaixo de um prédio ou em cima de uma cerca |
 | A ação é do prédio: tocar na arte leva o Domador até o bloqueio, e a ação acontece ao encostar | Sem uma camada de hexágonos à parte para acertar |
 | Os objetos de grade e as peças soltas viram uma coisa só, a peça solta | Um sistema só; uma pedra ou um poste também podem bloquear |
 | A conversão não mantém compatibilidade com um APK de antes dela | Ninguém depende do APK de 14/11 |

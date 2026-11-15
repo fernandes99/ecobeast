@@ -181,14 +181,15 @@ func _wall_between(from: Vector2i, to: Vector2i) -> bool:
 	return crosses_wall(HexMapView.flat_center(from), HexMapView.flat_center(to))
 
 
-## As linhas de bloqueio das peças, pelas do tipo de cada uma (`type_lines[prop_type_id]`)
-## ou pelas próprias.
+## As linhas de bloqueio das peças: as próprias ou as padrão do tipo, por
+## `type_lines["tipo:variante"]`, e sem elas as de `"tipo:0"` (prop-depth-blocks/02).
 func set_prop_lines(type_lines: Dictionary) -> void:
 	_prop_lines.clear()
 	_lines_by_prop.clear()
 	var none: Array[Dictionary] = []
 	for prop: MapProp in props:
-		var lines: Array[Dictionary] = type_lines.get(prop.prop_type_id, none)
+		var fallback: Array[Dictionary] = type_lines.get("%d:0" % prop.prop_type_id, none)
+		var lines: Array[Dictionary] = type_lines.get("%d:%d" % [prop.prop_type_id, prop.variant], fallback)
 		var world := prop.world_lines(lines)
 		_lines_by_prop.append(world)
 		_prop_lines.append_array(world)

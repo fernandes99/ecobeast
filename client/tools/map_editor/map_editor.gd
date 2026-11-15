@@ -323,7 +323,7 @@ func _paint(coord: Vector2i) -> void:
 		return
 	if _tools.paints_marks():
 		_canvas.refresh_marks(changed)
-	elif _tools.tool == EditorTools.Tool.OBJECT:
+	elif _tools.tool == EditorTools.Tool.OBJECT or _tools.tool == EditorTools.Tool.BLOCKS:
 		_canvas.refresh_props()
 	elif _tools.tool == EditorTools.Tool.VEGETATION:
 		_canvas.refresh_props_at(changed)
@@ -387,13 +387,14 @@ func _on_area_delete(key: int, area_name: String) -> void:
 
 func _on_brush_changed() -> void:
 	_canvas.editing_prop_block = _tools.object_panel.editing_blocks and _tools.object_panel.selected_prop >= 0
+	_canvas.all_block_points = _tools.tool == EditorTools.Tool.BLOCKS
 	_canvas.refresh_brush()
 	_place_object_bar()
 	if _tools.tool == EditorTools.Tool.ACTION and not _actions_check.button_pressed:
 		_actions_check.button_pressed = true
 	elif _tools.tool == EditorTools.Tool.AREA and not _areas_check.button_pressed:
 		_areas_check.button_pressed = true
-	if _tools.object_panel.editing_blocks and not _blocks_check.button_pressed:
+	if (_tools.object_panel.editing_blocks or _tools.tool == EditorTools.Tool.BLOCKS) and not _blocks_check.button_pressed:
 		_blocks_check.button_pressed = true
 
 
@@ -570,7 +571,7 @@ func _tool_key(key: InputEventKey) -> bool:
 			_tools.path_panel.select(-1)
 			return true
 	var objects := _tools.object_panel
-	if _tools.tool != EditorTools.Tool.OBJECT:
+	if _tools.tool != EditorTools.Tool.OBJECT and _tools.tool != EditorTools.Tool.BLOCKS:
 		return false
 	if objects.drawing and (key.keycode == KEY_ENTER or key.keycode == KEY_KP_ENTER or key.keycode == KEY_ESCAPE):
 		if key.keycode == KEY_ESCAPE:
@@ -579,6 +580,11 @@ func _tool_key(key: InputEventKey) -> bool:
 			objects.finish_line()
 		_canvas.refresh_brush()
 		return true
+	if _tools.tool == EditorTools.Tool.BLOCKS:
+		if key.keycode == KEY_ESCAPE and objects.selected_prop >= 0:
+			objects.edit_blocks_of(-1)
+			return true
+		return false
 	if objects.editing_blocks and key.keycode == KEY_ESCAPE:
 		objects.toggle_blocks()
 		return true
@@ -903,11 +909,14 @@ func _on_object_selected(_index: int) -> void:
 	_place_object_bar()
 
 
-## "Salvar como do tipo" (free-objects/02): confirma, grava no servidor, troca as linhas
-## do tipo no catálogo local e avisa as ilhas com a chegada bloqueada.
-func _on_type_block_save(prop_type_id: int, lines: Array[Dictionary]) -> void:
+## Salvar o padrão (free-objects/02, prop-depth-blocks/02): confirma, grava no servidor,
+## troca as linhas da variante no catálogo local e avisa as ilhas com a chegada bloqueada.
+func _on_type_block_save(prop_type_id: int, variant: int, lines: Array[Dictionary]) -> void:
 	var type_name := str(GameData.get_row("prop_types", prop_type_id).get("name", "?"))
-	_type_block_dialog.dialog_text = "As linhas desta peça viram o bloqueio de todo %s sem ajuste, em todas as ilhas, também nas publicadas. Não dá para desfazer." % type_name
+	if variant == GameData.ALL_VARIANTS:
+		_type_block_dialog.dialog_text = "As linhas desta peça viram o bloqueio de todo %s sem ajuste, nas variantes sem padrão próprio, em todas as ilhas, também nas publicadas. Não dá para desfazer." % type_name
+	else:
+		_type_block_dialog.dialog_text = "As linhas desta peça viram o bloqueio de todo %s na variante %d sem ajuste, em todas as ilhas, também nas publicadas. Não dá para desfazer." % [type_name, variant]
 	_type_block_dialog.popup_centered()
 	if not await _type_block_answered:
 		return
@@ -915,11 +924,11 @@ func _on_type_block_save(prop_type_id: int, lines: Array[Dictionary]) -> void:
 	var body: Array = []
 	for line: Dictionary in lines:
 		body.append({"closed": line["closed"], "points": Array(line["points"])})
-	var response := await EditorApi.save_prop_type_blocks(prop_type_id, body)
+	var response := await EditorApi.save_prop_type_blocks(prop_type_id, variant, body)
 	if not response.ok:
 		_set_message(response.error, true)
 		return
-	GameData.set_prop_blocks(prop_type_id, MapProp.lines_from(DictFields.get_array(response.data, "blocks")))
+	GameData.set_prop_blocks(prop_type_id, variant, MapProp.lines_from(DictFields.get_array(response.data, "blocks")))
 	_tools.object_panel.type_block_saved()
 	_canvas.refresh_props()
 	var blocked: Array[String] = []

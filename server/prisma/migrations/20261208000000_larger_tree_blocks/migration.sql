@@ -1,0 +1,23 @@
+-- O bloqueio das árvores grandes dos pacotes com o dobro do tamanho (.specs/prop-depth-blocks/02-variant-blocks.md).
+UPDATE "ecobeasts"."prop_type_blocks" SET "points" = ARRAY[12, -10, 8, -6, 0, -4, -8, -6, -12, -10, -8, -14, 0, -16, 8, -14] WHERE "prop_type_id" = 28 AND "variant" = 1 AND "position" = 0;
+UPDATE "ecobeasts"."prop_type_blocks" SET "points" = ARRAY[10, -7, 7, -3, 0, -2, -7, -3, -10, -7, -7, -11, 0, -12, 7, -11] WHERE "prop_type_id" = 28 AND "variant" = 2 AND "position" = 0;
+UPDATE "ecobeasts"."prop_type_blocks" SET "points" = ARRAY[12, -10, 8, -6, 0, -4, -8, -6, -12, -10, -8, -14, 0, -16, 8, -14] WHERE "prop_type_id" = 29 AND "variant" = 1 AND "position" = 0;
+UPDATE "ecobeasts"."prop_type_blocks" SET "points" = ARRAY[10, -7, 7, -3, 0, -2, -7, -3, -10, -7, -7, -11, 0, -12, 7, -11] WHERE "prop_type_id" = 29 AND "variant" = 2 AND "position" = 0;
+UPDATE "ecobeasts"."prop_type_blocks" SET "points" = ARRAY[12, -10, 8, -6, 0, -4, -8, -6, -12, -10, -8, -14, 0, -16, 8, -14] WHERE "prop_type_id" = 30 AND "variant" = 1 AND "position" = 0;
+UPDATE "ecobeasts"."prop_type_blocks" SET "points" = ARRAY[10, -8, 7, -4, 0, -3, -7, -4, -10, -8, -7, -12, 0, -13, 7, -12] WHERE "prop_type_id" = 30 AND "variant" = 2 AND "position" = 0;
+UPDATE "ecobeasts"."prop_type_blocks" SET "points" = ARRAY[12, -10, 8, -6, 0, -4, -8, -6, -12, -10, -8, -14, 0, -16, 8, -14] WHERE "prop_type_id" = 31 AND "variant" = 1 AND "position" = 0;
+UPDATE "ecobeasts"."prop_type_blocks" SET "points" = ARRAY[10, -9, 7, -5, 0, -4, -7, -5, -10, -9, -7, -13, 0, -14, 7, -13] WHERE "prop_type_id" = 31 AND "variant" = 2 AND "position" = 0;
+UPDATE "ecobeasts"."prop_type_blocks" SET "points" = ARRAY[12, -10, 8, -6, 0, -4, -8, -6, -12, -10, -8, -14, 0, -16, 8, -14] WHERE "prop_type_id" = 32 AND "variant" = 1 AND "position" = 0;
+UPDATE "ecobeasts"."prop_type_blocks" SET "points" = ARRAY[10, -7, 7, -3, 0, -2, -7, -3, -10, -7, -7, -11, 0, -12, 7, -11] WHERE "prop_type_id" = 32 AND "variant" = 2 AND "position" = 0;
+UPDATE "ecobeasts"."prop_type_blocks" SET "points" = ARRAY[12, -10, 8, -6, 0, -4, -8, -6, -12, -10, -8, -14, 0, -16, 8, -14] WHERE "prop_type_id" = 33 AND "variant" = 1 AND "position" = 0;
+UPDATE "ecobeasts"."prop_type_blocks" SET "points" = ARRAY[10, -7, 7, -3, 0, -2, -7, -3, -10, -7, -7, -11, 0, -12, 7, -11] WHERE "prop_type_id" = 33 AND "variant" = 2 AND "position" = 0;
+UPDATE "ecobeasts"."prop_type_blocks" SET "points" = ARRAY[12, -9, 8, -5, 0, -3, -8, -5, -12, -9, -8, -13, 0, -15, 8, -13] WHERE "prop_type_id" = 34 AND "variant" = 1 AND "position" = 0;
+UPDATE "ecobeasts"."prop_type_blocks" SET "points" = ARRAY[10, -9, 7, -5, 0, -4, -7, -5, -10, -9, -7, -13, 0, -14, 7, -13] WHERE "prop_type_id" = 34 AND "variant" = 2 AND "position" = 0;
+UPDATE "ecobeasts"."prop_type_blocks" SET "points" = ARRAY[12, -9, 8, -5, 0, -3, -8, -5, -12, -9, -8, -13, 0, -15, 8, -13] WHERE "prop_type_id" = 35 AND "variant" = 1 AND "position" = 0;
+UPDATE "ecobeasts"."prop_type_blocks" SET "points" = ARRAY[10, -9, 7, -5, 0, -4, -7, -5, -10, -9, -7, -13, 0, -14, 7, -13] WHERE "prop_type_id" = 35 AND "variant" = 2 AND "position" = 0;
+UPDATE "ecobeasts"."prop_type_blocks" SET "points" = ARRAY[12, -10, 8, -6, 0, -4, -8, -6, -12, -10, -8, -14, 0, -16, 8, -14] WHERE "prop_type_id" = 36 AND "variant" = 1 AND "position" = 0;
+UPDATE "ecobeasts"."prop_type_blocks" SET "points" = ARRAY[10, -7, 7, -3, 0, -2, -7, -3, -10, -7, -7, -11, 0, -12, 7, -11] WHERE "prop_type_id" = 36 AND "variant" = 2 AND "position" = 0;
+UPDATE "ecobeasts"."prop_type_blocks" SET "points" = ARRAY[12, -11, 8, -7, 0, -5, -8, -7, -12, -11, -8, -15, 0, -17, 8, -15] WHERE "prop_type_id" = 37 AND "variant" = 1 AND "position" = 0;
+UPDATE "ecobeasts"."prop_type_blocks" SET "points" = ARRAY[10, -8, 7, -4, 0, -3, -7, -4, -10, -8, -7, -12, 0, -13, 7, -12] WHERE "prop_type_id" = 37 AND "variant" = 2 AND "position" = 0;
+UPDATE "ecobeasts"."prop_type_blocks" SET "points" = ARRAY[12, -10, 8, -6, 0, -4, -8, -6, -12, -10, -8, -14, 0, -16, 8, -14] WHERE "prop_type_id" = 38 AND "variant" = 1 AND "position" = 0;
+UPDATE "ecobeasts"."prop_type_blocks" SET "points" = ARRAY[10, -9, 7, -5, 0, -4, -7, -5, -10, -9, -7, -13, 0, -14, 7, -13] WHERE "prop_type_id" = 38 AND "variant" = 2 AND "position" = 0;

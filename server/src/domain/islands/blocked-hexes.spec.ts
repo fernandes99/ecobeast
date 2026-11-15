@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   blockLineError,
   lineBlockedKeys,
+  typeBlockKey,
   worldLines,
 } from './blocked-hexes.js';
 import { flatCenter } from './hex-pixels.js';
@@ -12,6 +13,7 @@ const prop = (overrides = {}) => ({
   r: 0,
   dx: 0,
   dy: 0,
+  variant: 1,
   mirrored: false,
   ...overrides,
 });
@@ -19,11 +21,25 @@ const keysOf = (set: Set<string>) => [...set].sort();
 const NONE = new Map();
 
 describe('lineBlockedKeys', () => {
-  it('uma linha curta dentro de um hexágono só bloqueia ele', () => {
+  it('uma linha curta perto do centro só bloqueia o hexágono dele', () => {
     const line = { closed: false, points: [-5, 0, 5, 0] };
     expect(
       keysOf(lineBlockedKeys([prop({ block: [line] })], [], NONE)),
     ).toEqual(['0,0']);
+  });
+
+  it('só bloqueia o hexágono quando a linha pega o centro (prop-depth-blocks/02)', () => {
+    const corner = { closed: false, points: [14, 0, 24, 6] };
+    expect(lineBlockedKeys([prop({ block: [corner] })], [], NONE).size).toBe(0);
+    const near = { closed: false, points: [-10, 5, 10, 5] };
+    expect(
+      keysOf(lineBlockedKeys([prop({ block: [near] })], [], NONE)),
+    ).toEqual(['0,0']);
+    const ring = {
+      closed: true,
+      points: [10, -4, 20, -4, 20, 4, 10, 4],
+    };
+    expect(lineBlockedKeys([prop({ block: [ring] })], [], NONE).size).toBe(0);
   });
 
   it('uma linha que passa do centro de (0, 0) ao de (1, 0) bloqueia os dois', () => {
@@ -51,12 +67,29 @@ describe('lineBlockedKeys', () => {
   });
 
   it('usa as linhas do tipo quando a peça não tem as próprias', () => {
-    const types = new Map([[1, [{ closed: false, points: [0, 0, 64, 0] }]]]);
+    const types = new Map([
+      [typeBlockKey(1, 0), [{ closed: false, points: [0, 0, 64, 0] }]],
+    ]);
     expect(keysOf(lineBlockedKeys([prop()], [], types))).toEqual([
       '0,0',
       '1,0',
     ]);
     expect(lineBlockedKeys([prop({ block: [] })], [], types).size).toBe(0);
+  });
+
+  it('usa as linhas da variante, e as da variante 0 quando ela não tem', () => {
+    const types = new Map([
+      [typeBlockKey(1, 0), [{ closed: false, points: [0, 0, 64, 0] }]],
+      [typeBlockKey(1, 2), [{ closed: false, points: [0, 0, -64, 0] }]],
+    ]);
+    expect(keysOf(lineBlockedKeys([prop()], [], types))).toEqual([
+      '0,0',
+      '1,0',
+    ]);
+    expect(keysOf(lineBlockedKeys([prop({ variant: 2 })], [], types))).toEqual([
+      '-1,0',
+      '0,0',
+    ]);
   });
 
   it('espelha o x das linhas na peça espelhada', () => {

@@ -7,7 +7,8 @@ import { createTestApp } from './support/app.js';
 import { createTestPrisma } from './support/db.js';
 import { createTestTokens, TestTokens } from './support/tokens.js';
 
-// A rota das linhas de bloqueio de um tipo de peça (.specs/free-objects/02).
+// A rota das linhas de bloqueio de um tipo de peça (.specs/free-objects/02 e
+// prop-depth-blocks/02).
 // Cria um tipo zz_teste_ e uma ilha com ele; o afterAll apaga os dois.
 
 const TEST_SLUG = 'zz_teste_bloqueio';
@@ -82,6 +83,38 @@ describe('linhas de bloqueio do tipo de peça (e2e)', () => {
     expect(
       await prisma.propTypeBlock.count({ where: { propTypeId: typeId } }),
     ).toBe(0);
+  });
+
+  it('troca só as linhas de uma variante, e vazia a variante volta à 0 (prop-depth-blocks/02)', async () => {
+    const line = { closed: false, points: [0, 0, 7, 7] };
+    await call('put', `/prop-types/${typeId}/blocks`)
+      .send({ blocks: [square] })
+      .expect(200);
+    await call('put', `/prop-types/${typeId}/blocks`)
+      .send({ variant: 2, blocks: [line] })
+      .expect(200);
+    const rows = async () =>
+      (
+        await prisma.propTypeBlock.findMany({
+          where: { propTypeId: typeId },
+          orderBy: [{ variant: 'asc' }, { position: 'asc' }],
+        })
+      ).map(({ variant, points }) => [variant, points]);
+    expect(await rows()).toEqual([
+      [0, square.points],
+      [2, line.points],
+    ]);
+    await call('put', `/prop-types/${typeId}/blocks`)
+      .send({ variant: 2, blocks: [] })
+      .expect(200);
+    expect(await rows()).toEqual([[0, square.points]]);
+    const bad = await call('put', `/prop-types/${typeId}/blocks`)
+      .send({ variant: 100, blocks: [] })
+      .expect(400);
+    expect(bad.body.message).toBe('variant vai de 0 a 99.');
+    await call('put', `/prop-types/${typeId}/blocks`)
+      .send({ blocks: [] })
+      .expect(200);
   });
 
   it('recusa uma linha fora dos limites (400) e um tipo que não existe (404)', async () => {

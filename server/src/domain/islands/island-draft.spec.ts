@@ -13,6 +13,7 @@ import {
   MAX_WALLS,
   publishError,
 } from './island-draft.js';
+import { typeBlockKey } from './blocked-hexes.js';
 
 const REFUGE = 1;
 const RUVO = 1;
@@ -834,7 +835,7 @@ describe('as linhas de bloqueio das peças (free-objects/01)', () => {
   it('recusa mais de 2.000 peças que bloqueiam, contando as linhas do tipo', () => {
     const typed: KnownIds = {
       ...known,
-      propBlocks: new Map([[BENCH, [square]]]),
+      propBlocks: new Map([[typeBlockKey(BENCH, 0), [square]]]),
     };
     const draft = island();
     const bench = { ...draft.props[0]!, propTypeId: BENCH, variant: 1 };
@@ -858,7 +859,7 @@ describe('as linhas de bloqueio das peças (free-objects/01)', () => {
     expect(publishError(draft, known)).toBeNull();
     const typed: KnownIds = {
       ...known,
-      propBlocks: new Map([[BENCH, [square]]]),
+      propBlocks: new Map([[typeBlockKey(BENCH, 0), [square]]]),
     };
     expect(publishError(draft, typed)).toBe(
       'A chegada não pode ficar num hexágono bloqueado.',

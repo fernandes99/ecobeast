@@ -22,6 +22,9 @@ var _wandering: bool = false
 ## ao chão plano, onde as paredes ficam.
 var _walls_map: ExplorationMap = null
 var _flat_shift := Vector2.ZERO
+## Com o mapa, entra na frente ou atrás das peças pela altura do pé a cada passo
+## (prop-depth-blocks/01).
+var depth_view: HexMapView = null
 
 
 func _process(delta: float) -> void:
@@ -38,6 +41,7 @@ func _process(delta: float) -> void:
 		return
 	_exact = _exact.move_toward(_target, WALK_SPEED * delta)
 	position = _exact.round()
+	_follow_depth()
 	if _exact == _target:
 		_rest()
 
@@ -54,6 +58,7 @@ func wander_in(coord: Vector2i, center: Vector2, map: ExplorationMap = null) -> 
 			_exact = spot
 			break
 	position = _exact.round()
+	_follow_depth()
 	_rest()
 	_wandering = true
 
@@ -110,3 +115,8 @@ func _next_spot() -> Vector2:
 
 func _is_free(from: Vector2, to: Vector2) -> bool:
 	return _walls_map == null or not _walls_map.crosses_wall(from + _flat_shift, to + _flat_shift)
+
+
+func _follow_depth() -> void:
+	if depth_view != null:
+		depth_view.follow_depth(self, _exact + _flat_shift, _coord.y)

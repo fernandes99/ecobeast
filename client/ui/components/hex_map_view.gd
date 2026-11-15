@@ -60,13 +60,13 @@ const CONTOUR_TEXTURE := "contour"
 ## O contorno dos hexágonos, mais fraco e desligado; o menu Debug do mapa o liga (water-motion/03).
 const CONTOUR_ALPHA := 0.5
 const HIGHLIGHT_TEXTURE := "highlight"
-## As faixas de decoração de cada linha, de cima para baixo, pela distância do pé ao
-## centro do hexágono: os atores entram entre elas pela altura do pé (free-props/02).
-const DEPTH_BANDS := 4
-const BAND_HEIGHT := 14.5
-## Os atores sem o pé exato (Ecobeasts e Domadores NPC) entram antes desta faixa.
-const MIDDLE_BAND := 2
+## As faixas de decoração de cada linha, de cima para baixo, pela altura do pé no chão
+## plano a partir do topo da linha: os atores entram entre elas pela altura do pé. Um pé
+## na ponta de baixo do hexágono passa para a linha seguinte (prop-depth-blocks/01).
+const DEPTH_BANDS := 6
+const BAND_HEIGHT := 7.0
 const PROP_PATH := "res://assets/props/%s/%d.png"
+const NO_PLACE := Vector2i(-2147483648, 0)
 ## O corte de altura do editor: acima dele, o hexágono fica transparente (terrain-height/03).
 const CUT_HEIGHT := 4
 const GHOST_ALPHA := 0.25
@@ -133,6 +133,8 @@ var _walls_by_chunk: Dictionary[Vector2i, Array] = {}
 ## Os pedaços de cada parede, montados uma vez: o índice é refeito ao mudar o terreno.
 var _wall_pieces: Dictionary[MapWall, Array] = {}
 var _prop_slugs: Dictionary[int, String] = {}
+## Os hexágonos de cada linha, sem pedaços de colunas (o mapa do jogo, que não muda).
+var _row_tiles: Dictionary[int, Array] = {}
 
 
 func _init() -> void:
@@ -186,6 +188,7 @@ func set_map(map: ExplorationMap) -> void:
 		remove_child(row)
 		row.queue_free()
 	_rows.clear()
+	_row_tiles.clear()
 	_props_by_chunk.clear()
 	_walls_by_chunk.clear()
 	_wall_pieces.clear()
@@ -310,23 +313,43 @@ func build_all_rows() -> void:
 		_build_chunk(key)
 
 
-func set_actor_row(actor: Node2D, row: int) -> void:
-	var front := _first_index(_bands[MIDDLE_BAND], row)
-	move_child(actor, front if actor.get_index() > front else front - 1)
-
-
-## O ator entra na `row` (a linha dos pés), na divisa de faixas mais perto do pé
-## dele, `foot` no chão plano: atrás das decorações com o pé à frente do dele.
+## O ator entra pela altura do pé, `foot` no chão plano: na linha dele, ou na de baixo
+## pela regra de `spills_down`, na divisa de faixas mais perto do pé. `row` é a linha
+## dos pés, para quem está fora de um hexágono do mapa.
 func set_actor_depth(actor: Node2D, foot: Vector2, row: int) -> void:
-	if not _row_chunks.has(row):
+	var place := actor_place(foot, row)
+	if place.x != NO_PLACE.x:
+		_move_actor(actor, place)
+
+
+## Como `set_actor_depth`, mas só mexe no nó quando a linha ou a divisa mudam: para quem
+## passeia e chama a cada passo.
+func follow_depth(actor: Node2D, foot: Vector2, row: int) -> void:
+	var place := actor_place(foot, row)
+	if place.x == NO_PLACE.x or actor.get_meta(&"depth_place", NO_PLACE) == place:
 		return
-	var dy := foot.y - (STEP_Y * row + SURFACE_CENTER.y)
-	var gap := clampi(roundi((dy + SURFACE_CENTER.y) / BAND_HEIGHT), 0, DEPTH_BANDS)
-	var at := _first_index(_bands[gap], row) if gap < DEPTH_BANDS else _last_index(_bands[DEPTH_BANDS - 1], row) + 1
+	_move_actor(actor, place)
+
+
+## A linha e a divisa de faixas (de 0 a DEPTH_BANDS) de um pé, ou NO_PLACE sem a linha.
+func actor_place(foot: Vector2, row: int) -> Vector2i:
+	var coord := grid_coord(foot)
+	if _map == null or not _map.has(coord):
+		coord = Vector2i(coord.x, row)
+	var target := coord.y + 1 if _map != null and spills_down(coord, foot.y) else coord.y
+	if not _row_chunks.has(target):
+		return NO_PLACE
+	var gap := clampi(roundi((foot.y - float(STEP_Y * target)) / BAND_HEIGHT), 0, DEPTH_BANDS)
+	return Vector2i(target, gap)
+
+
+func _move_actor(actor: Node2D, place: Vector2i) -> void:
+	actor.set_meta(&"depth_place", place)
+	var at := _first_index(_bands[place.y], place.x) if place.y < DEPTH_BANDS else _last_index(_bands[DEPTH_BANDS - 1], place.x) + 1
 	move_child(actor, at if actor.get_index() > at else at - 1)
 
 
-## A faixa de uma decoração com o pé `dy` pixels da arte abaixo do centro do hexágono.
+## A faixa de uma decoração com o pé `dy` pixels da arte abaixo do centro da linha.
 static func band_of(dy: float) -> int:
 	return clampi(floori((dy + SURFACE_CENTER.y) / BAND_HEIGHT), 0, DEPTH_BANDS - 1)
 
@@ -617,7 +640,13 @@ func _build_row(key: Vector2i, tiles: Array) -> void:
 		row.meshes = no_meshes
 		row.textures = no_textures
 	_add_terrain(row, shown)
-	_add_decorations(bands, shown, props, _wall_entries(key))
+	var above := key + Vector2i(0, -1)
+	var above_tiles := _tiles_of(above)
+	var above_props: Array = _props_by_chunk.get(above, [])
+	if height_cut >= 0:
+		above_tiles = above_tiles.filter(func(tile: HexTile) -> bool: return tile.height <= height_cut)
+		above_props = above_props.filter(func(prop: MapProp) -> bool: return _level_at(prop.coord) <= height_cut)
+	_add_decorations(bands, key.y, shown, props, above_tiles, above_props, _wall_entries(key))
 	row.queue_redraw()
 	for band: HexRowView in bands:
 		band.queue_redraw()
@@ -880,33 +909,65 @@ func _add_grounds(row: HexRowView, tiles: Array) -> void:
 		_add_texture_mesh(row, ground_mask.texture_of(page), batch.points, batch.points, batch.colors, batch.custom, batch.extra)
 
 
-func _add_decorations(bands: Array[HexRowView], tiles: Array, props: Array, walls: Array = []) -> void:
+## As decorações da linha `row`: as dos hexágonos dela que ficam nela e as da linha de
+## cima que passam para ela (`spills_down`), cada uma na faixa do pé.
+func _add_decorations(bands: Array[HexRowView], row: int, tiles: Array, props: Array, above_tiles: Array, above_props: Array, walls: Array = []) -> void:
 	var sheet: Array[Array] = []
 	var files: Array[Dictionary] = []
 	for _band: int in DEPTH_BANDS:
 		var decorations: Array[HexDecorations.Decoration] = []
 		sheet.append(decorations)
 		files.append({})
+	_collect_decorations(sheet, files, row, tiles, props, false)
+	_collect_decorations(sheet, files, row, above_tiles, above_props, true)
+	var fences: Array[Dictionary] = []
+	for _band: int in DEPTH_BANDS:
+		fences.append({})
+	for entry: Array in walls:
+		var coord: Vector2i = entry[0]
+		var piece: HexWalls.Piece = entry[1]
+		var band := band_of(float(piece.flat.y) - flat_center(coord).y)
+		if not fences[band].has(piece.slug):
+			fences[band][piece.slug] = []
+		fences[band][piece.slug].append([Vector2(piece.flat) - _rise(_level_at(entry[2])), piece])
+	for band: int in DEPTH_BANDS:
+		var decorations: Array[HexDecorations.Decoration] = []
+		decorations.assign(sheet[band])
+		_add_decoration_mesh(bands[band], decorations)
+		for path: String in files[band]:
+			_add_file_props(bands[band], path, files[band][path])
+		for slug: String in fences[band]:
+			_add_wall_mesh(bands[band], slug, fences[band][slug])
+
+
+func _collect_decorations(sheet: Array[Array], files: Array[Dictionary], row: int, tiles: Array, props: Array, spilled: bool) -> void:
 	var trails := _trails_near(tiles)
 	var no_trails: Array[MapTrail] = []
+	var row_center := float(STEP_Y * row) + SURFACE_CENTER.y
 	for tile: HexTile in tiles:
 		if tile.bare:
 			continue
+		var flat := flat_center(tile.coord)
 		var center := Vector2i(_tile_origin(tile.coord) + SURFACE_CENTER - _rise(tile.height))
 		var tile_trails := trails if ground_mask.has_trail(tile.coord) else no_trails
 		for decoration: HexDecorations.Decoration in HexDecorations.decorations_of(tile, _map.map_seed):
+			if spills_down(tile.coord, flat.y + decoration.offset.y) != spilled:
+				continue
 			if allows_decoration.is_valid() and not allows_decoration.call(tile.coord, decoration.kind):
 				continue
-			if not HexGrounds.allows_on(HexGrounds.ground_at(tile, flat_center(tile.coord) + Vector2(decoration.offset), tile_trails), decoration.kind):
+			if not HexGrounds.allows_on(HexGrounds.ground_at(tile, flat + Vector2(decoration.offset), tile_trails), decoration.kind):
 				continue
 			decoration.base = center + decoration.offset
-			sheet[band_of(decoration.offset.y)].append(decoration)
+			sheet[band_of(flat.y + decoration.offset.y - row_center)].append(decoration)
 	for prop: MapProp in props:
 		var tile := _map.tile_at(prop.coord)
 		if tile == null:
 			continue
+		var flat_y := flat_center(prop.coord).y + prop.offset.y
+		if spills_down(prop.coord, flat_y) != spilled:
+			continue
 		var base := Vector2i(flat_center(prop.coord) - _rise(tile.height)) + prop.offset
-		var band := band_of(prop.offset.y)
+		var band := band_of(flat_y - row_center)
 		var slug: String = _prop_slugs.get(prop.prop_type_id, "")
 		if HexDecorations.KIND_ROWS.has(slug):
 			var decoration := HexDecorations.Decoration.new()
@@ -921,25 +982,43 @@ func _add_decorations(bands: Array[HexRowView], tiles: Array, props: Array, wall
 			if not files[band].has(path):
 				files[band][path] = []
 			files[band][path].append([base, prop.mirrored])
-	var fences: Array[Dictionary] = []
-	for _band: int in DEPTH_BANDS:
-		fences.append({})
-	for entry: Array in walls:
-		var coord: Vector2i = entry[0]
-		var piece: HexWalls.Piece = entry[1]
-		var offset := Vector2(piece.flat) - flat_center(coord)
-		var band := band_of(offset.y)
-		if not fences[band].has(piece.slug):
-			fences[band][piece.slug] = []
-		fences[band][piece.slug].append([Vector2(piece.flat) - _rise(_level_at(entry[2])), piece])
-	for band: int in DEPTH_BANDS:
-		var decorations: Array[HexDecorations.Decoration] = []
-		decorations.assign(sheet[band])
-		_add_decoration_mesh(bands[band], decorations)
-		for path: String in files[band]:
-			_add_file_props(bands[band], path, files[band][path])
-		for slug: String in fences[band]:
-			_add_wall_mesh(bands[band], slug, fences[band][slug])
+
+
+## Um pé no chão plano a `flat_y`, no hexágono `coord`, é desenhado na linha de baixo
+## quando passa do topo dela, ela existe nesse pedaço e os dois vizinhos de baixo não são
+## mais altos: senão o paredão deles deixaria de cobri-lo (prop-depth-blocks/01).
+func spills_down(coord: Vector2i, flat_y: float) -> bool:
+	if flat_y < float(STEP_Y * (coord.y + 1)):
+		return false
+	if not _rows.has(_chunk_of(coord + Vector2i(0, 1))):
+		return false
+	var height := _level_at(coord)
+	for neighbor: Vector2i in LOWER_NEIGHBORS:
+		var tile := _map.tile_at(coord + neighbor)
+		if tile != null and tile.height > height:
+			return false
+	return true
+
+
+## Os hexágonos de um pedaço, montado ou não.
+func _tiles_of(key: Vector2i) -> Array:
+	if _unbuilt_rows.has(key):
+		return _unbuilt_rows[key]
+	var tiles: Array = []
+	if not _rows.has(key):
+		return tiles
+	if chunk_columns > 0:
+		for q: int in range(key.x * chunk_columns, (key.x + 1) * chunk_columns):
+			var tile := _map.tile_at(Vector2i(q, key.y))
+			if tile != null:
+				tiles.append(tile)
+		return tiles
+	if _row_tiles.is_empty():
+		for tile: HexTile in _map.tiles.values():
+			if not _row_tiles.has(tile.coord.y):
+				_row_tiles[tile.coord.y] = []
+			_row_tiles[tile.coord.y].append(tile)
+	return _row_tiles.get(key.y, tiles)
 
 
 func _trails_near(tiles: Array) -> Array[MapTrail]:

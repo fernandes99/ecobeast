@@ -6,6 +6,7 @@ import {
 import { BundleService } from '../catalog/bundle/bundle.service.js';
 import { hexKey } from '../domain/exploration/hex.js';
 import {
+  ALL_VARIANTS,
   type BlockLine,
   blockLineError,
   MAX_BLOCK_LINES,
@@ -42,12 +43,14 @@ export class PropTypesEditorService {
     }));
     const error = blocksError(blocks);
     if (error) throw new BadRequestException(error);
+    const variant = dto.variant ?? ALL_VARIANTS;
     await this.prisma.$transaction(async (tx) => {
-      await tx.propTypeBlock.deleteMany({ where: { propTypeId: id } });
+      await tx.propTypeBlock.deleteMany({ where: { propTypeId: id, variant } });
       if (blocks.length > 0) {
         await tx.propTypeBlock.createMany({
           data: blocks.map(({ closed, points }, position) => ({
             propTypeId: id,
+            variant,
             position,
             closed,
             points,

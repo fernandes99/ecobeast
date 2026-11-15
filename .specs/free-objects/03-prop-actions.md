@@ -27,7 +27,7 @@ O Refúgio e a Loja abrem hoje pelo hexágono de ação embaixo do objeto de gra
 - **RF-03:** No editor, a peça escolhida tem a lista Ação ("Nenhuma" e os `action_types`). Trocar a ação é um passo do desfazer.
   - Na camada Ações, o nome da ação aparece acima do pé da peça, na cor do tipo.
   - O Carimbo leva a ação.
-- **RF-04:** No jogo, a arte das peças com bloqueio ou ação pega o toque, pelo retângulo e pelo alfa do pixel. Ganha a peça da frente, a do pé mais embaixo. As outras peças deixam o toque passar para o chão.
+- **RF-04:** No jogo, a arte das peças com bloqueio ou ação pega o toque, pelo retângulo e pelo alfa do pixel. Ganha a peça da frente, a do pé mais embaixo. As outras peças deixam o toque passar para o chão. **Trocado na [prop-depth-blocks/04](../prop-depth-blocks/04-tap-through.md):** só as peças com ação pegam o toque.
 - **RF-05:** O toque numa dessas peças funciona assim:
   - **O caminho:** o Domador anda pelo caminho mais curto até o ponto das linhas mais perto dele e para rente ao bloqueio, a `WALL_REACH`.
   - **Sem linhas:** o caminho vai até o pé.

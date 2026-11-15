@@ -269,12 +269,13 @@ func prop_at(art_point: Vector2) -> int:
 	return best
 
 
-## As linhas de bloqueio da peça (free-objects): as próprias, se ajustada, ou as do tipo.
+## As linhas de bloqueio da peça (free-objects): as próprias, se ajustada, ou as padrão da
+## variante dela (prop-depth-blocks/02).
 func prop_lines(index: int) -> Array[Dictionary]:
 	var prop: Dictionary = props[index]
 	if prop.has("block"):
 		return MapProp.lines_from(prop["block"])
-	return GameData.get_prop_blocks(int(prop.get("prop_type_id", 0)))
+	return GameData.get_prop_blocks(int(prop.get("prop_type_id", 0)), int(prop.get("variant", 1)))
 
 
 func prop_is_custom(index: int) -> bool:
@@ -286,7 +287,7 @@ func prop_world_lines(index: int) -> Array[PackedVector2Array]:
 	var prop := MapProp.from_dict(props[index])
 	if prop == null:
 		return []
-	return prop.world_lines(GameData.get_prop_blocks(prop.prop_type_id))
+	return prop.world_lines(GameData.get_prop_blocks(prop.prop_type_id, prop.variant))
 
 
 ## Um ponto do chão plano nas coordenadas das linhas da peça: a partir do pé, sem o espelho.

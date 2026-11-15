@@ -1,4 +1,4 @@
-import { type HexCoord, hexKey } from '../exploration/hex.js';
+import { type HexCoord, hexKey, hexNeighbors } from '../exploration/hex.js';
 import { flatCenter, gridCoord, type PixelPoint } from './hex-pixels.js';
 
 /**
@@ -16,13 +16,38 @@ export const MAX_BLOCK_COORD = 512;
 /** Peças que bloqueiam por ilha: segura o custo do blockedKeys. */
 export const MAX_BLOCKING_PROPS = 2000;
 
-/** As linhas de bloqueio padrão de cada tipo de peça, pelo id do tipo. */
-export type TypeBlocks = ReadonlyMap<number, readonly BlockLine[]>;
+/**
+ * As linhas de bloqueio padrão dos tipos de peça, por `typeBlockKey(tipo, variante)`.
+ * A variante 0 vale para as que não têm linhas próprias (prop-depth-blocks/02).
+ */
+export type TypeBlocks = ReadonlyMap<string, readonly BlockLine[]>;
+export const ALL_VARIANTS = 0;
+export const MAX_BLOCK_VARIANT = 99;
+/** Um hexágono é bloqueado quando uma linha passa a até isto do centro dele. */
+export const CENTER_REACH = 8;
+
+export function typeBlockKey(propTypeId: number, variant: number): string {
+  return `${propTypeId}:${variant}`;
+}
+
+/** As linhas padrão de uma variante: as próprias dela, ou as da variante 0. */
+export function typeLines(
+  typeBlocks: TypeBlocks,
+  propTypeId: number,
+  variant: number,
+): readonly BlockLine[] {
+  return (
+    typeBlocks.get(typeBlockKey(propTypeId, variant)) ??
+    typeBlocks.get(typeBlockKey(propTypeId, ALL_VARIANTS)) ??
+    []
+  );
+}
 
 export interface BlockingProp extends HexCoord {
   propTypeId: number;
   dx: number;
   dy: number;
+  variant: number;
   mirrored: boolean;
   /** As linhas da própria peça; sem o campo, valem as do tipo. */
   block?: BlockLine[];
@@ -51,7 +76,7 @@ export function propLines(
   prop: BlockingProp,
   typeBlocks: TypeBlocks,
 ): readonly BlockLine[] {
-  return prop.block ?? typeBlocks.get(prop.propTypeId) ?? [];
+  return prop.block ?? typeLines(typeBlocks, prop.propTypeId, prop.variant);
 }
 
 /** As linhas de uma peça no chão plano, com o espelho. */
@@ -83,8 +108,9 @@ export function wallLine(points: readonly number[]): PixelPoint[] {
 }
 
 /**
- * Os hexágonos que uma linha toca: os do caminho dela, em passos de 1 px, e,
- * fechada, os de centro dentro dela. A mesma conta do `IslandBlocks` do jogo.
+ * Os hexágonos que uma linha bloqueia: os de centro a até `CENTER_REACH` de um
+ * trecho dela e, fechada, os de centro dentro dela (prop-depth-blocks/02). A
+ * mesma conta do `IslandBlocks` do jogo.
  */
 export function addLineHexes(
   points: readonly PixelPoint[],
@@ -95,23 +121,52 @@ export function addLineHexes(
   for (let index = 0; index < segments; index++) {
     const from = points[index]!;
     const to = points[(index + 1) % points.length]!;
+    const seen = new Set<string>();
     const steps = Math.max(
       1,
-      Math.ceil(Math.max(Math.abs(to.x - from.x), Math.abs(to.y - from.y))),
+      Math.ceil(
+        Math.max(Math.abs(to.x - from.x), Math.abs(to.y - from.y)) /
+          CENTER_REACH,
+      ),
     );
     for (let step = 0; step <= steps; step++) {
       const t = step / steps;
-      into.add(
-        hexKey(
-          gridCoord({
-            x: from.x + (to.x - from.x) * t,
-            y: from.y + (to.y - from.y) * t,
-          }),
-        ),
-      );
+      const coord = gridCoord({
+        x: from.x + (to.x - from.x) * t,
+        y: from.y + (to.y - from.y) * t,
+      });
+      for (const candidate of [coord, ...hexNeighbors(coord)]) {
+        const key = hexKey(candidate);
+        if (seen.has(key)) continue;
+        seen.add(key);
+        if (segmentDistance(flatCenter(candidate), from, to) <= CENTER_REACH) {
+          into.add(key);
+        }
+      }
     }
   }
   if (closed && points.length >= 3) addInsideHexes(points, into);
+}
+
+function segmentDistance(
+  point: PixelPoint,
+  from: PixelPoint,
+  to: PixelPoint,
+): number {
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  const length = dx * dx + dy * dy;
+  const t =
+    length === 0
+      ? 0
+      : Math.max(
+          0,
+          Math.min(
+            1,
+            ((point.x - from.x) * dx + (point.y - from.y) * dy) / length,
+          ),
+        );
+  return Math.hypot(point.x - (from.x + dx * t), point.y - (from.y + dy * t));
 }
 
 const STEP_X = 64;

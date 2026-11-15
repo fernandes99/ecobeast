@@ -258,7 +258,7 @@ Como elas viram Ecobeasts no mapa está em [biome-encounters/architecture.md](..
 
 **`prop_types`** são os tipos de peça solta das ilhas (`slug`, `name` e `variants` ≥ 1), postas num ponto em pixels. A arte e o vento são do jogo, pelo `slug`. O desenho está em [free-props/architecture.md](../free-props/architecture.md). Os tipos 28 a 60 têm a arte de pacotes da craftpix.net ([vegetation-packs](../vegetation-packs/architecture.md#os-tipos)).
 
-**`prop_type_blocks`** são as linhas de bloqueio padrão de cada tipo de peça (`prop_type_id`, `position`, `closed` e `points`, os pixels `x0, y0, …` a partir do pé, de 4 a 128 números): a peça bloqueia o Domador por elas, como uma parede, a menos que tenha as próprias. O desenho está em [free-objects/architecture.md](../free-objects/architecture.md).
+**`prop_type_blocks`** são as linhas de bloqueio padrão de cada tipo de peça (`prop_type_id`, `variant`, `position`, `closed` e `points`, os pixels `x0, y0, …` a partir do pé, de 4 a 128 números): a peça bloqueia o Domador por elas, como uma parede, a menos que tenha as próprias. A `variant` 0 vale para as variantes sem linhas próprias. O desenho está em [free-objects/architecture.md](../free-objects/architecture.md) e em [prop-depth-blocks/architecture.md](../prop-depth-blocks/architecture.md#o-bloqueio-por-variante).
 
 **`wall_types`** são os tipos de parede das ilhas (`slug` em `^[a-z0-9_]+$`, `name` e `visible`): a cerca de madeira, o muro de pedra e a parede invisível, com ids estáveis. A parede é uma linha em pixels guardada em `island_walls`; a arte de um tipo visível é do jogo, pelo `slug`. O desenho está em [free-fences/architecture.md](../free-fences/architecture.md).
 

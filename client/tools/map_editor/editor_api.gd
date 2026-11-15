@@ -50,9 +50,10 @@ static func save_skill(id: int, body: Dictionary) -> ApiResponse:
 	return await _call(HTTPClient.METHOD_PUT, "%s/%d" % [SKILLS_PATH, id], body)
 
 
-## As linhas de bloqueio padrão de um tipo de peça (free-objects/02).
-static func save_prop_type_blocks(prop_type_id: int, blocks: Array) -> ApiResponse:
-	return await _call(HTTPClient.METHOD_PUT, "%s/%d/blocks" % [PROP_TYPES_PATH, prop_type_id], {"blocks": blocks})
+## As linhas de bloqueio padrão de uma variante de um tipo de peça, 0 para todas
+## (free-objects/02, prop-depth-blocks/02).
+static func save_prop_type_blocks(prop_type_id: int, variant: int, blocks: Array) -> ApiResponse:
+	return await _call(HTTPClient.METHOD_PUT, "%s/%d/blocks" % [PROP_TYPES_PATH, prop_type_id], {"variant": variant, "blocks": blocks})
 
 
 static func _call(method: HTTPClient.Method, path: String, body: Variant = null) -> ApiResponse:

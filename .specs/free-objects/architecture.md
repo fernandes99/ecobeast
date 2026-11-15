@@ -110,7 +110,7 @@ O `blockedKeys` passa a ser o conjunto dos hexágonos da ilha que alguma linha d
 - As peças sem bloqueio nem ação deixam o toque passar para o chão, como hoje.
 
 **A caminhada até a peça (fase 3):**
-- **O caminho:** tocar numa peça com bloqueio leva o Domador pelo caminho mais curto até ela, como tocar numa cerca, e ele para a `WALL_REACH` da linha.
+- **O caminho:** tocar numa peça com bloqueio leva o Domador pelo caminho mais curto até ela, como tocar numa cerca, e ele para a `WALL_REACH` da linha. Desde a [prop-depth-blocks/04](../prop-depth-blocks/04-tap-through.md), só a peça com ação pega o toque; na peça só com bloqueio, o toque vai para o chão.
 - **A ação:** se a peça tem ação, ela acontece quando o Domador termina essa caminhada encostado: a até `TOUCH_REACH` (8 px) de uma linha dela.
   - Se ele já está encostado quando toca, a ação acontece sem andar.
   - Uma peça com ação e sem bloqueio leva o Domador até o pé, e a ação acontece na chegada.

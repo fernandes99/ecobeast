@@ -182,6 +182,9 @@ model PropType {
 model PropTypeBlock {
   id         Int     @id @default(autoincrement())
   propTypeId Int     @map("prop_type_id")
+  /// A variante a que a linha vale; 0 vale para todas as que não têm linhas próprias
+  /// (prop-depth-blocks/02). CHECK 0 a 99 (migration variant_blocks)
+  variant    Int     @default(0)
   /// A ordem no tipo, de 0 em diante.
   position   Int
   /// Liga o último ponto ao primeiro.
@@ -192,7 +195,7 @@ model PropTypeBlock {
 
   propType PropType @relation(fields: [propTypeId], references: [id], onDelete: Cascade)
 
-  @@unique([propTypeId, position])
+  @@unique([propTypeId, variant, position])
   @@map("prop_type_blocks")
   @@schema("ecobeasts")
 }

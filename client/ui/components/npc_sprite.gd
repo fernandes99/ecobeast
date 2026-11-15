@@ -41,7 +41,7 @@ func place_on(view: HexMapView, map: ExplorationMap) -> void:
 	view.add_child(self)
 	_exact = view.surface_center(coord)
 	position = _exact.round()
-	view.set_actor_row(self, coord.y)
+	_follow_depth()
 	_rest()
 
 
@@ -75,7 +75,7 @@ func _process(delta: float) -> void:
 	position = _exact.round()
 	if coord != next and _exact.distance_to(target) < _exact.distance_to(_view.surface_center(coord)):
 		coord = next
-		_view.set_actor_row(self, coord.y)
+	_follow_depth()
 	if _exact == target:
 		_path.pop_front()
 		if _path.is_empty():
@@ -83,6 +83,11 @@ func _process(delta: float) -> void:
 		else:
 			face_toward(_view.surface_center(_path[0]) - _exact)
 			play_walk()
+
+
+## O pé no chão plano, pela altura do hexágono de agora (prop-depth-blocks/01).
+func _follow_depth() -> void:
+	_view.follow_depth(self, _exact + HexMapView.flat_center(coord) - _view.surface_center(coord), coord.y)
 
 
 func _rest() -> void:

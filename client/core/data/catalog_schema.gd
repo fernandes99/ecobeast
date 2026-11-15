@@ -185,6 +185,7 @@ const TABLES := {
 		"columns": {
 			"id": ID,
 			"prop_type_id": {"type": "int", "fk": "prop_types"},
+			"variant": {"type": "int", "min": 0, "max": 99},
 			"position": {"type": "int", "min": 0},
 			"closed": {"type": "bool"},
 			"points": {"type": "int_array"},

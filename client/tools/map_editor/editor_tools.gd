@@ -5,10 +5,10 @@ signal message(text: String)
 signal brush_changed
 signal edited(step: EditorHistory.Step, merge: bool)
 
-enum Tool { BIOME, HEIGHT, GROUND, ADD, REMOVE, START, OBJECT, ACTION, AREA, STAMP, ERASER, PATH, VEGETATION, NPC, FENCE }
+enum Tool { BIOME, HEIGHT, GROUND, ADD, REMOVE, START, OBJECT, ACTION, AREA, STAMP, ERASER, PATH, VEGETATION, NPC, FENCE, BLOCKS }
 
-const TOOL_NAMES: Array[String] = ["Bioma", "Altura", "Chão", "Pôr hexágono", "Tirar hexágono", "Chegada", "Peças", "Ação", "Área", "Carimbo", "Borracha", "Caminho", "Vegetação", "NPC", "Cerca"]
-const TOOL_ICONS: Array[String] = ["biome", "height", "ground", "hex_add", "hex_remove", "flag", "object", "action", "area", "stamp", "eraser", "path", "vegetation", "npc", "fence"]
+const TOOL_NAMES: Array[String] = ["Bioma", "Altura", "Chão", "Pôr hexágono", "Tirar hexágono", "Chegada", "Peças", "Ação", "Área", "Carimbo", "Borracha", "Caminho", "Vegetação", "NPC", "Cerca", "Bloqueios"]
+const TOOL_ICONS: Array[String] = ["biome", "height", "ground", "hex_add", "hex_remove", "flag", "object", "action", "area", "stamp", "eraser", "path", "vegetation", "npc", "fence", "blocks"]
 const TOOL_HINTS: Array[String] = [
 	"Troca o bioma dos hexágonos que já existem. A altura só muda se você escolher uma abaixo.",
 	"Troca só a altura dos hexágonos que já existem.",
@@ -25,12 +25,13 @@ const TOOL_HINTS: Array[String] = [
 	"Pinta vegetação e pedras do grupo escolhido. Botão direito apaga as peças soltas.",
 	"Põe o NPC da lista num hexágono, ou escolhe o que está nele. Botão direito escolhe ou solta.",
 	"Clique para pôr os pontos da cerca. Enter, clicar de novo no último ponto ou o botão direito terminam; Esc desiste. Clique numa cerca para escolher, trocar o tipo ou apagar.",
+	"Edita as linhas de bloqueio de qualquer peça. Botão direito apaga um ponto.",
 ]
 ## Os grupos da coluna (map-editor/06): as ferramentas parecidas viram abas do grupo.
 const GROUPS: Array[Dictionary] = [
 	{"name": "Terreno", "icon": "biome", "tools": [Tool.BIOME, Tool.HEIGHT, Tool.ADD, Tool.REMOVE]},
 	{"name": "Chão", "icon": "ground", "tools": [Tool.GROUND, Tool.PATH]},
-	{"name": "Peças", "icon": "object", "tools": [Tool.OBJECT, Tool.VEGETATION, Tool.STAMP, Tool.ERASER, Tool.FENCE]},
+	{"name": "Peças", "icon": "object", "tools": [Tool.OBJECT, Tool.VEGETATION, Tool.BLOCKS, Tool.STAMP, Tool.ERASER, Tool.FENCE]},
 	{"name": "Jogo", "icon": "flag", "tools": [Tool.START, Tool.ACTION, Tool.AREA, Tool.NPC]},
 ]
 const TAB_ICON_WIDTH := 18
@@ -114,6 +115,8 @@ var vegetation_panel: VegetationPanel
 var npc_panel: NpcPanel
 var _npc_section: Control
 var _vegetation_section: Control
+var blocks_panel: BlocksPanel
+var _blocks_section: Control
 var _path: MapTrail = null
 var fence_panel: FencePanel
 var _fence_section: Control
@@ -248,6 +251,11 @@ func _init() -> void:
 	object_panel.blocks_editing_changed.connect(func(_on: bool) -> void: brush_changed.emit())
 	objects_box.add_child(object_panel)
 
+	var blocks_box := _section("Bloqueios")
+	_blocks_section = blocks_box.get_parent()
+	blocks_panel = BlocksPanel.new(object_panel)
+	blocks_box.add_child(blocks_panel)
+
 	var actions_box := _section("Ação")
 	_action_section = actions_box.get_parent()
 	action_panel = ActionPanel.new()
@@ -313,6 +321,8 @@ func _init() -> void:
 
 
 func set_tool(value: int) -> void:
+	if tool == Tool.BLOCKS and value != Tool.BLOCKS and object_panel.editing_blocks:
+		object_panel.toggle_blocks()
 	tool = value as Tool
 	_fence = null
 	if tool != Tool.FENCE and fence_panel.selected >= 0:
@@ -401,6 +411,7 @@ func set_draft(draft: IslandDraft) -> void:
 func refresh_panels() -> void:
 	action_panel.refresh()
 	object_panel.refresh()
+	blocks_panel.refresh()
 	area_panel.refresh()
 	npc_panel.refresh()
 
@@ -418,7 +429,7 @@ func begin_stroke(draft: IslandDraft, secondary: bool = false) -> void:
 	_object_done = false
 	_moving = -1
 	_block_point = Vector2i(-1, -1)
-	if draft.props.size() > 0 or tool == Tool.OBJECT or tool == Tool.STAMP or tool == Tool.ERASER or tool == Tool.VEGETATION:
+	if draft.props.size() > 0 or tool == Tool.OBJECT or tool == Tool.STAMP or tool == Tool.ERASER or tool == Tool.VEGETATION or tool == Tool.BLOCKS:
 		_step.props_before = draft.props.duplicate(true)
 	if tool == Tool.VEGETATION:
 		vegetation_panel.begin(draft)
@@ -442,6 +453,8 @@ func paint(draft: IslandDraft, center: Vector2i) -> Array[Vector2i]:
 		return _paint_npc(draft, center)
 	if tool == Tool.OBJECT:
 		return _paint_object(draft)
+	if tool == Tool.BLOCKS:
+		return _paint_blocks(draft)
 	if tool == Tool.STAMP:
 		return _paint_stamp(draft, center)
 	if tool == Tool.PATH:
@@ -477,6 +490,8 @@ func end_stroke(draft: IslandDraft) -> EditorHistory.Step:
 	_step = null
 	if step == null:
 		return null
+	if tool == Tool.BLOCKS:
+		blocks_panel.refresh()
 	if tool == Tool.ACTION:
 		for index: int in range(draft.actions.size() - 1, -1, -1):
 			if (draft.actions[index]["tiles"] as Array).is_empty():
@@ -840,6 +855,54 @@ static func simplified(points: PackedVector2Array, tolerance: float) -> PackedVe
 	return left
 
 
+## A ferramenta Bloqueios (prop-depth-blocks/03): o ponto ou o trecho de linha mais perto
+## do ponteiro, de qualquer peça, escolhe a peça dela e segue como o cadeado; sem linha
+## perto, clicar na arte só escolhe a peça.
+func _paint_blocks(draft: IslandDraft) -> Array[Vector2i]:
+	var changed: Array[Vector2i] = []
+	if _object_done:
+		return changed
+	_object_done = true
+	if object_panel.drawing and object_panel.editing_blocks and object_panel.selected_prop >= 0:
+		return _paint_prop_block(draft)
+	var hit := _nearest_block_prop(draft)
+	if hit < 0:
+		if _secondary:
+			return changed
+		var art := pointer - Vector2(0.0, draft.rise_at(HexMapView.grid_coord(pointer)))
+		var piece := draft.prop_at(art)
+		object_panel.edit_blocks_of(piece if piece >= 0 and editable(draft, draft.prop_coord(piece)) else -1)
+		return changed
+	if hit != object_panel.selected_prop or not object_panel.editing_blocks:
+		object_panel.edit_blocks_of(hit)
+	return _paint_prop_block(draft)
+
+
+## A peça com um ponto ou um trecho de bloqueio a até BLOCK_PICK do ponteiro, a mais
+## perto; -1 sem nenhuma. Só olha as peças a até 3 hexágonos.
+func _nearest_block_prop(draft: IslandDraft) -> int:
+	var center := HexMapView.grid_coord(pointer)
+	var typed := GameData.prop_block_types()
+	var best := -1
+	var best_gap := BLOCK_PICK
+	for index: int in draft.props.size():
+		var prop: Dictionary = draft.props[index]
+		if not prop.has("block") and not typed.has(int(prop.get("prop_type_id", 0))):
+			continue
+		var coord := draft.prop_coord(index)
+		if ExplorationMap.distance(coord, center) > 3 or not editable(draft, coord):
+			continue
+		for line: PackedVector2Array in draft.prop_world_lines(index):
+			for at: int in line.size():
+				var gap := line[at].distance_to(pointer)
+				if at > 0:
+					gap = minf(gap, pointer.distance_to(Geometry2D.get_closest_point_to_segment(pointer, line[at - 1], line[at])))
+				if gap <= best_gap:
+					best_gap = gap
+					best = index
+	return best
+
+
 ## O bloqueio da peça escolhida (free-objects/02): um clique põe o ponto da linha em
 ## desenho, pega um ponto para arrastar ou põe um ponto num trecho; o botão direito
 ## apaga o ponto ou termina a linha em desenho.
@@ -1061,8 +1124,9 @@ func _refresh() -> void:
 	_path_section.visible = tool == Tool.PATH
 	_fence_section.visible = tool == Tool.FENCE
 	_vegetation_section.visible = tool == Tool.VEGETATION
+	_blocks_section.visible = tool == Tool.BLOCKS
 	_npc_section.visible = tool == Tool.NPC
-	_brush_section.visible = tool != Tool.START and tool != Tool.OBJECT and tool != Tool.PATH and tool != Tool.NPC and tool != Tool.FENCE and not (tool == Tool.STAMP and stamp_panel.mode == StampPanel.Mode.PLACE)
+	_brush_section.visible = tool != Tool.START and tool != Tool.OBJECT and tool != Tool.BLOCKS and tool != Tool.PATH and tool != Tool.NPC and tool != Tool.FENCE and not (tool == Tool.STAMP and stamp_panel.mode == StampPanel.Mode.PLACE)
 	for slug: String in _biome_buttons:
 		_biome_buttons[slug].set_pressed_no_signal(slug == biome)
 		_biome_buttons[slug].queue_redraw()

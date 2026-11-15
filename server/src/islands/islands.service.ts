@@ -1,6 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import type { Biome } from '../domain/exploration/map-generator.js';
-import type { BlockLine, TypeBlocks } from '../domain/islands/blocked-hexes.js';
+import {
+  type BlockLine,
+  type TypeBlocks,
+  typeBlockKey,
+} from '../domain/islands/blocked-hexes.js';
 import type { IslandDraft } from '../domain/islands/island-draft.js';
 import type { Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
@@ -43,13 +47,14 @@ export class IslandsService {
   /** As linhas de bloqueio padrão de cada tipo de peça (free-objects). */
   async readTypeBlocks(): Promise<TypeBlocks> {
     const rows = await this.prisma.propTypeBlock.findMany({
-      orderBy: [{ propTypeId: 'asc' }, { position: 'asc' }],
+      orderBy: [{ propTypeId: 'asc' }, { variant: 'asc' }, { position: 'asc' }],
     });
-    const blocks = new Map<number, BlockLine[]>();
-    for (const { propTypeId, closed, points } of rows) {
-      const lines = blocks.get(propTypeId) ?? [];
+    const blocks = new Map<string, BlockLine[]>();
+    for (const { propTypeId, variant, closed, points } of rows) {
+      const key = typeBlockKey(propTypeId, variant);
+      const lines = blocks.get(key) ?? [];
       lines.push({ closed, points });
-      blocks.set(propTypeId, lines);
+      blocks.set(key, lines);
     }
     return blocks;
   }
