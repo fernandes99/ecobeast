@@ -44,7 +44,7 @@ Detalhes em `.specs/foundation/architecture.md`.
 
 ## Editando dados do catálogo
 
-- O catálogo se edita no banco, pelo Table Editor do Supabase (schema `ecobeasts`). A mudança chega ao jogo na próxima abertura, em até 1 minuto (o servidor guarda o catálogo montado por 60 s).
+- O catálogo se edita no banco, pelo Table Editor do Supabase (schema `ecobeasts`). As Técnicas também se editam e se criam pelo F1, na aba Técnicas (`SkillForm`, `.specs/skill-editor/`), com a conta em `MAP_EDITOR_USER_IDS`. A mudança chega ao jogo na próxima abertura, em até 1 minuto (o servidor guarda o catálogo montado por 60 s).
 - As colunas, tipos, chaves e FKs estão em `core/data/catalog_schema.gd`, espelho de `.specs/game-data/architecture.md` e de `server/prisma/schema.prisma`. Tabela ou coluna nova muda os três no mesmo commit, com a migration.
 - Ids são estáveis: nunca renumere nem reaproveite.
 - O `CatalogValidator` confere o catálogo baixado a cada abertura. Um erro aparece na tela "Erro nos dados do jogo", com a lista, e no console.

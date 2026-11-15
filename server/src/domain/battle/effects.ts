@@ -11,6 +11,8 @@ import type {
 
 /** Efeitos que valem sempre no autor, sem coluna de alvo no catálogo. */
 const AUTHOR_EFFECTS = new Set(['heal', 'drain', 'recoil', 'self_damage']);
+/** Numa Técnica para o time, a cura vai para o aliado escolhido. */
+const ALLY_AUTHOR_EFFECTS = new Set(['drain', 'recoil', 'self_damage']);
 
 export function applyEffects(
   context: TurnContext,
@@ -29,8 +31,10 @@ export function applyEffects(
 }
 
 function isOnAuthor(effect: BattleSkillEffect, skill: BattleSkill): boolean {
+  const onAuthor =
+    skill.targetSlug === 'ally' ? ALLY_AUTHOR_EFFECTS : AUTHOR_EFFECTS;
   return (
-    AUTHOR_EFFECTS.has(effect.effectSlug) ||
+    onAuthor.has(effect.effectSlug) ||
     (effect.targetSlug ?? skill.targetSlug) === 'self'
   );
 }

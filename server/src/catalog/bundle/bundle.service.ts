@@ -35,6 +35,10 @@ export class BundleService {
     return this.cached.bundle;
   }
 
+  invalidate(): void {
+    this.cached = undefined;
+  }
+
   private async load(): Promise<CatalogBundle> {
     const entries = await Promise.all(
       CATALOG_TABLES.map(async (table) => {

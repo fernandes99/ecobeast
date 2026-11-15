@@ -5,6 +5,8 @@ const ICON_BOX := Vector2(104, 104)
 const LEVEL_UP := "level_up"
 const MINUS := "−"
 
+var _return_id := -1
+
 
 func _init(content_viewer: ContentViewer) -> void:
 	super(content_viewer)
@@ -20,6 +22,11 @@ func _init(content_viewer: ContentViewer) -> void:
 		row.tail_color = ContentViewer.status_color(done, files.size())
 		rows.append(row)
 	set_rows(rows)
+	var new_button := Button.new()
+	new_button.text = "Nova Técnica"
+	new_button.pressed.connect(_edit.bind(SkillForm.NEW_SKILL))
+	add_list_header(new_button)
+	visibility_changed.connect(_on_visibility_changed)
 
 
 func tab_title() -> String:
@@ -60,6 +67,40 @@ func _header(skill: Dictionary, icon: ContentFiles.Entry, box: VBoxContainer) ->
 	facts.add_child(ContentViewer.text(ContentViewer.row_name("skill_categories", skill.get("skill_category_id")), 0, UiPalette.TEXT_SECONDARY))
 	info.add_child(facts)
 	info.add_child(ContentViewer.paragraph(str(skill.get("description", ""))))
+	var edit_button := Button.new()
+	edit_button.text = "Editar"
+	edit_button.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	edit_button.pressed.connect(_edit.bind(int(skill["id"])))
+	header.add_child(edit_button)
+
+
+func _edit(id: int) -> void:
+	if selected_id != -1:
+		_return_id = selected_id
+	if id != SkillForm.NEW_SKILL:
+		_return_id = id
+	show_custom(func(box: VBoxContainer) -> void:
+		var form := SkillForm.new(viewer, id)
+		form.saved.connect(_on_saved)
+		form.cancelled.connect(_close_form)
+		box.add_child(form))
+
+
+func _close_form() -> void:
+	select(_return_id)
+	if selected_id == -1 and not _buttons.is_empty():
+		select(_buttons.keys()[0])
+
+
+func _on_saved(id: int) -> void:
+	await GameData.load_catalog()
+	viewer.rebuild()
+	viewer.show_item(ContentViewer.TAB_SKILLS, id)
+
+
+func _on_visibility_changed() -> void:
+	if not is_visible_in_tree() and selected_id == -1:
+		_close_form()
 
 
 func _data(skill: Dictionary, box: VBoxContainer) -> void:

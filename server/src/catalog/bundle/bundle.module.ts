@@ -5,5 +5,6 @@ import { BundleService } from './bundle.service.js';
 @Module({
   controllers: [BundleController],
   providers: [BundleService],
+  exports: [BundleService],
 })
 export class BundleModule {}

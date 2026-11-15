@@ -1,5 +1,6 @@
 [
 	{ "id": 1, "slug": "enemy", "name": "Inimigo" },
 	{ "id": 2, "slug": "self", "name": "Si mesmo" },
-	{ "id": 3, "slug": "all", "name": "Todos" }
+	{ "id": 3, "slug": "all", "name": "Todos" },
+	{ "id": 4, "slug": "ally", "name": "Meu time" }
 ]

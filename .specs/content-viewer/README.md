@@ -32,7 +32,7 @@ Tomadas com o dono do projeto:
 | Abas de Elementos (forças e fraquezas) e de Biomas (dados e sprites) | Pedido do dono |
 | Abas de Itens, Traços, Temperamentos e Estados | O dono aceitou na conversa ("Pode trazer") |
 | O algoritmo do mapa fica de fora | O dono pediu para ignorar por enquanto. Os parâmetros moram no código do servidor e a API não os envia |
-| Só leitura: editar continua no painel do Supabase | Aprovado pelo dono |
+| Só leitura: editar continua no painel do Supabase | Aprovado pelo dono. Desde a [skill-editor](../skill-editor/README.md), a aba Técnicas edita e cria Técnicas; as outras continuam só leitura |
 
 Tomadas no planejamento e apresentadas ao dono (corrigíveis; ao mudar uma, atualize aqui e nas specs afetadas):
 

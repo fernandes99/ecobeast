@@ -47,6 +47,7 @@ O que vem depois do MVP de estrutura (entrada, escolha do inicial e Hub). Cada l
 | 31  | [`free-fences`](free-fences/) | A cerca vira parede: um traço em qualquer ângulo (madeira, pedra ou invisível), desenhado pela ferramenta Cerca do editor, que bloqueia o Domador pela linha exata; as cercas de grade viram paredes, e a Cerca (cidade) sai | free-trails, vegetation-brush | concluída |
 | 32  | [`camera-zoom`](camera-zoom/) | O zoom da câmera em pinça: ao explorar, em degraus inteiros de pixel art com o Domador no centro e guardado no aparelho; na luta, contínuo até 2,5 vezes o tabuleiro inteiro, com a vista arrastável; a roda do mouse no PC | wild-battle, islands, board-battle | concluída |
 | 33  | [`skill-cooldown`](skill-cooldown/) | Countdown por Técnica, em rodadas, além do PP, respeitado pelo jogador e pela IA; 3 Técnicas por Ecobeast; na luta, a barra de 3 ícones com o detalhe ao segurar | board-battle, progression | concluída |
+| 34  | [`skill-editor`](skill-editor/) | Editar e criar Técnicas no visualizador (F1): o botão Editar, o formulário com campos, efeitos e quem aprende, as rotas do editor que conferem com as regras do jogo e gravam numa transação, e o alvo "Meu time" | content-viewer, map-editor, skill-cooldown | concluída |
 
 ## Pós-lançamento (do GDD)
 

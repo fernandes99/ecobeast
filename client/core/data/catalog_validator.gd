@@ -333,6 +333,11 @@ func _check_skills() -> void:
 			_row_error("skills", lines[i], "max_hits menor que min_hits")
 		if (rows[i]["ground_effect_id"] == null) != (rows[i]["ground_turns"] == null):
 			_row_error("skills", lines[i], "ground_effect_id e ground_turns precisam vir juntos")
+		if _slug_of("skill_targets", rows[i]["skill_target_id"]) == "ally":
+			if rows[i]["power"] != 0:
+				_row_error("skills", lines[i], "técnica para o time precisa de power = 0")
+			if _slug_of("area_shapes", rows[i]["area_shape_id"]) != "single":
+				_row_error("skills", lines[i], "técnica para o time precisa da área single")
 
 
 func _check_skill_effects() -> void:

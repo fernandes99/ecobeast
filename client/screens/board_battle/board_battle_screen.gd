@@ -36,6 +36,8 @@ const REFERENCE_BOARD_WIDTH := 624.0
 const EVENT_DELAY := 0.35
 const CHARS_PER_SECOND := 60.0
 const EMERGENCY_RANGE := 1
+const SELF_TARGET := "self"
+const ALLY_TARGET := "ally"
 const MIN_STAGE := -6
 const MAX_STAGE := 6
 const DEBUG_MARGIN := 16.0
@@ -532,7 +534,8 @@ func _play_event(event: Dictionary) -> void:
 	if type != "status_applied":
 		_show_statuses(_statuses.apply(event, key))
 	if type in HP_EVENTS and _board.has_token(key):
-		if type == "damage":
+		# A cura de uma Técnica para o time também mostra o efeito em quem recebe.
+		if type == "damage" or (type == "healed" and not _effect_played):
 			await _play_skill_effect(key)
 		_hp[key] = DictFields.get_int(event, "hp")
 		_board.set_hp(key, _hp[key], _max_hp.get(key, 0))
@@ -605,7 +608,7 @@ func _protects() -> bool:
 
 func _targets_self() -> bool:
 	var skill := GameData.get_skill(_attack_skill_id) if _attack_skill_id >= 0 else null
-	return skill != null and GameData.get_row("skill_targets", skill.skill_target_id).get("slug", "") == "self"
+	return skill != null and GameData.get_row("skill_targets", skill.skill_target_id).get("slug", "") == SELF_TARGET
 
 
 func _fly_projectile(area: Array[Vector2i], texture: Texture2D) -> void:
@@ -1024,13 +1027,26 @@ func _choose_skill(slot: int) -> void:
 				_targets.append(foe)
 	else:
 		var skill := GameData.get_skill(_view.player_at(_actor).skills[slot - 1].skill_id)
-		if GameData.get_row("skill_targets", skill.skill_target_id).get("slug", "") == "self":
+		var target_slug: String = GameData.get_row("skill_targets", skill.skill_target_id).get("slug", "")
+		if target_slug == SELF_TARGET:
 			_send({"type": "skill", "slot": slot})
 			return
 		_skill_slot = slot
-		_targets = BoardGeometry.targets(skill, _view.board_cells, foes, _here())
+		if target_slug == ALLY_TARGET:
+			_targets = BoardGeometry.ally_targets(skill, _ally_cells(), _here())
+		else:
+			_targets = BoardGeometry.targets(skill, _view.board_cells, foes, _here())
 	_mark_skill()
 	_board.light(_targets, UiPalette.BOARD_TARGET)
+
+
+## O autor conta onde está agora, depois de andar nesta vez.
+func _ally_cells() -> Array[Vector2i]:
+	var cells: Array[Vector2i] = [_here()]
+	for slot: int in _view.player_cells:
+		if slot != _actor and _view.player_at(slot) != null:
+			cells.append(_view.player_cells[slot])
+	return cells
 
 
 func _cancel_skill() -> void:

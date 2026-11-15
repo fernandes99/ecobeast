@@ -21,7 +21,7 @@ server/
   src/inventory/         a Loja e a Mochila do usuário logado (/v1/me/shop e /v1/me/items)
   src/team/              a equipe e o Santuário do usuário logado (/v1/me/team e /v1/me/storage)
   src/codex/             o Bestiário do usuário logado (/v1/me/codex) e o CodexService, que as lutas, a Evolução e o inicial usam para registrar visto e capturado
-  src/editor/            o editor de ilhas (/v1/editor): ilhas em rascunho e publicadas e o gerador de mapas, só para quem está em MAP_EDITOR_USER_IDS
+  src/editor/            os editores (/v1/editor): ilhas em rascunho e publicadas, o gerador de mapas e as Técnicas do F1 (/v1/editor/skills), só para quem está em MAP_EDITOR_USER_IDS
   src/islands/           as ilhas publicadas para o jogador (/v1/me/islands) e o IslandsService, que lê uma versão de ilha para o editor e para a exploração numa ilha
   src/common/            peças compartilhadas pelas rotas
   src/catalog/           um módulo por recurso do catálogo
@@ -39,7 +39,7 @@ server/
 - **Rotas** sob `/v1` (menos `/health`, `/docs` e as páginas do navegador `/auth/google/go` e `/auth/google/callback`). Toda rota documentada no OpenAPI, com descrição em pt-BR.
 - **Regras de jogo** ficam em `src/domain/`, como funções puras sem Nest, Prisma nem I/O, porque são a autoridade do jogo e precisam de testes de unidade.
 - **Sessão:** rotas do jogador usam `@UseGuards(AuthGuard)`, `@ApiBearerAuth()` e `@CurrentUser()` (o `sub` do token do Supabase). O servidor fala com o Supabase Auth só pela API REST (`SupabaseAuthClient`); a chave secreta do Supabase não é usada.
-- **Testes:** Vitest + supertest. Os e2e rodam contra o banco do `.env` e só leem dados, ou desfazem o que escrevem. O Supabase Auth dos e2e é sempre um dublê (`SUPABASE_URL` falso no `vitest.config.e2e.ts`), e os tokens são assinados por `test/support/tokens.ts`. Eles não conferem valores de balanceamento, que o dono muda no painel. `npm run lint`, `npm run typecheck`, `npm test` e `npm run test:e2e` passam antes de cada commit.
+- **Testes:** Vitest + supertest. Os e2e rodam contra o banco do `.env` e só leem dados, ou desfazem o que escrevem. O Supabase Auth dos e2e é sempre um dublê (`SUPABASE_URL` falso no `vitest.config.e2e.ts`), e os tokens são assinados por `test/support/tokens.ts`. Eles não conferem valores de balanceamento, que o dono muda no painel. Um e2e que grava no catálogo entra no grupo `e2e-catalog-writers` do `vitest.config.e2e.ts`, que roda depois dos outros. `npm run lint`, `npm run typecheck`, `npm test` e `npm run test:e2e` passam antes de cada commit.
 - **Segredos** só no `.env` (fora do git). O `.env.example` tem só nomes e valores de exemplo.
 - Imports relativos com extensão `.js` (ESM com `nodenext`).
 

@@ -57,6 +57,14 @@ static func targets(skill: Skill, cells: Array[Vector2i], foes: Array[Vector2i],
 	return result
 
 
+static func ally_targets(skill: Skill, allies: Array[Vector2i], from: Vector2i) -> Array[Vector2i]:
+	var result: Array[Vector2i] = []
+	for cell: Vector2i in allies:
+		if distance(from, cell) <= skill.area_range:
+			result.append(cell)
+	return result
+
+
 static func area(skill: Skill, cells: Array[Vector2i], foes: Array[Vector2i], from: Vector2i, target: Vector2i) -> Array[Vector2i]:
 	if skill.area_shape != "line":
 		return [target]

@@ -15,7 +15,8 @@ export function resolveSkill(
   const { state, events, random } = context;
   const author = combatantAt(state, spot);
   const target = foe && combatantAt(state, foe);
-  const aimsAtTarget = skill.targetSlug !== 'self';
+  const aimsAtTarget =
+    skill.targetSlug !== 'self' && skill.targetSlug !== 'ally';
 
   if (skill.effects.some((effect) => effect.effectSlug === PROTECT_EFFECT)) {
     author.isProtected = true;

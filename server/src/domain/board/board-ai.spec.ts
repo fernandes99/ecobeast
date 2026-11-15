@@ -1,4 +1,4 @@
-import { always } from '../battle/testing.js';
+import { always, makeEffect, makeSkill } from '../battle/testing.js';
 import { hexDistance } from '../exploration/hex.js';
 import { chooseEnemyVez } from './board-ai.js';
 import {
@@ -99,5 +99,42 @@ describe('o selvagem e o countdown (skill-cooldown/01)', () => {
     });
     const vez = chooseEnemyVez(state, catalog, always(0.5), ENEMY);
     expect(vez.action).toMatchObject({ type: 'skill', slot: 1 });
+  });
+});
+
+describe('o selvagem e o alvo do time (skill-editor/03)', () => {
+  const SUNBATH = makeSkill({
+    id: 40,
+    category: 'support',
+    power: 0,
+    targetSlug: 'ally',
+    effects: [makeEffect({ effectSlug: 'heal', percent: 50 })],
+  });
+  const withSun = boardCatalog([SUNBATH]);
+
+  function pack(allyHp: number) {
+    const healer = wild(30, {
+      skills: [{ skillId: SUNBATH.id, currentPp: 10 }],
+    });
+    return makeBoardState(
+      [fighter(10)],
+      [healer, wild(5, { currentHp: allyHp })],
+      {
+        slots: { player: 1, enemy: 2 },
+        cells: { player: [at(1, 5)], enemy: [at(0, 1), at(1, 1)] },
+        queue: [ENEMY],
+      },
+    );
+  }
+
+  it('cura o aliado ao lado com menos da metade do HP, sem andar', () => {
+    const vez = chooseEnemyVez(pack(80), withSun, always(0.5), ENEMY);
+    expect(vez.move).toBeUndefined();
+    expect(vez.action).toEqual({ type: 'skill', slot: 1, target: at(1, 1) });
+  });
+
+  it('com todos acima da metade, não usa', () => {
+    const vez = chooseEnemyVez(pack(150), withSun, always(0.5), ENEMY);
+    expect(vez.action).toEqual({ type: 'wait' });
   });
 });

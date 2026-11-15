@@ -50,7 +50,7 @@ import type {
 } from '../battle/types.js';
 import { CANNOT_USE, NO_ITEM } from '../items/use-item.js';
 import { type HexCoord, hexKey } from '../exploration/hex.js';
-import { areaOf, NO_ENEMY_THERE } from './areas.js';
+import { ALLY_TARGET, areaOf, NO_ENEMY_THERE } from './areas.js';
 import { chooseEnemyVez } from './board-ai.js';
 import {
   cellOf,
@@ -262,10 +262,17 @@ function areaRefusal(
   target: HexCoord | undefined,
 ): string | null {
   if (skill.targetSlug === 'self') return null;
-  const aim = target ?? onlyEnemyCell(state);
+  const aim = target ?? defaultAim(state, skill);
   if (!aim) return CHOOSE_TARGET;
   const area = areaOf(state, spot, from, skill, aim);
   return 'error' in area ? area.error : null;
+}
+
+function defaultAim(
+  state: BoardState,
+  skill: BattleSkill,
+): HexCoord | undefined {
+  return skill.targetSlug === ALLY_TARGET ? undefined : onlyEnemyCell(state);
 }
 
 function onlyEnemyCell(state: BoardState): HexCoord | undefined {
@@ -427,7 +434,7 @@ function useSkill(
   const skill = learned
     ? catalog.skills.get(learned.skillId)!
     : EMERGENCY_SKILL;
-  const aim = action.target ?? onlyEnemyCell(state);
+  const aim = action.target ?? defaultAim(state, skill);
   const area = areaOf(state, spot, cellOf(state, spot)!, skill, aim);
   if ('error' in area) {
     // Só a IA chega aqui, e só se o tabuleiro mudou: ela espera.
@@ -452,7 +459,9 @@ function useSkill(
     for (const foe of area.foes) {
       if (!standingAt(state, foe) || !isStanding(author)) continue;
       resolveSkill(context, spot, skill, foe);
-      if (combatantAt(state, foe).currentHp === 0) defeated = true;
+      if (foe.side !== spot.side && combatantAt(state, foe).currentHp === 0) {
+        defeated = true;
+      }
       faintIfDown(context, foe);
     }
   }

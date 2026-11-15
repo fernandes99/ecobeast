@@ -1,4 +1,4 @@
-import { always, eventsOf, makeSkill } from '../battle/testing.js';
+import { always, eventsOf, makeEffect, makeSkill } from '../battle/testing.js';
 import type { BattleEvent, Combatant } from '../battle/types.js';
 import {
   applyBoardVez,
@@ -8,6 +8,7 @@ import {
   NOT_YOUR_VEZ,
   startBoardBattle,
 } from './board-engine.js';
+import { ALLY_ONLY, OUT_OF_RANGE } from './areas.js';
 import { NOT_READY } from './cooldown.js';
 import {
   at,
@@ -663,5 +664,79 @@ describe('countdown das Técnicas (skill-cooldown/01)', () => {
         always(0.5),
       ),
     ).toEqual({ error: 'Ainda há Técnicas com PP.' });
+  });
+});
+
+describe('alvo do time (skill-editor/03)', () => {
+  const SUNBATH = makeSkill({
+    id: 40,
+    category: 'support',
+    power: 0,
+    accuracy: 0,
+    targetSlug: 'ally',
+    effects: [makeEffect({ effectSlug: 'heal', percent: 50 })],
+  });
+  const withSun = boardCatalog([SUNBATH]);
+  const healer = () =>
+    fighter(30, {
+      currentHp: 100,
+      skills: [{ skillId: SUNBATH.id, currentPp: 10 }],
+    });
+
+  function team(allyCell = at(1, 4)): BoardState {
+    return makeBoardState(
+      [healer(), fighter(10, { currentHp: 80 })],
+      [wild(5, ASLEEP)],
+      {
+        slots: { player: 2, enemy: 1 },
+        cells: { player: [at(0, 4), allyCell], enemy: [at(1, 0)] },
+      },
+    );
+  }
+  const sun = (
+    target: { q: number; r: number },
+    move?: { q: number; r: number },
+  ) => ({
+    position: 0,
+    ...(move ? { move } : {}),
+    action: { type: 'skill', slot: 1, target } as const,
+  });
+
+  it('cura o aliado escolhido, e não o autor', () => {
+    const { state } = playVez(team(), sun(at(1, 4)), withSun, always(0.99));
+    expect(state.player.team[1]!.currentHp).toBe(180);
+    expect(state.player.team[0]!.currentHp).toBe(100);
+  });
+
+  it('no próprio hexágono, cura o autor, também depois de andar', () => {
+    const still = playVez(team(), sun(at(0, 4)), withSun).state;
+    expect(still.player.team[0]!.currentHp).toBe(200);
+
+    const moved = playVez(team(), sun(at(0, 5), at(0, 5)), withSun).state;
+    expect(moved.player.team[0]!.currentHp).toBe(200);
+    expect(
+      applyBoardVez(team(), sun(at(0, 4), at(0, 5)), withSun, always(0.5)),
+    ).toEqual({ error: ALLY_ONLY });
+  });
+
+  it('recusa um aliado fora do alcance e um inimigo', () => {
+    expect(
+      applyBoardVez(team(at(2, 4)), sun(at(2, 4)), withSun, always(0.5)),
+    ).toEqual({ error: OUT_OF_RANGE });
+    const nearEnemy = makeBoardState([healer()], [wild(5, ASLEEP)], {
+      cells: { player: [at(0, 4)], enemy: [at(1, 4)] },
+    });
+    expect(
+      applyBoardVez(nearEnemy, sun(at(1, 4)), withSun, always(0.5)),
+    ).toEqual({ error: ALLY_ONLY });
+  });
+
+  it('não erra e passa pelo Proteger do aliado', () => {
+    const state = team();
+    state.player.team[1]!.isProtected = true;
+    const outcome = playVez(state, sun(at(1, 4)), withSun, always(0.99));
+    expect(types(outcome.events)).not.toContain('missed');
+    expect(types(outcome.events)).not.toContain('blocked');
+    expect(outcome.state.player.team[1]!.currentHp).toBe(180);
   });
 });

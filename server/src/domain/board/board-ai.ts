@@ -8,11 +8,14 @@ import type {
   Spot,
 } from '../battle/types.js';
 import { type HexCoord, hexDistance } from '../exploration/hex.js';
-import { areaOf } from './areas.js';
+import { ALLY_TARGET, areaOf } from './areas.js';
 import { cellOf, MOVE_RANGE, reachable, standingOnBoard } from './board.js';
 import { isReady } from './cooldown.js';
 import { markAt } from './marks.js';
 import type { BoardAction, BoardState, BoardVez } from './types.js';
+
+/** A IA só cura quem está com esta fração do HP ou menos (a revisar). */
+export const HEAL_BELOW = 0.5;
 
 interface Attack {
   target: HexCoord;
@@ -56,9 +59,14 @@ export function chooseEnemyVez(
     ({ skill }) => skill.power > 0 && skill.targetSlug !== 'self',
   );
 
-  const reachesNow = damaging.some(({ skill }) =>
-    attackFrom(state, spot, from, skill, target),
-  );
+  const reachesNow =
+    damaging.some(({ skill }) =>
+      attackFrom(state, spot, from, skill, target),
+    ) ||
+    usable.some(
+      ({ skill }) =>
+        skill.targetSlug === ALLY_TARGET && hurtAlly(state, spot, from, skill),
+    );
   const destination = reachesNow
     ? from
     : approach(state, from, cellOf(state, target)!, random);
@@ -116,6 +124,32 @@ function attackFrom(
   return null;
 }
 
+/** O aliado ao alcance mais ferido, pela fração do HP; no empate, o próprio autor. */
+function hurtAlly(
+  state: BoardState,
+  spot: Spot,
+  cell: HexCoord,
+  skill: BattleSkill,
+): HexCoord | null {
+  const hurt = standingOnBoard(state, spot.side)
+    .map((ally) => {
+      const self = ally.position === spot.position;
+      const creature = combatantAt(state, ally);
+      return {
+        self,
+        target: self ? cell : cellOf(state, ally)!,
+        fraction: creature.currentHp / creature.stats.hp,
+      };
+    })
+    .filter(
+      ({ target, fraction }) =>
+        fraction <= HEAL_BELOW &&
+        !('error' in areaOf(state, spot, cell, skill, target)),
+    )
+    .sort((a, b) => a.fraction - b.fraction || Number(b.self) - Number(a.self));
+  return hurt[0]?.target ?? null;
+}
+
 function chooseAction(
   state: BoardState,
   catalog: BattleCatalog,
@@ -141,6 +175,14 @@ function chooseAction(
   }
   const options: (SkillOption & { target?: HexCoord })[] = [];
   for (const { slot, skill } of usable) {
+    if (skill.targetSlug === ALLY_TARGET) {
+      const ally = hurtAlly(state, spot, cell, skill);
+      if (ally) {
+        const weight = skillWeight(me, me, skill, catalog);
+        options.push({ slot, weight, target: ally });
+      }
+      continue;
+    }
     if (skill.targetSlug === 'self') {
       const weight = skillWeight(
         me,

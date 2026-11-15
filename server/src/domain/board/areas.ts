@@ -11,6 +11,8 @@ import type { BoardState } from './types.js';
 export const OUT_OF_RANGE = 'Esse hexágono está fora do alcance.';
 export const NO_ENEMY_THERE = 'Não há inimigo nesse hexágono.';
 export const STRAIGHT_LINE = 'A linha só anda em linha reta.';
+export const ALLY_ONLY = 'Não há Ecobeast do seu time nesse hexágono.';
+export const ALLY_TARGET = 'ally';
 
 export interface SkillArea {
   cells: HexCoord[];
@@ -27,10 +29,33 @@ export function areaOf(
   if (skill.targetSlug === 'self') return { cells: [], foes: [] };
   if (!target || !hasCell(state, target)) return { error: OUT_OF_RANGE };
   const distance = hexDistance(from, target);
+  if (skill.targetSlug === ALLY_TARGET) {
+    return allyArea(state, spot, from, skill, target, distance);
+  }
   if (distance === 0 || distance > skill.range) return { error: OUT_OF_RANGE };
   return skill.areaShape === 'line'
     ? lineArea(state, spot, from, skill, target)
     : singleArea(state, spot, skill, target);
+}
+
+/** O autor conta em `from`, para onde andou nesta vez, e não onde estava. */
+function allyArea(
+  state: BoardState,
+  spot: Spot,
+  from: HexCoord,
+  skill: BattleSkill,
+  target: HexCoord,
+  distance: number,
+): SkillArea | { error: string } {
+  if (distance > skill.range) return { error: OUT_OF_RANGE };
+  if (distance === 0) return { cells: [target], foes: [spot] };
+  const occupant = spotAt(state, target);
+  const isAlly =
+    occupant !== null &&
+    occupant.side === spot.side &&
+    occupant.position !== spot.position &&
+    standingAt(state, occupant);
+  return isAlly ? { cells: [target], foes: [occupant] } : { error: ALLY_ONLY };
 }
 
 function foeAt(state: BoardState, spot: Spot, cell: HexCoord): Spot | null {

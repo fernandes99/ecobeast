@@ -246,7 +246,7 @@ Cada técnica é uma linha do catálogo (`skills`) com dados e uma lista de efei
 | cooldown | int (0–5) | Rodadas em que fica bloqueada depois de usada (countdown) |
 | priority | int (-7 a +5) | +1 ataca primeiro |
 | critStage | int | 0 normal, 1 = crítico alto |
-| target | enum | Inimigo, Si mesmo, Todos |
+| target | enum | Inimigo, Si mesmo, Todos, Meu time (um Ecobeast do próprio lado ao alcance, o autor incluído; sem dano) |
 | makesContact | bool | Ativa traços de contato |
 | hits | Vector2Int | (1,1) normal; (2,5) multi-golpe |
 | effects | List<SkillEffect> | Efeitos com chance |

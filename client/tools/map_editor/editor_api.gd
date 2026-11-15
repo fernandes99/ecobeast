@@ -3,6 +3,7 @@ extends RefCounted
 
 const ISLANDS_PATH := "/v1/editor/islands"
 const GENERATOR_PATH := "/v1/editor/map-generator"
+const SKILLS_PATH := "/v1/editor/skills"
 const TIMEOUT_SECONDS := 60.0
 const NOT_FOUND := 404
 const FORBIDDEN := 403
@@ -38,6 +39,14 @@ static func generator_params() -> ApiResponse:
 
 static func generate(map_seed: int, config: Dictionary) -> ApiResponse:
 	return await _call(HTTPClient.METHOD_POST, GENERATOR_PATH, {"seed": map_seed, "config": config})
+
+
+static func create_skill(body: Dictionary) -> ApiResponse:
+	return await _call(HTTPClient.METHOD_POST, SKILLS_PATH, body)
+
+
+static func save_skill(id: int, body: Dictionary) -> ApiResponse:
+	return await _call(HTTPClient.METHOD_PUT, "%s/%d" % [SKILLS_PATH, id], body)
 
 
 static func _call(method: HTTPClient.Method, path: String, body: Variant = null) -> ApiResponse:

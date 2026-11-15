@@ -164,6 +164,11 @@ describe('rotas do catálogo (e2e)', () => {
     expect(body.cooldown).toBeLessThanOrEqual(5);
   });
 
+  it('o alvo "Meu time" existe, com o slug ally (skill-editor/03)', async () => {
+    const { body } = await get('/v1/skill-targets/4').expect(200);
+    expect(body).toMatchObject({ id: 4, slug: 'ally', name: 'Meu time' });
+  });
+
   it('efeito modify_stat mostra stat e stages, sem status', async () => {
     const effect = await prisma.skillEffect.findFirst({
       where: { effectType: { slug: 'modify_stat' } },
