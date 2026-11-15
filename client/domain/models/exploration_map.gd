@@ -94,7 +94,9 @@ func path_to_any(from: Vector2i, goals: Dictionary[Vector2i, bool], from_point :
 	var came_from: Dictionary[Vector2i, Vector2i] = {from: from}
 	var frontier: Array[Vector2i] = [from]
 	var index := 0
-	var links: Dictionary[Vector2i, Array] = bridge_links() if use_bridges else {}
+	var links: Dictionary[Vector2i, Array] = {}
+	if use_bridges:
+		links = bridge_links()
 	if from_point.is_finite() and (is_water_hex(from) or not is_clear(from_point, HexMapView.flat_center(from))):
 		index = 1
 		var starts: Array[Vector2i] = []

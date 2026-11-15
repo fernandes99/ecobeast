@@ -131,11 +131,17 @@ func show_draft(draft: IslandDraft, fit: bool = true) -> void:
 	_map_view.set_props(_map.props)
 	_prop_tiles = _current_prop_tiles()
 	_overview.set_map(_map)
-	_shown_trails = IslandDraft.copy_trails(draft.trails) if draft != null else []
+	_shown_trails.clear()
+	if draft != null:
+		_shown_trails = IslandDraft.copy_trails(draft.trails)
 	_overview.set_trails(_map.trails)
-	_shown_walls = IslandDraft.copy_walls(draft.walls) if draft != null else []
+	_shown_walls.clear()
+	if draft != null:
+		_shown_walls = IslandDraft.copy_walls(draft.walls)
 	_overview.set_walls(_map.walls)
-	_shown_bridges = IslandDraft.copy_bridges(draft.bridges) if draft != null else []
+	_shown_bridges.clear()
+	if draft != null:
+		_shown_bridges = IslandDraft.copy_bridges(draft.bridges)
 	_overview.set_bridges(_map.bridges)
 	_refresh_blocks()
 	refresh_npcs()
