@@ -72,6 +72,11 @@ const PROP_SWAY: Dictionary[String, float] = {
 	"pink_bud_plant": 1.0, "red_bromeliad": 1.0, "round_bush": 1.0, "light_bush": 1.0,
 	"wild_fern": 1.0, "star_fern": 1.0, "snowy_bush": 1.0,
 }
+## As árvores dos pacotes mexem os pixels da copa no vento (vegetation-wind/02).
+const TREE_CANOPY: Array[String] = [
+	"leafy_tree", "moss_tree", "fruit_tree", "blossom_tree", "autumn_tree", "dead_tree",
+	"round_pine", "snowy_pine", "snowy_tree", "broadleaf_tree", "palm_tree",
+]
 const NO_PLACE := Vector2i(-2147483648, 0)
 ## O corte de altura do editor: acima dele, o hexágono fica transparente (terrain-height/03).
 const CUT_HEIGHT := 4
@@ -114,6 +119,7 @@ var ground_mask := GroundMask.new()
 
 var _map: ExplorationMap = null
 var _textures: Dictionary[String, Texture2D] = {}
+var _canopy_bases: Dictionary[String, int] = {}
 var _rows: Dictionary[Vector2i, HexRowView] = {}
 ## As decorações de cada pedaço, em nós próprios, porque o vento é um material e vale
 ## para o nó inteiro: um dicionário por faixa, de trás para a frente.
@@ -1155,6 +1161,9 @@ static func _wall_order(a: Array, b: Array) -> bool:
 ## Peças com arte própria: o pé no meio da borda de baixo da imagem. A que balança ganha
 ## uma folga de cada lado para a copa não ser cortada.
 func _add_file_props(row: HexRowView, path: String, placed: Array) -> void:
+	if TREE_CANOPY.has(path.get_base_dir().get_file()):
+		_add_tree_props(row, path, placed)
+		return
 	var texture := _texture(path)
 	if texture == null:
 		return
@@ -1176,6 +1185,35 @@ func _add_file_props(row: HexRowView, path: String, placed: Array) -> void:
 		for _vertex: int in 6:
 			wind.append_array(PackedFloat32Array([base.x, base.y, push if sway > 0.0 else HexDecorations.NO_SWAY.x, size.y if sway > 0.0 else HexDecorations.NO_SWAY.y]))
 	_add_mesh(row, path, points, texture_points, PackedColorArray(), wind)
+
+
+## As árvores: os pixels da copa, da base dela para cima, pegam a cor de um vizinho a
+## até 1 px pelo ruído do vento, no shader. A malha tem 1 px de folga em volta.
+func _add_tree_props(row: HexRowView, path: String, placed: Array) -> void:
+	var texture := _texture(path)
+	if texture == null:
+		return
+	if not _canopy_bases.has(path):
+		_canopy_bases[path] = TreeCanopy.base_of(texture.get_image())
+	placed.sort_custom(func(a: Array, b: Array) -> bool: return (a[0] as Vector2i).y < (b[0] as Vector2i).y)
+	var size := Vector2(texture.get_width(), texture.get_height())
+	var pad := 1.0
+	var points := PackedVector2Array()
+	var texture_points := PackedVector2Array()
+	var wind := PackedFloat32Array()
+	var canopy := PackedFloat32Array()
+	for entry: Array in placed:
+		var base: Vector2i = entry[0]
+		var top_left := Vector2(base) - Vector2(floorf(size.x / 2.0) + pad, size.y + pad)
+		var full := size + Vector2(2.0 * pad, pad)
+		points.append_array(_quad(top_left, top_left + Vector2(full.x, 0.0), Vector2(0.0, full.y)))
+		var left := size.x + pad if entry[1] else -pad
+		var right := -pad if entry[1] else size.x + pad
+		texture_points.append_array(_quad(Vector2(left, -pad), Vector2(right, -pad), Vector2(0.0, full.y)))
+		for _vertex: int in 6:
+			wind.append_array(PackedFloat32Array([base.x, base.y, -1.0 if entry[1] else 1.0, size.y]))
+			canopy.append_array(PackedFloat32Array([1.0, _canopy_bases[path], 0.0, 0.0]))
+	_add_texture_mesh(row, texture, points, texture_points, PackedColorArray(), wind, canopy)
 
 
 func _add_decoration_mesh(row: HexRowView, decorations: Array[HexDecorations.Decoration]) -> void:
