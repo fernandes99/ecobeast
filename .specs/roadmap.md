@@ -51,6 +51,7 @@ O que vem depois do MVP de estrutura (entrada, escolha do inicial e Hub). Cada l
 | 35  | [`free-objects`](free-objects/) | Os objetos de grade viram peças soltas, e toda peça pode bloquear por linhas, como a cerca: o bloqueio é do tipo, ajustável por peça e editável ponto a ponto no editor; a ação é do prédio, ao encostar; o servidor conta como bloqueado todo hexágono que um bloqueio ou uma parede toca | free-props, free-fences, island-villages | concluída |
 | 36  | [`vegetation-packs`](vegetation-packs/) | 33 tipos novos de peça solta com a arte de três pacotes da craftpix.net (12 árvores, 13 arbustos e 8 pedras, com os tamanhos como variantes) e 6 grupos novos no pincel Vegetação; as decorações do bioma e o mapa sorteado não mudam | free-objects, vegetation-brush | concluída (falta o dono usar) |
 | 37  | [`prop-depth-blocks`](prop-depth-blocks/) | Peças, decorações e atores na ordem do pé, também entre linhas de hexágonos; o bloqueio padrão por variante, com as pedras e árvores grandes dos pacotes já bloqueando; o hexágono bloqueado só quando a linha pega o centro; e a ferramenta Bloqueios do editor | free-objects, vegetation-packs | concluída (falta o dono conferir) |
+| 38  | [`vegetation-wind`](vegetation-wind/) | Os arbustos dos pacotes balançam com o vento das decorações do bioma; as árvores esperam uma animação melhor | vegetation-packs | concluída (falta o dono conferir) |
 
 ## Pós-lançamento (do GDD)
 

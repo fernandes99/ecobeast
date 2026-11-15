@@ -66,6 +66,12 @@ const HIGHLIGHT_TEXTURE := "highlight"
 const DEPTH_BANDS := 6
 const BAND_HEIGHT := 7.0
 const PROP_PATH := "res://assets/props/%s/%d.png"
+## Quantos pixels o topo dos arbustos dos pacotes anda no vento (vegetation-wind/01).
+const PROP_SWAY: Dictionary[String, float] = {
+	"autumn_bush": 1.0, "dry_twigs": 1.0, "blue_flower_bush": 1.0, "orange_flower_bush": 1.0,
+	"pink_bud_plant": 1.0, "red_bromeliad": 1.0, "round_bush": 1.0, "light_bush": 1.0,
+	"wild_fern": 1.0, "star_fern": 1.0, "snowy_bush": 1.0,
+}
 const NO_PLACE := Vector2i(-2147483648, 0)
 ## O corte de altura do editor: acima dele, o hexágono fica transparente (terrain-height/03).
 const CUT_HEIGHT := 4
@@ -1146,25 +1152,29 @@ static func _wall_order(a: Array, b: Array) -> bool:
 	return not (a[1] as HexWalls.Piece).post and (b[1] as HexWalls.Piece).post
 
 
-## Peças com arte própria: o pé no meio da borda de baixo da imagem, sem vento.
+## Peças com arte própria: o pé no meio da borda de baixo da imagem. A que balança ganha
+## uma folga de cada lado para a copa não ser cortada.
 func _add_file_props(row: HexRowView, path: String, placed: Array) -> void:
 	var texture := _texture(path)
 	if texture == null:
 		return
 	placed.sort_custom(func(a: Array, b: Array) -> bool: return (a[0] as Vector2i).y < (b[0] as Vector2i).y)
 	var size := Vector2(texture.get_width(), texture.get_height())
+	var sway: float = PROP_SWAY.get(path.get_base_dir().get_file(), 0.0)
+	var pad := ceilf(sway)
 	var points := PackedVector2Array()
 	var texture_points := PackedVector2Array()
 	var wind := PackedFloat32Array()
 	for entry: Array in placed:
 		var base: Vector2i = entry[0]
-		var top_left := Vector2(base) - Vector2(floorf(size.x / 2.0), size.y)
-		points.append_array(_quad(top_left, top_left + Vector2(size.x, 0.0), Vector2(0.0, size.y)))
-		var left := size.x if entry[1] else 0.0
-		var right := 0.0 if entry[1] else size.x
+		var top_left := Vector2(base) - Vector2(floorf(size.x / 2.0) + pad, size.y)
+		points.append_array(_quad(top_left, top_left + Vector2(size.x + 2.0 * pad, 0.0), Vector2(0.0, size.y)))
+		var left := size.x + pad if entry[1] else -pad
+		var right := -pad if entry[1] else size.x + pad
 		texture_points.append_array(_quad(Vector2(left, 0.0), Vector2(right, 0.0), Vector2(0.0, size.y)))
+		var push := -sway if entry[1] else sway
 		for _vertex: int in 6:
-			wind.append_array(PackedFloat32Array([base.x, base.y, HexDecorations.NO_SWAY.x, HexDecorations.NO_SWAY.y]))
+			wind.append_array(PackedFloat32Array([base.x, base.y, push if sway > 0.0 else HexDecorations.NO_SWAY.x, size.y if sway > 0.0 else HexDecorations.NO_SWAY.y]))
 	_add_mesh(row, path, points, texture_points, PackedColorArray(), wind)
 
 

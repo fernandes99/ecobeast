@@ -23,6 +23,11 @@ void fragment() {
 	float gust = 0.75 + 0.25 * sin(TAU * (TIME / gust_period - along / gust_length));
 	float rise = clamp((plant.y - floor(map_y)) / plant.w, 0.0, 1.0);
 	float pixels = round(strength * plant.z * sway * gust * rise * rise);
+	vec2 uv = UV - vec2(pixels * TEXTURE_PIXEL_SIZE.x, 0.0);
 	// O degrau entre as linhas não pode escolher o mipmap, no mapa inteiro.
-	COLOR = textureGrad(TEXTURE, UV - vec2(pixels * TEXTURE_PIXEL_SIZE.x, 0.0), dFdx(UV), dFdy(UV));
+	COLOR = textureGrad(TEXTURE, uv, dFdx(UV), dFdy(UV));
+	// A peça que balança tem folga fora da arte, e a textura do mapa repete.
+	if (plant.z != 0.0 && (uv.x < 0.0 || uv.x > 1.0)) {
+		COLOR = vec4(0.0);
+	}
 }

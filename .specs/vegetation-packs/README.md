@@ -59,7 +59,7 @@ Escolhas de Claude (corrigíveis; ao mudar uma, atualize aqui e no `architecture
 - Os pisos de teste.
 - Usar as plantas novas no sorteio do bioma ou do mapa sorteado.
 - Bloqueio e ação para os tipos novos.
-- Vento nas peças novas: as peças de arte própria ficam paradas, como o banco e o poste.
+- Vento nas peças novas: as peças de arte própria ficam paradas, como o banco e o poste. **Feito depois na [vegetation-wind](../vegetation-wind/).**
 
 ## Pré-requisitos
 
