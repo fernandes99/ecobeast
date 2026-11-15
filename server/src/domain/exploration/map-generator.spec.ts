@@ -28,6 +28,8 @@ const CONFIG: MapConfig = {
   deepFraction: 0.4,
   wetLimit: 0.6,
   stoneFraction: 0.15,
+  desertFraction: 0.12,
+  snowFraction: 0.12,
   hillFrom: 0.8,
   mountainFrom: 0.9,
   islandChance: 0.04,
@@ -74,10 +76,72 @@ describe('generateShapedMap', () => {
     maps = SEEDS.map((seed) => generateShapedMap(seed, CONFIG));
   });
 
-  it('só existem as cinco regiões', () => {
+  it('só existem as sete regiões', () => {
     expect([...SHAPED_BIOMES].sort()).toEqual(
-      ['boreal', 'stone', 'temperate', 'wdeep', 'wshallow'].sort(),
+      [
+        'boreal',
+        'desert',
+        'snow',
+        'stone',
+        'temperate',
+        'wdeep',
+        'wshallow',
+      ].sort(),
     );
+  });
+
+  it('o deserto e a neve ficam perto da fração deles na terra (desert-snow/01)', () => {
+    const land = maps.flatMap(({ tiles }) =>
+      tiles.filter(({ biome }) => !isWater(biome)),
+    );
+    for (const [biome, share] of [
+      ['desert', CONFIG.desertFraction],
+      ['snow', CONFIG.snowFraction],
+    ] as const) {
+      const count = land.filter((tile) => tile.biome === biome).length;
+      expect(count / land.length).toBeGreaterThan(share - 0.06);
+      expect(count / land.length).toBeLessThan(share + 0.06);
+    }
+  });
+
+  it('nenhum deserto encosta na neve', () => {
+    for (const map of maps) {
+      const byKey = indexed(map);
+      const touching = map.tiles.filter(
+        (tile) =>
+          tile.biome === 'desert' &&
+          neighborsOf(tile, byKey).some(({ biome }) => biome === 'snow'),
+      );
+      expect(touching).toEqual([]);
+    }
+  });
+
+  it('o deserto e a neve não mudam a água, as formas nem as variantes', () => {
+    const none = { ...CONFIG, desertFraction: 0, snowFraction: 0 };
+    for (const seed of SEEDS.slice(0, 20)) {
+      const plain = generateShapedMap(seed, none);
+      const map = generateShapedMap(seed, CONFIG);
+      expect(
+        plain.tiles.some(({ biome }) => biome === 'desert' || biome === 'snow'),
+      ).toBe(false);
+      expect(
+        map.tiles.map(({ q, r, shape, variant, biome }) => [
+          q,
+          r,
+          shape,
+          variant,
+          isWater(biome),
+        ]),
+      ).toEqual(
+        plain.tiles.map(({ q, r, shape, variant, biome }) => [
+          q,
+          r,
+          shape,
+          variant,
+          isWater(biome),
+        ]),
+      );
+    }
   });
 
   it('a configuração do jogo gera um mapa válido', () => {
@@ -279,7 +343,7 @@ describe('generateShapedMap', () => {
           .map((tile) => tile.biome),
       ),
     );
-    expect(biomes.size).toBe(3);
+    expect(biomes.size).toBe(5);
   });
 
   it('as ilhas são raras', () => {
@@ -342,6 +406,12 @@ describe('terrainOf', () => {
     ['boreal', 'hill', 'hill', 2],
     ['stone', 'hill', 'hill', 3],
     ['wshallow', 'hill', 'hill', 2],
+    ['desert', 'flat', 'desert', 1],
+    ['snow', 'flat', 'snow', 1],
+    ['desert', 'hill', 'desert', 2],
+    ['snow', 'hill', 'snow', 2],
+    ['desert', 'mont', 'mountain', 4],
+    ['snow', 'mont', 'mountain', 4],
     ['temperate', 'mont', 'mountain', 4],
     ['stone', 'mont', 'mountain', 4],
     ['wdeep', 'mont', 'mountain', 4],
@@ -357,10 +427,12 @@ describe('generateMap', () => {
     maps = SEEDS.slice(0, 40).map((seed) => generateMap(seed, CONFIG));
   });
 
-  it('são os 7 biomas do catálogo', () => {
+  it('são os 9 biomas do catálogo', () => {
     expect([...BIOMES].sort()).toEqual(
       [
         'boreal',
+        'desert',
+        'snow',
         'hill',
         'mountain',
         'stone',
@@ -412,6 +484,8 @@ describe('generateMap', () => {
     expect(sorted('hill')).toEqual([2, 3]);
     expect(sorted('temperate')).toEqual([1]);
     expect(sorted('boreal')).toEqual([1]);
+    expect(sorted('desert')).toEqual([1, 2]);
+    expect(sorted('snow')).toEqual([1, 2]);
     expect(sorted('wshallow')).toEqual([0]);
     expect(sorted('wdeep')).toEqual([0]);
   });
@@ -421,7 +495,9 @@ describe('generateMap', () => {
       const start = map.tiles.find(
         ({ q, r }) => q === map.start.q && r === map.start.r,
       );
-      expect(['temperate', 'boreal', 'stone']).toContain(start!.biome);
+      expect(['temperate', 'boreal', 'stone', 'desert', 'snow']).toContain(
+        start!.biome,
+      );
     }
   });
 });

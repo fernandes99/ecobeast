@@ -14,7 +14,7 @@ const NEIGHBORS: Array[Vector2i] = [
 ]
 ## De quem recebe para quem avança: a divisa tem arremate de um lado só. A água
 ## não está na lista: ela recebe da terra, e não há arremate entre rasa e funda.
-const SURFACE_ORDER: Array[String] = ["temperate", "boreal", "hill", "stone", "mountain"]
+const SURFACE_ORDER: Array[String] = ["desert", "temperate", "boreal", "hill", "snow", "stone", "mountain"]
 const FOAM := "foam"
 const MATERIAL_ROWS: Dictionary[String, int] = {
 	"foam": 0,
@@ -23,6 +23,8 @@ const MATERIAL_ROWS: Dictionary[String, int] = {
 	"hill": 3,
 	"stone": 4,
 	"mountain": 5,
+	"desert": 6,
+	"snow": 7,
 }
 const DRIP_TEXTURE_PATH := "res://assets/terrain/transitions/drips.png"
 const DRIP_CELL_SIZE := Vector2i(32, 16)
@@ -32,6 +34,8 @@ const DRIP_ROWS: Dictionary[String, int] = {
 	"temperate": 0,
 	"boreal": 1,
 	"hill": 2,
+	"desert": 3,
+	"snow": 4,
 }
 const NO_DRIP := Vector2i(-1, -1)
 

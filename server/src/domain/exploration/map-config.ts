@@ -6,6 +6,8 @@ export interface MapConfig {
   deepFraction: number;
   wetLimit: number;
   stoneFraction: number;
+  desertFraction: number;
+  snowFraction: number;
   hillFrom: number;
   mountainFrom: number;
   islandChance: number;
@@ -21,6 +23,8 @@ export const DEFAULT_MAP_CONFIG: MapConfig = {
   deepFraction: 0.5,
   wetLimit: 0.5,
   stoneFraction: 0.15,
+  desertFraction: 0.12,
+  snowFraction: 0.12,
   hillFrom: 0.6,
   mountainFrom: 0.95,
   islandChance: 0.05,
@@ -44,6 +48,8 @@ export const MAP_CONFIG_RANGES: Record<keyof MapConfig, ConfigRange> = {
   deepFraction: fraction,
   wetLimit: fraction,
   stoneFraction: fraction,
+  desertFraction: fraction,
+  snowFraction: fraction,
   hillFrom: fraction,
   mountainFrom: fraction,
   islandChance: fraction,

@@ -23,6 +23,12 @@ const KIND_ROWS: Dictionary[String, int] = {
 	"boulder": 14,
 	"rock_pile": 15,
 	"spire": 16,
+	"cactus": 17,
+	"sand_rock": 18,
+	"snow_pine": 19,
+	"snow_rock": 20,
+	"snow_bush": 21,
+	"snow_tuft": 22,
 }
 ## O espaço que cada tipo ocupa no chão, em pixels da arte. Ele também é a
 ## distância mínima do centro do hexágono, onde o jogador fica.
@@ -44,6 +50,12 @@ const KIND_RADIUS: Dictionary[String, float] = {
 	"rock_pile": 12.0,
 	"spire": 13.0,
 	"boulder": 14.0,
+	"cactus": 8.0,
+	"sand_rock": 10.0,
+	"snow_pine": 12.0,
+	"snow_rock": 9.0,
+	"snow_bush": 10.0,
+	"snow_tuft": 4.0,
 }
 const WIND_SHADER_PATH := "res://ui/components/plant_wind.gdshader"
 ## O vento em cada tipo: quantos pixels da arte o topo anda e a altura da planta, a
@@ -59,6 +71,9 @@ const KIND_SWAY: Dictionary[String, Vector2] = {
 	"fern": Vector2(1.0, 10.0),
 	"dry_shrub": Vector2(1.0, 14.0),
 	"dry_tuft": Vector2(2.0, 10.0),
+	"snow_pine": Vector2(2.0, 49.0),
+	"snow_bush": Vector2(1.0, 13.0),
+	"snow_tuft": Vector2(2.0, 8.0),
 }
 const NO_SWAY := Vector2(0.0, 1.0)
 ## Por superfície: tipo, chance de aparecer no hexágono, mínimo e máximo. Da
@@ -69,6 +84,8 @@ const RECIPES: Dictionary = {
 	"hill": [["rock", 0.16, 1, 2], ["dry_shrub", 0.36, 1, 2], ["pebbles", 0.24, 1, 2], ["dry_tuft", 0.72, 2, 5]],
 	"stone": [["spire", 0.2, 1, 1], ["boulder", 0.34, 1, 2], ["rock_pile", 0.3, 1, 2], ["moss", 0.2, 1, 2]],
 	"mountain": [["brown_rock", 0.3, 1, 2], ["moss", 0.06, 1, 1]],
+	"desert": [["cactus", 0.22, 1, 2], ["sand_rock", 0.14, 1, 1], ["dry_shrub", 0.18, 1, 1], ["pebbles", 0.12, 1, 2], ["dry_tuft", 0.3, 1, 3]],
+	"snow": [["snow_pine", 0.4, 1, 3], ["snow_rock", 0.14, 1, 1], ["snow_bush", 0.24, 1, 2], ["snow_tuft", 0.4, 1, 3]],
 }
 const PLACE_TRIES := 8
 const MAX_X := 24

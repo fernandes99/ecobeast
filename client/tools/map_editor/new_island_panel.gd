@@ -17,6 +17,8 @@ const PARAM_LABELS: Dictionary[String, String] = {
 	"deep_fraction": "Parte funda da água",
 	"wet_limit": "Umidade para virar floresta",
 	"stone_fraction": "Parte de pedra",
+	"desert_fraction": "Parte de deserto",
+	"snow_fraction": "Parte de neve",
 	"hill_from": "Crista para colina",
 	"mountain_from": "Crista para montanha",
 	"island_chance": "Chance de ilhota na água",

@@ -12,6 +12,8 @@ export const BIOMES = [
   'mountain',
   'wshallow',
   'wdeep',
+  'desert',
+  'snow',
 ] as const;
 export type Biome = (typeof BIOMES)[number];
 
@@ -21,6 +23,8 @@ export const SHAPED_BIOMES = [
   'stone',
   'wshallow',
   'wdeep',
+  'desert',
+  'snow',
 ] as const;
 export type ShapedBiome = (typeof SHAPED_BIOMES)[number];
 
@@ -58,6 +62,7 @@ export interface ShapedMap {
 interface Cell extends HexCoord {
   elevation: number;
   moisture: number;
+  temperature: number;
   rock: number;
   ridge: number;
   biome: ShapedBiome;
@@ -68,6 +73,8 @@ interface Cell extends HexCoord {
 const ORIGIN: HexCoord = { q: 0, r: 0 };
 const ROW_HEIGHT = Math.sqrt(3) / 2;
 const BASIC_VARIANTS = 3;
+/** O calor vem de um sorteio à parte, para os outros ruídos da seed não mudarem (desert-snow/01). */
+const TEMPERATURE_SALT = 0x5eed7e;
 
 export function isWater(biome: Biome): boolean {
   return biome === 'wshallow' || biome === 'wdeep';
@@ -86,7 +93,11 @@ export function terrainOf(
   if (shape === 'mont') return { biome: 'mountain', height: MOUNTAIN_HEIGHT };
   if (biome === 'stone')
     return { biome: shape === 'hill' ? 'hill' : 'stone', height: 3 };
-  if (shape === 'hill') return { biome: 'hill', height: 2 };
+  if (shape === 'hill')
+    return {
+      biome: biome === 'desert' || biome === 'snow' ? biome : 'hill',
+      height: 2,
+    };
   return { biome, height: isWater(biome) ? 0 : 1 };
 }
 
@@ -117,11 +128,12 @@ export function generateShapedMap(
   const moisture = createNoise(random);
   const rock = createNoise(random);
   const ridge = createNoise(random);
+  const temperature = createNoise(seededRandom(seed ^ TEMPERATURE_SALT));
 
   const coords = growRegion(edge, config);
   const cells = createCells(
     coords,
-    { elevation, moisture, rock, ridge },
+    { elevation, moisture, temperature, rock, ridge },
     config,
   );
   placeWater(cells, config);
@@ -191,7 +203,10 @@ function percentiles(values: number[]): number[] {
 
 function createCells(
   coords: HexCoord[],
-  noises: Record<'elevation' | 'moisture' | 'rock' | 'ridge', Noise2D>,
+  noises: Record<
+    'elevation' | 'moisture' | 'temperature' | 'rock' | 'ridge',
+    Noise2D
+  >,
   config: MapConfig,
 ): Cell[] {
   const raw = (noise: Noise2D): number[] =>
@@ -199,6 +214,7 @@ function createCells(
   const field = (noise: Noise2D): number[] => percentiles(raw(noise));
   const elevation = field(noises.elevation);
   const moisture = field(noises.moisture);
+  const temperature = field(noises.temperature);
   const rock = field(noises.rock);
   // Perto do meio da faixa, o ruído desenha linhas: é daí que saem as cadeias.
   const ridge = percentiles(
@@ -209,6 +225,7 @@ function createCells(
     ...coord,
     elevation: elevation[index]!,
     moisture: moisture[index]!,
+    temperature: temperature[index]!,
     rock: rock[index]!,
     ridge: ridge[index]!,
     biome: 'temperate',
@@ -238,8 +255,13 @@ function placeWater(cells: Cell[], config: MapConfig): void {
 }
 
 /** O bioma não olha a crista: plano, colina e montanha existem em todos. */
-function landBiome({ moisture, rock }: Cell, config: MapConfig): ShapedBiome {
+function landBiome(
+  { moisture, temperature, rock }: Cell,
+  config: MapConfig,
+): ShapedBiome {
   if (rock > 1 - config.stoneFraction) return 'stone';
+  if (temperature > 1 - config.desertFraction) return 'desert';
+  if (temperature < config.snowFraction) return 'snow';
   return moisture > config.wetLimit ? 'boreal' : 'temperate';
 }
 

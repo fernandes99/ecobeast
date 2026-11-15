@@ -233,12 +233,12 @@ Colunas que o tipo do efeito não usa ficam `null`.
 
 **`item_categories`** e **`items`** — as categorias, que viram as abas da Loja, e os itens, com preço e efeito. As colunas e o conteúdo estão em [inventory-shop/architecture.md](../inventory-shop/architecture.md#tabelas).
 
-**`biomes`** — os 7 biomas de encontro. O `slug` é usado no código; `name` e `description` são livres.
+**`biomes`** — os 9 biomas de encontro (o Deserto e a Neve vieram na [desert-snow](../desert-snow/)). O `slug` é usado no código; `name` e `description` são livres.
 
 | Coluna      | Tipo   | Observação                                                                  |
 | ----------- | ------ | --------------------------------------------------------------------------- |
 | id          | int    |                                                                             |
-| slug        | string | `temperate`, `boreal`, `stone`, `hill`, `mountain`, `wshallow` ou `wdeep`   |
+| slug        | string | `temperate`, `boreal`, `stone`, `hill`, `mountain`, `wshallow`, `wdeep`, `desert` ou `snow` |
 | name        | string | "Planície"                                                                  |
 | description | string |                                                                             |
 
