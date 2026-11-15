@@ -543,6 +543,18 @@
 		"id": 95,
 		"slug": "big_house",
 		"name": "Casa grande",
-		"variants": 1
+		"variants": 8
+	},
+	{
+		"id": 96,
+		"slug": "small_house",
+		"name": "Casa pequena",
+		"variants": 8
+	},
+	{
+		"id": 97,
+		"slug": "small_townhouse",
+		"name": "Sobrado pequeno",
+		"variants": 8
 	}
 ]

@@ -9,7 +9,7 @@ O dono quer a casa grande do pacote Main Characters Home nas ilhas, com a fumaç
 
 ## Escopo
 
-- O script `client/assets/props/make_big_house.py` e a arte `assets/props/big_house/`.
+- O script `client/assets/props/make_big_house.py` (hoje `make_houses.py`, [03](03-house-shapes.md)) e a arte `assets/props/big_house/`.
 - O tipo de peça 95, com o bloqueio padrão, na migração `20261216000000_home_pack` e na carga inicial.
 - A fumaça no `HexMapView` e no shader `plant_wind.gdshader`.
 

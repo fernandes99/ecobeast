@@ -82,6 +82,8 @@ const TREE_CANOPY: Array[String] = [
 const SMOKE_PATH := "res://assets/props/%s/smoke.png"
 const PROP_SMOKE: Dictionary[String, Dictionary] = {
 	"big_house": {"offset": Vector2i(-63, -144), "size": 48, "frames": 6, "fps": 6.0},
+	"small_house": {"offset": Vector2i(-48, -144), "size": 48, "frames": 6, "fps": 6.0},
+	"small_townhouse": {"offset": Vector2i(-48, -164), "size": 48, "frames": 6, "fps": 6.0},
 }
 const NO_PLACE := Vector2i(-2147483648, 0)
 ## O corte de altura do editor: acima dele, o hexágono fica transparente (terrain-height/03).

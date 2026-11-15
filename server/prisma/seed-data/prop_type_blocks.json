@@ -1147,5 +1147,39 @@
 			-60,
 			-44
 		]
+	},
+	{
+		"id": 46,
+		"prop_type_id": 96,
+		"variant": 0,
+		"position": 0,
+		"closed": true,
+		"points": [
+			-45,
+			-2,
+			43,
+			-2,
+			43,
+			-44,
+			-45,
+			-44
+		]
+	},
+	{
+		"id": 47,
+		"prop_type_id": 97,
+		"variant": 0,
+		"position": 0,
+		"closed": true,
+		"points": [
+			-45,
+			-2,
+			43,
+			-2,
+			43,
+			-44,
+			-45,
+			-44
+		]
 	}
 ]

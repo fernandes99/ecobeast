@@ -1,6 +1,6 @@
 # home-pack
 
-A casa grande, com a fumaça da chaminé animada, e a cerca de estacas do pacote gratuito **Main Characters Home** da craftpix.net entram nas ilhas: a casa como peça solta e a cerca como um tipo novo de parede.
+A casa grande, com a fumaça da chaminé animada, e mais dois formatos dela (a pequena e o sobrado pequeno), em 8 cores, e a cerca de estacas do pacote gratuito **Main Characters Home** da craftpix.net entram nas ilhas: as casas como peças soltas e a cerca como um tipo novo de parede.
 
 ## Contexto
 
@@ -10,7 +10,7 @@ O pacote tem uma casa só (`exterior.png`, telhado vermelho e paredes de pedra),
 
 ## Objetivos
 
-1. A casa é uma peça solta, posta pela ferramenta Peças, espelhável e com um bloqueio no pé dela.
+1. As casas são peças soltas, postas pela ferramenta Peças, espelháveis e com um bloqueio no pé.
 2. A fumaça sai da chaminé em loop, cada casa num ponto do ciclo.
 3. A cerca de estacas é uma parede como as outras: desenhada pela ferramenta Cerca e bloqueando pela linha, bonita em qualquer ângulo.
 4. A arte sai de scripts que recortam as folhas do pacote, sem mudar os pixels.
@@ -31,10 +31,12 @@ Escolhas de Claude (corrigíveis; ao mudar uma, atualize aqui e na fase):
 | A cerca tem uma estaca a cada 8 px, como no pacote, e cada estaca é um poste | Num trecho torto, as estacas ficam em pé, e a travessa liga uma à outra |
 | Acima de 60°, a cerca usa o trecho em pé do pacote (estacas vistas de cima entre duas travessas), 8 px acima do chão, e só tem os postes das pontas | O trecho em pé do pacote já traz as estacas, na altura da travessa deitada |
 | A arte do pacote fica fora do [guia de estilo da cidade](../town-art/style-guide.md) | O dono pediu a casa e a cerca do pacote |
+| Cada formato de casa é um tipo de peça, e as 8 cores são as variantes dele | O bloqueio e o lugar da fumaça dependem só do formato |
 
 ## Fora do escopo
 
 - O resto do pacote (árvores, pedras, interior, gato, pássaros, portas e janelas animadas).
+- Os formatos da prévia que o dono descartou: a casa média, a comprida, o sobrado grande e a de dois frontões ([03](03-house-shapes.md#contexto)).
 - A casa no mapa sorteado.
 
 ## Pré-requisitos
@@ -48,3 +50,4 @@ Escolhas de Claude (corrigíveis; ao mudar uma, atualize aqui e na fase):
 | --- | --- | --- | --- |
 | 1 | [01-big-house](01-big-house.md) | A casa grande como peça 95, com a fumaça animada | concluída (falta o dono conferir) |
 | 2 | [02-picket-fence](02-picket-fence.md) | A cerca de estacas como parede 4 | concluída (falta o dono conferir) |
+| 3 | [03-house-shapes](03-house-shapes.md) | As 8 cores das casas, a Casa pequena (96) e o Sobrado pequeno (97) | concluída (falta o dono conferir) |

@@ -317,7 +317,7 @@ describe('carga inicial do chão (island-villages/01)', () => {
   });
 });
 
-describe('carga inicial das peças soltas (free-props/01, free-objects/04, vegetation-packs/01, nature-variety/02, home-pack/01)', () => {
+describe('carga inicial das peças soltas (free-props/01, free-objects/04, vegetation-packs/01, nature-variety/02, home-pack/01 e 03)', () => {
   const read = <T>(file: string): T =>
     JSON.parse(readFileSync(join(SEED_DATA_DIR, file), 'utf8')) as T;
   const props =
@@ -332,10 +332,12 @@ describe('carga inicial das peças soltas (free-props/01, free-objects/04, veget
     }[]
   >('prop_type_blocks.json');
 
-  it('tem os tipos de 1 a 90 e a casa grande, 95, com pelo menos 1 variante', () => {
+  it('tem os tipos de 1 a 90 e as casas, de 95 a 97, com pelo menos 1 variante', () => {
     expect(props.map(({ id }) => id)).toEqual([
       ...Array.from({ length: 90 }, (_, index) => index + 1),
       95,
+      96,
+      97,
     ]);
     for (const { variants } of props)
       expect(variants).toBeGreaterThanOrEqual(1);
@@ -381,19 +383,22 @@ describe('carga inicial das peças soltas (free-props/01, free-objects/04, veget
     expect(nature.every(({ variants }) => variants === 4)).toBe(true);
   });
 
-  it('a casa grande do pacote Main Characters Home é a peça 95 (home-pack/01)', () => {
-    expect(props.find(({ id }) => id === 95)).toEqual({
-      id: 95,
-      slug: 'big_house',
-      name: 'Casa grande',
-      variants: 1,
-    });
+  it('as casas do pacote Main Characters Home são as peças 95 a 97, em 8 cores (home-pack/01 e 03)', () => {
+    expect(
+      props
+        .filter(({ id }) => id >= 95)
+        .map(({ id, slug, variants }) => [id, slug, variants]),
+    ).toEqual([
+      [95, 'big_house', 8],
+      [96, 'small_house', 8],
+      [97, 'small_townhouse', 8],
+    ]);
   });
 
   it('os prédios bloqueiam em todas as variantes, e as pedras e árvores grandes dos pacotes nas variantes 1 e 2', () => {
     const all = blocks.filter(({ variant }) => variant === 0);
     expect(all.map(({ prop_type_id }) => prop_type_id)).toEqual([
-      22, 23, 24, 25, 26, 27, 95,
+      22, 23, 24, 25, 26, 27, 95, 96, 97,
     ]);
     const packs = blocks.filter(({ variant }) => variant > 0);
     const large = [
