@@ -48,6 +48,7 @@ O que vem depois do MVP de estrutura (entrada, escolha do inicial e Hub). Cada l
 | 32  | [`camera-zoom`](camera-zoom/) | O zoom da câmera em pinça: ao explorar, em degraus inteiros de pixel art com o Domador no centro e guardado no aparelho; na luta, contínuo até 2,5 vezes o tabuleiro inteiro, com a vista arrastável; a roda do mouse no PC | wild-battle, islands, board-battle | concluída |
 | 33  | [`skill-cooldown`](skill-cooldown/) | Countdown por Técnica, em rodadas, além do PP, respeitado pelo jogador e pela IA; 3 Técnicas por Ecobeast; na luta, a barra de 3 ícones com o detalhe ao segurar | board-battle, progression | concluída |
 | 34  | [`skill-editor`](skill-editor/) | Editar e criar Técnicas no visualizador (F1): o botão Editar, o formulário com campos, efeitos e quem aprende, as rotas do editor que conferem com as regras do jogo e gravam numa transação, e o alvo "Meu time" | content-viewer, map-editor, skill-cooldown | concluída |
+| 35  | [`free-objects`](free-objects/) | Os objetos de grade viram peças soltas, e toda peça pode bloquear por linhas, como a cerca: o bloqueio é do tipo, ajustável por peça e editável ponto a ponto no editor; a ação é do prédio, ao encostar; o servidor conta como bloqueado todo hexágono que um bloqueio ou uma parede toca | free-props, free-fences, island-villages | concluída |
 
 ## Pós-lançamento (do GDD)
 

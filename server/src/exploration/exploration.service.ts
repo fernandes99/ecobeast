@@ -35,7 +35,6 @@ import {
   ExplorationResponseDto,
   MapCreatureDto,
   MapTamerDto,
-  toObjectDto,
   toPropDto,
   toNpcDto,
   toTrailDto,
@@ -109,7 +108,6 @@ export class ExplorationService {
         tamers: tamers.map(toMapTamerDto),
         island: null,
         actions: [],
-        objects: [],
         props: [],
         trails: [],
         walls: [],
@@ -125,7 +123,10 @@ export class ExplorationService {
     const island = await this.islands.readPublished(islandId);
     if (!island) throw new NotFoundException(ISLAND_NOT_FOUND);
     const { draft } = island;
-    const spawns = rollAreaSpawns(spawnAreas(draft), secureRandom);
+    const spawns = rollAreaSpawns(
+      spawnAreas(draft, await this.islands.readTypeBlocks()),
+      secureRandom,
+    );
     this.store.set(userId, {
       spawns: new Map(spawns.map((spawn) => [spawn.id, spawn])),
       tamers: new Map(),
@@ -157,7 +158,6 @@ export class ExplorationService {
           action_type_id: actionTypeId,
           tiles,
         })),
-        objects: draft.objects.map(toObjectDto),
         props: draft.props.map(toPropDto),
         trails: (draft.trails ?? []).map(toTrailDto),
         walls: (draft.walls ?? []).map(toWallDto),

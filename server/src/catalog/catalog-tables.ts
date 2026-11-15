@@ -17,7 +17,7 @@ const table = (
 });
 
 /**
- * As 42 tabelas do catálogo em ordem de dependência: cada FK aponta para uma
+ * As 41 tabelas do catálogo em ordem de dependência: cada FK aponta para uma
  * tabela que vem antes (a autorreferência de species é tratada no seed).
  * Usada pelo seed e pelo catálogo inteiro (GET /v1/catalog).
  */
@@ -39,13 +39,8 @@ export const CATALOG_TABLES: readonly CatalogTable[] = [
   table('npc_tamer_greetings', 'npcTamerGreeting'),
   table('action_types', 'actionType'),
   table('ground_types', 'groundType'),
-  table('map_object_types', 'mapObjectType'),
-  table('map_object_type_tiles', 'mapObjectTypeTile', [
-    'object_type_id',
-    'dq',
-    'dr',
-  ]),
   table('prop_types', 'propType'),
+  table('prop_type_blocks', 'propTypeBlock'),
   table('wall_types', 'wallType'),
   table('npcs', 'npc'),
   table('body_types', 'bodyType'),

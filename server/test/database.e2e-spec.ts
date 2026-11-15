@@ -38,10 +38,10 @@ describe('restrições do banco (e2e)', () => {
     expect(rows.map((row) => row.table_name)).toEqual([]);
   });
 
-  it('as 64 tabelas e o histórico de migrations ficam no schema ecobeasts', async () => {
+  it('as 62 tabelas e o histórico de migrations ficam no schema ecobeasts', async () => {
     const rows = await prisma.$queryRaw<{ n: number }[]>`
       SELECT count(*)::int AS n FROM information_schema.tables WHERE table_schema = 'ecobeasts'`;
-    expect(rows[0].n).toBe(65);
+    expect(rows[0].n).toBe(63);
   });
 
   it('recusa Técnica com precisão 150', async () => {
@@ -472,45 +472,48 @@ describe('restrições do banco (e2e)', () => {
       expectRejected(result, 'island_action_tiles_island_map_id_q_r_key');
     });
 
-    it('não deixa dois objetos no mesmo hexágono', async () => {
+    it('recusa uma linha de bloqueio de tipo com número ímpar de pontos (free-objects)', async () => {
       const result = await attempt(prisma, async (tx) => {
-        const map = await draftMap(tx);
-        const type = await tx.mapObjectType.findFirstOrThrow();
-        for (let i = 0; i < 2; i++) {
-          await tx.islandObject.create({
-            data: {
-              islandMapId: map.id,
-              objectTypeId: type.id,
-              q: 1,
-              r: 1,
-              variant: 1,
-              mirrored: false,
-              tiles: {
-                create: { islandMapId: map.id, q: 1, r: 1, blocks: true },
-              },
-            },
-          });
-        }
-      });
-      expectRejected(result, 'island_object_tiles_island_map_id_q_r_key');
-    });
-
-    it('recusa variante 0 de objeto', async () => {
-      const result = await attempt(prisma, async (tx) => {
-        const map = await draftMap(tx);
-        const type = await tx.mapObjectType.findFirstOrThrow();
-        await tx.islandObject.create({
+        const type = await tx.propType.findFirstOrThrow();
+        await tx.propTypeBlock.create({
           data: {
-            islandMapId: map.id,
-            objectTypeId: type.id,
-            q: 0,
-            r: 0,
-            variant: 0,
-            mirrored: false,
+            propTypeId: type.id,
+            position: 99,
+            closed: false,
+            points: [0, 0, 1],
           },
         });
       });
-      expectRejected(result, 'island_objects_variant_check');
+      expectRejected(result, 'prop_type_blocks_points_check');
+    });
+
+    it('recusa uma linha de bloqueio de peça com um ponto só (free-objects)', async () => {
+      const result = await attempt(prisma, async (tx) => {
+        const map = await draftMap(tx);
+        const type = await tx.propType.findFirstOrThrow();
+        const prop = await tx.islandProp.create({
+          data: {
+            islandMapId: map.id,
+            propTypeId: type.id,
+            q: 0,
+            r: 0,
+            dx: 0,
+            dy: 0,
+            variant: 1,
+            mirrored: false,
+            customBlock: true,
+          },
+        });
+        await tx.islandPropBlock.create({
+          data: {
+            islandPropId: prop.id,
+            position: 0,
+            closed: false,
+            points: [0, 0],
+          },
+        });
+      });
+      expectRejected(result, 'island_prop_blocks_points_check');
     });
 
     it('recusa variante 0 de peça solta (free-props/01)', async () => {

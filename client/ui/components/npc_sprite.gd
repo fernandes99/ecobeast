@@ -93,7 +93,7 @@ func _rest() -> void:
 func _start_trip() -> void:
 	var options: Array[Vector2i] = []
 	for tile: Vector2i in npc.walk_tiles():
-		if tile != coord and _map.has(tile) and not _map.is_blocked(tile):
+		if tile != coord and _map.has(tile):
 			options.append(tile)
 	if options.is_empty():
 		_rest()

@@ -15,7 +15,6 @@ import { BIOMES, MAX_HEIGHT } from '../domain/exploration/map-generator.js';
 import type { Biome } from '../domain/exploration/map-generator.js';
 import type {
   DraftNpc,
-  DraftObject,
   DraftProp,
   DraftTrail,
   DraftWall,
@@ -105,31 +104,6 @@ export class MapActionDto {
   tiles: HexCoordDto[];
 }
 
-export class MapObjectTileDto extends HexCoordDto {
-  @ApiProperty({
-    description: 'Se o Domador não atravessa este hexágono.',
-    example: true,
-  })
-  blocks: boolean;
-}
-
-export class MapObjectDto extends HexCoordDto {
-  @ApiProperty({ description: 'Id em `map_object_types`.', example: 1 })
-  object_type_id: number;
-
-  @ApiProperty({
-    description: 'A variante da arte, de 1 em diante.',
-    example: 1,
-  })
-  variant: number;
-
-  @ApiProperty({ description: 'Se a arte está espelhada.', example: false })
-  mirrored: boolean;
-
-  @ApiProperty({ type: [MapObjectTileDto] })
-  tiles: MapObjectTileDto[];
-}
-
 export class MapWallDto {
   @ApiProperty({
     description: 'O `slug` em `wall_types`.',
@@ -165,6 +139,22 @@ export class MapTrailDto {
   points: number[];
 }
 
+export class BlockLineDto {
+  @ApiProperty({
+    description: 'Liga o último ponto ao primeiro.',
+    example: true,
+  })
+  closed: boolean;
+
+  @ApiProperty({
+    type: [Number],
+    description:
+      'x0, y0, x1, y1, …: de 2 a 64 pontos, em pixels da arte, no chão plano, a partir do pé da peça, sem o espelho. Cada coordenada entre −512 e 512.',
+    example: [-40, -6, 40, -6, 40, 10, -40, 10],
+  })
+  points: number[];
+}
+
 export class MapPropDto extends HexCoordDto {
   @ApiProperty({ description: 'Id em `prop_types`.', example: 6 })
   prop_type_id: number;
@@ -189,6 +179,20 @@ export class MapPropDto extends HexCoordDto {
 
   @ApiProperty({ description: 'Se a arte está espelhada.', example: false })
   mirrored: boolean;
+
+  @ApiPropertyOptional({
+    type: [BlockLineDto],
+    description:
+      'As linhas de bloqueio da própria peça, só quando ela foi ajustada; `[]` é uma peça ajustada que não bloqueia. Sem o campo, valem as do tipo (`prop_type_blocks`).',
+  })
+  block?: BlockLineDto[];
+
+  @ApiPropertyOptional({
+    description:
+      'Id em `action_types`, só quando a peça tem ação: ela acontece quando o Domador encosta no bloqueio da peça.',
+    example: 1,
+  })
+  action_type_id?: number;
 }
 
 export class MapNpcDto extends HexCoordDto {
@@ -272,12 +276,6 @@ export class ExplorationMapDto {
     description: 'As ações da ilha; vazio no mapa sorteado.',
   })
   actions: MapActionDto[];
-
-  @ApiProperty({
-    type: [MapObjectDto],
-    description: 'Os objetos da ilha; vazio no mapa sorteado.',
-  })
-  objects: MapObjectDto[];
 
   @ApiProperty({
     type: [MapPropDto],
@@ -429,17 +427,6 @@ export class DebugTamerResponseDto {
   tamer: MapTamerDto;
 }
 
-export function toObjectDto(object: DraftObject): MapObjectDto {
-  return {
-    object_type_id: object.objectTypeId,
-    q: object.q,
-    r: object.r,
-    variant: object.variant,
-    mirrored: object.mirrored,
-    tiles: object.tiles.map(({ q, r, blocks }) => ({ q, r, blocks })),
-  };
-}
-
 export function toTrailDto({ ground, width, points }: DraftTrail): MapTrailDto {
   return { ground, width, points: [...points] };
 }
@@ -469,5 +456,16 @@ export function toPropDto(prop: DraftProp): MapPropDto {
     dy: prop.dy,
     variant: prop.variant,
     mirrored: prop.mirrored,
+    ...(prop.block === undefined
+      ? {}
+      : {
+          block: prop.block.map(({ closed, points }) => ({
+            closed,
+            points: [...points],
+          })),
+        }),
+    ...(prop.actionTypeId === undefined
+      ? {}
+      : { action_type_id: prop.actionTypeId }),
   };
 }

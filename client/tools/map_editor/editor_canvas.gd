@@ -34,12 +34,15 @@ var brush: Callable = Callable()
 var marked: Callable = Callable()
 ## A cor do contorno sob o ponteiro (Color.TRANSPARENT: a de sempre).
 var brush_color: Callable = Callable()
-var selected_object := -1
 var selected_prop := -1
 var selected_trail := -1
 ## A parede escolhida pela Cerca, ou -1, e a que está sendo desenhada (free-fences/03).
 var selected_wall := -1
 var fence_preview := Callable()
+## O bloqueio da peça escolhida em edição (free-objects/02): os pontos aparecem, e a
+## linha em desenho (no chão plano) segue o ponteiro.
+var editing_prop_block := false
+var block_preview := Callable()
 var _mouse_flat := Vector2.ZERO
 var action_colors: Dictionary[int, Color] = {}
 var action_names: Dictionary[int, String] = {}
@@ -57,10 +60,12 @@ var _dim_layer: HexTintLayer
 var _focus_key := 0
 var _show_areas := true
 var _show_actions := true
-var _show_blocks := false
-## O que cada hexágono com objeto mostra (tipo, variante e espelho): mudou, refaz as
-## decorações dele, porque a Vegetação é desenhada com elas.
-var _object_tiles: Dictionary[Vector2i, String] = {}
+var _show_blocks := true
+## As linhas de bloqueio das peças no chão plano, se cada uma é ajustada, e os hexágonos
+## que o servidor conta como bloqueados, refeitos quando as peças ou as paredes mudam.
+var _block_lines: Array[PackedVector2Array] = []
+var _block_custom: Array[bool] = []
+var _block_hexes: Dictionary[Vector2i, bool] = {}
 var _prop_tiles: Dictionary[Vector2i, String] = {}
 ## Cópias dos traços como estão desenhados, para achar o que mudou.
 var _shown_trails: Array[MapTrail] = []
@@ -116,15 +121,14 @@ func show_draft(draft: IslandDraft, fit: bool = true) -> void:
 	_pending.clear()
 	_map = draft.to_map() if draft != null else ExplorationMap.new()
 	_map_view.set_map(_map)
-	_map_view.set_objects(_map.objects)
 	_map_view.set_props(_map.props)
-	_object_tiles = _current_object_tiles()
 	_prop_tiles = _current_prop_tiles()
 	_overview.set_map(_map)
 	_shown_trails = IslandDraft.copy_trails(draft.trails) if draft != null else []
 	_overview.set_trails(_map.trails)
 	_shown_walls = IslandDraft.copy_walls(draft.walls) if draft != null else []
 	_overview.set_walls(_map.walls)
+	_refresh_blocks()
 	refresh_npcs()
 	refresh_marks()
 	if fit and draft != null:
@@ -135,26 +139,6 @@ func show_draft(draft: IslandDraft, fit: bool = true) -> void:
 func update_tiles(coords: Array[Vector2i]) -> void:
 	for coord: Vector2i in coords:
 		_pending[coord] = true
-	_overlay.queue_redraw()
-
-
-## Os objetos mudaram no rascunho: troca a arte e refaz as decorações dos hexágonos
-## que ganharam ou perderam objeto.
-func refresh_objects() -> void:
-	if _draft == null or _map == null:
-		return
-	_map.set_objects(_draft.map_objects())
-	_map_view.set_objects(_map.objects)
-	var now := _current_object_tiles()
-	var changed: Array[Vector2i] = []
-	for coord: Vector2i in now:
-		if _object_tiles.get(coord, "") != now[coord]:
-			changed.append(coord)
-	for coord: Vector2i in _object_tiles:
-		if not now.has(coord):
-			changed.append(coord)
-	_object_tiles = now
-	update_tiles(changed)
 	_overlay.queue_redraw()
 
 
@@ -192,6 +176,7 @@ func refresh_props() -> void:
 			changed.append(coord)
 	_prop_tiles = now
 	update_tiles(changed)
+	_refresh_blocks()
 	_overlay.queue_redraw()
 
 
@@ -234,6 +219,7 @@ func refresh_walls() -> void:
 	if not changed.is_empty():
 		_map_view.set_walls(_draft.walls.duplicate(), changed)
 		_overview.set_walls(_map.walls)
+		_refresh_blocks()
 	_overlay.queue_redraw()
 
 
@@ -328,14 +314,6 @@ func set_blocks(on: bool) -> void:
 	_overlay.queue_redraw()
 
 
-func _current_object_tiles() -> Dictionary[Vector2i, String]:
-	var result: Dictionary[Vector2i, String] = {}
-	for object: MapObject in _map.objects:
-		for coord: Vector2i in object.tiles:
-			result[coord] = "%d:%d:%s" % [object.object_type_id, object.variant, object.mirrored]
-	return result
-
-
 func refresh_brush() -> void:
 	_overlay.queue_redraw()
 
@@ -389,20 +367,6 @@ func set_area_focus(key: int) -> void:
 		return
 	_focus_key = key
 	refresh_marks()
-
-
-## O retângulo, em pontos deste Control, dos hexágonos de um objeto.
-func object_rect(index: int) -> Rect2:
-	var top_left := Vector2.INF
-	var bottom_right := -Vector2.INF
-	for corner: Vector2 in HexMapView.HEX_CORNERS:
-		top_left = top_left.min(corner)
-		bottom_right = bottom_right.max(corner)
-	var rect := Rect2()
-	for coord: Vector2i in _draft.object_tiles(index):
-		var box := Rect2(_screen_origin(coord) + top_left * _zoom, (bottom_right - top_left) * _zoom)
-		rect = box if not rect.has_area() else rect.merge(box)
-	return rect
 
 
 func set_layers(areas: bool, actions: bool) -> void:
@@ -478,7 +442,9 @@ func _gui_input(event: InputEvent) -> void:
 			_apply_view()
 		elif _painting:
 			_continue_stroke(motion.position)
-		if _draft != null and fence_preview.is_valid() and not (fence_preview.call() as PackedVector2Array).is_empty():
+		var drawing := fence_preview.is_valid() and not (fence_preview.call() as PackedVector2Array).is_empty()
+		drawing = drawing or (block_preview.is_valid() and not (block_preview.call() as PackedVector2Array).is_empty())
+		if _draft != null and drawing:
 			_mouse_flat = _flat_at(_art_point(motion.position))
 			_overlay.queue_redraw()
 		_update_hover(motion.position)
@@ -618,9 +584,6 @@ func draw_overlay(node: Node2D) -> void:
 		return
 	if _show_actions:
 		_draw_actions(node)
-	if selected_object >= 0:
-		for coord: Vector2i in _draft.object_tiles(selected_object):
-			_outline(node, coord, UiPalette.ACCENT)
 	if marked.is_valid():
 		for coord: Vector2i in marked.call():
 			_outline(node, coord, UiPalette.ACCENT)
@@ -705,18 +668,65 @@ func _screen_point(flat: Vector2) -> Vector2:
 	return _origin + (flat - Vector2(0.0, _draft.rise_at(HexMapView.grid_coord(flat)))) * _zoom
 
 
-## Um X vermelho em cada hexágono bloqueado.
+func _refresh_blocks() -> void:
+	_block_lines.clear()
+	_block_custom.clear()
+	if _draft == null:
+		_block_hexes.clear()
+		return
+	var typed := GameData.prop_blocks_by_type()
+	for index: int in _draft.props.size():
+		var prop: Dictionary = _draft.props[index]
+		var custom := prop.has("block")
+		if not custom and not typed.has(int(prop.get("prop_type_id", 0))):
+			continue
+		for line: PackedVector2Array in _draft.prop_world_lines(index):
+			_block_lines.append(line)
+			_block_custom.append(custom)
+	var all_lines: Array[PackedVector2Array] = _block_lines.duplicate()
+	for wall: MapWall in _draft.walls:
+		all_lines.append(wall.points)
+	_block_hexes = IslandBlocks.blocked_hexes(all_lines)
+
+
+## Um X vermelho em cada hexágono que o servidor conta como bloqueado, e as linhas de
+## bloqueio das peças, tracejadas: as do tipo numa cor, as ajustadas noutra.
 func _draw_blocks(node: Node2D) -> void:
 	var reach := Vector2(10.0, 7.0) * _zoom
-	for object: MapObject in _map.objects:
-		for coord: Vector2i in object.blocked_tiles():
-			var center := _screen_origin(coord) + HexMapView.SURFACE_CENTER * _zoom
-			node.draw_line(center - reach, center + reach, UiPalette.DANGER, OUTLINE_WIDTH + 1.0)
-			node.draw_line(center + Vector2(-reach.x, reach.y), center + Vector2(reach.x, -reach.y), UiPalette.DANGER, OUTLINE_WIDTH + 1.0)
+	for coord: Vector2i in _block_hexes:
+		if not _draft.tiles.has(coord):
+			continue
+		var center := _screen_origin(coord) + HexMapView.SURFACE_CENTER * _zoom
+		node.draw_line(center - reach, center + reach, Color(UiPalette.DANGER, 0.55), OUTLINE_WIDTH)
+		node.draw_line(center + Vector2(-reach.x, reach.y), center + Vector2(reach.x, -reach.y), Color(UiPalette.DANGER, 0.55), OUTLINE_WIDTH)
+	for index: int in _block_lines.size():
+		var line := _block_lines[index]
+		var color := UiPalette.ACCENT if _block_custom[index] else UiPalette.WARNING
+		for at: int in range(1, line.size()):
+			node.draw_dashed_line(_screen_point(line[at - 1]), _screen_point(line[at]), color, OUTLINE_WIDTH, WALL_DASH)
+	if editing_prop_block and selected_prop >= 0 and selected_prop < _draft.props.size():
+		for line: PackedVector2Array in _draft.prop_world_lines(selected_prop):
+			for point: Vector2 in line:
+				node.draw_circle(_screen_point(point), 4.0, UiPalette.TEXT)
+				node.draw_circle(_screen_point(point), 2.5, UiPalette.ACCENT)
+		var drawing: PackedVector2Array = block_preview.call() if block_preview.is_valid() else PackedVector2Array()
+		if not drawing.is_empty():
+			_draw_wall_line(node, drawing, _mouse_flat)
 
 
 func _draw_actions(node: Node2D) -> void:
 	var font := get_theme_font(&"font")
+	# As peças com ação (free-objects/03): o nome da ação acima do pé.
+	for index: int in _draft.props.size():
+		var piece_type := int((_draft.props[index] as Dictionary).get("action_type_id", 0))
+		if piece_type <= 0:
+			continue
+		var piece_label: String = action_names.get(piece_type, "?")
+		var piece_at := _screen_point(_draft.prop_foot(index)) + Vector2(0.0, -NAME_SIZE)
+		var piece_width := font.get_string_size(piece_label, HORIZONTAL_ALIGNMENT_LEFT, -1, NAME_SIZE).x
+		var piece_base := piece_at + Vector2(-piece_width / 2.0, 0.0)
+		node.draw_string_outline(font, piece_base, piece_label, HORIZONTAL_ALIGNMENT_LEFT, -1, NAME_SIZE, 4, UiPalette.BACKGROUND_DEEP)
+		node.draw_string(font, piece_base, piece_label, HORIZONTAL_ALIGNMENT_LEFT, -1, NAME_SIZE, action_colors.get(piece_type, UiPalette.TEXT))
 	for index: int in _draft.actions.size():
 		var coords := _draft.action_tiles(index)
 		if coords.is_empty():

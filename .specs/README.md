@@ -57,6 +57,7 @@ O Ecobeast é um jogo mobile (Android/iOS, retrato): o cliente em **Godot 4.7 co
 | [camera-zoom](camera-zoom/) | O zoom da câmera em pinça ao explorar e na luta, entre um mínimo e um máximo |
 | [skill-cooldown](skill-cooldown/) | Countdown por Técnica, 3 Técnicas por Ecobeast e a barra de ícones na luta |
 | [skill-editor](skill-editor/) | Editar e criar Técnicas no F1, com os efeitos e quem aprende, salvas pelo servidor |
+| [free-objects](free-objects/) | Os objetos de grade viram peças soltas que bloqueiam por linhas, editáveis no editor, com a ação do prédio ao encostar |
 
 As próximas iniciativas estão no [roadmap.md](roadmap.md).
 

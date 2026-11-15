@@ -126,7 +126,6 @@ var _highlighted_row: HexRowView = null
 var _hex_triangles := PackedVector2Array()
 var _window_scale := Vector2.ONE
 var _whole_map_area := Rect2()
-var _objects: Array[MapObjectSprite] = []
 var _props_by_chunk: Dictionary[Vector2i, Array] = {}
 ## Os pedaços das cercas (free-fences/01), `[hexágono onde é desenhado, HexWalls.Piece,
 ## hexágono do pé, MapWall]`, por pedaço de mapa.
@@ -179,7 +178,6 @@ func _process(_delta: float) -> void:
 
 func set_map(map: ExplorationMap) -> void:
 	_map = map
-	_clear_objects()
 	var views: Array = _rows.values()
 	for band: Dictionary in _bands:
 		views.append_array(band.values())
@@ -267,9 +265,6 @@ func update_tiles(coords: Array[Vector2i]) -> void:
 		_clear_views(key)
 		if not tiles.is_empty():
 			_build_row(key, tiles)
-	for sprite: MapObjectSprite in _objects:
-		sprite.place(_rise(_level_at(sprite.object.coord)))
-	_fade_objects()
 
 
 func set_contour_visible(on: bool) -> void:
@@ -308,73 +303,6 @@ func _rebuild_all() -> void:
 		elif _rows.has(key):
 			_clear_views(key)
 			_build_row(key, by_chunk[key])
-	_fade_objects()
-
-
-func _fade_objects() -> void:
-	for sprite: MapObjectSprite in _objects:
-		var above := height_cut >= 0 and sprite.object.tiles.any(func(coord: Vector2i) -> bool: return _level_at(coord) > height_cut)
-		sprite.modulate.a = GHOST_ALPHA if above else 1.0
-
-
-## Os objetos da ilha (island-villages/03): cada um entra logo depois do chão da linha
-## seguinte à da frente dele, por baixo das decorações e dos atores dela (ou, com um
-## hexágono da frente mais alto, antes das decorações da frente da própria linha).
-## Chame depois do `set_map`.
-func set_objects(objects: Array[MapObject]) -> void:
-	_clear_objects()
-	for object: MapObject in objects:
-		var row := GameData.get_row("map_object_types", object.object_type_id)
-		var sprite := MapObjectSprite.new()
-		if not sprite.setup(object, str(row.get("slug", ""))):
-			sprite.free()
-			continue
-		add_child(sprite)
-		_objects.append(sprite)
-		_place_object(sprite)
-	_fade_objects()
-
-
-## O objeto cuja arte está desenhada num ponto, em pixels da arte, da frente para
-## trás; ou `null`.
-func object_hit(point: Vector2) -> MapObject:
-	var best: MapObjectSprite = null
-	for sprite: MapObjectSprite in _objects:
-		if sprite.hits(point) and (best == null or sprite.get_index() > best.get_index()):
-			best = sprite
-	return best.object if best != null else null
-
-
-func _clear_objects() -> void:
-	for sprite: MapObjectSprite in _objects:
-		remove_child(sprite)
-		sprite.queue_free()
-	_objects.clear()
-
-
-## A arte que desce da borda de baixo do objeto (a pá do moinho) passa por cima do
-## chão da linha da frente, a não ser que um hexágono da frente encostado nele seja
-## mais alto: aí o chão dele cobre, como um degrau.
-func _place_object(sprite: MapObjectSprite) -> void:
-	sprite.place(_rise(_level_at(sprite.object.coord)))
-	var row := sprite.front_row
-	if not _row_chunks.has(row):
-		return
-	var at := _last_index(_bands[MIDDLE_BAND - 1], row) + 1
-	if _row_chunks.has(row + 1) and not _front_is_higher(sprite.object, row):
-		at = _first_index(_bands[0], row + 1)
-	move_child(sprite, at if sprite.get_index() > at else at - 1)
-
-
-func _front_is_higher(object: MapObject, row: int) -> bool:
-	var level := _level_at(object.coord)
-	for coord: Vector2i in object.tiles:
-		if coord.y != row:
-			continue
-		for below: Vector2i in [coord + Vector2i(-1, 1), coord + Vector2i(0, 1)]:
-			if _map.has(below) and _level_at(below) > level:
-				return true
-	return false
 
 
 func build_all_rows() -> void:
@@ -526,9 +454,6 @@ func _add_chunk_nodes(key: Vector2i) -> void:
 	_rows[key] = terrain
 	for band: int in DEPTH_BANDS:
 		_bands[band][key] = bands[band]
-	for sprite: MapObjectSprite in _objects:
-		if sprite.front_row == row or sprite.front_row == row - 1:
-			_place_object(sprite)
 
 
 ## Só para depuração: cabe o mapa inteiro em `area`, da tela lógica. Reduzido
@@ -965,7 +890,7 @@ func _add_decorations(bands: Array[HexRowView], tiles: Array, props: Array, wall
 	var trails := _trails_near(tiles)
 	var no_trails: Array[MapTrail] = []
 	for tile: HexTile in tiles:
-		if _map.object_at(tile.coord) >= 0 or tile.bare:
+		if tile.bare:
 			continue
 		var center := Vector2i(_tile_origin(tile.coord) + SURFACE_CENTER - _rise(tile.height))
 		var tile_trails := trails if ground_mask.has_trail(tile.coord) else no_trails

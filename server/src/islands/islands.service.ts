@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import type { Biome } from '../domain/exploration/map-generator.js';
+import type { BlockLine, TypeBlocks } from '../domain/islands/blocked-hexes.js';
 import type { IslandDraft } from '../domain/islands/island-draft.js';
 import type { Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
@@ -39,11 +40,25 @@ export class IslandsService {
     return { id: islandId, name: draft.name, draft };
   }
 
+  /** As linhas de bloqueio padrão de cada tipo de peça (free-objects). */
+  async readTypeBlocks(): Promise<TypeBlocks> {
+    const rows = await this.prisma.propTypeBlock.findMany({
+      orderBy: [{ propTypeId: 'asc' }, { position: 'asc' }],
+    });
+    const blocks = new Map<number, BlockLine[]>();
+    for (const { propTypeId, closed, points } of rows) {
+      const lines = blocks.get(propTypeId) ?? [];
+      lines.push({ closed, points });
+      blocks.set(propTypeId, lines);
+    }
+    return blocks;
+  }
+
   async readVersion(
     client: Tx | PrismaService,
     islandMapId: number,
   ): Promise<IslandDraft> {
-    const [map, tiles, actions, objects, props, trails, walls, npcs, areas] =
+    const [map, tiles, actions, props, trails, walls, npcs, areas] =
       await Promise.all([
         client.islandMap.findUniqueOrThrow({ where: { id: islandMapId } }),
         client.islandTile.findMany({
@@ -59,14 +74,10 @@ export class IslandsService {
           orderBy: { id: 'asc' },
           include: { tiles: { orderBy: [{ r: 'asc' }, { q: 'asc' }] } },
         }),
-        client.islandObject.findMany({
-          where: { islandMapId },
-          orderBy: { id: 'asc' },
-          include: { tiles: { orderBy: [{ r: 'asc' }, { q: 'asc' }] } },
-        }),
         client.islandProp.findMany({
           where: { islandMapId },
           orderBy: { id: 'asc' },
+          include: { blocks: { orderBy: { position: 'asc' } } },
         }),
         client.islandTrail.findMany({
           where: { islandMapId },
@@ -109,23 +120,34 @@ export class IslandsService {
         actionTypeId,
         tiles: occupied.map(({ q, r }) => ({ q, r })),
       })),
-      objects: objects.map((object) => ({
-        objectTypeId: object.objectTypeId,
-        q: object.q,
-        r: object.r,
-        variant: object.variant,
-        mirrored: object.mirrored,
-        tiles: object.tiles.map(({ q, r, blocks }) => ({ q, r, blocks })),
-      })),
-      props: props.map(({ propTypeId, q, r, dx, dy, variant, mirrored }) => ({
-        propTypeId,
-        q,
-        r,
-        dx,
-        dy,
-        variant,
-        mirrored,
-      })),
+      props: props.map(
+        ({
+          propTypeId,
+          q,
+          r,
+          dx,
+          dy,
+          variant,
+          mirrored,
+          customBlock,
+          blocks,
+          actionTypeId,
+        }) => ({
+          propTypeId,
+          q,
+          r,
+          dx,
+          dy,
+          variant,
+          mirrored,
+          ...(customBlock
+            ? {
+                block: blocks.map(({ closed, points }) => ({ closed, points })),
+              }
+            : {}),
+          ...(actionTypeId === null ? {} : { actionTypeId }),
+        }),
+      ),
       trails: trails.map(({ groundType, width, points }) => ({
         ground: groundType.slug,
         width,

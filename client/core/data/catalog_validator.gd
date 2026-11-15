@@ -107,6 +107,13 @@ func _has_type(value: Variant, type: String) -> bool:
 			return value is String
 		"bool":
 			return value is bool
+		"int_array":
+			if not value is Array:
+				return false
+			for item: Variant in value:
+				if not _has_type(item, "int"):
+					return false
+			return true
 	return false
 
 

@@ -102,43 +102,23 @@ export class DraftActionDto {
   tiles: EditorHexDto[];
 }
 
-export class DraftObjectTileDto extends EditorHexDto {
+export class DraftBlockLineDto {
   @ApiProperty({
-    description: 'Se o Domador não atravessa este hexágono.',
+    description: 'Liga o último ponto ao primeiro.',
     example: true,
   })
-  @IsBoolean({ message: 'blocks precisa ser verdadeiro ou falso.' })
-  blocks: boolean;
-}
-
-export class DraftObjectDto extends EditorHexDto {
-  @ApiProperty({ description: 'Id em `map_object_types`.', example: 1 })
-  @IsInt(integer('object_type_id'))
-  object_type_id: number;
+  @IsBoolean({ message: 'closed precisa ser verdadeiro ou falso.' })
+  closed: boolean;
 
   @ApiProperty({
-    description: 'A variante da arte, de 1 em diante.',
-    example: 1,
-  })
-  @IsInt(integer('variant'))
-  variant: number;
-
-  @ApiProperty({
-    description: 'Se a arte e o formato estão espelhados na horizontal.',
-    example: false,
-  })
-  @IsBoolean({ message: 'mirrored precisa ser verdadeiro ou falso.' })
-  mirrored: boolean;
-
-  @ApiProperty({
-    type: [DraftObjectTileDto],
+    type: [Number],
     description:
-      'Os hexágonos do objeto, com o de apoio (q, r) entre eles, e o bloqueio de cada um.',
+      'x0, y0, x1, y1, …: de 2 a 64 pontos (3 numa fechada), em pixels da arte, no chão plano, a partir do pé da peça, sem o espelho. Cada coordenada entre −512 e 512.',
+    example: [-40, -6, 40, -6, 40, 10, -40, 10],
   })
-  @IsArray(list('tiles'))
-  @ValidateNested({ each: true })
-  @Type(() => DraftObjectTileDto)
-  tiles: DraftObjectTileDto[];
+  @IsArray(list('points'))
+  @IsInt({ each: true, message: 'points precisa ter só números inteiros.' })
+  points: number[];
 }
 
 export class DraftPropDto extends EditorHexDto {
@@ -173,6 +153,26 @@ export class DraftPropDto extends EditorHexDto {
   @ApiProperty({ description: 'Se a arte está espelhada.', example: false })
   @IsBoolean({ message: 'mirrored precisa ser verdadeiro ou falso.' })
   mirrored: boolean;
+
+  @ApiPropertyOptional({
+    type: [DraftBlockLineDto],
+    description:
+      'As linhas de bloqueio ajustadas da peça, até 8; `[]` não bloqueia. Sem o campo, valem as do tipo.',
+  })
+  @IsOptional()
+  @IsArray(list('block'))
+  @ValidateNested({ each: true })
+  @Type(() => DraftBlockLineDto)
+  block?: DraftBlockLineDto[] | null;
+
+  @ApiPropertyOptional({
+    description:
+      'Id em `action_types`: a ação acontece quando o Domador encosta no bloqueio da peça. Até 500 peças com ação por ilha.',
+    example: 1,
+  })
+  @IsOptional()
+  @IsInt(integer('action_type_id'))
+  action_type_id?: number | null;
 }
 
 export class DraftTrailDto {
@@ -350,12 +350,6 @@ export class IslandDraftDto {
   @ValidateNested({ each: true })
   @Type(() => DraftActionDto)
   actions: DraftActionDto[];
-
-  @ApiProperty({ type: [DraftObjectDto] })
-  @IsArray(list('objects'))
-  @ValidateNested({ each: true })
-  @Type(() => DraftObjectDto)
-  objects: DraftObjectDto[];
 
   @ApiPropertyOptional({
     type: [DraftPropDto],

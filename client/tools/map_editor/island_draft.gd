@@ -12,7 +12,6 @@ var start := Vector2i.ZERO
 var tiles: Dictionary[Vector2i, HexTile] = {}
 var tile_areas: Dictionary[Vector2i, int] = {}
 var actions: Array = []
-var objects: Array = []
 ## As peças soltas (free-props/03), como o servidor manda: `prop_type_id`, `q`, `r`, `dx`,
 ## `dy`, `variant` e `mirrored`.
 var props: Array = []
@@ -63,7 +62,6 @@ static func from_dict(data: Dictionary) -> IslandDraft:
 	draft.name = DictFields.get_string(data, "name")
 	draft._read_terrain(data)
 	draft.actions = DictFields.get_array(data, "actions").duplicate(true)
-	draft.objects = DictFields.get_array(data, "objects").duplicate(true)
 	draft.props = DictFields.get_array(data, "props").duplicate(true)
 	for entry: Variant in DictFields.get_array(data, "trails"):
 		var trail: MapTrail = MapTrail.from_dict(entry) if entry is Dictionary else null
@@ -94,7 +92,6 @@ func to_dict() -> Dictionary:
 		"start": {"q": start.x, "r": start.y},
 		"tiles": tile_list,
 		"actions": actions,
-		"objects": objects,
 		"props": props,
 		"trails": trails.map(func(trail: MapTrail) -> Dictionary: return trail.to_dict()),
 		"walls": walls.map(func(wall: MapWall) -> Dictionary: return wall.to_dict()),
@@ -159,10 +156,6 @@ func remove_tile(coord: Vector2i) -> bool:
 				changed = true
 		if occupied.is_empty():
 			actions.remove_at(index)
-	var holder := object_at(coord)
-	if holder >= 0:
-		objects.remove_at(holder)
-		changed = true
 	for index: int in range(props.size() - 1, -1, -1):
 		if prop_coord(index) == coord:
 			props.remove_at(index)
@@ -236,43 +229,6 @@ func action_tiles(index: int) -> Array[Vector2i]:
 	return coords
 
 
-func object_at(coord: Vector2i) -> int:
-	for index: int in objects.size():
-		if object_tiles(index).has(coord):
-			return index
-	return -1
-
-
-func object_tiles(index: int) -> Array[Vector2i]:
-	var coords: Array[Vector2i] = []
-	if index < 0 or index >= objects.size():
-		return coords
-	for at: Variant in (objects[index] as Dictionary).get("tiles", []):
-		coords.append(Vector2i(int(at.get("q", 0)), int(at.get("r", 0))))
-	return coords
-
-
-## Se um objeto caberia nesses hexágonos: todos existem e nenhum é de outro objeto
-## (menos o `ignore`, para espelhar um objeto no lugar).
-func object_fits(coords: Array[Vector2i], ignore: int = -1) -> bool:
-	for coord: Vector2i in coords:
-		if not tiles.has(coord):
-			return false
-		var holder := object_at(coord)
-		if holder >= 0 and holder != ignore:
-			return false
-	return true
-
-
-func map_objects() -> Array[MapObject]:
-	var list: Array[MapObject] = []
-	for entry: Variant in objects:
-		var object := MapObject.from_dict(entry as Dictionary)
-		if object != null:
-			list.append(object)
-	return list
-
-
 func map_props() -> Array[MapProp]:
 	var list: Array[MapProp] = []
 	for entry: Variant in props:
@@ -311,6 +267,42 @@ func prop_at(art_point: Vector2) -> int:
 		if prop_rect(index).has_point(art_point) and (best < 0 or prop_foot(index).y >= prop_foot(best).y):
 			best = index
 	return best
+
+
+## As linhas de bloqueio da peça (free-objects): as próprias, se ajustada, ou as do tipo.
+func prop_lines(index: int) -> Array[Dictionary]:
+	var prop: Dictionary = props[index]
+	if prop.has("block"):
+		return MapProp.lines_from(prop["block"])
+	return GameData.get_prop_blocks(int(prop.get("prop_type_id", 0)))
+
+
+func prop_is_custom(index: int) -> bool:
+	return (props[index] as Dictionary).has("block")
+
+
+## As linhas da peça no chão plano, com o espelho.
+func prop_world_lines(index: int) -> Array[PackedVector2Array]:
+	var prop := MapProp.from_dict(props[index])
+	if prop == null:
+		return []
+	return prop.world_lines(GameData.get_prop_blocks(prop.prop_type_id))
+
+
+## Um ponto do chão plano nas coordenadas das linhas da peça: a partir do pé, sem o espelho.
+func prop_local(index: int, flat: Vector2) -> Vector2i:
+	var local := flat - prop_foot(index)
+	if bool((props[index] as Dictionary).get("mirrored", false)):
+		local.x = -local.x
+	return Vector2i(local.round()).clamp(Vector2i(-MapProp.MAX_COORD, -MapProp.MAX_COORD), Vector2i(MapProp.MAX_COORD, MapProp.MAX_COORD))
+
+
+## Um ponto das linhas da peça no chão plano.
+func prop_flat(index: int, local: Vector2i) -> Vector2:
+	var point := Vector2(local)
+	if bool((props[index] as Dictionary).get("mirrored", false)):
+		point.x = -point.x
+	return prop_foot(index) + point
 
 
 func rise_at(coord: Vector2i) -> float:
@@ -428,7 +420,6 @@ func to_map() -> ExplorationMap:
 	map.map_seed = id
 	map.start = start
 	map.tiles = tiles
-	map.set_objects(map_objects())
 	map.props = map_props()
 	map.trails = trails.duplicate()
 	map.walls = walls.duplicate()

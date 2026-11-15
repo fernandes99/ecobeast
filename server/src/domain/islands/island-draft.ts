@@ -7,6 +7,15 @@ import {
   MAX_HEIGHT,
   maxVariant,
 } from '../exploration/map-generator.js';
+import {
+  type BlockLine,
+  blockLineError,
+  lineBlockedKeys,
+  MAX_BLOCK_LINES,
+  MAX_BLOCKING_PROPS,
+  propLines,
+  type TypeBlocks,
+} from './blocked-hexes.js';
 import { flatCenter, gridCoord } from './hex-pixels.js';
 
 export const MAX_ISLAND_TILES = 20_000;
@@ -17,6 +26,7 @@ const COLOR_HEX = /^#[0-9A-Fa-f]{6}$/;
 export const MIN_AREA_SPAWNS = 1;
 export const MAX_AREA_SPAWNS = 200;
 export const MAX_PROPS = 20_000;
+export const MAX_PROP_ACTIONS = 500;
 export const MAX_TRAILS = 500;
 const MAX_TRAIL_POINTS = 256;
 const MIN_TRAIL_WIDTH = 8;
@@ -42,17 +52,6 @@ export interface DraftAction {
   tiles: HexCoord[];
 }
 
-export interface DraftObjectTile extends HexCoord {
-  blocks: boolean;
-}
-
-export interface DraftObject extends HexCoord {
-  objectTypeId: number;
-  variant: number;
-  mirrored: boolean;
-  tiles: DraftObjectTile[];
-}
-
 /** Uma peça solta: o pé em `(dx, dy)` pixels do centro plano de `(q, r)`. */
 export interface DraftProp extends HexCoord {
   propTypeId: number;
@@ -60,6 +59,10 @@ export interface DraftProp extends HexCoord {
   dy: number;
   variant: number;
   mirrored: boolean;
+  /** As linhas de bloqueio ajustadas (free-objects); sem o campo, valem as do tipo. */
+  block?: BlockLine[];
+  /** A ação que acontece ao encostar no bloqueio (free-objects/03). */
+  actionTypeId?: number;
 }
 
 /**
@@ -111,7 +114,6 @@ export interface IslandDraft {
   start: HexCoord;
   tiles: DraftTile[];
   actions: DraftAction[];
-  objects: DraftObject[];
   props: DraftProp[];
   trails?: DraftTrail[];
   walls?: DraftWall[];
@@ -121,13 +123,14 @@ export interface IslandDraft {
 
 export interface KnownIds {
   actionTypeIds: ReadonlySet<number>;
-  objectTypeIds: ReadonlySet<number>;
   groundSlugs: ReadonlySet<string>;
   speciesIds: ReadonlySet<number>;
   /** O máximo de variantes de cada tipo de peça solta. */
   propVariants: ReadonlyMap<number, number>;
   npcIds: ReadonlySet<number>;
   wallSlugs: ReadonlySet<string>;
+  /** As linhas de bloqueio padrão de cada tipo de peça. */
+  propBlocks: TypeBlocks;
 }
 
 const at = ({ q, r }: HexCoord): string => `(${q}, ${r})`;
@@ -195,35 +198,6 @@ function actionsError(
   return null;
 }
 
-function objectsError(
-  objects: DraftObject[],
-  tiles: ReadonlySet<string>,
-  known: KnownIds,
-): string | null {
-  const taken = new Set<string>();
-  for (const [index, object] of objects.entries()) {
-    const number = index + 1;
-    if (!known.objectTypeIds.has(object.objectTypeId)) {
-      return `O objeto ${number} tem um tipo que não existe.`;
-    }
-    if (!Number.isInteger(object.variant) || object.variant < 1) {
-      return `O objeto ${number} tem a variante ${object.variant}: começa em 1.`;
-    }
-    if (!object.tiles.some((tile) => hexKey(tile) === hexKey(object))) {
-      return `O objeto ${number} precisa ocupar o hexágono de apoio ${at(object)}.`;
-    }
-    for (const coord of object.tiles) {
-      const key = hexKey(coord);
-      if (!tiles.has(key)) {
-        return `O objeto ${number} ocupa ${at(coord)}, que não é da ilha.`;
-      }
-      if (taken.has(key)) return `O hexágono ${at(coord)} é de dois objetos.`;
-      taken.add(key);
-    }
-  }
-  return null;
-}
-
 function propsError(
   props: DraftProp[],
   tiles: ReadonlySet<string>,
@@ -255,6 +229,37 @@ function propsError(
     ) {
       return `A peça ${number} tem o pé fora do hexágono ${at(prop)}.`;
     }
+    if (prop.block !== undefined) {
+      if (prop.block.length > MAX_BLOCK_LINES) {
+        return `A peça ${number} pode ter até ${MAX_BLOCK_LINES} linhas de bloqueio.`;
+      }
+      for (const [lineIndex, line] of prop.block.entries()) {
+        const error = blockLineError(line);
+        if (error) {
+          return `A linha de bloqueio ${lineIndex + 1} da peça ${number} ${error}.`;
+        }
+      }
+    }
+  }
+  for (const [index, prop] of props.entries()) {
+    if (
+      prop.actionTypeId !== undefined &&
+      !known.actionTypeIds.has(prop.actionTypeId)
+    ) {
+      return `A peça ${index + 1} tem uma ação que não existe.`;
+    }
+  }
+  if (
+    props.filter(({ actionTypeId }) => actionTypeId !== undefined).length >
+    MAX_PROP_ACTIONS
+  ) {
+    return 'A ilha pode ter até 500 peças com ação.';
+  }
+  const blocking = props.filter(
+    (prop) => propLines(prop, known.propBlocks).length > 0,
+  ).length;
+  if (blocking > MAX_BLOCKING_PROPS) {
+    return 'A ilha pode ter até 2.000 peças que bloqueiam.';
   }
   return null;
 }
@@ -376,14 +381,12 @@ function npcsError(
   return null;
 }
 
+/** Os hexágonos que alguma linha de bloqueio, de peça ou de parede, toca (free-objects). */
 export function blockedKeys(
-  draft: Pick<IslandDraft, 'objects'>,
+  draft: Pick<IslandDraft, 'props' | 'walls'>,
+  typeBlocks: TypeBlocks,
 ): ReadonlySet<string> {
-  return new Set(
-    draft.objects.flatMap(({ tiles }) =>
-      tiles.filter(({ blocks }) => blocks).map(hexKey),
-    ),
-  );
+  return lineBlockedKeys(draft.props, draft.walls ?? [], typeBlocks);
 }
 
 function areaError(area: DraftArea, known: KnownIds): string | null {
@@ -448,8 +451,6 @@ export function draftError(draft: IslandDraft, known: KnownIds): string | null {
   }
   const actions = actionsError(draft.actions, tiles, known);
   if (actions) return actions;
-  const objects = objectsError(draft.objects, tiles, known);
-  if (objects) return objects;
   const props = propsError(draft.props, tiles, known);
   if (props) return props;
   const trails = trailsError(draft.trails ?? [], tiles, known);
@@ -489,7 +490,7 @@ export function publishError(
     action.tiles.some((coord) => hexKey(coord) === startKey),
   );
   if (inAction) return 'A chegada não pode ficar numa ação.';
-  if (blockedKeys(draft).has(startKey)) {
+  if (blockedKeys(draft, known.propBlocks).has(startKey)) {
     return 'A chegada não pode ficar num hexágono bloqueado.';
   }
   const empty = draft.areas.find((area) => area.species.length === 0);
@@ -503,7 +504,6 @@ const byRowThenColumn = (a: HexCoord, b: HexCoord): number =>
 /**
  * O rascunho em JSON, sempre igual para o mesmo conteúdo: hexágonos em ordem de
  * (r, q), ações na ordem da lista (cada uma com os hexágonos em (r, q)),
- * objetos em ordem de (r, q) do apoio (cada um com os hexágonos em (r, q)),
  * peças em ordem de (r, q, dy, dx, tipo, variante, espelho), traços na ordem
  * da lista (só quando há algum), paredes na ordem da lista (só quando há alguma),
  * NPCs em ordem de (r, q, npc_id), cada um com o
@@ -534,18 +534,6 @@ export function canonicalDraft(draft: IslandDraft): string {
       actionTypeId,
       tiles: [...tiles].sort(byRowThenColumn).map(({ q, r }) => ({ q, r })),
     })),
-    objects: [...draft.objects]
-      .sort(byRowThenColumn)
-      .map(({ objectTypeId, q, r, variant, mirrored, tiles }) => ({
-        objectTypeId,
-        q,
-        r,
-        variant,
-        mirrored,
-        tiles: [...tiles]
-          .sort(byRowThenColumn)
-          .map(({ q: tq, r: tr, blocks }) => ({ q: tq, r: tr, blocks })),
-      })),
     props: [...draft.props]
       .sort(
         (a, b) =>
@@ -554,17 +542,33 @@ export function canonicalDraft(draft: IslandDraft): string {
           a.dx - b.dx ||
           a.propTypeId - b.propTypeId ||
           a.variant - b.variant ||
-          Number(a.mirrored) - Number(b.mirrored),
+          Number(a.mirrored) - Number(b.mirrored) ||
+          compareText(blockText(a), blockText(b)),
       )
-      .map(({ propTypeId, q, r, dx, dy, variant, mirrored }) => ({
-        propTypeId,
-        q,
-        r,
-        dx,
-        dy,
-        variant,
-        mirrored,
-      })),
+      .map(
+        ({
+          propTypeId,
+          q,
+          r,
+          dx,
+          dy,
+          variant,
+          mirrored,
+          block,
+          actionTypeId,
+        }) => ({
+          propTypeId,
+          q,
+          r,
+          dx,
+          dy,
+          variant,
+          mirrored,
+          // Só quando há: uma ilha sem ajuste nem ação tem o hash de antes.
+          ...(block === undefined ? {} : { block: canonicalBlock(block) }),
+          ...(actionTypeId === undefined ? {} : { actionTypeId }),
+        }),
+      ),
     // Só com traços: uma ilha sem traços tem o hash de antes.
     ...(draft.trails?.length
       ? {
@@ -602,6 +606,20 @@ export function canonicalDraft(draft: IslandDraft): string {
     })),
   });
 }
+
+function canonicalBlock(block: BlockLine[]) {
+  return block.map(({ closed, points }) => ({ closed, points: [...points] }));
+}
+
+function blockText(prop: DraftProp): string {
+  return JSON.stringify([
+    prop.block === undefined ? null : canonicalBlock(prop.block),
+    prop.actionTypeId ?? null,
+  ]);
+}
+
+const compareText = (a: string, b: string): number =>
+  a < b ? -1 : a > b ? 1 : 0;
 
 function canonicalNpcs(npcs: DraftNpc[]) {
   return npcs

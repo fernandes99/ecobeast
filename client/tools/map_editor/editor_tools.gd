@@ -16,7 +16,7 @@ const TOOL_HINTS: Array[String] = [
 	"Cria hexágonos onde não há, com o bioma e a altura escolhidos abaixo.",
 	"Apaga hexágonos. A chegada nunca sai.",
 	"Move a chegada (a bandeira) para o hexágono clicado.",
-	"Põe peças: as de grade num hexágono, as soltas no ponto do clique. Botão direito escolhe uma posta; arrastar a escolhida a move.",
+	"Põe peças no ponto do clique. Botão direito escolhe uma posta; arrastar a escolhida a move.",
 	"Pinta uma ação nova, ou aumenta a escolhida. Botão direito escolhe uma ação.",
 	"Pinta a área escolhida. Botão direito tira os hexágonos de qualquer área.",
 	"Põe um carimbo, com o apoio no hexágono clicado, ou escolhe uma área e a guarda como carimbo.",
@@ -60,6 +60,8 @@ const FULL_MESSAGE := "A ilha chegou a 20.000 hexágonos."
 ## `PATH_CLICK` é um clique, e os pontos a menos de `PATH_TOLERANCE` da reta entre os
 ## vizinhos saem ao soltar (free-trails/04).
 const PATH_SPACING := 12.0
+## A distância, no chão plano, para pegar um ponto ou um trecho de bloqueio (free-objects/02).
+const BLOCK_PICK := 6.0
 const PATH_CLICK := 4.0
 const PATH_TOLERANCE := 2.0
 const MAX_PATH_POINTS := 256
@@ -125,6 +127,8 @@ var _step: EditorHistory.Step = null
 var pointer := Vector2.ZERO
 var _moving := -1
 var _grab := Vector2.ZERO
+## O ponto de bloqueio arrastado da peça escolhida: (linha, ponto), ou (-1, -1).
+var _block_point := Vector2i(-1, -1)
 var _full_warned := false
 var _secondary := false
 var _stroke_action := -2
@@ -365,10 +369,8 @@ func brush_radius() -> int:
 func brush_coords(center: Vector2i) -> Array[Vector2i]:
 	if tool == Tool.STAMP and stamp_panel.mode == StampPanel.Mode.PLACE:
 		return Stamp.targets(stamp_panel.stamp, center, stamp_panel.flip) if not stamp_panel.stamp.is_empty() else [center]
-	if tool == Tool.OBJECT and object_panel.placing_prop and object_panel.selected < 0:
+	if tool == Tool.OBJECT:
 		return [center]
-	if tool == Tool.OBJECT and not object_panel.editing_blocks:
-		return ObjectPanel.coords_of(ObjectPanel.footprint(object_panel.type_id, center, object_panel.mirrored))
 	var reach := brush_radius()
 	var coords: Array[Vector2i] = []
 	for q: int in range(-reach, reach + 1):
@@ -383,10 +385,6 @@ func editable(draft: IslandDraft, coord: Vector2i) -> bool:
 		return true
 	var tile: HexTile = draft.tiles.get(coord)
 	return tile == null or tile.height <= height_cut
-
-
-func _object_editable(draft: IslandDraft, index: int) -> bool:
-	return draft.object_tiles(index).all(func(coord: Vector2i) -> bool: return editable(draft, coord))
 
 
 func set_draft(draft: IslandDraft) -> void:
@@ -419,14 +417,13 @@ func begin_stroke(draft: IslandDraft, secondary: bool = false) -> void:
 	_stroke_action = -2
 	_object_done = false
 	_moving = -1
+	_block_point = Vector2i(-1, -1)
 	if draft.props.size() > 0 or tool == Tool.OBJECT or tool == Tool.STAMP or tool == Tool.ERASER or tool == Tool.VEGETATION:
 		_step.props_before = draft.props.duplicate(true)
 	if tool == Tool.VEGETATION:
 		vegetation_panel.begin(draft)
 	if draft.actions.size() > 0 or tool == Tool.ACTION:
 		_step.actions_before = draft.actions.duplicate(true)
-	if draft.objects.size() > 0 or tool == Tool.OBJECT or tool == Tool.STAMP:
-		_step.objects_before = draft.objects.duplicate(true)
 	if draft.npcs.size() > 0 or tool == Tool.NPC:
 		_step.npcs_before = draft.npcs.duplicate(true)
 	if tool == Tool.PATH:
@@ -444,7 +441,7 @@ func paint(draft: IslandDraft, center: Vector2i) -> Array[Vector2i]:
 	if tool == Tool.NPC:
 		return _paint_npc(draft, center)
 	if tool == Tool.OBJECT:
-		return _paint_object(draft, center)
+		return _paint_object(draft)
 	if tool == Tool.STAMP:
 		return _paint_stamp(draft, center)
 	if tool == Tool.PATH:
@@ -491,10 +488,6 @@ func end_stroke(draft: IslandDraft) -> EditorHistory.Step:
 		step.actions_after = draft.actions.duplicate(true)
 	else:
 		step.actions_before = null
-	if step.objects_before != null and step.objects_before != draft.objects:
-		step.objects_after = draft.objects.duplicate(true)
-	else:
-		step.objects_before = null
 	if tool == Tool.PATH:
 		_finish_path(draft)
 	if step.trails_before != null and IslandDraft.trails_state(step.trails_before) != IslandDraft.trails_state(draft.trails):
@@ -656,56 +649,33 @@ func _paint_npc(draft: IslandDraft, center: Vector2i) -> Array[Vector2i]:
 	return changed
 
 
-## Uma coisa por clique: escolher (botão direito), começar a mover a peça solta
-## escolhida, trocar o bloqueio de um hexágono do objeto escolhido ou pôr a peça nova.
-func _paint_object(draft: IslandDraft, center: Vector2i) -> Array[Vector2i]:
+## Uma coisa por clique: escolher (botão direito), começar a mover a peça escolhida,
+## editar o bloqueio dela ou pôr a peça nova.
+func _paint_object(draft: IslandDraft) -> Array[Vector2i]:
 	var changed: Array[Vector2i] = []
 	if _object_done:
 		return changed
 	_object_done = true
+	if object_panel.editing_blocks and object_panel.selected_prop >= 0:
+		return _paint_prop_block(draft)
 	var art := pointer - Vector2(0.0, draft.rise_at(HexMapView.grid_coord(pointer)))
 	if _secondary:
 		var hit := draft.prop_at(art)
-		if hit >= 0 and editable(draft, draft.prop_coord(hit)):
-			object_panel.select_prop(hit)
-		else:
-			var index := draft.object_at(center)
-			object_panel.select(index if index < 0 or _object_editable(draft, index) else -1)
+		object_panel.select_prop(hit if hit >= 0 and editable(draft, draft.prop_coord(hit)) else -1)
 		return changed
 	var chosen := object_panel.selected_prop
 	if chosen >= 0 and draft.prop_rect(chosen).has_point(art) and editable(draft, draft.prop_coord(chosen)):
 		_moving = chosen
 		_grab = draft.prop_foot(chosen) - pointer
 		return changed
-	if object_panel.placing_prop and not object_panel.editing_blocks:
-		var foot := pointer.round()
-		var coord := HexMapView.grid_coord(foot)
-		if not draft.tiles.has(coord) or not editable(draft, coord):
-			return changed
-		draft.props.append(object_panel.new_prop(coord, Vector2i(foot - HexMapView.flat_center(coord))))
-		object_panel.select_prop(draft.props.size() - 1)
-		changed.append(coord)
+	var foot := pointer.round()
+	var coord := HexMapView.grid_coord(foot)
+	if not draft.tiles.has(coord) or not editable(draft, coord):
 		return changed
-	if not object_panel.editing_blocks and draft.object_at(center) >= 0:
-		if _object_editable(draft, draft.object_at(center)):
-			object_panel.select(draft.object_at(center))
-		return changed
-	if object_panel.editing_blocks:
-		var selected := object_panel.selected
-		if selected < 0 or draft.object_at(center) != selected or not _object_editable(draft, selected):
-			return changed
-		for at: Variant in (draft.objects[selected] as Dictionary).get("tiles", []):
-			if int(at.get("q", 0)) == center.x and int(at.get("r", 0)) == center.y:
-				at["blocks"] = not bool(at.get("blocks", true))
-				changed.append(center)
-		return changed
-	var object := object_panel.new_object(center)
-	var coords := ObjectPanel.coords_of(object["tiles"])
-	if coords.is_empty() or not draft.object_fits(coords) or not coords.all(func(coord: Vector2i) -> bool: return editable(draft, coord)):
-		return changed
-	draft.objects.append(object)
-	object_panel.select(draft.objects.size() - 1)
-	return coords
+	draft.props.append(object_panel.new_prop(coord, Vector2i(foot - HexMapView.flat_center(coord))))
+	object_panel.select_prop(draft.props.size() - 1)
+	changed.append(coord)
+	return changed
 
 
 ## Põe (ou, com o botão direito, apaga) as peças soltas nos hexágonos do pincel.
@@ -746,7 +716,7 @@ func _paint_stamp(draft: IslandDraft, center: Vector2i) -> Array[Vector2i]:
 	changed = Stamp.place(draft, stamp_panel.stamp, center, stamp_panel.flip, allowed)
 	for coord: Vector2i in changed:
 		_step.after[coord] = draft.snapshot(coord)
-	object_panel.select(-1)
+	object_panel.select_prop(-1)
 	return changed
 
 
@@ -870,6 +840,95 @@ static func simplified(points: PackedVector2Array, tolerance: float) -> PackedVe
 	return left
 
 
+## O bloqueio da peça escolhida (free-objects/02): um clique põe o ponto da linha em
+## desenho, pega um ponto para arrastar ou põe um ponto num trecho; o botão direito
+## apaga o ponto ou termina a linha em desenho.
+func _paint_prop_block(draft: IslandDraft) -> Array[Vector2i]:
+	var index := object_panel.selected_prop
+	var changed: Array[Vector2i] = [draft.prop_coord(index)]
+	if not editable(draft, draft.prop_coord(index)):
+		return []
+	if object_panel.drawing:
+		if _secondary:
+			object_panel.finish_line()
+			return changed
+		var line := object_panel.drawing_line
+		if line.size() >= 3 and draft.prop_flat(index, line[0]).distance_to(pointer) <= BLOCK_PICK:
+			object_panel.finish_line(true)
+		elif line.size() < MapProp.MAX_POINTS:
+			line.append(draft.prop_local(index, pointer))
+			object_panel.refresh()
+		return changed
+	var lines := draft.prop_lines(index)
+	var hit := _block_point_at(draft, index, lines)
+	if _secondary:
+		if hit.x < 0:
+			return []
+		var block := object_panel.ensure_custom_block()
+		var entry: Dictionary = block[hit.x]
+		var values: Array = entry["points"]
+		values.remove_at(hit.y * 2)
+		values.remove_at(hit.y * 2)
+		if values.size() < 6:
+			entry["closed"] = false
+		if values.size() < 4:
+			block.remove_at(hit.x)
+		object_panel.active_line = -1 if values.size() < 4 else hit.x
+		object_panel.refresh()
+		return changed
+	if hit.x < 0:
+		hit = _block_insert(draft, index, lines)
+		if hit.x < 0:
+			return []
+	else:
+		object_panel.ensure_custom_block()
+	_block_point = hit
+	object_panel.active_line = hit.x
+	object_panel.refresh()
+	return changed
+
+
+func _block_point_at(draft: IslandDraft, index: int, lines: Array[Dictionary]) -> Vector2i:
+	var best := Vector2i(-1, -1)
+	var best_gap := BLOCK_PICK
+	for line_index: int in lines.size():
+		var values: Array = lines[line_index]["points"]
+		for at: int in range(0, values.size() - 1, 2):
+			var flat := draft.prop_flat(index, Vector2i(int(values[at]), int(values[at + 1])))
+			var gap := flat.distance_to(pointer)
+			if gap <= best_gap:
+				best_gap = gap
+				best = Vector2i(line_index, int(at / 2.0))
+	return best
+
+
+## Um ponto novo no trecho mais perto do ponteiro, se houver um a até BLOCK_PICK.
+func _block_insert(draft: IslandDraft, index: int, lines: Array[Dictionary]) -> Vector2i:
+	var best := Vector2i(-1, -1)
+	var best_gap := BLOCK_PICK
+	for line_index: int in lines.size():
+		var values: Array = lines[line_index]["points"]
+		var count := int(values.size() / 2.0)
+		if count >= MapProp.MAX_POINTS:
+			continue
+		var segments := count if bool(lines[line_index]["closed"]) else count - 1
+		for at: int in segments:
+			var a := draft.prop_flat(index, Vector2i(int(values[at * 2]), int(values[at * 2 + 1])))
+			var next := (at + 1) % count
+			var b := draft.prop_flat(index, Vector2i(int(values[next * 2]), int(values[next * 2 + 1])))
+			var gap := pointer.distance_to(Geometry2D.get_closest_point_to_segment(pointer, a, b))
+			if gap <= best_gap:
+				best_gap = gap
+				best = Vector2i(line_index, at + 1)
+	if best.x < 0:
+		return best
+	var local := draft.prop_local(index, pointer)
+	var points: Array = object_panel.ensure_custom_block()[best.x]["points"]
+	points.insert(best.y * 2, local.y)
+	points.insert(best.y * 2, local.x)
+	return best
+
+
 ## Os hexágonos da área marcada para o carimbo, enquanto ela está sendo escolhida.
 func marked_coords() -> Array[Vector2i]:
 	var coords: Array[Vector2i] = []
@@ -882,6 +941,8 @@ func marked_coords() -> Array[Vector2i]:
 ## os hexágonos que mudaram.
 func drag(draft: IslandDraft, flat: Vector2) -> Array[Vector2i]:
 	var changed: Array[Vector2i] = []
+	if _block_point.x >= 0:
+		return _drag_block_point(draft, flat)
 	if _moving < 0 or _moving >= draft.props.size():
 		return changed
 	var foot := (flat + _grab).round()
@@ -904,20 +965,33 @@ func drag(draft: IslandDraft, flat: Vector2) -> Array[Vector2i]:
 
 
 func is_moving() -> bool:
-	return _moving >= 0
+	return _moving >= 0 or _block_point.x >= 0
 
 
-## A cor do contorno sob o ponteiro com a ferramenta Peças: verde se o objeto cabe,
-## vermelho se não; transparente nas outras ferramentas e com uma peça solta.
+func _drag_block_point(draft: IslandDraft, flat: Vector2) -> Array[Vector2i]:
+	var index := object_panel.selected_prop
+	if index < 0 or not draft.prop_is_custom(index):
+		return []
+	var block: Array = draft.props[index]["block"]
+	if _block_point.x >= block.size():
+		return []
+	var values: Array = block[_block_point.x]["points"]
+	var local := draft.prop_local(index, flat)
+	var at := _block_point.y * 2
+	if at + 1 >= values.size() or (int(values[at]) == local.x and int(values[at + 1]) == local.y):
+		return []
+	values[at] = local.x
+	values[at + 1] = local.y
+	return [draft.prop_coord(index)]
+
+
+## A cor do contorno sob o ponteiro com o Carimbo: verde se ele cabe, vermelho se não;
+## transparente nas outras ferramentas.
 func brush_color(draft: IslandDraft, center: Vector2i) -> Color:
 	if tool == Tool.STAMP and stamp_panel.mode == StampPanel.Mode.PLACE and draft != null and not stamp_panel.stamp.is_empty():
 		var all_in := brush_coords(center).all(func(coord: Vector2i) -> bool: return draft.tiles.has(coord) and editable(draft, coord))
 		return UiPalette.HP_HIGH if all_in else UiPalette.WARNING
-	if tool != Tool.OBJECT or object_panel.editing_blocks or draft == null or object_panel.placing_prop:
-		return Color.TRANSPARENT
-	var coords := brush_coords(center)
-	var fits := draft.object_fits(coords) and coords.all(func(coord: Vector2i) -> bool: return editable(draft, coord))
-	return UiPalette.HP_HIGH if fits else UiPalette.DANGER
+	return Color.TRANSPARENT
 
 
 func _stroke_target(draft: IslandDraft, center: Vector2i) -> int:

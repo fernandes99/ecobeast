@@ -140,6 +140,7 @@ model ActionType {
 
   actions IslandAction[]
   npcs    IslandNpc[]
+  props   IslandProp[]
 
   @@map("action_types")
   @@schema("ecobeasts")
@@ -162,21 +163,6 @@ model GroundType {
   @@schema("ecobeasts")
 }
 
-model MapObjectType {
-  id       Int    @id @default(autoincrement())
-  /// CHECK ^[a-z0-9_]+$ (migration island_villages)
-  slug     String @unique
-  name     String
-  /// Quantas variantes a arte tem. CHECK >= 1 (migration island_villages)
-  variants Int
-
-  tiles   MapObjectTypeTile[]
-  objects IslandObject[]
-
-  @@map("map_object_types")
-  @@schema("ecobeasts")
-}
-
 model PropType {
   id       Int    @id @default(autoincrement())
   /// CHECK ^[a-z0-9_]+$ (migration free_props)
@@ -185,9 +171,29 @@ model PropType {
   /// Quantas variantes a arte tem. CHECK >= 1 (migration free_props)
   variants Int
 
-  props IslandProp[]
+  props  IslandProp[]
+  blocks PropTypeBlock[]
 
   @@map("prop_types")
+  @@schema("ecobeasts")
+}
+
+/// Uma linha de bloqueio padrão de um tipo de peça (.specs/free-objects).
+model PropTypeBlock {
+  id         Int     @id @default(autoincrement())
+  propTypeId Int     @map("prop_type_id")
+  /// A ordem no tipo, de 0 em diante.
+  position   Int
+  /// Liga o último ponto ao primeiro.
+  closed     Boolean
+  /// x0, y0, x1, y1, … em pixels da arte, a partir do pé da peça.
+  /// CHECK tamanho par, de 4 a 128 (migration prop_blocks)
+  points     Int[]
+
+  propType PropType @relation(fields: [propTypeId], references: [id], onDelete: Cascade)
+
+  @@unique([propTypeId, position])
+  @@map("prop_type_blocks")
   @@schema("ecobeasts")
 }
 
@@ -285,19 +291,6 @@ model Palette {
   playerParts PlayerAppearancePart[]
 
   @@map("palettes")
-  @@schema("ecobeasts")
-}
-
-model MapObjectTypeTile {
-  objectTypeId Int     @map("object_type_id")
-  dq           Int
-  dr           Int
-  blocks       Boolean
-
-  objectType MapObjectType @relation(fields: [objectTypeId], references: [id], onDelete: Cascade)
-
-  @@id([objectTypeId, dq, dr])
-  @@map("map_object_type_tiles")
   @@schema("ecobeasts")
 }
 
@@ -951,8 +944,6 @@ model IslandMap {
   tiles       IslandTile[]
   actions     IslandAction[]
   actionTiles IslandActionTile[]
-  objects     IslandObject[]
-  objectTiles IslandObjectTile[]
   areas       IslandArea[]
   props       IslandProp[]
   trails      IslandTrail[]
@@ -1023,64 +1014,50 @@ model IslandActionTile {
   @@schema("ecobeasts")
 }
 
-model IslandObject {
+/// Uma peça solta (.specs/free-props): bloqueia pelas linhas e pode ter uma ação (.specs/free-objects).
+model IslandProp {
   id           Int     @id @default(autoincrement())
   islandMapId  Int     @map("island_map_id")
-  objectTypeId Int     @map("object_type_id")
+  propTypeId   Int     @map("prop_type_id")
+  /// O hexágono do pé.
   q            Int
   r            Int
-  /// CHECK >= 1 (migration island_villages)
+  /// O pé, em pixels da arte, a partir do centro plano do hexágono.
+  dx           Int
+  dy           Int
+  /// CHECK >= 1 (migration free_props)
   variant      Int
   mirrored     Boolean
+  /// Usa as próprias linhas de bloqueio (blocks), e não as do tipo.
+  customBlock  Boolean @default(false) @map("custom_block")
+  /// Acontece quando o Domador encosta no bloqueio da peça (free-objects/03).
+  actionTypeId Int?    @map("action_type_id")
 
-  islandMap  IslandMap          @relation(fields: [islandMapId], references: [id], onDelete: Cascade)
-  objectType MapObjectType      @relation(fields: [objectTypeId], references: [id], onDelete: Restrict)
-  tiles      IslandObjectTile[]
-
-  @@index([islandMapId])
-  @@index([objectTypeId])
-  @@map("island_objects")
-  @@schema("ecobeasts")
-}
-
-/// Um hexágono de um objeto, com o bloqueio; dois objetos nunca dividem um hexágono.
-model IslandObjectTile {
-  objectId    Int     @map("object_id")
-  islandMapId Int     @map("island_map_id")
-  q           Int
-  r           Int
-  blocks      Boolean
-
-  object    IslandObject @relation(fields: [objectId], references: [id], onDelete: Cascade)
-  islandMap IslandMap    @relation(fields: [islandMapId], references: [id], onDelete: Cascade)
-
-  @@id([objectId, q, r])
-  @@unique([islandMapId, q, r])
-  @@map("island_object_tiles")
-  @@schema("ecobeasts")
-}
-
-/// Uma peça solta: só enfeite, nunca bloqueia (.specs/free-props).
-model IslandProp {
-  id          Int     @id @default(autoincrement())
-  islandMapId Int     @map("island_map_id")
-  propTypeId  Int     @map("prop_type_id")
-  /// O hexágono do pé.
-  q           Int
-  r           Int
-  /// O pé, em pixels da arte, a partir do centro plano do hexágono.
-  dx          Int
-  dy          Int
-  /// CHECK >= 1 (migration free_props)
-  variant     Int
-  mirrored    Boolean
-
-  islandMap IslandMap @relation(fields: [islandMapId], references: [id], onDelete: Cascade)
-  propType  PropType  @relation(fields: [propTypeId], references: [id], onDelete: Restrict)
+  islandMap  IslandMap         @relation(fields: [islandMapId], references: [id], onDelete: Cascade)
+  propType   PropType          @relation(fields: [propTypeId], references: [id], onDelete: Restrict)
+  blocks     IslandPropBlock[]
+  actionType ActionType?       @relation(fields: [actionTypeId], references: [id], onDelete: Restrict)
 
   @@index([islandMapId])
   @@index([propTypeId])
+  @@index([actionTypeId])
   @@map("island_props")
+  @@schema("ecobeasts")
+}
+
+/// Uma linha de bloqueio de uma peça ajustada (.specs/free-objects).
+model IslandPropBlock {
+  id           Int     @id @default(autoincrement())
+  islandPropId Int     @map("island_prop_id")
+  position     Int
+  closed       Boolean
+  /// Como PropTypeBlock.points. CHECK tamanho par, de 4 a 128 (migration prop_blocks)
+  points       Int[]
+
+  islandProp IslandProp @relation(fields: [islandPropId], references: [id], onDelete: Cascade)
+
+  @@unique([islandPropId, position])
+  @@map("island_prop_blocks")
   @@schema("ecobeasts")
 }
 

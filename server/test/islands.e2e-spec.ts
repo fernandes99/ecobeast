@@ -31,14 +31,6 @@ interface IslandMap {
   tamers: unknown[];
   island: { id: number; name: string } | null;
   actions: { action_type_id: number; tiles: { q: number; r: number }[] }[];
-  objects: {
-    object_type_id: number;
-    q: number;
-    r: number;
-    variant: number;
-    mirrored: boolean;
-    tiles: { q: number; r: number; blocks: boolean }[];
-  }[];
   props: {
     prop_type_id: number;
     q: number;
@@ -100,16 +92,6 @@ describe('Ilhas do jogador (e2e)', () => {
       start: { q: 0, r: 0 },
       tiles,
       actions: [{ action_type_id: refuge, tiles: [{ q: 0, r: 1 }] }],
-      objects: [
-        {
-          object_type_id: house,
-          q: 1,
-          r: 0,
-          variant: 1,
-          mirrored: false,
-          tiles: [{ q: 1, r: 0, blocks: true }],
-        },
-      ],
       props: [
         {
           prop_type_id: bench,
@@ -120,14 +102,25 @@ describe('Ilhas do jogador (e2e)', () => {
           variant: 2,
           mirrored: true,
         },
+        {
+          prop_type_id: house,
+          q: 1,
+          r: 0,
+          dx: 0,
+          dy: 0,
+          variant: 1,
+          mirrored: false,
+          block: [],
+          action_type_id: refuge,
+        },
       ],
       trails: [
         { ground: 'dirt_trail', width: 22, points: [0, 0, 64, 0] },
         { ground: 'gravel_trail', width: 14, points: [-32, 42, 0, 0, 32, -42] },
       ],
       walls: [
-        { type: 'wood_fence', points: [0, 0, 64, 0] },
-        { type: 'invisible_wall', points: [-32, 42, 0, 0] },
+        { type: 'wood_fence', points: [54, 0, 74, 0] },
+        { type: 'invisible_wall', points: [-32, 42, -12, 42] },
       ],
       npcs: [
         {
@@ -224,7 +217,7 @@ describe('Ilhas do jogador (e2e)', () => {
       })
     ).id;
     house = (
-      await prisma.mapObjectType.findUniqueOrThrow({
+      await prisma.propType.findUniqueOrThrow({
         where: { slug: 'town_house' },
       })
     ).id;
@@ -300,16 +293,6 @@ describe('Ilhas do jogador (e2e)', () => {
       expect(map.actions).toEqual([
         { action_type_id: refuge, tiles: [{ q: 0, r: 1 }] },
       ]);
-      expect(map.objects).toEqual([
-        {
-          object_type_id: house,
-          q: 1,
-          r: 0,
-          variant: 1,
-          mirrored: false,
-          tiles: [{ q: 1, r: 0, blocks: true }],
-        },
-      ]);
       expect(map.props).toEqual([
         {
           prop_type_id: bench,
@@ -320,14 +303,25 @@ describe('Ilhas do jogador (e2e)', () => {
           variant: 2,
           mirrored: true,
         },
+        {
+          prop_type_id: house,
+          q: 1,
+          r: 0,
+          dx: 0,
+          dy: 0,
+          variant: 1,
+          mirrored: false,
+          block: [],
+          action_type_id: refuge,
+        },
       ]);
       expect(map.trails).toEqual([
         { ground: 'dirt_trail', width: 22, points: [0, 0, 64, 0] },
         { ground: 'gravel_trail', width: 14, points: [-32, 42, 0, 0, 32, -42] },
       ]);
       expect(map.walls).toEqual([
-        { type: 'wood_fence', points: [0, 0, 64, 0] },
-        { type: 'invisible_wall', points: [-32, 42, 0, 0] },
+        { type: 'wood_fence', points: [54, 0, 74, 0] },
+        { type: 'invisible_wall', points: [-32, 42, -12, 42] },
       ]);
       expect(map.npcs).toEqual([
         {
@@ -442,7 +436,6 @@ describe('Ilhas do jogador (e2e)', () => {
       const map = (body as { map: IslandMap }).map;
       expect(map.island).toBeNull();
       expect(map.actions).toEqual([]);
-      expect(map.objects).toEqual([]);
       expect(map.props).toEqual([]);
       expect(map.trails).toEqual([]);
       expect(map.walls).toEqual([]);

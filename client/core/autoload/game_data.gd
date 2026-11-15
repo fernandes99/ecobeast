@@ -11,7 +11,7 @@ var errors: Array[String] = []
 
 
 func load_catalog() -> int:
-	var source := HttpDataSource.new(ProjectSettings.get_setting(BASE_URL_SETTING))
+	var source := HttpDataSource.new(ProjectSettings.get_setting_with_override(BASE_URL_SETTING))
 	var status: int = await _load_from(source)
 	if status == LOAD_INVALID and source.used_cache:
 		# A cópia guardada está estragada, e o servidor responderia 304 para ela
@@ -137,6 +137,31 @@ func get_npc(id: int) -> Dictionary:
 
 func get_rows(table_name: String) -> Array[Dictionary]:
 	return catalog.get_rows(table_name)
+
+
+## As linhas de bloqueio padrão de um tipo de peça (free-objects), na ordem:
+## `{"closed": bool, "points": Array[int]}`.
+func get_prop_blocks(prop_type_id: int) -> Array[Dictionary]:
+	var lines: Array[Dictionary] = []
+	var rows := get_rows("prop_type_blocks").filter(func(row: Dictionary) -> bool: return int(row["prop_type_id"]) == prop_type_id)
+	rows.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return int(a["position"]) < int(b["position"]))
+	for row: Dictionary in rows:
+		lines.append({"closed": row["closed"], "points": row["points"]})
+	return lines
+
+
+func set_prop_blocks(prop_type_id: int, lines: Array[Dictionary]) -> void:
+	catalog.replace_prop_blocks(prop_type_id, lines)
+
+
+## As linhas de bloqueio de todos os tipos que têm alguma, por id do tipo.
+func prop_blocks_by_type() -> Dictionary:
+	var by_type := {}
+	for row: Dictionary in get_rows("prop_type_blocks"):
+		by_type[int(row["prop_type_id"])] = true
+	for type_id: int in by_type.keys():
+		by_type[type_id] = get_prop_blocks(type_id)
+	return by_type
 
 
 func get_row(table_name: String, id: int) -> Dictionary:

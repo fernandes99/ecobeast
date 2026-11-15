@@ -141,7 +141,7 @@ func begin(draft: IslandDraft) -> void:
 ## Põe as peças de um hexágono, uma vez só por pincelada, e devolve quantas pôs.
 func paint_tile(draft: IslandDraft, coord: Vector2i, random: RandomNumberGenerator) -> int:
 	var tile: HexTile = draft.tiles.get(coord)
-	if tile == null or _painted.has(coord) or draft.object_at(coord) >= 0:
+	if tile == null or _painted.has(coord):
 		return 0
 	_painted[coord] = true
 	var taken: Array = _taken.get(coord, [])

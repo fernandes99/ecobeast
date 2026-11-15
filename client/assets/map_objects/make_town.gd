@@ -1,16 +1,15 @@
 extends SceneTree
 ## A arte da cidade das ilhas, no estilo de .specs/town-art/style-guide.md, desenhada só
-## por código: um PNG por variante, em res://assets/map_objects/<slug>/<variante>.png
-## (as peças soltas de PROP_TYPES, em res://assets/props/, free-props/02).
+## por código: um PNG por variante, em res://assets/props/<slug>/<variante>.png
+## (free-props/02, free-objects/04), e a folha de cada parede, em res://assets/walls/.
 ## Da pasta client/: godot --headless -s res://assets/map_objects/make_town.gd [-- <slug>...]
 ##
 ## A célula tem a largura do formato, simétrica em volta do ponto de apoio, e o pé dela é
 ## o canto de baixo da linha da frente.
 
-const OUT := "res://assets/map_objects/%s/%d.png"
-## Peças soltas: a imagem acaba no pé, sem as bordas vazias, com o pé no meio.
+const OUT := "res://assets/props/%s/%d.png"
+## As decorações de rua: a imagem acaba no pé, sem as bordas vazias, com o pé no meio.
 const PROP_TYPES: Array[String] = ["lamp_post", "sign", "flower_bed", "bench"]
-const PROP_OUT := "res://assets/props/%s/%d.png"
 const HEX_HALF_WIDTH := 32.0
 const CENTER_TO_BOTTOM := 29.0
 const CANVAS_HEIGHT := 320
@@ -98,7 +97,6 @@ func _init() -> void:
 				var middle := floori(art.get_width() / 2.0)
 				var half := maxi(middle - used.position.x, used.end.x - middle)
 				art = art.get_region(Rect2i(middle - half, 0, half * 2, used.end.y))
-				path = PROP_OUT % [slug, variant]
 			DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(path.get_base_dir()))
 			var error := art.save_png(path)
 			print("%s/%d: %dx%d %s" % [slug, variant, art.get_width(), art.get_height(), "ok" if error == OK else error_string(error)])

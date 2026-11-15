@@ -4,6 +4,7 @@ extends RefCounted
 const ISLANDS_PATH := "/v1/editor/islands"
 const GENERATOR_PATH := "/v1/editor/map-generator"
 const SKILLS_PATH := "/v1/editor/skills"
+const PROP_TYPES_PATH := "/v1/editor/prop-types"
 const TIMEOUT_SECONDS := 60.0
 const NOT_FOUND := 404
 const FORBIDDEN := 403
@@ -47,6 +48,11 @@ static func create_skill(body: Dictionary) -> ApiResponse:
 
 static func save_skill(id: int, body: Dictionary) -> ApiResponse:
 	return await _call(HTTPClient.METHOD_PUT, "%s/%d" % [SKILLS_PATH, id], body)
+
+
+## As linhas de bloqueio padrão de um tipo de peça (free-objects/02).
+static func save_prop_type_blocks(prop_type_id: int, blocks: Array) -> ApiResponse:
+	return await _call(HTTPClient.METHOD_PUT, "%s/%d/blocks" % [PROP_TYPES_PATH, prop_type_id], {"blocks": blocks})
 
 
 static func _call(method: HTTPClient.Method, path: String, body: Variant = null) -> ApiResponse:

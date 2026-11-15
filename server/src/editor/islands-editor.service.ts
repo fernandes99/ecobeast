@@ -4,7 +4,6 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { hexKey } from '../domain/exploration/hex.js';
 import {
   draftError,
   draftHash,
@@ -20,7 +19,6 @@ import {
 import { PrismaService } from '../prisma/prisma.service.js';
 import {
   toNpcDto,
-  toObjectDto,
   toPropDto,
   toTrailDto,
   toWallDto,
@@ -78,14 +76,6 @@ export function toDraft(dto: IslandDraftDto): IslandDraft {
       actionTypeId: action_type_id,
       tiles: tiles.map(({ q, r }) => ({ q, r })),
     })),
-    objects: dto.objects.map((object) => ({
-      objectTypeId: object.object_type_id,
-      q: object.q,
-      r: object.r,
-      variant: object.variant,
-      mirrored: object.mirrored,
-      tiles: object.tiles.map(({ q, r, blocks }) => ({ q, r, blocks })),
-    })),
     props: (dto.props ?? []).map((prop) => ({
       propTypeId: prop.prop_type_id,
       q: prop.q,
@@ -94,6 +84,17 @@ export function toDraft(dto: IslandDraftDto): IslandDraft {
       dy: prop.dy,
       variant: prop.variant,
       mirrored: prop.mirrored,
+      ...(prop.block === undefined || prop.block === null
+        ? {}
+        : {
+            block: prop.block.map(({ closed, points }) => ({
+              closed,
+              points: [...points],
+            })),
+          }),
+      ...(prop.action_type_id === undefined || prop.action_type_id === null
+        ? {}
+        : { actionTypeId: prop.action_type_id }),
     })),
     trails: (dto.trails ?? []).map(({ ground, width, points }) => ({
       ground,
@@ -137,7 +138,6 @@ function toDto(draft: IslandDraft): IslandDraftDto {
       action_type_id: actionTypeId,
       tiles,
     })),
-    objects: draft.objects.map(toObjectDto),
     props: draft.props.map(toPropDto),
     trails: (draft.trails ?? []).map(toTrailDto),
     walls: (draft.walls ?? []).map(toWallDto),
@@ -286,24 +286,24 @@ export class IslandsEditorService {
   }
 
   private async knownIds(): Promise<KnownIds> {
-    const [actions, objects, grounds, species, props, npcs, walls] =
+    const [actions, grounds, species, props, npcs, walls, blocks] =
       await Promise.all([
         this.prisma.actionType.findMany({ select: { id: true } }),
-        this.prisma.mapObjectType.findMany({ select: { id: true } }),
         this.prisma.groundType.findMany({ select: { slug: true } }),
         this.prisma.species.findMany({ select: { id: true } }),
         this.prisma.propType.findMany({ select: { id: true, variants: true } }),
         this.prisma.npc.findMany({ select: { id: true } }),
         this.prisma.wallType.findMany({ select: { slug: true } }),
+        this.islands.readTypeBlocks(),
       ]);
     return {
       actionTypeIds: new Set(actions.map(({ id }) => id)),
-      objectTypeIds: new Set(objects.map(({ id }) => id)),
       groundSlugs: new Set(grounds.map(({ slug }) => slug)),
       speciesIds: new Set(species.map(({ id }) => id)),
       propVariants: new Map(props.map(({ id, variants }) => [id, variants])),
       npcIds: new Set(npcs.map(({ id }) => id)),
       wallSlugs: new Set(walls.map(({ slug }) => slug)),
+      propBlocks: blocks,
     };
   }
 
@@ -391,42 +391,9 @@ export class IslandsEditorService {
       });
     }
 
-    // Em lote: um a um, 300 objetos passavam do tempo da transação até o Supabase.
-    // O apoio de cada objeto é um hexágono só dele, e por isso acha o id.
-    const objectIds = new Map<string, number>();
-    for (let first = 0; first < draft.objects.length; first += TILE_CHUNK) {
-      const created = await tx.islandObject.createManyAndReturn({
-        data: draft.objects
-          .slice(first, first + TILE_CHUNK)
-          .map(({ objectTypeId, q, r, variant, mirrored }) => ({
-            islandMapId: map.id,
-            objectTypeId,
-            q,
-            r,
-            variant,
-            mirrored,
-          })),
-        select: { id: true, q: true, r: true },
-      });
-      for (const { id, q, r } of created) objectIds.set(hexKey({ q, r }), id);
-    }
-    const objectTiles = draft.objects.flatMap((object) =>
-      object.tiles.map(({ q, r, blocks }) => ({
-        objectId: objectIds.get(hexKey(object))!,
-        islandMapId: map.id,
-        q,
-        r,
-        blocks,
-      })),
-    );
-    for (let first = 0; first < objectTiles.length; first += TILE_CHUNK) {
-      await tx.islandObjectTile.createMany({
-        data: objectTiles.slice(first, first + TILE_CHUNK),
-      });
-    }
-
-    const props = draft.props.map(
-      ({ propTypeId, q, r, dx, dy, variant, mirrored }) => ({
+    const props = draft.props
+      .filter(({ block }) => block === undefined)
+      .map(({ propTypeId, q, r, dx, dy, variant, mirrored, actionTypeId }) => ({
         islandMapId: map.id,
         propTypeId,
         q,
@@ -435,12 +402,48 @@ export class IslandsEditorService {
         dy,
         variant,
         mirrored,
-      }),
-    );
+        actionTypeId: actionTypeId ?? null,
+      }));
     for (let first = 0; first < props.length; first += TILE_CHUNK) {
       await tx.islandProp.createMany({
         data: props.slice(first, first + TILE_CHUNK),
       });
+    }
+    // As ajustadas depois, com as linhas: o serial cresce na ordem da lista, e por
+    // isso o id ordenado acha cada peça.
+    const custom = draft.props.filter(({ block }) => block !== undefined);
+    if (custom.length > 0) {
+      const created = await tx.islandProp.createManyAndReturn({
+        data: custom.map(
+          ({ propTypeId, q, r, dx, dy, variant, mirrored, actionTypeId }) => ({
+            islandMapId: map.id,
+            propTypeId,
+            q,
+            r,
+            dx,
+            dy,
+            variant,
+            mirrored,
+            customBlock: true,
+            actionTypeId: actionTypeId ?? null,
+          }),
+        ),
+        select: { id: true },
+      });
+      const ids = created.map(({ id }) => id).sort((a, b) => a - b);
+      const lines = custom.flatMap((prop, index) =>
+        prop.block!.map(({ closed, points }, position) => ({
+          islandPropId: ids[index]!,
+          position,
+          closed,
+          points,
+        })),
+      );
+      for (let first = 0; first < lines.length; first += TILE_CHUNK) {
+        await tx.islandPropBlock.createMany({
+          data: lines.slice(first, first + TILE_CHUNK),
+        });
+      }
     }
 
     const trails = (draft.trails ?? []).map(

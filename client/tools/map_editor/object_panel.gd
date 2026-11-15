@@ -1,32 +1,33 @@
 class_name ObjectPanel
 extends VBoxContainer
-## O bloco Peças do editor (island-villages/03, map-editor/05, free-props/03): a prévia
-## grande com as variantes, os tipos de grade e os soltos e, com uma peça escolhida, a
-## variante, o espelho, o bloqueio (só dos de grade) e apagar dela. A barra no mapa
-## (ObjectBar) e as teclas chamam os mesmos métodos.
+## O bloco Peças do editor (map-editor/05, free-props/03, free-objects): a prévia grande
+## com as variantes, os tipos de peça e, com uma peça escolhida, a variante, o espelho,
+## o bloqueio, a ação e apagar dela. A barra no mapa (ObjectBar) e as teclas chamam os
+## mesmos métodos.
 
 signal edited(step: EditorHistory.Step)
 signal selection_changed(index: int)
 signal blocks_editing_changed(on: bool)
+## "Salvar como do tipo" (free-objects/02): as linhas da peça escolhida viram as do tipo.
+signal type_block_save_requested(prop_type_id: int, lines: Array[Dictionary])
 
 const PREVIEW_SIZE := Vector2(0.0, 170.0)
 const TYPE_ICON_WIDTH := 40
 const CHIP_SIZE := Vector2(34.0, 30.0)
 
-var type_id := 0
 var prop_type_id := 0
-## O tipo novo escolhido é solto (peça) e não de grade (objeto).
-var placing_prop := false
 var variant := 1
 var mirrored := false
-var selected := -1
 var selected_prop := -1
 var editing_blocks := false
+## A linha de bloqueio da peça mexida por último, para Fechar ou Abrir.
+var active_line := -1
+## A linha nova sendo desenhada a cliques, nas coordenadas do pé, ou vazia.
+var drawing := false
+var drawing_line: Array[Vector2i] = []
 
 var _draft: IslandDraft = null
-var _types: Array[Dictionary] = []
 var _prop_types: Array[Dictionary] = []
-var _type_buttons: Dictionary[int, Button] = {}
 var _prop_buttons: Dictionary[int, Button] = {}
 var _preview: TextureRect
 var _caption: Label
@@ -36,28 +37,12 @@ var _chip_group := ButtonGroup.new()
 var _mirror_button: Button
 var _selected_box: VBoxContainer
 var _blocks_button: Button
-
-
-static func footprint(object_type_id: int, anchor: Vector2i, flip: bool) -> Array[Dictionary]:
-	var tiles: Array[Dictionary] = []
-	for row: Dictionary in GameData.get_rows("map_object_type_tiles"):
-		if int(row.get("object_type_id", 0)) != object_type_id:
-			continue
-		var offset := Vector2i(int(row.get("dq", 0)), int(row.get("dr", 0)))
-		tiles.append({"q": (anchor + mirror(offset, flip)).x, "r": (anchor + mirror(offset, flip)).y, "blocks": bool(row.get("blocks", true))})
-	return tiles
-
-
-## Espelhar na vertical, em coordenadas axiais: (dq, dr) vira (-dq - dr, dr).
-static func mirror(offset: Vector2i, flip: bool) -> Vector2i:
-	return Vector2i(-offset.x - offset.y, offset.y) if flip else offset
-
-
-static func coords_of(tiles: Array) -> Array[Vector2i]:
-	var coords: Array[Vector2i] = []
-	for at: Variant in tiles:
-		coords.append(Vector2i(int(at.get("q", 0)), int(at.get("r", 0))))
-	return coords
+var _block_box: VBoxContainer
+var _block_label: Label
+var _close_button: Button
+var _type_block_button: Button
+var _action_select: OptionButton
+var _action_ids: Array[int] = []
 
 
 func _init() -> void:
@@ -112,7 +97,7 @@ func _init() -> void:
 	_blocks_button.alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_blocks_button.icon = load(MapEditor.ICONS % "lock") as Texture2D
 	_blocks_button.add_theme_constant_override(&"icon_max_width", MapEditor.ICON_WIDTH)
-	_blocks_button.tooltip_text = "O clique esquerdo num hexágono do objeto troca o bloqueio dele."
+	_blocks_button.tooltip_text = "Mostra os pontos das linhas de bloqueio da peça para editar."
 	_blocks_button.toggled.connect(_on_blocks_toggled)
 	buttons.add_child(_blocks_button)
 	var delete := Button.new()
@@ -125,33 +110,53 @@ func _init() -> void:
 	delete.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	delete.pressed.connect(delete_selected)
 	buttons.add_child(delete)
+	var action_row := HBoxContainer.new()
+	action_row.add_theme_constant_override(&"separation", 6)
+	_selected_box.add_child(action_row)
+	var action_title := Label.new()
+	action_title.text = "Ação"
+	action_row.add_child(action_title)
+	_action_select = OptionButton.new()
+	_action_select.focus_mode = Control.FOCUS_NONE
+	_action_select.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_action_select.tooltip_text = "Acontece quando o Domador toca na peça e encosta no bloqueio dela."
+	_action_select.add_item("Nenhuma")
+	_action_ids.append(0)
+	for row: Dictionary in GameData.get_rows("action_types"):
+		_action_select.add_item(str(row.get("name", "")))
+		_action_ids.append(int(row.get("id", 0)))
+	_action_select.item_selected.connect(_on_action_selected)
+	action_row.add_child(_action_select)
+	_block_box = VBoxContainer.new()
+	_block_box.add_theme_constant_override(&"separation", 6)
+	_selected_box.add_child(_block_box)
+	_block_label = Label.new()
+	_block_label.theme_type_variation = &"SecondaryLabel"
+	_block_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_block_box.add_child(_block_label)
+	var line_row := HBoxContainer.new()
+	line_row.add_theme_constant_override(&"separation", 6)
+	_block_box.add_child(line_row)
+	line_row.add_child(_text_button("Nova linha", "Desenha uma linha a cliques: Enter ou o botão direito termina, e clicar no primeiro ponto fecha.", start_line))
+	_close_button = _text_button("Fechar linha", "Liga o último ponto ao primeiro da linha mexida por último, ou desfaz isso.", toggle_closed)
+	line_row.add_child(_close_button)
+	var type_row := HBoxContainer.new()
+	type_row.add_theme_constant_override(&"separation", 6)
+	_block_box.add_child(type_row)
+	_type_block_button = _text_button("Usar o do tipo", "Volta a peça para as linhas do tipo.", use_type_block)
+	type_row.add_child(_type_block_button)
+	type_row.add_child(_text_button("Salvar como do tipo", "As linhas desta peça viram as do tipo, em todas as ilhas. Não se desfaz.", request_type_save))
 	var release := Button.new()
 	release.text = "Voltar à peça nova  (Esc)"
 	release.focus_mode = Control.FOCUS_NONE
-	release.pressed.connect(select.bind(-1))
+	release.pressed.connect(select_prop.bind(-1))
 	_selected_box.add_child(release)
 
 	var group := ButtonGroup.new()
-	var grid_title := Label.new()
-	grid_title.text = "Na grade (bloqueiam)"
-	EditorTools.section_title(grid_title)
-	add_child(grid_title)
-	for row: Dictionary in GameData.get_rows("map_object_types"):
-		_types.append(row)
-		var id := int(row.get("id", 0))
-		var tiles := footprint(id, Vector2i.ZERO, false).size()
-		var button := EditorTools.tool_button("%s  ·  %d %s" % [str(row.get("name", "")), tiles, "hexágono" if tiles == 1 else "hexágonos"], group)
-		button.add_theme_constant_override(&"icon_max_width", TYPE_ICON_WIDTH)
-		var path := MapObjectSprite.art_path(str(row.get("slug", "")), 1)
-		if not path.is_empty():
-			button.icon = MapObjectSprite.first_frame(load(path) as Texture2D, coords_of(footprint(id, Vector2i.ZERO, false)))
-		button.pressed.connect(_pick_type.bind(id))
-		add_child(button)
-		_type_buttons[id] = button
-	var loose_title := Label.new()
-	loose_title.text = "Soltas (só enfeite)"
-	EditorTools.section_title(loose_title)
-	add_child(loose_title)
+	var types_title := Label.new()
+	types_title.text = "Peças"
+	EditorTools.section_title(types_title)
+	add_child(types_title)
 	for row: Dictionary in GameData.get_rows("prop_types"):
 		_prop_types.append(row)
 		var id := int(row.get("id", 0))
@@ -161,8 +166,6 @@ func _init() -> void:
 		button.pressed.connect(pick_prop_type.bind(id))
 		add_child(button)
 		_prop_buttons[id] = button
-	if not _types.is_empty():
-		type_id = int(_types[0].get("id", 0))
 	if not _prop_types.is_empty():
 		prop_type_id = int(_prop_types[0].get("id", 0))
 	refresh()
@@ -170,82 +173,61 @@ func _init() -> void:
 
 func set_draft(draft: IslandDraft) -> void:
 	_draft = draft
-	select(-1)
-
-
-func select(index: int) -> void:
-	if _draft == null or index >= _draft.objects.size():
-		index = -1
-	selected = index
-	selected_prop = -1
-	_set_editing_blocks(editing_blocks and selected >= 0)
-	refresh()
-	selection_changed.emit(selected)
+	select_prop(-1)
 
 
 func select_prop(index: int) -> void:
 	if _draft == null or index >= _draft.props.size():
 		index = -1
-	selected = -1
+	var same := index >= 0 and index == selected_prop
 	selected_prop = index
-	_set_editing_blocks(false)
+	if not same:
+		active_line = -1
+		cancel_line()
+	_set_editing_blocks(editing_blocks and same)
 	refresh()
-	selection_changed.emit(-1)
+	selection_changed.emit(selected_prop)
 
 
 func refresh() -> void:
-	if _draft == null or selected >= _draft.objects.size():
-		selected = -1
 	if _draft == null or selected_prop >= _draft.props.size():
 		selected_prop = -1
-	var prop := placing_prop
-	var shown_type := prop_type_id if placing_prop else type_id
+	var shown_type := prop_type_id
 	var shown_variant := variant
 	var shown_mirror := mirrored
-	if selected >= 0:
-		var object: Dictionary = _draft.objects[selected]
-		prop = false
-		shown_type = int(object.get("object_type_id", 0))
-		shown_variant = int(object.get("variant", 1))
-		shown_mirror = bool(object.get("mirrored", false))
-	elif selected_prop >= 0:
+	if selected_prop >= 0:
 		var piece: Dictionary = _draft.props[selected_prop]
-		prop = true
 		shown_type = int(piece.get("prop_type_id", 0))
 		shown_variant = int(piece.get("variant", 1))
 		shown_mirror = bool(piece.get("mirrored", false))
-	for id: int in _type_buttons:
-		_type_buttons[id].set_pressed_no_signal(not prop and id == shown_type)
 	for id: int in _prop_buttons:
-		_prop_buttons[id].set_pressed_no_signal(prop and id == shown_type)
-	var count := _variants(shown_type, prop)
-	if prop:
-		_preview.texture = PropArt.icon(_slug(shown_type, true), shown_variant)
-	else:
-		var path := MapObjectSprite.art_path(_slug(shown_type, false), shown_variant)
-		var art: Texture2D = load(path) as Texture2D if not path.is_empty() else null
-		_preview.texture = MapObjectSprite.first_frame(art, coords_of(footprint(shown_type, Vector2i.ZERO, false))) if art != null else null
+		_prop_buttons[id].set_pressed_no_signal(id == shown_type)
+	var count := _variants(shown_type)
+	_preview.texture = PropArt.icon(_slug(shown_type), shown_variant)
 	_preview.flip_h = shown_mirror
-	var chosen := selected >= 0 or selected_prop >= 0
-	_caption.text = ("Escolhida: %s" if chosen else "Nova: %s") % _type_name(shown_type, prop)
+	var chosen := selected_prop >= 0
+	_caption.text = ("Escolhida: %s" if chosen else "Nova: %s") % _type_name(shown_type)
 	_variant_label.text = "Variante %d de %d" % [shown_variant, count]
 	_rebuild_chips(count, shown_variant)
 	_mirror_button.set_pressed_no_signal(shown_mirror)
 	_selected_box.visible = chosen
-	_blocks_button.visible = selected >= 0
+	_blocks_button.visible = chosen
+	if chosen:
+		_action_select.select(maxi(0, _action_ids.find(int(_draft.props[selected_prop].get("action_type_id", 0)))))
 	_blocks_button.set_pressed_no_signal(editing_blocks)
-
-
-## O objeto novo num hexágono de apoio, com o bloqueio padrão do tipo.
-func new_object(anchor: Vector2i) -> Dictionary:
-	return {
-		"object_type_id": type_id,
-		"q": anchor.x,
-		"r": anchor.y,
-		"variant": variant,
-		"mirrored": mirrored,
-		"tiles": footprint(type_id, anchor, mirrored),
-	}
+	_block_box.visible = editing_blocks and chosen
+	if _block_box.visible:
+		var custom := _draft.prop_is_custom(selected_prop)
+		var line_count := _draft.prop_lines(selected_prop).size()
+		_block_label.text = "%s: %d %s. Arraste um ponto; clique numa linha para pôr um ponto; o botão direito apaga o ponto." % [
+			"Bloqueio ajustado" if custom else "Bloqueio do tipo", line_count, "linha" if line_count == 1 else "linhas"]
+		if drawing:
+			_block_label.text = "Desenhando: %d %s. Enter ou o botão direito termina; clicar no primeiro ponto fecha; Esc desiste." % [
+				drawing_line.size(), "ponto" if drawing_line.size() == 1 else "pontos"]
+		_type_block_button.disabled = not custom
+		var lines := _draft.prop_lines(selected_prop)
+		_close_button.disabled = active_line < 0 or active_line >= lines.size() or (lines[active_line]["points"] as Array).size() < 6
+		_close_button.text = "Abrir linha" if not _close_button.disabled and bool(lines[active_line]["closed"]) else "Fechar linha"
 
 
 ## A peça solta nova, com o pé `offset` pixels da arte a partir do centro de `coord`.
@@ -264,9 +246,9 @@ func new_prop(coord: Vector2i, offset: Vector2i) -> Dictionary:
 func change_variant(delta: int) -> void:
 	var piece := _selected_piece()
 	if piece.is_empty():
-		set_variant(wrapi(variant - 1 + delta, 0, _variants(prop_type_id if placing_prop else type_id, placing_prop)) + 1)
+		set_variant(wrapi(variant - 1 + delta, 0, _variants(prop_type_id)) + 1)
 		return
-	var count := _variants(_piece_type(piece), selected_prop >= 0)
+	var count := _variants(int(piece.get("prop_type_id", 0)))
 	set_variant(wrapi(int(piece.get("variant", 1)) - 1 + delta, 0, count) + 1)
 
 
@@ -292,15 +274,11 @@ func toggle_blocks() -> void:
 
 
 func delete_selected() -> void:
-	if _draft == null or (selected < 0 and selected_prop < 0):
+	if _draft == null or selected_prop < 0:
 		return
 	var step := _step("Apagar peça")
-	if selected >= 0:
-		_draft.objects.remove_at(selected)
-		select(-1)
-	else:
-		_draft.props.remove_at(selected_prop)
-		select_prop(-1)
+	_draft.props.remove_at(selected_prop)
+	select_prop(-1)
 	_finish(step)
 
 
@@ -308,7 +286,7 @@ func variant_text() -> String:
 	var piece := _selected_piece()
 	if piece.is_empty():
 		return ""
-	return "%d / %d" % [int(piece.get("variant", 1)), _variants(_piece_type(piece), selected_prop >= 0)]
+	return "%d / %d" % [int(piece.get("variant", 1)), _variants(int(piece.get("prop_type_id", 0)))]
 
 
 func is_mirrored() -> bool:
@@ -316,31 +294,15 @@ func is_mirrored() -> bool:
 
 
 func pick_prop_type(id: int) -> void:
-	placing_prop = true
 	prop_type_id = id
 	variant = 1
-	select(-1)
-
-
-func _pick_type(id: int) -> void:
-	placing_prop = false
-	type_id = id
-	variant = 1
-	select(-1)
+	select_prop(-1)
 
 
 func _selected_piece() -> Dictionary:
-	if _draft == null:
+	if _draft == null or selected_prop < 0:
 		return {}
-	if selected >= 0:
-		return _draft.objects[selected]
-	if selected_prop >= 0:
-		return _draft.props[selected_prop]
-	return {}
-
-
-func _piece_type(piece: Dictionary) -> int:
-	return int(piece.get("prop_type_id", piece.get("object_type_id", 0)))
+	return _draft.props[selected_prop]
 
 
 func _on_mirror_toggled(on: bool) -> void:
@@ -349,29 +311,99 @@ func _on_mirror_toggled(on: bool) -> void:
 		_draft.props[selected_prop]["mirrored"] = on
 		_finish(prop_step)
 		return
-	if selected < 0:
-		mirrored = on
-		refresh()
-		return
-	var object: Dictionary = _draft.objects[selected]
-	var anchor := Vector2i(int(object.get("q", 0)), int(object.get("r", 0)))
-	var flipped: Array[Dictionary] = []
-	for at: Variant in object.get("tiles", []):
-		var offset := Vector2i(int(at.get("q", 0)), int(at.get("r", 0))) - anchor
-		var coord := anchor + mirror(offset, true)
-		flipped.append({"q": coord.x, "r": coord.y, "blocks": bool(at.get("blocks", true))})
-	if not _draft.object_fits(coords_of(flipped), selected):
-		_mirror_button.set_pressed_no_signal(not on)
-		return
-	var step := _step("Espelhar objeto")
-	object["mirrored"] = on
-	object["tiles"] = flipped
-	_finish(step)
+	mirrored = on
+	refresh()
 
 
 func _on_blocks_toggled(on: bool) -> void:
-	_set_editing_blocks(on and selected >= 0)
+	_set_editing_blocks(on and selected_prop >= 0)
+	if not editing_blocks:
+		cancel_line()
 	refresh()
+
+
+## As linhas da peça escolhida passam a ser dela: na primeira mudança, uma cópia das
+## do tipo.
+func ensure_custom_block() -> Array:
+	var piece: Dictionary = _draft.props[selected_prop]
+	if not piece.has("block"):
+		var copies: Array = []
+		for line: Dictionary in GameData.get_prop_blocks(int(piece.get("prop_type_id", 0))):
+			copies.append({"closed": line["closed"], "points": Array(line["points"])})
+		piece["block"] = copies
+	return piece["block"]
+
+
+func start_line() -> void:
+	if selected_prop < 0:
+		return
+	drawing = true
+	drawing_line.clear()
+	refresh()
+
+
+func cancel_line() -> void:
+	drawing = false
+	drawing_line.clear()
+	if _block_box != null and _draft != null:
+		refresh()
+
+
+## Termina a linha em desenho: com 2 pontos ou mais, ela entra na peça.
+func finish_line(closed: bool = false) -> void:
+	if not drawing:
+		return
+	var points := drawing_line.duplicate()
+	cancel_line()
+	if points.size() < (3 if closed else 2) or selected_prop < 0:
+		return
+	var lines := _draft.prop_lines(selected_prop)
+	if lines.size() >= MapProp.MAX_LINES:
+		return
+	var step := _step("Nova linha de bloqueio")
+	var values: Array = []
+	for point: Vector2i in points:
+		values.append(point.x)
+		values.append(point.y)
+	var block := ensure_custom_block()
+	block.append({"closed": closed, "points": values})
+	active_line = block.size() - 1
+	_finish(step)
+
+
+func toggle_closed() -> void:
+	if selected_prop < 0:
+		return
+	var lines := _draft.prop_lines(selected_prop)
+	if active_line < 0 or active_line >= lines.size() or (lines[active_line]["points"] as Array).size() < 6:
+		return
+	var step := _step("Fechar ou abrir a linha")
+	var line: Dictionary = ensure_custom_block()[active_line]
+	line["closed"] = not bool(line["closed"])
+	_finish(step)
+
+
+func use_type_block() -> void:
+	if selected_prop < 0 or not _draft.prop_is_custom(selected_prop):
+		return
+	var step := _step("Usar o bloqueio do tipo")
+	_draft.props[selected_prop].erase("block")
+	active_line = -1
+	_finish(step)
+
+
+func request_type_save() -> void:
+	if selected_prop < 0:
+		return
+	type_block_save_requested.emit(int(_draft.props[selected_prop].get("prop_type_id", 0)), _draft.prop_lines(selected_prop))
+
+
+## Depois de salvar no tipo: a peça escolhida volta a usar as linhas dele.
+func type_block_saved() -> void:
+	if selected_prop >= 0 and _draft.prop_is_custom(selected_prop):
+		use_type_block()
+	else:
+		refresh()
 
 
 func _set_editing_blocks(on: bool) -> void:
@@ -400,35 +432,58 @@ func _rebuild_chips(count: int, current: int) -> void:
 func _step(label: String) -> EditorHistory.Step:
 	var step := EditorHistory.Step.new()
 	step.label = label
-	step.objects_before = _draft.objects.duplicate(true)
 	step.props_before = _draft.props.duplicate(true)
 	return step
 
 
 func _finish(step: EditorHistory.Step) -> void:
-	step.objects_after = _draft.objects.duplicate(true)
 	step.props_after = _draft.props.duplicate(true)
 	refresh()
 	edited.emit(step)
 
 
-func _row(id: int, prop: bool) -> Dictionary:
-	for row: Dictionary in (_prop_types if prop else _types):
+func _row(id: int) -> Dictionary:
+	for row: Dictionary in _prop_types:
 		if int(row.get("id", 0)) == id:
 			return row
 	return {}
 
 
-func _variants(id: int, prop: bool) -> int:
-	return maxi(1, int(_row(id, prop).get("variants", 1)))
+func _variants(id: int) -> int:
+	return maxi(1, int(_row(id).get("variants", 1)))
 
 
-func _type_name(id: int, prop: bool) -> String:
-	return str(_row(id, prop).get("name", "?"))
+func _type_name(id: int) -> String:
+	return str(_row(id).get("name", "?"))
 
 
-func _slug(id: int, prop: bool) -> String:
-	return str(_row(id, prop).get("slug", ""))
+func _slug(id: int) -> String:
+	return str(_row(id).get("slug", ""))
+
+
+func _on_action_selected(item: int) -> void:
+	if selected_prop < 0:
+		return
+	var piece: Dictionary = _draft.props[selected_prop]
+	var chosen := _action_ids[item]
+	if int(piece.get("action_type_id", 0)) == chosen:
+		return
+	var step := _step("Trocar a ação da peça")
+	if chosen > 0:
+		piece["action_type_id"] = chosen
+	else:
+		piece.erase("action_type_id")
+	_finish(step)
+
+
+func _text_button(text: String, tip: String, action: Callable) -> Button:
+	var button := Button.new()
+	button.text = text
+	button.tooltip_text = tip
+	button.focus_mode = Control.FOCUS_NONE
+	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	button.pressed.connect(action)
+	return button
 
 
 func _icon_button(icon_name: String, tip: String, action: Callable) -> Button:

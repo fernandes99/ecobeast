@@ -6,6 +6,7 @@ import type { IslandDraft } from './island-draft.js';
 const RUVO = 1;
 const NILU = 4;
 const ELU = 7;
+const NO_BLOCKS = new Map();
 
 function island(): IslandDraft {
   return {
@@ -18,7 +19,6 @@ function island(): IslandDraft {
       { q: 0, r: 1, biome: 'wshallow', height: 0, variant: 1, area: 2 },
     ],
     actions: [{ actionTypeId: 1, tiles: [{ q: 2, r: 0 }] }],
-    objects: [],
     props: [],
     areas: [
       {
@@ -50,7 +50,7 @@ function area(overrides: Partial<SpawnArea> = {}): SpawnArea {
 
 describe('spawnAreas', () => {
   it('dá a cada área os hexágonos dela, sem os de ação, na ordem da key', () => {
-    const areas = spawnAreas(island());
+    const areas = spawnAreas(island(), NO_BLOCKS);
     expect(areas.map(({ tiles }) => tiles)).toEqual([
       [{ q: 1, r: 0 }],
       [{ q: 0, r: 1 }],
@@ -62,33 +62,35 @@ describe('spawnAreas', () => {
   it('deixa sem hexágonos a área que só tem ação', () => {
     const draft = island();
     draft.actions[0]!.tiles.push({ q: 1, r: 0 });
-    expect(spawnAreas(draft)[0]!.tiles).toEqual([]);
+    expect(spawnAreas(draft, NO_BLOCKS)[0]!.tiles).toEqual([]);
   });
+});
 
-  it('tira os hexágonos bloqueados, e não os de objeto livre', () => {
+describe('spawnAreas com linhas de bloqueio (free-objects/01)', () => {
+  it('tira os hexágonos tocados pela linha do tipo de uma peça e por uma parede', () => {
     const draft = island();
-    draft.objects.push({
-      objectTypeId: 1,
+    draft.props.push({
+      propTypeId: 3,
       q: 1,
       r: 0,
+      dx: 0,
+      dy: 0,
       variant: 1,
       mirrored: false,
-      tiles: [
-        { q: 1, r: 0, blocks: true },
-        { q: 0, r: 1, blocks: false },
-      ],
     });
-    expect(spawnAreas(draft).map(({ tiles }) => tiles)).toEqual([
-      [],
-      [{ q: 0, r: 1 }],
-    ]);
+    const blocks = new Map([[3, [{ closed: false, points: [-4, 0, 4, 0] }]]]);
+    expect(spawnAreas(draft, blocks)[0]!.tiles).toEqual([]);
+    expect(spawnAreas(draft, NO_BLOCKS)[0]!.tiles).toEqual([{ q: 1, r: 0 }]);
+    draft.props = [];
+    draft.walls = [{ type: 'invisible_wall', points: [24, 42, 40, 42] }];
+    expect(spawnAreas(draft, NO_BLOCKS)[1]!.tiles).toEqual([]);
   });
 });
 
 describe('rollAreaSpawns', () => {
   it('sorteia a quantidade de cada área, cada um num hexágono dela', () => {
     const draft = island();
-    const areas = spawnAreas(draft);
+    const areas = spawnAreas(draft, NO_BLOCKS);
     const spawns = rollAreaSpawns(areas, seededRandom(7));
     expect(spawns).toHaveLength(8);
     const field = spawns.filter((spawn) => spawn.speciesId === RUVO);
@@ -102,13 +104,19 @@ describe('rollAreaSpawns', () => {
   });
 
   it('numera os Ecobeasts de 1 em diante', () => {
-    const spawns = rollAreaSpawns(spawnAreas(island()), seededRandom(3));
+    const spawns = rollAreaSpawns(
+      spawnAreas(island(), NO_BLOCKS),
+      seededRandom(3),
+    );
     expect(spawns.map(({ id }) => id)).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
   });
 
   it('nunca põe um Ecobeast em construção nem fora das áreas', () => {
     const allowed = new Set(['1,0', '0,1'].map((key) => key));
-    const spawns = rollAreaSpawns(spawnAreas(island()), seededRandom(11));
+    const spawns = rollAreaSpawns(
+      spawnAreas(island(), NO_BLOCKS),
+      seededRandom(11),
+    );
     for (const spawn of spawns) {
       expect(allowed.has(`${spawn.q},${spawn.r}`)).toBe(true);
     }

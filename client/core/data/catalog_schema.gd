@@ -172,19 +172,6 @@ const TABLES := {
 		"key": ["id"],
 		"columns": {"id": ID, "slug": SLUG, "name": TEXT, "kind": {"type": "string", "values": GROUND_KINDS}, "hardness": {"type": "int", "min": 1, "max": 3}},
 	},
-	"map_object_types": {
-		"key": ["id"],
-		"columns": {"id": ID, "slug": SLUG, "name": TEXT, "variants": {"type": "int", "min": 1}},
-	},
-	"map_object_type_tiles": {
-		"key": ["object_type_id", "dq", "dr"],
-		"columns": {
-			"object_type_id": {"type": "int", "fk": "map_object_types"},
-			"dq": {"type": "int"},
-			"dr": {"type": "int"},
-			"blocks": {"type": "bool"},
-		},
-	},
 	"npcs": {
 		"key": ["id"],
 		"columns": {"id": ID, "slug": SLUG, "name": TEXT, "description": TEXT, "sprite": {"type": "string", "pattern": "^[a-z0-9_]+$"}},
@@ -192,6 +179,16 @@ const TABLES := {
 	"prop_types": {
 		"key": ["id"],
 		"columns": {"id": ID, "slug": SLUG, "name": TEXT, "variants": {"type": "int", "min": 1}},
+	},
+	"prop_type_blocks": {
+		"key": ["id"],
+		"columns": {
+			"id": ID,
+			"prop_type_id": {"type": "int", "fk": "prop_types"},
+			"position": {"type": "int", "min": 0},
+			"closed": {"type": "bool"},
+			"points": {"type": "int_array"},
+		},
 	},
 	"wall_types": {
 		"key": ["id"],
@@ -407,5 +404,10 @@ static func normalize_row(table_name: String, row: Dictionary) -> Dictionary:
 					value = int(value)
 				"float":
 					value = float(value)
+				"int_array":
+					var ints: Array[int] = []
+					for item: Variant in value:
+						ints.append(int(item))
+					value = ints
 		result[column] = value
 	return result

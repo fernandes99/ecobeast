@@ -18,7 +18,6 @@ var tamers: Dictionary[int, MapTamer] = {}
 var island_id: int = 0
 var island_name: String = ""
 var actions: Array[MapAction] = []
-var objects: Array[MapObject] = []
 var props: Array[MapProp] = []
 var trails: Array[MapTrail] = []
 ## As paredes (free-fences): trocar a lista refaz o índice dos trechos por hexágono.
@@ -27,9 +26,12 @@ var walls: Array[MapWall] = []:
 		walls = value
 		_index_walls()
 var npcs: Array[MapNpc] = []
+## As linhas de bloqueio das peças no chão plano (free-objects/01), postas pela tela
+## com `set_prop_lines`; o índice das paredes as leva junto.
+var _prop_lines: Array[PackedVector2Array] = []
+## As linhas de cada peça, na ordem de `props`.
+var _lines_by_prop: Array = []
 var _action_of: Dictionary[Vector2i, int] = {}
-var _object_of: Dictionary[Vector2i, int] = {}
-var _blocked: Dictionary[Vector2i, bool] = {}
 ## Os trechos de parede `[a, b]` que passam perto de cada hexágono, no chão plano.
 var _wall_cells: Dictionary[Vector2i, Array] = {}
 
@@ -76,16 +78,8 @@ func action_at(coord: Vector2i) -> int:
 	return _action_of.get(coord, -1)
 
 
-func object_at(coord: Vector2i) -> int:
-	return _object_of.get(coord, -1)
-
-
-func is_blocked(coord: Vector2i) -> bool:
-	return _blocked.has(coord)
-
-
 ## O caminho mais curto de `from` até o primeiro hexágono de `goals`, sem o `from`,
-## desviando dos bloqueados e sem passar entre dois centros por cima de uma parede.
+## sem passar entre dois centros por cima de uma parede.
 ## Com `from_point` do lado de uma parede sem o centro do hexágono, começa pelos
 ## vizinhos que ele alcança em reta. Vazio quando não há caminho ou `from` já é um deles.
 func path_to_any(from: Vector2i, goals: Dictionary[Vector2i, bool], from_point := Vector2.INF) -> Array[Vector2i]:
@@ -98,7 +92,7 @@ func path_to_any(from: Vector2i, goals: Dictionary[Vector2i, bool], from_point :
 	if from_point.is_finite() and crosses_wall(from_point, HexMapView.flat_center(from)):
 		index = 1
 		for next: Vector2i in neighbors(from):
-			if is_blocked(next) or crosses_wall(from_point, HexMapView.flat_center(next)):
+			if crosses_wall(from_point, HexMapView.flat_center(next)):
 				continue
 			came_from[next] = from
 			if goals.has(next):
@@ -108,7 +102,7 @@ func path_to_any(from: Vector2i, goals: Dictionary[Vector2i, bool], from_point :
 		var coord := frontier[index]
 		index += 1
 		for next: Vector2i in neighbors(coord):
-			if came_from.has(next) or is_blocked(next) or _wall_between(coord, next):
+			if came_from.has(next) or _wall_between(coord, next):
 				continue
 			came_from[next] = coord
 			if goals.has(next):
@@ -172,7 +166,7 @@ func approach_goals(target: Vector2i, finish: Vector2) -> Dictionary[Vector2i, b
 	var all: Dictionary[Vector2i, bool] = {}
 	var facing: Dictionary[Vector2i, bool] = {}
 	for next: Vector2i in neighbors(target):
-		if not has(next) or is_blocked(next) or is_center_walled(next):
+		if not has(next) or is_center_walled(next):
 			continue
 		all[next] = true
 		if not crosses_wall(HexMapView.flat_center(next), finish):
@@ -187,13 +181,47 @@ func _wall_between(from: Vector2i, to: Vector2i) -> bool:
 	return crosses_wall(HexMapView.flat_center(from), HexMapView.flat_center(to))
 
 
+## As linhas de bloqueio das peças, pelas do tipo de cada uma (`type_lines[prop_type_id]`)
+## ou pelas próprias.
+func set_prop_lines(type_lines: Dictionary) -> void:
+	_prop_lines.clear()
+	_lines_by_prop.clear()
+	var none: Array[Dictionary] = []
+	for prop: MapProp in props:
+		var lines: Array[Dictionary] = type_lines.get(prop.prop_type_id, none)
+		var world := prop.world_lines(lines)
+		_lines_by_prop.append(world)
+		_prop_lines.append_array(world)
+	_index_walls()
+
+
+func prop_world_lines(index: int) -> Array[PackedVector2Array]:
+	var none: Array[PackedVector2Array] = []
+	return _lines_by_prop[index] if index < _lines_by_prop.size() else none
+
+
+## O ponto das linhas mais perto de `point`, e a distância até ele (INF sem linhas).
+static func nearest_on_lines(lines: Array[PackedVector2Array], point: Vector2) -> Vector2:
+	var best := Vector2.INF
+	for line: PackedVector2Array in lines:
+		for index: int in range(1, line.size()):
+			var at := Geometry2D.get_closest_point_to_segment(point, line[index - 1], line[index])
+			if not best.is_finite() or at.distance_to(point) < best.distance_to(point):
+				best = at
+	return best
+
+
 func _index_walls() -> void:
 	_wall_cells.clear()
 	var margin := WALL_REACH + 1.0
 	var spread: Array[Vector2] = [Vector2.ZERO, Vector2(margin, 0.0), Vector2(-margin, 0.0), Vector2(0.0, margin), Vector2(0.0, -margin)]
+	var lines: Array[PackedVector2Array] = []
 	for wall: MapWall in walls:
-		for index: int in range(1, wall.points.size()):
-			var segment := PackedVector2Array([wall.points[index - 1], wall.points[index]])
+		lines.append(wall.points)
+	lines.append_array(_prop_lines)
+	for line: PackedVector2Array in lines:
+		for index: int in range(1, line.size()):
+			var segment := PackedVector2Array([line[index - 1], line[index]])
 			var steps := maxi(1, ceili(segment[0].distance_to(segment[1]) / WALL_SAMPLE))
 			var cells: Dictionary[Vector2i, bool] = {}
 			for step: int in steps + 1:
@@ -216,38 +244,6 @@ static func _segment_distance(a: Vector2, b: Vector2, c: Vector2, d: Vector2) ->
 	return minf(
 		minf(a.distance_to(Geometry2D.get_closest_point_to_segment(a, c, d)), b.distance_to(Geometry2D.get_closest_point_to_segment(b, c, d))),
 		minf(c.distance_to(Geometry2D.get_closest_point_to_segment(c, a, b)), d.distance_to(Geometry2D.get_closest_point_to_segment(d, a, b))))
-
-
-## Os hexágonos livres de onde o Domador alcança o bloqueado `coord`: os vizinhos dele,
-## ou, se ele estiver cercado, os de qualquer hexágono do mesmo objeto.
-func free_sides(coord: Vector2i) -> Dictionary[Vector2i, bool]:
-	var sides: Dictionary[Vector2i, bool] = {}
-	var around: Array[Vector2i] = [coord]
-	for _pass: int in 2:
-		for tile: Vector2i in around:
-			for next: Vector2i in neighbors(tile):
-				if not is_blocked(next):
-					sides[next] = true
-		if not sides.is_empty() or object_at(coord) < 0:
-			break
-		around = objects[object_at(coord)].tiles
-	return sides
-
-
-func set_objects(list: Array[MapObject]) -> void:
-	objects.clear()
-	_object_of.clear()
-	_blocked.clear()
-	for object: MapObject in list:
-		add_object(object)
-
-
-func add_object(object: MapObject) -> void:
-	for coord: Vector2i in object.tiles:
-		_object_of[coord] = objects.size()
-	for coord: Vector2i in object.blocked_tiles():
-		_blocked[coord] = true
-	objects.append(object)
 
 
 static func from_dict(d: Dictionary) -> ExplorationMap:
@@ -276,10 +272,6 @@ static func from_dict(d: Dictionary) -> ExplorationMap:
 			for coord: Vector2i in action.tiles:
 				map._action_of[coord] = map.actions.size()
 			map.actions.append(action)
-	for object_dict: Variant in DictFields.get_array(d, "objects"):
-		var object: MapObject = MapObject.from_dict(object_dict) if object_dict is Dictionary else null
-		if object != null:
-			map.add_object(object)
 	for prop_dict: Variant in DictFields.get_array(d, "props"):
 		var prop: MapProp = MapProp.from_dict(prop_dict) if prop_dict is Dictionary else null
 		if prop != null:

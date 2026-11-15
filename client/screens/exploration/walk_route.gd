@@ -10,7 +10,7 @@ const SAMPLE_STEP := 4.0
 
 
 ## O caminho de `from` até `to`, passando pelo centro dos `hexes` (o primeiro é o do
-## `from`, o último o do `to`) e esticado em retas que não cruzam bloqueados nem
+## `from`, o último o do `to`) e esticado em retas que não saem do mapa nem cruzam
 ## paredes. Cada trecho de um centro ao seguinte já é livre pela busca; o centro do
 ## próprio hexágono só entra quando alcançável, e o fim para rente à primeira parede
 ## (free-fences/02).
@@ -39,7 +39,7 @@ static func is_clear(map: ExplorationMap, from: Vector2, to: Vector2) -> bool:
 	var steps := maxi(1, ceili(from.distance_to(to) / SAMPLE_STEP))
 	for step: int in range(steps + 1):
 		var coord := HexMapView.grid_coord(from.lerp(to, float(step) / steps))
-		if not map.has(coord) or map.is_blocked(coord):
+		if not map.has(coord):
 			return false
 	return not map.crosses_wall(from, to)
 

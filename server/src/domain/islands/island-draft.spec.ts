@@ -15,14 +15,12 @@ import {
 } from './island-draft.js';
 
 const REFUGE = 1;
-const HOUSE = 1;
 const RUVO = 1;
 const NILU = 4;
 const FLOWERS = 6;
 const BENCH = 21;
 const known: KnownIds = {
   actionTypeIds: new Set([REFUGE, 2]),
-  objectTypeIds: new Set([HOUSE, 2]),
   groundSlugs: new Set(['dirt_trail', 'cobble_floor']),
   speciesIds: new Set([RUVO, NILU]),
   propVariants: new Map([
@@ -31,6 +29,7 @@ const known: KnownIds = {
   ]),
   npcIds: new Set([1, 2]),
   wallSlugs: new Set(['wood_fence', 'invisible_wall']),
+  propBlocks: new Map(),
 };
 
 function island(): IslandDraft {
@@ -50,16 +49,6 @@ function island(): IslandDraft {
       { q: 0, r: 1, biome: 'wshallow', height: 0, variant: 6 },
     ],
     actions: [{ actionTypeId: REFUGE, tiles: [{ q: 0, r: 1 }] }],
-    objects: [
-      {
-        objectTypeId: HOUSE,
-        q: 0,
-        r: 1,
-        variant: 2,
-        mirrored: false,
-        tiles: [{ q: 0, r: 1, blocks: true }],
-      },
-    ],
     props: [
       {
         propTypeId: FLOWERS,
@@ -224,66 +213,6 @@ describe('draftError', () => {
     );
   });
 
-  it('recusa um tipo de objeto que não existe', () => {
-    const draft = island();
-    draft.objects[0]!.objectTypeId = 99;
-    expect(draftError(draft, known)).toBe(
-      'O objeto 1 tem um tipo que não existe.',
-    );
-  });
-
-  it.each([0, -1, 1.5])('recusa a variante de objeto %d', (variant) => {
-    const draft = island();
-    draft.objects[0]!.variant = variant;
-    expect(draftError(draft, known)).toBe(
-      `O objeto 1 tem a variante ${variant}: começa em 1.`,
-    );
-  });
-
-  it('aceita qualquer variante a partir de 1, porque o painel pode diminuir as variantes', () => {
-    const draft = island();
-    draft.objects[0]!.variant = 40;
-    expect(draftError(draft, known)).toBeNull();
-  });
-
-  it('recusa um objeto sem o hexágono de apoio', () => {
-    const draft = island();
-    draft.objects[0]!.tiles = [{ q: 1, r: 0, blocks: true }];
-    expect(draftError(draft, known)).toBe(
-      'O objeto 1 precisa ocupar o hexágono de apoio (0, 1).',
-    );
-  });
-
-  it('recusa um objeto fora da ilha', () => {
-    const draft = island();
-    draft.objects[0]!.tiles.push({ q: 7, r: 7, blocks: false });
-    expect(draftError(draft, known)).toBe(
-      'O objeto 1 ocupa (7, 7), que não é da ilha.',
-    );
-  });
-
-  it('recusa dois objetos no mesmo hexágono', () => {
-    const draft = island();
-    draft.objects.push({
-      objectTypeId: 2,
-      q: 1,
-      r: 0,
-      variant: 1,
-      mirrored: true,
-      tiles: [
-        { q: 1, r: 0, blocks: true },
-        { q: 0, r: 1, blocks: false },
-      ],
-    });
-    expect(draftError(draft, known)).toBe(
-      'O hexágono (0, 1) é de dois objetos.',
-    );
-  });
-
-  it('aceita ação e objeto no mesmo hexágono', () => {
-    expect(draftError(island(), known)).toBeNull();
-  });
-
   it('recusa duas áreas com a mesma key', () => {
     const draft = island();
     draft.areas.push({ ...draft.areas[0]!, species: [] });
@@ -397,24 +326,6 @@ describe('publishError', () => {
     );
   });
 
-  it('recusa a chegada num hexágono bloqueado', () => {
-    const draft = island();
-    draft.objects[0]!.q = 0;
-    draft.objects[0]!.r = 0;
-    draft.objects[0]!.tiles = [{ q: 0, r: 0, blocks: true }];
-    expect(publishError(draft, known)).toBe(
-      'A chegada não pode ficar num hexágono bloqueado.',
-    );
-  });
-
-  it('aceita a chegada num hexágono de objeto livre', () => {
-    const draft = island();
-    draft.objects[0]!.q = 0;
-    draft.objects[0]!.r = 0;
-    draft.objects[0]!.tiles = [{ q: 0, r: 0, blocks: false }];
-    expect(publishError(draft, known)).toBeNull();
-  });
-
   it('recusa uma área sem espécies', () => {
     const draft = island();
     draft.areas[0]!.species = [];
@@ -452,33 +363,12 @@ describe('canonicalDraft e draftHash', () => {
     expect(draftHash(renumbered)).toBe(draftHash(island()));
   });
 
-  it('não depende da ordem dos objetos nem dos hexágonos deles', () => {
-    const second = {
-      objectTypeId: 2,
-      q: 1,
-      r: 0,
-      variant: 1,
-      mirrored: false,
-      tiles: [
-        { q: 1, r: 0, blocks: true },
-        { q: 1, r: -1, blocks: false },
-      ],
-    };
-    const one = island();
-    one.objects.push(second);
-    const other = island();
-    other.objects.unshift({ ...second, tiles: [...second.tiles].reverse() });
-    expect(draftHash(one)).toBe(draftHash(other));
-  });
-
-  it('muda quando o chão, o bloqueio ou o espelho mudam', () => {
+  it('muda quando o chão ou o espelho de uma peça mudam', () => {
     const ground = island();
     ground.tiles[0]!.ground = 'cobble_floor';
-    const blocks = island();
-    blocks.objects[0]!.tiles[0]!.blocks = false;
     const mirrored = island();
-    mirrored.objects[0]!.mirrored = true;
-    for (const changed of [ground, blocks, mirrored]) {
+    mirrored.props[0]!.mirrored = true;
+    for (const changed of [ground, mirrored]) {
       expect(draftHash(changed)).not.toBe(draftHash(island()));
     }
   });
@@ -884,5 +774,156 @@ describe('os NPCs da ilha (island-npcs/01)', () => {
     expect(draftHash(withNpcs({ ...npc(), still: true }))).not.toBe(
       draftHash(withNpcs(npc())),
     );
+  });
+});
+
+describe('as linhas de bloqueio das peças (free-objects/01)', () => {
+  const square = { closed: true, points: [-10, -10, 10, -10, 10, 10, -10, 10] };
+  const atStart = () => ({
+    propTypeId: BENCH,
+    q: 0,
+    r: 0,
+    dx: 0,
+    dy: 0,
+    variant: 1,
+    mirrored: false,
+  });
+
+  it('aceita uma peça com linhas ajustadas, abertas e fechadas', () => {
+    const draft = island();
+    draft.props[0]!.block = [square, { closed: false, points: [0, 0, 5, 5] }];
+    expect(draftError(draft, known)).toBeNull();
+  });
+
+  it('recusa linhas fora dos limites', () => {
+    const draft = island();
+    const cases: [object, string][] = [
+      [
+        { closed: false, points: [0, 0] },
+        'precisa ter de 2 a 64 pontos inteiros',
+      ],
+      [
+        { closed: false, points: Array.from({ length: 130 }, () => 0) },
+        'precisa ter de 2 a 64 pontos inteiros',
+      ],
+      [
+        { closed: false, points: [0, 0, 1.5, 0] },
+        'precisa ter de 2 a 64 pontos inteiros',
+      ],
+      [
+        { closed: true, points: [0, 0, 5, 5] },
+        'fechada precisa ter pelo menos 3 pontos',
+      ],
+      [
+        { closed: false, points: [0, 0, 513, 0] },
+        'tem um ponto a mais de 512 pixels do pé',
+      ],
+    ];
+    for (const [line, message] of cases) {
+      draft.props[0]!.block = [line as typeof square];
+      expect(draftError(draft, known)).toBe(
+        `A linha de bloqueio 1 da peça 1 ${message}.`,
+      );
+    }
+    draft.props[0]!.block = Array.from({ length: 9 }, () => square);
+    expect(draftError(draft, known)).toBe(
+      'A peça 1 pode ter até 8 linhas de bloqueio.',
+    );
+  });
+
+  it('recusa mais de 2.000 peças que bloqueiam, contando as linhas do tipo', () => {
+    const typed: KnownIds = {
+      ...known,
+      propBlocks: new Map([[BENCH, [square]]]),
+    };
+    const draft = island();
+    const bench = { ...draft.props[0]!, propTypeId: BENCH, variant: 1 };
+    draft.props = Array.from({ length: 2000 }, () => ({ ...bench }));
+    expect(draftError(draft, typed)).toBeNull();
+    draft.props.push({
+      ...draft.props[0]!,
+      propTypeId: FLOWERS,
+      block: [square],
+    });
+    expect(draftError(draft, typed)).toBe(
+      'A ilha pode ter até 2.000 peças que bloqueiam.',
+    );
+    draft.props[0]!.block = [];
+    expect(draftError(draft, typed)).toBeNull();
+  });
+
+  it('recusa a chegada tocada pela linha de uma peça, do tipo ou ajustada', () => {
+    const draft = island();
+    draft.props = [atStart()];
+    expect(publishError(draft, known)).toBeNull();
+    const typed: KnownIds = {
+      ...known,
+      propBlocks: new Map([[BENCH, [square]]]),
+    };
+    expect(publishError(draft, typed)).toBe(
+      'A chegada não pode ficar num hexágono bloqueado.',
+    );
+    draft.props[0]!.block = [];
+    expect(publishError(draft, typed)).toBeNull();
+    draft.props[0]!.block = [{ closed: false, points: [-3, 0, 3, 0] }];
+    expect(publishError(draft, known)).toBe(
+      'A chegada não pode ficar num hexágono bloqueado.',
+    );
+  });
+
+  it('recusa a chegada tocada por uma parede', () => {
+    const draft = island();
+    draft.walls = [{ type: 'invisible_wall', points: [0, 0, 20, 0] }];
+    expect(publishError(draft, known)).toBe(
+      'A chegada não pode ficar num hexágono bloqueado.',
+    );
+  });
+
+  it('leva o bloqueio no hash só nas peças ajustadas', () => {
+    const draft = island();
+    const plain = draftHash(draft);
+    draft.props[0]!.block = [];
+    const empty = draftHash(draft);
+    expect(empty).not.toBe(plain);
+    draft.props[0]!.block = [square];
+    expect(draftHash(draft)).not.toBe(empty);
+    expect(JSON.parse(canonicalDraft(draft)).props[0].block).toEqual([square]);
+    delete draft.props[0]!.block;
+    expect(draftHash(draft)).toBe(plain);
+  });
+});
+
+describe('a ação das peças (free-objects/03)', () => {
+  it('aceita uma peça com ação que existe e recusa uma que não existe', () => {
+    const draft = island();
+    draft.props[0]!.actionTypeId = REFUGE;
+    expect(draftError(draft, known)).toBeNull();
+    draft.props[0]!.actionTypeId = 99;
+    expect(draftError(draft, known)).toBe(
+      'A peça 1 tem uma ação que não existe.',
+    );
+  });
+
+  it('recusa mais de 500 peças com ação', () => {
+    const draft = island();
+    const prop = { ...draft.props[0]!, actionTypeId: REFUGE };
+    draft.props = Array.from({ length: 500 }, () => ({ ...prop }));
+    expect(draftError(draft, known)).toBeNull();
+    draft.props.push({ ...prop });
+    expect(draftError(draft, known)).toBe(
+      'A ilha pode ter até 500 peças com ação.',
+    );
+  });
+
+  it('leva a ação no hash só quando a peça tem uma', () => {
+    const draft = island();
+    const plain = draftHash(draft);
+    draft.props[0]!.actionTypeId = REFUGE;
+    expect(draftHash(draft)).not.toBe(plain);
+    expect(JSON.parse(canonicalDraft(draft)).props[0].actionTypeId).toBe(
+      REFUGE,
+    );
+    delete draft.props[0]!.actionTypeId;
+    expect(draftHash(draft)).toBe(plain);
   });
 });

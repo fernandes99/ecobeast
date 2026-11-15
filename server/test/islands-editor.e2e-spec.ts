@@ -23,17 +23,10 @@ interface Tile {
   bare?: boolean;
 }
 
-interface DraftObject {
-  object_type_id: number;
-  q: number;
-  r: number;
-  variant: number;
-  mirrored: boolean;
-  tiles: { q: number; r: number; blocks: boolean }[];
-}
-
 interface DraftProp {
   prop_type_id: number;
+  block?: { closed: boolean; points: number[] }[];
+  action_type_id?: number;
   q: number;
   r: number;
   dx: number;
@@ -57,7 +50,6 @@ interface Draft {
   start: { q: number; r: number };
   tiles: Tile[];
   actions: { action_type_id: number; tiles: { q: number; r: number }[] }[];
-  objects: DraftObject[];
   props?: DraftProp[];
   trails?: { ground: string; width: number; points: number[] }[];
   walls?: { type: string; points: number[] }[];
@@ -94,7 +86,6 @@ describe('Editor de ilhas (e2e)', () => {
   let tokens: TestTokens;
   let owner: string;
   let refuge: number;
-  let house: number;
   const editor = randomUUID();
   const islands: number[] = [];
 
@@ -107,16 +98,6 @@ describe('Editor de ilhas (e2e)', () => {
       start: { q: 0, r: 0 },
       tiles,
       actions: [{ action_type_id: refuge, tiles: [{ q: 0, r: 1 }] }],
-      objects: [
-        {
-          object_type_id: house,
-          q: 0,
-          r: 1,
-          variant: 2,
-          mirrored: true,
-          tiles: [{ q: 0, r: 1, blocks: false }],
-        },
-      ],
       areas: [
         {
           key: 1,
@@ -158,11 +139,6 @@ describe('Editor de ilhas (e2e)', () => {
     refuge = (
       await prisma.actionType.findUniqueOrThrow({
         where: { slug: 'refuge' },
-      })
-    ).id;
-    house = (
-      await prisma.mapObjectType.findUniqueOrThrow({
-        where: { slug: 'town_house' },
       })
     ).id;
   });
@@ -215,7 +191,6 @@ describe('Editor de ilhas (e2e)', () => {
         name: 'Ilha das Brumas',
         start: { q: 0, r: 0 },
         actions: body.actions,
-        objects: body.objects,
         areas: body.areas,
       });
       const byCoord = (a: Tile, b: Tile) => a.r - b.r || a.q - b.q;
@@ -260,26 +235,6 @@ describe('Editor de ilhas (e2e)', () => {
         'chão que não existe',
         (d: Draft) => (d.tiles[0]!.ground = 'lava_trail'),
         'tem um chão que não existe.',
-      ],
-      [
-        'objeto sem o hexágono de apoio',
-        (d: Draft) => (d.objects[0]!.tiles = [{ q: 1, r: 0, blocks: true }]),
-        'O objeto 1 precisa ocupar o hexágono de apoio (0, 1).',
-      ],
-      [
-        'objeto sobre outro',
-        (d: Draft) => d.objects.push({ ...d.objects[0]! }),
-        'O hexágono (0, 1) é de dois objetos.',
-      ],
-      [
-        'objeto fora da ilha',
-        (d: Draft) => d.objects[0]!.tiles.push({ q: 5, r: 5, blocks: true }),
-        'O objeto 1 ocupa (5, 5), que não é da ilha.',
-      ],
-      [
-        'variante 0 de objeto',
-        (d: Draft) => (d.objects[0]!.variant = 0),
-        'O objeto 1 tem a variante 0: começa em 1.',
       ],
       [
         'corpo sem ações',
@@ -402,12 +357,7 @@ describe('Editor de ilhas (e2e)', () => {
 
     it('recusa publicar com a chegada num hexágono bloqueado (409)', async () => {
       const body = draft();
-      body.objects[0] = {
-        ...body.objects[0]!,
-        q: 0,
-        r: 0,
-        tiles: [{ q: 0, r: 0, blocks: true }],
-      };
+      body.walls = [{ type: 'invisible_wall', points: [0, 0, 20, 0] }];
       const id = await create(body);
       const response = await call('post', `/islands/${id}/publish`).expect(409);
       expect(response.body.message).toBe(
@@ -433,7 +383,6 @@ describe('Editor de ilhas (e2e)', () => {
         ...draft(),
         tiles: hexagon(81),
         actions: [],
-        objects: [],
         areas: [],
       };
       expect(body.tiles).toHaveLength(19_927);
@@ -638,6 +587,80 @@ describe('Editor de ilhas (e2e)', () => {
       expect(response.body.message).toBe(
         'A parede 1 tem um tipo que não existe.',
       );
+    });
+  });
+
+  describe('as linhas de bloqueio das peças (free-objects/01)', () => {
+    const square = {
+      closed: true,
+      points: [-10, -10, 10, -10, 10, 10, -10, 10],
+    };
+    const prop = async (block?: DraftProp['block']): Promise<DraftProp> => ({
+      prop_type_id: (
+        await prisma.propType.findUniqueOrThrow({ where: { slug: 'bench' } })
+      ).id,
+      q: 1,
+      r: 0,
+      dx: 0,
+      dy: 0,
+      variant: 1,
+      mirrored: false,
+      ...(block === undefined ? {} : { block }),
+    });
+
+    it('salva e lê de volta o bloqueio ajustado, e a peça sem ajuste volta sem o campo', async () => {
+      const body = draft();
+      body.props = [await prop([square]), await prop(), await prop([])];
+      body.props[1]!.dx = 5;
+      body.props[2]!.dx = -5;
+      const id = await create(body);
+      const read = (await call('get', `/islands/${id}`).expect(200))
+        .body as Draft;
+      const byX = (a: DraftProp, b: DraftProp) =>
+        (a as { dx: number }).dx - (b as { dx: number }).dx;
+      expect([...read.props!].sort(byX)).toEqual([...body.props].sort(byX));
+    });
+
+    it('salva e lê de volta a ação da peça (free-objects/03)', async () => {
+      const body = draft();
+      body.props = [{ ...(await prop([square])), action_type_id: refuge }];
+      const id = await create(body);
+      const read = (await call('get', `/islands/${id}`).expect(200))
+        .body as Draft;
+      expect(read.props).toEqual(body.props);
+      body.props = [{ ...(await prop()), action_type_id: 999999 }];
+      const bad = await call('put', `/islands/${id}/draft`)
+        .send(body)
+        .expect(400);
+      expect(bad.body.message).toBe('A peça 1 tem uma ação que não existe.');
+    });
+
+    it('recusa uma linha de bloqueio fora dos limites (400)', async () => {
+      const id = await create();
+      const body = draft();
+      body.props = [await prop([{ closed: true, points: [0, 0, 5, 5] }])];
+      const response = await call('put', `/islands/${id}/draft`)
+        .send(body)
+        .expect(400);
+      expect(response.body.message).toBe(
+        'A linha de bloqueio 1 da peça 1 fechada precisa ter pelo menos 3 pontos.',
+      );
+    });
+
+    it('recusa publicar com a chegada tocada por uma linha ou por uma parede (409)', async () => {
+      const byLine = draft();
+      byLine.props = [{ ...(await prop([square])), q: 0, r: 0 }];
+      const first = await create(byLine);
+      const response = await call('post', `/islands/${first}/publish`).expect(
+        409,
+      );
+      expect(response.body.message).toBe(
+        'A chegada não pode ficar num hexágono bloqueado.',
+      );
+      const byWall = draft();
+      byWall.walls = [{ type: 'invisible_wall', points: [0, 0, 20, 0] }];
+      const second = await create(byWall);
+      await call('post', `/islands/${second}/publish`).expect(409);
     });
   });
 

@@ -5,9 +5,9 @@ import { CATALOG_TABLES, SEED_DATA_DIR } from './catalog-tables.js';
 describe('CATALOG_TABLES', () => {
   const names = CATALOG_TABLES.map((table) => table.name);
 
-  it('tem as 42 tabelas, sem repetição', () => {
-    expect(names).toHaveLength(42);
-    expect(new Set(names).size).toBe(42);
+  it('tem as 41 tabelas, sem repetição', () => {
+    expect(names).toHaveLength(41);
+    expect(new Set(names).size).toBe(41);
   });
 
   it('casa com os arquivos .json da pasta de dados do seed', () => {
@@ -275,19 +275,13 @@ describe('carga inicial dos tipos de parede (free-fences/01)', () => {
   });
 });
 
-describe('carga inicial do chão e dos objetos (island-villages/01)', () => {
+describe('carga inicial do chão (island-villages/01)', () => {
   const read = <T>(file: string): T =>
     JSON.parse(readFileSync(join(SEED_DATA_DIR, file), 'utf8')) as T;
   const grounds =
     read<{ slug: string; kind: string; hardness: number }[]>(
       'ground_types.json',
     );
-  const objects = read<{ id: number; slug: string; variants: number }[]>(
-    'map_object_types.json',
-  );
-  const tiles = read<
-    { object_type_id: number; dq: number; dr: number; blocks: boolean }[]
-  >('map_object_type_tiles.json');
 
   it('tem seis trilhas e dois pisos, cada um com a dureza (free-trails/01)', () => {
     expect(grounds.map(({ kind }) => kind)).toEqual([
@@ -305,76 +299,54 @@ describe('carga inicial do chão e dos objetos (island-villages/01)', () => {
       expect(hardness).toBeLessThanOrEqual(3);
     }
   });
-
-  it('tem os 5 objetos da cidade e o Observatório, cada um com o hexágono de apoio e pelo menos 1 variante (free-fences/04, town-art/06)', () => {
-    expect(objects.map(({ id, slug }) => [id, slug])).toEqual([
-      [21, 'refuge_building'],
-      [22, 'shop_building'],
-      [24, 'town_house'],
-      [25, 'town_house_medium'],
-      [26, 'town_house_large'],
-      [41, 'observatory'],
-    ]);
-    for (const { id, variants } of objects) {
-      expect(variants).toBeGreaterThanOrEqual(1);
-      expect(
-        tiles.some(
-          (tile) =>
-            tile.object_type_id === id && tile.dq === 0 && tile.dr === 0,
-        ),
-      ).toBe(true);
-    }
-    expect(
-      tiles.every(({ object_type_id }) =>
-        objects.some(({ id }) => id === object_type_id),
-      ),
-    ).toBe(true);
-  });
-
-  it('as casas da cidade têm 1, 2 e 3 hexágonos', () => {
-    const size = (slug: string) => {
-      const { id } = objects.find((object) => object.slug === slug)!;
-      return tiles.filter(({ object_type_id }) => object_type_id === id).length;
-    };
-    expect(
-      ['town_house', 'town_house_medium', 'town_house_large'].map(size),
-    ).toEqual([1, 2, 3]);
-  });
 });
 
-describe('carga inicial das peças soltas (free-props/01)', () => {
+describe('carga inicial das peças soltas (free-props/01, free-objects/04)', () => {
   const read = <T>(file: string): T =>
     JSON.parse(readFileSync(join(SEED_DATA_DIR, file), 'utf8')) as T;
   const props =
     read<{ id: number; slug: string; variants: number }[]>('prop_types.json');
-  const objects = read<{ id: number; slug: string; variants: number }[]>(
-    'map_object_types.json',
-  );
-  const objectTiles = read<
-    { object_type_id: number; dq: number; dr: number; blocks: boolean }[]
-  >('map_object_type_tiles.json');
+  const blocks = read<
+    {
+      prop_type_id: number;
+      position: number;
+      closed: boolean;
+      points: number[];
+    }[]
+  >('prop_type_blocks.json');
 
-  it('tem os 21 tipos, de 1 a 21, com pelo menos 1 variante', () => {
+  it('tem os 27 tipos, de 1 a 27, com pelo menos 1 variante', () => {
     expect(props.map(({ id }) => id)).toEqual(
-      Array.from({ length: 21 }, (_, index) => index + 1),
+      Array.from({ length: 27 }, (_, index) => index + 1),
     );
     for (const { variants } of props)
       expect(variants).toBeGreaterThanOrEqual(1);
   });
 
-  it('as decorações de rua viraram peças e saíram dos objetos', () => {
-    const slugs = props.map(({ slug }) => slug);
-    expect(slugs.slice(-4)).toEqual([
+  it('as decorações de rua e os prédios da cidade são peças', () => {
+    expect(props.slice(17).map(({ slug }) => slug)).toEqual([
       'lamp_post',
       'sign',
       'flower_bed',
       'bench',
+      'refuge_building',
+      'shop_building',
+      'town_house',
+      'town_house_medium',
+      'town_house_large',
+      'observatory',
     ]);
-    const gone = [36, 37, 38, 39];
-    expect(objects.some(({ id }) => gone.includes(id))).toBe(false);
-    expect(
-      objectTiles.some(({ object_type_id }) => gone.includes(object_type_id)),
-    ).toBe(false);
+  });
+
+  it('só os prédios bloqueiam, cada um com uma linha fechada de pontos pares', () => {
+    expect(blocks.map(({ prop_type_id }) => prop_type_id)).toEqual([
+      22, 23, 24, 25, 26, 27,
+    ]);
+    for (const { closed, points } of blocks) {
+      expect(closed).toBe(true);
+      expect(points.length % 2).toBe(0);
+      expect(points.length).toBeGreaterThanOrEqual(6);
+    }
   });
 });
 

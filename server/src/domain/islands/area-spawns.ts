@@ -1,6 +1,7 @@
 import type { Random } from '../battle/types.js';
 import { type HexCoord, hexKey } from '../exploration/hex.js';
 import { type MapSpawn, pickWeighted } from '../exploration/spawns.js';
+import type { TypeBlocks } from './blocked-hexes.js';
 import {
   blockedKeys,
   type DraftAreaSpecies,
@@ -14,9 +15,10 @@ export interface SpawnArea {
 }
 
 export function spawnAreas(
-  draft: Pick<IslandDraft, 'tiles' | 'actions' | 'objects' | 'areas'>,
+  draft: Pick<IslandDraft, 'tiles' | 'actions' | 'props' | 'walls' | 'areas'>,
+  typeBlocks: TypeBlocks,
 ): SpawnArea[] {
-  const blocked = blockedKeys(draft);
+  const blocked = blockedKeys(draft, typeBlocks);
   const built = new Set([
     ...draft.actions.flatMap(({ tiles }) => tiles.map(hexKey)),
     ...blocked,

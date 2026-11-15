@@ -11,7 +11,9 @@ const ACTION_SCREENS: Dictionary[String, StringName] = {
 }
 const NOTHING_HERE_TEXT := "Nada por aqui."
 const NO_PATH_TEXT := "Não dá para chegar lá."
-const NO_TARGET := Vector2i(2147483647, 2147483647)
+## Encostado numa peça: a até isto das linhas dela, em pixels da arte (free-objects/03).
+const TOUCH_REACH := 8.0
+const HIT_ALPHA := 0.5
 const ALMOST_LEVEL_UP_TEXT := "A equipe está a 1 XP do próximo nível."
 const SPAWNED_TEXT := "%s apareceu aqui. Toque em Procurar."
 const EXPLORE_MUSIC_FADE_IN := 1.0
@@ -58,6 +60,9 @@ var _tamer_sprites: Dictionary[int, TamerSprite] = {}
 var _challenger: MapTamer = null
 var _npc_sprites: Array[NpcSprite] = []
 var _npc_target: NpcSprite = null
+## A peça com bloqueio ou ação até onde o Domador anda (free-objects/03), ou -1.
+var _prop_target := -1
+var _prop_images: Dictionary[String, Image] = {}
 var _talking: NpcSprite = null
 var _talk_lines: Array[String] = []
 var _talk_index := 0
@@ -124,8 +129,8 @@ func _ready() -> void:
 	_debug_tint_button.pressed.connect(func() -> void: _toggle_height_cues(HexMapView.height_lips, HexMapView.foot_shadows, not HexMapView.height_tint))
 	%DebugTest2Button.pressed.connect(_open_board_test.bind(2))
 	%DebugTest3Button.pressed.connect(_open_board_test.bind(3))
-	for size: int in [1, 2, 3]:
-		(get_node("%%DebugTamer%dButton" % size) as Button).pressed.connect(_debug_tamer.bind(size))
+	for team_size: int in [1, 2, 3]:
+		(get_node("%%DebugTamer%dButton" % team_size) as Button).pressed.connect(_debug_tamer.bind(team_size))
 	_greeting.tapped.connect(_on_greeting_tapped)
 	_refresh_god_button()
 	_refresh_contour_button()
@@ -153,10 +158,10 @@ func _begin() -> void:
 		_show_message(result.error, &"DangerLabel")
 		return
 	_map = result.data
+	_map.set_prop_lines(GameData.prop_blocks_by_type())
 	_player_coord = _map.start
 	_player_point = HexMapView.flat_center(_player_coord)
 	_map_view.set_map(_map)
-	_map_view.set_objects(_map.objects)
 	_map_view.set_props(_map.props)
 	_shown_rise = _rise_at(_player_coord)
 	_map_view.set_current(_player_coord)
@@ -229,56 +234,27 @@ func _tap(point: Vector2) -> void:
 		_go_to(art_point)
 
 
-## A arte de um objeto cobre os hexágonos de trás: o toque nela vale para o hexágono
-## dele ao lado do Domador, o de ação primeiro; longe dele, para o mais perto do toque.
-func _object_target(object: MapObject, art_point: Vector2) -> Vector2i:
-	var best := NO_TARGET
-	for coord: Vector2i in object.tiles:
-		if not _map.neighbors(_player_coord).has(coord):
-			continue
-		if best == NO_TARGET or (_map.action_at(coord) >= 0 and _map.action_at(best) < 0):
-			best = coord
-		elif (_map.action_at(coord) >= 0) == (_map.action_at(best) >= 0) and _closer(coord, best, art_point):
-			best = coord
-	if best != NO_TARGET:
-		return best
-	for coord: Vector2i in object.tiles:
-		if best == NO_TARGET or _closer(coord, best, art_point):
-			best = coord
-	return best
-
-
-func _closer(coord: Vector2i, than: Vector2i, art_point: Vector2) -> bool:
-	return _map_view.surface_center(coord).distance_to(art_point) < _map_view.surface_center(than).distance_to(art_point)
-
-
-## Num livre, o Domador anda até o ponto tocado; num bloqueado, até o centro do lado
-## livre mais perto, e executa a ação dele, se houver.
+## O Domador anda até o ponto tocado; com uma parede no centro do hexágono, chega por
+## um vizinho.
 func _go_to(art_point: Vector2) -> void:
 	_npc_target = null
+	_prop_target = -1
 	var npc := _npc_hit(art_point)
 	if npc != null:
 		_go_to_npc(npc)
 		return
+	var piece := _prop_hit(art_point)
+	if piece >= 0:
+		_go_to_prop(piece)
+		return
 	var target := _map_view.coord_at(art_point)
-	var object := _map_view.object_hit(art_point)
-	if object != null:
-		target = _object_target(object, art_point)
 	if not _map.has(target):
 		return
-	var action := -1
 	var goals: Dictionary[Vector2i, bool] = {target: true}
 	var finish := art_point + Vector2(0.0, _rise_at(target))
 	if HexMapView.grid_coord(finish) != target:
 		finish = HexMapView.flat_center(target)
-	if _map.is_blocked(target):
-		action = _map.action_at(target)
-		goals = _map.free_sides(target)
-		if goals.has(_player_coord):
-			if action >= 0:
-				_run_action(action)
-			return
-	elif target != _player_coord and _map.is_center_walled(target):
+	if target != _player_coord and _map.is_center_walled(target):
 		# Uma parede passa pelo centro (free-fences/02): o Domador chega por um vizinho
 		# e anda até o ponto tocado, parando rente a ela.
 		goals = _map.approach_goals(target, finish)
@@ -289,15 +265,13 @@ func _go_to(art_point: Vector2) -> void:
 			_show_message(NO_PATH_TEXT, &"SecondaryLabel")
 			return
 		hexes.append_array(path)
-		if _map.is_blocked(target):
-			finish = HexMapView.flat_center(path[path.size() - 1])
 	if finish.distance_to(_player_point) < 1.0:
 		return
-	_walk(WalkRoute.points(_map, _player_point, hexes, finish), action)
+	_walk(WalkRoute.points(_map, _player_point, hexes, finish))
 
 
 ## Quadro a quadro: o hexágono muda quando os pés cruzam a borda (wild-battle/15).
-func _walk(route: PackedVector2Array, action: int) -> void:
+func _walk(route: PackedVector2Array) -> void:
 	_walking = true
 	_message.hide()
 	_show_route(route)
@@ -333,18 +307,22 @@ func _walk(route: PackedVector2Array, action: int) -> void:
 	if tamer != null:
 		_next_point = null
 		_npc_target = null
+		_prop_target = -1
 		_challenge(tamer)
 	elif _next_point != null:
 		var next: Vector2 = _next_point
 		_next_point = null
 		_go_to(next)
+	elif _prop_target >= 0:
+		var piece := _prop_target
+		_prop_target = -1
+		if _touching_prop(piece):
+			_run_action_type(_map.props[piece].action_type_id)
 	elif _npc_target != null:
 		var npc := _npc_target
 		_npc_target = null
 		if ExplorationMap.distance(_player_coord, npc.coord) <= 1:
 			_talk(npc)
-	elif action >= 0:
-		_run_action(action)
 	else:
 		_enter_action(_map.action_at(origin), _map.action_at(_player_coord))
 
@@ -502,15 +480,15 @@ func _npc_hit(art_point: Vector2) -> NpcSprite:
 	return null
 
 
-## Perto, a conversa abre; longe, o Domador anda até o hexágono do NPC ou um vizinho
-## livre, o mais perto, e ela abre ao chegar.
+## Perto, a conversa abre; longe, o Domador anda até o hexágono do NPC ou um vizinho,
+## o mais perto, e ela abre ao chegar.
 func _go_to_npc(npc: NpcSprite) -> void:
 	if ExplorationMap.distance(_player_coord, npc.coord) <= 1:
 		_talk(npc)
 		return
 	var goals: Dictionary[Vector2i, bool] = {}
 	for coord: Vector2i in [npc.coord] + _map.neighbors(npc.coord):
-		if _map.has(coord) and not _map.is_blocked(coord):
+		if _map.has(coord):
 			goals[coord] = true
 	var path := _map.path_to_any(_player_coord, goals, _player_point)
 	if path.is_empty():
@@ -519,7 +497,76 @@ func _go_to_npc(npc: NpcSprite) -> void:
 	var hexes: Array[Vector2i] = [_player_coord]
 	hexes.append_array(path)
 	_npc_target = npc
-	_walk(WalkRoute.points(_map, _player_point, hexes, HexMapView.flat_center(path[path.size() - 1])), -1)
+	_walk(WalkRoute.points(_map, _player_point, hexes, HexMapView.flat_center(path[path.size() - 1])))
+
+
+## A peça da frente com bloqueio ou ação cuja arte tem um pixel desenhado em
+## `art_point`, ou -1. As outras deixam o toque passar para o chão.
+func _prop_hit(art_point: Vector2) -> int:
+	var best := -1
+	for index: int in _map.props.size():
+		var prop := _map.props[index]
+		if prop.action_type_id <= 0 and _map.prop_world_lines(index).is_empty():
+			continue
+		if best >= 0 and prop.foot().y < _map.props[best].foot().y:
+			continue
+		var slug := PropArt.slug_of(prop.prop_type_id)
+		var rect := PropArt.rect(slug, prop.variant)
+		var local := art_point - (prop.foot() - Vector2(0.0, _rise_at(prop.coord)))
+		if prop.mirrored:
+			local.x = -local.x - 1.0
+		if not rect.has_point(local):
+			continue
+		var image := _prop_image(slug, prop.variant)
+		var pixel := Vector2i(local - rect.position)
+		if image != null and image.get_pixelv(pixel.clamp(Vector2i.ZERO, image.get_size() - Vector2i.ONE)).a < HIT_ALPHA:
+			continue
+		best = index
+	return best
+
+
+func _prop_image(slug: String, variant: int) -> Image:
+	var key := "%s/%d" % [slug, variant]
+	if not _prop_images.has(key):
+		var texture := PropArt.icon(slug, variant)
+		_prop_images[key] = texture.get_image() if texture != null else null
+	return _prop_images[key]
+
+
+## Se o Domador está encostado na peça: a até TOUCH_REACH de uma linha dela, ou do pé,
+## numa sem linhas.
+func _touching_prop(index: int) -> bool:
+	var lines := _map.prop_world_lines(index)
+	if lines.is_empty():
+		return _player_point.distance_to(_map.props[index].foot()) <= TOUCH_REACH * 2.0
+	return ExplorationMap.nearest_on_lines(lines, _player_point).distance_to(_player_point) <= TOUCH_REACH
+
+
+## O Domador anda até o ponto da peça mais perto dele e para rente ao bloqueio; a ação
+## da peça acontece se ele chegar encostado. Já encostado, ela acontece sem andar.
+func _go_to_prop(index: int) -> void:
+	var prop := _map.props[index]
+	if _touching_prop(index):
+		_run_action_type(prop.action_type_id)
+		return
+	var lines := _map.prop_world_lines(index)
+	var finish := prop.foot() if lines.is_empty() else ExplorationMap.nearest_on_lines(lines, _player_point)
+	var target := HexMapView.grid_coord(finish)
+	if not _map.has(target):
+		_show_message(NO_PATH_TEXT, &"SecondaryLabel")
+		return
+	var goals: Dictionary[Vector2i, bool] = {target: true}
+	if _map.is_center_walled(target):
+		goals = _map.approach_goals(target, finish)
+	var hexes: Array[Vector2i] = [_player_coord]
+	if not goals.has(_player_coord):
+		var path := _map.path_to_any(_player_coord, goals, _player_point)
+		if path.is_empty():
+			_show_message(NO_PATH_TEXT, &"SecondaryLabel")
+			return
+		hexes.append_array(path)
+	_prop_target = index
+	_walk(WalkRoute.points(_map, _player_point, hexes, finish))
 
 
 func _talk(npc: NpcSprite) -> void:
@@ -708,11 +755,11 @@ func _spawn(species: CreatureSpecies) -> void:
 	_show_message(SPAWNED_TEXT % species.name, &"SecondaryLabel")
 
 
-func _debug_tamer(size: int) -> void:
+func _debug_tamer(team_size: int) -> void:
 	if _walking or _challenger != null:
 		return
 	_debug_menu.hide()
-	var result: Result = await Session.debug_tamer(_player_coord, size)
+	var result: Result = await Session.debug_tamer(_player_coord, team_size)
 	if not result.ok:
 		_show_message(result.error, &"DangerLabel")
 		return

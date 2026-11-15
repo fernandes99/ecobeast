@@ -17,6 +17,7 @@ const DISCARD := &"discard"
 signal _unsaved_answered(answer: String)
 signal _delete_answered(confirmed: bool)
 signal _publish_answered(confirmed: bool)
+signal _type_block_answered(confirmed: bool)
 
 var _blocked: VBoxContainer
 var _blocked_label: Label
@@ -40,6 +41,7 @@ var _actions_check: CheckButton
 var _blocks_check: CheckButton
 var _contour_check: CheckButton
 var _publish_dialog: ConfirmationDialog
+var _type_block_dialog: ConfirmationDialog
 var _side: VBoxContainer
 var _list: IslandList
 var _new_panel: NewIslandPanel
@@ -137,7 +139,6 @@ func _show_island(draft: IslandDraft, status: String) -> void:
 	_name_edit.text = draft.name if draft != null else ""
 	_name_edit.editable = draft != null
 	_canvas.selected_action = -1
-	_canvas.selected_object = -1
 	_canvas.selected_npc = -1
 	_canvas.selected_trail = -1
 	_canvas.selected_wall = -1
@@ -323,7 +324,6 @@ func _paint(coord: Vector2i) -> void:
 	if _tools.paints_marks():
 		_canvas.refresh_marks(changed)
 	elif _tools.tool == EditorTools.Tool.OBJECT:
-		_canvas.refresh_objects()
 		_canvas.refresh_props()
 	elif _tools.tool == EditorTools.Tool.VEGETATION:
 		_canvas.refresh_props_at(changed)
@@ -334,12 +334,10 @@ func _paint(coord: Vector2i) -> void:
 			_canvas.refresh_brush()
 			return
 		_canvas.update_tiles(changed)
-		_canvas.refresh_objects()
 		_canvas.refresh_props()
 	else:
 		_canvas.update_tiles(changed)
 		if _tools.tool == EditorTools.Tool.REMOVE:
-			_canvas.refresh_objects()
 			_canvas.refresh_props()
 			_canvas.refresh_npcs()
 		elif _tools.tool == EditorTools.Tool.ERASER:
@@ -370,7 +368,6 @@ func _on_pointer_dragged(flat: Vector2) -> void:
 func _on_tools_edited(step: EditorHistory.Step, merge: bool) -> void:
 	_history.record(step, merge)
 	_canvas.refresh_marks()
-	_canvas.refresh_objects()
 	_canvas.refresh_props()
 	_canvas.refresh_trails()
 	_canvas.selected_wall = _tools.fence_panel.selected
@@ -389,6 +386,7 @@ func _on_area_delete(key: int, area_name: String) -> void:
 
 
 func _on_brush_changed() -> void:
+	_canvas.editing_prop_block = _tools.object_panel.editing_blocks and _tools.object_panel.selected_prop >= 0
 	_canvas.refresh_brush()
 	_place_object_bar()
 	if _tools.tool == EditorTools.Tool.ACTION and not _actions_check.button_pressed:
@@ -416,7 +414,6 @@ func _on_stroke_ended() -> void:
 func _on_history_applied(coords: Array[Vector2i]) -> void:
 	_canvas.update_tiles(coords)
 	_canvas.refresh_marks()
-	_canvas.refresh_objects()
 	_canvas.refresh_props()
 	_tools.path_panel.refresh()
 	_canvas.selected_trail = _tools.path_panel.selected
@@ -544,7 +541,7 @@ func _fence_key(key: InputEventKey) -> bool:
 	return handled
 
 
-## As teclas que dependem da ferramenta: alturas, o objeto escolhido e o foco da área.
+## As teclas que dependem da ferramenta: alturas, a peça escolhida e o foco da área.
 func _tool_key(key: InputEventKey) -> bool:
 	if _draft == null or key.ctrl_pressed:
 		return false
@@ -575,6 +572,16 @@ func _tool_key(key: InputEventKey) -> bool:
 	var objects := _tools.object_panel
 	if _tools.tool != EditorTools.Tool.OBJECT:
 		return false
+	if objects.drawing and (key.keycode == KEY_ENTER or key.keycode == KEY_KP_ENTER or key.keycode == KEY_ESCAPE):
+		if key.keycode == KEY_ESCAPE:
+			objects.cancel_line()
+		else:
+			objects.finish_line()
+		_canvas.refresh_brush()
+		return true
+	if objects.editing_blocks and key.keycode == KEY_ESCAPE:
+		objects.toggle_blocks()
+		return true
 	match key.keycode:
 		KEY_LEFT:
 			objects.change_variant(-1)
@@ -583,13 +590,13 @@ func _tool_key(key: InputEventKey) -> bool:
 		KEY_M:
 			objects.toggle_mirror()
 		KEY_DELETE, KEY_BACKSPACE:
-			if objects.selected < 0 and objects.selected_prop < 0:
+			if objects.selected_prop < 0:
 				return false
 			objects.delete_selected()
 		KEY_ESCAPE:
-			if objects.selected < 0 and objects.selected_prop < 0:
+			if objects.selected_prop < 0:
 				return false
-			objects.select(-1)
+			objects.select_prop(-1)
 		_:
 			return false
 	return true
@@ -687,7 +694,7 @@ func _build() -> void:
 	layers.add_child(_areas_check)
 	_actions_check = _layer_check("Ações", true)
 	layers.add_child(_actions_check)
-	_blocks_check = _layer_check("Bloqueio", false)
+	_blocks_check = _layer_check("Bloqueios", true)
 	layers.add_child(_blocks_check)
 	_contour_check = CheckButton.new()
 	_contour_check.text = "Contorno"
@@ -718,6 +725,7 @@ func _build() -> void:
 		_canvas.selected_action = index
 		_canvas.refresh_brush())
 	_tools.object_panel.selection_changed.connect(_on_object_selected)
+	_tools.object_panel.type_block_save_requested.connect(_on_type_block_save)
 	_tools.npc_panel.selection_changed.connect(func(index: int) -> void:
 		_canvas.selected_npc = index
 		_canvas.refresh_brush())
@@ -752,6 +760,14 @@ func _build() -> void:
 	_canvas.marked = _tools.marked_coords
 	_canvas.fence_preview = _tools.fence_points
 	_canvas.brush_color = func(coord: Vector2i) -> Color: return _tools.brush_color(_draft, coord)
+	_canvas.block_preview = func() -> PackedVector2Array:
+		var panel := _tools.object_panel
+		var points := PackedVector2Array()
+		if _draft == null or not panel.drawing or panel.selected_prop < 0:
+			return points
+		for local: Vector2i in panel.drawing_line:
+			points.append(_draft.prop_flat(panel.selected_prop, local))
+		return points
 	for row: Dictionary in GameData.get_rows("action_types"):
 		var type_id := int(row.get("id", 0))
 		_canvas.action_colors[type_id] = Color.from_string(str(row.get("color_hex", "")), UiPalette.TEXT)
@@ -799,6 +815,14 @@ func _build() -> void:
 	_confirm_dialog.confirmed.connect(func() -> void: _delete_answered.emit(true))
 	_confirm_dialog.canceled.connect(func() -> void: _delete_answered.emit(false))
 	add_child(_confirm_dialog)
+
+	_type_block_dialog = ConfirmationDialog.new()
+	_type_block_dialog.title = TITLE
+	_type_block_dialog.ok_button_text = "Salvar no tipo"
+	_type_block_dialog.cancel_button_text = "Cancelar"
+	_type_block_dialog.confirmed.connect(func() -> void: _type_block_answered.emit(true))
+	_type_block_dialog.canceled.connect(func() -> void: _type_block_answered.emit(false))
+	add_child(_type_block_dialog)
 
 	_publish_dialog = ConfirmationDialog.new()
 	_publish_dialog.title = TITLE
@@ -851,7 +875,7 @@ func toggle_height_cut() -> void:
 	var cut := -1 if _tools.height_cut >= 0 else HexMapView.CUT_HEIGHT
 	_tools.height_cut = cut
 	_canvas.set_height_cut(cut)
-	_tools.object_panel.select(-1)
+	_tools.object_panel.select_prop(-1)
 	_refresh_cut_button()
 
 
@@ -873,18 +897,45 @@ func _popup_below(panel: PopupPanel, button: Control) -> void:
 
 
 func _on_object_selected(_index: int) -> void:
-	_canvas.selected_object = _tools.object_panel.selected
 	_canvas.selected_prop = _tools.object_panel.selected_prop
+	_canvas.editing_prop_block = _tools.object_panel.editing_blocks and _tools.object_panel.selected_prop >= 0
 	_canvas.refresh_brush()
 	_place_object_bar()
+
+
+## "Salvar como do tipo" (free-objects/02): confirma, grava no servidor, troca as linhas
+## do tipo no catálogo local e avisa as ilhas com a chegada bloqueada.
+func _on_type_block_save(prop_type_id: int, lines: Array[Dictionary]) -> void:
+	var type_name := str(GameData.get_row("prop_types", prop_type_id).get("name", "?"))
+	_type_block_dialog.dialog_text = "As linhas desta peça viram o bloqueio de todo %s sem ajuste, em todas as ilhas, também nas publicadas. Não dá para desfazer." % type_name
+	_type_block_dialog.popup_centered()
+	if not await _type_block_answered:
+		return
+	_set_message("Salvando o bloqueio do tipo...")
+	var body: Array = []
+	for line: Dictionary in lines:
+		body.append({"closed": line["closed"], "points": Array(line["points"])})
+	var response := await EditorApi.save_prop_type_blocks(prop_type_id, body)
+	if not response.ok:
+		_set_message(response.error, true)
+		return
+	GameData.set_prop_blocks(prop_type_id, MapProp.lines_from(DictFields.get_array(response.data, "blocks")))
+	_tools.object_panel.type_block_saved()
+	_canvas.refresh_props()
+	var blocked: Array[String] = []
+	for entry: Variant in DictFields.get_array(response.data, "blocked_starts"):
+		if entry is Dictionary:
+			blocked.append("%s (%s)" % [DictFields.get_string(entry, "name"), "publicada" if DictFields.get_string(entry, "kind") == "published" else "rascunho"])
+	if blocked.is_empty():
+		_set_message("Bloqueio do tipo %s salvo." % type_name)
+	else:
+		_set_message("Bloqueio do tipo %s salvo. A chegada ficou bloqueada em: %s. Mova a chegada antes de salvar essas ilhas." % [type_name, ", ".join(blocked)], true)
 
 
 func _place_object_bar() -> void:
 	var panel := _tools.object_panel
 	var rect := Rect2()
-	if _draft != null and panel.selected >= 0:
-		rect = _canvas.object_rect(panel.selected)
-	elif _draft != null and panel.selected_prop >= 0:
+	if _draft != null and panel.selected_prop >= 0:
 		rect = _canvas.prop_rect(panel.selected_prop)
 	if not rect.has_area() or _tools.tool != EditorTools.Tool.OBJECT or _canvas.is_overview():
 		_object_bar.visible = false
