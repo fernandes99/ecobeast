@@ -44,6 +44,7 @@ O que vem depois do MVP de estrutura (entrada, escolha do inicial e Hub). Cada l
 | 28  | [`free-trails`](free-trails/) | Caminhos nas ilhas: 4 tipos novos de chão, a máscara de chão com borda irregular e emendas entre tipos, e os traços livres desenhados pela ferramenta Caminho | free-props | concluída |
 | 29  | [`vegetation-brush`](vegetation-brush/) | Só 6 objetos de grade ficam (as casas, os prédios do Refúgio e da Loja e a cerca da cidade), e o editor ganha a ferramenta Vegetação, um pincel que espalha peças soltas por grupo | free-trails | concluída |
 | 30  | [`tamer-appearance`](tamer-appearance/) | A aparência do Domador em camadas (boneca de papel): corpo masculino ou feminino, pele, rosto, cabelo, chapéu e roupas, cada peça com a cor da paleta, e a tela Aparência na entrada e pelo avatar do Hub | auth-google, islands | concluída |
+| 31  | [`free-fences`](free-fences/) | A cerca vira parede: um traço em qualquer ângulo (madeira, pedra ou invisível), desenhado pela ferramenta Cerca do editor, que bloqueia o Domador pela linha exata; as cercas de grade viram paredes, e a Cerca (cidade) sai | free-trails, vegetation-brush | concluída |
 
 ## Pós-lançamento (do GDD)
 

@@ -306,14 +306,13 @@ describe('carga inicial do chão e dos objetos (island-villages/01)', () => {
     }
   });
 
-  it('tem só os 6 objetos da cidade, cada um com o hexágono de apoio e pelo menos 1 variante (vegetation-brush/01)', () => {
+  it('tem só os 5 objetos da cidade, cada um com o hexágono de apoio e pelo menos 1 variante (free-fences/04)', () => {
     expect(objects.map(({ id, slug }) => [id, slug])).toEqual([
       [21, 'refuge_building'],
       [22, 'shop_building'],
       [24, 'town_house'],
       [25, 'town_house_medium'],
       [26, 'town_house_large'],
-      [29, 'town_fence'],
     ]);
     for (const { id, variants } of objects) {
       expect(variants).toBeGreaterThanOrEqual(1);

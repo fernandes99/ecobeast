@@ -28,11 +28,5 @@
 		"slug": "town_house_large",
 		"name": "Casa grande (cidade)",
 		"variants": 10
-	},
-	{
-		"id": 29,
-		"slug": "town_fence",
-		"name": "Cerca (cidade)",
-		"variants": 2
 	}
 ]

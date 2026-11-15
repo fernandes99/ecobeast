@@ -1,6 +1,6 @@
 # 05. Cerca que se liga sozinha
 
-- **Status:** concluída
+- **Status:** concluída (substituída pela [free-fences/04](../free-fences/04-fence-conversion.md): a cerca virou parede)
 - **Depende de:** [04-plants-and-animations](04-plants-and-animations.md)
 
 ## Contexto

@@ -26,7 +26,6 @@ const TYPES := {
 	"town_house": ["one", 9],
 	"town_house_medium": ["pair", 12],
 	"town_house_large": ["triangle", 10],
-	"town_fence": ["one", 2],
 	"lamp_post": ["one", 2],
 	"sign": ["one", 2],
 	"flower_bed": ["one", 3],
@@ -103,14 +102,13 @@ func _init() -> void:
 			DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(path.get_base_dir()))
 			var error := art.save_png(path)
 			print("%s/%d: %dx%d %s" % [slug, variant, art.get_width(), art.get_height(), "ok" if error == OK else error_string(error)])
-			if slug == "town_fence":
-				var parts := _strip_cells(_town_fence_parts(variant))
-				error = parts.save_png(HexFences.PARTS_PATH % variant)
-				print("town_fence/parts_%d: %dx%d %s" % [variant, parts.get_width(), parts.get_height(), "ok" if error == OK else error_string(error)])
-				var wall_path := WALL_PATH % WALL_SLUGS[variant - 1]
-				DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(wall_path.get_base_dir()))
-				error = _strip_cells(_wall_cells(variant)).save_png(wall_path)
-				print("%s: %s" % [wall_path, "ok" if error == OK else error_string(error)])
+	for index: int in WALL_SLUGS.size():
+		if not only.is_empty() and not only.has(WALL_SLUGS[index]):
+			continue
+		var wall_path := WALL_PATH % WALL_SLUGS[index]
+		DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(wall_path.get_base_dir()))
+		var error := _strip_cells(_wall_cells(index + 1)).save_png(wall_path)
+		print("%s: %s" % [wall_path, "ok" if error == OK else error_string(error)])
 	quit()
 
 
@@ -599,40 +597,6 @@ static func _barrel(s: Image, at: Vector2i) -> void:
 	_fill(s, Rect2i(at.x + 1, at.y, 5, 1), WOOD[0])
 
 
-# --- Os objetos de vila da cidade ----------------------------------------------------
-
-
-func _draw_town_fence(variant: int, _frame: int) -> void:
-	var cell := HexFences.compose(_town_fence_parts(variant), 0)
-	var at := Vector2i((_centers[0] - HexFences.CELL_CENTER).round())
-	_image.blend_rect(cell, Rect2i(Vector2i.ZERO, cell.get_size()), at)
-
-
-## As 7 células da Cerca da cidade, no formato da island-villages/05: o poste do centro e
-## os braços dos lados 0 a 5. A madeira tem dois trilhos e um poste na ponta; a pedra,
-## um muro baixo com um pilar na ponta.
-func _town_fence_parts(variant: int) -> Array[Image]:
-	var cells: Array[Image] = []
-	var center := HexFences.CELL_CENTER
-	for index: int in 7:
-		var cell := Image.create(HexFences.CELL_SIZE.x, HexFences.CELL_SIZE.y, false, Image.FORMAT_RGBA8)
-		if index == 0:
-			if variant == 1:
-				_fence_post(cell, center)
-			else:
-				_fence_pillar(cell, center)
-		else:
-			var end := center + HexFences.EDGE_MIDPOINTS[index - 1]
-			if variant == 1:
-				_fence_rails(cell, center, end)
-				_fence_post(cell, end)
-			else:
-				_fence_wall(cell, center, end)
-				_fence_pillar(cell, end)
-		cells.append(cell)
-	return cells
-
-
 ## A folha das paredes (free-fences/01): o poste e uma travessa reta de ponta a ponta, sem
 ## poste, para as fatias repetirem a cada HexWalls.RAIL_SPAN colunas. Os tamanhos repetem
 ## os do HexWalls, que usa o GameData, que este script não tem.
@@ -657,7 +621,7 @@ func _wall_cells(variant: int) -> Array[Image]:
 	return [post, rail]
 
 
-## O muro do _fence_wall, deitado, com a emenda exata a cada 7 colunas.
+## O muro de pedra, deitado, com a emenda exata a cada 7 colunas.
 static func _straight_wall(cell: Image, foot_y: float) -> void:
 	var base := roundi(foot_y) + 2
 	for x: int in cell.get_width():
@@ -705,25 +669,6 @@ static func _fence_pillar(cell: Image, foot: Vector2) -> void:
 	_fill(cell, Rect2i(x - 1, y - 16, 10, 2), STONE[0])
 	_fill(cell, Rect2i(x - 1, y - 14, 10, 1), STONE[2])
 	_fill(cell, Rect2i(x, y - 8, 8, 1), STONE[2])
-
-
-static func _fence_wall(cell: Image, from: Vector2, to: Vector2) -> void:
-	var steps := ceili(from.distance_to(to) * 2.0)
-	var length := from.distance_to(to)
-	for step: int in steps + 1:
-		var t := step / float(steps)
-		var p := from.lerp(to, t)
-		var x := roundi(p.x)
-		var base := roundi(p.y) + 2
-		var seam := int(t * length) % 7 == 0
-		_dot(cell, x, base - 11, STONE[3])
-		_dot(cell, x, base - 10, STONE[0])
-		for y: int in range(base - 9, base):
-			var color := STONE[1]
-			if y == base - 5 or seam or y == base - 1:
-				color = STONE[2]
-			_dot(cell, x, y, color)
-		_dot(cell, x, base, STONE[3])
 
 
 static func _strip_cells(cells: Array[Image]) -> Image:

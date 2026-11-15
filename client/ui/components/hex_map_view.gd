@@ -260,10 +260,6 @@ func update_tiles(coords: Array[Vector2i]) -> void:
 			_build_row(key, tiles)
 	for sprite: MapObjectSprite in _objects:
 		sprite.place(_rise(_level_at(sprite.object.coord)))
-		if sprite.fence:
-			var art := _fence_art(sprite.object)
-			if art != null:
-				sprite.set_fence_texture(art)
 	_fade_objects()
 
 
@@ -321,11 +317,7 @@ func set_objects(objects: Array[MapObject]) -> void:
 	for object: MapObject in objects:
 		var row := GameData.get_row("map_object_types", object.object_type_id)
 		var sprite := MapObjectSprite.new()
-		var slug := str(row.get("slug", ""))
-		var fence_art := _fence_art(object) if HexFences.is_fence(slug) else null
-		if fence_art != null:
-			sprite.setup_fence(object, fence_art)
-		elif not sprite.setup(object, slug):
+		if not sprite.setup(object, str(row.get("slug", ""))):
 			sprite.free()
 			continue
 		add_child(sprite)
@@ -342,11 +334,6 @@ func object_hit(point: Vector2) -> MapObject:
 		if sprite.hits(point) and (best == null or sprite.get_index() > best.get_index()):
 			best = sprite
 	return best.object if best != null else null
-
-
-func _fence_art(object: MapObject) -> Texture2D:
-	var slug := str(GameData.get_row("map_object_types", object.object_type_id).get("slug", ""))
-	return HexFences.texture(slug, object.variant, HexFences.links(_map, object.coord, object.object_type_id))
 
 
 func _clear_objects() -> void:

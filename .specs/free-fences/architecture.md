@@ -114,7 +114,7 @@ A migration `free_fences_conversion`, em SQL escrito à mão, em cada `island_ma
 3. **As paredes novas:**
    - **Para cada par:** com a mesma variante, uma parede do centro de uma ao centro da outra. Com variantes diferentes, duas paredes, cada uma do centro da sua cerca até o meio do lado, no tipo da sua variante (1 vira `wood_fence`, 2 vira `stone_fence`).
    - **Para cada cerca sem ligação:** a peça reta de hoje, de (−30, 0) a (30, 0) a partir do centro dela. Os 2 px a menos de cada lado deixam as pontas dentro do hexágono dela, mesmo na beira da ilha, onde (±32, 0) cairia fora.
-   - O centro plano de (q, r) a partir do (0, 0) é `(64q + 32r, 42r)`. O `position` segue a ordem dos objetos.
+   - O centro plano de (q, r) a partir do (0, 0) é `(64q + 32r, 42r)`. O `position` continua depois das paredes que o mapa já tem, na ordem do id das cercas (revisto na fase 4: a ilha 1199 já tinha paredes).
 4. **A conferência:** toda parede convertida passa nas regras do contrato (pontos dentro da ilha, até 2.000 por ilha). A fase 4 confere isso no banco real antes de aplicar.
 5. **A limpeza:** apaga os objetos de tipo 29 (os `island_object_tiles` vão junto) e o tipo 29 de `map_object_types` (os `map_object_type_tiles` vão junto).
 
