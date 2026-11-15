@@ -14,7 +14,7 @@ const MASK_CODE := 3
 const MAX_TYPES := 32
 const TEXTURE_SIZE := 512
 const SMOOTH_STEP := 6.0
-const TRAIL_DECORATIONS: Array[String] = ["tuft", "dry_tuft", "flowers", "pebbles", "moss"]
+const TRAIL_DECORATIONS: Array[String] = ["tuft", "dry_tuft", "flowers", "pebbles", "moss", "clover", "dune_grass"]
 ## Os lados na ordem dos cantos de HexMapView.HEX_CORNERS: o lado i vai do canto i
 ## ao canto i + 1.
 const EDGE_NEIGHBORS: Array[Vector2i] = [

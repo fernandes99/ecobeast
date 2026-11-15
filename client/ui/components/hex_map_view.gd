@@ -975,14 +975,18 @@ func _collect_decorations(sheet: Array[Array], files: Array[Dictionary], row: in
 	var trails := _trails_near(tiles)
 	var no_trails: Array[MapTrail] = []
 	var row_center := float(STEP_Y * row) + SURFACE_CENTER.y
+	var taken := _prop_spots(props)
 	for tile: HexTile in tiles:
 		if tile.bare:
 			continue
 		var flat := flat_center(tile.coord)
 		var center := Vector2i(_tile_origin(tile.coord) + SURFACE_CENTER - _rise(tile.height))
 		var tile_trails := trails if ground_mask.has_trail(tile.coord) else no_trails
+		var tile_taken: Array = taken.get(tile.coord, [])
 		for decoration: HexDecorations.Decoration in HexDecorations.decorations_of(tile, _map.map_seed):
 			if spills_down(tile.coord, flat.y + decoration.offset.y) != spilled:
+				continue
+			if _under_prop(decoration, tile_taken):
 				continue
 			if allows_decoration.is_valid() and not allows_decoration.call(tile.coord, decoration.kind):
 				continue
@@ -1015,6 +1019,24 @@ func _collect_decorations(sheet: Array[Array], files: Array[Dictionary], row: in
 			if not files[band].has(path):
 				files[band][path] = []
 			files[band][path].append([base, prop.mirrored])
+
+
+## Os pontos ocupados pelas peças de cada hexágono: `[ponto, raio]` (nature-variety/01).
+func _prop_spots(props: Array) -> Dictionary:
+	var taken := {}
+	for prop: MapProp in props:
+		if not taken.has(prop.coord):
+			taken[prop.coord] = []
+		taken[prop.coord].append([prop.offset, PropArt.radius(_prop_slugs.get(prop.prop_type_id, ""), prop.variant)])
+	return taken
+
+
+func _under_prop(decoration: HexDecorations.Decoration, taken: Array) -> bool:
+	var radius: float = HexDecorations.KIND_RADIUS[decoration.kind]
+	for entry: Array in taken:
+		if Vector2(decoration.offset - (entry[0] as Vector2i)).length() < maxf(radius, entry[1] as float):
+			return true
+	return false
 
 
 ## Um pé no chão plano a `flat_y`, no hexágono `coord`, é desenhado na linha de baixo

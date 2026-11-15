@@ -358,5 +358,185 @@
 		"slug": "lava_stone",
 		"name": "Pedra de lava",
 		"variants": 5
+	},
+	{
+		"id": 61,
+		"slug": "cactus",
+		"name": "Cacto",
+		"variants": 4
+	},
+	{
+		"id": 62,
+		"slug": "sand_rock",
+		"name": "Pedra de arenito",
+		"variants": 4
+	},
+	{
+		"id": 63,
+		"slug": "snow_pine",
+		"name": "Pinheiro nevado",
+		"variants": 4
+	},
+	{
+		"id": 64,
+		"slug": "snow_rock",
+		"name": "Pedra com neve",
+		"variants": 4
+	},
+	{
+		"id": 65,
+		"slug": "snow_bush",
+		"name": "Arbusto nevado",
+		"variants": 4
+	},
+	{
+		"id": 66,
+		"slug": "snow_tuft",
+		"name": "Capim com geada",
+		"variants": 4
+	},
+	{
+		"id": 67,
+		"slug": "birch",
+		"name": "Bétula",
+		"variants": 4
+	},
+	{
+		"id": 68,
+		"slug": "oak",
+		"name": "Carvalho",
+		"variants": 4
+	},
+	{
+		"id": 69,
+		"slug": "fir",
+		"name": "Abeto",
+		"variants": 4
+	},
+	{
+		"id": 70,
+		"slug": "fallen_branch",
+		"name": "Galho caído",
+		"variants": 4
+	},
+	{
+		"id": 71,
+		"slug": "log",
+		"name": "Tronco caído",
+		"variants": 4
+	},
+	{
+		"id": 72,
+		"slug": "stump",
+		"name": "Toco",
+		"variants": 4
+	},
+	{
+		"id": 73,
+		"slug": "mushrooms",
+		"name": "Cogumelos",
+		"variants": 4
+	},
+	{
+		"id": 74,
+		"slug": "tall_grass",
+		"name": "Mato alto",
+		"variants": 4
+	},
+	{
+		"id": 75,
+		"slug": "wildflowers",
+		"name": "Flores do campo",
+		"variants": 4
+	},
+	{
+		"id": 76,
+		"slug": "clover",
+		"name": "Trevo",
+		"variants": 4
+	},
+	{
+		"id": 77,
+		"slug": "berry_bush",
+		"name": "Arbusto de frutinhas",
+		"variants": 4
+	},
+	{
+		"id": 78,
+		"slug": "thistle",
+		"name": "Cardo",
+		"variants": 4
+	},
+	{
+		"id": 79,
+		"slug": "dry_branch",
+		"name": "Galho seco",
+		"variants": 4
+	},
+	{
+		"id": 80,
+		"slug": "yellow_flowers",
+		"name": "Flores amarelas",
+		"variants": 4
+	},
+	{
+		"id": 81,
+		"slug": "slab",
+		"name": "Laje rachada",
+		"variants": 4
+	},
+	{
+		"id": 82,
+		"slug": "lichen_rock",
+		"name": "Pedra com líquen",
+		"variants": 4
+	},
+	{
+		"id": 83,
+		"slug": "tumbleweed",
+		"name": "Rolo seco",
+		"variants": 4
+	},
+	{
+		"id": 84,
+		"slug": "desert_flower",
+		"name": "Flor do deserto",
+		"variants": 4
+	},
+	{
+		"id": 85,
+		"slug": "bleached_branch",
+		"name": "Galho branco",
+		"variants": 4
+	},
+	{
+		"id": 86,
+		"slug": "dune_grass",
+		"name": "Capim de duna",
+		"variants": 4
+	},
+	{
+		"id": 87,
+		"slug": "frozen_branch",
+		"name": "Galho congelado",
+		"variants": 4
+	},
+	{
+		"id": 88,
+		"slug": "ice_shards",
+		"name": "Cristais de gelo",
+		"variants": 4
+	},
+	{
+		"id": 89,
+		"slug": "winter_berry",
+		"name": "Arbusto de inverno",
+		"variants": 4
+	},
+	{
+		"id": 90,
+		"slug": "snow_log",
+		"name": "Tronco com neve",
+		"variants": 4
 	}
 ]

@@ -3,6 +3,12 @@ extends RefCounted
 ## A arte de um tipo de peça solta fora do mapa (free-props/03): o ícone de uma
 ## variante e o retângulo da arte em volta do pé, em pixels da arte.
 
+## O espaço das peças de arte própria, que não estão em KIND_RADIUS: uma parte da largura
+## da variante, entre os limites (vegetation-packs/01).
+const ART_RADIUS_SHARE := 0.25
+const MIN_ART_RADIUS := 4.0
+const MAX_ART_RADIUS := 15.0
+
 static var _icons: Dictionary[String, Texture2D] = {}
 
 
@@ -26,6 +32,13 @@ static func icon(slug: String, variant: int) -> Texture2D:
 		texture = load(path) as Texture2D if ResourceLoader.exists(path) else null
 	_icons[key] = texture
 	return texture
+
+
+## O espaço que a peça ocupa no chão, em pixels da arte.
+static func radius(slug: String, variant: int) -> float:
+	if HexDecorations.KIND_RADIUS.has(slug):
+		return HexDecorations.KIND_RADIUS[slug]
+	return clampf(rect(slug, variant).size.x * ART_RADIUS_SHARE, MIN_ART_RADIUS, MAX_ART_RADIUS)
 
 
 ## O retângulo da arte, com o pé em (0, 0).

@@ -18,7 +18,10 @@ const CORNERS: Array[Vector2] = [
 const GROUND_SCALE := HEX_WIDTH / HexMapView.TILE_SIZE.x
 const DEFAULT_BIOME := "temperate"
 const DEFAULT_HEIGHT := 1
-const LOW_DECORATIONS: Array[String] = ["tuft", "flowers", "pebbles", "fern", "moss", "dry_tuft"]
+const LOW_DECORATIONS: Array[String] = [
+	"tuft", "flowers", "pebbles", "fern", "moss", "dry_tuft", "fallen_branch", "dry_branch", "bleached_branch",
+	"frozen_branch", "mushrooms", "clover", "wildflowers", "yellow_flowers", "desert_flower", "dune_grass",
+]
 const LOW_DECORATION_DISTANCE := 1
 const COVER_MARGIN := 2
 const MAX_COVER_CELLS := 64

@@ -316,7 +316,7 @@ describe('carga inicial do chão (island-villages/01)', () => {
   });
 });
 
-describe('carga inicial das peças soltas (free-props/01, free-objects/04, vegetation-packs/01)', () => {
+describe('carga inicial das peças soltas (free-props/01, free-objects/04, vegetation-packs/01, nature-variety/02)', () => {
   const read = <T>(file: string): T =>
     JSON.parse(readFileSync(join(SEED_DATA_DIR, file), 'utf8')) as T;
   const props =
@@ -331,9 +331,9 @@ describe('carga inicial das peças soltas (free-props/01, free-objects/04, veget
     }[]
   >('prop_type_blocks.json');
 
-  it('tem os 60 tipos, de 1 a 60, com pelo menos 1 variante', () => {
+  it('tem os 90 tipos, de 1 a 90, com pelo menos 1 variante', () => {
     expect(props.map(({ id }) => id)).toEqual(
-      Array.from({ length: 60 }, (_, index) => index + 1),
+      Array.from({ length: 90 }, (_, index) => index + 1),
     );
     for (const { variants } of props)
       expect(variants).toBeGreaterThanOrEqual(1);
@@ -355,13 +355,28 @@ describe('carga inicial das peças soltas (free-props/01, free-objects/04, veget
   });
 
   it('os pacotes têm 12 árvores, 13 arbustos e 8 pedras de 5 tamanhos', () => {
-    const packs = props.slice(27);
+    const packs = props.slice(27, 60);
     expect(packs.map(({ slug }) => slug).slice(0, 2)).toEqual([
       'leafy_tree',
       'moss_tree',
     ]);
     expect(packs).toHaveLength(33);
     expect(packs.slice(25).every(({ variants }) => variants === 5)).toBe(true);
+  });
+
+  it('as decorações do Deserto, da Neve e da nature-variety são peças de 4 variantes', () => {
+    const nature = props.slice(60);
+    expect(nature.map(({ slug }) => slug).slice(0, 7)).toEqual([
+      'cactus',
+      'sand_rock',
+      'snow_pine',
+      'snow_rock',
+      'snow_bush',
+      'snow_tuft',
+      'birch',
+    ]);
+    expect(nature.at(-1)?.slug).toBe('snow_log');
+    expect(nature.every(({ variants }) => variants === 4)).toBe(true);
   });
 
   it('os prédios bloqueiam em todas as variantes, e as pedras e árvores grandes dos pacotes nas variantes 1 e 2', () => {

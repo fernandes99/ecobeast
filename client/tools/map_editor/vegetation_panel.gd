@@ -9,13 +9,14 @@ const PACK_BUSHES: Array[String] = ["autumn_bush", "dry_twigs", "blue_flower_bus
 const PACK_STONES: Array[String] = ["sand_stone", "rust_crystal", "ice_crystal", "moss_stone", "white_stone", "slab_stone", "clay_stone", "lava_stone"]
 const PACK_ODD_STONES: Array[String] = ["rust_crystal", "ice_crystal", "lava_stone"]
 const GROUPS: Array[Dictionary] = [
-	{"name": "Árvores", "kinds": ["tree", "pine"], "per_tile": 1.0},
-	{"name": "Arbustos", "kinds": ["bush", "dark_bush", "dry_shrub", "fern"], "per_tile": 2.0},
-	{"name": "Gramas", "kinds": ["tuft", "dry_tuft", "moss"], "per_tile": 4.0},
-	{"name": "Flores", "kinds": ["flowers"], "per_tile": 3.0},
-	{"name": "Pedras pequenas", "kinds": ["pebbles"], "per_tile": 2.0},
-	{"name": "Pedras médias", "kinds": ["rock", "mossy_rock", "brown_rock"], "per_tile": 1.0},
-	{"name": "Pedras grandes", "kinds": ["boulder", "rock_pile", "spire"], "per_tile": 1.0},
+	{"name": "Árvores", "kinds": ["tree", "pine", "birch", "oak", "fir", "snow_pine"], "per_tile": 1.0, "off": ["snow_pine"]},
+	{"name": "Arbustos", "kinds": ["bush", "dark_bush", "dry_shrub", "fern", "berry_bush", "thistle", "winter_berry", "snow_bush", "tumbleweed", "cactus"], "per_tile": 2.0, "off": ["winter_berry", "snow_bush", "tumbleweed", "cactus"]},
+	{"name": "Gramas", "kinds": ["tuft", "dry_tuft", "moss", "tall_grass", "clover", "dune_grass", "snow_tuft"], "per_tile": 4.0, "off": ["dune_grass", "snow_tuft"]},
+	{"name": "Flores", "kinds": ["flowers", "wildflowers", "yellow_flowers", "mushrooms", "desert_flower"], "per_tile": 3.0, "off": ["desert_flower"]},
+	{"name": "Pedras pequenas", "kinds": ["pebbles", "ice_shards"], "per_tile": 2.0, "off": ["ice_shards"]},
+	{"name": "Pedras médias", "kinds": ["rock", "mossy_rock", "brown_rock", "lichen_rock", "sand_rock", "snow_rock"], "per_tile": 1.0, "off": ["sand_rock", "snow_rock"]},
+	{"name": "Pedras grandes", "kinds": ["boulder", "rock_pile", "spire", "slab"], "per_tile": 1.0},
+	{"name": "Galhos e troncos", "kinds": ["fallen_branch", "dry_branch", "log", "stump", "bleached_branch", "frozen_branch", "snow_log"], "per_tile": 0.5, "off": ["bleached_branch", "frozen_branch", "snow_log"]},
 	{"name": "Árvores (pacote)", "kinds": PACK_TREES, "per_tile": 1.0, "off": ["autumn_tree", "dead_tree", "snowy_pine", "snowy_tree", "broadleaf_tree", "palm_tree"]},
 	{"name": "Troncos (pacote)", "kinds": ["stump_log"], "per_tile": 0.5},
 	{"name": "Arbustos (pacote)", "kinds": PACK_BUSHES, "per_tile": 2.0, "off": ["autumn_bush", "dry_twigs", "barrel_cactus", "arm_cactus", "snowy_bush"]},
@@ -27,11 +28,6 @@ const DENSITIES: Array[float] = [0.5, 1.0, 2.0]
 const DENSITY_NAMES: Array[String] = ["Pouca", "Média", "Muita"]
 const MAX_PROPS := 20000
 const FULL_MESSAGE := "A ilha chegou ao limite de 20.000 peças."
-## O espaço das peças de arte própria, que não estão em KIND_RADIUS: uma parte da largura
-## da variante, entre os limites (vegetation-packs/01).
-const ART_RADIUS_SHARE := 0.25
-const MIN_ART_RADIUS := 4.0
-const MAX_ART_RADIUS := 15.0
 const ICON_WIDTH := 28
 
 var group := 0
@@ -247,9 +243,7 @@ static func kind_icon(slug: String) -> Texture2D:
 
 
 static func radius_of(slug: String, variant: int) -> float:
-	if HexDecorations.KIND_RADIUS.has(slug):
-		return HexDecorations.KIND_RADIUS[slug]
-	return clampf(PropArt.rect(slug, variant).size.x * ART_RADIUS_SHARE, MIN_ART_RADIUS, MAX_ART_RADIUS)
+	return PropArt.radius(slug, variant)
 
 
 ## Uma variante dentro do limite do grupo, quando ele tem um, e das que o tipo tem.
