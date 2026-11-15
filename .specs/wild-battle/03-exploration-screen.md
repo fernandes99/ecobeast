@@ -64,7 +64,7 @@ Com a grade e o gerador prontos, falta o jogador chegar ao mapa. Esta fase cria 
 - [x] Tocar em cada um dos seis vizinhos move o jogador para ele.
 - [x] Tocar longe, no próprio hexágono ou fora do mapa não move o jogador.
 - [x] Depois de andar, o mapa continua centrado no jogador.
-- [x] Andar sobre água e montanha funciona.
+- [x] Andar sobre água e montanha funciona. **Revisto na [bridges](../bridges/README.md#decisões):** a água passa a bloquear o andar, e a ponte é o caminho para atravessar.
 - [x] Dois toques rápidos dão um passo só.
 - [x] Arrastar o dedo sobre o mapa não o move.
 - [x] Em 405×720 e nos tamanhos conferidos na [01](01-hex-grid.md), a arte continua em pixels inteiros depois de andar.

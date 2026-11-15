@@ -33,6 +33,11 @@ const MIN_TRAIL_WIDTH = 8;
 const MAX_TRAIL_WIDTH = 64;
 export const MAX_WALLS = 2000;
 const MAX_WALL_POINTS = 128;
+export const MAX_BRIDGES = 500;
+const MIN_BRIDGE_LENGTH = 16;
+export const DEFAULT_BRIDGE_WIDTH = 28;
+const MIN_BRIDGE_WIDTH = 16;
+const MAX_BRIDGE_WIDTH = 64;
 export const MAX_NPCS = 200;
 export const MAX_NPC_TILES = 40;
 export const MAX_DIALOGUE_LENGTH = 2_000;
@@ -84,6 +89,17 @@ export interface DraftWall {
   points: number[];
 }
 
+/**
+ * Uma ponte (bridges/01): `type` é o slug de `bridge_types`, e `points` são as duas
+ * pontas, `x0, y0, x1, y1`, como os de uma parede.
+ */
+export interface DraftBridge {
+  type: string;
+  points: number[];
+  /** A largura do piso em pixels; sem ela, `DEFAULT_BRIDGE_WIDTH`. */
+  width?: number;
+}
+
 /** Um NPC do catálogo posto em `(q, r)`, que também faz parte do passeio. */
 export interface DraftNpc extends HexCoord {
   npcId: number;
@@ -117,6 +133,7 @@ export interface IslandDraft {
   props: DraftProp[];
   trails?: DraftTrail[];
   walls?: DraftWall[];
+  bridges?: DraftBridge[];
   npcs?: DraftNpc[];
   areas: DraftArea[];
 }
@@ -129,6 +146,7 @@ export interface KnownIds {
   propVariants: ReadonlyMap<number, number>;
   npcIds: ReadonlySet<number>;
   wallSlugs: ReadonlySet<string>;
+  bridgeSlugs: ReadonlySet<string>;
   /** As linhas de bloqueio padrão de cada tipo de peça. */
   propBlocks: TypeBlocks;
 }
@@ -339,26 +357,75 @@ function wallsError(
   return null;
 }
 
-function npcsError(
-  npcs: DraftNpc[],
-  tiles: ReadonlySet<string>,
+function bridgesError(
+  bridges: DraftBridge[],
+  biomes: ReadonlyMap<string, Biome>,
   known: KnownIds,
 ): string | null {
+  if (bridges.length > MAX_BRIDGES) return 'A ilha pode ter até 500 pontes.';
+  const origin = flatCenter({ q: 0, r: 0 });
+  for (const [index, bridge] of bridges.entries()) {
+    const number = index + 1;
+    if (!known.bridgeSlugs.has(bridge.type)) {
+      return `A ponte ${number} tem um tipo que não existe.`;
+    }
+    const { points, width } = bridge;
+    if (points.length !== 4 || !points.every(Number.isInteger)) {
+      return `A ponte ${number} precisa ter 2 pontas.`;
+    }
+    if (
+      width !== undefined &&
+      (!Number.isInteger(width) ||
+        width < MIN_BRIDGE_WIDTH ||
+        width > MAX_BRIDGE_WIDTH)
+    ) {
+      return `A ponte ${number} precisa ter de ${MIN_BRIDGE_WIDTH} a ${MAX_BRIDGE_WIDTH} px de largura.`;
+    }
+    for (let at = 0; at < points.length; at += 2) {
+      const biome = biomes.get(
+        hexKey(
+          gridCoord({
+            x: origin.x + points[at]!,
+            y: origin.y + points[at + 1]!,
+          }),
+        ),
+      );
+      if (biome === undefined || isWater(biome)) {
+        return 'A ponta da ponte precisa ficar em terra.';
+      }
+    }
+    const [x0, y0, x1, y1] = points as [number, number, number, number];
+    if (Math.hypot(x1 - x0, y1 - y0) < MIN_BRIDGE_LENGTH) {
+      return `A ponte ${number} precisa ter pelo menos ${MIN_BRIDGE_LENGTH} px.`;
+    }
+  }
+  return null;
+}
+
+function npcsError(
+  npcs: DraftNpc[],
+  biomes: ReadonlyMap<string, Biome>,
+  known: KnownIds,
+): string | null {
+  const water = (coord: HexCoord): boolean =>
+    isWater(biomes.get(hexKey(coord))!);
   if (npcs.length > MAX_NPCS) return 'A ilha pode ter até 200 NPCs.';
   for (const [index, npc] of npcs.entries()) {
     const number = index + 1;
     if (!known.npcIds.has(npc.npcId)) {
       return `O NPC ${number} não existe no catálogo.`;
     }
-    if (!tiles.has(hexKey(npc))) {
+    if (!biomes.has(hexKey(npc))) {
       return `O NPC ${number} fica em ${at(npc)}, que não é da ilha.`;
     }
+    if (water(npc)) return 'O NPC não pode ficar na água.';
     const walk = new Set([hexKey(npc)]);
     for (const coord of npc.tiles) {
       const key = hexKey(coord);
-      if (!tiles.has(key)) {
+      if (!biomes.has(key)) {
         return `O NPC ${number} passeia por ${at(coord)}, que não é da ilha.`;
       }
+      if (water(coord)) return 'O NPC não pode ficar na água.';
       if (walk.has(key)) {
         return `O NPC ${number} repete o hexágono ${at(coord)} no passeio.`;
       }
@@ -439,10 +506,12 @@ export function draftError(draft: IslandDraft, known: KnownIds): string | null {
     return 'A ilha precisa ter de 1 a 20.000 hexágonos.';
   }
   const tiles = new Set<string>();
+  const biomes = new Map<string, Biome>();
   for (const tile of draft.tiles) {
     const key = hexKey(tile);
     if (tiles.has(key)) return `O hexágono ${at(tile)} aparece duas vezes.`;
     tiles.add(key);
+    biomes.set(key, tile.biome);
     const error = tileError(tile, known);
     if (error) return error;
   }
@@ -457,7 +526,9 @@ export function draftError(draft: IslandDraft, known: KnownIds): string | null {
   if (trails) return trails;
   const walls = wallsError(draft.walls ?? [], tiles, known);
   if (walls) return walls;
-  const npcs = npcsError(draft.npcs ?? [], tiles, known);
+  const bridges = bridgesError(draft.bridges ?? [], biomes, known);
+  if (bridges) return bridges;
+  const npcs = npcsError(draft.npcs ?? [], biomes, known);
   if (npcs) return npcs;
 
   const keys = new Set<number>();
@@ -506,6 +577,7 @@ const byRowThenColumn = (a: HexCoord, b: HexCoord): number =>
  * (r, q), ações na ordem da lista (cada uma com os hexágonos em (r, q)),
  * peças em ordem de (r, q, dy, dx, tipo, variante, espelho), traços na ordem
  * da lista (só quando há algum), paredes na ordem da lista (só quando há alguma),
+ * pontes na ordem da lista (só quando há alguma),
  * NPCs em ordem de (r, q, npc_id), cada um com o
  * passeio em (r, q) (só quando há algum),
  * áreas na ordem da `key`, numeradas de novo de 1 em diante, e espécies em
@@ -585,6 +657,16 @@ export function canonicalDraft(draft: IslandDraft): string {
           walls: draft.walls.map(({ type, points }) => ({
             type,
             points: [...points],
+          })),
+        }
+      : {}),
+    // Só com pontes: uma ilha sem pontes tem o hash de antes.
+    ...(draft.bridges?.length
+      ? {
+          bridges: draft.bridges.map(({ type, points, width }) => ({
+            type,
+            points: [...points],
+            width: width ?? DEFAULT_BRIDGE_WIDTH,
           })),
         }
       : {}),

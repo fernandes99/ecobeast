@@ -20,7 +20,7 @@ A posição do jogador continua só no cliente: o servidor não confere passo a 
 
 - Mostrar a rota antes de andar, ou pedir confirmação do destino.
 - Custo por terreno ou altura: todo hexágono livre custa 1, como no passo de um hexágono.
-- Bloqueio por terreno (água, montanha): continua valendo só o bloqueio dos objetos.
+- Bloqueio por terreno (água, montanha): continua valendo só o bloqueio dos objetos. **Revisto na [bridges](../bridges/README.md#decisões):** a água passa a bloquear o andar, e a ponte é o caminho para atravessar.
 - Mudar o servidor.
 
 ## Requisitos

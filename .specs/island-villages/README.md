@@ -40,7 +40,7 @@ Do dono, em 2026-11-11:
 | A construção de hoje é uma ação de abrir uma tela. Depois virão outras ações (diálogo, ir para outra ilha ou mapa, começar uma luta) | Pedido do dono |
 | Tocar num hexágono bloqueado com ação, estando ao lado dele, executa a ação sem entrar | Pedido do dono: é como bater na porta |
 | A primeira leva de objetos é a lista do [architecture.md](architecture.md#os-tipos-de-objeto), com variantes de cor nas casas | Aprovada pelo dono |
-| A água continua livre para andar; a ponte é só visual | Pedido do dono |
+| A água continua livre para andar; a ponte é só visual | Pedido do dono **Revisto na [bridges](../bridges/README.md#decisões):** a água passa a bloquear o andar, e a ponte é o caminho para atravessar. |
 
 Escolhas do planejamento (corrigíveis; ao mudar uma, atualize aqui e no [architecture.md](architecture.md)):
 

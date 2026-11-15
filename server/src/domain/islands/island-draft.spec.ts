@@ -5,6 +5,7 @@ import {
   type DraftNpc,
   type IslandDraft,
   type KnownIds,
+  MAX_BRIDGES,
   MAX_ISLAND_TILES,
   MAX_NPC_TILES,
   MAX_NPCS,
@@ -30,6 +31,7 @@ const known: KnownIds = {
   ]),
   npcIds: new Set([1, 2]),
   wallSlugs: new Set(['wood_fence', 'invisible_wall']),
+  bridgeSlugs: new Set(['wood_bridge', 'rope_bridge']),
   propBlocks: new Map(),
 };
 
@@ -630,6 +632,111 @@ describe('as paredes (free-fences/01)', () => {
   });
 });
 
+describe('as pontes (bridges/01)', () => {
+  const bridge = () => ({ type: 'wood_bridge', points: [0, 0, 64, 0] });
+
+  it('aceita uma ponte com as duas pontas em terra', () => {
+    const draft = island();
+    draft.bridges = [
+      bridge(),
+      { type: 'rope_bridge', points: [-20, 4, 70, 6] },
+    ];
+    expect(draftError(draft, known)).toBeNull();
+  });
+
+  it('recusa uma ponte com tipo que não existe', () => {
+    const draft = island();
+    draft.bridges = [bridge(), { ...bridge(), type: 'lava_bridge' }];
+    expect(draftError(draft, known)).toBe(
+      'A ponte 2 tem um tipo que não existe.',
+    );
+  });
+
+  it('recusa pontas que não são 2 pares de inteiros', () => {
+    const draft = island();
+    for (const points of [
+      [0, 0],
+      [0, 0, 64],
+      [0, 0, 32, 0, 64, 0],
+      [0, 0, 63.5, 0],
+    ]) {
+      draft.bridges = [{ ...bridge(), points }];
+      expect(draftError(draft, known)).toBe('A ponte 1 precisa ter 2 pontas.');
+    }
+  });
+
+  it('recusa uma ponta fora da ilha ou na água', () => {
+    const draft = island();
+    for (const points of [
+      [0, 0, 400, 0],
+      [0, 0, 32, 42],
+    ]) {
+      draft.bridges = [{ ...bridge(), points }];
+      expect(draftError(draft, known)).toBe(
+        'A ponta da ponte precisa ficar em terra.',
+      );
+    }
+  });
+
+  it('recusa pontas a menos de 16 px', () => {
+    const draft = island();
+    draft.bridges = [bridge(), { ...bridge(), points: [0, 0, 10, 12] }];
+    expect(draftError(draft, known)).toBe(
+      'A ponte 2 precisa ter pelo menos 16 px.',
+    );
+    draft.bridges = [{ ...bridge(), points: [0, 0, 16, 0] }];
+    expect(draftError(draft, known)).toBeNull();
+  });
+
+  it('aceita a largura de 16 a 64 px e recusa fora disso', () => {
+    const draft = island();
+    for (const width of [16, 28, 64]) {
+      draft.bridges = [{ ...bridge(), width }];
+      expect(draftError(draft, known)).toBeNull();
+    }
+    for (const width of [15, 65, 20.5]) {
+      draft.bridges = [bridge(), { ...bridge(), width }];
+      expect(draftError(draft, known)).toBe(
+        'A ponte 2 precisa ter de 16 a 64 px de largura.',
+      );
+    }
+  });
+
+  it('sem largura, a ponte tem 28 px, e a largura entra no hash', () => {
+    const draft = island();
+    draft.bridges = [bridge()];
+    const missing = draftHash(draft);
+    expect(JSON.parse(canonicalDraft(draft)).bridges[0].width).toBe(28);
+    draft.bridges = [{ ...bridge(), width: 28 }];
+    expect(draftHash(draft)).toBe(missing);
+    draft.bridges = [{ ...bridge(), width: 40 }];
+    expect(draftHash(draft)).not.toBe(missing);
+  });
+
+  it(`recusa mais de ${MAX_BRIDGES} pontes`, () => {
+    const draft = island();
+    draft.bridges = Array.from({ length: MAX_BRIDGES + 1 }, bridge);
+    expect(draftError(draft, known)).toBe('A ilha pode ter até 500 pontes.');
+  });
+
+  it('leva as pontes no hash, na ordem, e uma ilha sem pontes tem o hash de antes', () => {
+    const draft = island();
+    const plain = draftHash(draft);
+    draft.bridges = [];
+    expect(draftHash(draft)).toBe(plain);
+    draft.bridges = [bridge(), { ...bridge(), type: 'rope_bridge' }];
+    const two = draftHash(draft);
+    expect(two).not.toBe(plain);
+    draft.bridges.reverse();
+    expect(draftHash(draft)).not.toBe(two);
+    expect(JSON.parse(canonicalDraft(draft)).bridges[0]).toEqual({
+      type: 'rope_bridge',
+      points: [0, 0, 64, 0],
+      width: 28,
+    });
+  });
+});
+
 describe('os NPCs da ilha (island-npcs/01)', () => {
   const npc = (): DraftNpc => ({
     npcId: 1,
@@ -643,8 +750,14 @@ describe('os NPCs da ilha (island-npcs/01)', () => {
     dialogue: 'Bem-vindo!\n\nO Refúgio fica ali.',
     actionTypeId: REFUGE,
   });
+  // Na ilha de teste, (0, 1) é água; aqui ela vira terra para o passeio.
+  const landIsland = (): IslandDraft => {
+    const draft = island();
+    draft.tiles[2] = { q: 0, r: 1, biome: 'temperate', height: 1, variant: 1 };
+    return draft;
+  };
   const withNpcs = (...npcs: DraftNpc[]): IslandDraft => ({
-    ...island(),
+    ...landIsland(),
     npcs,
   });
 
@@ -707,6 +820,23 @@ describe('os NPCs da ilha (island-npcs/01)', () => {
     );
   });
 
+  it('recusa um NPC nascendo ou passeando na água (bridges/04)', () => {
+    const draft: IslandDraft = { ...island(), npcs: [{ ...npc(), tiles: [] }] };
+    expect(draftError(draft, known)).toBeNull();
+    draft.npcs = [{ ...npc(), q: 0, r: 1, tiles: [] }];
+    expect(draftError(draft, known)).toBe('O NPC não pode ficar na água.');
+    draft.npcs = [
+      {
+        ...npc(),
+        tiles: [
+          { q: 1, r: 0 },
+          { q: 0, r: 1 },
+        ],
+      },
+    ];
+    expect(draftError(draft, known)).toBe('O NPC não pode ficar na água.');
+  });
+
   it('conta o diálogo em caracteres, não em unidades de UTF-16', () => {
     expect(
       draftError(withNpcs({ ...npc(), dialogue: '😀'.repeat(2_000) }), known),
@@ -741,7 +871,7 @@ describe('os NPCs da ilha (island-npcs/01)', () => {
   });
 
   it('uma ilha sem NPC tem o hash de antes', () => {
-    const plain = draftHash(island());
+    const plain = draftHash(landIsland());
     expect(draftHash(withNpcs())).toBe(plain);
     expect(draftHash(withNpcs(npc()))).not.toBe(plain);
   });

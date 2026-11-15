@@ -61,6 +61,7 @@ O Ecobeast é um jogo mobile (Android/iOS, retrato): o cliente em **Godot 4.7 co
 | [vegetation-packs](vegetation-packs/) | As árvores, os arbustos e as pedras de três pacotes da craftpix.net como peças soltas, na ferramenta Peças e no pincel Vegetação |
 | [prop-depth-blocks](prop-depth-blocks/) | A ordem de desenho pelo pé, o bloqueio padrão por variante, o hexágono bloqueado pelo centro e a ferramenta Bloqueios do editor |
 | [vegetation-wind](vegetation-wind/) | Os arbustos dos pacotes balançando com o vento das decorações do bioma e os pixels da copa das árvores mexendo no vento |
+| [bridges](bridges/) | Pontes retas em qualquer ângulo nas ilhas, com a arte de um pacote, e a água bloqueando o andar |
 
 As próximas iniciativas estão no [roadmap.md](roadmap.md).
 

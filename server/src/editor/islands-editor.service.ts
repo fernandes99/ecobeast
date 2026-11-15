@@ -5,6 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import {
+  DEFAULT_BRIDGE_WIDTH,
   draftError,
   draftHash,
   type IslandDraft,
@@ -18,6 +19,7 @@ import {
 } from '../islands/islands.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import {
+  toBridgeDto,
   toNpcDto,
   toPropDto,
   toTrailDto,
@@ -105,6 +107,11 @@ export function toDraft(dto: IslandDraftDto): IslandDraft {
       type,
       points: [...points],
     })),
+    bridges: (dto.bridges ?? []).map(({ type, points, width }) => ({
+      type,
+      points: [...points],
+      ...(width === undefined ? {} : { width }),
+    })),
     npcs: (dto.npcs ?? []).map((npc) => ({
       npcId: npc.npc_id,
       q: npc.q,
@@ -141,6 +148,7 @@ function toDto(draft: IslandDraft): IslandDraftDto {
     props: draft.props.map(toPropDto),
     trails: (draft.trails ?? []).map(toTrailDto),
     walls: (draft.walls ?? []).map(toWallDto),
+    bridges: (draft.bridges ?? []).map(toBridgeDto),
     npcs: (draft.npcs ?? []).map(toNpcDto),
     areas: draft.areas.map(({ key, name, colorHex, spawnCount, species }) => ({
       key,
@@ -286,7 +294,7 @@ export class IslandsEditorService {
   }
 
   private async knownIds(): Promise<KnownIds> {
-    const [actions, grounds, species, props, npcs, walls, blocks] =
+    const [actions, grounds, species, props, npcs, walls, bridges, blocks] =
       await Promise.all([
         this.prisma.actionType.findMany({ select: { id: true } }),
         this.prisma.groundType.findMany({ select: { slug: true } }),
@@ -294,6 +302,7 @@ export class IslandsEditorService {
         this.prisma.propType.findMany({ select: { id: true, variants: true } }),
         this.prisma.npc.findMany({ select: { id: true } }),
         this.prisma.wallType.findMany({ select: { slug: true } }),
+        this.prisma.bridgeType.findMany({ select: { slug: true } }),
         this.islands.readTypeBlocks(),
       ]);
     return {
@@ -303,6 +312,7 @@ export class IslandsEditorService {
       propVariants: new Map(props.map(({ id, variants }) => [id, variants])),
       npcIds: new Set(npcs.map(({ id }) => id)),
       wallSlugs: new Set(walls.map(({ slug }) => slug)),
+      bridgeSlugs: new Set(bridges.map(({ slug }) => slug)),
       propBlocks: blocks,
     };
   }
@@ -475,6 +485,26 @@ export class IslandsEditorService {
     for (let first = 0; first < walls.length; first += TILE_CHUNK) {
       await tx.islandWall.createMany({
         data: walls.slice(first, first + TILE_CHUNK),
+      });
+    }
+
+    const bridgeIds = new Map(
+      (await tx.bridgeType.findMany({ select: { id: true, slug: true } })).map(
+        ({ id, slug }) => [slug, id],
+      ),
+    );
+    const bridges = (draft.bridges ?? []).map(
+      ({ type, points, width }, position) => ({
+        islandMapId: map.id,
+        bridgeTypeId: bridgeIds.get(type)!,
+        position,
+        points,
+        width: width ?? DEFAULT_BRIDGE_WIDTH,
+      }),
+    );
+    for (let first = 0; first < bridges.length; first += TILE_CHUNK) {
+      await tx.islandBridge.createMany({
+        data: bridges.slice(first, first + TILE_CHUNK),
       });
     }
 

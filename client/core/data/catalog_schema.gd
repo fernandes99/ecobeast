@@ -195,6 +195,10 @@ const TABLES := {
 		"key": ["id"],
 		"columns": {"id": ID, "slug": SLUG, "name": TEXT, "visible": {"type": "bool"}},
 	},
+	"bridge_types": {
+		"key": ["id"],
+		"columns": {"id": ID, "slug": SLUG, "name": TEXT},
+	},
 	"body_types": {
 		"key": ["id"],
 		"columns": {"id": ID, "slug": SLUG, "name": TEXT},

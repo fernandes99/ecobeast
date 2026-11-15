@@ -65,7 +65,7 @@ Uma verificação temporária confere os critérios nos quatro tamanhos, e a tel
 Passos do dono no editor (F5) e no celular:
 
 1. Abrir o mapa e conferir o destaque.
-2. Andar por água, terra, colina, pedra e montanha.
+2. Andar por água, terra, colina, pedra e montanha. **Revisto na [bridges](../bridges/README.md#decisões):** a água passa a bloquear o andar, e a ponte é o caminho para atravessar.
 3. Passar atrás de um morro e de uma árvore.
 
 ```bash

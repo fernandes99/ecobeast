@@ -12,6 +12,7 @@ var _coord_at: Array[Vector2i] = []
 var _count := 0
 var _trails: Array[MapTrail] = []
 var _walls: Array[MapWall] = []
+var _bridges: Array[MapBridge] = []
 
 
 func _init() -> void:
@@ -48,6 +49,11 @@ func set_trails(trails: Array[MapTrail]) -> void:
 
 func set_walls(walls: Array[MapWall]) -> void:
 	_walls = walls.duplicate()
+	queue_redraw()
+
+
+func set_bridges(bridges: Array[MapBridge]) -> void:
+	_bridges = bridges.duplicate()
 	queue_redraw()
 
 
@@ -133,3 +139,8 @@ func _draw() -> void:
 		if visible_wall and not _surface_colors.has(wall.type):
 			_surface_colors[wall.type] = _average_color(HexWalls.ART_PATH % wall.type)
 		draw_polyline(wall.points, _surface_colors[wall.type] if visible_wall else UiPalette.DANGER, WALL_WIDTH)
+	for bridge: MapBridge in _bridges:
+		var key := "bridge:" + bridge.type
+		if not _surface_colors.has(key):
+			_surface_colors[key] = _average_color(HexBridges.ART_PATH % [bridge.type, "middle"])
+		draw_line(bridge.from, bridge.to, _surface_colors[key], bridge.width)

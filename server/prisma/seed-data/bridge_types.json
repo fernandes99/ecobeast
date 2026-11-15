@@ -1,0 +1,12 @@
+[
+	{
+		"id": 4,
+		"slug": "rope_bridge",
+		"name": "Ponte de corda"
+	},
+	{
+		"id": 5,
+		"slug": "wood_bridge",
+		"name": "Ponte de madeira"
+	}
+]

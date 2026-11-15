@@ -17,7 +17,7 @@ Com a [01](01-village-records.md), cada hexágono de uma ilha pode guardar um ch
 
 - Objetos ([03](03-map-objects.md)).
 - Chão no mapa sorteado.
-- Trilha com mais de uma largura, ou cruzando água como ponte (a ponte é um objeto).
+- Trilha com mais de uma largura, ou cruzando água como ponte (a ponte é um objeto). **Revisto na [bridges](../bridges/README.md#decisões):** a água passa a bloquear o andar, e a ponte é o caminho para atravessar.
 
 ## Requisitos
 

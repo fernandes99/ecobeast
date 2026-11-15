@@ -53,6 +53,7 @@ interface Draft {
   props?: DraftProp[];
   trails?: { ground: string; width: number; points: number[] }[];
   walls?: { type: string; points: number[] }[];
+  bridges?: { type: string; points: number[]; width?: number }[];
   npcs?: DraftNpc[];
   areas: {
     key: number;
@@ -586,6 +587,72 @@ describe('Editor de ilhas (e2e)', () => {
         .expect(400);
       expect(response.body.message).toBe(
         'A parede 1 tem um tipo que não existe.',
+      );
+    });
+  });
+
+  describe('as pontes (bridges/01)', () => {
+    it('salva e lê de volta as pontes, na mesma ordem', async () => {
+      const body = draft();
+      body.bridges = [
+        { type: 'wood_bridge', points: [-64, 0, 64, 0], width: 64 },
+        { type: 'rope_bridge', points: [32, -42, -32, 42], width: 16 },
+        { type: 'wood_bridge', points: [-32, 42, 32, -42] },
+      ];
+      const id = await create(body);
+      const read = (await call('get', `/islands/${id}`).expect(200))
+        .body as Draft;
+      expect(read.bridges).toEqual([
+        body.bridges[0],
+        body.bridges[1],
+        { ...body.bridges[2], width: 28 },
+      ]);
+    });
+
+    it('recusa uma ponte larga demais (400)', async () => {
+      const id = await create();
+      const body = draft();
+      body.bridges = [
+        { type: 'wood_bridge', points: [-64, 0, 64, 0], width: 65 },
+      ];
+      const response = await call('put', `/islands/${id}/draft`)
+        .send(body)
+        .expect(400);
+      expect(response.body.message).toBe(
+        'A ponte 1 precisa ter de 16 a 64 px de largura.',
+      );
+    });
+
+    it('lê uma ilha sem pontes com a lista vazia', async () => {
+      const id = await create();
+      const read = (await call('get', `/islands/${id}`).expect(200))
+        .body as Draft;
+      expect(read.bridges).toEqual([]);
+    });
+
+    it('recusa uma ponta de ponte na água (400)', async () => {
+      const id = await create();
+      const body = draft();
+      body.tiles.find((tile) => tile.q === 1 && tile.r === 0)!.biome =
+        'wshallow';
+      body.bridges = [{ type: 'wood_bridge', points: [-64, 0, 64, 0] }];
+      const response = await call('put', `/islands/${id}/draft`)
+        .send(body)
+        .expect(400);
+      expect(response.body.message).toBe(
+        'A ponta da ponte precisa ficar em terra.',
+      );
+    });
+
+    it('recusa um estilo de ponte que não existe (400)', async () => {
+      const id = await create();
+      const body = draft();
+      body.bridges = [{ type: 'lava_bridge', points: [-64, 0, 64, 0] }];
+      const response = await call('put', `/islands/${id}/draft`)
+        .send(body)
+        .expect(400);
+      expect(response.body.message).toBe(
+        'A ponte 1 tem um tipo que não existe.',
       );
     });
   });

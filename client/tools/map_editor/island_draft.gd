@@ -23,6 +23,7 @@ var npcs: Array = []
 var trails: Array[MapTrail] = []
 ## As paredes, na ordem (free-fences/01).
 var walls: Array[MapWall] = []
+var bridges: Array[MapBridge] = []
 
 
 static func max_variant(biome: String) -> int:
@@ -71,6 +72,10 @@ static func from_dict(data: Dictionary) -> IslandDraft:
 		var wall: MapWall = MapWall.from_dict(entry) if entry is Dictionary else null
 		if wall != null:
 			draft.walls.append(wall)
+	for entry: Variant in DictFields.get_array(data, "bridges"):
+		var bridge: MapBridge = MapBridge.from_dict(entry) if entry is Dictionary else null
+		if bridge != null:
+			draft.bridges.append(bridge)
 	draft.areas = DictFields.get_array(data, "areas").duplicate(true)
 	draft.npcs = DictFields.get_array(data, "npcs").duplicate(true)
 	return draft
@@ -95,6 +100,7 @@ func to_dict() -> Dictionary:
 		"props": props,
 		"trails": trails.map(func(trail: MapTrail) -> Dictionary: return trail.to_dict()),
 		"walls": walls.map(func(wall: MapWall) -> Dictionary: return wall.to_dict()),
+		"bridges": bridges.map(func(bridge: MapBridge) -> Dictionary: return bridge.to_dict()),
 		"areas": areas,
 		"npcs": npcs,
 	}
@@ -350,6 +356,23 @@ static func copy_walls(list: Array) -> Array[MapWall]:
 	return copies
 
 
+static func copy_bridges(list: Array) -> Array[MapBridge]:
+	var copies: Array[MapBridge] = []
+	for bridge: MapBridge in list:
+		copies.append(bridge.copy())
+	return copies
+
+
+## A ponte de cima cujo piso passa a até `reach` do ponto do chão plano, ou -1.
+func bridge_at(flat: Vector2, reach: float) -> int:
+	for index: int in range(bridges.size() - 1, -1, -1):
+		var bridge := bridges[index]
+		var gap := flat.distance_to(Geometry2D.get_closest_point_to_segment(flat, bridge.from, bridge.to))
+		if gap <= bridge.width / 2.0 + reach:
+			return index
+	return -1
+
+
 static func walls_state(list: Array) -> Array:
 	return list.map(func(wall: MapWall) -> Dictionary: return wall.to_dict())
 
@@ -372,6 +395,24 @@ func clip_walls() -> int:
 		else:
 			wall.points = kept
 	return changed
+
+
+## Apaga as pontes com uma ponta fora da ilha ou na água (bridges/01). Devolve quantas.
+func clip_bridges() -> int:
+	var removed := 0
+	for index: int in range(bridges.size() - 1, -1, -1):
+		var bridge := bridges[index]
+		if bridge_end_ok(bridge.from) and bridge_end_ok(bridge.to):
+			continue
+		bridges.remove_at(index)
+		removed += 1
+	return removed
+
+
+## Se uma ponta de ponte pode ficar no ponto: num hexágono da ilha que não é água.
+func bridge_end_ok(flat: Vector2) -> bool:
+	var tile: HexTile = tiles.get(HexMapView.grid_coord(flat))
+	return tile != null and not tile.is_water()
 
 
 ## A parede de cima a até `reach` do ponto do chão plano, ou -1.
@@ -424,6 +465,7 @@ func to_map() -> ExplorationMap:
 	map.props = map_props()
 	map.trails = trails.duplicate()
 	map.walls = walls.duplicate()
+	map.bridges = bridges.duplicate()
 	return map
 
 

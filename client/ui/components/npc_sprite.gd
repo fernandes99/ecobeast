@@ -104,7 +104,8 @@ func _start_trip() -> void:
 		_rest()
 		return
 	var goals: Dictionary[Vector2i, bool] = {options.pick_random(): true}
-	_path = _map.path_to_any(coord, goals)
+	# O NPC vai de centro em centro e não sabe andar pelo piso das pontes (bridges/04).
+	_path = _map.path_to_any(coord, goals, Vector2.INF, false)
 	if _path.is_empty():
 		_rest()
 		return

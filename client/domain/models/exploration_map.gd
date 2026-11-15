@@ -26,6 +26,8 @@ var walls: Array[MapWall] = []:
 		walls = value
 		_index_walls()
 var npcs: Array[MapNpc] = []
+## As pontes (bridges/01).
+var bridges: Array[MapBridge] = []
 ## As linhas de bloqueio das peças no chão plano (free-objects/01), postas pela tela
 ## com `set_prop_lines`; o índice das paredes as leva junto.
 var _prop_lines: Array[PackedVector2Array] = []
@@ -38,6 +40,9 @@ var _wall_cells: Dictionary[Vector2i, Array] = {}
 ## O pé do Domador não chega a menos disto de uma parede, em pixels da arte (free-fences/02).
 const WALL_REACH := 3.0
 const WALL_SAMPLE := 4.0
+## A água bloqueia fora do piso das pontes (bridges/04): o segmento é conferido de
+## tanto em tanto.
+const WATER_SAMPLE := 2.0
 const NO_SEGMENTS: Array = []
 
 
@@ -82,17 +87,28 @@ func action_at(coord: Vector2i) -> int:
 ## sem passar entre dois centros por cima de uma parede.
 ## Com `from_point` do lado de uma parede sem o centro do hexágono, começa pelos
 ## vizinhos que ele alcança em reta. Vazio quando não há caminho ou `from` já é um deles.
-func path_to_any(from: Vector2i, goals: Dictionary[Vector2i, bool], from_point := Vector2.INF) -> Array[Vector2i]:
+func path_to_any(from: Vector2i, goals: Dictionary[Vector2i, bool], from_point := Vector2.INF, use_bridges := true) -> Array[Vector2i]:
 	var path: Array[Vector2i] = []
 	if goals.is_empty() or goals.has(from):
 		return path
 	var came_from: Dictionary[Vector2i, Vector2i] = {from: from}
 	var frontier: Array[Vector2i] = [from]
 	var index := 0
-	if from_point.is_finite() and crosses_wall(from_point, HexMapView.flat_center(from)):
+	var links: Dictionary[Vector2i, Array] = bridge_links() if use_bridges else {}
+	if from_point.is_finite() and (is_water_hex(from) or not is_clear(from_point, HexMapView.flat_center(from))):
 		index = 1
+		var starts: Array[Vector2i] = []
 		for next: Vector2i in neighbors(from):
-			if crosses_wall(from_point, HexMapView.flat_center(next)):
+			if not is_water_hex(next) and is_clear(from_point, HexMapView.flat_center(next)):
+				starts.append(next)
+		var deck := deck_of(from_point)
+		if deck >= 0:
+			for end: Vector2 in [bridges[deck].from, bridges[deck].to]:
+				var coord := HexMapView.grid_coord(end)
+				if has(coord) and not is_water_hex(coord) and is_clear(end, HexMapView.flat_center(coord)):
+					starts.append(coord)
+		for next: Vector2i in starts:
+			if came_from.has(next):
 				continue
 			came_from[next] = from
 			if goals.has(next):
@@ -101,8 +117,14 @@ func path_to_any(from: Vector2i, goals: Dictionary[Vector2i, bool], from_point :
 	while index < frontier.size():
 		var coord := frontier[index]
 		index += 1
+		var nexts: Array[Vector2i] = []
 		for next: Vector2i in neighbors(coord):
-			if came_from.has(next) or _wall_between(coord, next):
+			if not is_water_hex(next) and not _wall_between(coord, next):
+				nexts.append(next)
+		for link: Array in links.get(coord, []):
+			nexts.append(link[0])
+		for next: Vector2i in nexts:
+			if came_from.has(next):
 				continue
 			came_from[next] = coord
 			if goals.has(next):
@@ -136,15 +158,16 @@ func crosses_wall(from: Vector2, to: Vector2) -> bool:
 	return false
 
 
-## O ponto mais longe de `from`, na reta até `to`, que se alcança sem cruzar parede.
+## O ponto mais longe de `from`, na reta até `to`, que se alcança sem cruzar parede nem
+## entrar na água fora de uma ponte.
 func clip_to_walls(from: Vector2, to: Vector2) -> Vector2:
-	if not crosses_wall(from, to):
+	if is_clear(from, to):
 		return to
 	var low := 0.0
 	var high := 1.0
 	for _step: int in 12:
 		var middle := (low + high) / 2.0
-		if crosses_wall(from, from.lerp(to, middle)):
+		if not is_clear(from, from.lerp(to, middle)):
 			high = middle
 		else:
 			low = middle
@@ -168,10 +191,134 @@ func approach_goals(target: Vector2i, finish: Vector2) -> Dictionary[Vector2i, b
 	for next: Vector2i in neighbors(target):
 		if not has(next) or is_center_walled(next):
 			continue
+		if is_water_hex(next):
+			continue
 		all[next] = true
-		if not crosses_wall(HexMapView.flat_center(next), finish):
+		if is_clear(HexMapView.flat_center(next), finish):
 			facing[next] = true
 	return facing if not facing.is_empty() else all
+
+
+## Se o segmento não cruza parede nem passa pela água fora do piso de uma ponte
+## (bridges/04). Quem já está num ponto bloqueado pode sair dele.
+func is_clear(from: Vector2, to: Vector2) -> bool:
+	if crosses_wall(from, to):
+		return false
+	var leaving := is_blocked(from)
+	var steps := maxi(1, ceili(from.distance_to(to) / WATER_SAMPLE))
+	for step: int in range(1, steps + 1):
+		if is_blocked(from.lerp(to, float(step) / steps)):
+			if not leaving:
+				return false
+		else:
+			leaving = false
+	return true
+
+
+## Um ponto na água, fora do piso das pontes.
+func is_blocked(flat: Vector2) -> bool:
+	return is_water_hex(HexMapView.grid_coord(flat)) and deck_of(flat) < 0
+
+
+func is_water_hex(coord: Vector2i) -> bool:
+	var tile := tile_at(coord)
+	return tile != null and tile.is_water()
+
+
+## A ponte cujo piso tem o ponto, ou -1. O piso é o corredor reto entre as pontas, com a
+## largura da arte menos a folga.
+func deck_of(flat: Vector2) -> int:
+	for index: int in bridges.size():
+		var bridge := bridges[index]
+		var along := bridge.to - bridge.from
+		var length := along.length_squared()
+		if length <= 0.0:
+			continue
+		var part := (flat - bridge.from).dot(along) / length
+		if part < 0.0 or part > 1.0:
+			continue
+		if flat.distance_to(bridge.from + along * part) <= HexBridges.deck_reach(bridge):
+			return index
+	return -1
+
+
+## Quanto o piso da ponte sobe no ponto: a altura das margens misturada pelo caminho.
+func deck_lift(index: int, flat: Vector2) -> float:
+	var bridge := bridges[index]
+	var along := bridge.to - bridge.from
+	var part := clampf((flat - bridge.from).dot(along) / maxf(along.length_squared(), 0.001), 0.0, 1.0)
+	return roundf(lerpf(_level_rise(bridge.from), _level_rise(bridge.to), part))
+
+
+## A altura em pixels do chão no ponto: a do piso em cima de uma ponte, senão a do hexágono.
+func rise_at(flat: Vector2) -> float:
+	var deck := deck_of(flat)
+	return deck_lift(deck, flat) if deck >= 0 else _level_rise(flat)
+
+
+## O ponto do chão plano de um ponto da arte (com a altura) em cima do piso de uma ponte,
+## ou INF fora de todas.
+func deck_point_of_art(art: Vector2) -> Vector2:
+	for index: int in bridges.size():
+		var bridge := bridges[index]
+		for lift: float in [_level_rise(bridge.from), _level_rise(bridge.to)]:
+			var flat := art + Vector2(0.0, lift)
+			if deck_of(flat) == index:
+				return art + Vector2(0.0, deck_lift(index, flat))
+	return Vector2.INF
+
+
+## As ligações das pontes na busca: por hexágono de uma ponta, `[hexágono da outra,
+## ponta daqui, ponta de lá]`. A ponta que não alcança o centro do hexágono dela não liga.
+func bridge_links() -> Dictionary[Vector2i, Array]:
+	var links: Dictionary[Vector2i, Array] = {}
+	for bridge: MapBridge in bridges:
+		var a := HexMapView.grid_coord(bridge.from)
+		var b := HexMapView.grid_coord(bridge.to)
+		if a == b or not has(a) or not has(b) or is_water_hex(a) or is_water_hex(b):
+			continue
+		if not is_clear(HexMapView.flat_center(a), bridge.from) or not is_clear(bridge.to, HexMapView.flat_center(b)):
+			continue
+		if not links.has(a):
+			links[a] = []
+		if not links.has(b):
+			links[b] = []
+		links[a].append([b, bridge.from, bridge.to])
+		links[b].append([a, bridge.to, bridge.from])
+	return links
+
+
+## As pontas de ponte que levam do hexágono `from` ao `to`, ou nada sem ponte entre eles.
+func bridge_hop(from: Vector2i, to: Vector2i) -> PackedVector2Array:
+	for link: Array in bridge_links().get(from, []):
+		if link[0] == to:
+			return PackedVector2Array([link[1], link[2]])
+	return PackedVector2Array()
+
+
+## Os hexágonos de terra mais perto de um de água, para tocar na água levar à margem.
+func shore_goals(target: Vector2i) -> Dictionary[Vector2i, bool]:
+	var goals: Dictionary[Vector2i, bool] = {}
+	var seen: Dictionary[Vector2i, bool] = {target: true}
+	var ring: Array[Vector2i] = [target]
+	while goals.is_empty() and not ring.is_empty():
+		var next_ring: Array[Vector2i] = []
+		for coord: Vector2i in ring:
+			for next: Vector2i in neighbors(coord):
+				if seen.has(next):
+					continue
+				seen[next] = true
+				if is_water_hex(next):
+					next_ring.append(next)
+				else:
+					goals[next] = true
+		ring = next_ring
+	return goals
+
+
+func _level_rise(flat: Vector2) -> float:
+	var tile := tile_at(HexMapView.grid_coord(flat))
+	return HexMapView.LEVEL_HEIGHTS[tile.height] if tile != null else 0.0
 
 
 ## A reta entre dois centros vizinhos fica dentro dos dois hexágonos: só eles importam.
@@ -287,6 +434,10 @@ static func from_dict(d: Dictionary) -> ExplorationMap:
 		if wall != null:
 			wall_list.append(wall)
 	map.walls = wall_list
+	for bridge_dict: Variant in DictFields.get_array(d, "bridges"):
+		var bridge: MapBridge = MapBridge.from_dict(bridge_dict) if bridge_dict is Dictionary else null
+		if bridge != null:
+			map.bridges.append(bridge)
 	for npc_dict: Variant in DictFields.get_array(d, "npcs"):
 		var npc: MapNpc = MapNpc.from_dict(npc_dict) if npc_dict is Dictionary else null
 		if npc != null:

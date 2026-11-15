@@ -212,6 +212,7 @@ func save() -> bool:
 	var clipped := _draft.clip_trails()
 	_tools.finish_fence(_draft)
 	var clipped_walls := _draft.clip_walls()
+	var clipped_bridges := _draft.clip_bridges()
 	if clipped_walls > 0:
 		_tools.fence_panel.refresh()
 		_canvas.selected_wall = _tools.fence_panel.selected
@@ -231,6 +232,8 @@ func save() -> bool:
 		message += " %d caminho(s) passavam fora da ilha e foram cortados." % clipped
 	if clipped_walls > 0:
 		message += " %d parede(s) passavam fora da ilha e foram cortadas." % clipped_walls
+	if clipped_bridges > 0:
+		message += " %d ponte(s) tinham uma ponta fora da terra e foram apagadas." % clipped_bridges
 	_set_message(message)
 	_status = DictFields.get_string(response.data, "status")
 	_mark_saved()
@@ -310,6 +313,10 @@ func _on_stroke_started(coord: Vector2i, secondary: bool) -> void:
 		_tools.fence_click(_draft, _tools.pointer, secondary)
 		_canvas.set_fence_mouse(_tools.pointer)
 		return
+	if _tools.tool == EditorTools.Tool.BRIDGE:
+		_tools.bridge_click(_draft, _tools.pointer, secondary)
+		_canvas.set_fence_mouse(_tools.pointer)
+		return
 	_tools.begin_stroke(_draft, secondary)
 	_paint(coord)
 
@@ -372,6 +379,8 @@ func _on_tools_edited(step: EditorHistory.Step, merge: bool) -> void:
 	_canvas.refresh_trails()
 	_canvas.selected_wall = _tools.fence_panel.selected
 	_canvas.refresh_walls()
+	_canvas.selected_bridge = _tools.bridge_panel.selected
+	_canvas.refresh_bridges()
 	_canvas.refresh_npcs()
 	_update_dirty()
 	_place_object_bar()
@@ -422,6 +431,9 @@ func _on_history_applied(coords: Array[Vector2i]) -> void:
 	_tools.fence_panel.refresh()
 	_canvas.selected_wall = _tools.fence_panel.selected
 	_canvas.refresh_walls()
+	_tools.bridge_panel.refresh()
+	_canvas.selected_bridge = _tools.bridge_panel.selected
+	_canvas.refresh_bridges()
 	_canvas.refresh_npcs()
 	_tools.refresh_panels()
 	if _name_edit.text.strip_edges() != _draft.name:
@@ -542,6 +554,23 @@ func _fence_key(key: InputEventKey) -> bool:
 	return handled
 
 
+## Esc desiste da ponte em desenho ou solta a escolhida; Delete apaga a escolhida.
+func _bridge_key(key: InputEventKey) -> bool:
+	var handled := false
+	if key.keycode == KEY_ESCAPE:
+		handled = _tools.drawing_bridge() or _tools.bridge_panel.selected >= 0
+		if _tools.drawing_bridge():
+			_tools.cancel_bridge()
+		else:
+			_tools.bridge_panel.select(-1)
+	elif key.keycode == KEY_DELETE or key.keycode == KEY_BACKSPACE:
+		handled = _tools.bridge_panel.selected >= 0
+		_tools.bridge_panel.delete_selected()
+	if handled:
+		_canvas.refresh_brush()
+	return handled
+
+
 ## As teclas que dependem da ferramenta: alturas, a peça escolhida e o foco da área.
 func _tool_key(key: InputEventKey) -> bool:
 	if _draft == null or key.ctrl_pressed:
@@ -562,6 +591,8 @@ func _tool_key(key: InputEventKey) -> bool:
 			_tools.npc_panel.select(-1)
 			return true
 	if _tools.tool == EditorTools.Tool.FENCE and _fence_key(key):
+		return true
+	if _tools.tool == EditorTools.Tool.BRIDGE and _bridge_key(key):
 		return true
 	if _tools.tool == EditorTools.Tool.PATH and _tools.path_panel.selected >= 0:
 		if key.keycode == KEY_DELETE or key.keycode == KEY_BACKSPACE:
@@ -741,6 +772,9 @@ func _build() -> void:
 	_tools.fence_panel.changed.connect(func() -> void:
 		_canvas.selected_wall = _tools.fence_panel.selected
 		_canvas.refresh_brush())
+	_tools.bridge_panel.changed.connect(func() -> void:
+		_canvas.selected_bridge = _tools.bridge_panel.selected
+		_canvas.refresh_brush())
 	body.add_child(_tools.tool_column)
 	_side = VBoxContainer.new()
 	_side.custom_minimum_size.x = SIDE_WIDTH
@@ -765,6 +799,7 @@ func _build() -> void:
 	_canvas.brush = _tools.brush_coords
 	_canvas.marked = _tools.marked_coords
 	_canvas.fence_preview = _tools.fence_points
+	_canvas.bridge_preview = _tools.bridge_points
 	_canvas.brush_color = func(coord: Vector2i) -> Color: return _tools.brush_color(_draft, coord)
 	_canvas.block_preview = func() -> PackedVector2Array:
 		var panel := _tools.object_panel

@@ -35,6 +35,7 @@ import {
   ExplorationResponseDto,
   MapCreatureDto,
   MapTamerDto,
+  toBridgeDto,
   toPropDto,
   toNpcDto,
   toTrailDto,
@@ -111,6 +112,7 @@ export class ExplorationService {
         props: [],
         trails: [],
         walls: [],
+        bridges: [],
         npcs: [],
       },
     };
@@ -161,6 +163,7 @@ export class ExplorationService {
         props: draft.props.map(toPropDto),
         trails: (draft.trails ?? []).map(toTrailDto),
         walls: (draft.walls ?? []).map(toWallDto),
+        bridges: (draft.bridges ?? []).map(toBridgeDto),
         npcs: (draft.npcs ?? []).map((npc, index) => ({
           id: index + 1,
           ...toNpcDto(npc),

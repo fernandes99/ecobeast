@@ -17,10 +17,21 @@ const SAMPLE_STEP := 4.0
 static func points(map: ExplorationMap, from: Vector2, hexes: Array[Vector2i], to: Vector2) -> PackedVector2Array:
 	var waypoints := PackedVector2Array([from])
 	var own := HexMapView.flat_center(hexes[0])
-	if not map.crosses_wall(from, own):
+	var deck := map.deck_of(from)
+	if deck >= 0 and map.is_water_hex(hexes[0]) and hexes.size() > 1:
+		# Em cima de uma ponte: sai pela ponta do hexágono seguinte (bridges/04).
+		var bridge := map.bridges[deck]
+		waypoints.append(bridge.from if HexMapView.grid_coord(bridge.from) == hexes[1] else bridge.to)
+	elif map.is_clear(from, own):
 		waypoints.append(own)
 	for index: int in range(1, hexes.size()):
+		waypoints.append_array(map.bridge_hop(hexes[index - 1], hexes[index]))
 		waypoints.append(HexMapView.flat_center(hexes[index]))
+	var last := waypoints[waypoints.size() - 1]
+	var target_deck := map.deck_of(to)
+	if target_deck >= 0 and not map.is_clear(last, to):
+		var bridge := map.bridges[target_deck]
+		waypoints.append(bridge.from if bridge.from.distance_to(last) <= bridge.to.distance_to(last) else bridge.to)
 	waypoints.append(map.clip_to_walls(waypoints[waypoints.size() - 1], to))
 	var result := PackedVector2Array([from])
 	var at := 0
@@ -41,7 +52,7 @@ static func is_clear(map: ExplorationMap, from: Vector2, to: Vector2) -> bool:
 		var coord := HexMapView.grid_coord(from.lerp(to, float(step) / steps))
 		if not map.has(coord):
 			return false
-	return not map.crosses_wall(from, to)
+	return map.is_clear(from, to)
 
 
 static func world(vector: Vector2) -> Vector2:

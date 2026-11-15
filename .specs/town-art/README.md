@@ -47,7 +47,7 @@ Escolhas do planejamento, _a revisar_ (ao mudar uma, atualize aqui e na fase):
 ## Fora do escopo
 
 - O terreno, a água, os paredões, as trilhas e os pisos, e as árvores, pedras e plantas (do bioma e da Vegetação).
-- Ponte, cais e barco: a água continua livre para andar, e uma ponte em hexágono pede um desenho próprio. Fica para quando o dono pedir.
+- Ponte, cais e barco: a água continua livre para andar, e uma ponte em hexágono pede um desenho próprio. Fica para quando o dono pedir. **Revisto na [bridges](../bridges/README.md#decisões):** a água passa a bloquear o andar, e a ponte é o caminho para atravessar.
 - A tela da Arena (ela segue sem tela até a `arenas-league`).
 - Interiores das construções.
 - Arte do Domador, dos Ecobeasts e das telas.

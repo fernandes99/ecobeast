@@ -72,6 +72,11 @@ var _prop_tiles: Dictionary[Vector2i, String] = {}
 ## Cópias dos traços como estão desenhados, para achar o que mudou.
 var _shown_trails: Array[MapTrail] = []
 var _shown_walls: Array[MapWall] = []
+var _shown_bridges: Array[MapBridge] = []
+## A ponte escolhida pela Ponte, ou -1, e a primeira ponta da que está sendo desenhada
+## (bridges/03).
+var selected_bridge := -1
+var bridge_preview := Callable()
 var _draft: IslandDraft = null
 var _map: ExplorationMap = null
 var _zoom := OPEN_ZOOM
@@ -130,6 +135,8 @@ func show_draft(draft: IslandDraft, fit: bool = true) -> void:
 	_overview.set_trails(_map.trails)
 	_shown_walls = IslandDraft.copy_walls(draft.walls) if draft != null else []
 	_overview.set_walls(_map.walls)
+	_shown_bridges = IslandDraft.copy_bridges(draft.bridges) if draft != null else []
+	_overview.set_bridges(_map.bridges)
 	_refresh_blocks()
 	refresh_npcs()
 	refresh_marks()
@@ -222,6 +229,30 @@ func refresh_walls() -> void:
 		_map_view.set_walls(_draft.walls.duplicate(), changed)
 		_overview.set_walls(_map.walls)
 		_refresh_blocks()
+	_overlay.queue_redraw()
+
+
+## As pontes mudaram no rascunho (bridges/03): remonta as que entraram, saíram ou mudaram.
+func refresh_bridges() -> void:
+	if _draft == null or _map == null:
+		return
+	var before: Dictionary[String, bool] = {}
+	for bridge: MapBridge in _shown_bridges:
+		before[JSON.stringify(bridge.to_dict())] = true
+	var now: Dictionary[String, bool] = {}
+	for bridge: MapBridge in _draft.bridges:
+		now[JSON.stringify(bridge.to_dict())] = true
+	var changed: Array[MapBridge] = []
+	for bridge: MapBridge in _shown_bridges:
+		if not now.has(JSON.stringify(bridge.to_dict())):
+			changed.append(bridge)
+	for bridge: MapBridge in _draft.bridges:
+		if not before.has(JSON.stringify(bridge.to_dict())):
+			changed.append(bridge)
+	_shown_bridges = IslandDraft.copy_bridges(_draft.bridges)
+	if not changed.is_empty():
+		_map_view.set_bridges(_draft.bridges.duplicate(), changed)
+		_overview.set_bridges(_map.bridges)
 	_overlay.queue_redraw()
 
 
@@ -446,6 +477,7 @@ func _gui_input(event: InputEvent) -> void:
 			_continue_stroke(motion.position)
 		var drawing := fence_preview.is_valid() and not (fence_preview.call() as PackedVector2Array).is_empty()
 		drawing = drawing or (block_preview.is_valid() and not (block_preview.call() as PackedVector2Array).is_empty())
+		drawing = drawing or (bridge_preview.is_valid() and not (bridge_preview.call() as PackedVector2Array).is_empty())
 		if _draft != null and drawing:
 			_mouse_flat = _flat_at(_art_point(motion.position))
 			_overlay.queue_redraw()
@@ -603,6 +635,13 @@ func draw_overlay(node: Node2D) -> void:
 		var drawing: PackedVector2Array = fence_preview.call()
 		if not drawing.is_empty():
 			_draw_wall_line(node, drawing, _mouse_flat)
+	if selected_bridge >= 0 and selected_bridge < _draft.bridges.size():
+		var chosen := _draft.bridges[selected_bridge]
+		_draw_wall_line(node, PackedVector2Array([chosen.from, chosen.to]), Vector2.INF)
+	if bridge_preview.is_valid():
+		var started: PackedVector2Array = bridge_preview.call()
+		if not started.is_empty():
+			_draw_wall_line(node, started, _mouse_flat)
 	if selected_prop >= 0:
 		var rect := prop_rect(selected_prop)
 		if rect.has_area():

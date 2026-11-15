@@ -13,7 +13,9 @@ import { ISLAND_NOT_FOUND } from '../islands/islands.service.js';
 export const INVALID_TAMER = 'Domador de depuração inválido.';
 import { BIOMES, MAX_HEIGHT } from '../domain/exploration/map-generator.js';
 import type { Biome } from '../domain/exploration/map-generator.js';
+import { DEFAULT_BRIDGE_WIDTH } from '../domain/islands/island-draft.js';
 import type {
+  DraftBridge,
   DraftNpc,
   DraftProp,
   DraftTrail,
@@ -118,6 +120,28 @@ export class MapWallDto {
     example: [12, -40, 30, -8, 31, 40],
   })
   points: number[];
+}
+
+export class MapBridgeDto {
+  @ApiProperty({
+    description: 'O `slug` em `bridge_types`.',
+    example: 'wood_bridge',
+  })
+  type: string;
+
+  @ApiProperty({
+    type: [Number],
+    description:
+      'x0, y0, x1, y1: as duas pontas, em pixels da arte, no chão plano, a partir do centro plano do hexágono (0, 0).',
+    example: [12, -40, 140, 20],
+  })
+  points: number[];
+
+  @ApiProperty({
+    description: 'A largura do piso, em pixels da arte, de 16 a 64.',
+    example: 28,
+  })
+  width: number;
 }
 
 export class MapTrailDto {
@@ -298,6 +322,13 @@ export class ExplorationMapDto {
   walls: MapWallDto[];
 
   @ApiProperty({
+    type: [MapBridgeDto],
+    description:
+      'As pontes da ilha, na ordem, de terra a terra; vazio no mapa sorteado.',
+  })
+  bridges: MapBridgeDto[];
+
+  @ApiProperty({
     type: [MapNpcDto],
     description: 'Os NPCs da ilha; vazio no mapa sorteado.',
   })
@@ -433,6 +464,14 @@ export function toTrailDto({ ground, width, points }: DraftTrail): MapTrailDto {
 
 export function toWallDto({ type, points }: DraftWall): MapWallDto {
   return { type, points: [...points] };
+}
+
+export function toBridgeDto({
+  type,
+  points,
+  width,
+}: DraftBridge): MapBridgeDto {
+  return { type, points: [...points], width: width ?? DEFAULT_BRIDGE_WIDTH };
 }
 
 export function toNpcDto(npc: DraftNpc): Omit<MapNpcDto, 'id'> {

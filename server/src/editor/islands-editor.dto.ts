@@ -222,6 +222,36 @@ export class DraftWallDto {
   points: number[];
 }
 
+export class DraftBridgeDto {
+  @ApiProperty({
+    description: 'O `slug` em `bridge_types`.',
+    example: 'wood_bridge',
+  })
+  @IsString(text('type'))
+  type: string;
+
+  @ApiProperty({
+    type: [Number],
+    description:
+      'x0, y0, x1, y1: as duas pontas, em pixels da arte, no chão plano, a partir do ' +
+      'centro plano do hexágono (0, 0). Cada ponta cai num hexágono da ilha que não é água, ' +
+      'e elas ficam a pelo menos 16 px uma da outra.',
+    example: [12, -40, 140, 20],
+  })
+  @IsArray(list('points'))
+  @IsInt({ each: true, message: 'points precisa ter só números inteiros.' })
+  points: number[];
+
+  @ApiPropertyOptional({
+    description:
+      'A largura do piso, em pixels da arte, de 16 a 64. Sem o campo, 28. Ao ler, sempre vem.',
+    example: 28,
+  })
+  @IsOptional()
+  @IsInt(integer('width'))
+  width?: number;
+}
+
 export class DraftNpcDto extends EditorHexDto {
   @ApiProperty({
     description: 'Id em `npcs`. (q, r) é o hexágono onde ele nasce.',
@@ -383,6 +413,17 @@ export class IslandDraftDto {
   @ValidateNested({ each: true })
   @Type(() => DraftWallDto)
   walls?: DraftWallDto[];
+
+  @ApiPropertyOptional({
+    type: [DraftBridgeDto],
+    description:
+      'As pontes, retas, de terra a terra, até 500, na ordem. Sem o campo, a ilha fica sem pontes.',
+  })
+  @IsOptional()
+  @IsArray(list('bridges'))
+  @ValidateNested({ each: true })
+  @Type(() => DraftBridgeDto)
+  bridges?: DraftBridgeDto[];
 
   @ApiPropertyOptional({
     type: [DraftNpcDto],

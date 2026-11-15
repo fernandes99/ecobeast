@@ -300,11 +300,14 @@ function countBiomes(cells: Cell[]): Map<ShapedBiome, number> {
   return counts;
 }
 
-function startOf(cells: Cell[]): HexCoord {
-  const flatLand = cells.filter(
-    ({ biome, shape }) => !isWater(biome) && shape === 'flat',
-  );
-  const options = flatLand.length > 0 ? flatLand : cells;
+/** O hexágono de chegada: terra plana, senão terra, e só sem terra nenhuma a água. */
+export function startOf(
+  cells: readonly Pick<ShapedTile, 'q' | 'r' | 'biome' | 'shape'>[],
+): HexCoord {
+  const land = cells.filter(({ biome }) => !isWater(biome));
+  const flatLand = land.filter(({ shape }) => shape === 'flat');
+  const options =
+    flatLand.length > 0 ? flatLand : land.length > 0 ? land : cells;
   const nearest = options.reduce((best, cell) =>
     hexDistance(cell, ORIGIN) < hexDistance(best, ORIGIN) ? cell : best,
   );

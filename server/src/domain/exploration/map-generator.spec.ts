@@ -11,6 +11,7 @@ import {
   ShapedBiome,
   ShapedMap,
   ShapedTile,
+  startOf,
   TERRAIN_SHAPES,
   terrainOf,
 } from './map-generator.js';
@@ -295,6 +296,38 @@ describe('generateShapedMap', () => {
     expect(waterShare(generateShapedMap(9, wetter))).toBeGreaterThan(
       waterShare(generateShapedMap(9, CONFIG)),
     );
+  });
+});
+
+describe('startOf (bridges/04)', () => {
+  it('prefere a terra plana mais perto da origem', () => {
+    expect(
+      startOf([
+        { q: 0, r: 0, biome: 'wshallow', shape: 'flat' },
+        { q: 1, r: 0, biome: 'stone', shape: 'hill' },
+        { q: 3, r: 0, biome: 'temperate', shape: 'flat' },
+      ]),
+    ).toEqual({ q: 3, r: 0 });
+  });
+
+  it('sem terra plana, vai para a terra mais perto, nunca para a água', () => {
+    expect(
+      startOf([
+        { q: 0, r: 0, biome: 'wdeep', shape: 'flat' },
+        { q: 1, r: 0, biome: 'wshallow', shape: 'flat' },
+        { q: 2, r: 0, biome: 'stone', shape: 'mont' },
+        { q: 3, r: 0, biome: 'boreal', shape: 'hill' },
+      ]),
+    ).toEqual({ q: 2, r: 0 });
+  });
+
+  it('só sem terra nenhuma cai na água mais perto', () => {
+    expect(
+      startOf([
+        { q: 2, r: 0, biome: 'wdeep', shape: 'flat' },
+        { q: 0, r: 1, biome: 'wshallow', shape: 'flat' },
+      ]),
+    ).toEqual({ q: 0, r: 1 });
   });
 });
 

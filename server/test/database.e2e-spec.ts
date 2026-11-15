@@ -38,10 +38,10 @@ describe('restrições do banco (e2e)', () => {
     expect(rows.map((row) => row.table_name)).toEqual([]);
   });
 
-  it('as 62 tabelas e o histórico de migrations ficam no schema ecobeasts', async () => {
+  it('as 64 tabelas e o histórico de migrations ficam no schema ecobeasts', async () => {
     const rows = await prisma.$queryRaw<{ n: number }[]>`
       SELECT count(*)::int AS n FROM information_schema.tables WHERE table_schema = 'ecobeasts'`;
-    expect(rows[0].n).toBe(63);
+    expect(rows[0].n).toBe(65);
   });
 
   it('recusa Técnica com precisão 150', async () => {
@@ -612,6 +612,46 @@ describe('restrições do banco (e2e)', () => {
         }),
       );
       expectRejected(result, 'wall_types_slug_check');
+    });
+
+    it('recusa ponte sem exatamente 4 números (bridges/01)', async () => {
+      for (const points of [
+        [0, 0],
+        [0, 0, 10, 0, 20, 0],
+      ]) {
+        const result = await attempt(prisma, async (tx) => {
+          const map = await draftMap(tx);
+          await tx.islandBridge.create({
+            data: { islandMapId: map.id, bridgeTypeId: 5, position: 0, points },
+          });
+        });
+        expectRejected(result, 'island_bridges_points_check');
+      }
+    });
+
+    it('recusa ponte com largura fora de 16 a 64 (bridges/01)', async () => {
+      for (const width of [15, 65]) {
+        const result = await attempt(prisma, async (tx) => {
+          const map = await draftMap(tx);
+          await tx.islandBridge.create({
+            data: {
+              islandMapId: map.id,
+              bridgeTypeId: 5,
+              position: 0,
+              points: [0, 0, 64, 0],
+              width,
+            },
+          });
+        });
+        expectRejected(result, 'island_bridges_width_check');
+      }
+    });
+
+    it('recusa estilo de ponte com slug fora do formato (bridges/01)', async () => {
+      const result = await attempt(prisma, (tx) =>
+        tx.bridgeType.create({ data: { slug: 'Ponte Alta', name: 'Teste' } }),
+      );
+      expectRejected(result, 'bridge_types_slug_check');
     });
 
     it('recusa tipo de chão e de ação fora da lista', async () => {

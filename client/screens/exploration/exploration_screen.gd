@@ -163,7 +163,7 @@ func _begin() -> void:
 	_player_point = HexMapView.flat_center(_player_coord)
 	_map_view.set_map(_map)
 	_map_view.set_props(_map.props)
-	_shown_rise = _rise_at(_player_coord)
+	_shown_rise = _map.rise_at(_player_point)
 	_map_view.set_current(_player_coord)
 	_map_view.set_actor_depth(_marker, _player_point, _feet_row())
 	_reveal_player()
@@ -247,19 +247,29 @@ func _go_to(art_point: Vector2) -> void:
 	if piece >= 0:
 		_go_to_prop(piece)
 		return
-	var target := _map_view.coord_at(art_point)
+	var deck_point := _map.deck_point_of_art(art_point)
+	var target := HexMapView.grid_coord(deck_point) if deck_point.is_finite() else _map_view.coord_at(art_point)
 	if not _map.has(target):
 		return
 	var goals: Dictionary[Vector2i, bool] = {target: true}
-	var finish := art_point + Vector2(0.0, _rise_at(target))
-	if HexMapView.grid_coord(finish) != target:
+	var finish := deck_point if deck_point.is_finite() else art_point + Vector2(0.0, _rise_at(target))
+	if not deck_point.is_finite() and HexMapView.grid_coord(finish) != target:
 		finish = HexMapView.flat_center(target)
-	if target != _player_coord and _map.is_center_walled(target):
+	if deck_point.is_finite():
+		# No piso de uma ponte (bridges/04): chega por uma ponta e anda pelo piso.
+		var bridge := _map.bridges[_map.deck_of(deck_point)]
+		goals = {HexMapView.grid_coord(bridge.from): true, HexMapView.grid_coord(bridge.to): true}
+		if _map.is_clear(_player_point, finish):
+			goals = {_player_coord: true}
+	elif _map.is_water_hex(target):
+		# Na água: vai até a terra mais perto e para rente a ela.
+		goals = _map.shore_goals(target)
+	elif target != _player_coord and _map.is_center_walled(target):
 		# Uma parede passa pelo centro (free-fences/02): o Domador chega por um vizinho
 		# e anda até o ponto tocado, parando rente a ela.
 		goals = _map.approach_goals(target, finish)
 	var hexes: Array[Vector2i] = [_player_coord]
-	if not goals.has(_player_coord) and target != _player_coord:
+	if not goals.has(_player_coord) and (target != _player_coord or _map.is_water_hex(target)):
 		var path := _map.path_to_any(_player_coord, goals, _player_point)
 		if path.is_empty():
 			_show_message(NO_PATH_TEXT, &"SecondaryLabel")
@@ -267,7 +277,10 @@ func _go_to(art_point: Vector2) -> void:
 		hexes.append_array(path)
 	if finish.distance_to(_player_point) < 1.0:
 		return
-	_walk(WalkRoute.points(_map, _player_point, hexes, finish))
+	var route := WalkRoute.points(_map, _player_point, hexes, finish)
+	if route.size() < 2 or route[route.size() - 1].distance_to(_player_point) < 1.0:
+		return
+	_walk(route)
 
 
 ## Quadro a quadro: o hexágono muda quando os pés cruzam a borda (wild-battle/15).
@@ -297,7 +310,7 @@ func _walk(route: PackedVector2Array) -> void:
 			tamer = _map.tamer_at(coord)
 		_place_player(delta)
 		_trim_route(traveled)
-	while _shown_rise != _rise_at(_player_coord):
+	while _shown_rise != _map.rise_at(_player_point):
 		await get_tree().process_frame
 		_place_player(get_process_delta_time())
 	_clear_route()
@@ -328,7 +341,7 @@ func _walk(route: PackedVector2Array) -> void:
 
 
 func _place_player(delta: float) -> void:
-	_shown_rise = move_toward(_shown_rise, _rise_at(_player_coord), RISE_SPEED * delta)
+	_shown_rise = move_toward(_shown_rise, _map.rise_at(_player_point), RISE_SPEED * delta)
 	_map_view.set_actor_depth(_marker, _player_point, _feet_row())
 	_reveal_player()
 	_move_map(_player_centered_position())
@@ -365,7 +378,7 @@ func _show_route(route: PackedVector2Array) -> void:
 		var at := route[route.size() - 1] if last else WalkRoute.point_at(route, index * ROUTE_DOT_SPACING)
 		var coord := HexMapView.grid_coord(at)
 		var mark := RouteMark.new(index, last)
-		mark.place(at - Vector2(0.0, _rise_at(coord)))
+		mark.place(at - Vector2(0.0, _map.rise_at(at)))
 		_map_view.set_ground_overlay(mark, coord.y)
 		_route.append(mark)
 
@@ -387,6 +400,20 @@ func _search() -> void:
 		return
 	if _map.has_creature(_player_coord):
 		_open_battle({"coord": _player_coord}, &"wild")
+		return
+	# A água bloqueia (bridges/04): o Ecobeast de um hexágono de água vizinho também
+	# se enfrenta, o mais perto do pé.
+	var nearest := Vector2i.ZERO
+	var best := INF
+	for next: Vector2i in _map.neighbors(_player_coord):
+		if not _map.is_water_hex(next) or not _map.has_creature(next):
+			continue
+		var gap := HexMapView.flat_center(next).distance_to(_player_point)
+		if gap < best:
+			best = gap
+			nearest = next
+	if best < INF:
+		_open_battle({"coord": nearest}, &"wild")
 	else:
 		_show_message(NOTHING_HERE_TEXT, &"SecondaryLabel")
 

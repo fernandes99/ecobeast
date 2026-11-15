@@ -5,10 +5,10 @@ signal message(text: String)
 signal brush_changed
 signal edited(step: EditorHistory.Step, merge: bool)
 
-enum Tool { BIOME, HEIGHT, GROUND, ADD, REMOVE, START, OBJECT, ACTION, AREA, STAMP, ERASER, PATH, VEGETATION, NPC, FENCE, BLOCKS }
+enum Tool { BIOME, HEIGHT, GROUND, ADD, REMOVE, START, OBJECT, ACTION, AREA, STAMP, ERASER, PATH, VEGETATION, NPC, FENCE, BLOCKS, BRIDGE }
 
-const TOOL_NAMES: Array[String] = ["Bioma", "Altura", "Chão", "Pôr hexágono", "Tirar hexágono", "Chegada", "Peças", "Ação", "Área", "Carimbo", "Borracha", "Caminho", "Vegetação", "NPC", "Cerca", "Bloqueios"]
-const TOOL_ICONS: Array[String] = ["biome", "height", "ground", "hex_add", "hex_remove", "flag", "object", "action", "area", "stamp", "eraser", "path", "vegetation", "npc", "fence", "blocks"]
+const TOOL_NAMES: Array[String] = ["Bioma", "Altura", "Chão", "Pôr hexágono", "Tirar hexágono", "Chegada", "Peças", "Ação", "Área", "Carimbo", "Borracha", "Caminho", "Vegetação", "NPC", "Cerca", "Bloqueios", "Ponte"]
+const TOOL_ICONS: Array[String] = ["biome", "height", "ground", "hex_add", "hex_remove", "flag", "object", "action", "area", "stamp", "eraser", "path", "vegetation", "npc", "fence", "blocks", "bridge"]
 const TOOL_HINTS: Array[String] = [
 	"Troca o bioma dos hexágonos que já existem. A altura só muda se você escolher uma abaixo.",
 	"Troca só a altura dos hexágonos que já existem.",
@@ -26,12 +26,13 @@ const TOOL_HINTS: Array[String] = [
 	"Põe o NPC da lista num hexágono, ou escolhe o que está nele. Botão direito escolhe ou solta.",
 	"Clique para pôr os pontos da cerca. Enter, clicar de novo no último ponto ou o botão direito terminam; Esc desiste. Clique numa cerca para escolher, trocar o tipo ou apagar.",
 	"Edita as linhas de bloqueio de qualquer peça. Botão direito apaga um ponto.",
+	"Clique numa margem e depois na outra para pôr a ponte. Esc ou o botão direito desistem. Clique numa ponte para escolher, trocar o estilo ou apagar.",
 ]
 ## Os grupos da coluna (map-editor/06): as ferramentas parecidas viram abas do grupo.
 const GROUPS: Array[Dictionary] = [
 	{"name": "Terreno", "icon": "biome", "tools": [Tool.BIOME, Tool.HEIGHT, Tool.ADD, Tool.REMOVE]},
 	{"name": "Chão", "icon": "ground", "tools": [Tool.GROUND, Tool.PATH]},
-	{"name": "Peças", "icon": "object", "tools": [Tool.OBJECT, Tool.VEGETATION, Tool.BLOCKS, Tool.STAMP, Tool.ERASER, Tool.FENCE]},
+	{"name": "Peças", "icon": "object", "tools": [Tool.OBJECT, Tool.VEGETATION, Tool.BLOCKS, Tool.STAMP, Tool.ERASER, Tool.FENCE, Tool.BRIDGE]},
 	{"name": "Jogo", "icon": "flag", "tools": [Tool.START, Tool.ACTION, Tool.AREA, Tool.NPC]},
 ]
 const TAB_ICON_WIDTH := 18
@@ -69,6 +70,10 @@ const MAX_PATH_POINTS := 256
 ## A Cerca (free-fences/03): a distância de um clique até uma parede ou até o último ponto.
 const FENCE_PICK := 6.0
 const MAX_FENCE_POINTS := 128
+## A Ponte (bridges/03): o menor tamanho, como no servidor.
+const MIN_BRIDGE := 16.0
+const BRIDGE_END_MESSAGE := "A ponta da ponte precisa ficar em terra, num hexágono editável."
+const BRIDGE_SHORT_MESSAGE := "A ponte precisa ter pelo menos 16 px."
 
 var tool := Tool.BIOME
 var group := 0
@@ -122,6 +127,10 @@ var fence_panel: FencePanel
 var _fence_section: Control
 ## A parede sendo desenhada, fora do rascunho até terminar.
 var _fence: MapWall = null
+var bridge_panel: BridgePanel
+var _bridge_section: Control
+## A primeira ponta da ponte em desenho, ou INF.
+var _bridge_start := Vector2.INF
 var _path_start := Vector2.ZERO
 
 var _step: EditorHistory.Step = null
@@ -286,6 +295,12 @@ func _init() -> void:
 	fence_panel.edited.connect(func(step: EditorHistory.Step) -> void: edited.emit(step, false))
 	fences_box.add_child(fence_panel)
 
+	var bridges_box := _section("Ponte")
+	_bridge_section = bridges_box.get_parent()
+	bridge_panel = BridgePanel.new()
+	bridge_panel.edited.connect(func(step: EditorHistory.Step) -> void: edited.emit(step, false))
+	bridges_box.add_child(bridge_panel)
+
 	var vegetation_box := _section("Vegetação")
 	_vegetation_section = vegetation_box.get_parent()
 	vegetation_panel = VegetationPanel.new()
@@ -327,6 +342,9 @@ func set_tool(value: int) -> void:
 	_fence = null
 	if tool != Tool.FENCE and fence_panel.selected >= 0:
 		fence_panel.select(-1)
+	_bridge_start = Vector2.INF
+	if tool != Tool.BRIDGE and bridge_panel.selected >= 0:
+		bridge_panel.select(-1)
 	group = group_of(tool)
 	_last_in_group[group] = tool
 	if tool != Tool.AREA:
@@ -405,6 +423,8 @@ func set_draft(draft: IslandDraft) -> void:
 	path_panel.set_draft(draft)
 	fence_panel.set_draft(draft)
 	_fence = null
+	bridge_panel.set_draft(draft)
+	_bridge_start = Vector2.INF
 	npc_panel.set_draft(draft)
 
 
@@ -818,6 +838,63 @@ func cancel_fence() -> void:
 	_fence = null
 
 
+func drawing_bridge() -> bool:
+	return _bridge_start.is_finite()
+
+
+func bridge_points() -> PackedVector2Array:
+	return PackedVector2Array([_bridge_start]) if _bridge_start.is_finite() else PackedVector2Array()
+
+
+## Um clique com a Ponte: sem ponte em desenho, escolhe a de perto, solta a escolha ou
+## põe a primeira ponta; desenhando, põe a segunda e termina, ou desiste com o direito.
+func bridge_click(draft: IslandDraft, flat: Vector2, secondary: bool) -> void:
+	if tool != Tool.BRIDGE or draft == null:
+		return
+	if _bridge_start.is_finite():
+		if secondary:
+			_bridge_start = Vector2.INF
+			return
+		if not _bridge_end_ok(draft, flat):
+			message.emit(BRIDGE_END_MESSAGE)
+			return
+		if flat.distance_to(_bridge_start) < MIN_BRIDGE:
+			message.emit(BRIDGE_SHORT_MESSAGE)
+			return
+		var bridge := MapBridge.new()
+		bridge.type = bridge_panel.type
+		bridge.width = bridge_panel.width
+		bridge.from = _bridge_start
+		bridge.to = flat.round()
+		_bridge_start = Vector2.INF
+		var step := EditorHistory.Step.new()
+		step.label = TOOL_NAMES[Tool.BRIDGE]
+		step.bridges_before = IslandDraft.copy_bridges(draft.bridges)
+		draft.bridges.append(bridge)
+		step.bridges_after = IslandDraft.copy_bridges(draft.bridges)
+		edited.emit(step, false)
+		return
+	if secondary:
+		bridge_panel.select(-1)
+		return
+	var near := draft.bridge_at(flat, FENCE_PICK)
+	if near >= 0 or bridge_panel.selected >= 0:
+		bridge_panel.select(near)
+		return
+	if not _bridge_end_ok(draft, flat):
+		message.emit(BRIDGE_END_MESSAGE)
+		return
+	_bridge_start = flat.round()
+
+
+func cancel_bridge() -> void:
+	_bridge_start = Vector2.INF
+
+
+func _bridge_end_ok(draft: IslandDraft, flat: Vector2) -> bool:
+	return draft.bridge_end_ok(flat) and editable(draft, HexMapView.grid_coord(flat))
+
+
 ## Ao soltar: o traço desenhado fica com os pontos simplificados, sem escolha, para a
 ## próxima amostra valer para o próximo; um clique escolhe o traço de cima no ponto, ou
 ## solta a escolha.
@@ -1123,10 +1200,11 @@ func _refresh() -> void:
 	_stamp_section.visible = tool == Tool.STAMP
 	_path_section.visible = tool == Tool.PATH
 	_fence_section.visible = tool == Tool.FENCE
+	_bridge_section.visible = tool == Tool.BRIDGE
 	_vegetation_section.visible = tool == Tool.VEGETATION
 	_blocks_section.visible = tool == Tool.BLOCKS
 	_npc_section.visible = tool == Tool.NPC
-	_brush_section.visible = tool != Tool.START and tool != Tool.OBJECT and tool != Tool.BLOCKS and tool != Tool.PATH and tool != Tool.NPC and tool != Tool.FENCE and not (tool == Tool.STAMP and stamp_panel.mode == StampPanel.Mode.PLACE)
+	_brush_section.visible = tool != Tool.START and tool != Tool.OBJECT and tool != Tool.BLOCKS and tool != Tool.PATH and tool != Tool.NPC and tool != Tool.FENCE and tool != Tool.BRIDGE and not (tool == Tool.STAMP and stamp_panel.mode == StampPanel.Mode.PLACE)
 	for slug: String in _biome_buttons:
 		_biome_buttons[slug].set_pressed_no_signal(slug == biome)
 		_biome_buttons[slug].queue_redraw()

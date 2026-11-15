@@ -18,6 +18,8 @@ class Step:
 	var trails_after: Variant = null
 	var walls_before: Variant = null
 	var walls_after: Variant = null
+	var bridges_before: Variant = null
+	var bridges_after: Variant = null
 	var areas_before: Variant = null
 	var npcs_before: Variant = null
 	var npcs_after: Variant = null
@@ -28,7 +30,7 @@ class Step:
 	var name_after: Variant = null
 
 	func is_empty() -> bool:
-		return after.is_empty() and actions_after == null and props_after == null and trails_after == null and walls_after == null and areas_after == null and npcs_after == null and start_after == null and name_after == null
+		return after.is_empty() and actions_after == null and props_after == null and trails_after == null and walls_after == null and bridges_after == null and areas_after == null and npcs_after == null and start_after == null and name_after == null
 
 
 var _undo_redo := UndoRedo.new()
@@ -104,6 +106,9 @@ func _apply(step: Step, forward: bool) -> void:
 	var walls: Variant = step.walls_after if forward else step.walls_before
 	if walls != null:
 		_draft.walls = IslandDraft.copy_walls(walls)
+	var bridges: Variant = step.bridges_after if forward else step.bridges_before
+	if bridges != null:
+		_draft.bridges = IslandDraft.copy_bridges(bridges)
 	var areas: Variant = step.areas_after if forward else step.areas_before
 	if areas != null:
 		_draft.areas = (areas as Array).duplicate(true)

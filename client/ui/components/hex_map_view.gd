@@ -144,6 +144,9 @@ var _props_by_chunk: Dictionary[Vector2i, Array] = {}
 var _walls_by_chunk: Dictionary[Vector2i, Array] = {}
 ## Os pedaços de cada parede, montados uma vez: o índice é refeito ao mudar o terreno.
 var _wall_pieces: Dictionary[MapWall, Array] = {}
+## As fatias das pontes (bridges/02), `[hexágono onde é desenhada, HexBridges.Piece]`,
+## por pedaço de mapa.
+var _bridges_by_chunk: Dictionary[Vector2i, Array] = {}
 var _prop_slugs: Dictionary[int, String] = {}
 ## Os hexágonos de cada linha, sem pedaços de colunas (o mapa do jogo, que não muda).
 var _row_tiles: Dictionary[int, Array] = {}
@@ -204,6 +207,7 @@ func set_map(map: ExplorationMap) -> void:
 	_props_by_chunk.clear()
 	_walls_by_chunk.clear()
 	_wall_pieces.clear()
+	_bridges_by_chunk.clear()
 	_row_chunks.clear()
 	_unbuilt_rows.clear()
 	_highlighted_row = null
@@ -217,6 +221,7 @@ func set_map(map: ExplorationMap) -> void:
 			_unbuilt_rows[key] = []
 		_unbuilt_rows[key].append(tile)
 	_index_walls()
+	_index_bridges()
 	for key: Vector2i in _unbuilt_rows:
 		if not _row_chunks.has(key.y):
 			_row_chunks[key.y] = []
@@ -246,6 +251,7 @@ func update_tiles(coords: Array[Vector2i]) -> void:
 	# Apagar, pôr ou subir um hexágono muda onde cada pedaço de cerca é desenhado.
 	_walls_by_chunk.clear()
 	_index_walls()
+	_index_bridges()
 	# Com pedaços, o vizinho de uma ponta pode estar no pedaço ao lado.
 	var spread: Array[int] = [0]
 	if chunk_columns > 0:
@@ -658,7 +664,7 @@ func _build_row(key: Vector2i, tiles: Array) -> void:
 	if height_cut >= 0:
 		above_tiles = above_tiles.filter(func(tile: HexTile) -> bool: return tile.height <= height_cut)
 		above_props = above_props.filter(func(prop: MapProp) -> bool: return _level_at(prop.coord) <= height_cut)
-	_add_decorations(bands, key.y, shown, props, above_tiles, above_props, _wall_entries(key))
+	_add_decorations(bands, key.y, shown, props, above_tiles, above_props, _wall_entries(key), _bridges_by_chunk.get(key, []))
 	row.queue_redraw()
 	for band: HexRowView in bands:
 		band.queue_redraw()
@@ -923,7 +929,7 @@ func _add_grounds(row: HexRowView, tiles: Array) -> void:
 
 ## As decorações da linha `row`: as dos hexágonos dela que ficam nela e as da linha de
 ## cima que passam para ela (`spills_down`), cada uma na faixa do pé.
-func _add_decorations(bands: Array[HexRowView], row: int, tiles: Array, props: Array, above_tiles: Array, above_props: Array, walls: Array = []) -> void:
+func _add_decorations(bands: Array[HexRowView], row: int, tiles: Array, props: Array, above_tiles: Array, above_props: Array, walls: Array = [], bridges: Array = []) -> void:
 	var sheet: Array[Array] = []
 	var files: Array[Dictionary] = []
 	for _band: int in DEPTH_BANDS:
@@ -950,6 +956,19 @@ func _add_decorations(bands: Array[HexRowView], row: int, tiles: Array, props: A
 			_add_file_props(bands[band], path, files[band][path])
 		for slug: String in fences[band]:
 			_add_wall_mesh(bands[band], slug, fences[band][slug])
+	var decks: Array[Dictionary] = []
+	for _band: int in DEPTH_BANDS:
+		decks.append({})
+	for entry: Array in bridges:
+		var coord: Vector2i = entry[0]
+		var piece: HexBridges.Piece = entry[1]
+		var band := band_of(piece.key.y - flat_center(coord).y)
+		if not decks[band].has(piece.texture):
+			decks[band][piece.texture] = []
+		decks[band][piece.texture].append(piece)
+	for band: int in DEPTH_BANDS:
+		for texture: Texture2D in decks[band]:
+			_add_bridge_mesh(bands[band], texture, decks[band][texture])
 
 
 func _collect_decorations(sheet: Array[Array], files: Array[Dictionary], row: int, tiles: Array, props: Array, spilled: bool) -> void:
@@ -966,6 +985,8 @@ func _collect_decorations(sheet: Array[Array], files: Array[Dictionary], row: in
 			if spills_down(tile.coord, flat.y + decoration.offset.y) != spilled:
 				continue
 			if allows_decoration.is_valid() and not allows_decoration.call(tile.coord, decoration.kind):
+				continue
+			if _under_bridge(flat + Vector2(decoration.offset)):
 				continue
 			if not HexGrounds.allows_on(HexGrounds.ground_at(tile, flat + Vector2(decoration.offset), tile_trails), decoration.kind):
 				continue
@@ -1088,6 +1109,81 @@ func set_walls(walls: Array[MapWall], changed: Array[MapWall]) -> void:
 	var list: Array[Vector2i] = []
 	list.assign(coords.keys())
 	update_tiles(list)
+
+
+## As pontes da ilha (bridges/02): troca a lista e remonta os pedaços de mapa que as
+## pontes de `changed` tocavam ou tocam.
+func set_bridges(bridges: Array[MapBridge], changed: Array[MapBridge]) -> void:
+	if _map == null:
+		return
+	var coords: Dictionary[Vector2i, bool] = {}
+	for bridge: MapBridge in changed:
+		for entry: Array in _bridge_entries(bridge):
+			coords[entry[0]] = true
+		for end: Vector2 in [bridge.from, bridge.to]:
+			if _map.has(grid_coord(end)):
+				coords[grid_coord(end)] = true
+	_map.bridges = bridges
+	_bridges_by_chunk.clear()
+	_index_bridges()
+	var list: Array[Vector2i] = []
+	list.assign(coords.keys())
+	update_tiles(list)
+
+
+func _index_bridges() -> void:
+	for bridge: MapBridge in _map.bridges:
+		for entry: Array in _bridge_entries(bridge):
+			var key := _chunk_of(entry[0])
+			if not _bridges_by_chunk.has(key):
+				_bridges_by_chunk[key] = []
+			_bridges_by_chunk[key].append(entry)
+
+
+## Se uma decoração natural do bioma no ponto ficaria embaixo do piso de uma ponte:
+## ela sai, para a grama não nascer por cima da cabeceira (bridges/06).
+func _under_bridge(flat: Vector2) -> bool:
+	for bridge: MapBridge in _map.bridges:
+		var closest := Geometry2D.get_closest_point_to_segment(flat, bridge.from, bridge.to)
+		if flat.distance_to(closest) <= bridge.width / 2.0 + 2.0:
+			return true
+	return false
+
+
+## As fatias de uma ponte com o hexágono da linha de cada uma.
+func _bridge_entries(bridge: MapBridge) -> Array:
+	var entries: Array = []
+	var lifts := Vector2(_rise(_level_at(grid_coord(bridge.from))).y, _rise(_level_at(grid_coord(bridge.to))).y)
+	for piece: HexBridges.Piece in HexBridges.pieces(bridge, lifts):
+		# A linha da fatia é a do pé, como a dos atores: o chão das linhas da frente
+		# começa abaixo dela e não a cobre (bridges/05).
+		var row := floori(piece.key.y / STEP_Y)
+		var coord := grid_coord(Vector2(piece.key.x, row * STEP_Y + SURFACE_CENTER.y))
+		if not _map.has(coord):
+			for shift: int in [-1, 1, -2, 2]:
+				if _map.has(coord + Vector2i(shift, 0)):
+					coord += Vector2i(shift, 0)
+					break
+		if _map.has(coord):
+			entries.append([coord, piece])
+	return entries
+
+
+## As fatias de ponte de uma faixa, de trás para a frente.
+func _add_bridge_mesh(row: HexRowView, texture: Texture2D, placed: Array) -> void:
+	placed.sort_custom(func(a: HexBridges.Piece, b: HexBridges.Piece) -> bool: return a.key.y < b.key.y)
+	var points := PackedVector2Array()
+	var texture_points := PackedVector2Array()
+	var wind := PackedFloat32Array()
+	for piece: HexBridges.Piece in placed:
+		var top_left := piece.top_left - Vector2(0.0, piece.lift)
+		var size := Vector2(piece.source.size)
+		var source := Vector2(piece.source.position)
+		points.append_array(_quad(top_left, top_left + Vector2(size.x, 0.0), Vector2(0.0, size.y)))
+		texture_points.append_array(_quad(source, source + Vector2(size.x, 0.0), Vector2(0.0, size.y)))
+		for _vertex: int in 6:
+			wind.append_array(PackedFloat32Array([piece.key.x, piece.key.y, HexDecorations.NO_SWAY.x, HexDecorations.NO_SWAY.y]))
+	_add_texture_mesh(row, texture, points, texture_points, PackedColorArray(), wind)
 
 
 ## Os pedaços de cerca de um pedaço de mapa, sem os de pé acima do corte de altura.

@@ -42,6 +42,7 @@ interface IslandMap {
   }[];
   trails: { ground: string; width: number; points: number[] }[];
   walls: { type: string; points: number[] }[];
+  bridges: { type: string; points: number[]; width: number }[];
   npcs: {
     id: number;
     npc_id: number;
@@ -121,6 +122,10 @@ describe('Ilhas do jogador (e2e)', () => {
       walls: [
         { type: 'wood_fence', points: [54, 0, 74, 0] },
         { type: 'invisible_wall', points: [-32, 42, -12, 42] },
+      ],
+      bridges: [
+        { type: 'wood_bridge', points: [-64, 0, 64, 0], width: 40 },
+        { type: 'rope_bridge', points: [-32, 42, 32, -42] },
       ],
       npcs: [
         {
@@ -323,6 +328,10 @@ describe('Ilhas do jogador (e2e)', () => {
         { type: 'wood_fence', points: [54, 0, 74, 0] },
         { type: 'invisible_wall', points: [-32, 42, -12, 42] },
       ]);
+      expect(map.bridges).toEqual([
+        { type: 'wood_bridge', points: [-64, 0, 64, 0], width: 40 },
+        { type: 'rope_bridge', points: [-32, 42, 32, -42], width: 28 },
+      ]);
       expect(map.npcs).toEqual([
         {
           id: 1,
@@ -439,6 +448,7 @@ describe('Ilhas do jogador (e2e)', () => {
       expect(map.props).toEqual([]);
       expect(map.trails).toEqual([]);
       expect(map.walls).toEqual([]);
+      expect(map.bridges).toEqual([]);
       expect(map.npcs).toEqual([]);
       expect(map.tiles.some((tile) => tile.ground !== undefined)).toBe(false);
       expect(map.tiles.length).toBeGreaterThan(1000);

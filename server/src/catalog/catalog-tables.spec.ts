@@ -5,9 +5,9 @@ import { CATALOG_TABLES, SEED_DATA_DIR } from './catalog-tables.js';
 describe('CATALOG_TABLES', () => {
   const names = CATALOG_TABLES.map((table) => table.name);
 
-  it('tem as 41 tabelas, sem repetição', () => {
-    expect(names).toHaveLength(41);
-    expect(new Set(names).size).toBe(41);
+  it('tem as 42 tabelas, sem repetição', () => {
+    expect(names).toHaveLength(42);
+    expect(new Set(names).size).toBe(42);
   });
 
   it('casa com os arquivos .json da pasta de dados do seed', () => {
@@ -271,6 +271,19 @@ describe('carga inicial dos tipos de parede (free-fences/01)', () => {
       [1, 'wood_fence', true],
       [2, 'stone_fence', true],
       [3, 'invisible_wall', false],
+    ]);
+  });
+});
+
+describe('carga inicial dos estilos de ponte (bridges/01)', () => {
+  const bridges = JSON.parse(
+    readFileSync(join(SEED_DATA_DIR, 'bridge_types.json'), 'utf8'),
+  ) as { id: number; slug: string; name: string }[];
+
+  it('tem a ponte de corda e a de madeira, com ids estáveis', () => {
+    expect(bridges.map(({ id, slug }) => [id, slug])).toEqual([
+      [4, 'rope_bridge'],
+      [5, 'wood_bridge'],
     ]);
   });
 });

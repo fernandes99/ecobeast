@@ -951,6 +951,7 @@ model IslandMap {
   props       IslandProp[]
   trails      IslandTrail[]
   walls       IslandWall[]
+  bridges     IslandBridge[]
   npcs        IslandNpc[]
 
   @@unique([islandId, kind])
@@ -1182,6 +1183,41 @@ model IslandWall {
   @@unique([islandMapId, position])
   @@index([wallTypeId])
   @@map("island_walls")
+  @@schema("ecobeasts")
+}
+
+/// Um estilo de ponte (bridges/01), recortado do pacote de pontes da craftpix.net.
+model BridgeType {
+  id   Int    @id @default(autoincrement())
+  /// CHECK ^[a-z0-9_]+$ (migration bridges)
+  slug String @unique
+  name String
+
+  bridges IslandBridge[]
+
+  @@map("bridge_types")
+  @@schema("ecobeasts")
+}
+
+/// Uma ponte da ilha (bridges/01): um trecho reto, de terra a terra.
+model IslandBridge {
+  id           Int   @id @default(autoincrement())
+  islandMapId  Int   @map("island_map_id")
+  bridgeTypeId Int   @map("bridge_type_id")
+  /// A ordem na ilha, de 0 em diante.
+  position     Int
+  /// x0, y0, x1, y1: as duas pontas, em pixels da arte, a partir do centro plano do hexágono (0, 0).
+  /// CHECK exatamente 4 números (migration bridges)
+  points       Int[]
+  /// A largura do piso, em pixels da arte. CHECK 16–64 (migration bridge_width)
+  width        Int   @default(28)
+
+  islandMap  IslandMap  @relation(fields: [islandMapId], references: [id], onDelete: Cascade)
+  bridgeType BridgeType @relation(fields: [bridgeTypeId], references: [id], onDelete: Restrict)
+
+  @@unique([islandMapId, position])
+  @@index([bridgeTypeId])
+  @@map("island_bridges")
   @@schema("ecobeasts")
 }
 
