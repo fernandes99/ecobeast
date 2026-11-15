@@ -67,6 +67,12 @@ const EFFECTS := {
 	"manto_de_neve": ["ice", "1/26"],
 	"eco_mental": ["mind", "10/475"],
 	"garra_de_pedra": ["earth", "6/295"],
+	"garra_do_eclipse": ["shadow", "3/123"],
+	"martelo_de_ferro": ["metal", "10/486"],
+	"lanca_de_cristal": ["ice", "11/529"],
+	"inverno_mudo": ["ice", "13/615"],
+	"grito_congelado": ["mind", "13/633"],
+	"palavra_guardada": ["mind", "14/655"],
 }
 
 const PROJECTILES := {

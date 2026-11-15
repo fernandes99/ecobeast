@@ -79,6 +79,7 @@ A luta nova substitui a de hoje em Explorar zona. A luta atual deixa de ser usad
 | 22 | [22-earth-ice-mind-skills](22-earth-ice-mind-skills.md) | Ícone, efeito e som da Nuvem de Poeira, do Floco Cortante, do Arremesso de Torrão, do Manto de Neve, do Eco Mental e da Garra de Pedra, com a Terra na linha cinza tingida de marrom | concluída (falta o dono ver e ouvir no editor) |
 | 23 | [23-battle-effect-states](23-battle-effect-states.md) | Os efeitos que duram: um efeito no corpo para cada estado e para o Protegido, o escudo, as plaquinhas dos atributos, as chamas do Chão em chamas e o painel de depuração F3 | concluída (falta o dono ver no editor) |
 | 24 | [24-ruvak-idle](24-ruvak-idle.md) | O idle do Ruvak nas 5 vistas, do PixelLab, tirado do zip de folha única; o walk continua o do boneco | concluída (falta o dono ver no editor) |
+| 25 | [25-shadow-metal-ice-mind-skills](25-shadow-metal-ice-mind-skills.md) | Ícone, efeito e som da Garra do Eclipse, do Martelo de Ferro, da Lança de Cristal, do Inverno Mudo, do Grito Congelado e da Palavra Guardada | concluída (falta o dono ver e ouvir no editor) |
 
 O desenho compartilhado está no [architecture.md](architecture.md).
 

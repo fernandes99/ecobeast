@@ -1,4 +1,4 @@
-"""Gera o som das Técnicas da board-battle/18 e /20 a /22 (board-battle/19 a /22), por síntese:
+"""Gera o som das Técnicas da board-battle/18 e /20 a /22 e /25 (board-battle/19 a /22 e /25), por síntese:
 ruído em filtros, tons com a altura mudando e saturação leve. Cada som dura mais
 ou menos o efeito da Técnica, porque os dois começam juntos; o impacto fica com o
 som de dano. Tudo sai daqui: sem gravação de terceiros.
@@ -686,6 +686,103 @@ def garra_de_pedra(rng):
     return mix, 2.2
 
 
+def garra_do_eclipse(rng):
+    """Garra do Eclipse: a escuridão puxando o ar para dentro, um risco fundo de garra e
+    um zumbido grave e desafinado que fica no ar."""
+    length = 0.6
+    mix = silence(length)
+    pull = band(noise(rng, 0.18), [(0.0, 300.0), (0.18, 1400.0)], 1.2)
+    add(mix, shape(pull, [(0.0, 0.0), (0.16, 1.0), (0.18, 0.0)]), 0.0, 0.7)
+    for at in (0.16, 0.2):
+        slash = band(noise(rng, 0.12), [(0.0, 3500.0), (0.12, 700.0)], 2.5)
+        add(mix, decay(slash, 0.12, 0.002), at, 1.3)
+    add(mix, thud(95.0, 40.0, 0.2), 0.17, 1.1)
+    dark = [a + b for a, b in zip(tone(0.42, 82.0, (1.0, 0.5, 0.25)), tone(0.42, 87.0, (1.0, 0.5, 0.25)))]
+    add(mix, shape(low(dark, 900.0), [(0.0, 0.0), (0.06, 0.6), (0.42, 0.0)]), 0.18, 0.5)
+    return mix, 1.8
+
+
+def martelo_de_ferro(rng):
+    """Martelo de Ferro: o punho pesado cortando o ar, a pancada de ferro na bigorna,
+    que ressoa, e as faíscas estalando."""
+    length = 0.6
+    mix = silence(length)
+    swing = band(noise(rng, 0.12), [(0.0, 300.0), (0.12, 900.0)], 1.2)
+    add(mix, shape(swing, [(0.0, 0.0), (0.11, 1.0), (0.12, 0.0)]), 0.0, 0.7)
+    add(mix, thud(140.0, 38.0, 0.22), 0.12, 1.6)
+    add(mix, click(rng, 2200.0, 0.025, 1.0), 0.12, 1.6)
+    add(mix, ping(780.0, 0.45, ((1.0, 1.0), (2.76, 0.6), (5.4, 0.35), (8.9, 0.15))), 0.12, 0.8)
+    add(mix, crackles(rng, length, 120.0, 0.13, 0.4, weight=0.8, freq=5500.0), 0.0, 1.0)
+    return mix, 2.0
+
+
+def lanca_de_cristal(rng):
+    """Lança de Cristal: o cristal crescendo num brilho que sobe, a ponta furando o ar
+    num estalo agudo e a lança se desfazendo em cacos."""
+    length = 0.65
+    mix = silence(length)
+    grow = tone(0.2, [(0.0, 1800.0), (0.2, 3600.0)], (1.0, 0.3), (22.0, 0.01))
+    add(mix, shape(grow, [(0.0, 0.0), (0.18, 1.0), (0.2, 0.0)]), 0.0, 0.25)
+    add(mix, shape(band(noise(rng, 0.2), [(0.0, 3000.0), (0.2, 7000.0)], 3.0), [(0.0, 0.0), (0.2, 1.0)]), 0.0, 0.6)
+    add(mix, decay(band(noise(rng, 0.06), 6500.0, 3.0), 0.06, 0.001), 0.2, 1.6)
+    add(mix, ping(3500.0, 0.25, ((1.0, 1.0), (1.41, 0.6), (2.76, 0.3))), 0.2, 0.6)
+    for _ in range(9):
+        add(mix, ping(rng.uniform(3000.0, 6500.0), 0.07, ((1.0, 1.0), (2.4, 0.3))), rng.uniform(0.32, 0.55), rng.uniform(0.2, 0.4))
+    return mix, 1.6
+
+
+def inverno_mudo(rng):
+    """Inverno Mudo: uma rajada gelada que cresce e se corta de repente, deixando um
+    brilho fino e o gelo estalando no silêncio."""
+    length = 0.7
+    mix = silence(length)
+    gust = band(noise(rng, 0.3), [(0.0, 900.0), (0.28, 3500.0)], 1.0)
+    add(mix, shape(gust, [(0.0, 0.0), (0.26, 1.0), (0.3, 0.0)]), 0.0, 1.0)
+    add(mix, shape(low(noise(rng, 0.3), 500.0), [(0.0, 0.0), (0.26, 1.0), (0.3, 0.0)]), 0.0, 0.6)
+    hush = shape(tone(0.4, 4186.0, (1.0,), (6.0, 0.004)), [(0.0, 0.0), (0.05, 1.0), (0.4, 0.0)])
+    add(mix, hush, 0.3, 0.12)
+    for index, at in enumerate((0.32, 0.41, 0.53)):
+        add(mix, click(rng, 2500.0 - index * 400.0, 0.03, 2.0), at, 0.9 - index * 0.2)
+        add(mix, ping(rng.uniform(3500.0, 5000.0), 0.08, ((1.0, 1.0), (2.76, 0.3))), at, 0.2)
+    return mix, 1.5
+
+
+def grito_congelado(rng):
+    """Grito Congelado: um grito fantasma que desce e treme, preso num eco gelado, com o
+    gelo chiando por baixo."""
+    length = 0.75
+    mix = silence(length)
+    pitch = [(0.0, 700.0), (0.08, 900.0), (0.45, 420.0)]
+    voice = tone(0.45, pitch, (1.0, 0.6, 0.45, 0.3, 0.2), (9.0, 0.05))
+    scream = [0.0] * len(voice)
+    for freq, q, weight in ((900.0, 3.0, 1.0), (2600.0, 4.0, 0.7)):
+        for index, value in enumerate(band(voice, freq, q)):
+            scream[index] += value * weight
+    for index, value in enumerate(band(noise(rng, 0.45), 2200.0, 1.5)):
+        scream[index] += value * 0.4
+    scream = shape(scream, [(0.0, 0.0), (0.04, 1.0), (0.3, 0.7), (0.45, 0.0)])
+    for index, weight in enumerate((1.0, 0.4, 0.18)):
+        add(mix, low(scream, 6000.0 - index * 2000.0), index * 0.13, weight)
+    frost = shape(band(noise(rng, length), 7000.0, 2.0), [(0.0, 0.0), (0.15, 1.0), (0.75, 0.0)])
+    add(mix, frost, 0.0, 0.25)
+    return mix, 1.6
+
+
+def palavra_guardada(rng):
+    """Palavra Guardada: um sussurro baixinho e um acorde calmo que se abre, nota a nota,
+    com um brilho que sobe no fim."""
+    length = 0.75
+    mix = silence(length)
+    whisper = shape(band(noise(rng, 0.22), 2500.0, 1.8), [(0.0, 0.0), (0.06, 1.0), (0.22, 0.0)])
+    add(mix, flutter(rng, whisper, 30.0, 0.6), 0.0, 0.35)
+    for index, freq in enumerate((C5, E5, G5, C6)):
+        note = shape(tone(0.6 - index * 0.08, freq, (1.0, 0.25), (5.0, 0.004)), [(0.0, 0.0), (0.05, 1.0), (0.5 - index * 0.08, 0.0)])
+        add(mix, note, 0.12 + index * 0.08, 0.32)
+    for index, freq in enumerate(PENTATONIC[3:]):
+        add(mix, ping(freq, 0.12, ((1.0, 1.0), (2.0, 0.2))), 0.45 + index * 0.04, 0.15)
+    return mix, 1.2
+
+
 SOUNDS = {
     "mordida_brasa": mordida_brasa,
     "fumaca_densa": fumaca_densa,
@@ -727,6 +824,12 @@ SOUNDS = {
     "manto_de_neve": manto_de_neve,
     "eco_mental": eco_mental,
     "garra_de_pedra": garra_de_pedra,
+    "garra_do_eclipse": garra_do_eclipse,
+    "martelo_de_ferro": martelo_de_ferro,
+    "lanca_de_cristal": lanca_de_cristal,
+    "inverno_mudo": inverno_mudo,
+    "grito_congelado": grito_congelado,
+    "palavra_guardada": palavra_guardada,
 }
 
 
