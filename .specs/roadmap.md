@@ -54,6 +54,7 @@ O que vem depois do MVP de estrutura (entrada, escolha do inicial e Hub). Cada l
 | 38  | [`vegetation-wind`](vegetation-wind/) | Os arbustos dos pacotes balançam com o vento das decorações do bioma, e os pixels da copa das árvores mexem pelo ruído do vento | vegetation-packs | concluída (falta o dono conferir) |
 | 39  | [`bridges`](bridges/) | Pontes retas em qualquer ângulo, desenhadas no editor com a arte de um pacote da craftpix.net; a água passa a bloquear nas ilhas e no mapa sorteado, e a ponte é o corredor para atravessar | free-fences, prop-depth-blocks | concluída (falta o dono conferir) |
 | 40  | [`desert-snow`](desert-snow/) | Os biomas Deserto e Neve: no catálogo, com quem nasce neles; no mapa sorteado, pelo ruído de temperatura, nas pontas quente e fria; e no editor, com o chão, os arremates, o escorrido e as decorações gerados por script | terrain-height, biome-encounters | concluída (falta o dono conferir) |
+| 41  | [`fence-art`](fence-art/) | A cerca de madeira e o muro de pedra ganham a arte do pacote Sunnyside World (postes de topo redondo, pilares), com a travessa vista de cima nos trechos acima de 60°; o traço, o bloqueio e o editor não mudam | free-fences | concluída (falta o dono conferir) |
 
 ## Pós-lançamento (do GDD)
 

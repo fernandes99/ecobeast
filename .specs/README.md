@@ -63,6 +63,7 @@ O Ecobeast é um jogo mobile (Android/iOS, retrato): o cliente em **Godot 4.7 co
 | [vegetation-wind](vegetation-wind/) | Os arbustos dos pacotes balançando com o vento das decorações do bioma e os pixels da copa das árvores mexendo no vento |
 | [bridges](bridges/) | Pontes retas em qualquer ângulo nas ilhas, com a arte de um pacote, e a água bloqueando o andar |
 | [desert-snow](desert-snow/) | Os biomas Deserto e Neve no catálogo, no mapa sorteado, nas ilhas e na luta, com o chão, os arremates e as decorações |
+| [fence-art](fence-art/) | A cerca de madeira e o muro de pedra com a arte do pacote Sunnyside World, com a travessa vista de cima nos trechos em pé |
 
 As próximas iniciativas estão no [roadmap.md](roadmap.md).
 

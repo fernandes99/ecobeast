@@ -1,7 +1,7 @@
 extends SceneTree
 ## A arte da cidade das ilhas, no estilo de .specs/town-art/style-guide.md, desenhada só
 ## por código: um PNG por variante, em res://assets/props/<slug>/<variante>.png
-## (free-props/02, free-objects/04), e a folha de cada parede, em res://assets/walls/.
+## (free-props/02, free-objects/04). A arte das paredes sai do assets/walls/make_walls.py.
 ## Da pasta client/: godot --headless -s res://assets/map_objects/make_town.gd [-- <slug>...]
 ##
 ## A célula tem a largura do formato, simétrica em volta do ponto de apoio, e o pé dela é
@@ -100,13 +100,6 @@ func _init() -> void:
 			DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(path.get_base_dir()))
 			var error := art.save_png(path)
 			print("%s/%d: %dx%d %s" % [slug, variant, art.get_width(), art.get_height(), "ok" if error == OK else error_string(error)])
-	for index: int in WALL_SLUGS.size():
-		if not only.is_empty() and not only.has(WALL_SLUGS[index]):
-			continue
-		var wall_path := WALL_PATH % WALL_SLUGS[index]
-		DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(wall_path.get_base_dir()))
-		var error := _strip_cells(_wall_cells(index + 1)).save_png(wall_path)
-		print("%s: %s" % [wall_path, "ok" if error == OK else error_string(error)])
 	quit()
 
 
@@ -593,88 +586,6 @@ static func _barrel(s: Image, at: Vector2i) -> void:
 	_fill(s, Rect2i(at.x, at.y + 2, 7, 1), IRON[1])
 	_fill(s, Rect2i(at.x, at.y + 6, 7, 1), IRON[1])
 	_fill(s, Rect2i(at.x + 1, at.y, 5, 1), WOOD[0])
-
-
-## A folha das paredes (free-fences/01): o poste e uma travessa reta de ponta a ponta, sem
-## poste, para as fatias repetirem a cada HexWalls.RAIL_SPAN colunas. Os tamanhos repetem
-## os do HexWalls, que usa o GameData, que este script não tem.
-const WALL_SLUGS: Array[String] = ["wood_fence", "stone_fence"]
-const WALL_PATH := "res://assets/walls/%s.png"
-const WALL_CELL_SIZE := Vector2i(96, 72)
-const WALL_FOOT := Vector2i(48, 43)
-
-
-func _wall_cells(variant: int) -> Array[Image]:
-	var foot := Vector2(WALL_FOOT)
-	var post := Image.create(WALL_CELL_SIZE.x, WALL_CELL_SIZE.y, false, Image.FORMAT_RGBA8)
-	var rail := Image.create(WALL_CELL_SIZE.x, WALL_CELL_SIZE.y, false, Image.FORMAT_RGBA8)
-	var from := Vector2(0.0, foot.y)
-	var to := Vector2(WALL_CELL_SIZE.x - 1, foot.y)
-	if variant == 1:
-		_fence_post(post, foot)
-		_fence_rails(rail, from, to)
-	else:
-		_fence_pillar(post, foot)
-		_straight_wall(rail, foot.y)
-	return [post, rail]
-
-
-## O muro de pedra, deitado, com a emenda exata a cada 7 colunas.
-static func _straight_wall(cell: Image, foot_y: float) -> void:
-	var base := roundi(foot_y) + 2
-	for x: int in cell.get_width():
-		var seam := x % 7 == 0
-		_dot(cell, x, base - 11, STONE[3])
-		_dot(cell, x, base - 10, STONE[0])
-		for y: int in range(base - 9, base):
-			var color := STONE[1]
-			if y == base - 5 or seam or y == base - 1:
-				color = STONE[2]
-			_dot(cell, x, y, color)
-		_dot(cell, x, base, STONE[3])
-
-
-static func _fence_post(cell: Image, foot: Vector2) -> void:
-	var x := roundi(foot.x) - 2
-	var y := roundi(foot.y) + 2
-	_fill(cell, Rect2i(x - 1, y - 14, 6, 15), WOOD[3])
-	_fill(cell, Rect2i(x, y - 13, 4, 13), WOOD[1])
-	_fill(cell, Rect2i(x, y - 13, 1, 13), WOOD[0])
-	_fill(cell, Rect2i(x + 3, y - 13, 1, 13), WOOD[2])
-	_fill(cell, Rect2i(x, y - 13, 4, 1), WOOD[0])
-
-
-static func _fence_rails(cell: Image, from: Vector2, to: Vector2) -> void:
-	var steps := ceili(from.distance_to(to) * 2.0)
-	for rail: int in [-10, -5]:
-		for step: int in steps + 1:
-			var p := from.lerp(to, step / float(steps)) + Vector2(0, rail)
-			var x := roundi(p.x)
-			var y := roundi(p.y)
-			_dot(cell, x, y - 1, WOOD[3])
-			_dot(cell, x, y, WOOD[0])
-			_dot(cell, x, y + 1, WOOD[1])
-			_dot(cell, x, y + 2, WOOD[3])
-
-
-static func _fence_pillar(cell: Image, foot: Vector2) -> void:
-	var x := roundi(foot.x) - 4
-	var y := roundi(foot.y) + 3
-	_fill(cell, Rect2i(x - 1, y - 16, 10, 17), STONE[3])
-	_fill(cell, Rect2i(x, y - 15, 8, 15), STONE[1])
-	_fill(cell, Rect2i(x, y - 15, 1, 15), STONE[0])
-	_fill(cell, Rect2i(x + 6, y - 15, 2, 15), STONE[2])
-	_fill(cell, Rect2i(x - 1, y - 16, 10, 2), STONE[0])
-	_fill(cell, Rect2i(x - 1, y - 14, 10, 1), STONE[2])
-	_fill(cell, Rect2i(x, y - 8, 8, 1), STONE[2])
-
-
-static func _strip_cells(cells: Array[Image]) -> Image:
-	var size := cells[0].get_size()
-	var strip := Image.create(size.x * cells.size(), size.y, false, Image.FORMAT_RGBA8)
-	for index: int in cells.size():
-		strip.blit_rect(cells[index], Rect2i(Vector2i.ZERO, size), Vector2i(size.x * index, 0))
-	return strip
 
 
 # --- As decorações de rua ------------------------------------------------------------

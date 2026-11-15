@@ -1222,7 +1222,8 @@ func _index_wall(wall: MapWall) -> void:
 
 
 ## Os pedaços de cerca de uma faixa, de trás para a frente, com o poste por cima das
-## fatias do mesmo ponto: a fatia é a coluna da travessa, o poste a célula inteira.
+## fatias do mesmo ponto: a fatia é a coluna da travessa deitada ou a linha da vista de
+## cima, o poste a célula inteira.
 func _add_wall_mesh(row: HexRowView, slug: String, placed: Array) -> void:
 	var path := HexWalls.ART_PATH % slug
 	if _texture(path) == null:
@@ -1230,17 +1231,27 @@ func _add_wall_mesh(row: HexRowView, slug: String, placed: Array) -> void:
 	placed.sort_custom(_wall_order)
 	var cell := Vector2(HexWalls.CELL_SIZE)
 	var foot := Vector2(HexWalls.CELL_FOOT)
+	var top_width := float(HexWalls.top_width(slug))
 	var points := PackedVector2Array()
 	var texture_points := PackedVector2Array()
 	var wind := PackedFloat32Array()
 	for entry: Array in placed:
 		var base: Vector2 = entry[0]
 		var piece: HexWalls.Piece = entry[1]
-		var width := cell.x if piece.post else 1.0
-		var top_left := base - foot if piece.post else base - Vector2(0.0, foot.y)
-		var source := Vector2.ZERO if piece.post else Vector2(cell.x + piece.column, 0.0)
-		points.append_array(_quad(top_left, top_left + Vector2(width, 0.0), Vector2(0.0, cell.y)))
-		texture_points.append_array(_quad(source, source + Vector2(width, 0.0), Vector2(0.0, cell.y)))
+		var top_left := base - foot
+		var size := cell
+		var source := Vector2.ZERO
+		match piece.kind:
+			HexWalls.Kind.RAIL:
+				top_left = base - Vector2(0.0, foot.y)
+				size = Vector2(1.0, cell.y)
+				source = Vector2(cell.x + piece.column, 0.0)
+			HexWalls.Kind.TOP:
+				top_left = base - Vector2(floorf(top_width / 2.0), 0.0)
+				size = Vector2(top_width, 1.0)
+				source = Vector2(cell.x * 2.0 + foot.x - floorf(top_width / 2.0), piece.column)
+		points.append_array(_quad(top_left, top_left + Vector2(size.x, 0.0), Vector2(0.0, size.y)))
+		texture_points.append_array(_quad(source, source + Vector2(size.x, 0.0), Vector2(0.0, size.y)))
 		for _vertex: int in 6:
 			wind.append_array(PackedFloat32Array([base.x, base.y, HexDecorations.NO_SWAY.x, HexDecorations.NO_SWAY.y]))
 	_add_mesh(row, path, points, texture_points, PackedColorArray(), wind)

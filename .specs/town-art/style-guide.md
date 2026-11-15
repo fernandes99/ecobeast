@@ -1,6 +1,6 @@
 # Guia de estilo da cidade
 
-As regras que toda arte de construção e de decoração de cidade segue, desenhada por código ou por outra ferramenta. Nasceu da amostra aprovada pelo dono em 2026-11-12 ([README](README.md)). O terreno, a água, as árvores, as pedras e a vegetação não seguem este guia: eles continuam no estilo deles.
+As regras que toda arte de construção e de decoração de cidade segue, desenhada por código ou por outra ferramenta. Nasceu da amostra aprovada pelo dono em 2026-11-12 ([README](README.md)). O terreno, a água, as árvores, as pedras e a vegetação não seguem este guia: eles continuam no estilo deles. A cerca de madeira e o muro de pedra também não: são do pacote Sunnyside World, escolhido pelo dono ([fence-art](../fence-art/README.md)).
 
 Ao criar arte nova de cidade, siga estas regras. Para mudar uma, mude aqui primeiro, com o motivo.
 
