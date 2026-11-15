@@ -256,7 +256,7 @@ Como elas viram Ecobeasts no mapa está em [biome-encounters/architecture.md](..
 
 **`action_types`** e **`ground_types`** são os tipos das ilhas: o que uma ação faz (`kind` em `open_screen`; era `building_types`) e as trilhas e os pisos (`kind` em `trail` ou `floor`, e `hardness` de 1 a 3: na emenda entre dois chãos, o mais duro se espalha sobre o outro, [free-trails/architecture.md](../free-trails/architecture.md)). O desenho deles está em [island-villages/architecture.md](../island-villages/architecture.md). Os objetos de grade (`map_object_types` e `map_object_type_tiles`) saíram na [free-objects/04](../free-objects/04-objects-to-props.md): viraram os tipos de peça 22 a 27.
 
-**`prop_types`** são os tipos de peça solta das ilhas (`slug`, `name` e `variants` ≥ 1), postas num ponto em pixels. A arte e o vento são do jogo, pelo `slug`. O desenho está em [free-props/architecture.md](../free-props/architecture.md).
+**`prop_types`** são os tipos de peça solta das ilhas (`slug`, `name` e `variants` ≥ 1), postas num ponto em pixels. A arte e o vento são do jogo, pelo `slug`. O desenho está em [free-props/architecture.md](../free-props/architecture.md). Os tipos 28 a 60 têm a arte de pacotes da craftpix.net ([vegetation-packs](../vegetation-packs/architecture.md#os-tipos)).
 
 **`prop_type_blocks`** são as linhas de bloqueio padrão de cada tipo de peça (`prop_type_id`, `position`, `closed` e `points`, os pixels `x0, y0, …` a partir do pé, de 4 a 128 números): a peça bloqueia o Domador por elas, como uma parede, a menos que tenha as próprias. O desenho está em [free-objects/architecture.md](../free-objects/architecture.md).
 

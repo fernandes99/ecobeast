@@ -301,7 +301,7 @@ describe('carga inicial do chão (island-villages/01)', () => {
   });
 });
 
-describe('carga inicial das peças soltas (free-props/01, free-objects/04)', () => {
+describe('carga inicial das peças soltas (free-props/01, free-objects/04, vegetation-packs/01)', () => {
   const read = <T>(file: string): T =>
     JSON.parse(readFileSync(join(SEED_DATA_DIR, file), 'utf8')) as T;
   const props =
@@ -315,16 +315,16 @@ describe('carga inicial das peças soltas (free-props/01, free-objects/04)', () 
     }[]
   >('prop_type_blocks.json');
 
-  it('tem os 27 tipos, de 1 a 27, com pelo menos 1 variante', () => {
+  it('tem os 60 tipos, de 1 a 60, com pelo menos 1 variante', () => {
     expect(props.map(({ id }) => id)).toEqual(
-      Array.from({ length: 27 }, (_, index) => index + 1),
+      Array.from({ length: 60 }, (_, index) => index + 1),
     );
     for (const { variants } of props)
       expect(variants).toBeGreaterThanOrEqual(1);
   });
 
   it('as decorações de rua e os prédios da cidade são peças', () => {
-    expect(props.slice(17).map(({ slug }) => slug)).toEqual([
+    expect(props.slice(17, 27).map(({ slug }) => slug)).toEqual([
       'lamp_post',
       'sign',
       'flower_bed',
@@ -336,6 +336,16 @@ describe('carga inicial das peças soltas (free-props/01, free-objects/04)', () 
       'town_house_large',
       'observatory',
     ]);
+  });
+
+  it('os pacotes têm 12 árvores, 13 arbustos e 8 pedras de 5 tamanhos', () => {
+    const packs = props.slice(27);
+    expect(packs.map(({ slug }) => slug).slice(0, 2)).toEqual([
+      'leafy_tree',
+      'moss_tree',
+    ]);
+    expect(packs).toHaveLength(33);
+    expect(packs.slice(25).every(({ variants }) => variants === 5)).toBe(true);
   });
 
   it('só os prédios bloqueiam, cada um com uma linha fechada de pontos pares', () => {

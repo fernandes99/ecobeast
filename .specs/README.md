@@ -58,6 +58,7 @@ O Ecobeast é um jogo mobile (Android/iOS, retrato): o cliente em **Godot 4.7 co
 | [skill-cooldown](skill-cooldown/) | Countdown por Técnica, 3 Técnicas por Ecobeast e a barra de ícones na luta |
 | [skill-editor](skill-editor/) | Editar e criar Técnicas no F1, com os efeitos e quem aprende, salvas pelo servidor |
 | [free-objects](free-objects/) | Os objetos de grade viram peças soltas que bloqueiam por linhas, editáveis no editor, com a ação do prédio ao encostar |
+| [vegetation-packs](vegetation-packs/) | As árvores, os arbustos e as pedras de três pacotes da craftpix.net como peças soltas, na ferramenta Peças e no pincel Vegetação |
 
 As próximas iniciativas estão no [roadmap.md](roadmap.md).
 

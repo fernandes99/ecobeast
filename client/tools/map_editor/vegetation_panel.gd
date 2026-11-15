@@ -3,6 +3,11 @@ extends VBoxContainer
 ## O bloco da ferramenta Vegetação (vegetation-brush/02): o grupo, os tipos ligados de
 ## cada grupo e a densidade, e a pincelada, que espalha peças soltas pelos hexágonos.
 
+## Os tipos dos pacotes da craftpix.net (vegetation-packs/01). Nas pedras, a variante é o tamanho.
+const PACK_TREES: Array[String] = ["leafy_tree", "moss_tree", "fruit_tree", "blossom_tree", "autumn_tree", "dead_tree", "round_pine", "snowy_pine", "snowy_tree", "broadleaf_tree", "palm_tree"]
+const PACK_BUSHES: Array[String] = ["autumn_bush", "dry_twigs", "blue_flower_bush", "orange_flower_bush", "pink_bud_plant", "red_bromeliad", "round_bush", "light_bush", "barrel_cactus", "arm_cactus", "wild_fern", "star_fern", "snowy_bush"]
+const PACK_STONES: Array[String] = ["sand_stone", "rust_crystal", "ice_crystal", "moss_stone", "white_stone", "slab_stone", "clay_stone", "lava_stone"]
+const PACK_ODD_STONES: Array[String] = ["rust_crystal", "ice_crystal", "lava_stone"]
 const GROUPS: Array[Dictionary] = [
 	{"name": "Árvores", "kinds": ["tree", "pine"], "per_tile": 1.0},
 	{"name": "Arbustos", "kinds": ["bush", "dark_bush", "dry_shrub", "fern"], "per_tile": 2.0},
@@ -11,13 +16,22 @@ const GROUPS: Array[Dictionary] = [
 	{"name": "Pedras pequenas", "kinds": ["pebbles"], "per_tile": 2.0},
 	{"name": "Pedras médias", "kinds": ["rock", "mossy_rock", "brown_rock"], "per_tile": 1.0},
 	{"name": "Pedras grandes", "kinds": ["boulder", "rock_pile", "spire"], "per_tile": 1.0},
+	{"name": "Árvores (pacote)", "kinds": PACK_TREES, "per_tile": 1.0, "off": ["autumn_tree", "dead_tree", "snowy_pine", "snowy_tree", "broadleaf_tree", "palm_tree"]},
+	{"name": "Troncos (pacote)", "kinds": ["stump_log"], "per_tile": 0.5},
+	{"name": "Arbustos (pacote)", "kinds": PACK_BUSHES, "per_tile": 2.0, "off": ["autumn_bush", "dry_twigs", "barrel_cactus", "arm_cactus", "snowy_bush"]},
+	{"name": "Pedras grandes (pacote)", "kinds": PACK_STONES, "per_tile": 1.0, "variants": [1, 2], "off": PACK_ODD_STONES},
+	{"name": "Pedras médias (pacote)", "kinds": PACK_STONES, "per_tile": 1.0, "variants": [3, 3], "off": PACK_ODD_STONES},
+	{"name": "Pedras pequenas (pacote)", "kinds": PACK_STONES, "per_tile": 2.0, "variants": [4, 5], "off": PACK_ODD_STONES},
 ]
 const DENSITIES: Array[float] = [0.5, 1.0, 2.0]
 const DENSITY_NAMES: Array[String] = ["Pouca", "Média", "Muita"]
 const MAX_PROPS := 20000
 const FULL_MESSAGE := "A ilha chegou ao limite de 20.000 peças."
-## O espaço das peças de arte própria (poste, placa, canteiro e banco), que não estão em KIND_RADIUS.
-const OTHER_RADIUS := 8.0
+## O espaço das peças de arte própria, que não estão em KIND_RADIUS: uma parte da largura
+## da variante, entre os limites (vegetation-packs/01).
+const ART_RADIUS_SHARE := 0.25
+const MIN_ART_RADIUS := 4.0
+const MAX_ART_RADIUS := 15.0
 const ICON_WIDTH := 28
 
 var group := 0
@@ -40,7 +54,8 @@ static var _icons: Dictionary[String, Texture2D] = {}
 func _init() -> void:
 	add_theme_constant_override(&"separation", 8)
 	for entry: Dictionary in GROUPS:
-		_enabled.append((entry["kinds"] as Array).duplicate())
+		var off: Array = entry.get("off", [])
+		_enabled.append((entry["kinds"] as Array).filter(func(slug: String) -> bool: return not off.has(slug)))
 	var groups := HFlowContainer.new()
 	groups.add_theme_constant_override(&"h_separation", 4)
 	groups.add_theme_constant_override(&"v_separation", 4)
@@ -135,7 +150,8 @@ func begin(draft: IslandDraft) -> void:
 		var coord := draft.prop_coord(index)
 		if not _taken.has(coord):
 			_taken[coord] = []
-		_taken[coord].append([Vector2i(int(prop.get("dx", 0)), int(prop.get("dy", 0))), _radius_of(PropArt.slug_of(int(prop.get("prop_type_id", 0))))])
+		var slug := PropArt.slug_of(int(prop.get("prop_type_id", 0)))
+		_taken[coord].append([Vector2i(int(prop.get("dx", 0)), int(prop.get("dy", 0))), radius_of(slug, int(prop.get("variant", 1)))])
 
 
 ## Põe as peças de um hexágono, uma vez só por pincelada, e devolve quantas pôs.
@@ -159,7 +175,8 @@ func paint_tile(draft: IslandDraft, coord: Vector2i, random: RandomNumberGenerat
 			full = true
 			break
 		var slug: String = kinds[random.randi_range(0, kinds.size() - 1)]
-		var radius := _radius_of(slug)
+		var variant := _random_variant(slug, random)
+		var radius := radius_of(slug, variant)
 		for _try: int in HexDecorations.PLACE_TRIES:
 			var spot := HexDecorations.random_spot(random)
 			if not HexDecorations.is_free_spot(spot, radius, taken):
@@ -173,7 +190,7 @@ func paint_tile(draft: IslandDraft, coord: Vector2i, random: RandomNumberGenerat
 				"r": coord.y,
 				"dx": spot.x,
 				"dy": spot.y,
-				"variant": random.randi_range(1, _variant_count(slug)),
+				"variant": variant,
 				"mirrored": random.randf() < 0.5,
 			})
 			placed += 1
@@ -229,8 +246,17 @@ static func kind_icon(slug: String) -> Texture2D:
 	return icon
 
 
-static func _radius_of(slug: String) -> float:
-	return HexDecorations.KIND_RADIUS.get(slug, OTHER_RADIUS)
+static func radius_of(slug: String, variant: int) -> float:
+	if HexDecorations.KIND_RADIUS.has(slug):
+		return HexDecorations.KIND_RADIUS[slug]
+	return clampf(PropArt.rect(slug, variant).size.x * ART_RADIUS_SHARE, MIN_ART_RADIUS, MAX_ART_RADIUS)
+
+
+## Uma variante dentro do limite do grupo, quando ele tem um, e das que o tipo tem.
+func _random_variant(slug: String, random: RandomNumberGenerator) -> int:
+	var count := _variant_count(slug)
+	var limits: Array = GROUPS[group].get("variants", [1, count])
+	return random.randi_range(mini(int(limits[0]), count), mini(int(limits[1]), count))
 
 
 func _type_id(slug: String) -> int:

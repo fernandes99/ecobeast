@@ -39,6 +39,8 @@ O pincel usa os tipos de `prop_types` pelo slug. A tabela mora no cliente (`Vege
 | Pedras médias | `rock`, `mossy_rock`, `brown_rock` | 1 |
 | Pedras grandes | `boulder`, `rock_pile`, `spire` | 1 |
 
+Os 6 grupos "(pacote)", com a arte da craftpix.net, vêm depois destes ([vegetation-packs](../vegetation-packs/architecture.md#os-grupos-do-pincel)).
+
 A densidade multiplica o número da tabela: Pouca × 0,5, Média × 1 e Muita × 2. Uma parte quebrada vira uma chance: 0,5 peça é uma peça em metade dos hexágonos.
 
 ## Onde o pincel põe uma peça

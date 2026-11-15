@@ -160,5 +160,203 @@
 		"slug": "observatory",
 		"name": "Observatório",
 		"variants": 1
+	},
+	{
+		"id": 28,
+		"slug": "leafy_tree",
+		"name": "Árvore frondosa",
+		"variants": 3
+	},
+	{
+		"id": 29,
+		"slug": "moss_tree",
+		"name": "Árvore com musgo",
+		"variants": 3
+	},
+	{
+		"id": 30,
+		"slug": "fruit_tree",
+		"name": "Árvore frutífera",
+		"variants": 3
+	},
+	{
+		"id": 31,
+		"slug": "blossom_tree",
+		"name": "Árvore florida",
+		"variants": 3
+	},
+	{
+		"id": 32,
+		"slug": "autumn_tree",
+		"name": "Árvore de outono",
+		"variants": 3
+	},
+	{
+		"id": 33,
+		"slug": "dead_tree",
+		"name": "Árvore morta",
+		"variants": 3
+	},
+	{
+		"id": 34,
+		"slug": "round_pine",
+		"name": "Pinheiro redondo",
+		"variants": 3
+	},
+	{
+		"id": 35,
+		"slug": "snowy_pine",
+		"name": "Pinheiro com neve",
+		"variants": 3
+	},
+	{
+		"id": 36,
+		"slug": "snowy_tree",
+		"name": "Árvore com neve",
+		"variants": 3
+	},
+	{
+		"id": 37,
+		"slug": "broadleaf_tree",
+		"name": "Árvore de folha larga",
+		"variants": 3
+	},
+	{
+		"id": 38,
+		"slug": "palm_tree",
+		"name": "Palmeira",
+		"variants": 3
+	},
+	{
+		"id": 39,
+		"slug": "stump_log",
+		"name": "Tocos e troncos",
+		"variants": 7
+	},
+	{
+		"id": 40,
+		"slug": "autumn_bush",
+		"name": "Arbusto de outono",
+		"variants": 3
+	},
+	{
+		"id": 41,
+		"slug": "dry_twigs",
+		"name": "Galhos secos",
+		"variants": 4
+	},
+	{
+		"id": 42,
+		"slug": "blue_flower_bush",
+		"name": "Arbusto de flores azuis",
+		"variants": 3
+	},
+	{
+		"id": 43,
+		"slug": "orange_flower_bush",
+		"name": "Arbusto de flores laranja",
+		"variants": 3
+	},
+	{
+		"id": 44,
+		"slug": "pink_bud_plant",
+		"name": "Planta de botão rosa",
+		"variants": 3
+	},
+	{
+		"id": 45,
+		"slug": "red_bromeliad",
+		"name": "Bromélia vermelha",
+		"variants": 3
+	},
+	{
+		"id": 46,
+		"slug": "round_bush",
+		"name": "Arbusto redondo",
+		"variants": 3
+	},
+	{
+		"id": 47,
+		"slug": "light_bush",
+		"name": "Arbusto claro",
+		"variants": 3
+	},
+	{
+		"id": 48,
+		"slug": "barrel_cactus",
+		"name": "Cacto redondo",
+		"variants": 3
+	},
+	{
+		"id": 49,
+		"slug": "arm_cactus",
+		"name": "Cacto de braços",
+		"variants": 3
+	},
+	{
+		"id": 50,
+		"slug": "wild_fern",
+		"name": "Samambaia selvagem",
+		"variants": 3
+	},
+	{
+		"id": 51,
+		"slug": "star_fern",
+		"name": "Folhagem estrela",
+		"variants": 3
+	},
+	{
+		"id": 52,
+		"slug": "snowy_bush",
+		"name": "Arbusto com neve",
+		"variants": 3
+	},
+	{
+		"id": 53,
+		"slug": "sand_stone",
+		"name": "Pedra bege",
+		"variants": 5
+	},
+	{
+		"id": 54,
+		"slug": "rust_crystal",
+		"name": "Cristal ferrugem",
+		"variants": 5
+	},
+	{
+		"id": 55,
+		"slug": "ice_crystal",
+		"name": "Cristal de gelo",
+		"variants": 5
+	},
+	{
+		"id": 56,
+		"slug": "moss_stone",
+		"name": "Pedra de musgo",
+		"variants": 5
+	},
+	{
+		"id": 57,
+		"slug": "white_stone",
+		"name": "Pedra branca",
+		"variants": 5
+	},
+	{
+		"id": 58,
+		"slug": "slab_stone",
+		"name": "Pedra em lascas",
+		"variants": 5
+	},
+	{
+		"id": 59,
+		"slug": "clay_stone",
+		"name": "Pedra de barro",
+		"variants": 5
+	},
+	{
+		"id": 60,
+		"slug": "lava_stone",
+		"name": "Pedra de lava",
+		"variants": 5
 	}
 ]
