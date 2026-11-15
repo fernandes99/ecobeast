@@ -75,3 +75,29 @@ describe('a vez do selvagem', () => {
     expect(vez.action).toEqual({ type: 'wait' });
   });
 });
+
+describe('o selvagem e o countdown (skill-cooldown/01)', () => {
+  it('não usa a Técnica bloqueada nem a emergência: só espera', () => {
+    const blocked = wild(30, {
+      skills: [{ skillId: 1, currentPp: 35, readyRound: 3 }],
+    });
+    const state = makeBoardState([fighter(10)], [blocked], {
+      cells: { enemy: [at(1, 3)] },
+      queue: [ENEMY],
+    });
+    const vez = chooseEnemyVez(state, catalog, always(0.5), ENEMY);
+    expect(vez.action).toEqual({ type: 'wait' });
+  });
+
+  it('com a Técnica de volta, ataca', () => {
+    const ready = wild(30, {
+      skills: [{ skillId: 1, currentPp: 35, readyRound: 1 }],
+    });
+    const state = makeBoardState([fighter(10)], [ready], {
+      cells: { enemy: [at(1, 3)] },
+      queue: [ENEMY],
+    });
+    const vez = chooseEnemyVez(state, catalog, always(0.5), ENEMY);
+    expect(vez.action).toMatchObject({ type: 'skill', slot: 1 });
+  });
+});

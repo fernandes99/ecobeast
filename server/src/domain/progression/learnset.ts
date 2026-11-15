@@ -1,6 +1,6 @@
 import type { LearnsetEntry } from '../rules/creature-factory.js';
 
-const MAX_SKILLS = 4;
+const MAX_SKILLS = 3;
 
 function byLevelThenId(a: LearnsetEntry, b: LearnsetEntry): number {
   return (a.level ?? 0) - (b.level ?? 0) || a.skillId - b.skillId;

@@ -8,6 +8,7 @@ export const EMERGENCY_SKILL: BattleSkill = {
   power: 30,
   accuracy: 0,
   maxPp: 0,
+  cooldown: 0,
   priority: 0,
   critStage: 0,
   targetSlug: 'enemy',

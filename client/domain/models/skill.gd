@@ -11,6 +11,8 @@ var power: int
 ## 0 = nunca erra.
 var accuracy: int
 var max_pp: int
+## Rodadas em que a Técnica fica bloqueada depois de usada.
+var cooldown: int
 var priority: int
 var crit_stage: int
 var skill_target_id: int
@@ -42,6 +44,7 @@ static func from_row(row: Dictionary) -> Skill:
 	skill.power = row["power"]
 	skill.accuracy = row["accuracy"]
 	skill.max_pp = row["max_pp"]
+	skill.cooldown = row["cooldown"]
 	skill.priority = row["priority"]
 	skill.crit_stage = row["crit_stage"]
 	skill.skill_target_id = row["skill_target_id"]

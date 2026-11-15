@@ -4,7 +4,7 @@ const ElementBadgeScene := preload("res://ui/components/element_badge.tscn")
 const SkillRowScene := preload("res://screens/creature_details/skill_row.tscn")
 const GeneRowScene := preload("res://screens/creature_details/gene_row.tscn")
 
-const SKILL_SLOTS := 4
+const SKILL_SLOTS := 3
 const GLOW_ALPHA := 0.55
 const LIGHT_RANK_LUMINANCE := 0.3
 const NO_ITEM := "Nenhum"

@@ -160,6 +160,8 @@ describe('rotas do catálogo (e2e)', () => {
     expect(body.category.url).toMatch(/^\/v1\/skill-categories\/\d+$/);
     expect(body.target.url).toMatch(/^\/v1\/skill-targets\/\d+$/);
     expect(Array.isArray(body.effects)).toBe(true);
+    expect(body.cooldown).toBeGreaterThanOrEqual(0);
+    expect(body.cooldown).toBeLessThanOrEqual(5);
   });
 
   it('efeito modify_stat mostra stat e stages, sem status', async () => {

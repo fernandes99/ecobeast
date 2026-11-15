@@ -184,6 +184,7 @@ temperaments ──> stats (aumentado, diminuído)
 | pierces           | bool   | Só na `line`: atravessa os inimigos          |
 | ground_effect_id  | int?   | FK → ground_effects: a marca que fica no chão |
 | ground_turns      | int?   | 1–20 vezes da fila; nulo junto com a marca   |
+| cooldown          | int    | 0–5 rodadas bloqueada depois de usada (skill-cooldown) |
 
 **`skill_effects`** — chave `id`; cada técnica tem zero ou mais efeitos, aplicados na ordem de `sort_order`.
 
@@ -278,7 +279,7 @@ O cliente nunca lê essas tabelas: recebe o jogador pronto, no formato do contra
 - `players` (`id` uuid, `name`, `level`, `coins`, `created_at`).
 - `creature_instances` (`uid` uuid, `player_id`, `species_id`, `nickname?`, `level`, `current_xp`, `current_hp`, `temperament_id`, `trait_id`, `gender`, `is_prismatic`, `bond`, `held_item_id?`, `status_condition_id?`, `location` `party`/`storage`, `party_slot?`, `original_player_id`, `caught_at`, `caught_zone_id?`).
 - `creature_instance_stats` (`creature_uid`, `stat_id`, `genes` 0–31, `training_points` 0–252).
-- `creature_instance_skills` (`creature_uid`, `slot` 1–4, `skill_id`, `current_pp`).
+- `creature_instance_skills` (`creature_uid`, `slot` 1–3, `skill_id`, `current_pp`).
 - `inventory_items` (`player_id`, `item_id`, `quantity`).
 - `codex_entries` (`player_id`, `species_id`, `seen_at`, `caught_at?`): o Bestiário, uma linha por espécie que o jogador já viu numa luta ([codex](../codex/architecture.md#tabela)).
 

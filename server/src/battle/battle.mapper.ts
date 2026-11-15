@@ -1,4 +1,5 @@
 import { noStages } from '../domain/battle/stages.js';
+import { cooldownLeft } from '../domain/board/cooldown.js';
 import type { BattleState, Combatant } from '../domain/battle/types.js';
 import type { NewCreature } from '../domain/rules/creature-factory.js';
 import { Prisma } from '../generated/prisma/client.js';
@@ -109,6 +110,8 @@ export function toBattleDto(state: BattleState): BattleDto {
         skills: creature.skills.map((skill) => ({
           skill_id: skill.skillId,
           current_pp: skill.currentPp,
+          // Na luta de tabuleiro, o turno é a rodada.
+          cooldown_left: cooldownLeft(skill, state.turn),
         })),
       })),
       items: bag

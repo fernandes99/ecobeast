@@ -637,6 +637,8 @@ model Skill {
   groundEffectId  Int?    @map("ground_effect_id")
   /// CHECK 1–20, e nulo junto com ground_effect_id (migration board_skill_areas)
   groundTurns     Int?    @map("ground_turns")
+  /// CHECK 0–5 (migration skill_cooldown)
+  cooldown        Int     @default(0)
 
   element        Element                 @relation(fields: [elementId], references: [id], onDelete: Restrict)
   skillCategory  SkillCategory           @relation(fields: [skillCategoryId], references: [id], onDelete: Restrict)
@@ -876,7 +878,7 @@ model CreatureInstanceStat {
 
 model CreatureInstanceSkill {
   creatureUid String @map("creature_uid") @db.Uuid
-  /// CHECK 1–4 (migration init)
+  /// CHECK 1–3 (migration skill_cooldown)
   slot        Int
   skillId     Int    @map("skill_id")
   /// CHECK ≥ 0 (migration init)

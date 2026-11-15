@@ -12,6 +12,8 @@ export type BattleStatSlug = Exclude<StageSlug, 'accuracy' | 'evasion'>;
 export interface CombatantSkill {
   skillId: number;
   currentPp: number;
+  /** A rodada a partir da qual a Técnica pode ser usada de novo; sem ela, já pode. */
+  readyRound?: number;
 }
 
 export interface Combatant {
@@ -55,6 +57,8 @@ export interface BattleSkill {
   /** 0 = nunca erra. */
   accuracy: number;
   maxPp: number;
+  /** Rodadas em que a Técnica fica bloqueada depois de usada. */
+  cooldown: number;
   priority: number;
   critStage: number;
   targetSlug: string;

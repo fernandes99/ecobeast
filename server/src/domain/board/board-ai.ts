@@ -1,4 +1,5 @@
 import { pickSlot, skillWeight, type SkillOption } from '../battle/ai.js';
+import { hasPp } from '../battle/emergency.js';
 import { combatantAt } from '../battle/field.js';
 import type {
   BattleCatalog,
@@ -9,6 +10,7 @@ import type {
 import { type HexCoord, hexDistance } from '../exploration/hex.js';
 import { areaOf } from './areas.js';
 import { cellOf, MOVE_RANGE, reachable, standingOnBoard } from './board.js';
+import { isReady } from './cooldown.js';
 import { markAt } from './marks.js';
 import type { BoardAction, BoardState, BoardVez } from './types.js';
 
@@ -46,7 +48,9 @@ export function chooseEnemyVez(
   const me = combatantAt(state, spot);
   const usable = me.skills.flatMap((learned, index) => {
     const skill = catalog.skills.get(learned.skillId);
-    return skill && learned.currentPp > 0 ? [{ slot: index + 1, skill }] : [];
+    return skill && learned.currentPp > 0 && isReady(learned, state.round)
+      ? [{ slot: index + 1, skill }]
+      : [];
   });
   const damaging = usable.filter(
     ({ skill }) => skill.power > 0 && skill.targetSlug !== 'self',
@@ -123,6 +127,7 @@ function chooseAction(
 ): BoardAction {
   const me = combatantAt(state, spot);
   if (usable.length === 0) {
+    if (hasPp(me)) return { type: 'wait' };
     const adjacent = standingOnBoard(state, 'player')
       .sort(
         (a, b) =>

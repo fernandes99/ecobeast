@@ -1,4 +1,4 @@
-import { always, eventsOf } from '../battle/testing.js';
+import { always, eventsOf, makeSkill } from '../battle/testing.js';
 import type { BattleEvent, Combatant } from '../battle/types.js';
 import {
   applyBoardVez,
@@ -8,6 +8,7 @@ import {
   NOT_YOUR_VEZ,
   startBoardBattle,
 } from './board-engine.js';
+import { NOT_READY } from './cooldown.js';
 import {
   at,
   boardCatalog,
@@ -595,5 +596,72 @@ describe('item e marca com status', () => {
     const all = [...events, ...again.events];
     expect(eventsOf(all, 'status_applied')).toHaveLength(1);
     expect(eventsOf(all, 'effect_failed')).toEqual([]);
+  });
+});
+
+describe('countdown das Técnicas (skill-cooldown/01)', () => {
+  const SLOW = makeSkill({ id: 30, cooldown: 1 });
+  const withSlow = boardCatalog([SLOW]);
+  const SLOW_SLOT = 1;
+  const strike = (slot: number) => ({
+    position: 0,
+    action: { type: 'skill', slot, target: at(2, 3) } as const,
+  });
+
+  function nextToSleeper(): BoardState {
+    return makeBoardState(
+      [
+        fighter(30, {
+          skills: [
+            { skillId: SLOW.id, currentPp: 10 },
+            { skillId: 1, currentPp: 35 },
+          ],
+        }),
+      ],
+      [wild(5, ASLEEP)],
+      { cells: { player: [at(2, 4)], enemy: [at(2, 3)] } },
+    );
+  }
+
+  it('com countdown 1, usada na rodada 1, é recusada na 2 e volta na 3', () => {
+    const first = playVez(nextToSleeper(), strike(SLOW_SLOT), withSlow).state;
+    expect(first.round).toBe(2);
+    expect(first.player.team[0]!.skills[0]!.readyRound).toBe(3);
+    expect(
+      applyBoardVez(first, strike(SLOW_SLOT), withSlow, always(0.5)),
+    ).toEqual({
+      error: NOT_READY,
+    });
+
+    const second = playVez(
+      first,
+      { position: 0, action: { type: 'wait' } },
+      withSlow,
+    ).state;
+    expect(second.round).toBe(3);
+    const third = playVez(second, strike(SLOW_SLOT), withSlow);
+    expect(eventsOf(third.events, 'skill_used')[0]).toMatchObject({
+      side: 'player',
+    });
+  });
+
+  it('com countdown 0, pode ser usada em toda rodada', () => {
+    const first = playVez(nextToSleeper(), strike(2), withSlow).state;
+    const second = playVez(first, strike(2), withSlow);
+    expect(second.state.round).toBe(3);
+    expect(eventsOf(second.events, 'skill_used')).toHaveLength(1);
+  });
+
+  it('com as Técnicas bloqueadas mas com PP, a emergência é recusada', () => {
+    const state = nextToSleeper();
+    for (const learned of state.player.team[0]!.skills) learned.readyRound = 5;
+    expect(
+      applyBoardVez(
+        state,
+        { position: 0, action: { type: 'emergency', target: at(2, 3) } },
+        withSlow,
+        always(0.5),
+      ),
+    ).toEqual({ error: 'Ainda há Técnicas com PP.' });
   });
 });

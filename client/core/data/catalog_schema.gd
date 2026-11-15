@@ -314,6 +314,7 @@ const TABLES := {
 			"pierces": {"type": "bool"},
 			"ground_effect_id": {"type": "int", "nullable": true, "fk": "ground_effects"},
 			"ground_turns": {"type": "int", "nullable": true, "min": 1, "max": 20},
+			"cooldown": {"type": "int", "min": 0, "max": 5},
 		},
 	},
 	"skill_effects": {

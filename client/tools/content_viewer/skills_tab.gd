@@ -67,6 +67,7 @@ func _data(skill: Dictionary, box: VBoxContainer) -> void:
 		["Poder", _power_text(skill.get("power"))],
 		["Precisão", ContentViewer.value_or_dash(skill.get("accuracy"))],
 		["PP", ContentViewer.value_or_dash(skill.get("max_pp"))],
+		["Countdown", _countdown_text(skill.get("cooldown"))],
 		["Prioridade", ContentViewer.value_or_dash(skill.get("priority"))],
 		["Estágio de crítico", ContentViewer.value_or_dash(skill.get("crit_stage"))],
 		["Alvo", ContentViewer.row_name("skill_targets", skill.get("skill_target_id"))],
@@ -191,6 +192,18 @@ func _power_text(power: Variant) -> String:
 	if power == null or int(power) <= 0:
 		return ContentViewer.EMPTY
 	return str(power)
+
+
+func _countdown_text(cooldown: Variant) -> String:
+	if cooldown == null:
+		return ContentViewer.EMPTY
+	match int(cooldown):
+		0:
+			return "Nenhum"
+		1:
+			return "1 rodada"
+		_:
+			return "%d rodadas" % int(cooldown)
 
 
 func _yes_no(value: Variant) -> String:

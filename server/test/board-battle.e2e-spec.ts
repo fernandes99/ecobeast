@@ -40,7 +40,10 @@ interface BoardBody {
       cells: (Cell | null)[];
       entry_cells: Cell[];
       pending_positions: number[];
-      team: { hp: number; skills: { current_pp: number }[] }[];
+      team: {
+        hp: number;
+        skills: { current_pp: number; cooldown_left: number }[];
+      }[];
     };
     enemy: { cells: (Cell | null)[] };
   };
@@ -207,6 +210,9 @@ describe('Rotas da luta no tabuleiro (e2e)', () => {
     expect(body.battle.enemy.cells).toEqual([{ q: 1, r: 1 }]);
     expect(body.battle.queue[0]).toEqual({ side: 'player', position: 0 });
     expect(body.battle.round).toBe(1);
+    for (const skill of body.battle.player.team[0]!.skills) {
+      expect(skill.cooldown_left).toBe(0);
+    }
     expect(body.events.at(-1)).toEqual({
       type: 'vez_started',
       side: 'player',

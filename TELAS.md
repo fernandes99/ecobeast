@@ -6,10 +6,10 @@ Celular, orientação retrato. Estilo fantasia leve, colorido e amigável. 15 el
 2. **Escolha do inicial** — 3 criaturas (Fogo, Água, Flora) com nome, elemento e botão "Escolher".
 3. **Home** — topo: avatar, nível do domador, moedas. Centro: equipe de 6 (sprite, nome, nível, barra de HP). Ações: Explorar zona, Desafiar (abre na hora uma luta contra um Domador NPC sorteado, `.specs/npc-tamers/`), Arenas, Loja, Refúgio, Santuário, Bestiário, Mochila. Barra inferior: Home, Equipe, Bestiário, Loja, Perfil.
 4. **Mapa de exploração** — mapa hexagonal gerado a cada exploração, com o jogador no centro da tela, andando um hexágono por vez, sem zoom nem arrastar. Botão provisório "Procurar Ecobeast", "Mochila" e "Voltar".
-5. **Batalha** — inimigo em cima (nome, nível, elemento, HP, status); sua criatura embaixo (nome, nível, HP numérico, XP); log do turno; botões Atacar, Itens, Equipe, Correr; em Atacar, 4 técnicas com elemento (cor) e PP.
+5. **Batalha** — inimigo em cima (nome, nível, elemento, HP, status); sua criatura embaixo (nome, nível, HP numérico, XP); log do turno; botões Atacar, Itens, Equipe, Correr; em Atacar, 3 técnicas em ícones com elemento (cor), PP e countdown, e segurar mostra o detalhe.
 6. **Captura** — tela escurecida por cima da luta, com o Ecobeast entrando na Esfera enquanto um anel enche; depois, "Capturado!" ou "Escapou!". Sem arremesso nem tremidas.
 7. **Fim de batalha** — XP, level up, moedas; pop-up de nova técnica (escolher qual esquecer); tela de evolução com botão cancelar.
-8. **Detalhes da criatura** — sprite grande, nome/apelido, nível, elementos, temperamento, traço, item; gráfico de atributos (HP, Atk, Def, SpAtk, SpDef, Spd); 4 técnicas.
+8. **Detalhes da criatura** — sprite grande, nome/apelido, nível, elementos, temperamento, traço, item; gráfico de atributos (HP, Atk, Def, SpAtk, SpDef, Spd); 3 técnicas.
 9. **Equipe** — 6 vagas: segurar e arrastar muda a ordem, e o primeiro com HP começa a luta. Mostra HP e status, e cada Ecobeast abre detalhes e a troca com o Santuário.
 10. **Santuário** — grade com busca, filtro por Elemento e ordem por nível; o filtro de raridade fica para quando houver espécies de raridades diferentes. Cada Ecobeast abre detalhes e a ação de mover para a equipe.
 11. **Bestiário** — grade numerada (visto, capturado, silhueta); detalhe com descrição, elementos, habitat e linha evolutiva. Visto conta só em luta, e a primeira captura de uma espécie, ou a Evolução para ela, mostra o aviso de registro (`.specs/codex/`).

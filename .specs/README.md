@@ -55,6 +55,7 @@ O Ecobeast é um jogo mobile (Android/iOS, retrato): o cliente em **Godot 4.7 co
 | [free-fences](free-fences/) | Cercas livres nas ilhas: traços em qualquer ângulo que são parede, a parede invisível e o fim da cerca de grade |
 | [tamer-appearance](tamer-appearance/) | A aparência do Domador em camadas: corpo, pele, rosto, cabelo, chapéu e roupas, com a cor por paleta e a tela Aparência |
 | [camera-zoom](camera-zoom/) | O zoom da câmera em pinça ao explorar e na luta, entre um mínimo e um máximo |
+| [skill-cooldown](skill-cooldown/) | Countdown por Técnica, 3 Técnicas por Ecobeast e a barra de ícones na luta |
 
 As próximas iniciativas estão no [roadmap.md](roadmap.md).
 

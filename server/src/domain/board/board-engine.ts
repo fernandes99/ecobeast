@@ -65,6 +65,7 @@ import {
   standingOnBoard,
   startCell,
 } from './board.js';
+import { isReady, NOT_READY, startCooldown } from './cooldown.js';
 import { ageMarks, applyMarks, placeMarks } from './marks.js';
 import { roundQueue } from './queue.js';
 import type {
@@ -221,9 +222,9 @@ function actionRefusal(
     case 'skill': {
       const refusal = skillRefusal(creature, action.slot, catalog);
       if (refusal) return refusal;
-      const skill = catalog.skills.get(
-        creature.skills[action.slot - 1]!.skillId,
-      )!;
+      const learned = creature.skills[action.slot - 1]!;
+      if (!isReady(learned, state.round)) return NOT_READY;
+      const skill = catalog.skills.get(learned.skillId)!;
       return areaRefusal(state, spot, from, skill, action.target);
     }
     case 'emergency':
@@ -434,7 +435,10 @@ function useSkill(
     return;
   }
 
-  if (learned) learned.currentPp -= 1;
+  if (learned) {
+    learned.currentPp -= 1;
+    startCooldown(learned, state.round, skill.cooldown);
+  }
   events.push({
     type: 'skill_used',
     ...spot,

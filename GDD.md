@@ -73,7 +73,7 @@ O MVP é o Pokémon Simulator modernizado: menus, batalha 1x1 por turnos, captur
 - [ ] Tela Home com equipe ativa (6) e menu de Ações
 - [ ] Batalha selvagem a partir de um mapa hexagonal gerado a cada exploração
 - [ ] Batalha contra domadores NPC com IA simples
-- [ ] Batalha por turnos: 4 técnicas, trocar criatura, usar item, fugir
+- [ ] Batalha por turnos: 3 técnicas, trocar criatura, usar item, fugir
 - [ ] Tipos, STAB, crítico, precisão, status (queimado, paralisado etc.)
 - [ ] Captura com 3 esferas e chance baseada em HP/status
 - [ ] XP, level up, aprender técnica nova (escolher qual esquecer)
@@ -170,7 +170,7 @@ Separe em duas camadas: a **Espécie** (dados fixos, uma linha do catálogo por 
 | trainingPoints | StatBlock (0–252 cada, 510 total) | Ganhos ao vencer batalhas |
 | temperament | enum (25) | +10% em um stat, -10% em outro |
 | trait | Trait | Traço passivo |
-| skills | SkillSlot[4] | Técnica + PP atual |
+| skills | SkillSlot[3] | Técnica + PP atual |
 | status | StatusCondition | Queimado, Paralisado, Sono etc. |
 | heldItem | Item | Item equipado |
 | gender | enum |  |
@@ -243,6 +243,7 @@ Cada técnica é uma linha do catálogo (`skills`) com dados e uma lista de efei
 | power | int (0–250) | 0 em técnicas de suporte |
 | accuracy | int (0–100) | 0 = nunca erra |
 | maxPP | int (5–40) | Usos antes de descansar |
+| cooldown | int (0–5) | Rodadas em que fica bloqueada depois de usada (countdown) |
 | priority | int (-7 a +5) | +1 ataca primeiro |
 | critStage | int | 0 normal, 1 = crítico alto |
 | target | enum | Inimigo, Si mesmo, Todos |
@@ -285,7 +286,7 @@ Cada técnica é uma linha do catálogo (`skills`) com dados e uma lista de efei
 
 ## Técnicas por nível (learnset)
 
-Cada espécie tem uma lista `LevelSkill { int level; SkillData skill; }`. Ao subir de nível, o jogo verifica a lista; se já houver 4 técnicas, o jogador escolhe qual esquecer ou desiste da nova.
+Cada espécie tem uma lista `LevelSkill { int level; SkillData skill; }`. Ao subir de nível, o jogo verifica a lista; se já houver 3 técnicas, o jogador escolhe qual esquecer ou desiste da nova.
 
 Regras práticas:
 
@@ -352,6 +353,8 @@ Ao evoluir: mantém nível, XP, Genes, Treino, Temperamento, técnicas e víncul
 | Congelado | Não age; 20% de descongelar por turno | Gelo |
 
 Status voláteis (somem ao sair de campo): Confuso (33% de se atingir, 2–5 turnos), Amedrontado (perde 1 turno), Preso (não pode fugir).
+
+**Countdown.** Uma Técnica com countdown N, usada na rodada R, só pode ser usada de novo na rodada R + N + 1; com 0, em toda rodada. Vale para o jogador e para a IA, conta mesmo fora de campo e zera no fim da luta. Os valores iniciais vêm do poder: sem dano 2; até 50, 0; até 80, 1; até 110, 2; acima, 3 (a revisar, `.specs/skill-cooldown/`).
 
 **Fuga e falta de PP.** Fugir tem chance fixa de 20% de falhar, a revisar, e a falha gasta o turno. Sem PP em nenhuma Técnica, o Ecobeast usa o Golpe de Esforço: físico, Poder 30, sem Elemento, nunca erra e tira 1/8 do HP máximo de quem o usa (valores a revisar).
 

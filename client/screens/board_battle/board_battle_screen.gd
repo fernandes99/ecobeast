@@ -1,8 +1,9 @@
 extends Control
 
 const SkillButtonScene := preload("res://screens/board_battle/battle_skill_button.tscn")
+const SkillDetailScene := preload("res://screens/board_battle/skill_detail_card.tscn")
 
-const SKILL_SLOTS := 4
+const SKILL_SLOTS := 3
 const SEARCHING_TEXT := "Procurando um Ecobeast..."
 const GONE_TEXT := "Essa luta não existe mais."
 const PICK_ENTRY_TEXT := "Toque no hexágono verde onde ele entra."
@@ -118,6 +119,7 @@ var _dragging := false
 @onready var _bottom: VBoxContainer = %Bottom
 @onready var _skills_box: Control = %SkillsBox
 @onready var _skills_grid: GridContainer = %SkillsGrid
+@onready var _skill_detail: SkillDetailCard = SkillDetailScene.instantiate()
 @onready var _attack_button: Button = %AttackButton
 @onready var _emergency_button: Button = %EmergencyButton
 @onready var _actions_row: Control = %ActionsRow
@@ -151,8 +153,12 @@ func _ready() -> void:
 	for index: int in SKILL_SLOTS:
 		var button: BattleSkillButton = SkillButtonScene.instantiate()
 		button.theme_type_variation = BattleTheme.BUTTON
-		button.pressed.connect(_choose_skill.bind(index + 1))
+		button.chosen.connect(_choose_skill.bind(index + 1))
+		button.hold_started.connect(_open_skill_detail)
+		button.hold_ended.connect(_skill_detail.hide)
 		_skills_grid.add_child(button)
+	_skill_detail.theme_type_variation = BattleTheme.PANEL
+	add_child(_skill_detail)
 	_style_controls()
 	_reserve_bottom()
 	add_child(_skill_sound)
@@ -918,10 +924,22 @@ func _fill_skills(creature: BattleCreature) -> void:
 	var has_pp := false
 	for index: int in SKILL_SLOTS:
 		var slot: SkillSlot = creature.skills[index] if index < creature.skills.size() else null
-		(_skills_grid.get_child(index) as BattleSkillButton).set_skill(slot)
+		var button := _skills_grid.get_child(index) as BattleSkillButton
+		button.set_skill(slot)
+		button.disabled = false
 		has_pp = has_pp or (slot != null and slot.current_pp > 0)
 	_skills_grid.visible = has_pp
 	_emergency_button.visible = not has_pp
+	_mark_skill()
+
+
+func _mark_skill() -> void:
+	for index: int in _skills_grid.get_child_count():
+		(_skills_grid.get_child(index) as BattleSkillButton).set_selected(_skill_slot == index + 1)
+
+
+func _open_skill_detail(button: BattleSkillButton) -> void:
+	_skill_detail.open(button.get_slot(), button.get_global_rect())
 
 
 func _here() -> Vector2i:
@@ -1011,6 +1029,7 @@ func _choose_skill(slot: int) -> void:
 			return
 		_skill_slot = slot
 		_targets = BoardGeometry.targets(skill, _view.board_cells, foes, _here())
+	_mark_skill()
 	_board.light(_targets, UiPalette.BOARD_TARGET)
 
 
@@ -1020,6 +1039,7 @@ func _cancel_skill() -> void:
 	_skill_slot = 0
 	_sphere_item = -1
 	_targets.clear()
+	_mark_skill()
 	_light_reach()
 
 
@@ -1035,6 +1055,7 @@ func _open_skills() -> void:
 func _close_skills() -> void:
 	if _skill_slot != 0:
 		_cancel_skill()
+	_skill_detail.hide()
 	_skills_box.hide()
 	_actions_row.show()
 
@@ -1321,6 +1342,8 @@ func _set_busy(busy: bool) -> void:
 	_emergency_button.disabled = busy
 	_bag_button.disabled = busy
 	_flee_button.disabled = busy or _view == null or not _view.can_flee
+	if busy:
+		_skill_detail.hide()
 	for button: Node in _skills_grid.get_children():
 		if busy:
 			(button as Button).disabled = true
@@ -1329,6 +1352,7 @@ func _set_busy(busy: bool) -> void:
 
 
 func _show_controls(playing: bool) -> void:
+	_skill_detail.hide()
 	_actions_row.visible = playing
 	_skills_box.visible = false
 	_result_box.visible = false

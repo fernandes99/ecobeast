@@ -117,7 +117,7 @@ describe('createCreature', () => {
     expect(creature.gender).toBe('none');
   });
 
-  it('de um learnset com 6 Técnicas até o nível, ficam as 4 últimas', () => {
+  it('de um learnset com 6 Técnicas até o nível, ficam as 3 últimas', () => {
     const ids = [1, 2, 3, 4, 5, 6];
     const creature = createCreature(
       {
@@ -127,8 +127,8 @@ describe('createCreature', () => {
       },
       sequence(...DRAWS),
     );
-    expect(creature.skills.map((skill) => skill.skillId)).toEqual([3, 4, 5, 6]);
-    expect(creature.skills.map((skill) => skill.slot)).toEqual([1, 2, 3, 4]);
+    expect(creature.skills.map((skill) => skill.skillId)).toEqual([4, 5, 6]);
+    expect(creature.skills.map((skill) => skill.slot)).toEqual([1, 2, 3]);
   });
 
   it('Técnica de outro método ou de nível maior não entra', () => {

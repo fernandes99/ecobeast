@@ -46,6 +46,7 @@ O que vem depois do MVP de estrutura (entrada, escolha do inicial e Hub). Cada l
 | 30  | [`tamer-appearance`](tamer-appearance/) | A aparência do Domador em camadas (boneca de papel): corpo masculino ou feminino, pele, rosto, cabelo, chapéu e roupas, cada peça com a cor da paleta, e a tela Aparência na entrada e pelo avatar do Hub | auth-google, islands | concluída |
 | 31  | [`free-fences`](free-fences/) | A cerca vira parede: um traço em qualquer ângulo (madeira, pedra ou invisível), desenhado pela ferramenta Cerca do editor, que bloqueia o Domador pela linha exata; as cercas de grade viram paredes, e a Cerca (cidade) sai | free-trails, vegetation-brush | concluída |
 | 32  | [`camera-zoom`](camera-zoom/) | O zoom da câmera em pinça: ao explorar, em degraus inteiros de pixel art com o Domador no centro e guardado no aparelho; na luta, contínuo até 2,5 vezes o tabuleiro inteiro, com a vista arrastável; a roda do mouse no PC | wild-battle, islands, board-battle | concluída |
+| 33  | [`skill-cooldown`](skill-cooldown/) | Countdown por Técnica, em rodadas, além do PP, respeitado pelo jogador e pela IA; 3 Técnicas por Ecobeast; na luta, a barra de 3 ícones com o detalhe ao segurar | board-battle, progression | concluída |
 
 ## Pós-lançamento (do GDD)
 

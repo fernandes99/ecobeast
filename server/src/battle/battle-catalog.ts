@@ -126,6 +126,7 @@ function toBattleSkill(row: SkillRow): BattleSkill {
     power: row.power,
     accuracy: row.accuracy,
     maxPp: row.maxPp,
+    cooldown: row.cooldown,
     priority: row.priority,
     critStage: row.critStage,
     targetSlug: row.skillTarget.slug,

@@ -112,12 +112,21 @@ export class EnemyCreatureDto {
   stages: Record<StageSlug, number>;
 }
 
+export class BattleSkillSlotDto extends SkillSlotDto {
+  @ApiProperty({
+    description:
+      'Rodadas que faltam para a Técnica poder ser usada de novo; 0 é livre.',
+    example: 0,
+  })
+  cooldown_left: number;
+}
+
 export class PlayerCreatureDto extends EnemyCreatureDto {
   @ApiProperty({ example: '0b5c2f4e-8d1a-4c3b-9e7f-1a2b3c4d5e6f' })
   uid: string;
 
-  @ApiProperty({ type: () => [SkillSlotDto] })
-  skills: SkillSlotDto[];
+  @ApiProperty({ type: () => [BattleSkillSlotDto] })
+  skills: BattleSkillSlotDto[];
 }
 
 export class PlayerSideDto {

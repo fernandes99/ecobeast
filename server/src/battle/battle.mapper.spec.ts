@@ -205,7 +205,7 @@ describe('toBattleDto', () => {
             status: 'burn',
             confused: false,
             stages: { ...noStages(), atk: 1 },
-            skills: [{ skill_id: 1, current_pp: 33 }],
+            skills: [{ skill_id: 1, current_pp: 33, cooldown_left: 0 }],
           },
         ],
         items: [],

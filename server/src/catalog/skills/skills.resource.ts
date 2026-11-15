@@ -120,6 +120,13 @@ export class SkillDetailDto {
   max_pp: number;
 
   @ApiProperty({
+    description:
+      'Rodadas em que a Técnica fica bloqueada depois de usada, de 0 a 5.',
+    example: 1,
+  })
+  cooldown: number;
+
+  @ApiProperty({
     description: 'Quem tem prioridade maior age primeiro.',
     example: 0,
   })
@@ -195,6 +202,7 @@ export const SkillsController = resourceController<SkillRow, SkillDetailDto>({
     power: skill.power,
     accuracy: skill.accuracy,
     max_pp: skill.maxPp,
+    cooldown: skill.cooldown,
     priority: skill.priority,
     crit_stage: skill.critStage,
     makes_contact: skill.makesContact,

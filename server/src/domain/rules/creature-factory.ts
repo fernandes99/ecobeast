@@ -3,7 +3,7 @@ import { STAT_SLUGS, StatBlock, TemperamentEffect } from './types.js';
 import { totalXpForLevel } from './xp-curve.js';
 
 const MAX_GENE = 31;
-const MAX_SKILLS = 4;
+const MAX_SKILLS = 3;
 const START_BOND = 70;
 export const HIDDEN_TRAIT_CHANCE = 1 / 20;
 

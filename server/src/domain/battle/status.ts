@@ -30,6 +30,7 @@ const CONFUSED_HIT: BattleSkill = {
   power: 40,
   accuracy: 0,
   maxPp: 0,
+  cooldown: 0,
   priority: 0,
   critStage: 0,
   targetSlug: 'self',

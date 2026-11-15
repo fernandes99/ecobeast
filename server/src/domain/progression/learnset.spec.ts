@@ -37,22 +37,22 @@ describe('evolutionSkills', () => {
 });
 
 describe('learnNewSkills', () => {
-  it('com vaga, aprende na ordem até completar 4', () => {
-    expect(learnNewSkills([1, 2], [5, 6, 7])).toEqual({
+  it('com vaga, aprende na ordem até completar 3', () => {
+    expect(learnNewSkills([1], [5, 6, 7])).toEqual({
       learned: [5, 6],
       pending: [7],
     });
   });
 
-  it('com 4, tudo fica pendente', () => {
-    expect(learnNewSkills([1, 2, 3, 4], [5, 6])).toEqual({
+  it('com 3, tudo fica pendente', () => {
+    expect(learnNewSkills([1, 2, 3], [5, 6])).toEqual({
       learned: [],
       pending: [5, 6],
     });
   });
 
   it('tira as que ele já conhece e as repetidas', () => {
-    expect(learnNewSkills([1, 2, 3, 4], [2, 5, 5, 6])).toEqual({
+    expect(learnNewSkills([1, 2, 3], [2, 5, 5, 6])).toEqual({
       learned: [],
       pending: [5, 6],
     });

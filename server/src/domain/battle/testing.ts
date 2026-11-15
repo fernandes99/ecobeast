@@ -51,6 +51,7 @@ export function makeSkill(overrides: Partial<BattleSkill> = {}): BattleSkill {
     power: 40,
     accuracy: 100,
     maxPp: 35,
+    cooldown: 0,
     priority: 0,
     critStage: 0,
     targetSlug: 'enemy',
