@@ -48,6 +48,14 @@ extends RefCounted
 @abstract func list_islands() -> Result
 
 
+## Grava hexágonos descobertos numa ilha (fog-of-war/03).
+@abstract func add_island_discoveries(island_id: int, coords: Array[Vector2i]) -> Result
+
+
+## Só com as rotas de teste ligadas no servidor.
+@abstract func forget_island_discoveries(island_id: int) -> Result
+
+
 @abstract func start_board_wild_battle(coord: Vector2i, god: bool = false) -> Result
 
 

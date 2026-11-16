@@ -387,6 +387,14 @@ export class StartExplorationBodyDto {
 export class ExplorationResponseDto {
   @ApiProperty({ type: ExplorationMapDto })
   map: ExplorationMapDto;
+
+  @ApiProperty({
+    type: [HexCoordDto],
+    description:
+      'Numa ilha, os hexágonos que o Domador já descobriu e que existem na ' +
+      'versão publicada (fog-of-war). No mapa sorteado, sempre vazia.',
+  })
+  discovered: HexCoordDto[];
 }
 
 export class DebugSpawnBodyDto {

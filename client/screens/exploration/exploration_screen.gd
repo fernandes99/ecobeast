@@ -24,6 +24,8 @@ const FEET_DEPTH := 6.0
 const ROUTE_DOT_SPACING := 16.0
 ## Até quanto o dedo pode correr, em pontos da tela lógica, para ainda ser um toque.
 const MAX_TAP_TRAVEL := 24.0
+## De quanto em quanto tempo os hexágonos descobertos de uma ilha vão para o servidor.
+const DISCOVERY_SYNC_INTERVAL := 5.0
 const WHOLE_MAP_TEXT := "Debug: ver mapa inteiro"
 const NORMAL_ZOOM_TEXT := "Debug: voltar ao zoom normal"
 const DEBUG_SPECIES_HEIGHT := 112.0
@@ -51,6 +53,11 @@ var _island_id: int = 0
 var _map: ExplorationMap = null
 var _prop_lights: Array[MapLight] = []
 var _swarms := PackedVector2Array()
+var _swarm_coords: Array[Vector2i] = []
+var _discovery := MapDiscovery.new()
+var _sync_timer := Timer.new()
+## Os nomes das construções: o texto, o ponto na arte e o hexágono do meio.
+var _building_labels: Array[Dictionary] = []
 var _player_coord := Vector2i.ZERO
 ## O ponto dos pés no chão plano, sem a altura (wild-battle/15).
 var _player_point := Vector2.ZERO
@@ -88,6 +95,7 @@ var _pinch_start_zoom := HexMapView.DEFAULT_ZOOM
 @onready var _debug_button: Button = %DebugButton
 @onready var _debug_menu: Control = %DebugMenu
 @onready var _debug_zoom_button: Button = %DebugZoomButton
+@onready var _debug_forget_button: Button = %DebugForgetButton
 @onready var _debug_species: Control = %DebugSpecies
 @onready var _debug_clear_button: Button = %DebugClearButton
 @onready var _debug_xp_button: Button = %DebugXpButton
@@ -106,6 +114,7 @@ var _pinch_start_zoom := HexMapView.DEFAULT_ZOOM
 @onready var _island_name: Label = %IslandName
 @onready var _building_names: BuildingNamesLayer = %BuildingNames
 @onready var _day_light: DayLightLayer = %DayLight
+@onready var _fog: FogLayer = %Fog
 
 
 func setup(params: Dictionary) -> void:
@@ -124,6 +133,10 @@ func _ready() -> void:
 	_back_button.pressed.connect(Router.back)
 	_debug_button.pressed.connect(_toggle_debug_menu)
 	_debug_zoom_button.pressed.connect(_toggle_whole_map)
+	_debug_forget_button.pressed.connect(_forget_island)
+	_sync_timer.wait_time = DISCOVERY_SYNC_INTERVAL
+	_sync_timer.timeout.connect(Session.send_island_discoveries)
+	add_child(_sync_timer)
 	_debug_clear_button.pressed.connect(_clear_creatures)
 	_debug_xp_button.pressed.connect(_almost_level_up)
 	%DebugHourButton.pressed.connect(_debug_next_hour)
@@ -180,6 +193,7 @@ func handle_back() -> bool:
 
 func _exit_tree() -> void:
 	Music.fade_out()
+	Session.send_island_discoveries()
 
 
 func _begin() -> void:
@@ -198,6 +212,14 @@ func _begin() -> void:
 	_map_view.set_props(_map.props)
 	_prop_lights = _map_view.prop_lights(_map.props)
 	_swarms = _map_view.firefly_swarms()
+	_swarm_coords = _map_view.firefly_swarm_tiles()
+	_discovery = MapDiscovery.new()
+	_discovery.add(_map.discovered)
+	Session.queue_island_discoveries(_map.island_id, _discovery.reveal_around(_map, _player_coord))
+	_fog.set_map(_map, _discovery)
+	_debug_forget_button.disabled = _map.island_id <= 0
+	if _map.island_id > 0:
+		_sync_timer.start()
 	_shown_rise = _map.rise_at(_player_point)
 	_map_view.set_current(_player_coord)
 	_map_view.set_actor_depth(_marker, _player_point, _feet_row())
@@ -341,6 +363,7 @@ func _walk(route: PackedVector2Array) -> void:
 			origin = _player_coord
 			_player_coord = coord
 			_map_view.set_current(coord)
+			_discover()
 			_refresh_wild_sprites()
 			tamer = _map.tamer_at(coord)
 		_place_player(delta)
@@ -458,6 +481,8 @@ func _search() -> void:
 ## até o jogador sair do hexágono e entrar de novo.
 func _on_visibility_changed() -> void:
 	_pinch.cancel()
+	if not visible:
+		Session.send_island_discoveries()
 	if visible and _map != null:
 		Music.play_explore(EXPLORE_MUSIC_FADE_IN)
 		var fought := Session.take_fought_spawn()
@@ -474,7 +499,7 @@ func _on_visibility_changed() -> void:
 func _show_island() -> void:
 	_island_plate.visible = _map.island_id > 0
 	_island_name.text = _map.island_name
-	_building_names.clear()
+	_building_labels.clear()
 	# Uma camada por linha, para a linha seguinte e os atores ficarem por cima.
 	var rows: Dictionary[int, Array] = {}
 	for action: MapAction in _map.actions:
@@ -486,7 +511,7 @@ func _show_island() -> void:
 				rows[coord.y] = []
 			rows[coord.y].append({"coord": coord, "color": color})
 		var middle := BuildingNamesLayer.middle_of(action.tiles)
-		_building_names.add_name(str(type.get("name", "")), _map_view.surface_center(middle))
+		_building_labels.append({"text": str(type.get("name", "")), "point": _map_view.surface_center(middle), "coord": middle})
 	for row: int in rows:
 		var layer := HexTintLayer.new(false, rows[row].size())
 		layer.set_raised(true)
@@ -495,6 +520,29 @@ func _show_island() -> void:
 			if tile != null:
 				layer.set_hex(hex["coord"], hex["color"], tile.height)
 		_map_view.set_ground_overlay(layer, row)
+	_refresh_building_names()
+
+
+func _refresh_building_names() -> void:
+	_building_names.clear()
+	for label: Dictionary in _building_labels:
+		if _is_visible_hex(label["coord"]):
+			_building_names.add_name(label["text"], label["point"])
+
+
+## Descobre os hexágonos em volta do Domador e tira a névoa deles (fog-of-war/02).
+func _discover() -> void:
+	var found := _discovery.reveal_around(_map, _player_coord)
+	if found.is_empty():
+		return
+	Session.queue_island_discoveries(_map.island_id, found)
+	_fog.reveal(found)
+	_refresh_building_names()
+	_refresh_lights()
+
+
+func _is_visible_hex(coord: Vector2i) -> bool:
+	return _showing_whole_map or _discovery.is_discovered(coord)
 
 
 func _enter_action(from: int, to: int) -> void:
@@ -537,7 +585,7 @@ func _add_npcs() -> void:
 
 func _npc_hit(art_point: Vector2) -> NpcSprite:
 	for sprite: NpcSprite in _npc_sprites:
-		if sprite.npc.has_talk() and sprite.hits(art_point):
+		if sprite.npc.has_talk() and _discovery.is_discovered(sprite.coord) and sprite.hits(art_point):
 			return sprite
 	return null
 
@@ -569,7 +617,7 @@ func _prop_hit(art_point: Vector2) -> int:
 	var best := -1
 	for index: int in _map.props.size():
 		var prop := _map.props[index]
-		if prop.action_type_id <= 0:
+		if prop.action_type_id <= 0 or not _discovery.is_discovered(prop.coord):
 			continue
 		if best >= 0 and prop.foot().y < _map.props[best].foot().y:
 			continue
@@ -691,12 +739,30 @@ func _set_controls_enabled(enabled: bool) -> void:
 	_debug_button.disabled = not enabled
 
 
+func _forget_island() -> void:
+	if _map == null or _map.island_id <= 0:
+		return
+	_debug_menu.hide()
+	var result: Result = await Session.forget_island_discoveries(_map.island_id)
+	if not result.ok:
+		_show_message(result.error, &"DangerLabel")
+		return
+	_discovery.clear()
+	Session.queue_island_discoveries(_map.island_id, _discovery.reveal_around(_map, _player_coord))
+	_fog.set_map(_map, _discovery)
+	_fog.visible = not _showing_whole_map
+	_refresh_building_names()
+	_refresh_lights()
+
+
 func _toggle_whole_map() -> void:
 	if _walking or _challenger != null:
 		return
 	_debug_menu.hide()
 	_showing_whole_map = not _showing_whole_map
 	_debug_zoom_button.text = NORMAL_ZOOM_TEXT if _showing_whole_map else WHOLE_MAP_TEXT
+	_fog.visible = not _showing_whole_map
+	_refresh_building_names()
 	_refresh_wild_sprites()
 	_fit_view()
 
@@ -946,6 +1012,7 @@ func _fit_view() -> void:
 func _sync_view_layers() -> void:
 	_building_names.set_view(_map_view.position, _map_view.pixel_scale())
 	_day_light.set_view(_map_view.position, _map_view.pixel_scale().x)
+	_fog.set_view(_map_view.position, _map_view.pixel_scale().x)
 	_refresh_lights()
 
 
@@ -960,7 +1027,7 @@ func _refresh_lights() -> void:
 	var player := _player_art_point()
 	var near: Array[MapLight] = []
 	for light: MapLight in _prop_lights:
-		if view.grow(light.radius).has_point(light.position):
+		if _is_visible_hex(light.coord) and view.grow(light.radius).has_point(light.position):
 			near.append(light)
 	near.sort_custom(func(a: MapLight, b: MapLight) -> bool: return a.position.distance_squared_to(player) < b.position.distance_squared_to(player))
 	var lights: Array[MapLight] = [MapLight.make(player - Vector2(0.0, TAMER_LIGHT_LIFT), TAMER_LIGHT_RADIUS, TAMER_LIGHT_COLOR)]
@@ -968,8 +1035,9 @@ func _refresh_lights() -> void:
 	_day_light.set_lights(lights)
 	var swarms: Array[Vector2] = []
 	var swarm_view := view.grow(DayLightLayer.SWARM_REACH)
-	for swarm: Vector2 in _swarms:
-		if swarm_view.has_point(swarm):
+	for index: int in _swarms.size():
+		var swarm := _swarms[index]
+		if _is_visible_hex(_swarm_coords[index]) and swarm_view.has_point(swarm):
 			swarms.append(swarm)
 	swarms.sort_custom(func(a: Vector2, b: Vector2) -> bool: return a.distance_squared_to(player) < b.distance_squared_to(player))
 	_day_light.set_swarms(PackedVector2Array(swarms.slice(0, DayLightLayer.MAX_SWARMS)))

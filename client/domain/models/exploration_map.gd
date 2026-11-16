@@ -16,6 +16,8 @@ var tiles: Dictionary[Vector2i, HexTile] = {}
 var creatures: Dictionary[int, MapCreature] = {}
 var tamers: Dictionary[int, MapTamer] = {}
 var island_id: int = 0
+## Numa ilha, os hexágonos que o Domador já tinha descoberto (fog-of-war/03).
+var discovered: Array[Vector2i] = []
 var island_name: String = ""
 var actions: Array[MapAction] = []
 var props: Array[MapProp] = []

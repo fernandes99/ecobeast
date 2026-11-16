@@ -412,6 +412,17 @@ func firefly_swarms() -> PackedVector2Array:
 	return swarms
 
 
+## Os hexágonos dos enxames de `firefly_swarms`, na mesma ordem.
+func firefly_swarm_tiles() -> Array[Vector2i]:
+	var coords: Array[Vector2i] = []
+	if _map == null:
+		return coords
+	for tile: HexTile in _map.tiles.values():
+		if HexDecorations.swarm_of(tile, _map.map_seed) != null:
+			coords.append(tile.coord)
+	return coords
+
+
 ## Os pontos de luz da noite das peças, em pixels da arte, no ponto em que cada uma é
 ## desenhada (o pé erguido pela altura do hexágono). Na espelhada, o pixel troca de lado
 ## (day-night/03).
@@ -434,7 +445,9 @@ func prop_lights(props: Array[MapProp]) -> Array[MapLight]:
 			var x := int(row["x"])
 			if prop.mirrored:
 				x = -x - 1 + width % 2
-			lights.append(MapLight.make(base + Vector2(x + 0.5, int(row["y"]) + 0.5), float(row["radius"]), Color(str(row["color"]))))
+			var light := MapLight.make(base + Vector2(x + 0.5, int(row["y"]) + 0.5), float(row["radius"]), Color(str(row["color"])))
+			light.coord = prop.coord
+			lights.append(light)
 	return lights
 
 

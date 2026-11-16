@@ -50,6 +50,7 @@ import {
   toTrailDto,
   toWallDto,
 } from './exploration.dto.js';
+import { DiscoveriesService } from '../islands/discoveries.service.js';
 import { ExplorationStore } from './exploration.store.js';
 import {
   loadSpawnSpecies,
@@ -82,6 +83,7 @@ export class ExplorationService {
     private readonly store: ExplorationStore,
     private readonly config: ConfigService<Env, true>,
     private readonly islands: IslandsService,
+    private readonly discoveries: DiscoveriesService,
   ) {}
 
   async start(
@@ -138,6 +140,7 @@ export class ExplorationService {
         walls: [],
         npcs: [],
       },
+      discovered: [],
     };
   }
 
@@ -149,9 +152,10 @@ export class ExplorationService {
     const island = await this.islands.readPublished(islandId);
     if (!island) throw new NotFoundException(ISLAND_NOT_FOUND);
     const { draft } = island;
-    const [typeBlocks, born] = await Promise.all([
+    const [typeBlocks, born, discovered] = await Promise.all([
       this.islands.readTypeBlocks(),
       speciesBornAt(this.prisma, minute),
+      this.discoveries.listDiscovered(userId, island.id, draft.tiles),
     ]);
     const spawns = rollAreaSpawns(
       areasBornIn(spawnAreas(draft, typeBlocks), born),
@@ -197,6 +201,7 @@ export class ExplorationService {
           ...toNpcDto(npc),
         })),
       },
+      discovered,
     };
   }
 

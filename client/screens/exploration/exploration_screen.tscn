@@ -8,6 +8,7 @@
 [ext_resource type="Script" path="res://ui/components/building_names_layer.gd" id="6_names"]
 [ext_resource type="Script" path="res://ui/components/day_light_layer.gd" id="7_day_light"]
 [ext_resource type="PackedScene" path="res://ui/components/day_phase_badge.tscn" id="8_day_phase"]
+[ext_resource type="Script" path="res://ui/components/fog_layer.gd" id="9_fog"]
 
 [node name="ExplorationScreen" type="Control"]
 layout_mode = 3
@@ -37,6 +38,18 @@ script = ExtResource("2_map_view")
 unique_name_in_owner = true
 visible = false
 script = ExtResource("3_tamer")
+
+[node name="Fog" type="ColorRect" parent="MapArea"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("9_fog")
 
 [node name="DayLight" type="ColorRect" parent="MapArea"]
 unique_name_in_owner = true
@@ -114,6 +127,13 @@ custom_minimum_size = Vector2(0, 56)
 layout_mode = 2
 theme_type_variation = &"OutlineButton"
 text = "Debug: ver mapa inteiro"
+
+[node name="DebugForgetButton" type="Button" parent="SafeArea/Column/DebugMenu/Items/DebugMain"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+theme_type_variation = &"OutlineButton"
+text = "Esquecer ilha"
 
 [node name="DebugSpawnButton" type="Button" parent="SafeArea/Column/DebugMenu/Items/DebugMain"]
 unique_name_in_owner = true

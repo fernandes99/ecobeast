@@ -23,6 +23,7 @@ const DEBUG_SPAWNS_PATH := "/v1/me/exploration/spawns"
 const DEBUG_TAMERS_PATH := "/v1/me/exploration/tamers"
 const CODEX_PATH := "/v1/me/codex"
 const ISLANDS_PATH := "/v1/me/islands"
+const DISCOVERIES_PATH := "/v1/me/islands/%d/discoveries"
 const EVOLUTION_PATH := "/v1/me/creatures/%s/evolution"
 const LEARN_SKILL_PATH := "/v1/me/creatures/%s/skills"
 
@@ -108,7 +109,36 @@ func start_exploration(island_id: int = 0) -> Result:
 	if not response.ok:
 		return Result.failure(response.error)
 	var map: Variant = response.data.get("map") if response.data is Dictionary else null
-	return Result.success(ExplorationMap.from_dict(map)) if map is Dictionary else Result.failure(ApiResponse.SERVER_ERROR)
+	if not map is Dictionary:
+		return Result.failure(ApiResponse.SERVER_ERROR)
+	var exploration := ExplorationMap.from_dict(map)
+	exploration.discovered = _coords(DictFields.get_array(response.data, "discovered"))
+	return Result.success(exploration)
+
+
+func add_island_discoveries(island_id: int, coords: Array[Vector2i]) -> Result:
+	var tiles: Array[Dictionary] = []
+	for coord: Vector2i in coords:
+		tiles.append({"q": coord.x, "r": coord.y})
+	var response: ApiResponse = await Api.request(HTTPClient.METHOD_POST, DISCOVERIES_PATH % island_id, {"tiles": tiles}, true)
+	if not response.ok:
+		return Result.failure(response.error)
+	return Result.success(null)
+
+
+func forget_island_discoveries(island_id: int) -> Result:
+	var response: ApiResponse = await Api.request(HTTPClient.METHOD_DELETE, DISCOVERIES_PATH % island_id, null, true)
+	if not response.ok:
+		return Result.failure(response.error)
+	return Result.success(null)
+
+
+static func _coords(items: Array) -> Array[Vector2i]:
+	var coords: Array[Vector2i] = []
+	for item: Variant in items:
+		if item is Dictionary and (item.get("q") is int or item.get("q") is float) and (item.get("r") is int or item.get("r") is float):
+			coords.append(Vector2i(int(item["q"]), int(item["r"])))
+	return coords
 
 
 func list_islands() -> Result:

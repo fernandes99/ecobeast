@@ -854,6 +854,7 @@ model Player {
   inventory       InventoryItem[]
   codex           CodexEntry[]
   appearanceParts PlayerAppearancePart[]
+  discoveries     IslandDiscovery[]
 
   @@index([bodyTypeId])
   @@index([skinPaletteId])
@@ -999,9 +1000,28 @@ model Island {
   createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
   publishedAt DateTime? @map("published_at") @db.Timestamptz(3)
 
-  maps IslandMap[]
+  maps        IslandMap[]
+  discoveries IslandDiscovery[]
 
   @@map("islands")
+  @@schema("ecobeasts")
+}
+
+/// Um hexágono de ilha que o Domador já descobriu (fog-of-war/01). Sem FK
+/// para island_tiles: o hexágono pode sumir numa versão nova da ilha.
+model IslandDiscovery {
+  playerId     String   @map("player_id") @db.Uuid
+  islandId     Int      @map("island_id")
+  q            Int
+  r            Int
+  discoveredAt DateTime @default(now()) @map("discovered_at") @db.Timestamptz(3)
+
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  island Island @relation(fields: [islandId], references: [id], onDelete: Cascade)
+
+  @@id([playerId, islandId, q, r])
+  @@index([islandId])
+  @@map("island_discoveries")
   @@schema("ecobeasts")
 }
 

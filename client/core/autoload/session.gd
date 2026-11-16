@@ -10,6 +10,8 @@ extends Node
 signal player_changed
 signal logged_in
 
+const DISCOVERY_BATCH := 1000
+
 var player: Player = null
 var storage: Array[CreatureInstance] = []
 
@@ -18,6 +20,10 @@ var _auth := AuthService.new()
 var _fought_spawn := 0
 var _fought_tamer := 0
 var debug_god := false
+## Os hexágonos descobertos de cada ilha que ainda não foram para o servidor
+## (fog-of-war/03). Moram aqui porque a tela de exploração some antes do envio.
+var _pending_discoveries: Dictionary[int, Array] = {}
+var _sending_discoveries := false
 
 
 func has_auth_session() -> bool:
@@ -160,6 +166,48 @@ func start_exploration(island_id: int = 0) -> Result:
 func list_islands() -> Result:
 	@warning_ignore("redundant_await")
 	return await _service.list_islands()
+
+
+func add_island_discoveries(island_id: int, coords: Array[Vector2i]) -> Result:
+	@warning_ignore("redundant_await")
+	return await _service.add_island_discoveries(island_id, coords)
+
+
+func forget_island_discoveries(island_id: int) -> Result:
+	_pending_discoveries.erase(island_id)
+	@warning_ignore("redundant_await")
+	return await _service.forget_island_discoveries(island_id)
+
+
+func queue_island_discoveries(island_id: int, coords: Array[Vector2i]) -> void:
+	if island_id <= 0 or coords.is_empty():
+		return
+	if not _pending_discoveries.has(island_id):
+		_pending_discoveries[island_id] = []
+	_pending_discoveries[island_id].append_array(coords)
+
+
+## Manda os pendentes em lotes, um envio por vez. O que falha volta para a fila, sem aviso.
+func send_island_discoveries() -> void:
+	if _sending_discoveries:
+		return
+	_sending_discoveries = true
+	while not _pending_discoveries.is_empty():
+		var island_id: int = _pending_discoveries.keys()[0]
+		var queued: Array = _pending_discoveries[island_id]
+		var batch: Array[Vector2i] = []
+		batch.assign(queued.slice(0, DISCOVERY_BATCH))
+		var rest := queued.slice(DISCOVERY_BATCH)
+		if rest.is_empty():
+			_pending_discoveries.erase(island_id)
+		else:
+			_pending_discoveries[island_id] = rest
+		@warning_ignore("redundant_await")
+		var result: Result = await _service.add_island_discoveries(island_id, batch)
+		if not result.ok:
+			queue_island_discoveries(island_id, batch)
+			break
+	_sending_discoveries = false
 
 
 func take_fought_spawn() -> int:

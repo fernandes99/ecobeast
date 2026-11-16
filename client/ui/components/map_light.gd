@@ -5,6 +5,8 @@ extends RefCounted
 var position := Vector2.ZERO
 var radius := 0.0
 var color := Color.WHITE
+## O hexágono da peça que acende (fog-of-war/02).
+var coord := Vector2i.ZERO
 
 
 static func make(at: Vector2, light_radius: float, light_color: Color) -> MapLight:
