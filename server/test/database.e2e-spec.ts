@@ -38,10 +38,10 @@ describe('restrições do banco (e2e)', () => {
     expect(rows.map((row) => row.table_name)).toEqual([]);
   });
 
-  it('as 66 tabelas e o histórico de migrations ficam no schema ecobeasts', async () => {
+  it('as 67 tabelas e o histórico de migrations ficam no schema ecobeasts', async () => {
     const rows = await prisma.$queryRaw<{ n: number }[]>`
       SELECT count(*)::int AS n FROM information_schema.tables WHERE table_schema = 'ecobeasts'`;
-    expect(rows[0].n).toBe(67);
+    expect(rows[0].n).toBe(68);
   });
 
   it('recusa uma parte do dia que começa depois do minuto 1439 (day-night)', async () => {
@@ -186,6 +186,15 @@ describe('restrições do banco (e2e)', () => {
       });
     });
     expectRejected(result, 'species_biomes_species_id_fkey');
+  });
+
+  it('recusa uma parte do dia de nascer que não existe (day-phase-spawns)', async () => {
+    const result = await attempt(prisma, async (tx) => {
+      await tx.speciesDayPhase.create({
+        data: { speciesId: 1, dayPhaseId: 999_999 },
+      });
+    });
+    expectRejected(result, 'species_day_phases_day_phase_id_fkey');
   });
 
   it.each(['', 'x'.repeat(21)])(

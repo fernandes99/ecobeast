@@ -310,6 +310,13 @@ const TABLES := {
 			"rate": {"type": "int", "min": 0, "max": 100},
 		},
 	},
+	"species_day_phases": {
+		"key": ["species_id", "day_phase_id"],
+		"columns": {
+			"species_id": {"type": "int", "fk": "species"},
+			"day_phase_id": {"type": "int", "fk": "day_phases"},
+		},
+	},
 	"skills": {
 		"key": ["id"],
 		"columns": {

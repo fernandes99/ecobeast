@@ -12,8 +12,17 @@ import {
 } from '../battle/battle.dto.js';
 import { secureRandom } from '../common/secure-random.js';
 import { generateMap } from '../domain/exploration/map-generator.js';
-import { type MapSpawn, rollSpawns } from '../domain/exploration/spawns.js';
-import { rollAreaSpawns, spawnAreas } from '../domain/islands/area-spawns.js';
+import {
+  bornIn,
+  type MapSpawn,
+  rollSpawns,
+} from '../domain/exploration/spawns.js';
+import {
+  areasBornIn,
+  rollAreaSpawns,
+  spawnAreas,
+} from '../domain/islands/area-spawns.js';
+import { minuteOfDay } from '../domain/world-clock/world-clock.js';
 import type { TamerSize } from '../domain/tamers/tamer-config.js';
 import {
   type MapTamer,
@@ -46,6 +55,7 @@ import {
   loadSpawnSpecies,
   loadTamerTexts,
   partyAverageLevel,
+  speciesBornAt,
 } from './spawn-data.js';
 
 export const NO_PLAYER = 'Crie seu Domador primeiro.';
@@ -77,17 +87,31 @@ export class ExplorationService {
   async start(
     userId: string,
     islandId?: number,
+    debugMinute?: number,
   ): Promise<ExplorationResponseDto> {
     const teamAverage = await partyAverageLevel(this.prisma, userId);
     if (teamAverage === null) throw new ConflictException(NO_PLAYER);
-    if (islandId !== undefined) return this.startIsland(userId, islandId);
+    const minute =
+      debugMinute !== undefined &&
+      this.config.get('ENABLE_TEST_BATTLE', { infer: true })
+        ? debugMinute
+        : minuteOfDay(Date.now());
+    if (islandId !== undefined) {
+      return this.startIsland(userId, islandId, minute);
+    }
 
     const map = generateMap(Math.floor(secureRandom() * SEED_RANGE));
-    const [species, texts] = await Promise.all([
+    const [species, texts, born] = await Promise.all([
       loadSpawnSpecies(this.prisma),
       loadTamerTexts(this.prisma),
+      speciesBornAt(this.prisma, minute),
     ]);
-    const spawns = rollSpawns(map.tiles, species, teamAverage, secureRandom);
+    const spawns = rollSpawns(
+      map.tiles,
+      bornIn(species, born),
+      teamAverage,
+      secureRandom,
+    );
     const tamers = rollMapTamers(
       map.tiles,
       map.start,
@@ -120,12 +144,17 @@ export class ExplorationService {
   private async startIsland(
     userId: string,
     islandId: number,
+    minute: number,
   ): Promise<ExplorationResponseDto> {
     const island = await this.islands.readPublished(islandId);
     if (!island) throw new NotFoundException(ISLAND_NOT_FOUND);
     const { draft } = island;
+    const [typeBlocks, born] = await Promise.all([
+      this.islands.readTypeBlocks(),
+      speciesBornAt(this.prisma, minute),
+    ]);
     const spawns = rollAreaSpawns(
-      spawnAreas(draft, await this.islands.readTypeBlocks()),
+      areasBornIn(spawnAreas(draft, typeBlocks), born),
       secureRandom,
     );
     this.store.set(userId, {

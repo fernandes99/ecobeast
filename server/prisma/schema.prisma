@@ -128,6 +128,8 @@ model DayPhase {
   /// O minuto do dia em que a parte começa. CHECK 0 a 1439 (migration day_phases)
   startMinute Int    @unique @map("start_minute")
 
+  species SpeciesDayPhase[]
+
   @@map("day_phases")
   @@schema("ecobeasts")
 }
@@ -516,6 +518,7 @@ model Species {
   starterOption  StarterOption?
   creatures      CreatureInstance[]
   biomes         SpeciesBiome[]
+  dayPhases      SpeciesDayPhase[]
   codexEntries   CodexEntry[]
   islandAreas    IslandAreaSpecies[]
 
@@ -553,6 +556,20 @@ model SpeciesBiome {
   @@id([speciesId, biomeId])
   @@index([biomeId])
   @@map("species_biomes")
+  @@schema("ecobeasts")
+}
+
+/// As partes do dia em que o Ecobeast nasce como selvagem; sem linha, ele não nasce nela.
+model SpeciesDayPhase {
+  speciesId  Int @map("species_id")
+  dayPhaseId Int @map("day_phase_id")
+
+  species  Species  @relation(fields: [speciesId], references: [id], onDelete: Restrict)
+  dayPhase DayPhase @relation(fields: [dayPhaseId], references: [id], onDelete: Restrict)
+
+  @@id([speciesId, dayPhaseId])
+  @@index([dayPhaseId])
+  @@map("species_day_phases")
   @@schema("ecobeasts")
 }
 

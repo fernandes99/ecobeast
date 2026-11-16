@@ -10,6 +10,10 @@ import {
 import { INVALID_ENEMY } from '../battle/battle.dto.js';
 import { ISLAND_NOT_FOUND } from '../islands/islands.service.js';
 
+const MINUTES_PER_DAY = 1440;
+export const INVALID_DEBUG_MINUTE =
+  'debug_minute precisa ser um inteiro de 0 a 1439.';
+
 export const INVALID_TAMER = 'Domador de depuração inválido.';
 import { BIOMES, MAX_HEIGHT } from '../domain/exploration/map-generator.js';
 import type { Biome } from '../domain/exploration/map-generator.js';
@@ -355,6 +359,29 @@ export class StartExplorationBodyDto {
     { message: ISLAND_NOT_FOUND },
   )
   island_id?: number;
+
+  @ApiPropertyOptional({
+    description:
+      'Só para testes: o minuto do dia (0 a 1439) que decide quem nasce, no ' +
+      'lugar do relógio do servidor. Só vale com as rotas de teste ligadas; ' +
+      'sem elas, é ignorado.',
+    example: 1200,
+  })
+  @IsOptional()
+  @ValidateBy(
+    {
+      name: 'isDebugMinute',
+      validator: {
+        validate: (value: unknown) =>
+          typeof value === 'number' &&
+          Number.isInteger(value) &&
+          value >= 0 &&
+          value < MINUTES_PER_DAY,
+      },
+    },
+    { message: INVALID_DEBUG_MINUTE },
+  )
+  debug_minute?: number;
 }
 
 export class ExplorationResponseDto {

@@ -1,6 +1,10 @@
 import type { Random } from '../battle/types.js';
 import { type HexCoord, hexKey } from '../exploration/hex.js';
-import { type MapSpawn, pickWeighted } from '../exploration/spawns.js';
+import {
+  bornIn,
+  type MapSpawn,
+  pickWeighted,
+} from '../exploration/spawns.js';
 import type { TypeBlocks } from './blocked-hexes.js';
 import {
   blockedKeys,
@@ -32,6 +36,14 @@ export function spawnAreas(
       spawnCount,
       species,
     }));
+}
+
+/** Cada área só com os Ecobeasts da lista dela que nascem na parte do dia. */
+export function areasBornIn(
+  areas: readonly SpawnArea[],
+  born: ReadonlySet<number>,
+): SpawnArea[] {
+  return areas.map((area) => ({ ...area, species: bornIn(area.species, born) }));
 }
 
 export function rollAreaSpawns(areas: SpawnArea[], random: Random): MapSpawn[] {

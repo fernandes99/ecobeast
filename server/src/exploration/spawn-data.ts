@@ -5,6 +5,7 @@ import {
   type SpawnSpecies,
 } from '../domain/exploration/spawns.js';
 import type { TamerTexts } from '../domain/tamers/tamers.js';
+import { dayPhaseAt } from '../domain/world-clock/world-clock.js';
 import type { PrismaService } from '../prisma/prisma.service.js';
 
 export async function loadSpawnSpecies(
@@ -27,6 +28,22 @@ export async function loadSpawnSpecies(
     bySpecies.set(speciesId, species);
   }
   return [...bySpecies.values()];
+}
+
+/** Os ids dos Ecobeasts que nascem na parte do dia do `minute` (day-phase-spawns/01). */
+export async function speciesBornAt(
+  prisma: PrismaService,
+  minute: number,
+): Promise<ReadonlySet<number>> {
+  const phases = await prisma.dayPhase.findMany({
+    select: { id: true, startMinute: true },
+  });
+  if (phases.length === 0) return new Set();
+  const rows = await prisma.speciesDayPhase.findMany({
+    where: { dayPhaseId: dayPhaseAt(minute, phases).id },
+    select: { speciesId: true },
+  });
+  return new Set(rows.map(({ speciesId }) => speciesId));
 }
 
 export async function loadTamerTexts(

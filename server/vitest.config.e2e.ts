@@ -4,6 +4,7 @@ import tsconfigPaths from 'vite-tsconfig-paths';
 const CATALOG_WRITERS = [
   'test/skills-editor.e2e-spec.ts',
   'test/prop-types-editor.e2e-spec.ts',
+  'test/day-phase-spawns.e2e-spec.ts',
 ];
 
 export default defineConfig({
@@ -23,7 +24,7 @@ export default defineConfig({
     // Os e2e falam com o Supabase pela rede.
     testTimeout: 30_000,
     hookTimeout: 30_000,
-    // Os editores de Técnicas e de tipos de peça gravam no catálogo: rodam depois dos que o leem.
+    // Os editores de Técnicas e de tipos de peça e o teste das partes do dia gravam no catálogo: rodam depois dos que o leem.
     projects: [
       {
         extends: true,

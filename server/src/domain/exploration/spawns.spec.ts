@@ -2,6 +2,7 @@ import { generateMap, MapTile } from './map-generator.js';
 import { seededRandom } from './seeded-random.js';
 import { DEFAULT_SPAWN_CONFIG, SpawnConfig } from './spawn-config.js';
 import {
+  bornIn,
   EvolutionLevel,
   naturalLevel,
   rollSpawns,
@@ -398,5 +399,48 @@ describe('rollSpawns', () => {
     const copy = structuredClone(map);
     rollSpawns(map, [ELU], 10, seededRandom(15), CONFIG);
     expect(map).toEqual(copy);
+  });
+
+  describe('pela parte do dia (day-phase-spawns/01)', () => {
+    it('quem não nasce na parte do dia some, e os outros nascem como antes', () => {
+      const map = [...tiles('boreal', 20, 0), ...tiles('wshallow', 20, 1)];
+      const spawns = rollSpawns(
+        map,
+        bornIn([ELU, NILU], new Set([NILU.speciesId])),
+        10,
+        seededRandom(16),
+        CONFIG,
+      );
+      expect(spawns).toHaveLength(CONFIG.count);
+      expect(new Set(spawns.map(({ speciesId }) => speciesId))).toEqual(
+        new Set([NILU.speciesId]),
+      );
+      expect(new Set(spawns.map(({ r }) => r))).toEqual(new Set([1]));
+    });
+
+    it('um bioma só com quem não nasce na parte do dia fica vazio', () => {
+      expect(
+        rollSpawns(
+          tiles('boreal', 5),
+          bornIn([ELU], new Set()),
+          10,
+          seededRandom(17),
+          CONFIG,
+        ),
+      ).toEqual([]);
+    });
+
+    it('com todos nascendo, o sorteio é o mesmo de antes', () => {
+      const map = [...tiles('boreal', 20, 0), ...tiles('wshallow', 20, 1)];
+      expect(
+        rollSpawns(
+          map,
+          bornIn([ELU, NILU], new Set([ELU.speciesId, NILU.speciesId])),
+          10,
+          seededRandom(18),
+          CONFIG,
+        ),
+      ).toEqual(rollSpawns(map, [ELU, NILU], 10, seededRandom(18), CONFIG));
+    });
   });
 });

@@ -69,6 +69,7 @@ O Ecobeast é um jogo mobile (Android/iOS, retrato): o cliente em **Godot 4.7 co
 | [coast-rivers](coast-rivers/) | O mar num lado do mapa, a Praia, os lagos, os rios e as travessias (pontes automáticas e vaus) |
 | [day-night](day-night/) | O relógio do mundo (um dia em 24 minutos), a luz da hora no mapa e na luta, o indicador da parte do dia e as luzes da noite |
 | [fireflies](fireflies/) | Vagalumes à noite na Planície e no Boreal, desenhados e iluminando pelo shader da noite |
+| [day-phase-spawns](day-phase-spawns/) | As partes do dia em que cada Ecobeast nasce (`species_day_phases`) e o sorteio dos selvagens pela hora da entrada |
 
 As próximas iniciativas estão no [roadmap.md](roadmap.md).
 

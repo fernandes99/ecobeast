@@ -31,6 +31,7 @@ species ──< evolutions >── species              (evolution_triggers)
 species ──> growth_rates, rarities, species (evolves_from)
 species ──< starter_options
 species ──< species_biomes >── biomes
+species ──< species_day_phases >── day_phases
 temperaments ──> stats (aumentado, diminuído)
 ```
 
@@ -251,6 +252,13 @@ Colunas que o tipo do efeito não usa ficam `null`.
 | rate       | int  | 0–100, o peso da espécie na disputa pelas vagas do bioma                    |
 
 Como elas viram Ecobeasts no mapa está em [biome-encounters/architecture.md](../biome-encounters/architecture.md).
+
+**`species_day_phases`** — as partes do dia em que cada espécie nasce como selvagem, no mapa sorteado e nas áreas das ilhas. Chave (`species_id`, `day_phase_id`). Sem linha para uma parte do dia, a espécie não nasce nela; as equipes dos Domadores NPC não olham esta tabela. Como o sorteio a usa está em [day-phase-spawns](../day-phase-spawns/).
+
+| Coluna       | Tipo | Observação          |
+| ------------ | ---- | ------------------- |
+| species_id   | int  | FK → species        |
+| day_phase_id | int  | FK → day_phases     |
 
 **`npc_tamer_names`** — os nomes que um Domador NPC sorteado pode ter (`id`, `name`, de 1 a 20 caracteres). **`npc_tamer_greetings`** — as falas do desafio (`id`, `text`, de 1 a 120 caracteres), escritas sem o nome na frente: o jogo monta `"{name}: {text}"`. As duas não têm FK, e o catálogo é recusado com alguma delas vazia. Como elas são sorteadas está em [npc-tamers/architecture.md](../npc-tamers/architecture.md).
 

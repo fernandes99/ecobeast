@@ -87,6 +87,14 @@ export function wildLevel(
   return Math.min(MAX_LEVEL, Math.max(MIN_LEVEL, level));
 }
 
+/** Só os Ecobeasts que nascem na parte do dia, cujos ids estão em `born`. */
+export function bornIn<T extends { speciesId: number }>(
+  items: readonly T[],
+  born: ReadonlySet<number>,
+): T[] {
+  return items.filter(({ speciesId }) => born.has(speciesId));
+}
+
 export function pickWeighted<T extends { weight: number }>(
   items: T[],
   random: Random,

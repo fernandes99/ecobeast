@@ -5,9 +5,9 @@ import { CATALOG_TABLES, SEED_DATA_DIR } from './catalog-tables.js';
 describe('CATALOG_TABLES', () => {
   const names = CATALOG_TABLES.map((table) => table.name);
 
-  it('tem as 44 tabelas, sem repetição', () => {
-    expect(names).toHaveLength(44);
-    expect(new Set(names).size).toBe(44);
+  it('tem as 45 tabelas, sem repetição', () => {
+    expect(names).toHaveLength(45);
+    expect(new Set(names).size).toBe(45);
   });
 
   it('casa com os arquivos .json da pasta de dados do seed', () => {
@@ -33,6 +33,12 @@ describe('CATALOG_TABLES', () => {
     );
     expect(names.indexOf('species')).toBeLessThan(
       names.indexOf('species_biomes'),
+    );
+    expect(names.indexOf('day_phases')).toBeLessThan(
+      names.indexOf('species_day_phases'),
+    );
+    expect(names.indexOf('species')).toBeLessThan(
+      names.indexOf('species_day_phases'),
     );
     expect(names.indexOf('area_shapes')).toBeLessThan(names.indexOf('skills'));
     expect(names.indexOf('status_conditions')).toBeLessThan(
@@ -530,6 +536,22 @@ describe('carga inicial do dia e da noite (day-night/01 e 03)', () => {
       color: string;
     }[]
   >('prop_type_lights.json');
+
+  it('todo Ecobeast nasce nas 4 partes do dia (day-phase-spawns/01)', () => {
+    const species = read<{ id: number }[]>('species.json');
+    const born = read<{ species_id: number; day_phase_id: number }[]>(
+      'species_day_phases.json',
+    );
+    expect(born).toHaveLength(species.length * phases.length);
+    for (const { id } of species) {
+      expect(
+        born
+          .filter(({ species_id }) => species_id === id)
+          .map(({ day_phase_id }) => day_phase_id)
+          .sort(),
+      ).toEqual(phases.map((phase) => phase.id).sort());
+    }
+  });
 
   it('tem as 4 partes do dia, dentro do dia', () => {
     expect(phases.map(({ slug }) => slug)).toEqual([

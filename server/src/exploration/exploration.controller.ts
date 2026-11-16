@@ -25,6 +25,7 @@ import {
   DebugTamerBodyDto,
   DebugTamerResponseDto,
   ExplorationResponseDto,
+  INVALID_DEBUG_MINUTE,
   INVALID_TAMER,
   StartExplorationBodyDto,
 } from './exploration.dto.js';
@@ -59,11 +60,14 @@ export class ExplorationController {
       'de cada área, cada um num hexágono dela fora de construção, a espécie ' +
       'pelo peso e o nível entre o mínimo e o máximo. Nos dois casos, o servidor ' +
       'guarda os Ecobeasts, os Domadores e a posição do Domador até a próxima ' +
-      'exploração.',
+      'exploração. Só nascem os Ecobeasts selvagens da parte do dia do momento ' +
+      'da entrada (`species_day_phases`); os Domadores NPC levam qualquer um.',
   })
   @ApiCreatedResponse({ type: ExplorationResponseDto })
   @ApiBadRequestResponse({
-    description: `\`island_id\` que não é um inteiro maior que 0: "${ISLAND_NOT_FOUND}"`,
+    description:
+      `\`island_id\` que não é um inteiro maior que 0: "${ISLAND_NOT_FOUND}"; ` +
+      `\`debug_minute\` fora de 0 a 1439: "${INVALID_DEBUG_MINUTE}"`,
   })
   @ApiNotFoundResponse({
     description: `A ilha não existe ou nunca foi publicada: "${ISLAND_NOT_FOUND}"`,
@@ -75,7 +79,11 @@ export class ExplorationController {
     @CurrentUser() userId: string,
     @Body() body: StartExplorationBodyDto,
   ): Promise<ExplorationResponseDto> {
-    return this.exploration.start(userId, body?.island_id);
+    return this.exploration.start(
+      userId,
+      body?.island_id,
+      body?.debug_minute,
+    );
   }
 
   @Post('spawns')

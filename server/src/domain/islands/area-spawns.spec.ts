@@ -1,6 +1,11 @@
 import { seededRandom } from '../exploration/seeded-random.js';
 import { hexKey } from '../exploration/hex.js';
-import { rollAreaSpawns, type SpawnArea, spawnAreas } from './area-spawns.js';
+import {
+  areasBornIn,
+  rollAreaSpawns,
+  type SpawnArea,
+  spawnAreas,
+} from './area-spawns.js';
 import { typeBlockKey } from './blocked-hexes.js';
 import type { IslandDraft } from './island-draft.js';
 
@@ -175,5 +180,38 @@ describe('rollAreaSpawns', () => {
       ),
     );
     expect(used.size).toBe(3);
+  });
+});
+
+describe('areasBornIn (day-phase-spawns/01)', () => {
+  const both = area({
+    spawnCount: 40,
+    species: [
+      { speciesId: RUVO, weight: 1, minLevel: 2, maxLevel: 6 },
+      { speciesId: ELU, weight: 1, minLevel: 2, maxLevel: 6 },
+    ],
+  });
+
+  it('cada área só sorteia quem nasce na parte do dia', () => {
+    const spawns = rollAreaSpawns(
+      areasBornIn([both], new Set([ELU])),
+      seededRandom(3),
+    );
+    expect(spawns).toHaveLength(40);
+    expect(new Set(spawns.map(({ speciesId }) => speciesId))).toEqual(
+      new Set([ELU]),
+    );
+  });
+
+  it('a área sem ninguém da parte do dia fica vazia', () => {
+    expect(
+      rollAreaSpawns(areasBornIn([area()], new Set([ELU])), seededRandom(4)),
+    ).toEqual([]);
+  });
+
+  it('com todos nascendo, o sorteio é o mesmo de antes', () => {
+    expect(
+      rollAreaSpawns(areasBornIn([both], new Set([RUVO, ELU])), seededRandom(5)),
+    ).toEqual(rollAreaSpawns([both], seededRandom(5)));
   });
 });

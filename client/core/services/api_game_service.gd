@@ -95,10 +95,16 @@ func reset_progress() -> Result:
 
 
 func start_exploration(island_id: int = 0) -> Result:
-	var body: Variant = null
+	var body := {}
 	if island_id > 0:
-		body = {"island_id": island_id}
-	var response: ApiResponse = await Api.request(HTTPClient.METHOD_POST, EXPLORATION_PATH, body, true)
+		body["island_id"] = island_id
+	# Com a hora de debug mexida, o servidor sorteia os selvagens nela (só com as rotas de teste ligadas).
+	if WorldClock.debug_offset_minutes != 0.0:
+		body["debug_minute"] = floori(WorldClock.minute_of_day())
+	var payload: Variant = null
+	if not body.is_empty():
+		payload = body
+	var response: ApiResponse = await Api.request(HTTPClient.METHOD_POST, EXPLORATION_PATH, payload, true)
 	if not response.ok:
 		return Result.failure(response.error)
 	var map: Variant = response.data.get("map") if response.data is Dictionary else null
