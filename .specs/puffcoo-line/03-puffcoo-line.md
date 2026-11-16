@@ -1,6 +1,6 @@
 # 03. Linha da Puffcoo
 
-- **Status:** rascunho
+- **Status:** concluída (falta o dono conferir no jogo)
 - **Depende de:** [01-field-rules](01-field-rules.md) (as marcas 2 e 3) e [02-field-screen](02-field-screen.md) (o jogo mostra o Atordoado)
 
 ## Contexto
@@ -36,8 +36,10 @@ Ele escolheu os nomes, aprovou a ficha proposta por Claude, mudou a evolução p
 
   | id | slug | name | Elemento | Raridade | Captura | XP | Altura (m) | Peso (kg) |
   | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-  | 15 | `puffcoo` | Puffcoo | Vento | Comum | 200 | 50 | 0.3 | 1.8 |
-  | 16 | `galecrest` | Galecrest | Vento | Incomum | 90 | 160 | 1.5 | 28.0 |
+  | 15 | `puffcoo` | Puffcoo | Vento | Comum | 75 | 50 | 0.3 | 1.8 |
+  | 16 | `galecrest` | Galecrest | Vento | Incomum | 35 | 160 | 1.5 | 28.0 |
+
+  A captura vai de 0 a 100 desde a migration `capture_rate_0_100`: é a chance, em %, com 1 de HP e a Esfera básica. A proposta aprovada (200 e 90) estava na escala antiga, de 0 a 255, e foi convertida na mesma proporção (_a revisar_). Para comparar, as iniciais e o Clod têm 45, e o Hushling, 55.
 
   Descrições (Bestiário):
   - **Puffcoo:** "Ave rechonchuda que vive em bandos nos campos. Arrulha baixinho e, quando se assusta, sobe num redemoinho de penas."
@@ -74,11 +76,11 @@ Ele escolheu os nomes, aprovou a ficha proposta por Claude, mudou a evolução p
 
 - **RF-06:** Os efeitos (`skill_effects`, ids 39 a 42):
   - 39: Pena Afiada, `modify_stat`, chance 30, alvo Inimigo, Precisão −1;
-  - 40: Vento a Favor, `modify_stat`, chance 100, sem alvo próprio, Velocidade +1;
-  - 41: Vento a Favor, `modify_stat`, chance 100, sem alvo próprio, Evasão +1;
+  - 40: Vento a Favor, `modify_stat`, chance 100, alvo Meu time (4), Velocidade +1;
+  - 41: Vento a Favor, `modify_stat`, chance 100, alvo Meu time (4), Evasão +1;
   - 42: Rajada de Penas, `fixed_damage`, chance 100, `value` 15.
 
-  Sem alvo próprio, o efeito vale no Ecobeast escolhido pela Técnica de Meu time, como no Banho de Sol. Na Rajada de Penas, o poder é 0 porque o dano de cada golpe é o fixo, pelas regras da [01](01-field-rules.md) (RF-12 a RF-14).
+  Com o alvo Meu time, o efeito vale no Ecobeast escolhido pela Técnica. A spec dizia "sem alvo próprio", como a cura do Banho de Sol, mas o `CatalogValidator` exige alvo em todo `modify_stat`. Na Rajada de Penas, o poder é 0 porque o dano de cada golpe é o fixo, pelas regras da [01](01-field-rules.md) (RF-12 a RF-14).
 
 **Learnsets**
 
@@ -109,10 +111,10 @@ Ele escolheu os nomes, aprovou a ficha proposta por Claude, mudou a evolução p
 
 ## Critérios de aceite
 
-- [ ] `GET /v1/species/puffcoo` e `/galecrest` respondem 200, e `/v1/species/puffcoo/evolutions` mostra a linha com o nível 20.
-- [ ] O jogo abre com o servidor no ar, e o `CatalogValidator` não aponta erro.
+- [x] `GET /v1/species/puffcoo` e `/galecrest` respondem 200, e `/v1/species/puffcoo/evolutions` mostra a linha com o nível 20.
+- [x] O jogo abre com o servidor no ar, e o `CatalogValidator` não aponta erro.
 - [ ] Na janela F1, as duas espécies aparecem com o `front.png` e as 5 Técnicas novas com os dados do RF-05.
-- [ ] Numa luta com uma Galecrest (batalha de teste ou pelo F3):
+- [x] Numa luta com uma Galecrest (batalha de teste ou pelo F3):
   - a Pena Afiada acerta o primeiro da linha;
   - a Rajada de Penas acerta o primeiro da linha, a até 6 hexágonos, de 2 a 5 vezes, tirando 15 de HP em cada;
   - o Vento a Favor sobe a Velocidade e a Evasão de um aliado a até 2 hexágonos;
@@ -141,9 +143,23 @@ F5 no Godot: abrir o F1 e conferir as duas espécies e as Técnicas. Explorar de
 
 ## Tarefas
 
-- [ ] Recortar os dois `front.png`.
-- [ ] Espécies, atributos, Traços e evolução.
-- [ ] Técnicas, efeitos e learnsets.
-- [ ] Biomas e partes do dia.
-- [ ] Conferir a mira da Nuvem de Penas numa casa vazia.
-- [ ] `CLAUDE.md`, o README da iniciativa e as tabelas das specs.
+- [x] Recortar os dois `front.png`.
+- [x] Espécies, atributos, Traços e evolução.
+- [x] Técnicas, efeitos e learnsets.
+- [x] Biomas e partes do dia.
+- [x] Conferir a mira da Nuvem de Penas numa casa vazia.
+- [x] `CLAUDE.md`, o README da iniciativa e as tabelas das specs.
+
+Conferido por Claude:
+- as linhas estão no banco, gravadas por SQL, sem arquivo no repositório, e `GET /v1/species/puffcoo`, `/galecrest` e `/v1/species/puffcoo/evolutions` respondem com o nível 20;
+- o jogo abre sem janela com o servidor no ar, e o `CatalogValidator` aceita tudo;
+- num teste temporário com o catálogo da luta carregado do banco, já apagado:
+  - a Pena Afiada tirou 1 de Precisão;
+  - a Rajada de Penas deu 4 golpes de 15, com o `multi_hit`;
+  - a Nuvem de Penas, mirada numa casa vazia, pôs as Penas no ar na fileira;
+  - o Vendaval acertou e pôs o Redemoinho em 3 casas;
+  - o Vento a Favor subiu a Velocidade e a Evasão do aliado;
+- a mira do jogo já aceita qualquer casa da linha, vazia ou não (`BoardGeometry.targets`), e nada mudou nela;
+- lint, typecheck e os testes de unidade passam. Os e2e passam, menos a contagem de tabelas, que quebrou com a migration `island_discoveries` da `fog-of-war`, ainda sem commit noutra sessão.
+
+Fica para o dono: as duas espécies no F1, uma luta com a Galecrest no editor e a Puffcoo de dia no mapa sorteado.

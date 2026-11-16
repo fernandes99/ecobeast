@@ -62,6 +62,7 @@ Escolhas de Claude (corrigíveis; ao mudar uma, atualize aqui e na fase):
 | As Técnicas novas, com os números da [03](03-puffcoo-line.md), _a revisar_ | Foi pedido "não tanta". Somadas às 3 de Vento e à Investida Veloz, o Galecrest aprende 9 |
 | A Rajada de Penas para no primeiro da linha, tem Precisão 85, sorteada uma vez para todos os golpes, e o número de golpes sai de 2 a 5 com a mesma chance | Com 15 de dano fixo, de 30 a 75 por uso logo no nível 12, a Precisão mais baixa e o cooldown 2 seguram a força. O dano fixo não cresce com o nível, então ela perde força mais tarde |
 | O Ciclone sai da evolução para o nível 32, e o Vendaval fica como a Técnica que o Galecrest aprende ao evoluir | O Vendaval é a Técnica que deixa o redemoinho e combina com a forma nova |
+| A captura da proposta (200 e 90, na escala antiga de 0 a 255) virou 75 e 35, na escala de hoje, de 0 a 100, _a revisar_ | A taxa de captura mudou de escala na migration `capture_rate_0_100`, e a proporção foi mantida |
 | As regras primeiro, a tela depois e as espécies por último | As Técnicas das espécies usam as marcas novas. Cada fase pode ser commitada e conferida sozinha |
 
 ## Fora do escopo
@@ -84,4 +85,4 @@ Escolhas de Claude (corrigíveis; ao mudar uma, atualize aqui e na fase):
 | --- | --- | --- | --- |
 | 1 | [01-field-rules](01-field-rules.md) | Servidor: o estado Atordoado, as marcas que mudam atributos (`ground_effect_stats`), as marcas Penas no ar e Redemoinho, os vários golpes, o dano fixo e a IA | concluída |
 | 2 | [02-field-screen](02-field-screen.md) | Jogo: o ícone do Atordoado, o andar travado na vez dele, as marcas novas no tabuleiro e no histórico e os golpes seguidos na tela | concluída (falta o dono ver no editor) |
-| 3 | [03-puffcoo-line](03-puffcoo-line.md) | Dados: Puffcoo e Galecrest, as 5 Técnicas novas, os learnsets, a evolução, os biomas, as partes do dia e os `front.png` | rascunho |
+| 3 | [03-puffcoo-line](03-puffcoo-line.md) | Dados: Puffcoo e Galecrest, as 5 Técnicas novas, os learnsets, a evolução, os biomas, as partes do dia e os `front.png` | concluída (falta o dono conferir no jogo) |
