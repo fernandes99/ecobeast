@@ -3,6 +3,7 @@ import type { BattleEvent, Combatant } from '../battle/types.js';
 import {
   applyBoardVez,
   CANNOT_REACH,
+  DAZED_NO_MOVE,
   ENTRY_NOT_FREE,
   FLEE_NO_MOVE,
   NOT_YOUR_VEZ,
@@ -25,6 +26,7 @@ const ASLEEP: Partial<Combatant> = { statusSlug: 'sleep', sleepTurns: 99 };
 const SCRATCH_SLOT = 1;
 const SPARK_SLOT = 2;
 const SPIRAL_SLOT = 3;
+const GROWL_SLOT = 4;
 const catalog = boardCatalog();
 
 function types(events: BattleEvent[]): string[] {
@@ -571,7 +573,11 @@ describe('item e marca com status', () => {
   it('uma marca que congela aplica o status em quem está nela, sem repetir', () => {
     const ICE = 2;
     const icy = boardCatalog();
-    icy.groundEffects.set(ICE, { damagePercent: null, statusSlug: 'freeze' });
+    icy.groundEffects.set(ICE, {
+      damagePercent: null,
+      statusSlug: 'freeze',
+      stats: [],
+    });
     const state = makeBoardState(
       [fighter(30)],
       [wild(5, ASLEEP)],
@@ -738,5 +744,175 @@ describe('alvo do time (skill-editor/03)', () => {
     expect(types(outcome.events)).not.toContain('missed');
     expect(types(outcome.events)).not.toContain('blocked');
     expect(outcome.state.player.team[1]!.currentHp).toBe(180);
+  });
+});
+
+describe('Atordoado e as marcas que mudam atributos (puffcoo-line/01)', () => {
+  const FEATHERS = 2;
+  const WHIRL = 3;
+  const WIND = 6;
+  const field = boardCatalog();
+  field.groundEffects.set(FEATHERS, {
+    damagePercent: null,
+    statusSlug: null,
+    stats: [
+      { statSlug: 'accuracy', stages: -1 },
+      { statSlug: 'evasion', stages: -1 },
+    ],
+  });
+  field.groundEffects.set(WHIRL, {
+    damagePercent: null,
+    statusSlug: 'dazed',
+    stats: [],
+  });
+  field.statusImmunities.set('dazed', [WIND]);
+  const wait = { position: 0, action: { type: 'wait' } } as const;
+
+  function onWhirl(player = fighter(30)): BoardState {
+    return makeBoardState(
+      [player],
+      [wild(5, ASLEEP)],
+      {},
+      { marks: [{ cell: at(1, 4), groundEffectId: WHIRL, remaining: 6 }] },
+    );
+  }
+
+  it('atordoado, não anda, e nada muda na luta', () => {
+    const state = makeBoardState(
+      [fighter(30, { isDazed: true })],
+      [wild(5, ASLEEP)],
+    );
+    const before = structuredClone(state);
+    expect(
+      applyBoardVez(
+        state,
+        { position: 0, move: at(2, 4), action: { type: 'wait' } },
+        field,
+        always(0.5),
+      ),
+    ).toEqual({ error: DAZED_NO_MOVE });
+    expect(state).toEqual(before);
+  });
+
+  it('atordoado, ainda usa uma Técnica, e deixa de estar no fim da vez', () => {
+    const state = makeBoardState(
+      [fighter(30, { isDazed: true })],
+      [wild(5, ASLEEP)],
+    );
+    const { state: after, events } = playVez(
+      state,
+      {
+        position: 0,
+        action: { type: 'skill', slot: GROWL_SLOT },
+      },
+      field,
+    );
+    expect(eventsOf(events, 'skill_used')).toHaveLength(1);
+    expect(eventsOf(events, 'status_ended')).toContainEqual({
+      type: 'status_ended',
+      side: 'player',
+      position: 0,
+      status: 'dazed',
+    });
+    expect(after.player.team[0]!.isDazed).toBe(false);
+  });
+
+  it('quem termina a vez no Redemoinho fica atordoado e não sai dele', () => {
+    const { state: after, events } = playVez(onWhirl(), wait, field);
+    expect(eventsOf(events, 'status_applied')).toEqual([
+      { type: 'status_applied', side: 'player', position: 0, status: 'dazed' },
+    ]);
+    expect(eventsOf(events, 'effect_failed')).toEqual([]);
+    expect(after.player.team[0]!.isDazed).toBe(true);
+    expect(
+      applyBoardVez(
+        after,
+        { position: 0, move: at(2, 4), action: { type: 'wait' } },
+        field,
+        always(0.5),
+      ),
+    ).toEqual({ error: DAZED_NO_MOVE });
+
+    const again = playVez(after, wait, field);
+    const order = again.events
+      .filter(
+        (event) =>
+          event.type === 'status_ended' || event.type === 'status_applied',
+      )
+      .map((event) => event.type);
+    expect(order.slice(0, 2)).toEqual(['status_ended', 'status_applied']);
+    expect(again.state.player.team[0]!.isDazed).toBe(true);
+  });
+
+  it('o queimado também fica atordoado no Redemoinho', () => {
+    const { state: after } = playVez(
+      onWhirl(fighter(30, { statusSlug: 'burn' })),
+      wait,
+      field,
+    );
+    expect(after.player.team[0]!.isDazed).toBe(true);
+    expect(after.player.team[0]!.statusSlug).toBe('burn');
+  });
+
+  it('o Vento não fica atordoado, sem encher o histórico de falhas', () => {
+    const { state: after, events } = playVez(
+      onWhirl(fighter(30, { elementIds: [WIND] })),
+      wait,
+      field,
+    );
+    expect(eventsOf(events, 'status_applied')).toEqual([]);
+    expect(eventsOf(events, 'effect_failed')).toEqual([]);
+    expect(after.player.team[0]!.isDazed).toBe(false);
+  });
+
+  it('as Penas no ar só baixam quem acabou de jogar, uma vez por vez dele', () => {
+    const state = makeBoardState(
+      [fighter(30), fighter(20)],
+      [wild(5, ASLEEP)],
+      {
+        slots: { player: 2, enemy: 1 },
+        cells: { player: [at(0, 4), at(2, 4)] },
+        queue: [
+          { side: 'player', position: 0 },
+          { side: 'player', position: 1 },
+          { side: 'enemy', position: 0 },
+        ],
+      },
+      {
+        marks: [
+          { cell: at(0, 4), groundEffectId: FEATHERS, remaining: 6 },
+          { cell: at(2, 4), groundEffectId: FEATHERS, remaining: 6 },
+        ],
+      },
+    );
+    const first = playVez(state, wait, field);
+    expect(eventsOf(first.events, 'stat_changed')).toEqual([
+      {
+        type: 'stat_changed',
+        side: 'player',
+        position: 0,
+        stat: 'accuracy',
+        stages: -1,
+        value: -1,
+      },
+      {
+        type: 'stat_changed',
+        side: 'player',
+        position: 0,
+        stat: 'evasion',
+        stages: -1,
+        value: -1,
+      },
+    ]);
+    expect(first.state.player.team[1]!.stages.accuracy).toBe(0);
+
+    const second = playVez(
+      first.state,
+      { position: 1, action: { type: 'wait' } },
+      field,
+    );
+    const [one, two] = second.state.player.team;
+    expect(two!.stages).toMatchObject({ accuracy: -1, evasion: -1 });
+    expect(one!.stages).toMatchObject({ accuracy: -1, evasion: -1 });
   });
 });

@@ -38,10 +38,21 @@ describe('restrições do banco (e2e)', () => {
     expect(rows.map((row) => row.table_name)).toEqual([]);
   });
 
-  it('as 67 tabelas e o histórico de migrations ficam no schema ecobeasts', async () => {
+  it('as 68 tabelas e o histórico de migrations ficam no schema ecobeasts', async () => {
     const rows = await prisma.$queryRaw<{ n: number }[]>`
       SELECT count(*)::int AS n FROM information_schema.tables WHERE table_schema = 'ecobeasts'`;
-    expect(rows[0].n).toBe(68);
+    expect(rows[0].n).toBe(69);
+  });
+
+  it('recusa uma marca que muda um atributo em 0 estágio (puffcoo-line)', async () => {
+    const result = await attempt(prisma, async (tx) => {
+      const effect = await tx.groundEffect.findFirstOrThrow();
+      const stat = await tx.stat.findFirstOrThrow({ where: { slug: 'atk' } });
+      await tx.groundEffectStat.create({
+        data: { groundEffectId: effect.id, statId: stat.id, stages: 0 },
+      });
+    });
+    expectRejected(result, 'ground_effect_stats_stages_check');
   });
 
   it('recusa uma parte do dia que começa depois do minuto 1439 (day-night)', async () => {

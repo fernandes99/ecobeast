@@ -22,6 +22,8 @@ export function applyEffects(
   dealt: number,
 ): void {
   for (const effect of skill.effects) {
+    // O dano fixo já foi o golpe (actions.ts).
+    if (effect.effectSlug === 'fixed_damage') continue;
     const affected = isOnAuthor(effect, skill) ? author : foe;
     const creature = affected && activeAt(context.state, affected);
     if (!creature || !isStanding(creature)) continue;

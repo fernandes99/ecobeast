@@ -27,6 +27,7 @@ export function makeCombatant(overrides: Partial<Combatant> = {}): Combatant {
     confusionTurns: 0,
     isFeared: false,
     isTrapped: false,
+    isDazed: false,
     isProtected: false,
     stages: noStages(),
     skills: [],
@@ -54,6 +55,8 @@ export function makeSkill(overrides: Partial<BattleSkill> = {}): BattleSkill {
     cooldown: 0,
     priority: 0,
     critStage: 0,
+    minHits: 1,
+    maxHits: 1,
     targetSlug: 'enemy',
     effects: [],
     areaShape: 'single',
@@ -76,6 +79,7 @@ export function makeEffect(
     statSlug: null,
     stages: null,
     percent: null,
+    value: null,
     ...overrides,
   };
 }

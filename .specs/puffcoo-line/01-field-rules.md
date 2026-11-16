@@ -1,6 +1,6 @@
 # 01. As regras do campo: Atordoado, marcas que mudam atributos, vários golpes e dano fixo
 
-- **Status:** rascunho
+- **Status:** concluída
 - **Depende de:** [board-battle](../board-battle/) (as marcas e o fim da vez)
 
 ## Contexto
@@ -81,19 +81,19 @@ Esta fase cria as regras no servidor e as duas marcas que as Técnicas da [03](0
 
 ## Critérios de aceite
 
-- [ ] Um teste mostra que um Ecobeast atordoado não anda (400 com a mensagem), age, e no fim da vez recebe o `status_ended` do `dazed`.
-- [ ] Um teste mostra que um Ecobeast de Vento recebe `effect_failed` ao ser atordoado.
-- [ ] Um teste mostra que, numa luta de 2×2 com dois Ecobeasts nas Penas no ar, cada um perde 1 de Precisão e 1 de Evasão só no fim da própria vez, e não a cada vez da fila.
-- [ ] Um teste mostra que quem termina a vez no Redemoinho está atordoado na vez seguinte, e que o Chão em chamas continua tirando HP de todos depois de cada vez.
-- [ ] Um teste mostra que a IA atordoada não manda `move`.
-- [ ] Um teste mostra que uma Técnica de 2 a 5 golpes com `fixed_damage` de 15:
+- [x] Um teste mostra que um Ecobeast atordoado não anda (400 com a mensagem), age, e no fim da vez recebe o `status_ended` do `dazed`.
+- [x] Um teste mostra que um Ecobeast de Vento recebe `effect_failed` ao ser atordoado.
+- [x] Um teste mostra que, numa luta de 2×2 com dois Ecobeasts nas Penas no ar, cada um perde 1 de Precisão e 1 de Evasão só no fim da própria vez, e não a cada vez da fila.
+- [x] Um teste mostra que quem termina a vez no Redemoinho está atordoado na vez seguinte, e que o Chão em chamas continua tirando HP de todos depois de cada vez.
+- [x] Um teste mostra que a IA atordoada não manda `move`.
+- [x] Um teste mostra que uma Técnica de 2 a 5 golpes com `fixed_damage` de 15:
   - gera de 2 a 5 eventos `damage` de 15 e o `multi_hit`;
   - para no golpe que derruba o alvo;
   - não gera nenhum golpe quando a Precisão erra.
-- [ ] Um teste mostra que o dano fixo ignora o crítico e a vantagem de Elemento, mas não a imunidade.
-- [ ] Um teste mostra que a IA escolhe uma Técnica de dano fixo de poder 0 como Técnica de dano.
-- [ ] `GET /v1/catalog` traz `ground_effect_stats` com as duas linhas das Penas no ar, os ground effects 2 e 3 e o status 9.
-- [ ] Lint, typecheck, testes de unidade e e2e do servidor passam.
+- [x] Um teste mostra que o dano fixo ignora o crítico e a vantagem de Elemento, mas não a imunidade.
+- [x] Um teste mostra que a IA escolhe uma Técnica de dano fixo de poder 0 como Técnica de dano.
+- [x] `GET /v1/catalog` traz `ground_effect_stats` com as duas linhas das Penas no ar, os ground effects 2 e 3 e o status 9.
+- [x] Lint, typecheck, testes de unidade e e2e do servidor passam.
 
 ## Desenho técnico
 
@@ -124,11 +124,13 @@ No painel F3 da luta ([board-battle/23](../board-battle/23-battle-effect-states.
 
 ## Tarefas
 
-- [ ] Migration, schema e seed-data.
-- [ ] `ground_effect_stats` no catálogo e no motor.
-- [ ] O Atordoado: regra, andar recusado, fim na vez e vista.
-- [ ] A parte de atributos das marcas.
-- [ ] A IA atordoada.
-- [ ] Os vários golpes e o dano fixo, com a IA.
-- [ ] Testes de unidade e e2e.
-- [ ] `board-battle/architecture.md`, `GDD.md`, o README da iniciativa e as tabelas das specs.
+- [x] Migration, schema e seed-data.
+- [x] `ground_effect_stats` no catálogo e no motor.
+- [x] O Atordoado: regra, andar recusado, fim na vez e vista.
+- [x] A parte de atributos das marcas.
+- [x] A IA atordoada.
+- [x] Os vários golpes e o dano fixo, com a IA.
+- [x] Testes de unidade e e2e.
+- [x] `board-battle/architecture.md`, `GDD.md`, o README da iniciativa e as tabelas das specs.
+
+Conferido por Claude: lint, typecheck, 974 testes de unidade e os e2e passam, e a migration foi aplicada no banco. O jogo ainda não desenha o Atordoado: isso é a [02](02-field-screen.md). Diferença do desenho: o `isImmune` e o `hasStatus` saíram do `status.ts` para a marca pular, sem evento, quem já tem o status ou é imune (antes, a marca só tentava em quem não tinha status principal, e um queimado nunca ficaria atordoado). Os testes de golpes e dano fixo ficaram num `actions.spec.ts` novo.

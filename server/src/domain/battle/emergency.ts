@@ -11,6 +11,8 @@ export const EMERGENCY_SKILL: BattleSkill = {
   cooldown: 0,
   priority: 0,
   critStage: 0,
+  minHits: 1,
+  maxHits: 1,
   targetSlug: 'enemy',
   areaShape: 'single',
   range: 1,
@@ -26,6 +28,7 @@ export const EMERGENCY_SKILL: BattleSkill = {
       statSlug: null,
       stages: null,
       percent: 12.5,
+      value: null,
     },
   ],
 };

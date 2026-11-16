@@ -6,5 +6,6 @@
 	{ "id": 5, "slug": "freeze", "name": "Congelado", "is_volatile": false },
 	{ "id": 6, "slug": "confusion", "name": "Confuso", "is_volatile": true },
 	{ "id": 7, "slug": "fear", "name": "Amedrontado", "is_volatile": true },
-	{ "id": 8, "slug": "trapped", "name": "Preso", "is_volatile": true }
+	{ "id": 8, "slug": "trapped", "name": "Preso", "is_volatile": true },
+	{ "id": 9, "slug": "dazed", "name": "Atordoado", "is_volatile": true }
 ]

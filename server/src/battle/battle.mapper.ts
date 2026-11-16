@@ -35,6 +35,7 @@ const FRESH_IN_BATTLE = {
   confusionTurns: 0,
   isFeared: false,
   isTrapped: false,
+  isDazed: false,
   isProtected: false,
   captured: false,
 };
@@ -135,6 +136,7 @@ function toVisibleCreature(creature: Combatant): EnemyCreatureDto {
     max_hp: creature.stats.hp,
     status: creature.statusSlug,
     confused: creature.confusionTurns > 0,
+    dazed: creature.isDazed,
     stages: creature.stages,
   };
 }

@@ -48,6 +48,7 @@ export interface CatalogRows {
     id: number;
     damagePercent: number | null;
     statusCondition: { slug: string } | null;
+    stats: { stages: number; stat: { slug: string } }[];
   }[];
 }
 
@@ -73,7 +74,12 @@ export async function loadBattleCatalog(
         select: { id: true, captureRate: true, baseXpYield: true },
       }),
       prisma.groundEffect.findMany({
-        select: { id: true, damagePercent: true, statusCondition: SLUG },
+        select: {
+          id: true,
+          damagePercent: true,
+          statusCondition: SLUG,
+          stats: { select: { stages: true, stat: SLUG } },
+        },
       }),
     ]);
   return toBattleCatalog({
@@ -109,10 +115,19 @@ export function toBattleCatalog(rows: CatalogRows): BattleCatalog {
       rows.species.map(({ id, baseXpYield }) => [id, baseXpYield]),
     ),
     groundEffects: new Map(
-      rows.groundEffects.map(({ id, damagePercent, statusCondition }) => [
-        id,
-        { damagePercent, statusSlug: statusCondition?.slug ?? null },
-      ]),
+      rows.groundEffects.map(
+        ({ id, damagePercent, statusCondition, stats }) => [
+          id,
+          {
+            damagePercent,
+            statusSlug: statusCondition?.slug ?? null,
+            stats: stats.map(({ stages, stat }) => ({
+              statSlug: stat.slug as StageSlug,
+              stages,
+            })),
+          },
+        ],
+      ),
     ),
   };
 }
@@ -129,6 +144,8 @@ function toBattleSkill(row: SkillRow): BattleSkill {
     cooldown: row.cooldown,
     priority: row.priority,
     critStage: row.critStage,
+    minHits: row.minHits,
+    maxHits: row.maxHits,
     targetSlug: row.skillTarget.slug,
     effects: row.effects.map(toBattleEffect),
     areaShape: row.areaShape.slug as AreaShape,
@@ -148,5 +165,6 @@ function toBattleEffect(row: EffectRow): BattleSkillEffect {
     statSlug: (row.stat?.slug as StageSlug | undefined) ?? null,
     stages: row.stages,
     percent: row.percent,
+    value: row.value,
   };
 }

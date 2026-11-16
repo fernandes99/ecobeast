@@ -80,6 +80,7 @@ import type {
 export const NOT_YOUR_VEZ = 'Não é a vez desse Ecobeast.';
 export const CANNOT_REACH = 'Não dá para chegar lá.';
 export const FLEE_NO_MOVE = 'Fugir não combina com andar.';
+export const DAZED_NO_MOVE = 'Atordoado: não dá para andar nesta vez.';
 export const ENTRY_NOT_FREE = 'Esse hexágono não está livre para entrar.';
 const CHOOSE_NEXT = 'Escolha o próximo Ecobeast.';
 const NOBODY_WAITING = 'Ninguém está esperando para entrar.';
@@ -201,6 +202,7 @@ function refusalFor(
   if (input.move) {
     if (input.action.type === 'flee') return FLEE_NO_MOVE;
     if (!sameCell(input.move, from)) {
+      if (combatantAt(state, spot).isDazed) return DAZED_NO_MOVE;
       if (!reachable(state, from, MOVE_RANGE).has(hexKey(input.move))) {
         return CANNOT_REACH;
       }
@@ -387,7 +389,8 @@ function playVez(context: BoardContext, spot: Spot, vez: BoardVez): void {
   }
 
   const from = cellOf(state, spot)!;
-  if (vez.move && !sameCell(vez.move, from)) {
+  const canWalk = !combatantAt(state, spot).isDazed;
+  if (vez.move && canWalk && !sameCell(vez.move, from)) {
     const path = reachable(state, from, MOVE_RANGE).get(hexKey(vez.move))!;
     state.cells[spot.side][spot.position] = vez.move;
     events.push({ type: 'moved', ...spot, path });
@@ -531,14 +534,23 @@ function tryCapture(
   });
 }
 
+/** Antes das marcas, para quem termina a vez no Redemoinho ficar atordoado de novo. */
+function wakeFromDaze(context: BoardContext, actor: Spot): void {
+  const creature = combatantAt(context.state, actor);
+  if (!creature.isDazed) return;
+  creature.isDazed = false;
+  context.events.push({ type: 'status_ended', ...actor, status: 'dazed' });
+}
+
 function endVez(context: BoardContext, actor: Spot): void {
   const { state } = context;
   state.queue.shift();
   if (standingAt(state, actor)) {
     applyStatusDamage(context, actor);
     combatantAt(state, actor).isFeared = false;
+    wakeFromDaze(context, actor);
   }
-  applyMarks(context);
+  applyMarks(context, actor);
   ageMarks(context);
 
   // As moedas contam quem estava em campo no fim, inclusive quem acabou de cair

@@ -63,7 +63,7 @@ Um hexágono tem no máximo um Ecobeast e uma marca. As fases são as de hoje: `
 ## Rodada e vez
 
 1. **Começo da rodada:** a fila recebe todos os Ecobeasts de pé no tabuleiro, dos dois lados, pela Velocidade efetiva, com estágios e paralisia, como no cálculo de hoje. O empate é sorteado, e a prioridade das Técnicas não conta. Evento `round_started`.
-2. **A vez:** o primeiro da fila joga. Evento `vez_started`. Quem dorme, está congelado ou perde a vez pela paralisia ou pelo medo não anda nem age, com o `cannot_act` de hoje.
+2. **A vez:** o primeiro da fila joga. Evento `vez_started`. Quem dorme, está congelado ou perde a vez pela paralisia ou pelo medo não anda nem age, com o `cannot_act` de hoje. Quem está atordoado não anda, mas age ([puffcoo-line/01](../puffcoo-line/01-field-rules.md)).
 3. **Andar (opcional):** até `MOVE_RANGE` passos, por hexágonos do tabuleiro sem nenhum Ecobeast. Marcas não bloqueiam. Evento `moved`, com o caminho que o servidor escolheu, um dos mais curtos.
 4. **Agir (opcional):** uma Técnica, um item, uma troca, uma Esfera ou fugir. Sem ação, é `wait`, e o evento é `waited`.
 5. **Fim da vez**, nesta ordem:
@@ -110,9 +110,10 @@ A tabela `ground_effects` diz o que cada marca faz, depois de cada vez da fila, 
 | Coluna | O que faz |
 | --- | --- |
 | `damage_percent` | Dano de uma porcentagem do HP máximo, no mínimo 1. Evento `ground_damage` |
-| `status_condition_id` | Tenta aplicar o status, com as imunidades e as regras de hoje. Evento `status_applied` |
+| `status_condition_id` | Tenta aplicar o status, com as imunidades e as regras de hoje. Quem já tem esse status ou é imune a ele é pulado, sem evento. Evento `status_applied` |
+| `ground_effect_stats` (tabela filha) | Muda os estágios de quem **acabou de jogar** e terminou a vez na marca, uma linha por atributo, com o limite de ±6. Evento `stat_changed`. Desde a [puffcoo-line/01](../puffcoo-line/01-field-rules.md) |
 
-A marca age em qualquer Ecobeast, dos dois lados, inclusive em quem a criou. Andar por cima não aplica nada. A primeira marca é `fire`, "Chão em chamas", com `damage_percent` 6 (_a revisar_, cerca de 1/16, como a queimadura).
+A marca age em qualquer Ecobeast, dos dois lados, inclusive em quem a criou. Andar por cima não aplica nada. O dano e o status agem em todos que estão na marca depois de cada vez; os atributos, só em quem acabou de jogar. O Atordoado de quem jogou acaba no fim da vez dele, antes de as marcas agirem. A primeira marca é `fire`, "Chão em chamas", com `damage_percent` 6 (_a revisar_, cerca de 1/16, como a queimadura).
 
 ## Entrada
 
@@ -144,6 +145,7 @@ Os eventos de hoje continuam, com `side` e `position`. Os novos e os que mudam:
 | `mark_placed` | `cell`, `ground_effect_id`, `remaining` |
 | `mark_ended` | `cell` |
 | `ground_damage` | `side`, `position`, `amount`, `hp`, `ground_effect_id` |
+| `multi_hit` | `side`, `position` (do alvo), `hits`: depois dos `damage` de uma Técnica de vários golpes ([puffcoo-line/01](../puffcoo-line/01-field-rules.md)) |
 | `creature_entered` | os de hoje e `cell` |
 | `capture_attempted` | os de hoje, com `target` sendo a posição do selvagem |
 

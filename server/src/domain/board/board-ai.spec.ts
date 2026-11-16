@@ -138,3 +138,50 @@ describe('o selvagem e o alvo do time (skill-editor/03)', () => {
     expect(vez.action).toEqual({ type: 'wait' });
   });
 });
+
+describe('o selvagem atordoado e o dano fixo (puffcoo-line/01)', () => {
+  it('atordoado, não anda: espera de onde está', () => {
+    const scratcher = wild(30, {
+      isDazed: true,
+      skills: [{ skillId: 1, currentPp: 35 }],
+    });
+    const state = makeBoardState([fighter(10)], [scratcher], {
+      cells: { enemy: [at(1, 2)] },
+      queue: [ENEMY],
+    });
+    const vez = chooseEnemyVez(state, catalog, always(0.5), ENEMY);
+    expect(vez.move).toBeUndefined();
+    expect(vez.action).toEqual({ type: 'wait' });
+  });
+
+  it('uma Técnica de dano fixo com poder 0 conta como ataque', () => {
+    const volley = makeSkill({
+      id: 57,
+      power: 0,
+      category: 'special',
+      areaShape: 'line',
+      range: 6,
+      minHits: 2,
+      maxHits: 5,
+      effects: [makeEffect({ effectSlug: 'fixed_damage', value: 15 })],
+    });
+    const archer = wild(30, { skills: [{ skillId: 57, currentPp: 10 }] });
+    // De at(2, 1), a linha chega reta em at(1, 4).
+    const state = makeBoardState([fighter(10)], [archer], {
+      cells: { enemy: [at(2, 1)] },
+      queue: [ENEMY],
+    });
+    const vez = chooseEnemyVez(
+      state,
+      boardCatalog([volley]),
+      always(0.5),
+      ENEMY,
+    );
+    expect(vez.move).toBeUndefined();
+    expect(vez.action).toMatchObject({
+      type: 'skill',
+      slot: 1,
+      target: at(1, 4),
+    });
+  });
+});

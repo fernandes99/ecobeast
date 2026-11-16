@@ -17,7 +17,7 @@ const table = (
 });
 
 /**
- * As 45 tabelas do catálogo em ordem de dependência: cada FK aponta para uma
+ * As 46 tabelas do catálogo em ordem de dependência: cada FK aponta para uma
  * tabela que vem antes (a autorreferência de species é tratada no seed).
  * Usada pelo seed e pelo catálogo inteiro (GET /v1/catalog).
  */
@@ -34,6 +34,10 @@ export const CATALOG_TABLES: readonly CatalogTable[] = [
   table('skill_learn_methods', 'skillLearnMethod'),
   table('status_conditions', 'statusCondition'),
   table('ground_effects', 'groundEffect'),
+  table('ground_effect_stats', 'groundEffectStat', [
+    'ground_effect_id',
+    'stat_id',
+  ]),
   table('effect_types', 'effectType'),
   table('evolution_triggers', 'evolutionTrigger'),
   table('npc_tamer_names', 'npcTamerName'),

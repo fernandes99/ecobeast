@@ -33,6 +33,8 @@ const CONFUSED_HIT: BattleSkill = {
   cooldown: 0,
   priority: 0,
   critStage: 0,
+  minHits: 1,
+  maxHits: 1,
   targetSlug: 'self',
   effects: [],
   areaShape: 'single',
@@ -124,17 +126,43 @@ export function applyStatus(
   spot: Spot,
   statusSlug: string,
 ): void {
-  const { catalog, events, random } = context;
+  const { events, random } = context;
   const creature = combatantAt(context.state, spot);
-  const immuneElementIds = catalog.statusImmunities.get(statusSlug) ?? [];
-  const isImmune = creature.elementIds.some((elementId) =>
-    immuneElementIds.includes(elementId),
-  );
-  if (isImmune || !setStatus(creature, statusSlug, random)) {
+  if (
+    isImmune(context, creature, statusSlug) ||
+    !setStatus(creature, statusSlug, random)
+  ) {
     events.push({ type: 'effect_failed', ...spot });
     return;
   }
   events.push({ type: 'status_applied', ...spot, status: statusSlug });
+}
+
+export function isImmune(
+  context: TurnContext,
+  creature: Combatant,
+  statusSlug: string,
+): boolean {
+  const immuneElementIds =
+    context.catalog.statusImmunities.get(statusSlug) ?? [];
+  return creature.elementIds.some((elementId) =>
+    immuneElementIds.includes(elementId),
+  );
+}
+
+export function hasStatus(creature: Combatant, statusSlug: string): boolean {
+  switch (statusSlug) {
+    case 'confusion':
+      return creature.confusionTurns > 0;
+    case 'fear':
+      return creature.isFeared;
+    case 'trapped':
+      return creature.isTrapped;
+    case 'dazed':
+      return creature.isDazed;
+    default:
+      return creature.statusSlug !== null;
+  }
 }
 
 function setStatus(
@@ -156,6 +184,10 @@ function setStatus(
     case 'trapped':
       creature.isTrapped = true;
       return true;
+    case 'dazed':
+      if (creature.isDazed) return false;
+      creature.isDazed = true;
+      return true;
     default:
       if (creature.statusSlug !== null) return false;
       creature.statusSlug = statusSlug;
@@ -168,6 +200,7 @@ export function clearVolatile(creature: Combatant): void {
   creature.confusionTurns = 0;
   creature.isFeared = false;
   creature.isTrapped = false;
+  creature.isDazed = false;
   creature.isProtected = false;
 }
 

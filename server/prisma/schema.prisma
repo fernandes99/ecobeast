@@ -72,6 +72,7 @@ model Stat {
   species               SpeciesStat[]
   skillEffects          SkillEffect[]
   creatureStats         CreatureInstanceStat[]
+  groundEffectStats     GroundEffectStat[]
 
   @@map("stats")
   @@schema("ecobeasts")
@@ -440,11 +441,29 @@ model GroundEffect {
   /// CHECK ^#[0-9A-Fa-f]{6}$ (migration board_skill_areas)
   colorHex          String @map("color_hex")
 
-  statusCondition StatusCondition? @relation(fields: [statusConditionId], references: [id], onDelete: Restrict)
+  statusCondition StatusCondition?   @relation(fields: [statusConditionId], references: [id], onDelete: Restrict)
   skills          Skill[]
+  stats           GroundEffectStat[]
 
   @@index([statusConditionId])
   @@map("ground_effects")
+  @@schema("ecobeasts")
+}
+
+/// O que uma marca muda nos estágios de quem termina a vez nela
+/// (.specs/puffcoo-line/01-field-rules.md).
+model GroundEffectStat {
+  groundEffectId Int @map("ground_effect_id")
+  statId         Int @map("stat_id")
+  /// CHECK −6–6, sem 0 (migration field_marks)
+  stages         Int
+
+  groundEffect GroundEffect @relation(fields: [groundEffectId], references: [id], onDelete: Cascade)
+  stat         Stat         @relation(fields: [statId], references: [id], onDelete: Restrict)
+
+  @@id([groundEffectId, statId])
+  @@index([statId])
+  @@map("ground_effect_stats")
   @@schema("ecobeasts")
 }
 

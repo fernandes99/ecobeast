@@ -140,6 +140,7 @@ describe('toEnemyCombatant', () => {
       confusionTurns: 0,
       isFeared: false,
       isTrapped: false,
+      isDazed: false,
       isProtected: false,
       stages: noStages(),
       skills: [{ skillId: 3, currentPp: 25 }],
@@ -184,6 +185,7 @@ describe('toBattleDto', () => {
       max_hp: 18,
       status: null,
       confused: true,
+      dazed: false,
       stages: { ...noStages(), def: -1 },
     };
     expect(toBattleDto(state())).toEqual({
@@ -204,6 +206,7 @@ describe('toBattleDto', () => {
             max_hp: 20,
             status: 'burn',
             confused: false,
+            dazed: false,
             stages: { ...noStages(), atk: 1 },
             skills: [{ skill_id: 1, current_pp: 33, cooldown_left: 0 }],
           },

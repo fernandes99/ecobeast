@@ -352,7 +352,9 @@ Ao evoluir: mantém nível, XP, Genes, Treino, Temperamento, técnicas e víncul
 | Sono | Não age por 1–3 turnos | — |
 | Congelado | Não age; 20% de descongelar por turno | Gelo |
 
-Status voláteis (somem ao sair de campo): Confuso (33% de se atingir, 2–5 turnos), Amedrontado (perde 1 turno), Preso (não pode fugir).
+Status voláteis (somem ao sair de campo): Confuso (33% de se atingir, 2–5 turnos), Amedrontado (perde 1 turno), Preso (não pode fugir), Atordoado (não anda na próxima vez do tabuleiro; o Vento é imune, `.specs/puffcoo-line/`).
+
+**Vários golpes e dano fixo.** Uma Técnica com `hits` (2,5) sorteia de 2 a 5 golpes, com a mesma chance, por alvo: a Precisão é sorteada uma vez, o crítico a cada golpe, e os golpes param quando o alvo cai. Com o efeito `fixed_damage`, cada golpe tira exatamente `value` de HP, sem Ataque, Defesa, crítico nem vantagem de Elemento, mas um Elemento imune não recebe dano (`.specs/puffcoo-line/01-field-rules.md`).
 
 **Countdown.** Uma Técnica com countdown N, usada na rodada R, só pode ser usada de novo na rodada R + N + 1; com 0, em toda rodada. Vale para o jogador e para a IA, conta mesmo fora de campo e zera no fim da luta. Os valores iniciais vêm do poder: sem dano 2; até 50, 0; até 80, 1; até 110, 2; acima, 3 (a revisar, `.specs/skill-cooldown/`).
 

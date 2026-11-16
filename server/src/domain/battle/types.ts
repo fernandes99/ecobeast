@@ -30,6 +30,8 @@ export interface Combatant {
   confusionTurns: number;
   isFeared: boolean;
   isTrapped: boolean;
+  /** Não anda na próxima vez do tabuleiro. */
+  isDazed: boolean;
   isProtected: boolean;
   stages: Record<StageSlug, number>;
   skills: CombatantSkill[];
@@ -46,6 +48,7 @@ export interface BattleSkillEffect {
   statSlug: StageSlug | null;
   stages: number | null;
   percent: number | null;
+  value: number | null;
 }
 
 export interface BattleSkill {
@@ -61,6 +64,8 @@ export interface BattleSkill {
   cooldown: number;
   priority: number;
   critStage: number;
+  minHits: number;
+  maxHits: number;
   targetSlug: string;
   effects: BattleSkillEffect[];
   areaShape: AreaShape;
@@ -72,9 +77,15 @@ export interface BattleSkill {
 
 export type AreaShape = 'single' | 'line';
 
+export interface BattleGroundEffectStat {
+  statSlug: StageSlug;
+  stages: number;
+}
+
 export interface BattleGroundEffect {
   damagePercent: number | null;
   statusSlug: string | null;
+  stats: BattleGroundEffectStat[];
 }
 
 export interface BattleItem extends UsableItem {
@@ -188,6 +199,7 @@ export type BattleEvent =
   | { type: 'missed'; side: SideSlug; position: number }
   | { type: 'blocked'; side: SideSlug; position: number }
   | { type: 'no_effect'; side: SideSlug; position: number }
+  | { type: 'multi_hit'; side: SideSlug; position: number; hits: number }
   | { type: 'effect_failed'; side: SideSlug; position: number }
   | {
       type: 'damage';

@@ -3,6 +3,7 @@ import {
   always,
   makeCatalog,
   makeCombatant,
+  makeEffect,
   makeSkill,
   sequence,
 } from './testing.js';
@@ -10,7 +11,15 @@ import {
 const SCRATCH = makeSkill({ id: 1 });
 const BLAST = makeSkill({ id: 2, power: 120 });
 const GROWL = makeSkill({ id: 3, power: 0, category: 'support' });
-const catalog = makeCatalog({}, [SCRATCH, BLAST, GROWL]);
+const VOLLEY = makeSkill({
+  id: 4,
+  power: 0,
+  category: 'special',
+  minHits: 2,
+  maxHits: 5,
+  effects: [makeEffect({ effectSlug: 'fixed_damage', value: 15 })],
+});
+const catalog = makeCatalog({}, [SCRATCH, BLAST, GROWL, VOLLEY]);
 
 function weight(skill = SCRATCH, targetHp = 100, usedCatalog = catalog) {
   return skillWeight(
@@ -37,6 +46,12 @@ describe('skillWeight', () => {
 
   it('não fica abaixo de 1', () => {
     expect(weight(SCRATCH, 100000)).toBe(1);
+  });
+
+  it('o dano fixo vale o dano vezes a média de golpes (puffcoo-line/01)', () => {
+    expect(weight(VOLLEY, 100)).toBe(52.5);
+    const immune = makeCatalog({ '13:1': 0 }, [VOLLEY]);
+    expect(weight(VOLLEY, 100, immune)).toBe(1);
   });
 
   it('efetividade 0 tem peso 1', () => {

@@ -107,6 +107,8 @@ describe('toBattleCatalog', () => {
       cooldown: 0,
       priority: 0,
       critStage: 0,
+      minHits: 1,
+      maxHits: 1,
       targetSlug: 'enemy',
       effects: [],
       areaShape: 'single',
@@ -144,17 +146,24 @@ describe('toBattleCatalog', () => {
     const { groundEffects } = toBattleCatalog({
       ...NO_ROWS,
       groundEffects: [
-        { id: 1, damagePercent: 6, statusCondition: null },
-        { id: 2, damagePercent: null, statusCondition: { slug: 'freeze' } },
+        { id: 1, damagePercent: 6, statusCondition: null, stats: [] },
+        {
+          id: 2,
+          damagePercent: null,
+          statusCondition: { slug: 'freeze' },
+          stats: [{ stages: -1, stat: { slug: 'accuracy' } }],
+        },
       ],
     });
     expect(groundEffects.get(1)).toEqual({
       damagePercent: 6,
       statusSlug: null,
+      stats: [],
     });
     expect(groundEffects.get(2)).toEqual({
       damagePercent: null,
       statusSlug: 'freeze',
+      stats: [{ statSlug: 'accuracy', stages: -1 }],
     });
   });
 
@@ -186,6 +195,7 @@ describe('toBattleCatalog', () => {
         statSlug: 'atk',
         stages: -1,
         percent: null,
+        value: null,
       },
       {
         effectSlug: 'apply_status',
@@ -195,6 +205,7 @@ describe('toBattleCatalog', () => {
         statSlug: null,
         stages: null,
         percent: null,
+        value: null,
       },
       {
         effectSlug: 'recoil',
@@ -204,6 +215,7 @@ describe('toBattleCatalog', () => {
         statSlug: null,
         stages: null,
         percent: 33,
+        value: null,
       },
     ]);
   });

@@ -108,6 +108,12 @@ export class EnemyCreatureDto {
   @ApiProperty({ example: false })
   confused: boolean;
 
+  @ApiProperty({
+    description: 'Atordoado: não anda na próxima vez dele no tabuleiro.',
+    example: false,
+  })
+  dazed: boolean;
+
   @ApiProperty(STAGES)
   stages: Record<StageSlug, number>;
 }

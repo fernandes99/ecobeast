@@ -1,4 +1,9 @@
-import { pickSlot, skillWeight, type SkillOption } from '../battle/ai.js';
+import {
+  dealsDamage,
+  pickSlot,
+  skillWeight,
+  type SkillOption,
+} from '../battle/ai.js';
 import { hasPp } from '../battle/emergency.js';
 import { combatantAt } from '../battle/field.js';
 import type {
@@ -56,7 +61,7 @@ export function chooseEnemyVez(
       : [];
   });
   const damaging = usable.filter(
-    ({ skill }) => skill.power > 0 && skill.targetSlug !== 'self',
+    ({ skill }) => dealsDamage(skill) && skill.targetSlug !== 'self',
   );
 
   const reachesNow =
@@ -67,9 +72,10 @@ export function chooseEnemyVez(
       ({ skill }) =>
         skill.targetSlug === ALLY_TARGET && hurtAlly(state, spot, from, skill),
     );
-  const destination = reachesNow
-    ? from
-    : approach(state, from, cellOf(state, target)!, random);
+  const destination =
+    reachesNow || me.isDazed
+      ? from
+      : approach(state, from, cellOf(state, target)!, random);
   const move = destination === from ? {} : { move: destination };
   const action = chooseAction(
     state,
