@@ -18,6 +18,7 @@ import { PlayerModule } from './player/player.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { ProgressionModule } from './progression/progression.module.js';
 import { TeamModule } from './team/team.module.js';
+import { WorldClockModule } from './world-clock/world-clock.module.js';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { TeamModule } from './team/team.module.js';
     CodexModule,
     EditorModule,
     IslandsModule,
+    WorldClockModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

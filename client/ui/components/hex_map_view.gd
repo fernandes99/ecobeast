@@ -397,6 +397,32 @@ func set_props(props: Array[MapProp]) -> void:
 			_prop_slugs[prop.prop_type_id] = PropArt.slug_of(prop.prop_type_id)
 
 
+## Os pontos de luz da noite das peças, em pixels da arte, no ponto em que cada uma é
+## desenhada (o pé erguido pela altura do hexágono). Na espelhada, o pixel troca de lado
+## (day-night/03).
+func prop_lights(props: Array[MapProp]) -> Array[MapLight]:
+	var lights: Array[MapLight] = []
+	var by_key := GameData.prop_lights_by_key()
+	if by_key.is_empty() or _map == null:
+		return lights
+	for prop: MapProp in props:
+		var rows: Array = by_key.get(Vector2i(prop.prop_type_id, prop.variant), by_key.get(Vector2i(prop.prop_type_id, GameData.ALL_VARIANTS), []))
+		if rows.is_empty():
+			continue
+		var tile := _map.tile_at(prop.coord)
+		var texture := PropArt.icon(PropArt.slug_of(prop.prop_type_id), prop.variant)
+		if tile == null or texture == null:
+			continue
+		var width := texture.get_width()
+		var base := Vector2(Vector2i(flat_center(prop.coord) - _rise(tile.height)) + prop.offset)
+		for row: Dictionary in rows:
+			var x := int(row["x"])
+			if prop.mirrored:
+				x = -x - 1 + width % 2
+			lights.append(MapLight.make(base + Vector2(x + 0.5, int(row["y"]) + 0.5), float(row["radius"]), Color(str(row["color"]))))
+	return lights
+
+
 ## Troca só as peças dos hexágonos de `coords` pelas de `props` (o pincel do editor,
 ## vegetation-brush/02). Chame `update_tiles` com os mesmos hexágonos depois.
 func replace_props(coords: Dictionary[Vector2i, bool], props: Array[MapProp]) -> void:

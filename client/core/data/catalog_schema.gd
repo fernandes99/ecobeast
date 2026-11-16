@@ -89,6 +89,10 @@ const TABLES := {
 		"key": ["id"],
 		"columns": {"id": ID, "slug": SLUG, "name": TEXT, "description": TEXT},
 	},
+	"day_phases": {
+		"key": ["id"],
+		"columns": {"id": ID, "slug": SLUG, "name": TEXT, "start_minute": {"type": "int", "unique": true, "min": 0, "max": 1439}},
+	},
 	"temperaments": {
 		"key": ["id"],
 		"columns": {
@@ -189,6 +193,19 @@ const TABLES := {
 			"position": {"type": "int", "min": 0},
 			"closed": {"type": "bool"},
 			"points": {"type": "int_array"},
+		},
+	},
+	"prop_type_lights": {
+		"key": ["id"],
+		"columns": {
+			"id": ID,
+			"prop_type_id": {"type": "int", "fk": "prop_types"},
+			"variant": {"type": "int", "min": 0, "max": 99},
+			"position": {"type": "int", "min": 0},
+			"x": {"type": "int"},
+			"y": {"type": "int"},
+			"radius": {"type": "int", "min": 2, "max": 96},
+			"color": {"type": "string", "pattern": "^[0-9a-f]{6}$"},
 		},
 	},
 	"wall_types": {

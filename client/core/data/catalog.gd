@@ -24,6 +24,7 @@ var _items: Dictionary = {}           # id -> Item
 var _ground_effects: Dictionary = {}  # id -> GroundEffect
 var _item_list: Array[Item] = []
 var _item_categories: Array[ItemCategory] = []
+var _day_phases: Array[DayPhase] = []
 
 
 func load_from(source: DataSource) -> Array[String]:
@@ -168,6 +169,10 @@ func get_item_categories() -> Array[ItemCategory]:
 	return _item_categories
 
 
+func get_day_phases() -> Array[DayPhase]:
+	return _day_phases
+
+
 func get_growth_rate(id: int) -> GrowthRate:
 	return _lookup(_growth_rates, id, "curva de XP")
 
@@ -248,6 +253,7 @@ func _clear() -> void:
 	_ground_effects.clear()
 	_item_list.clear()
 	_item_categories.clear()
+	_day_phases.clear()
 
 
 func _build() -> void:
@@ -291,6 +297,8 @@ func _build() -> void:
 
 	for row: Dictionary in _sorted(_rows("item_categories"), "sort_order"):
 		_item_categories.append(ItemCategory.from_row(row))
+	for row: Dictionary in _sorted(_rows("day_phases"), "start_minute"):
+		_day_phases.append(DayPhase.from_row(row))
 	for row: Dictionary in _sorted(_rows("items"), "sort_order"):
 		var item := Item.from_row(row)
 		_items[item.id] = item

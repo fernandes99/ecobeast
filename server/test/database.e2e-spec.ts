@@ -38,10 +38,36 @@ describe('restrições do banco (e2e)', () => {
     expect(rows.map((row) => row.table_name)).toEqual([]);
   });
 
-  it('as 64 tabelas e o histórico de migrations ficam no schema ecobeasts', async () => {
+  it('as 66 tabelas e o histórico de migrations ficam no schema ecobeasts', async () => {
     const rows = await prisma.$queryRaw<{ n: number }[]>`
       SELECT count(*)::int AS n FROM information_schema.tables WHERE table_schema = 'ecobeasts'`;
-    expect(rows[0].n).toBe(65);
+    expect(rows[0].n).toBe(67);
+  });
+
+  it('recusa uma parte do dia que começa depois do minuto 1439 (day-night)', async () => {
+    const result = await attempt(prisma, async (tx) => {
+      await tx.dayPhase.create({
+        data: { slug: 'zz_teste', name: 'Teste', startMinute: 1440 },
+      });
+    });
+    expectRejected(result, 'day_phases_start_minute_check');
+  });
+
+  it('recusa uma luz de peça com cor fora do formato (day-night)', async () => {
+    const result = await attempt(prisma, async (tx) => {
+      const type = await tx.propType.findFirstOrThrow();
+      await tx.propTypeLight.create({
+        data: {
+          propTypeId: type.id,
+          position: 99,
+          x: 0,
+          y: -10,
+          radius: 8,
+          color: '#FFCC00',
+        },
+      });
+    });
+    expectRejected(result, 'prop_type_lights_color_check');
   });
 
   it('recusa Técnica com precisão 150', async () => {

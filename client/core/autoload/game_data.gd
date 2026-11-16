@@ -108,6 +108,10 @@ func get_item_categories() -> Array[ItemCategory]:
 	return catalog.get_item_categories()
 
 
+func get_day_phases() -> Array[DayPhase]:
+	return catalog.get_day_phases()
+
+
 func get_growth_rate(id: int) -> GrowthRate:
 	return catalog.get_growth_rate(id)
 
@@ -183,6 +187,20 @@ func prop_block_types() -> Dictionary[int, bool]:
 	for row: Dictionary in get_rows("prop_type_blocks"):
 		types[int(row["prop_type_id"])] = true
 	return types
+
+
+## Os pontos de luz da noite de cada tipo e variante que têm algum, por (tipo, variante),
+## na ordem (day-night/03). A variante sem luzes próprias usa as da variante 0.
+func prop_lights_by_key() -> Dictionary[Vector2i, Array]:
+	var by_key: Dictionary[Vector2i, Array] = {}
+	var rows := get_rows("prop_type_lights")
+	rows.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return int(a["position"]) < int(b["position"]))
+	for row: Dictionary in rows:
+		var key := Vector2i(int(row["prop_type_id"]), int(row.get("variant", ALL_VARIANTS)))
+		if not by_key.has(key):
+			by_key[key] = []
+		by_key[key].append(row)
+	return by_key
 
 
 static func prop_block_key(prop_type_id: int, variant: int) -> String:

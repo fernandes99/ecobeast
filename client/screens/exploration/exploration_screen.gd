@@ -42,9 +42,14 @@ const TINT_TEXT := "Tom por altura: %s"
 ## Até onde os Ecobeasts existem como nós, em hexágonos, no zoom de partida: passa
 ## da tela com folga, para eles nascerem e saírem sem ninguém ver. A revisar.
 const CREATURE_RADIUS := 16
+## A luz em volta do Domador à noite, em pixels da arte (day-night/03). A revisar.
+const TAMER_LIGHT_LIFT := 10.0
+const TAMER_LIGHT_RADIUS := 36.0
+const TAMER_LIGHT_COLOR := Color("ffe8c0")
 
 var _island_id: int = 0
 var _map: ExplorationMap = null
+var _prop_lights: Array[MapLight] = []
 var _player_coord := Vector2i.ZERO
 ## O ponto dos pés no chão plano, sem a altura (wild-battle/15).
 var _player_point := Vector2.ZERO
@@ -99,6 +104,7 @@ var _pinch_start_zoom := HexMapView.DEFAULT_ZOOM
 @onready var _island_plate: Control = %IslandPlate
 @onready var _island_name: Label = %IslandName
 @onready var _building_names: BuildingNamesLayer = %BuildingNames
+@onready var _day_light: DayLightLayer = %DayLight
 
 
 func setup(params: Dictionary) -> void:
@@ -119,6 +125,9 @@ func _ready() -> void:
 	_debug_zoom_button.pressed.connect(_toggle_whole_map)
 	_debug_clear_button.pressed.connect(_clear_creatures)
 	_debug_xp_button.pressed.connect(_almost_level_up)
+	%DebugHourButton.pressed.connect(_debug_next_hour)
+	%DebugTimeSlider.value_changed.connect(_debug_set_time)
+	%DebugRealTimeButton.pressed.connect(_debug_real_time)
 	_debug_spawn_button.pressed.connect(_show_debug_part.bind(true))
 	_debug_spawn_back_button.pressed.connect(_show_debug_part.bind(false))
 	_debug_god_button.pressed.connect(_toggle_god)
@@ -138,7 +147,30 @@ func _ready() -> void:
 	_refresh_height_cue_buttons()
 	resized.connect(_fit_view.call_deferred)
 	visibility_changed.connect(_on_visibility_changed)
+	WorldClock.sync()
 	_begin()
+
+
+func _debug_next_hour() -> void:
+	WorldClock.debug_offset_minutes += 60.0
+	_show_debug_time()
+
+
+func _debug_set_time(minute: float) -> void:
+	WorldClock.debug_set_minute(minute)
+	_show_debug_time()
+
+
+func _debug_real_time() -> void:
+	WorldClock.debug_offset_minutes = 0.0
+	_show_debug_time()
+
+
+func _show_debug_time() -> void:
+	var phase := WorldClock.phase()
+	%DebugTimeLabel.text = WorldClock.clock_text()
+	%DebugTimeSlider.set_value_no_signal(snappedf(WorldClock.minute_of_day(), 15.0))
+	_show_message("%s — %s" % [WorldClock.clock_text(), phase.name if phase != null else "sem hora do servidor"], &"SecondaryLabel")
 
 
 func handle_back() -> bool:
@@ -163,6 +195,7 @@ func _begin() -> void:
 	_player_point = HexMapView.flat_center(_player_coord)
 	_map_view.set_map(_map)
 	_map_view.set_props(_map.props)
+	_prop_lights = _map_view.prop_lights(_map.props)
 	_shown_rise = _map.rise_at(_player_point)
 	_map_view.set_current(_player_coord)
 	_map_view.set_actor_depth(_marker, _player_point, _feet_row())
@@ -669,6 +702,8 @@ func _toggle_whole_map() -> void:
 func _toggle_debug_menu() -> void:
 	_show_debug_part(false)
 	_debug_menu.visible = not _debug_menu.visible
+	%DebugTimeLabel.text = WorldClock.clock_text()
+	%DebugTimeSlider.set_value_no_signal(snappedf(WorldClock.minute_of_day(), 15.0))
 
 
 func _show_debug_part(spawn: bool) -> void:
@@ -903,11 +938,31 @@ func _fit_view() -> void:
 		tamer.scale = _marker.scale
 	for npc: NpcSprite in _npc_sprites:
 		npc.scale = _marker.scale
-	_sync_building_names()
+	_sync_view_layers()
 
 
-func _sync_building_names() -> void:
+func _sync_view_layers() -> void:
 	_building_names.set_view(_map_view.position, _map_view.pixel_scale())
+	_day_light.set_view(_map_view.position, _map_view.pixel_scale().x)
+	_refresh_lights()
+
+
+## A luz do Domador e, depois, as das peças que tocam a tela, das mais perto dele para
+## as mais longe, até o limite do filtro (day-night/03).
+func _refresh_lights() -> void:
+	if _map == null:
+		return
+	var art_scale := _map_view.pixel_scale().x
+	var view := Rect2(-_map_view.position / art_scale, _map_area.size / art_scale)
+	var player := _player_art_point()
+	var near: Array[MapLight] = []
+	for light: MapLight in _prop_lights:
+		if view.grow(light.radius).has_point(light.position):
+			near.append(light)
+	near.sort_custom(func(a: MapLight, b: MapLight) -> bool: return a.position.distance_squared_to(player) < b.position.distance_squared_to(player))
+	var lights: Array[MapLight] = [MapLight.make(player - Vector2(0.0, TAMER_LIGHT_LIFT), TAMER_LIGHT_RADIUS, TAMER_LIGHT_COLOR)]
+	lights.append_array(near.slice(0, DayLightLayer.MAX_LIGHTS - 1))
+	_day_light.set_lights(lights)
 
 
 ## Parte do centro já arredondado: em uma tela de tamanho ímpar, ele cai no meio de
@@ -921,7 +976,7 @@ func _player_centered_position() -> Vector2:
 func _move_map(value: Vector2) -> void:
 	_map_view.position = _map_view.snapped_to_pixels(value)
 	_marker.position = (_map_view.snapped_to_pixels(size / 2.0) - _map_view.position) / _map_view.pixel_scale()
-	_sync_building_names()
+	_sync_view_layers()
 
 
 func _show_message(text: String, variation: StringName) -> void:

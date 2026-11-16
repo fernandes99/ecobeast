@@ -6,6 +6,7 @@
 [ext_resource type="Texture2D" uid="uid://bmvw4cwe2paik" path="res://ui/icons/team.svg" id="4_team"]
 [ext_resource type="Texture2D" uid="uid://xfm2ehapap4s" path="res://ui/icons/pencil.svg" id="5_pencil"]
 [ext_resource type="FontVariation" path="res://ui/theme/fonts/nunito_bold.tres" id="6_bold"]
+[ext_resource type="PackedScene" path="res://ui/components/day_phase_badge.tscn" id="90_day_phase"]
 
 [node name="HubScreen" type="Control" unique_id=949083238]
 texture_filter = 4
@@ -125,6 +126,9 @@ layout_mode = 2
 theme_type_variation = &"TitleLabel"
 horizontal_alignment = 1
 vertical_alignment = 1
+
+[node name="DayPhaseBadge" parent="SafeArea/Padding/Column/TopBar" instance=ExtResource("90_day_phase")]
+layout_mode = 2
 
 [node name="CoinChip" type="PanelContainer" parent="SafeArea/Padding/Column/TopBar" unique_id=571315394]
 layout_mode = 2

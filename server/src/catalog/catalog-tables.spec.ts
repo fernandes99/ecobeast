@@ -5,9 +5,9 @@ import { CATALOG_TABLES, SEED_DATA_DIR } from './catalog-tables.js';
 describe('CATALOG_TABLES', () => {
   const names = CATALOG_TABLES.map((table) => table.name);
 
-  it('tem as 42 tabelas, sem repetição', () => {
-    expect(names).toHaveLength(42);
-    expect(new Set(names).size).toBe(42);
+  it('tem as 44 tabelas, sem repetição', () => {
+    expect(names).toHaveLength(44);
+    expect(new Set(names).size).toBe(44);
   });
 
   it('casa com os arquivos .json da pasta de dados do seed', () => {
@@ -510,5 +510,59 @@ describe('carga inicial do guarda-roupa (tamer-appearance/04)', () => {
     const count = (kind: string) =>
       palettes.filter((palette) => palette.kind === kind).length;
     expect([count('skin'), count('hair'), count('cloth')]).toEqual([6, 8, 10]);
+  });
+});
+
+describe('carga inicial do dia e da noite (day-night/01 e 03)', () => {
+  const read = <T>(file: string): T =>
+    JSON.parse(readFileSync(join(SEED_DATA_DIR, file), 'utf8')) as T;
+  const phases =
+    read<{ id: number; slug: string; start_minute: number }[]>(
+      'day_phases.json',
+    );
+  const props = read<{ id: number; variants: number }[]>('prop_types.json');
+  const lights = read<
+    {
+      prop_type_id: number;
+      variant: number;
+      position: number;
+      radius: number;
+      color: string;
+    }[]
+  >('prop_type_lights.json');
+
+  it('tem as 4 partes do dia, dentro do dia', () => {
+    expect(phases.map(({ slug }) => slug)).toEqual([
+      'morning',
+      'afternoon',
+      'dusk',
+      'night',
+    ]);
+    for (const { start_minute } of phases) {
+      expect(start_minute).toBeGreaterThanOrEqual(0);
+      expect(start_minute).toBeLessThan(1440);
+    }
+  });
+
+  it('as luzes apontam para tipos e variantes que existem', () => {
+    const variants = new Map(props.map(({ id, variants }) => [id, variants]));
+    for (const light of lights) {
+      expect(variants.has(light.prop_type_id)).toBe(true);
+      expect(light.variant).toBeLessThanOrEqual(
+        variants.get(light.prop_type_id)!,
+      );
+      expect(light.radius).toBeGreaterThanOrEqual(2);
+      expect(light.radius).toBeLessThanOrEqual(96);
+      expect(light.color).toMatch(/^[0-9a-f]{6}$/);
+    }
+  });
+
+  it('o Poste de luz acende nas 2 variantes, e as casas do pacote em todas as cores', () => {
+    const of = (type: number) => lights.filter((l) => l.prop_type_id === type);
+    expect(of(18).map(({ variant }) => variant)).toEqual([1, 2]);
+    for (const type of [95, 96, 97])
+      expect(new Set(of(type).map(({ variant }) => variant))).toEqual(
+        new Set([0]),
+      );
   });
 });

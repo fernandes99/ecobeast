@@ -45,3 +45,5 @@ O jogador nunca vê a coluna "Referência": ela só existe para quem implementa 
 - **Mapa de exploração:** a região hexagonal gerada a cada Explorar zona (`ExplorationMap`). Ver [wild-battle](wild-battle/).
 - **Bioma:** o tipo de terreno de um hexágono (`biome`), como `temperate` ou `boreal`. Mais tarde, ele decide o Campo.
 - **Bioma de encontro:** um dos 7 da tabela `biomes`, que recebem as taxas de `species_biomes`. São os 5 biomas de terreno, em hexágono plano, mais `hill` e `mountain`, que valem para qualquer colina ou montanha.
+- **Relógio do mundo:** a hora do jogo, a mesma para todos os jogadores, calculada pelo servidor; um dia dura 24 minutos reais (`WorldClock`, `GET /v1/world-clock`). Ver [day-night](day-night/).
+- **Parte do dia:** Manhã, Tarde, Final de tarde ou Noite (`DayPhase`, tabela `day_phases`). Ver [day-night](day-night/).

@@ -127,6 +127,8 @@ class Token:
 	var statuses: StatusIcons = null
 	var aura: CreatureAura = null
 	var chips: StageChips = null
+	## A barra, os chips e os estados, fora do filtro da hora (day-night/02).
+	var hud := Node2D.new()
 	var speed := 1.0
 	var breath: Tween = null
 	var sheets: BattleSheets = null
@@ -174,6 +176,10 @@ var _height := DEFAULT_HEIGHT
 var _outside: Array[Vector2i] = []
 var _overlay := Node2D.new()
 var _flames := GroundFlames.new()
+## O chão do tabuleiro passa do retângulo dele até a borda da tela, em qualquer zoom.
+const DAY_LIGHT_MARGIN := 4096.0
+
+var _day_light := DayLightLayer.new()
 var _marks: Dictionary[Vector2i, Color] = {}
 var _lit: Dictionary[Vector2i, Color] = {}
 var _tokens: Dictionary[String, Token] = {}
@@ -191,6 +197,8 @@ func _init() -> void:
 	add_child(_overlay)
 	_flames.board = self
 	add_child(_flames)
+	_day_light.margin = DAY_LIGHT_MARGIN
+	add_child(_day_light)
 
 
 func _ready() -> void:
@@ -320,15 +328,20 @@ func place(key: String, side: String, species_id: int, hp: int, max_hp: int, cel
 	token.bar.position = Vector2(-BAR_WIDTH / 2.0, FEET_Y - token.height - BAR_HEIGHT - 6.0)
 	token.bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	token.bar.set_hp(hp, max_hp)
-	token.add_child(token.bar)
+	token.hud.add_child(token.bar)
 	token.chips = StageChips.new()
 	token.chips.position = Vector2(0.0, FEET_Y + CHIPS_GAP)
-	# Por cima dos Ecobeasts da linha de baixo, que nascem depois e cobririam as plaquinhas.
-	token.chips.z_index = 1
-	token.add_child(token.chips)
+	token.hud.add_child(token.chips)
 
 	_tokens[key] = token
 	add_child(token)
+	move_child(token, _day_light.get_index())
+	add_child(token.hud)
+	var follow := RemoteTransform2D.new()
+	follow.update_rotation = false
+	follow.update_scale = false
+	token.add_child(follow)
+	follow.remote_path = follow.get_path_to(token.hud)
 	# Com as folhas, o idle já respira; só a pose de uma imagem parada precisa da escala.
 	if token.sheets == null or token.sheets.frame_count(BattleSheets.IDLE, _rest_row(side)) <= 1:
 		_breathe(token)
@@ -340,6 +353,7 @@ func remove(key: String) -> void:
 		return
 	var token: Token = _tokens[key]
 	_tokens.erase(key)
+	token.hud.queue_free()
 	token.queue_free()
 	_redraw()
 
@@ -506,7 +520,7 @@ func set_statuses(key: String, slugs: Array[String]) -> void:
 	var token: Token = _tokens[key]
 	if token.statuses == null:
 		token.statuses = StatusIcons.new()
-		token.add_child(token.statuses)
+		token.hud.add_child(token.statuses)
 	token.statuses.position = Vector2(
 		token.bar.position.x + token.bar.size.x / 2.0,
 		token.bar.position.y - StatusIcons.RADIUS - StatusIcons.OUTLINE - STATUS_GAP,
@@ -544,6 +558,7 @@ func vanish(key: String, coin: bool) -> void:
 		return
 	var token: Token = _tokens[key]
 	create_tween().tween_property(token, ^"modulate:a", 0.0, VANISH_SECONDS)
+	create_tween().tween_property(token.hud, ^"modulate:a", 0.0, VANISH_SECONDS)
 	await get_tree().create_timer(VANISH_SECONDS).timeout
 	var middle := _body_middle(token)
 	remove(key)
@@ -569,6 +584,7 @@ func _pop_coin(at: Vector2) -> void:
 func fade(key: String) -> void:
 	if _tokens.has(key):
 		create_tween().tween_property(_tokens[key], ^"modulate:a", 0.3, 0.3)
+		create_tween().tween_property(_tokens[key].hud, ^"modulate:a", 0.3, 0.3)
 
 
 func _redraw() -> void:

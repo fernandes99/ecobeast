@@ -1,0 +1,6 @@
+[
+	{ "id": 1, "slug": "morning", "name": "Manhã", "start_minute": 360 },
+	{ "id": 2, "slug": "afternoon", "name": "Tarde", "start_minute": 720 },
+	{ "id": 3, "slug": "dusk", "name": "Final de tarde", "start_minute": 1020 },
+	{ "id": 4, "slug": "night", "name": "Noite", "start_minute": 1140 }
+]

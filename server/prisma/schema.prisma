@@ -119,6 +119,19 @@ model Biome {
   @@schema("ecobeasts")
 }
 
+/// As partes do dia do relógio do mundo (.specs/day-night/01-world-clock.md).
+model DayPhase {
+  id          Int    @id @default(autoincrement())
+  /// CHECK ^[a-z0-9_]+$ (migration day_phases)
+  slug        String @unique
+  name        String
+  /// O minuto do dia em que a parte começa. CHECK 0 a 1439 (migration day_phases)
+  startMinute Int    @unique @map("start_minute")
+
+  @@map("day_phases")
+  @@schema("ecobeasts")
+}
+
 model NpcTamerName {
   id   Int    @id @default(autoincrement())
   /// CHECK 1–20 caracteres (migration npc_tamer_texts)
@@ -173,6 +186,7 @@ model PropType {
 
   props  IslandProp[]
   blocks PropTypeBlock[]
+  lights PropTypeLight[]
 
   @@map("prop_types")
   @@schema("ecobeasts")
@@ -197,6 +211,30 @@ model PropTypeBlock {
 
   @@unique([propTypeId, variant, position])
   @@map("prop_type_blocks")
+  @@schema("ecobeasts")
+}
+
+/// Um ponto de luz da noite de um tipo de peça (.specs/day-night/03-night-lights.md).
+model PropTypeLight {
+  id         Int    @id @default(autoincrement())
+  propTypeId Int    @map("prop_type_id")
+  /// A variante a que a luz vale; 0 vale para todas as que não têm luzes próprias.
+  /// CHECK 0 a 99 (migration prop_type_lights)
+  variant    Int    @default(0)
+  /// A ordem no tipo e na variante, de 0 em diante.
+  position   Int
+  /// O pixel do centro, a partir do pé da peça.
+  x          Int
+  y          Int
+  /// Em pixels da arte. CHECK 2 a 96 (migration prop_type_lights)
+  radius     Int
+  /// CHECK ^[0-9a-f]{6}$ (migration prop_type_lights)
+  color      String
+
+  propType PropType @relation(fields: [propTypeId], references: [id], onDelete: Cascade)
+
+  @@unique([propTypeId, variant, position])
+  @@map("prop_type_lights")
   @@schema("ecobeasts")
 }
 

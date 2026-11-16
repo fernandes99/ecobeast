@@ -6,6 +6,8 @@
 [ext_resource type="PackedScene" path="res://ui/components/safe_area.tscn" id="4_safe_area"]
 [ext_resource type="Script" path="res://screens/exploration/tamer_greeting_panel.gd" id="5_greeting"]
 [ext_resource type="Script" path="res://ui/components/building_names_layer.gd" id="6_names"]
+[ext_resource type="Script" path="res://ui/components/day_light_layer.gd" id="7_day_light"]
+[ext_resource type="PackedScene" path="res://ui/components/day_phase_badge.tscn" id="8_day_phase"]
 
 [node name="ExplorationScreen" type="Control"]
 layout_mode = 3
@@ -36,6 +38,18 @@ unique_name_in_owner = true
 visible = false
 script = ExtResource("3_tamer")
 
+[node name="DayLight" type="ColorRect" parent="MapArea"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("7_day_light")
+
 [node name="BuildingNames" type="Control" parent="MapArea"]
 unique_name_in_owner = true
 layout_mode = 1
@@ -56,7 +70,13 @@ layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 12
 
-[node name="IslandPlate" type="PanelContainer" parent="SafeArea/Column"]
+[node name="TopRow" type="HBoxContainer" parent="SafeArea/Column"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="IslandPlate" type="PanelContainer" parent="SafeArea/Column/TopRow"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
@@ -64,11 +84,14 @@ size_flags_horizontal = 4
 mouse_filter = 2
 theme_type_variation = &"NamePlatePanel"
 
-[node name="IslandName" type="Label" parent="SafeArea/Column/IslandPlate"]
+[node name="IslandName" type="Label" parent="SafeArea/Column/TopRow/IslandPlate"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"TitleLabel"
 horizontal_alignment = 1
+
+[node name="DayPhaseBadge" parent="SafeArea/Column/TopRow" instance=ExtResource("8_day_phase")]
+layout_mode = 2
 
 [node name="DebugMenu" type="PanelContainer" parent="SafeArea/Column"]
 unique_name_in_owner = true
@@ -195,6 +218,40 @@ custom_minimum_size = Vector2(0, 56)
 layout_mode = 2
 theme_type_variation = &"OutlineButton"
 text = "Quase subir de nível"
+
+[node name="DebugHourButton" type="Button" parent="SafeArea/Column/DebugMenu/Items/DebugMain"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+theme_type_variation = &"OutlineButton"
+text = "Debug: +1 hora"
+
+[node name="DebugTimeRow" type="HBoxContainer" parent="SafeArea/Column/DebugMenu/Items/DebugMain"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="DebugTimeLabel" type="Label" parent="SafeArea/Column/DebugMenu/Items/DebugMain/DebugTimeRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(72, 0)
+layout_mode = 2
+theme_type_variation = &"BoldLabel"
+text = "00h00"
+
+[node name="DebugTimeSlider" type="HSlider" parent="SafeArea/Column/DebugMenu/Items/DebugMain/DebugTimeRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+max_value = 1425.0
+step = 15.0
+
+[node name="DebugRealTimeButton" type="Button" parent="SafeArea/Column/DebugMenu/Items/DebugMain/DebugTimeRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+theme_type_variation = &"OutlineButton"
+text = "Hora real"
 
 [node name="DebugSpawn" type="VBoxContainer" parent="SafeArea/Column/DebugMenu/Items"]
 unique_name_in_owner = true

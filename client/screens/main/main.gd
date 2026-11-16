@@ -100,6 +100,7 @@ func _boot() -> void:
 			_show_load_error(OFFLINE_MESSAGE)
 			return
 		_catalog_loaded = true
+		WorldClock.sync()
 
 	if Session.has_auth_session():
 		_load_player()
