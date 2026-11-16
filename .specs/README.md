@@ -68,6 +68,7 @@ O Ecobeast é um jogo mobile (Android/iOS, retrato): o cliente em **Godot 4.7 co
 | [home-pack](home-pack/) | A casa grande do pacote Main Characters Home, com a fumaça da chaminé animada, a pequena e o sobrado pequeno, em 8 cores, e a cerca de estacas do mesmo pacote |
 | [coast-rivers](coast-rivers/) | O mar num lado do mapa, a Praia, os lagos, os rios e as travessias (pontes automáticas e vaus) |
 | [day-night](day-night/) | O relógio do mundo (um dia em 24 minutos), a luz da hora no mapa e na luta, o indicador da parte do dia e as luzes da noite |
+| [fireflies](fireflies/) | Vagalumes à noite na Planície e no Boreal, desenhados e iluminando pelo shader da noite |
 
 As próximas iniciativas estão no [roadmap.md](roadmap.md).
 

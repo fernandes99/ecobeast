@@ -159,6 +159,9 @@ const RECIPES: Dictionary = {
 	"beach": [["driftwood", 0.08, 1, 1], ["beach_rock", 0.1, 1, 1], ["dune_grass", 0.3, 1, 2], ["shells", 0.3, 1, 2], ["starfish", 0.08, 1, 1]],
 }
 const PLACE_TRIES := 8
+## A chance de um hexágono ter um enxame de vagalumes, por bioma (fireflies/01). A revisar.
+const SWARM_CHANCE: Dictionary[String, float] = {"temperate": 0.12, "boreal": 0.18}
+const SWARM_RADIUS := 6.0
 const MAX_X := 24
 const MAX_Y := 20
 const MAX_EDGE_DISTANCE := 22.0
@@ -185,6 +188,23 @@ static func decorations_of(tile: HexTile, map_seed: int) -> Array[Decoration]:
 			if decoration != null:
 				decorations.append(decoration)
 	return decorations
+
+
+## O ponto do enxame de vagalumes do hexágono, a partir do centro, ou null. O gerador é
+## próprio, para o sorteio das decorações não mudar (fireflies/01).
+static func swarm_of(tile: HexTile, map_seed: int) -> Variant:
+	var chance: float = SWARM_CHANCE.get(tile.biome, 0.0)
+	if chance <= 0.0 or tile.bare:
+		return null
+	var random := RandomNumberGenerator.new()
+	random.seed = hash([map_seed, tile.coord, "fireflies"])
+	if random.randf() >= chance:
+		return null
+	for _index: int in PLACE_TRIES:
+		var spot := random_spot(random)
+		if is_free_spot(spot, SWARM_RADIUS, []):
+			return spot
+	return null
 
 
 static func _placed(kind: String, random: RandomNumberGenerator, decorations: Array[Decoration]) -> Decoration:

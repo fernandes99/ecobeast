@@ -50,6 +50,7 @@ const TAMER_LIGHT_COLOR := Color("ffe8c0")
 var _island_id: int = 0
 var _map: ExplorationMap = null
 var _prop_lights: Array[MapLight] = []
+var _swarms := PackedVector2Array()
 var _player_coord := Vector2i.ZERO
 ## O ponto dos pés no chão plano, sem a altura (wild-battle/15).
 var _player_point := Vector2.ZERO
@@ -196,6 +197,7 @@ func _begin() -> void:
 	_map_view.set_map(_map)
 	_map_view.set_props(_map.props)
 	_prop_lights = _map_view.prop_lights(_map.props)
+	_swarms = _map_view.firefly_swarms()
 	_shown_rise = _map.rise_at(_player_point)
 	_map_view.set_current(_player_coord)
 	_map_view.set_actor_depth(_marker, _player_point, _feet_row())
@@ -948,7 +950,8 @@ func _sync_view_layers() -> void:
 
 
 ## A luz do Domador e, depois, as das peças que tocam a tela, das mais perto dele para
-## as mais longe, até o limite do filtro (day-night/03).
+## as mais longe, até o limite do filtro (day-night/03); os enxames de vagalumes do
+## mesmo jeito, numa lista à parte (fireflies/01).
 func _refresh_lights() -> void:
 	if _map == null:
 		return
@@ -963,6 +966,13 @@ func _refresh_lights() -> void:
 	var lights: Array[MapLight] = [MapLight.make(player - Vector2(0.0, TAMER_LIGHT_LIFT), TAMER_LIGHT_RADIUS, TAMER_LIGHT_COLOR)]
 	lights.append_array(near.slice(0, DayLightLayer.MAX_LIGHTS - 1))
 	_day_light.set_lights(lights)
+	var swarms: Array[Vector2] = []
+	var swarm_view := view.grow(DayLightLayer.SWARM_REACH)
+	for swarm: Vector2 in _swarms:
+		if swarm_view.has_point(swarm):
+			swarms.append(swarm)
+	swarms.sort_custom(func(a: Vector2, b: Vector2) -> bool: return a.distance_squared_to(player) < b.distance_squared_to(player))
+	_day_light.set_swarms(PackedVector2Array(swarms.slice(0, DayLightLayer.MAX_SWARMS)))
 
 
 ## Parte do centro já arredondado: em uma tela de tamanho ímpar, ele cai no meio de

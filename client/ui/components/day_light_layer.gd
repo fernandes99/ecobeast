@@ -5,6 +5,10 @@ extends ColorRect
 
 const SHADER_PATH := "res://ui/components/day_light.gdshader"
 const MAX_LIGHTS := 32
+## Os enxames de vagalumes por vez, fora do limite das luzes (fireflies/01).
+const MAX_SWARMS := 32
+## Até onde vão os pontinhos e a luz de um enxame, em pixels da arte (o SWARM_RADIUS do shader).
+const SWARM_REACH := 16.0
 
 ## [hora, ambiente, saturação], em ordem de hora; depois das 24h volta ao primeiro. A revisar.
 const KEYFRAMES: Array[Array] = [
@@ -88,6 +92,15 @@ func set_lights(lights: Array[MapLight]) -> void:
 	_material.set_shader_parameter(&"lights", points)
 	_material.set_shader_parameter(&"light_colors", colors)
 	_material.set_shader_parameter(&"light_count", _lights.size())
+
+
+## Os centros dos enxames de vagalumes, em pixels da arte; os que passam ficam de fora.
+func set_swarms(points: PackedVector2Array) -> void:
+	var count := mini(points.size(), MAX_SWARMS)
+	var padded := points.slice(0, count)
+	padded.resize(MAX_SWARMS)
+	_material.set_shader_parameter(&"swarms", padded)
+	_material.set_shader_parameter(&"swarm_count", count)
 
 
 ## [ambiente, saturação] na hora, misturando em linha reta os dois pontos em volta.

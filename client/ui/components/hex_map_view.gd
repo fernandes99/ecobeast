@@ -68,6 +68,8 @@ const HIGHLIGHT_TEXTURE := "highlight"
 ## na ponta de baixo do hexágono passa para a linha seguinte (prop-depth-blocks/01).
 const DEPTH_BANDS := 6
 const BAND_HEIGHT := 7.0
+## Quanto o centro de um enxame de vagalumes fica acima do chão (fireflies/01).
+const SWARM_LIFT := 8.0
 const PROP_PATH := "res://assets/props/%s/%d.png"
 ## Quantos pixels o topo dos arbustos dos pacotes anda no vento (vegetation-wind/01).
 const PROP_SWAY: Dictionary[String, float] = {
@@ -395,6 +397,19 @@ func set_props(props: Array[MapProp]) -> void:
 		_props_by_chunk[key].append(prop)
 		if not _prop_slugs.has(prop.prop_type_id):
 			_prop_slugs[prop.prop_type_id] = PropArt.slug_of(prop.prop_type_id)
+
+
+## Os centros dos enxames de vagalumes do mapa, em pixels da arte, acima do chão
+## (fireflies/01).
+func firefly_swarms() -> PackedVector2Array:
+	var swarms := PackedVector2Array()
+	if _map == null:
+		return swarms
+	for tile: HexTile in _map.tiles.values():
+		var spot: Variant = HexDecorations.swarm_of(tile, _map.map_seed)
+		if spot != null:
+			swarms.append(flat_center(tile.coord) - _rise(tile.height) + Vector2(spot as Vector2i) - Vector2(0.0, SWARM_LIFT))
+	return swarms
 
 
 ## Os pontos de luz da noite das peças, em pixels da arte, no ponto em que cada uma é
