@@ -113,6 +113,8 @@ func _draw() -> void:
 				_draw_sweat()
 			"trapped":
 				_draw_chain(self, false)
+			"dazed":
+				_draw_sparkles()
 			"protect":
 				_draw_bubble()
 
@@ -209,6 +211,22 @@ func _draw_stars() -> void:
 			var radius := size if corner % 2 == 0 else size * 0.45
 			points.append(at + Vector2.from_angle(-PI / 2.0 + corner * PI / 5.0) * radius)
 		_shape(points, UiPalette.AURA_STAR)
+
+
+## O Atordoado (puffcoo-line/02): estrelinhas de 4 pontas, âmbar, mais devagar e
+## mais largas que as estrelas da confusão.
+func _draw_sparkles() -> void:
+	var center := _head() + Vector2(0.0, -2.0)
+	var color := _color("dazed")
+	for index: int in STARS:
+		var angle := -_time * 1.8 + index * TAU / STARS
+		var at := center + Vector2(cos(angle) * maxf(_half_width() * 1.2, 18.0), sin(angle) * 4.0)
+		var size := 5.0 + 1.5 * sin(angle)
+		var points := PackedVector2Array()
+		for corner: int in 8:
+			var radius := size if corner % 2 == 0 else size * 0.35
+			points.append(at + Vector2.from_angle(-PI / 2.0 + corner * PI / 4.0) * radius)
+		_shape(points, color)
 
 
 func _draw_sweat() -> void:

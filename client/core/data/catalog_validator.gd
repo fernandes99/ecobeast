@@ -35,6 +35,7 @@ func _run(tables: Dictionary) -> Array[String]:
 	_check_npc_tamer_texts()
 	_check_day_phases()
 	_check_prop_type_lights()
+	_check_ground_effect_stats()
 	return _errors
 
 
@@ -421,6 +422,14 @@ func _check_prop_type_lights() -> void:
 		var prop_type := _row_by_id("prop_types", rows[i]["prop_type_id"])
 		if not prop_type.is_empty() and int(rows[i]["variant"]) > int(prop_type["variants"]):
 			_row_error("prop_type_lights", lines[i], "variant %d acima das %d variantes do tipo" % [rows[i]["variant"], prop_type["variants"]])
+
+
+func _check_ground_effect_stats() -> void:
+	var rows: Array[Dictionary] = _rows["ground_effect_stats"]
+	var lines: Array[int] = _lines["ground_effect_stats"]
+	for i: int in rows.size():
+		if rows[i]["stages"] == 0:
+			_row_error("ground_effect_stats", lines[i], "stages não pode ser 0")
 
 
 func _for_each_species(callback: Callable) -> void:

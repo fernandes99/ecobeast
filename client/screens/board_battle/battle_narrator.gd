@@ -61,6 +61,9 @@ func describe(event: Dictionary) -> String:
 			return line % who if not line.is_empty() else ""
 		"confused_hit":
 			return "%s está confuso e se atingiu: perdeu %d de HP." % [who, DictFields.get_int(event, "damage")]
+		"multi_hit":
+			var hits := DictFields.get_int(event, "hits")
+			return "Acertou 1 vez!" if hits == 1 else "Acertou %d vezes!" % hits
 		"effect_failed":
 			return "Não funcionou."
 		"damage":

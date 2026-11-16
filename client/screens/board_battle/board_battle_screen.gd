@@ -24,6 +24,7 @@ const TAMER_RESULT_TEXTS: Dictionary[String, String] = {
 }
 const EXIT_TEXT := "Voltar"
 const EXIT_TO_HUB_TEXT := "Voltar ao Hub"
+const DAZED_TEXT := "Atordoado: não dá para andar nesta vez."
 const BOARD_LINES: Dictionary[String, String] = {
 	"moved": "%s andou.",
 	"waited": "%s esperou.",
@@ -34,6 +35,8 @@ const HP_EVENTS: Array[String] = ["damage", "recoil", "healed", "confused_hit", 
 const LOSS_EVENTS: Array[String] = ["damage", "recoil", "confused_hit", "status_damage", "ground_damage"]
 const REFERENCE_BOARD_WIDTH := 624.0
 const EVENT_DELAY := 0.35
+## Entre os golpes de uma Técnica de vários golpes (puffcoo-line/02, a revisar).
+const MULTI_HIT_GAP := 0.15
 const CHARS_PER_SECOND := 60.0
 const EMERGENCY_RANGE := 1
 const SELF_TARGET := "self"
@@ -65,6 +68,7 @@ var _attacker_key: String = ""
 var _attack_skill_id := -1
 var _effect_played := false
 var _projectile_flown := false
+var _hits_seen := 0
 var _statuses := BattleStatuses.new()
 var _typing: Tween = null
 var _last_line := ""
@@ -490,6 +494,7 @@ func _play_event(event: Dictionary) -> void:
 			_attack_skill_id = DictFields.get_id(event, "skill_id")
 			_effect_played = false
 			_projectile_flown = false
+			_hits_seen = 0
 			var area := _cells_of(DictFields.get_array(event, "cells"))
 			_board.light(area, UiPalette.BOARD_AREA)
 			await _board.attack_shake(key)
@@ -535,8 +540,11 @@ func _play_event(event: Dictionary) -> void:
 		_show_statuses(_statuses.apply(event, key))
 	if type in HP_EVENTS and _board.has_token(key):
 		# A cura de uma Técnica para o time também mostra o efeito em quem recebe.
-		if type == "damage" or (type == "healed" and not _effect_played):
+		var repeated_hit := type == "damage" and _multi_hit() and _hits_seen > 0
+		if (type == "damage" and not repeated_hit) or (type == "healed" and not _effect_played):
 			await _play_skill_effect(key)
+		if type == "damage":
+			_hits_seen += 1
 		_hp[key] = DictFields.get_int(event, "hp")
 		_board.set_hp(key, _hp[key], _max_hp.get(key, 0))
 		_focus(side, key)
@@ -545,6 +553,8 @@ func _play_event(event: Dictionary) -> void:
 			_play_hit_sound(_hit_kind(type, event))
 			await _board.hit(key)
 			_board.float_number(key, "-%d" % amount, UiPalette.DANGER)
+			if type == "damage" and _multi_hit():
+				await get_tree().create_timer(MULTI_HIT_GAP).timeout
 		else:
 			_board.float_number(key, "+%d" % amount, UiPalette.HP_HIGH)
 	await _say(type, side, key, event)
@@ -555,7 +565,8 @@ func _say(type: String, side: String, key: String, event: Dictionary) -> void:
 	if line.is_empty():
 		return
 	_history.add_line(line)
-	if type in HISTORY_ONLY:
+	# Os golpes seguidos só vão ao histórico; o log escreve o "Acertou N vezes!".
+	if type in HISTORY_ONLY or (type == "damage" and _multi_hit()):
 		return
 	await _type_line(line)
 	await get_tree().create_timer(EVENT_DELAY).timeout
@@ -594,6 +605,11 @@ func _projectile_texture() -> Texture2D:
 		return null
 	var path := ContentFiles.SKILL_PROJECTILE_PATH % skill.slug
 	return load(path) as Texture2D if ResourceLoader.exists(path) else null
+
+
+func _multi_hit() -> bool:
+	var skill := GameData.get_skill(_attack_skill_id) if _attack_skill_id >= 0 else null
+	return skill != null and skill.max_hits > 1
 
 
 func _protects() -> bool:
@@ -734,7 +750,7 @@ func _sync_token(key: String, side: String, creature: BattleCreature, cell: Vect
 	_level[key] = creature.level
 	_hp[key] = creature.hp
 	_board.set_hp(key, creature.hp, creature.max_hp)
-	_statuses.sync(key, creature.status, creature.confused)
+	_statuses.sync(key, creature.status, creature.confused, creature.dazed)
 	_board.set_statuses(key, _statuses.of(key))
 	var stages: Dictionary = {}
 	for stat: String in creature.stages:
@@ -915,10 +931,13 @@ func _begin_vez() -> void:
 	_disarm_flee()
 	var blocked := _view.occupied_cells()
 	blocked.erase(_origin)
+	var dazed := _view.player_at(_actor).dazed
 	_reach = BoardGeometry.reachable(_view.board_cells, blocked, _origin)
+	if dazed:
+		_reach.clear()
 	_fill_skills(_view.player_at(_actor))
 	_light_reach()
-	_show_message("")
+	_show_message(DAZED_TEXT if dazed else "")
 	_show_controls(true)
 	_set_busy(false)
 

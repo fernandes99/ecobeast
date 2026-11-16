@@ -8,6 +8,7 @@ var hp: int = 0
 var max_hp: int = 0
 var status: String = ""
 var confused: bool = false
+var dazed: bool = false
 var stages: Dictionary[String, int] = {}
 var skills: Array[SkillSlot] = []
 
@@ -21,6 +22,7 @@ func copy() -> BattleCreature:
 	creature.max_hp = max_hp
 	creature.status = status
 	creature.confused = confused
+	creature.dazed = dazed
 	creature.stages = stages.duplicate()
 	creature.skills = skills.duplicate()
 	return creature
@@ -35,6 +37,7 @@ static func from_dict(d: Dictionary) -> BattleCreature:
 	creature.max_hp = DictFields.get_int(d, "max_hp")
 	creature.status = DictFields.get_string(d, "status")
 	creature.confused = DictFields.get_bool(d, "confused")
+	creature.dazed = DictFields.get_bool(d, "dazed")
 	var stages_dict := DictFields.get_dict(d, "stages")
 	for slug: Variant in stages_dict:
 		creature.stages[str(slug)] = DictFields.get_int(stages_dict, str(slug))

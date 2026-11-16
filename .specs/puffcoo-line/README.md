@@ -83,5 +83,5 @@ Escolhas de Claude (corrigíveis; ao mudar uma, atualize aqui e na fase):
 | # | Fase | Entrega | Status |
 | --- | --- | --- | --- |
 | 1 | [01-field-rules](01-field-rules.md) | Servidor: o estado Atordoado, as marcas que mudam atributos (`ground_effect_stats`), as marcas Penas no ar e Redemoinho, os vários golpes, o dano fixo e a IA | concluída |
-| 2 | [02-field-screen](02-field-screen.md) | Jogo: o ícone do Atordoado, o andar travado na vez dele, as marcas novas no tabuleiro e no histórico e os golpes seguidos na tela | rascunho |
+| 2 | [02-field-screen](02-field-screen.md) | Jogo: o ícone do Atordoado, o andar travado na vez dele, as marcas novas no tabuleiro e no histórico e os golpes seguidos na tela | concluída (falta o dono ver no editor) |
 | 3 | [03-puffcoo-line](03-puffcoo-line.md) | Dados: Puffcoo e Galecrest, as 5 Técnicas novas, os learnsets, a evolução, os biomas, as partes do dia e os `front.png` | rascunho |

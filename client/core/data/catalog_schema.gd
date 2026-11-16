@@ -139,6 +139,14 @@ const TABLES := {
 			"color_hex": {"type": "string", "pattern": "^#[0-9A-Fa-f]{6}$"},
 		},
 	},
+	"ground_effect_stats": {
+		"key": ["ground_effect_id", "stat_id"],
+		"columns": {
+			"ground_effect_id": {"type": "int", "fk": "ground_effects"},
+			"stat_id": {"type": "int", "fk": "stats"},
+			"stages": {"type": "int", "min": -6, "max": 6},
+		},
+	},
 	"status_condition_immunities": {
 		"key": ["status_condition_id", "element_id"],
 		"columns": {

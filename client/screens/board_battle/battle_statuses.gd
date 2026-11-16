@@ -1,9 +1,9 @@
 class_name BattleStatuses
 extends RefCounted
 
-const ORDER: Array[String] = ["burn", "poison", "paralysis", "sleep", "freeze", "confusion", "fear", "trapped", "protect"]
+const ORDER: Array[String] = ["burn", "poison", "paralysis", "sleep", "freeze", "confusion", "fear", "trapped", "dazed", "protect"]
 const MAIN: Array[String] = ["burn", "poison", "paralysis", "sleep", "freeze"]
-const VOLATILE: Array[String] = ["confusion", "fear", "trapped", "protect"]
+const VOLATILE: Array[String] = ["confusion", "fear", "trapped", "dazed", "protect"]
 
 var _by_key: Dictionary[String, Array] = {}
 var _actor := ""
@@ -95,16 +95,18 @@ func cure(key: String) -> void:
 
 
 ## O que o servidor diz no fim da resposta: o principal (vazio sem nenhum) e se está
-## confuso. O medo e o preso, que ele não manda, ficam como os eventos deixaram.
-func sync(key: String, status: String, confused: bool) -> void:
+## confuso ou atordoado. O medo e o preso, que ele não manda, ficam como os eventos deixaram.
+func sync(key: String, status: String, confused: bool, dazed: bool = false) -> void:
 	var kept: Array = []
 	for slug: String in _by_key.get(key, []):
-		if not MAIN.has(slug) and slug != "confusion":
+		if not MAIN.has(slug) and slug != "confusion" and slug != "dazed":
 			kept.append(slug)
 	if not status.is_empty():
 		kept.append(status)
 	if confused:
 		kept.append("confusion")
+	if dazed:
+		kept.append("dazed")
 	_by_key[key] = kept
 
 

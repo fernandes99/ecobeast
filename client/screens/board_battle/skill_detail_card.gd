@@ -26,9 +26,14 @@ func open(slot: SkillSlot, anchor: Rect2) -> void:
 	_name_label.text = skill.name
 	_badge.set_element(skill.element_id)
 	var category: String = GameData.get_row("skill_categories", skill.skill_category_id).get("name", "")
-	var power := "—" if skill.power == 0 else str(skill.power)
+	var power := "Poder %s" % ("—" if skill.power == 0 else str(skill.power))
+	for effect: SkillEffect in skill.effects:
+		if effect.effect_slug == "fixed_damage":
+			power = "Dano fixo %d" % effect.value
 	var accuracy := "—" if skill.accuracy == 0 else str(skill.accuracy)
-	_info_label.text = "%s · Poder %s · Precisão %s · Alcance %d" % [category, power, accuracy, skill.area_range]
+	_info_label.text = "%s · %s · Precisão %s · Alcance %d" % [category, power, accuracy, skill.area_range]
+	if skill.max_hits > 1:
+		_info_label.text += " · Golpes %d a %d" % [skill.min_hits, skill.max_hits]
 	_description_label.text = skill.description
 	var countdown := "sem countdown" if skill.cooldown == 0 else "countdown de %s" % _rounds(skill.cooldown)
 	_usage_label.text = "PP %d/%d · %s" % [slot.current_pp, skill.max_pp, countdown]

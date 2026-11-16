@@ -52,6 +52,10 @@ func _icon(slug: String, at: Vector2) -> void:
 		"trapped":
 			draw_arc(at + Vector2(0.0, -1.5), 3.2, PI, TAU, 10, dark, LINE)
 			draw_rect(Rect2(at + Vector2(-5.0, -1.5), Vector2(10.0, 8.0)), dark)
+		"dazed":
+			for index: int in 3:
+				var spot := at + Vector2.from_angle(-PI / 2.0 + index * TAU / 3.0) * 4.5
+				draw_colored_polygon(_moved(_sparkle(3.6), spot), dark)
 		"protect":
 			draw_colored_polygon(_moved(PackedVector2Array([
 				Vector2(0.0, -7.5), Vector2(6.0, -5.0), Vector2(5.0, 2.0),
@@ -65,6 +69,15 @@ func _flame() -> PackedVector2Array:
 	for index: int in steps + 1:
 		var angle := deg_to_rad(-25.0 + index * 230.0 / steps)
 		points.append(Vector2(0.0, 2.0) + Vector2.from_angle(angle) * 5.0)
+	return points
+
+
+## Uma estrelinha de 4 pontas.
+static func _sparkle(size: float) -> PackedVector2Array:
+	var points := PackedVector2Array()
+	for corner: int in 8:
+		var radius := size if corner % 2 == 0 else size * 0.35
+		points.append(Vector2.from_angle(-PI / 2.0 + corner * PI / 4.0) * radius)
 	return points
 
 

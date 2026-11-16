@@ -1,6 +1,6 @@
 # 02. O campo na tela: o Atordoado, as marcas novas e os golpes seguidos
 
-- **Status:** rascunho
+- **Status:** concluída (falta o dono ver no editor)
 - **Depende de:** [01-field-rules](01-field-rules.md)
 
 ## Contexto
@@ -46,24 +46,28 @@ As marcas novas já aparecem como o hexágono tingido com a cor de `ground_effec
   - a mensagem da vez diz "Atordoado: não dá para andar nesta vez.";
   - as Técnicas, a Mochila, a Esfera, a fuga e o Passar continuam como sempre.
 - **RF-05:** O `BattleNarrator` (`res://screens/board_battle/battle_narrator.gd`) escreve no histórico, _a revisar_:
-  - "`<nome>` ficou atordoado!" no `status_applied` do `dazed`;
+  - "`<nome>` ficou atordoado." no `status_applied` do `dazed`;
   - "`<nome>` não está mais atordoado." no `status_ended` do `dazed`.
+
+  São os textos de hoje para qualquer estado, com o nome do catálogo em minúsculas.
 
   O `stat_changed` que vem de uma marca usa o texto de hoje.
 - **RF-06:** Os eventos `damage` seguidos de uma Técnica de vários golpes ([01](01-field-rules.md), RF-12) tocam, cada um, o tremor e o pisca do alvo e o número de dano da [board-battle/09](../board-battle/09-hit-feedback.md), com 0,15 s entre um golpe e o próximo (_a revisar_). O efeito e o som da Técnica tocam uma vez, no primeiro golpe.
 - **RF-07:** O `multi_hit` escreve "Acertou `<hits>` vezes!" no log e no histórico.
 - **RF-08:** O detalhe da Técnica, que aparece ao segurar o ícone ([skill-cooldown](../skill-cooldown/)), mostra:
-  - "Golpes: `<min>` a `<max>`" quando `max_hits` é maior que 1;
-  - "Dano fixo: `<value>`" no lugar do poder, numa Técnica com `fixed_damage`.
+  - "Golpes `<min>` a `<max>`" no fim da linha de informações, quando `max_hits` é maior que 1;
+  - "Dano fixo `<value>`" no lugar do "Poder", numa Técnica com `fixed_damage`.
+
+  Sem dois-pontos, como o "Poder 40" e o "Precisão 100" da mesma linha.
 
 ## Critérios de aceite
 
-- [ ] O jogo abre com o servidor no ar, e o `CatalogValidator` não aponta erro.
+- [x] O jogo abre com o servidor no ar, e o `CatalogValidator` não aponta erro.
 - [ ] No painel F3, o Redemoinho embaixo do Ecobeast do jogador pinta o hexágono de verde-água. No fim da vez de qualquer um, o Ecobeast fica com o ícone e as estrelinhas do Atordoado.
 - [ ] Na vez dele, nenhum hexágono acende para andar, a mensagem avisa, e uma Técnica funciona.
 - [ ] As Penas no ar embaixo do Ecobeast do jogador baixam a Precisão e a Evasão dele no fim da vez dele, com as plaquinhas dos atributos.
 - [ ] Uma Técnica de vários golpes mostra um número de dano por golpe, um depois do outro, e o "Acertou N vezes!". Dá para conferir com a Rajada de Penas, depois da [03](03-puffcoo-line.md), ou com uma Técnica de teste no F1.
-- [ ] `godot --headless --path client --quit-after 60` roda sem erro de script.
+- [x] `godot --headless --path client --quit-after 60` roda sem erro de script.
 
 ## Desenho técnico
 
@@ -82,9 +86,16 @@ As marcas novas já aparecem como o hexágono tingido com a cor de `ground_effec
 
 ## Tarefas
 
-- [ ] `ground_effect_stats` no esquema e no validador.
-- [ ] O Atordoado no `BattleStatuses`, na cor, no ícone, no efeito no corpo, no sinal e no F3.
-- [ ] O andar travado e a mensagem.
-- [ ] Os textos do histórico.
-- [ ] Os golpes seguidos, o `multi_hit` e o detalhe da Técnica.
-- [ ] `client/CLAUDE.md`, o README da iniciativa e as tabelas das specs.
+- [x] `ground_effect_stats` no esquema e no validador.
+- [x] O Atordoado no `BattleStatuses`, na cor, no ícone, no efeito no corpo, no sinal e no F3.
+- [x] O andar travado e a mensagem.
+- [x] Os textos do histórico.
+- [x] Os golpes seguidos, o `multi_hit` e o detalhe da Técnica.
+- [x] `client/CLAUDE.md`, o README da iniciativa e as tabelas das specs.
+
+Conferido por Claude:
+- o jogo abre sem janela com o servidor no ar, e o validador aceita o catálogo com `ground_effect_stats`;
+- numa cena temporária, a tela da luta e os scripts mexidos compilam, o `BattleStatuses` põe e tira o `dazed` (pelo `sync`, pelo `status_ended` e no fim da luta), o narrador escreve "Acertou 4 vezes!" e o validador recusa `stages` 0;
+- numa captura, o ícone âmbar tem as três estrelinhas, e as estrelinhas de 4 pontas do Atordoado se distinguem das estrelas da confusão.
+
+Fica para o dono: a luta de verdade no editor, com o F3 (Redemoinho, Penas no ar e o andar travado), e os golpes seguidos, que só dá para ver com a Rajada de Penas da [03](03-puffcoo-line.md) ou com uma Técnica de teste no F1. O `client/CLAUDE.md` não ganhou linha: os estados da luta não são descritos lá.
