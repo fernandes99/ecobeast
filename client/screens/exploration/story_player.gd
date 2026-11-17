@@ -6,6 +6,7 @@ extends Node
 ## pelos métodos `story_*` dela.
 
 signal finished
+signal fade_settled
 
 const SAVE_ERROR := "Não deu para salvar a história. %s"
 const RETRY_TEXT := "Tentar de novo"
@@ -25,6 +26,7 @@ var _actors: Dictionary[String, NpcSprite] = {}
 ## Os atores que a cena pôs no mapa; os outros são NPCs da ilha ou seguidores.
 var _created: Array[NpcSprite] = []
 var _moving: Array[NpcSprite] = []
+var _fade_tween: Tween = null
 
 
 func setup(screen: ExplorationScreen, greeting: TamerGreetingPanel, choices: StoryChoicePanel, fade: ColorRect) -> void:
@@ -47,6 +49,7 @@ func play(scene: StoryScene, touched: NpcSprite = null) -> void:
 		if sprite.is_walking():
 			await sprite.arrived
 	_moving.clear()
+	await _settle()
 	await _screen.story_camera_back(CAMERA_BACK_SECONDS)
 	if _fade.color.a > 0.0:
 		await _fade_to(0.0, CLEAR_SECONDS)
@@ -122,7 +125,11 @@ func _step(step: Dictionary) -> void:
 		"wait":
 			await get_tree().create_timer(DictFields.get_float(step, "seconds")).timeout
 		"fade":
-			await _fade_to(1.0 if step.get("to") == "black" else 0.0, DictFields.get_float(step, "seconds"))
+			var alpha := 1.0 if step.get("to") == "black" else 0.0
+			if _waits(step):
+				await _fade_to(alpha, DictFields.get_float(step, "seconds"))
+			else:
+				_fade_to(alpha, DictFields.get_float(step, "seconds"))
 		"show", "hide":
 			var sprite := _actor(step)
 			if sprite != null:
@@ -132,18 +139,29 @@ func _step(step: Dictionary) -> void:
 		"face":
 			_face(step)
 		"camera":
-			await _screen.story_camera_to(StoryValidator.coord_of(step), DictFields.get_float(step, "seconds"))
+			var coord: Vector2i = StoryValidator.coord_of(step)
+			var seconds := DictFields.get_float(step, "seconds")
+			if _waits(step):
+				await _screen.story_camera_to(coord, seconds, DictFields.get_int(step, "zoom"))
+			else:
+				_screen.story_camera_to(coord, seconds, DictFields.get_int(step, "zoom"))
 		"camera_back":
-			await _screen.story_camera_back(DictFields.get_float(step, "seconds"))
+			if _waits(step):
+				await _screen.story_camera_back(DictFields.get_float(step, "seconds"))
+			else:
+				_screen.story_camera_back(DictFields.get_float(step, "seconds"))
 		"follow", "unfollow":
 			var sprite := _actor(step)
 			if sprite != null:
 				_screen.story_set_follow(sprite, step.get("type") == "follow")
 		"open_screen":
+			await _settle()
 			await _screen.story_open_screen(StringName(DictFields.get_string(step, "screen")))
 		"create_tamer":
+			await _settle()
 			await _screen.story_create_tamer()
 		"choose_starter":
+			await _settle()
 			await _screen.story_choose_starter()
 
 
@@ -210,10 +228,30 @@ func _text(text: String) -> String:
 	return StoryText.render(text, Session.player)
 
 
+func _waits(step: Dictionary) -> bool:
+	return DictFields.get_bool(step, "wait", true)
+
+
+## Um escurecer novo para o anterior e parte da cor em que ele está.
 func _fade_to(alpha: float, seconds: float) -> void:
-	var tween := create_tween()
-	tween.tween_property(_fade, ^"color:a", alpha, maxf(seconds, 0.01))
-	await tween.finished
+	if _fade_tween != null:
+		_fade_tween.kill()
+	_fade_tween = create_tween()
+	_fade_tween.tween_property(_fade, ^"color:a", alpha, maxf(seconds, 0.01))
+	_fade_tween.finished.connect(_fade_arrived)
+	await fade_settled
+
+
+func _fade_arrived() -> void:
+	_fade_tween = null
+	fade_settled.emit()
+
+
+## Espera a câmera e o escurecer que ficaram andando sem esperar (story/07).
+func _settle() -> void:
+	await _screen.story_camera_idle()
+	if _fade_tween != null:
+		await fade_settled
 
 
 ## A cena só termina com os Marcos gravados.

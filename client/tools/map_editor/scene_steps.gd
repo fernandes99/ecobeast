@@ -175,10 +175,12 @@ func new_step(type: String) -> Dictionary:
 			return {"type": type, "mark": "marco", "then": [], "else": []}
 		"set_mark":
 			return {"type": type, "mark": "marco"}
-		"wait", "camera_back":
+		"wait":
 			return {"type": type, "seconds": 1.0}
+		"camera_back":
+			return {"type": type, "seconds": 1.0, "wait": true}
 		"fade":
-			return {"type": type, "to": "black", "seconds": 1.0}
+			return {"type": type, "to": "black", "seconds": 1.0, "wait": true}
 		"show", "hide", "follow", "unfollow":
 			return {"type": type, "actor": first_actor}
 		"move":
@@ -189,7 +191,7 @@ func new_step(type: String) -> Dictionary:
 				toward = first_actor
 			return {"type": type, "actor": TAMER, "toward": toward}
 		"camera":
-			return {"type": type, "q": _start.x, "r": _start.y, "seconds": 1.5}
+			return {"type": type, "q": _start.x, "r": _start.y, "seconds": 1.5, "wait": true}
 		"open_screen":
 			return {"type": type, "screen": "appearance"}
 	return {"type": type}
@@ -253,14 +255,17 @@ static func summary(step: Dictionary) -> String:
 			return "Se tiver %s" % DictFields.get_string(step, "mark")
 		"set_mark":
 			return "Liga %s" % DictFields.get_string(step, "mark")
-		"wait", "camera_back":
+		"wait":
 			return "%s s" % EditorNumberField.format(DictFields.get_float(step, "seconds"), false)
+		"camera_back":
+			return "%s s%s" % [EditorNumberField.format(DictFields.get_float(step, "seconds"), false), _no_wait(step)]
 		"fade":
-			return "%s em %s s" % ["Escurece" if step.get("to") == "black" else "Clareia", EditorNumberField.format(DictFields.get_float(step, "seconds"), false)]
+			return "%s em %s s%s" % ["Escurece" if step.get("to") == "black" else "Clareia", EditorNumberField.format(DictFields.get_float(step, "seconds"), false), _no_wait(step)]
 		"move":
-			return "%s → (%d, %d)%s" % [_actor_name(step.get("actor")), DictFields.get_int(step, "q"), DictFields.get_int(step, "r"), "" if DictFields.get_bool(step, "wait", true) else "\nsem esperar"]
+			return "%s → (%d, %d)%s" % [_actor_name(step.get("actor")), DictFields.get_int(step, "q"), DictFields.get_int(step, "r"), _no_wait(step)]
 		"camera":
-			return "→ (%d, %d) em %s s" % [DictFields.get_int(step, "q"), DictFields.get_int(step, "r"), EditorNumberField.format(DictFields.get_float(step, "seconds"), false)]
+			var zoom := DictFields.get_int(step, "zoom")
+			return "→ (%d, %d) em %s s%s%s" % [DictFields.get_int(step, "q"), DictFields.get_int(step, "r"), EditorNumberField.format(DictFields.get_float(step, "seconds"), false), " · zoom %d" % zoom if zoom > 0 else "", _no_wait(step)]
 		"face":
 			var toward: Variant = step.get("toward")
 			var coord: Variant = StoryValidator.coord_of(toward)
@@ -271,6 +276,10 @@ static func summary(step: Dictionary) -> String:
 		"open_screen":
 			return SCREEN_NAMES.get(str(step.get("screen")), str(step.get("screen")))
 	return ""
+
+
+static func _no_wait(step: Dictionary) -> String:
+	return "" if DictFields.get_bool(step, "wait", true) else "\nsem esperar"
 
 
 static func _actor_name(actor: Variant) -> String:
@@ -304,24 +313,21 @@ func _show_fields() -> void:
 			_text_field("Fala · {nome} vira o nome do Domador; {cansado|cansada} muda com o corpo", step, "text", true)
 		"if_mark", "set_mark":
 			_text_field("Marco", step, "mark", false)
-		"wait", "camera_back":
+		"wait":
 			_number_field("Segundos", step, "seconds")
+		"camera_back":
+			_number_field("Segundos", step, "seconds")
+			_wait_box(step, "Esperar terminar")
 		"fade":
 			_choice_field("Para", step, "to", [["Escuro", "black"], ["Claro", "clear"]])
 			_number_field("Segundos", step, "seconds")
+			_wait_box(step, "Esperar terminar")
 		"show", "hide", "follow", "unfollow":
 			_choice_field("Ator", step, "actor", _actor_options(false))
 		"move":
 			_choice_field("Quem anda", step, "actor", _actor_options(true))
 			_hex_field("Até", step)
-			var wait := CheckBox.new()
-			wait.text = "Esperar chegar"
-			wait.button_pressed = DictFields.get_bool(step, "wait", true)
-			wait.focus_mode = Control.FOCUS_NONE
-			wait.toggled.connect(func(on: bool) -> void:
-				step["wait"] = on
-				_field_changed())
-			_fields.add_child(wait)
+			_wait_box(step, "Esperar chegar")
 		"face":
 			_choice_field("Quem vira", step, "actor", _actor_options(true))
 			var options := _actor_options(true)
@@ -337,6 +343,15 @@ func _show_fields() -> void:
 		"camera":
 			_hex_field("Até", step)
 			_number_field("Segundos", step, "seconds")
+			var zooms: Array = [["Manter", 0]]
+			for level: int in range(HexMapView.MIN_ZOOM, HexMapView.STORY_MAX_ZOOM + 1):
+				zooms.append([str(level), level])
+			_choice_field("Zoom", step, "zoom", zooms, func(value: Variant) -> void:
+				if value == 0:
+					step.erase("zoom")
+				else:
+					step["zoom"] = value)
+			_wait_box(step, "Esperar terminar")
 		"open_screen":
 			var screens: Array = []
 			for key: String in SCREEN_NAMES:
@@ -434,6 +449,17 @@ func _number_field(title: String, target: Dictionary, key: String) -> void:
 
 
 ## `options` é uma lista de [texto, valor].
+func _wait_box(step: Dictionary, title: String) -> void:
+	var wait := CheckBox.new()
+	wait.text = title
+	wait.button_pressed = DictFields.get_bool(step, "wait", true)
+	wait.focus_mode = Control.FOCUS_NONE
+	wait.toggled.connect(func(on: bool) -> void:
+		step["wait"] = on
+		_field_changed())
+	_fields.add_child(wait)
+
+
 func _choice_field(title: String, target: Dictionary, key: String, options: Array, on_change: Callable = Callable()) -> void:
 	var row := HBoxContainer.new()
 	var label := Label.new()

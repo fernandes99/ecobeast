@@ -1,6 +1,9 @@
 class_name ExplorationScreen
 extends Control
 
+## A câmera da cena chegou (story/07).
+signal camera_settled
+
 const PortraitScene := preload("res://ui/components/creature_portrait.tscn")
 
 const LOADING_TEXT := "Gerando mapa..."
@@ -110,6 +113,8 @@ var _story_test := false
 var _area_scene: StoryScene = null
 ## O ponto da arte no centro da tela; INF é o Domador.
 var _camera_focus := Vector2.INF
+var _camera_tween: Tween = null
+var _camera_target_zoom := 0.0
 ## A altura da tela onde o Domador fica, de 0 a 1 (a criação o sobe).
 var _center_ratio := 0.5
 var _creating := false
@@ -1480,29 +1485,65 @@ func story_face_tamer(point: Vector2) -> void:
 		_marker.face_toward(point - _player_art_point())
 
 
-func story_camera_to(coord: Vector2i, seconds: float) -> void:
-	await _slide_camera(story_hex_point(coord), seconds)
+## `zoom` 0 mantém o zoom para onde a câmera vai, que sempre é um degrau inteiro (story/07).
+func story_camera_to(coord: Vector2i, seconds: float, zoom: int = 0) -> void:
+	var target_zoom := float(zoom) if zoom > 0 else (_camera_target_zoom if _camera_tween != null else float(_map_view.zoom_level))
+	_slide_camera(story_hex_point(coord), target_zoom, seconds, false)
+	await camera_settled
 
 
+## Volta ao Domador e ao zoom do jogador.
 func story_camera_back(seconds: float) -> void:
-	if not _camera_focus.is_finite():
+	var zoom := float(ViewSettings.explore_zoom())
+	if _camera_tween == null and not _camera_focus.is_finite() and is_equal_approx(_camera_zoom(), zoom):
 		return
-	await _slide_camera(_player_art_point(), seconds)
-	_camera_focus = Vector2.INF
-	_move_map(_player_centered_position())
+	_slide_camera(_player_art_point(), zoom, seconds, true)
+	await camera_settled
 
 
-func _slide_camera(target: Vector2, seconds: float) -> void:
+func story_camera_idle() -> void:
+	if _camera_tween != null:
+		await camera_settled
+
+
+func _camera_zoom() -> float:
+	return _map_view.story_zoom if _map_view.story_zoom > 0.0 else float(_map_view.zoom_level)
+
+
+## Um movimento novo para o anterior e parte de onde a câmera está, sem saltar.
+func _slide_camera(target: Vector2, zoom: float, seconds: float, back: bool) -> void:
+	if _camera_tween != null:
+		_camera_tween.kill()
+	_camera_target_zoom = zoom
 	var start := _camera_focus if _camera_focus.is_finite() else _player_art_point()
 	_camera_focus = start
-	var tween := create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	tween.tween_method(_set_camera_focus, start, target, maxf(seconds, 0.01))
-	await tween.finished
+	_camera_tween = create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	_camera_tween.tween_method(_camera_frame.bind(start, target, _camera_zoom(), zoom), 0.0, 1.0, maxf(seconds, 0.01))
+	_camera_tween.finished.connect(_camera_arrived.bind(zoom, back))
 
 
-func _set_camera_focus(point: Vector2) -> void:
-	_camera_focus = point
-	_move_map(_player_centered_position())
+## O foco e a escala saem do mesmo valor, para o mapa não escorregar enquanto aproxima.
+func _camera_frame(weight: float, start: Vector2, target: Vector2, from_zoom: float, to_zoom: float) -> void:
+	_camera_focus = start.lerp(target, weight)
+	if is_equal_approx(from_zoom, to_zoom):
+		_move_map(_player_centered_position())
+		return
+	_map_view.story_zoom = lerpf(from_zoom, to_zoom, weight)
+	_fit_view()
+
+
+func _camera_arrived(zoom: float, back: bool) -> void:
+	_camera_tween = null
+	var level := roundi(zoom)
+	if _map_view.story_zoom > 0.0 or level != _map_view.zoom_level:
+		_map_view.zoom_level = level
+		_map_view.story_zoom = 0.0
+		_refresh_wild_sprites()
+		_fit_view()
+	if back:
+		_camera_focus = Vector2.INF
+		_move_map(_player_centered_position())
+	camera_settled.emit()
 
 
 ## O passo `create_tamer`: a criação por cima do mapa, com o Domador maior e acima do painel.

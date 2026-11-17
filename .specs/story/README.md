@@ -74,5 +74,6 @@ Tomadas no planejamento (corrigíveis; ao mudar uma, atualize aqui e nas specs a
 | [04](04-scenes-tool.md) | A ferramenta Cenas do F2: a lista de cenas da ilha, o gatilho, os passos com os blocos, pegar hexágono no mapa, salvar e Testar daqui | concluída |
 | [05](05-story-line.md) | A Linha da história: as cenas ligadas pelos Marcos, com os avisos | concluída |
 | [06](06-scene-timeline.md) | A linha do tempo das cenas: os passos em cartões embaixo do mapa do F2, os ramos em faixas juntas e o painel lateral reorganizado, com o topo, o passo escolhido e as seções dobráveis | concluída |
+| [07](07-camera-zoom.md) | O zoom da câmera e os passos sem esperar: o `zoom` suave no passo Câmera e o `wait` na câmera e no escurecer, para uma fala aparecer com a câmera andando | concluída |
 
 O desenho que as fases compartilham está em [architecture.md](architecture.md).

@@ -117,7 +117,7 @@ Da fase 02 (conversa):
 | `if_mark` | `mark`, `then`, `else` (listas de passos; `else` pode faltar) | roda um ou outro conforme o Marco (contando os ligados nesta cena) |
 | `set_mark` | `mark` | liga o Marco (fica pendente até a cena terminar) |
 | `wait` | `seconds` (0,1 a 10) | espera |
-| `fade` | `to`: `"black"` ou `"clear"`, `seconds` | escurece ou clareia a tela |
+| `fade` | `to`: `"black"` ou `"clear"`, `seconds`, `wait` (padrão `true`, da [07](07-camera-zoom.md)) | escurece ou clareia a tela; com `wait: false`, a cena segue enquanto escurece |
 
 Da fase 03 (mapa):
 
@@ -126,8 +126,8 @@ Da fase 03 (mapa):
 | `show` / `hide` | `actor` | o ator aparece ou some |
 | `move` | `actor` (ou `"tamer"`), `q`, `r`, `wait` (padrão `true`) | anda pelo caminho do mapa até o hexágono; com `wait: false`, a cena segue enquanto ele anda |
 | `face` | `actor` (ou `"tamer"`), `toward`: `{ q, r }`, `"tamer"` ou a `key` de outro ator | vira para lá |
-| `camera` | `q`, `r`, `seconds` | a câmera desliza até o hexágono e fica |
-| `camera_back` | `seconds` | a câmera volta ao Domador |
+| `camera` | `q`, `r`, `seconds`, `zoom` (1 a 10, opcional) e `wait` (padrão `true`), da [07](07-camera-zoom.md) | a câmera desliza até o hexágono e fica, mudando o zoom junto, suave; com `wait: false`, a cena segue enquanto ela anda |
+| `camera_back` | `seconds`, `wait` (padrão `true`) | a câmera volta ao Domador e ao zoom do jogador |
 | `follow` / `unfollow` | `actor` | o ator passa a seguir o Domador (fica depois da cena, até o `unfollow` ou sair da ilha) |
 | `open_screen` | `screen`: `"appearance"`, `"heal_station"`, `"shop"`, `"team"`, `"bag"` ou `"codex"` | abre a tela por cima da cena (`Router.push`) e espera voltar. O nome e a escolha do inicial ficam de fora: eles são os passos abaixo |
 

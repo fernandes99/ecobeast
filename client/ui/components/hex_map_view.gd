@@ -34,6 +34,8 @@ const ART_SCALE := 2.0
 ## Pixels da tela lógica por pixel da arte, só inteiros para não borrar (camera-zoom/01).
 const MIN_ZOOM := 1
 const MAX_ZOOM := 4
+## As cenas aproximam mais que a pinça do jogador (story/07).
+const STORY_MAX_ZOOM := 10
 const DEFAULT_ZOOM := 2
 const SURFACE_PATH := "res://assets/terrain/surfaces/%s.png"
 const CLIFF_BIOMES: Array[String] = ["stone", "mountain"]
@@ -111,7 +113,13 @@ var fixed_scale := 0.0:
 			_update_scale()
 var zoom_level := DEFAULT_ZOOM:
 	set(value):
-		zoom_level = clampi(value, MIN_ZOOM, MAX_ZOOM)
+		zoom_level = clampi(value, MIN_ZOOM, STORY_MAX_ZOOM)
+		if is_inside_tree():
+			_update_scale()
+## O zoom fracionário do passo de câmera de uma cena, ou 0 fora dele (story/07).
+var story_zoom := 0.0:
+	set(value):
+		story_zoom = clampf(value, MIN_ZOOM, STORY_MAX_ZOOM) if value > 0.0 else 0.0
 		if is_inside_tree():
 			_update_scale()
 var allows_decoration := Callable()
@@ -646,7 +654,14 @@ func pixel_scale() -> Vector2:
 
 
 func art_scale() -> Vector2:
-	var pixels := maxi(1, roundi(_window_scale.y * zoom_level))
+	if story_zoom > 0.0:
+		var low := floori(story_zoom)
+		return _level_scale(low).lerp(_level_scale(mini(low + 1, STORY_MAX_ZOOM)), story_zoom - low)
+	return _level_scale(zoom_level)
+
+
+func _level_scale(level: int) -> Vector2:
+	var pixels := maxi(1, roundi(_window_scale.y * level))
 	return Vector2(pixels, pixels) / _window_scale
 
 

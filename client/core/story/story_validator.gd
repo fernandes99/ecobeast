@@ -163,28 +163,46 @@ static func _check_step(step: Dictionary, path: String, depth: int, keys: Dictio
 				_check_steps(step.get("else"), "%s.2" % path, depth + 1, keys, add)
 		"set_mark":
 			_check_mark(step.get("mark"), fail)
-		"wait", "camera_back":
+		"wait":
 			_check_seconds(step, fail)
+		"camera_back":
+			_check_seconds(step, fail)
+			_check_wait(step, fail)
 		"fade":
 			_check_seconds(step, fail)
+			_check_wait(step, fail)
 			if not ["black", "clear"].has(step.get("to")):
 				fail.call("o escurecer vai para \"black\" ou \"clear\".")
 		"move":
 			if coord_of(step) == null:
 				fail.call("falta o hexágono de destino.")
-			if step.has("wait") and not step.get("wait") is bool:
-				fail.call("o \"esperar\" precisa ser sim ou não.")
+			_check_wait(step, fail)
 		"face":
 			var toward: Variant = step.get("toward")
 			if not (coord_of(toward) != null or toward == TAMER or (toward is String and keys.has(toward))):
 				fail.call("falta para onde virar: um hexágono, o Domador ou um ator.")
 		"camera":
 			_check_seconds(step, fail)
+			_check_wait(step, fail)
 			if coord_of(step) == null:
 				fail.call("falta o hexágono da câmera.")
+			if step.has("zoom") and not _is_zoom(step.get("zoom")):
+				fail.call("o zoom vai de %d a %d." % [HexMapView.MIN_ZOOM, HexMapView.STORY_MAX_ZOOM])
 		"open_screen":
 			if not SCREENS.has(step.get("screen")):
 				fail.call("a tela \"%s\" não existe." % str(step.get("screen")))
+
+
+static func _check_wait(step: Dictionary, fail: Callable) -> void:
+	if step.has("wait") and not step.get("wait") is bool:
+		fail.call("o \"esperar\" precisa ser sim ou não.")
+
+
+## O JSON lê todo número como float; 3.0 vale, 3.5 não.
+static func _is_zoom(value: Variant) -> bool:
+	if not (value is int or value is float) or float(value) != floorf(float(value)):
+		return false
+	return int(value) >= HexMapView.MIN_ZOOM and int(value) <= HexMapView.STORY_MAX_ZOOM
 
 
 static func _check_actor(step: Dictionary, keys: Dictionary[String, bool], tamer_ok: bool, fail: Callable) -> void:
