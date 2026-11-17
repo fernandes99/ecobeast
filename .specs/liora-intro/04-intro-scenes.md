@@ -42,7 +42,7 @@ Cada área é uma coluna inteira de hexágonos, para o Domador passar por ela de
 - a Loja e o cais (a ação Viagem);
 - a marca "Casa do jogador", sem a qual o jogo recusa as cenas com `create_tamer` e `choose_starter`.
 
-As cenas `exemplo_conversa` e `exemplo_chegada`, da [story](../story/), também são da ilha 1199 e ficaram como estavam.
+As cenas `exemplo_conversa` e `exemplo_chegada`, da [story](../story/), também eram da ilha 1199. O dono as apagou depois das cenas de Liora, e o que elas mostravam continua descrito nas fases 02 e 03 da story.
 
 ## Escopo
 
