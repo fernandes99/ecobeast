@@ -586,5 +586,11 @@
 		"slug": "timber_house",
 		"name": "Casa enxaimel",
 		"variants": 8
+	},
+	{
+		"id": 99,
+		"slug": "stone_cottage",
+		"name": "Casinha de pedra",
+		"variants": 8
 	}
 ]

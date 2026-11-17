@@ -76,6 +76,7 @@ O Ecobeast é um jogo mobile (Android/iOS, retrato): o cliente em **Godot 4.7 co
 | [timber-house](timber-house/) | A casa enxaimel do pacote Glassblower's Workshop, montada pelos tiles dele, em 8 cores, com a fumaça e as luzes das janelas |
 | [story](story/) | As cenas da história: o roteiro no cliente, os Marcos do jogador no servidor, a ferramenta Cenas do F2 e a Linha da história |
 | [browt-line](browt-line/) | O inicial de Flora refeito: Browt, Eagrow e Sowingle, com 4 Técnicas físicas e a marca Espinheiro |
+| [stone-cottage](stone-cottage/) | A casinha de pedra da imagem do dono, como peça solta em 8 cores |
 
 As próximas iniciativas estão no [roadmap.md](roadmap.md).
 

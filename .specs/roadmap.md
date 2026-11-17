@@ -66,6 +66,7 @@ O que vem depois do MVP de estrutura (entrada, escolha do inicial e Hub). Cada l
 | 50  | [`minimap`](minimap/) | O minimapa redondo de moldura dourada em pixel art no canto de Explorar, com o Domador no centro e só o descoberto colorido, e o mapa grande da ilha inteira, aberto por ele, com zoom, arrasto e os ícones do Refúgio, da Loja e dos NPCs | fog-of-war | concluída (falta o dono conferir) |
 | 51  | [`timber-house`](timber-house/) | A casa enxaimel do pacote Glassblower's Workshop, montada pelos tiles do `Exterior.tmx`, vira a peça 98 em 8 cores (telhado, madeira, pedra e reboco), com a fumaça da Casa grande na chaminé e as 5 janelas acesas à noite | home-pack, day-night | concluída (falta o dono conferir) |
 | 52  | [`story`](story/) | As cenas da história: o roteiro mora no cliente (`res://story/scenes/`), o servidor guarda só os Marcos do jogador (`player_story_marks`), a ferramenta Cenas do F2 escreve e testa as cenas, e a Linha da história mostra a ordem e os buracos | island-npcs, islands, map-editor | concluída (falta o dono conferir) |
+| 53  | [`stone-cottage`](stone-cottage/) | A casinha de pedra com telhado vermelho da imagem do dono vira a peça 99 em 8 cores (telhado e pedra), lida da imagem ampliada pelo `make_stone_cottage.py` e repintada com a paleta e o contorno da Casa grande | free-props | concluída (falta o dono conferir) |
 
 ## Pós-lançamento (do GDD)
 
