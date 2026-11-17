@@ -1,6 +1,6 @@
 # 04. As cenas da introdução
 
-- **Status:** rascunho
+- **Status:** concluída (falta o dono pôr no mapa os NPCs, o Refúgio e a casa, e conferir)
 - **Depende de:** [02](02-person-npcs.md), [03](03-intro-steps.md), o mapa de Liora desenhado pelo dono
 
 ## Contexto
@@ -17,6 +17,32 @@ Antes desta fase, o dono desenha Liora no F2 e:
 - põe os NPCs da ilha: o Avô (`grandpa`) perto da casa dele, a Mira (`mira`) na praça e o Responsável do Refúgio (`refuge_keeper`) na porta do Refúgio, todos parados.
 
 Com isso, eu leio a ilha publicada e escolho o resto dos hexágonos das cenas: os pontos da câmera no campo, onde o Puffcoo está, de onde o avô chega, as áreas do caminho, a entrada da vila e por onde o avô sai. O dono ajusta depois no F2.
+
+### Os hexágonos escolhidos
+
+As cenas foram escritas com o mapa de Liora ainda sem os NPCs, o Refúgio, a Loja, o cais e a marca de casa (ilha 1199, publicada em 17/11/2026, com 10.116 hexágonos). O que já estava no mapa: o início em (-22, -1), no campo; a trilha de areia de (-13, -4) até a vila; a praça de pedra em volta de (0, 0); e 7 casas, com a casinha de pedra (-7, 3) na entrada da vila, que virou a casa do avô.
+
+| O que | Hexágono |
+| --- | --- |
+| O Domador na abertura | (-22, -1), o início, e o passo até (-21, -1) |
+| O Puffcoo | (-20, -2), fugindo para (-18, -5) |
+| A câmera da abertura | o lago (-14, 3) e o alto (-12, -9) |
+| De onde o avô chega | (-15, -1) |
+| O avô ao lado do Domador (`avo_chega` e `avo_segue`) | (-22, 0), vizinho do início e de (-21, -1) |
+| A área do `caminho_conversa_1` | a coluna q = -17, de r = -8 a 2 |
+| A área do `caminho_conversa_2` | a coluna q = -14, de r = -8 a 1 |
+| A área da `vila_chegada` | a coluna q = -9, de r = -6 a 6 |
+| Por onde o avô sai | (-6, 4), na porta da casinha de pedra (-7, 3) |
+
+Cada área é uma coluna inteira de hexágonos, para o Domador passar por ela de qualquer jeito vindo do oeste. Para o reencontro e o vínculo, falta o dono pôr no mapa:
+
+- o Avô (`grandpa`) parado em (-6, 4), onde o avô da cena some;
+- a Mira (`mira`) parada na praça, perto de (0, 0);
+- o Refúgio e o Responsável do Refúgio (`refuge_keeper`) na porta dele;
+- a Loja e o cais (a ação Viagem);
+- a marca "Casa do jogador", sem a qual o jogo recusa as cenas com `create_tamer` e `choose_starter`.
+
+As cenas `exemplo_conversa` e `exemplo_chegada`, da [story](../story/), também são da ilha 1199 e ficaram como estavam.
 
 ## Escopo
 
@@ -36,6 +62,8 @@ Com isso, eu leio a ilha publicada e escolho o resto dos hexágonos das cenas: o
 - **RF-03:** As falas seguem o roteiro do dono. As que eu escrevi para ligar as partes (as opções de resposta, a narração da anotação e a dica de andar) ficam marcadas _a revisar_ na descrição da cena, no campo `name`, e na lista abaixo.
 - **RF-04:** Toda fala sobre o Domador que muda com o corpo usa `{forma masculina|forma feminina}`.
 - **RF-05:** O `StoryValidator` aceita as 9 cenas, e a Linha da história as mostra em ordem, sem aviso além do `introducao_pulada` sem dono ([architecture](architecture.md#as-contas-antigas)).
+- **RF-06:** Na ilha casa, os hexágonos a até 30 do ponto de início (`HOME_KNOWN_RADIUS` em `exploration_screen.gd`, _a revisar_) já entram descobertos, a cada entrada e depois do "Esquecer ilha" do Debug, e vão para o servidor como as outras descobertas. O raio cobre o campo da abertura e a vila (a casa mais longe fica a 29); o resto da ilha continua na névoa para explorar.
+- **RF-07:** Durante qualquer cena, a névoa some, para a câmera mostrar o mapa onde passar; ao fim da cena, ela volta como estava. O que a câmera mostrou não conta como descoberto.
 
 ### As cenas
 
@@ -92,7 +120,7 @@ Manual (F5, conta nova): os critérios de aceite.
 
 ## Tarefas
 
-- [ ] O NPC 6.
-- [ ] Ler o mapa publicado e escolher os hexágonos.
-- [ ] As 9 cenas.
-- [ ] Jogar a introdução inteira com uma conta nova (ou deixar escrito o que ficou para o dono).
+- [x] O NPC 6 (migration `liora_puffcoo`; o teste da carga inicial confere o sprite pelas folhas de explorar do jogo, porque o `species.json` só tem as 9 espécies da carga inicial).
+- [x] Ler o mapa publicado e escolher os hexágonos.
+- [x] As 9 cenas, geradas no formato do F2; o `Story.load_scenes()` as aceita, e a Linha da história as põe em ordem.
+- [ ] Jogar a introdução inteira com uma conta nova: fica para o dono, depois de pôr os NPCs, o Refúgio e a casa no mapa.

@@ -43,5 +43,14 @@
 		"sprite": null,
 		"body_type_id": 1,
 		"skin_palette_id": 6
+	},
+	{
+		"id": 6,
+		"slug": "liora_puffcoo",
+		"name": "Puffcoo",
+		"description": "O Ecobeast que o Domador observa no campo.",
+		"sprite": "puffcoo",
+		"body_type_id": null,
+		"skin_palette_id": null
 	}
 ]

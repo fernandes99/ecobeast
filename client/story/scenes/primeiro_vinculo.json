@@ -1,0 +1,61 @@
+{
+  "slug": "primeiro_vinculo",
+  "name": "Liora 8: o primeiro vínculo no Refúgio",
+  "island_id": 1199,
+  "repeatable": false,
+  "priority": 0,
+  "requires": [
+    "mira_reencontro"
+  ],
+  "forbids": [],
+  "trigger": {
+    "type": "npc",
+    "npc_id": 5
+  },
+  "actors": [
+    {
+      "key": "responsavel",
+      "npc_id": 5,
+      "island_npc": true
+    }
+  ],
+  "steps": [
+    {
+      "type": "face",
+      "actor": "responsavel",
+      "toward": "tamer"
+    },
+    {
+      "type": "say",
+      "speaker": "responsavel",
+      "text": "Olá, {nome}! A Mira me disse que você viria."
+    },
+    {
+      "type": "say",
+      "speaker": "responsavel",
+      "text": "Temos alguns Ecobeasts jovens que precisam de alguém para cuidar deles e crescer junto."
+    },
+    {
+      "type": "say",
+      "speaker": "responsavel",
+      "text": "Você conhece os campos de Liora como ninguém. Acho que um deles vai se dar muito bem com você."
+    },
+    {
+      "type": "say",
+      "speaker": "responsavel",
+      "text": "Venha, escolha com calma."
+    },
+    {
+      "type": "choose_starter"
+    },
+    {
+      "type": "say",
+      "speaker": "responsavel",
+      "text": "Cuide bem dele. E ele vai cuidar de você também."
+    },
+    {
+      "type": "set_mark",
+      "mark": "introducao_concluida"
+    }
+  ]
+}

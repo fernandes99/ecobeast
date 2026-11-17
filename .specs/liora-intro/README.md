@@ -2,7 +2,7 @@
 
 A introdução do jogo, em Liora: a natureza da ilha com a narração, a criação do Domador dentro da cena, a chegada do avô, o caminho até a Vila Raiz, o reencontro com a Mira, o convite dela e o primeiro vínculo no Refúgio. O jogador novo passa a começar por ela, e não pela tela de nome. Para isso, o Domador nasce sem nome, Liora abre sem equipe, os NPCs podem ser pessoas (com as camadas da aparência do Domador), as falas mudam com o corpo do Domador e as cenas ganham dois passos novos, criar o Domador e escolher o inicial.
 
-- **Status:** em andamento
+- **Status:** concluída (falta o dono pôr os NPCs, o Refúgio e a casa no mapa de Liora e conferir)
 - **Depende de:** [home-island](../home-island/), [story](../story/), [tamer-appearance](../tamer-appearance/), [island-npcs](../island-npcs/)
 
 ## Contexto
@@ -74,6 +74,6 @@ Tomadas no planejamento (corrigíveis; ao mudar uma, atualize aqui e nas specs a
 | [01](01-nameless-tamer.md) | O Domador sem nome e Liora sem equipe: `POST /v1/me` sem nome, `PUT /v1/me/name`, a casa sem equipe e o Marco `introducao_pulada` | concluída |
 | [02](02-person-npcs.md) | Os NPCs pessoas: a aparência no catálogo dos NPCs, o desenho no mapa e nas cenas, e o botão Aparência na ferramenta NPC do F2 | concluída |
 | [03](03-intro-steps.md) | Os passos da introdução: `create_tamer` com a criação por cima do mapa, `choose_starter`, o texto que segue o corpo, a entrada nova do jogo e o jogo sem equipe em Liora | concluída |
-| [04](04-intro-scenes.md) | As cenas da introdução, escritas a partir do roteiro do dono, e os NPCs dela | rascunho |
+| [04](04-intro-scenes.md) | As cenas da introdução, escritas a partir do roteiro do dono, e os NPCs dela | concluída (falta o dono pôr os NPCs, o Refúgio e a casa no mapa) |
 
 O desenho que as fases compartilham está em [architecture.md](architecture.md).

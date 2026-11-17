@@ -1,0 +1,110 @@
+{
+  "slug": "liora_abertura",
+  "name": "Liora 1: os campos e a criação do Domador",
+  "island_id": 1199,
+  "repeatable": false,
+  "priority": 10,
+  "requires": [],
+  "forbids": [
+    "introducao_pulada"
+  ],
+  "trigger": {
+    "type": "auto"
+  },
+  "actors": [
+    {
+      "key": "puffcoo",
+      "npc_id": 6,
+      "q": -20,
+      "r": -2,
+      "visible": true
+    }
+  ],
+  "steps": [
+    {
+      "type": "fade",
+      "to": "black",
+      "seconds": 0.1
+    },
+    {
+      "type": "camera",
+      "q": -16,
+      "r": 25,
+      "seconds": 0.1
+    },
+    {
+      "type": "fade",
+      "to": "clear",
+      "seconds": 1.5
+    },
+    {
+      "type": "say",
+      "speaker": null,
+      "text": "Em Auralis, cada ilha guarda suas próprias paisagens, criaturas e histórias."
+    },
+    {
+      "type": "camera",
+      "q": 11,
+      "r": 3,
+      "seconds": 4
+    },
+    {
+      "type": "say",
+      "speaker": null,
+      "text": "Para alguns, esses lugares são apenas o lar. Para outros, são um mundo inteiro esperando para ser descoberto."
+    },
+    {
+      "type": "camera_back",
+      "seconds": 4
+    },
+    {
+      "type": "face",
+      "actor": "tamer",
+      "toward": "puffcoo"
+    },
+    {
+      "type": "say",
+      "speaker": null,
+      "text": "E existem aqueles que nunca conseguem ficar muito tempo longe da natureza..."
+    },
+    {
+      "type": "create_tamer"
+    },
+    {
+      "type": "move",
+      "actor": "tamer",
+      "q": -21,
+      "r": -1,
+      "wait": true
+    },
+    {
+      "type": "face",
+      "actor": "puffcoo",
+      "toward": "tamer"
+    },
+    {
+      "type": "wait",
+      "seconds": 0.5
+    },
+    {
+      "type": "move",
+      "actor": "puffcoo",
+      "q": -18,
+      "r": -5,
+      "wait": false
+    },
+    {
+      "type": "wait",
+      "seconds": 1.5
+    },
+    {
+      "type": "hide",
+      "actor": "puffcoo"
+    },
+    {
+      "type": "say",
+      "speaker": null,
+      "text": "{nome} sorri e faz uma pequena anotação no caderno."
+    }
+  ]
+}

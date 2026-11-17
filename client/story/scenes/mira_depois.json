@@ -1,0 +1,49 @@
+{
+  "slug": "mira_depois",
+  "name": "Liora 9: a Mira conhece o primeiro Ecobeast",
+  "island_id": 1199,
+  "repeatable": false,
+  "priority": 0,
+  "requires": [
+    "primeiro_vinculo"
+  ],
+  "forbids": [],
+  "trigger": {
+    "type": "npc",
+    "npc_id": 4
+  },
+  "actors": [
+    {
+      "key": "mira",
+      "npc_id": 4,
+      "island_npc": true
+    }
+  ],
+  "steps": [
+    {
+      "type": "face",
+      "actor": "mira",
+      "toward": "tamer"
+    },
+    {
+      "type": "say",
+      "speaker": "mira",
+      "text": "Você escolheu! Deixa eu ver..."
+    },
+    {
+      "type": "say",
+      "speaker": null,
+      "text": "A Mira anota alguma coisa no caderno, sorrindo."
+    },
+    {
+      "type": "say",
+      "speaker": "mira",
+      "text": "Vocês combinam. Dá para ver."
+    },
+    {
+      "type": "say",
+      "speaker": "mira",
+      "text": "Quando estiver {pronto|pronta}, vamos juntos para a Pradaria Serena. Vai ser como antigamente!"
+    }
+  ]
+}

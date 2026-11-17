@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { CATALOG_TABLES, SEED_DATA_DIR } from './catalog-tables.js';
 
@@ -471,18 +471,28 @@ describe('carga inicial dos NPCs (island-npcs/01)', () => {
       skin_palette_id: number | null;
     }[]
   >('npcs.json');
-  const species = read<{ slug: string }[]>('species.json');
+  // As folhas de explorar do jogo: o species.json só tem a carga inicial.
+  const sheets = (sprite: string) =>
+    existsSync(
+      join(
+        SEED_DATA_DIR,
+        '../../../client/assets/creatures',
+        sprite,
+        'explore/idle.png',
+      ),
+    );
   const parts = read<{ npc_id: number; appearance_slot_id: number }[]>(
     'npc_appearance_parts.json',
   );
 
-  it('tem os 2 NPCs de Ecobeast e as 3 pessoas da introdução (liora-intro/02)', () => {
+  it('tem os NPCs de Ecobeast e as 3 pessoas da introdução (liora-intro/02 e 04)', () => {
     expect(npcs.map(({ id, slug }) => [id, slug])).toEqual([
       [1, 'village_ruvo'],
       [2, 'guard_ruvak'],
       [3, 'grandpa'],
       [4, 'mira'],
       [5, 'refuge_keeper'],
+      [6, 'liora_puffcoo'],
     ]);
   });
 
@@ -492,7 +502,7 @@ describe('carga inicial dos NPCs (island-npcs/01)', () => {
         expect(npc.body_type_id).not.toBeNull();
         expect(npc.skin_palette_id).not.toBeNull();
       } else {
-        expect(species.some(({ slug }) => slug === npc.sprite)).toBe(true);
+        expect(sheets(npc.sprite)).toBe(true);
         expect(npc.body_type_id).toBeNull();
         expect(npc.skin_palette_id).toBeNull();
       }

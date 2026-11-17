@@ -1,0 +1,112 @@
+{
+  "slug": "vila_chegada",
+  "name": "Liora 6: a chegada à Vila Raiz",
+  "island_id": 1199,
+  "repeatable": false,
+  "priority": 0,
+  "requires": [
+    "avo_chega"
+  ],
+  "forbids": [],
+  "trigger": {
+    "type": "area",
+    "tiles": [
+      {
+        "q": -9,
+        "r": -6
+      },
+      {
+        "q": -9,
+        "r": -5
+      },
+      {
+        "q": -9,
+        "r": -4
+      },
+      {
+        "q": -9,
+        "r": -3
+      },
+      {
+        "q": -9,
+        "r": -2
+      },
+      {
+        "q": -9,
+        "r": -1
+      },
+      {
+        "q": -9,
+        "r": 0
+      },
+      {
+        "q": -9,
+        "r": 1
+      },
+      {
+        "q": -9,
+        "r": 2
+      },
+      {
+        "q": -9,
+        "r": 3
+      },
+      {
+        "q": -9,
+        "r": 4
+      },
+      {
+        "q": -9,
+        "r": 5
+      },
+      {
+        "q": -9,
+        "r": 6
+      }
+    ]
+  },
+  "actors": [
+    {
+      "key": "avo",
+      "npc_id": 3,
+      "island_npc": true
+    }
+  ],
+  "steps": [
+    {
+      "type": "face",
+      "actor": "avo",
+      "toward": "tamer"
+    },
+    {
+      "type": "say",
+      "speaker": "avo",
+      "text": "Bom, chegamos."
+    },
+    {
+      "type": "say",
+      "speaker": "avo",
+      "text": "Tenho algumas coisas para resolver, então vou deixar você procurar sua amiga."
+    },
+    {
+      "type": "say",
+      "speaker": "avo",
+      "text": "Ela deve estar lá pela praça."
+    },
+    {
+      "type": "unfollow",
+      "actor": "avo"
+    },
+    {
+      "type": "move",
+      "actor": "avo",
+      "q": -6,
+      "r": 4,
+      "wait": true
+    },
+    {
+      "type": "hide",
+      "actor": "avo"
+    }
+  ]
+}

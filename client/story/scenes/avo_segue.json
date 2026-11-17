@@ -1,0 +1,36 @@
+{
+  "slug": "avo_segue",
+  "name": "Liora 3: o avô acompanha até a vila",
+  "island_id": 1199,
+  "repeatable": true,
+  "priority": 0,
+  "requires": [
+    "avo_chega"
+  ],
+  "forbids": [
+    "vila_chegada"
+  ],
+  "trigger": {
+    "type": "auto"
+  },
+  "actors": [
+    {
+      "key": "avo",
+      "npc_id": 3,
+      "q": -22,
+      "r": 0,
+      "visible": true
+    }
+  ],
+  "steps": [
+    {
+      "type": "follow",
+      "actor": "avo"
+    },
+    {
+      "type": "say",
+      "speaker": null,
+      "text": "Toque no chão para andar."
+    }
+  ]
+}

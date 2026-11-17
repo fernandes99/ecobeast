@@ -25,11 +25,11 @@ func clear() -> void:
 	_found.clear()
 
 
-## Descobre os hexágonos do mapa a até REVEAL_RADIUS de `center` e devolve só os novos.
-func reveal_around(map: ExplorationMap, center: Vector2i) -> Array[Vector2i]:
+## Descobre os hexágonos do mapa a até `radius` de `center` e devolve só os novos.
+func reveal_around(map: ExplorationMap, center: Vector2i, radius: int = REVEAL_RADIUS) -> Array[Vector2i]:
 	var found: Array[Vector2i] = []
-	for dq: int in range(-REVEAL_RADIUS, REVEAL_RADIUS + 1):
-		for dr: int in range(maxi(-REVEAL_RADIUS, -dq - REVEAL_RADIUS), mini(REVEAL_RADIUS, -dq + REVEAL_RADIUS) + 1):
+	for dq: int in range(-radius, radius + 1):
+		for dr: int in range(maxi(-radius, -dq - radius), mini(radius, -dq + radius) + 1):
 			var coord := center + Vector2i(dq, dr)
 			if map.has(coord) and not _found.has(coord):
 				_found[coord] = true

@@ -1,0 +1,110 @@
+{
+  "slug": "mira_reencontro",
+  "name": "Liora 7: o reencontro com a Mira",
+  "island_id": 1199,
+  "repeatable": false,
+  "priority": 0,
+  "requires": [
+    "vila_chegada"
+  ],
+  "forbids": [],
+  "trigger": {
+    "type": "npc",
+    "npc_id": 4
+  },
+  "actors": [
+    {
+      "key": "mira",
+      "npc_id": 4,
+      "island_npc": true
+    }
+  ],
+  "steps": [
+    {
+      "type": "face",
+      "actor": "mira",
+      "toward": "tamer"
+    },
+    {
+      "type": "say",
+      "speaker": "mira",
+      "text": "Espera... Não acredito!"
+    },
+    {
+      "type": "say",
+      "speaker": "mira",
+      "text": "É você mesmo?!"
+    },
+    {
+      "type": "choice",
+      "options": [
+        {
+          "text": "Mira?!",
+          "steps": []
+        },
+        {
+          "text": "Oi, Mira! Quanto tempo!",
+          "steps": []
+        }
+      ]
+    },
+    {
+      "type": "say",
+      "speaker": "mira",
+      "text": "Nossa, quanto tempo! Achei que você fosse demorar ainda mais para aparecer!"
+    },
+    {
+      "type": "say",
+      "speaker": "mira",
+      "text": "Faz alguns anos desde que fui estudar no Instituto Meridian. Tenho tanta coisa para contar!"
+    },
+    {
+      "type": "say",
+      "speaker": null,
+      "text": "A Mira mostra o caderno, cheio de anotações e desenhos de Ecobeasts."
+    },
+    {
+      "type": "say",
+      "speaker": "mira",
+      "text": "E você? Continua explorando todos os cantinhos de Liora? Aposto que ainda conhece esses campos melhor do que qualquer mapa."
+    },
+    {
+      "type": "choice",
+      "options": [
+        {
+          "text": "Conheço cada pedra desses campos.",
+          "steps": []
+        },
+        {
+          "text": "Ainda me perco de vez em quando...",
+          "steps": []
+        }
+      ]
+    },
+    {
+      "type": "say",
+      "speaker": "mira",
+      "text": "Sabe... depois de tanto tempo estudando, percebi que estava sentindo falta de explorar de verdade."
+    },
+    {
+      "type": "say",
+      "speaker": "mira",
+      "text": "Acho que seria ótimo se pudéssemos fazer isso juntos novamente."
+    },
+    {
+      "type": "say",
+      "speaker": "mira",
+      "text": "Voltei a Liora para fazer pesquisa de campo. Quero começar pela Pradaria Serena."
+    },
+    {
+      "type": "say",
+      "speaker": "mira",
+      "text": "Ah, e passei pelo Refúgio. O responsável está procurando novos Domadores para alguns Ecobeasts jovens."
+    },
+    {
+      "type": "say",
+      "speaker": "mira",
+      "text": "Passa lá! Depois me conta qual você escolheu."
+    }
+  ]
+}

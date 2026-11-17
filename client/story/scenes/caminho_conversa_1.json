@@ -1,0 +1,81 @@
+{
+  "slug": "caminho_conversa_1",
+  "name": "Liora 4: o avô lembra dos campos",
+  "island_id": 1199,
+  "repeatable": false,
+  "priority": 0,
+  "requires": [
+    "avo_chega"
+  ],
+  "forbids": [
+    "vila_chegada"
+  ],
+  "trigger": {
+    "type": "area",
+    "tiles": [
+      {
+        "q": -17,
+        "r": -8
+      },
+      {
+        "q": -17,
+        "r": -7
+      },
+      {
+        "q": -17,
+        "r": -6
+      },
+      {
+        "q": -17,
+        "r": -5
+      },
+      {
+        "q": -17,
+        "r": -4
+      },
+      {
+        "q": -17,
+        "r": -3
+      },
+      {
+        "q": -17,
+        "r": -2
+      },
+      {
+        "q": -17,
+        "r": -1
+      },
+      {
+        "q": -17,
+        "r": 0
+      },
+      {
+        "q": -17,
+        "r": 1
+      },
+      {
+        "q": -17,
+        "r": 2
+      }
+    ]
+  },
+  "actors": [
+    {
+      "key": "avo",
+      "npc_id": 3,
+      "island_npc": true
+    }
+  ],
+  "steps": [
+    {
+      "type": "say",
+      "speaker": "avo",
+      "text": "Faz alguns anos desde que vocês dois se viram, não é?"
+    },
+    {
+      "type": "say",
+      "speaker": "avo",
+      "text": "Lembro de quando passavam tardes inteiras explorando esses campos."
+    }
+  ]
+}

@@ -1,0 +1,156 @@
+{
+  "slug": "avo_chega",
+  "name": "Liora 2: o avô chega",
+  "island_id": 1199,
+  "repeatable": false,
+  "priority": 0,
+  "requires": [
+    "liora_abertura"
+  ],
+  "forbids": [],
+  "trigger": {
+    "type": "auto"
+  },
+  "actors": [
+    {
+      "key": "avo",
+      "npc_id": 3,
+      "q": -15,
+      "r": -1,
+      "visible": false
+    }
+  ],
+  "steps": [
+    {
+      "type": "wait",
+      "seconds": 0.8
+    },
+    {
+      "type": "show",
+      "actor": "avo"
+    },
+    {
+      "type": "camera",
+      "q": -15,
+      "r": -1,
+      "seconds": 1.5
+    },
+    {
+      "type": "say",
+      "speaker": "avo",
+      "text": "Ei! Já estava imaginando que encontraria você por aqui!"
+    },
+    {
+      "type": "camera_back",
+      "seconds": 1.5
+    },
+    {
+      "type": "move",
+      "actor": "avo",
+      "q": -22,
+      "r": 0,
+      "wait": true
+    },
+    {
+      "type": "face",
+      "actor": "avo",
+      "toward": "tamer"
+    },
+    {
+      "type": "face",
+      "actor": "tamer",
+      "toward": "avo"
+    },
+    {
+      "type": "say",
+      "speaker": "avo",
+      "text": "Você tem mesmo um talento para desaparecer quando encontra alguma criatura interessante, hein?"
+    },
+    {
+      "type": "face",
+      "actor": "avo",
+      "toward": {
+        "q": -18,
+        "r": -5
+      }
+    },
+    {
+      "type": "say",
+      "speaker": "avo",
+      "text": "O que estava observando dessa vez?"
+    },
+    {
+      "type": "choice",
+      "options": [
+        {
+          "text": "Um Puffcoo! Quase consegui chegar perto.",
+          "steps": []
+        },
+        {
+          "text": "Nada de mais... só um Ecobeast curioso.",
+          "steps": []
+        }
+      ]
+    },
+    {
+      "type": "face",
+      "actor": "avo",
+      "toward": "tamer"
+    },
+    {
+      "type": "say",
+      "speaker": null,
+      "text": "O avô dá uma risada."
+    },
+    {
+      "type": "say",
+      "speaker": "avo",
+      "text": "Imaginei. Mas hoje tenho uma notícia que talvez seja ainda mais interessante para você."
+    },
+    {
+      "type": "wait",
+      "seconds": 0.8
+    },
+    {
+      "type": "say",
+      "speaker": "avo",
+      "text": "Uma velha amiga sua voltou para a Vila Raiz. Chegou ontem e parece que está procurando por você."
+    },
+    {
+      "type": "choice",
+      "options": [
+        {
+          "text": "Uma velha amiga?",
+          "steps": []
+        },
+        {
+          "text": "Quem será?",
+          "steps": []
+        }
+      ]
+    },
+    {
+      "type": "say",
+      "speaker": "avo",
+      "text": "Não vai me dizer que já esqueceu da Mira?"
+    },
+    {
+      "type": "choice",
+      "options": [
+        {
+          "text": "A Mira?! Ela voltou?",
+          "steps": []
+        },
+        {
+          "text": "Claro que não esqueci!",
+          "steps": []
+        }
+      ]
+    },
+    {
+      "type": "say",
+      "speaker": "avo",
+      "text": "Vamos, ela deve estar na vila. Não seria muito educado deixar uma velha amiga esperando, não acha?"
+    }
+  ]
+}

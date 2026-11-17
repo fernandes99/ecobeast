@@ -18,6 +18,8 @@ const NO_TEAM_TRAVEL_TEXT := "Você precisa de um Ecobeast para viajar."
 const NO_TEAM_HEAL_TEXT := "Você ainda não tem Ecobeasts para cuidar."
 ## Na criação, o Domador fica no meio da parte de cima, acima do painel.
 const CREATOR_CENTER := 0.24
+## Na casa, o campo e a vila em volta do início já vêm descobertos (liora-intro/04). A revisar.
+const HOME_KNOWN_RADIUS := 30
 const NOTHING_HERE_TEXT := "Nada por aqui."
 const NO_PATH_TEXT := "Não dá para chegar lá."
 ## Encostado numa peça: a até isto das linhas dela, em pixels da arte (free-objects/03).
@@ -293,6 +295,7 @@ func _begin() -> void:
 	_swarm_coords = _map_view.firefly_swarm_tiles()
 	_discovery = MapDiscovery.new()
 	_discovery.add(_map.discovered)
+	_reveal_home_field()
 	Session.queue_island_discoveries(_map.island_id, _discovery.reveal_around(_map, _player_coord))
 	_fog.set_map(_map, _discovery)
 	_debug_forget_button.disabled = _map.island_id <= 0
@@ -918,6 +921,7 @@ func _forget_island() -> void:
 		_show_message(result.error, &"DangerLabel")
 		return
 	_discovery.clear()
+	_reveal_home_field()
 	Session.queue_island_discoveries(_map.island_id, _discovery.reveal_around(_map, _player_coord))
 	_fog.set_map(_map, _discovery)
 	_fog.visible = not _showing_whole_map
@@ -1309,6 +1313,11 @@ func _playable(scene: StoryScene) -> bool:
 	return errors.is_empty()
 
 
+func _reveal_home_field() -> void:
+	if Home.is_home(_map.island_id):
+		Session.queue_island_discoveries(_map.island_id, _discovery.reveal_around(_map, _map.start, HOME_KNOWN_RADIUS))
+
+
 func _story_busy() -> bool:
 	return _story.playing or _creating
 
@@ -1374,11 +1383,14 @@ func story_began() -> void:
 	_message.hide()
 	_controls_panel.hide()
 	_minimap.hide()
+	# A câmera da cena mostra o mapa inteiro; a névoa volta, como estava, quando ela termina.
+	_fog.visible = false
 
 
 func story_ended() -> void:
 	_controls_panel.show()
 	_minimap.show()
+	_fog.visible = not _showing_whole_map
 	_fit_view.call_deferred()
 
 
