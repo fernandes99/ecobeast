@@ -1,11 +1,11 @@
 ---
 name: creature-sprites
-description: Cria as folhas de pixel art idle.png e walk.png de um Ecobeast a partir do front.png dele, em 5 ângulos, no formato de client/assets/tamer. Use sempre que o usuário pedir sprite animado, idle, walk, andar, pixel art ou spritesheet de uma criatura ou Ecobeast (Ruvo, Nilu, Elu, Ruvak e os outros), mesmo sem dizer "folha", e também para ajustar ou redesenhar uma folha que já existe.
+description: Cria as folhas de pixel art idle.png e walk.png de um Ecobeast a partir do front.png dele, em 5 ângulos, no formato de client/assets/tamer. Use sempre que o usuário pedir sprite animado, idle, walk, andar, pixel art ou spritesheet de uma criatura ou Ecobeast (Ruvo, Nilu, Browt, Ruvak e os outros), mesmo sem dizer "folha", e também para ajustar ou redesenhar uma folha que já existe.
 ---
 
 # Folhas de pixel art dos Ecobeasts
 
-Esta skill transforma o `front.png` de um Ecobeast em duas folhas desenhadas à mão, pixel a pixel. Um `front.png` mostra um ângulo só, e reduzir a imagem borra e não cria os outros quatro. Por isso cada parte da criatura é um desenho em texto, e o código só monta as partes em cada quadro. Os exemplos estão em `client/assets/creatures/<slug>/explore/sprites.py`: leia o mais parecido antes de começar. Nilu é o menor; Ruvo e Elu são pequenos, de quatro patas; Ruvak e Eluvin são médios; Ruvaroth e Eluvara são grandes; Nilgar e Nilgorr são caranguejos.
+Esta skill transforma o `front.png` de um Ecobeast em duas folhas desenhadas à mão, pixel a pixel. Um `front.png` mostra um ângulo só, e reduzir a imagem borra e não cria os outros quatro. Por isso cada parte da criatura é um desenho em texto, e o código só monta as partes em cada quadro. Os exemplos estão em `client/assets/creatures/<slug>/explore/sprites.py`: leia o mais parecido antes de começar. Nilu é o menor; Ruvo é pequeno, de quatro patas; Ruvak é médio; Ruvaroth é grande; Puffcoo e Galecrest são aves; Nilgar e Nilgorr são caranguejos.
 
 O tamanho vem da altura do catálogo, na escala do Domador: um Ecobeast pequeno é pequeno de verdade. Fale com o dono em pt-BR. Ele é iniciante em Godot, então explique os conceitos do motor quando aparecerem.
 
@@ -18,7 +18,7 @@ O tamanho vem da altura do catálogo, na escala do Domador: um Ecobeast pequeno 
 
 - Células de 32×32, em 5 linhas: frente, diagonal descendo para a direita, lado direito, diagonal subindo para a direita e costas. O lado esquerdo sai espelhando no jogo, com `flip_h`, então nunca é desenhado.
 - Os pés encostam na última linha da célula, perto da coluna 16: é o ponto que o jogo põe no centro do hexágono.
-- **Altura:** o Domador tem 1,70 m e ocupa 25 pixels, então `pixels = height_m × 25 / 1,70`, arredondado. `height_m` está em `server/prisma/seed-data/species.json`, e `weight_kg` diz se o corpo é esguio ou pesado. Hoje: Nilu 4, Elu 6, Ruvo 7, Nilgar e Eluvin 13, Ruvak 15, Eluvara 21, Nilgorr 22 e Ruvaroth 24. Qualquer altura até 2,18 m cabe na célula.
+- **Altura:** o Domador tem 1,70 m e ocupa 25 pixels, então `pixels = height_m × 25 / 1,70`, arredondado. `height_m` está no catálogo (`GET /v1/species/<slug>`; o `server/prisma/seed-data/` é só a carga inicial), e `weight_kg` diz se o corpo é esguio ou pesado. Hoje: Nilu e Browt 4, Ruvo 7, Nilgar 13, Ruvak e Eagrow 15, Nilgorr 22, Ruvaroth 24 e Sowingle 26. Qualquer altura até 2,18 m cabe na célula.
 - A altura é da folha inteira, com orelhas e chamas. A verificação aceita 1 pixel de diferença.
 - Sem transparência parcial, com até 32 cores e a mesma densidade de pixels do Domador.
 

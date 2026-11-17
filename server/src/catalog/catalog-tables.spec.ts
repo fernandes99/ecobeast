@@ -75,7 +75,7 @@ describe('carga inicial dos biomas (biome-encounters/01)', () => {
     'species_biomes',
   );
   const biomeId = (slug: string) => biomes.find((b) => b.slug === slug)!.id;
-  const ELU = 7;
+  const BROWT = 7;
 
   it('tem os 11 biomas de encontro', () => {
     expect(biomes.map(({ slug }) => slug).sort()).toEqual(
@@ -108,10 +108,10 @@ describe('carga inicial dos biomas (biome-encounters/01)', () => {
     expect(new Set(pairs).size).toBe(pairs.length);
   });
 
-  it('o Elu é bem mais comum no boreal que na montanha, e não está na água', () => {
+  it('o Browt é bem mais comum no boreal que na montanha, e não está na água', () => {
     const rate = (slug: string) =>
       rates.find(
-        (row) => row.species_id === ELU && row.biome_id === biomeId(slug),
+        (row) => row.species_id === BROWT && row.biome_id === biomeId(slug),
       )?.rate;
     expect(rate('boreal')).toBeGreaterThan(rate('mountain')! * 10);
     expect(rate('wshallow')).toBeUndefined();

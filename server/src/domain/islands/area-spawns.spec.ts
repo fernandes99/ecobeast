@@ -11,7 +11,7 @@ import type { IslandDraft } from './island-draft.js';
 
 const RUVO = 1;
 const NILU = 4;
-const ELU = 7;
+const BROWT = 7;
 const NO_BLOCKS = new Map();
 
 function island(): IslandDraft {
@@ -157,15 +157,15 @@ describe('rollAreaSpawns', () => {
           spawnCount: 200,
           species: [
             { speciesId: RUVO, weight: 9, minLevel: 2, maxLevel: 2 },
-            { speciesId: ELU, weight: 1, minLevel: 2, maxLevel: 2 },
+            { speciesId: BROWT, weight: 1, minLevel: 2, maxLevel: 2 },
           ],
         }),
       ],
       seededRandom(9),
     );
-    const elu = spawns.filter(({ speciesId }) => speciesId === ELU).length;
-    expect(elu).toBeGreaterThan(5);
-    expect(elu).toBeLessThan(45);
+    const browt = spawns.filter(({ speciesId }) => speciesId === BROWT).length;
+    expect(browt).toBeGreaterThan(5);
+    expect(browt).toBeLessThan(45);
   });
 
   it('espalha os Ecobeasts pelos hexágonos da área', () => {
@@ -188,30 +188,33 @@ describe('areasBornIn (day-phase-spawns/01)', () => {
     spawnCount: 40,
     species: [
       { speciesId: RUVO, weight: 1, minLevel: 2, maxLevel: 6 },
-      { speciesId: ELU, weight: 1, minLevel: 2, maxLevel: 6 },
+      { speciesId: BROWT, weight: 1, minLevel: 2, maxLevel: 6 },
     ],
   });
 
   it('cada área só sorteia quem nasce na parte do dia', () => {
     const spawns = rollAreaSpawns(
-      areasBornIn([both], new Set([ELU])),
+      areasBornIn([both], new Set([BROWT])),
       seededRandom(3),
     );
     expect(spawns).toHaveLength(40);
     expect(new Set(spawns.map(({ speciesId }) => speciesId))).toEqual(
-      new Set([ELU]),
+      new Set([BROWT]),
     );
   });
 
   it('a área sem ninguém da parte do dia fica vazia', () => {
     expect(
-      rollAreaSpawns(areasBornIn([area()], new Set([ELU])), seededRandom(4)),
+      rollAreaSpawns(areasBornIn([area()], new Set([BROWT])), seededRandom(4)),
     ).toEqual([]);
   });
 
   it('com todos nascendo, o sorteio é o mesmo de antes', () => {
     expect(
-      rollAreaSpawns(areasBornIn([both], new Set([RUVO, ELU])), seededRandom(5)),
+      rollAreaSpawns(
+        areasBornIn([both], new Set([RUVO, BROWT])),
+        seededRandom(5),
+      ),
     ).toEqual(rollAreaSpawns([both], seededRandom(5)));
   });
 });

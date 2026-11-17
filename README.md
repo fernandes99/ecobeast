@@ -26,7 +26,7 @@ Jogo mobile (Android e iOS, em retrato) de **capturar, treinar e batalhar criatu
 
 - **Domador:** o jogador. Começa com um nome e um Ecobeast inicial.
 - **Ecobeasts:** cada um tem um ou dois dos **15 Elementos**, Técnicas, um Traço, um Temperamento e Genes próprios, e pode **evoluir** ao subir de nível.
-- **Os iniciais:** três linhas evolutivas para escolher no começo: Ruvo (Fogo), Nilu (Água) e Elu (Flora).
+- **Os iniciais:** três linhas evolutivas para escolher no começo: Ruvo (Fogo), Nilu (Água) e Browt (Flora).
 - **Só online:** o servidor decide as regras (stats, dano, captura, recompensas), e o aparelho só mostra o resultado. Isso evita trapaças e prepara o terreno para PvP e trocas.
 
 As regras, as fórmulas e o conteúdo estão no [GDD](GDD.md); as 16 telas do protótipo, em [TELAS.md](TELAS.md).
