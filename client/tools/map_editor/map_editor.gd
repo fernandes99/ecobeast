@@ -43,6 +43,8 @@ var _areas_check: CheckButton
 var _actions_check: CheckButton
 var _blocks_check: CheckButton
 var _contour_check: CheckButton
+var _motion_check: CheckButton
+var _low_processor_before := false
 var _publish_dialog: ConfirmationDialog
 var _type_block_dialog: ConfirmationDialog
 var _side: VBoxContainer
@@ -97,7 +99,20 @@ func close() -> void:
 
 func _on_visibility_changed() -> void:
 	if visible:
+		_low_processor_before = OS.low_processor_usage_mode
 		_refresh_list()
+		_apply_motion()
+	else:
+		HexMapView.animated = true
+		OS.low_processor_usage_mode = _low_processor_before
+
+
+## As animações do mapa desligadas (editor-performance/01): o vento, a água e a fumaça
+## param, e o Godot só redesenha quando algo muda, até o editor fechar.
+func _apply_motion() -> void:
+	var on := _motion_check.button_pressed
+	HexMapView.animated = on
+	OS.low_processor_usage_mode = _low_processor_before or not on
 
 
 func _refresh_list() -> void:
@@ -357,7 +372,7 @@ func _paint(coord: Vector2i) -> void:
 	if _tools.paints_marks():
 		_canvas.refresh_marks(changed)
 	elif _tools.tool == EditorTools.Tool.OBJECT or _tools.tool == EditorTools.Tool.BLOCKS:
-		_canvas.refresh_props()
+		_canvas.refresh_props_at(changed)
 	elif _tools.tool == EditorTools.Tool.VEGETATION:
 		_canvas.refresh_props_at(changed)
 	elif _tools.tool == EditorTools.Tool.NPC:
@@ -368,13 +383,13 @@ func _paint(coord: Vector2i) -> void:
 			return
 		_canvas.update_tiles(changed)
 		_canvas.refresh_props()
+	elif _tools.tool == EditorTools.Tool.REMOVE:
+		_canvas.refresh_props_at(changed)
+		_canvas.refresh_npcs()
+	elif _tools.tool == EditorTools.Tool.ERASER:
+		_canvas.refresh_props_at(changed)
 	else:
 		_canvas.update_tiles(changed)
-		if _tools.tool == EditorTools.Tool.REMOVE:
-			_canvas.refresh_props()
-			_canvas.refresh_npcs()
-		elif _tools.tool == EditorTools.Tool.ERASER:
-			_canvas.refresh_props()
 	title = TITLE + " *"
 
 
@@ -391,9 +406,10 @@ func _on_pointer_dragged(flat: Vector2) -> void:
 		return
 	if not _tools.is_moving():
 		return
-	if _tools.drag(_draft, flat).is_empty():
+	var moved := _tools.drag(_draft, flat)
+	if moved.is_empty():
 		return
-	_canvas.refresh_props()
+	_canvas.refresh_props_at(moved)
 	_place_object_bar()
 	title = TITLE + " *"
 
@@ -784,6 +800,13 @@ func _build() -> void:
 	_contour_check.focus_mode = Control.FOCUS_NONE
 	_contour_check.toggled.connect(func(on: bool) -> void: _canvas.set_contour(on))
 	layers.add_child(_contour_check)
+	_motion_check = CheckButton.new()
+	_motion_check.text = "Animações"
+	_motion_check.tooltip_text = "O vento, a água e a fumaça do mapa. Desligadas, o editor só redesenha quando algo muda."
+	_motion_check.button_pressed = ViewSettings.editor_motion()
+	_motion_check.focus_mode = Control.FOCUS_NONE
+	_motion_check.toggled.connect(_on_motion_toggled)
+	layers.add_child(_motion_check)
 
 	_islands_popup = _popup_panel()
 	_list = IslandList.new()
@@ -961,6 +984,12 @@ func _popup_panel() -> PopupPanel:
 	panel.add_theme_stylebox_override(&"panel", style)
 	add_child(panel)
 	return panel
+
+
+func _on_motion_toggled(on: bool) -> void:
+	ViewSettings.set_editor_motion(on)
+	if visible:
+		_apply_motion()
 
 
 func _layer_check(text: String, on: bool) -> CheckButton:

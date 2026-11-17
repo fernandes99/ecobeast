@@ -72,6 +72,9 @@ const PATH_SPACING := 12.0
 ## A distância, no chão plano, para pegar um ponto ou um trecho de bloqueio (free-objects/02).
 const BLOCK_PICK := 6.0
 const PATH_CLICK := 4.0
+## As ferramentas que mexem nas peças: só elas copiam a lista para o desfazer
+## (editor-performance/01).
+const PROP_TOOLS: Array[Tool] = [Tool.OBJECT, Tool.STAMP, Tool.ERASER, Tool.VEGETATION, Tool.BLOCKS, Tool.REMOVE]
 const PATH_TOLERANCE := 2.0
 const MAX_PATH_POINTS := 256
 ## A Cerca (free-fences/03): a distância de um clique até uma parede ou até o último ponto.
@@ -465,7 +468,7 @@ func begin_stroke(draft: IslandDraft, secondary: bool = false) -> void:
 	_object_done = false
 	_moving = -1
 	_block_point = Vector2i(-1, -1)
-	if draft.props.size() > 0 or tool == Tool.OBJECT or tool == Tool.STAMP or tool == Tool.ERASER or tool == Tool.VEGETATION or tool == Tool.BLOCKS:
+	if PROP_TOOLS.has(tool):
 		_step.props_before = draft.props.duplicate(true)
 	if tool == Tool.VEGETATION:
 		vegetation_panel.begin(draft)
@@ -510,11 +513,14 @@ func paint(draft: IslandDraft, center: Vector2i) -> Array[Vector2i]:
 			_step.start_after = center
 			changed.append(center)
 		return changed
+	var erased: Dictionary[Vector2i, bool] = {}
+	if tool == Tool.ERASER and not _secondary:
+		erased = _erase_props(draft, brush_coords(center))
 	for coord: Vector2i in brush_coords(center):
 		if not editable(draft, coord):
 			continue
 		var before := draft.snapshot(coord)
-		if not _change(draft, coord):
+		if not _change(draft, coord) and not erased.has(coord):
 			continue
 		if not _step.before.has(coord):
 			_step.before[coord] = before
@@ -571,6 +577,26 @@ func end_stroke(draft: IslandDraft) -> EditorHistory.Step:
 	return null if step.is_empty() else step
 
 
+## Tira as peças dos hexágonos editáveis de `coords` numa passada pela lista e devolve
+## os hexágonos que perderam alguma.
+func _erase_props(draft: IslandDraft, coords: Array[Vector2i]) -> Dictionary[Vector2i, bool]:
+	var targets: Dictionary[Vector2i, bool] = {}
+	for coord: Vector2i in coords:
+		if draft.tiles.has(coord) and editable(draft, coord):
+			targets[coord] = true
+	var erased: Dictionary[Vector2i, bool] = {}
+	var kept: Array = []
+	for index: int in draft.props.size():
+		var coord := draft.prop_coord(index)
+		if targets.has(coord):
+			erased[coord] = true
+		else:
+			kept.append(draft.props[index])
+	if not erased.is_empty():
+		draft.props = kept
+	return erased
+
+
 func _change(draft: IslandDraft, coord: Vector2i) -> bool:
 	var tile: HexTile = draft.tiles.get(coord)
 	match tool:
@@ -615,16 +641,8 @@ func _change(draft: IslandDraft, coord: Vector2i) -> bool:
 			draft.remove_tile(coord)
 			return true
 		Tool.ERASER:
-			if tile == null:
+			if tile == null or tile.bare == not _secondary:
 				return false
-			var erased := false
-			if not _secondary:
-				for index: int in range(draft.props.size() - 1, -1, -1):
-					if draft.prop_coord(index) == coord:
-						draft.props.remove_at(index)
-						erased = true
-			if tile.bare == not _secondary:
-				return erased
 			tile.bare = not _secondary
 			return true
 		Tool.AREA:

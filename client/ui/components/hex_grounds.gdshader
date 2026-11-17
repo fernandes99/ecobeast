@@ -15,6 +15,8 @@ uniform float hardness[32];
 uniform bool reveal_on = false;
 uniform vec4 reveal_rect = vec4(0.0);
 uniform float reveal_alpha = 0.4;
+// O relógio das animações, passado pelo HexMapView: parado, a água para (editor-performance/01).
+uniform float map_time = 0.0;
 
 const float PAGE = 2048.0;
 const float TEXEL = 2.0;
@@ -28,7 +30,7 @@ const vec2 CORNERS[6] = {
 };
 // A água (water-motion): o código 4 é a superfície, com a funda no z; o 5, a
 // cachoeira, com a altura da lateral no x e a borda do mapa no y; o 6, a espuma do
-// pé; o 7, a espuma da praia. As velocidades fecham voltas inteiras em 3.600 s, quando o TIME
+// pé; o 7, a espuma da praia. As velocidades fecham voltas inteiras em 3.600 s, quando o map_time
 // volta a zero, para não dar salto.
 const float WATER_STEPS = 6.0;
 const vec2 SHALLOW_DRIFT = vec2(21.0, 10.0) * 512.0 / 3600.0;
@@ -43,7 +45,7 @@ const float FALL_FADE = 8.0;
 const float FOAM_WIDTH = 6.0;
 const vec4 FOAM = vec4(0.93, 0.98, 1.0, 1.0);
 // A espuma da praia (código 7): mais fraca, e uma onda que corre pela costa a
-// apaga e acende pixel a pixel. 0,25 volta por segundo fecha no TIME de 3.600 s.
+// apaga e acende pixel a pixel. 0,25 volta por segundo fecha no map_time de 3.600 s.
 const float SHORE_ALPHA = 0.55;
 const float SHORE_STEPS = 6.0;
 const float SHORE_SPEED = 0.25;
@@ -124,12 +126,12 @@ void fragment() {
 	int code = int(round(ground.w));
 	vec2 texel = floor(UV / TEXTURE_PIXEL_SIZE);
 	if (code == 4) {
-		float t = floor(TIME * WATER_STEPS) / WATER_STEPS;
+		float t = floor(map_time * WATER_STEPS) / WATER_STEPS;
 		vec2 drift = floor(t * (ground.z > 0.5 ? DEEP_DRIFT : SHALLOW_DRIFT));
 		float wave = round(sin(6.2831853 * (texel.y / WAVE_LENGTH + t * WAVE_SPEED)));
 		color = water_texel(TEXTURE, texel - drift - vec2(wave, 0.0), TEXTURE_PIXEL_SIZE) * shade;
 	} else if (code == 5) {
-		float frame = floor(TIME * FALL_STEPS);
+		float frame = floor(map_time * FALL_STEPS);
 		float height = ground.x;
 		bool off_map = ground.y > 0.5;
 		if (texel.y < LIP) {
@@ -151,7 +153,7 @@ void fragment() {
 		}
 		color.rgb *= shade.rgb;
 	} else if (code == 6) {
-		float frame = floor(TIME * WATER_STEPS);
+		float frame = floor(map_time * WATER_STEPS);
 		float churn = hash(vec2(floor(texel.x / 2.0), floor(texel.y / 2.0)) + frame * 31.0);
 		float density = 0.9 - texel.y / FOAM_WIDTH * 0.75;
 		if (churn < density) {
@@ -163,7 +165,7 @@ void fragment() {
 		}
 		color *= shade;
 	} else if (code == 7) {
-		float t = floor(TIME * SHORE_STEPS) / SHORE_STEPS;
+		float t = floor(map_time * SHORE_STEPS) / SHORE_STEPS;
 		vec2 pixel = floor(art_point);
 		float swell = 0.5 + 0.5 * sin(6.2831853 * (t * SHORE_SPEED + (pixel.x + pixel.y * 0.5) / SHORE_LENGTH));
 		if (hash(pixel + vec2(57.0, 13.0)) > 0.25 + 0.75 * swell) {

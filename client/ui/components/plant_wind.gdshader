@@ -13,6 +13,8 @@ uniform float flow_speed = 9.0;
 uniform float churn = 0.2;
 uniform float reach = 0.8;
 uniform float vertical = 0.5;
+// O relógio das animações, passado pelo HexMapView: parado, o vento para (editor-performance/01).
+uniform float map_time = 0.0;
 
 // xy: o ponto de apoio, no mapa. z: quanto o topo anda, negativo na planta espelhada,
 // porque a textura dela corre ao contrário. w: a altura da planta.
@@ -44,19 +46,19 @@ float noise(vec2 at) {
 
 void fragment() {
 	float along = dot(plant.xy, direction);
-	float sway = sin(TAU * (TIME / sway_period - along / sway_length));
-	float gust = 0.75 + 0.25 * sin(TAU * (TIME / gust_period - along / gust_length));
+	float sway = sin(TAU * (map_time / sway_period - along / sway_length));
+	float gust = 0.75 + 0.25 * sin(TAU * (map_time / gust_period - along / gust_length));
 	if (canopy.x > 1.5) {
-		float frame = mod(floor(TIME * canopy.z + hash(plant.xy) * canopy.y), canopy.y);
+		float frame = mod(floor(map_time * canopy.z + hash(plant.xy) * canopy.y), canopy.y);
 		vec2 uv = UV + vec2(frame / canopy.y, 0.0);
 		COLOR = textureGrad(TEXTURE, uv, dFdx(UV), dFdy(UV));
 	} else if (canopy.x > 0.5) {
 		vec2 size = 1.0 / TEXTURE_PIXEL_SIZE;
 		vec2 p = floor(UV * size);
 		float weight = clamp((canopy.y - p.y) / 4.0, 0.0, 1.0);
-		vec2 flow = normalize(direction) * vec2(sign(plant.z), 1.0) * TIME * flow_speed;
+		vec2 flow = normalize(direction) * vec2(sign(plant.z), 1.0) * map_time * flow_speed;
 		vec2 at = (p + vec2(plant.x * sign(plant.z), plant.y) - flow) / clump;
-		vec2 push = vec2(noise(at + vec2(0.0, TIME * churn)), noise(at * 1.31 + vec2(17.3, -TIME * churn))) - 0.5;
+		vec2 push = vec2(noise(at + vec2(0.0, map_time * churn)), noise(at * 1.31 + vec2(17.3, -map_time * churn))) - 0.5;
 		vec2 offset = round(push * vec2(1.0, vertical) * 2.0 * reach * weight * (0.6 + 0.4 * gust));
 		vec2 uv = (p - offset + 0.5) * TEXTURE_PIXEL_SIZE;
 		COLOR = textureGrad(TEXTURE, uv, dFdx(UV), dFdy(UV));

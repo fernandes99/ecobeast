@@ -101,6 +101,8 @@ const GHOST_ALPHA := 0.25
 const REVEAL_ALPHA := 0.2
 const REVEAL_MARGIN := 4.0
 const REVEAL_ROWS := 4
+## O relógio das animações volta a zero como o TIME do Godot: a água fecha voltas nele.
+const TIME_ROLLOVER := 3600.0
 
 var fixed_scale := 0.0:
 	set(value):
@@ -122,6 +124,10 @@ var height_cut := -1:
 		_rebuild_all()
 
 var chunk_columns := 0
+## O vento, a água e a fumaça de todos os mapas andam pelo `map_time` dos shaders, passado
+## a cada quadro enquanto isto está ligado. Sem o TIME no shader, o Godot no modo de pouco
+## processamento só redesenha quando algo muda; o editor de ilhas desliga (editor-performance/01).
+static var animated := true
 static var contour_visible := false
 ## As pontas arredondadas onde a altura ou o bioma muda (terrain-height/04).
 static var rounded_corners := true
@@ -197,6 +203,8 @@ func _exit_tree() -> void:
 
 
 func _process(_delta: float) -> void:
+	if animated:
+		_set_map_time(fmod(Time.get_ticks_msec() / 1000.0, TIME_ROLLOVER))
 	if _unbuilt_rows.is_empty():
 		return
 	var height := get_viewport_rect().size.y
@@ -205,6 +213,11 @@ func _process(_delta: float) -> void:
 	for key: Vector2i in _unbuilt_rows.keys():
 		if key.y >= first_row and key.y <= last_row:
 			_build_chunk(key)
+
+
+func _set_map_time(seconds: float) -> void:
+	for shader_material: ShaderMaterial in [_wind_material, _terrain_material, _reveal_material]:
+		shader_material.set_shader_parameter(&"map_time", seconds)
 
 
 func set_map(map: ExplorationMap) -> void:
@@ -265,6 +278,7 @@ func update_tiles(coords: Array[Vector2i]) -> void:
 	# Apagar, pôr ou subir um hexágono muda onde cada pedaço de cerca é desenhado.
 	_walls_by_chunk.clear()
 	_index_walls()
+	_bridges_by_chunk.clear()
 	_index_bridges()
 	# Com pedaços, o vizinho de uma ponta pode estar no pedaço ao lado.
 	var spread: Array[int] = [0]

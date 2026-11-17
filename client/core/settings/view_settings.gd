@@ -13,8 +13,22 @@ static func explore_zoom() -> int:
 
 
 static func set_explore_zoom(level: int) -> void:
+	_write("explore_zoom", level)
+
+
+## Se o mapa do editor de ilhas anima o vento, a água e a fumaça (editor-performance/01).
+static func editor_motion() -> bool:
+	var on: Variant = _read().get("editor_motion")
+	return bool(on) if on is bool else true
+
+
+static func set_editor_motion(on: bool) -> void:
+	_write("editor_motion", on)
+
+
+static func _write(key: String, value: Variant) -> void:
 	var data := _read()
-	data["explore_zoom"] = level
+	data[key] = value
 	var file := FileAccess.open(PATH, FileAccess.WRITE)
 	if file == null:
 		push_warning("ViewSettings: não deu para gravar %s: %s" % [PATH, error_string(FileAccess.get_open_error())])

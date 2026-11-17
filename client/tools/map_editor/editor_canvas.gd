@@ -22,6 +22,8 @@ const OUTLINE_WIDTH := 2.0
 ## O traço da parede invisível, em pixels da tela (free-fences/01).
 const WALL_DASH := 6.0
 const CHUNK_COLUMNS := 16
+## Até onde as linhas de bloqueio de uma peça vão a partir do hexágono dela, na arte.
+const BLOCK_REACH := 160.0
 ## Numa pincelada rápida, um ponto a cada tanto da arte, para não pular hexágonos.
 const STROKE_SPACING := 16.0
 const AREA_ALPHA := 0.38
@@ -43,7 +45,11 @@ var fence_preview := Callable()
 ## linha em desenho (no chão plano) segue o ponteiro.
 var editing_prop_block := false
 ## A ferramenta Bloqueios mostra os pontos das linhas de todas as peças (prop-depth-blocks/03).
-var all_block_points := false
+var all_block_points := false:
+	set(value):
+		all_block_points = value
+		if _blocks_layer != null:
+			_blocks_layer.queue_redraw()
 var block_preview := Callable()
 var _mouse_flat := Vector2.ZERO
 var action_colors: Dictionary[int, Color] = {}
@@ -65,12 +71,14 @@ var _focus_key := 0
 var _show_areas := true
 var _show_actions := true
 var _show_blocks := true
-## As linhas de bloqueio das peças no chão plano, se cada uma é ajustada, e os hexágonos
-## que o servidor conta como bloqueados, refeitos quando as peças ou as paredes mudam.
-var _block_lines: Array[PackedVector2Array] = []
-var _block_custom: Array[bool] = []
-var _block_hexes: Dictionary[Vector2i, bool] = {}
-var _prop_tiles: Dictionary[Vector2i, String] = {}
+## Os bloqueios das peças por hexágono de peça, quantas peças bloqueiam cada hexágono e os
+## hexágonos das paredes: mexer numa peça refaz só o hexágono dela (editor-performance/01).
+var _block_cells: Dictionary[Vector2i, BlockCell] = {}
+var _block_counts: Dictionary[Vector2i, int] = {}
+var _wall_hexes: Dictionary[Vector2i, bool] = {}
+var _blocks_layer: BlocksLayer
+## A chave das peças de cada hexágono, para achar os que mudaram.
+var _prop_tiles: Dictionary[Vector2i, int] = {}
 ## Cópias dos traços como estão desenhados, para achar o que mudou.
 var _shown_trails: Array[MapTrail] = []
 var _shown_walls: Array[MapWall] = []
@@ -101,6 +109,21 @@ class Overlay extends Node2D:
 		canvas.draw_overlay(self)
 
 
+## Os bloqueios, por baixo do desenho de cima: o pincel segue o mouse a cada movimento, e
+## os bloqueios só mudam com eles, a vista ou o terreno.
+class BlocksLayer extends Node2D:
+	var canvas: EditorCanvas
+
+	func _draw() -> void:
+		canvas.draw_blocks(self)
+
+
+class BlockCell extends RefCounted:
+	var lines: Array[PackedVector2Array] = []
+	var custom: Array[bool] = []
+	var hexes: Dictionary[Vector2i, bool] = {}
+
+
 func _init() -> void:
 	clip_contents = true
 	focus_mode = Control.FOCUS_CLICK
@@ -119,6 +142,9 @@ func _init() -> void:
 	add_child(_area_stripes)
 	_action_layer = HexTintLayer.new(false, IslandDraft.MAX_TILES)
 	add_child(_action_layer)
+	_blocks_layer = BlocksLayer.new()
+	_blocks_layer.canvas = self
+	add_child(_blocks_layer)
 	_overlay = Overlay.new()
 	_overlay.canvas = self
 	add_child(_overlay)
@@ -131,7 +157,9 @@ func show_draft(draft: IslandDraft, fit: bool = true) -> void:
 	_map = draft.to_map() if draft != null else ExplorationMap.new()
 	_map_view.set_map(_map)
 	_map_view.set_props(_map.props)
-	_prop_tiles = _current_prop_tiles()
+	_prop_tiles.clear()
+	if draft != null:
+		_prop_tiles = _current_prop_tiles()
 	_overview.set_map(_map)
 	_shown_trails.clear()
 	if draft != null:
@@ -182,19 +210,15 @@ func refresh_npcs() -> void:
 func refresh_props() -> void:
 	if _draft == null or _map == null:
 		return
-	_map.props = _draft.map_props()
-	_map_view.set_props(_map.props)
 	var now := _current_prop_tiles()
 	var changed: Array[Vector2i] = []
 	for coord: Vector2i in now:
-		if _prop_tiles.get(coord, "") != now[coord]:
+		if _prop_tiles.get(coord, 0) != now[coord]:
 			changed.append(coord)
 	for coord: Vector2i in _prop_tiles:
 		if not now.has(coord):
 			changed.append(coord)
-	_prop_tiles = now
-	update_tiles(changed)
-	_refresh_blocks()
+	refresh_props_at(changed)
 	_overlay.queue_redraw()
 
 
@@ -237,7 +261,7 @@ func refresh_walls() -> void:
 	if not changed.is_empty():
 		_map_view.set_walls(_draft.walls.duplicate(), changed)
 		_overview.set_walls(_map.walls)
-		_refresh_blocks()
+		_refresh_wall_blocks()
 	_overlay.queue_redraw()
 
 
@@ -281,32 +305,41 @@ func refresh_trail_piece(piece: MapTrail) -> void:
 	_overlay.queue_redraw()
 
 
-func _current_prop_tiles() -> Dictionary[Vector2i, String]:
-	var result: Dictionary[Vector2i, String] = {}
-	for prop: MapProp in _map.props:
-		result[prop.coord] = result.get(prop.coord, "") + _prop_key(prop)
+## A chave vem do dicionário inteiro da peça, com o bloqueio ajustado, sem convertê-la.
+func _current_prop_tiles() -> Dictionary[Vector2i, int]:
+	var result: Dictionary[Vector2i, int] = {}
+	for entry: Variant in _draft.props:
+		var data := entry as Dictionary
+		var coord := Vector2i(int(data.get("q", 0)), int(data.get("r", 0)))
+		result[coord] = hash([result.get(coord, 0), data])
 	return result
 
 
-static func _prop_key(prop: MapProp) -> String:
-	return "%d:%d:%d:%d:%s:%s;" % [prop.prop_type_id, prop.offset.x, prop.offset.y, prop.variant, prop.mirrored, prop.no_smoke]
-
-
-## Como o `refresh_props`, só nos hexágonos de `coords` (vegetation-brush/02): numa ilha
-## com milhares de peças, refazer a lista toda a cada passo do pincel pesa.
+## Refaz as peças e os bloqueios só nos hexágonos de `coords` (vegetation-brush/02): numa
+## ilha com milhares de peças, refazer a lista toda a cada passo pesa.
 func refresh_props_at(coords: Array[Vector2i]) -> void:
 	if _draft == null or _map == null or coords.is_empty():
 		return
 	var wanted: Dictionary[Vector2i, bool] = {}
 	for coord: Vector2i in coords:
 		wanted[coord] = true
+	var typed := GameData.prop_block_types()
 	var fresh: Array[MapProp] = []
-	for entry: Variant in _draft.props:
-		var data := entry as Dictionary
-		if wanted.has(Vector2i(int(data.get("q", 0)), int(data.get("r", 0)))):
-			var prop := MapProp.from_dict(data)
-			if prop != null:
-				fresh.append(prop)
+	var keys: Dictionary[Vector2i, int] = {}
+	var blocking: Dictionary[Vector2i, Array] = {}
+	for index: int in _draft.props.size():
+		var data: Dictionary = _draft.props[index]
+		var coord := Vector2i(int(data.get("q", 0)), int(data.get("r", 0)))
+		if not wanted.has(coord):
+			continue
+		keys[coord] = hash([keys.get(coord, 0), data])
+		var prop := MapProp.from_dict(data)
+		if prop != null:
+			fresh.append(prop)
+		if _blocks(data, typed):
+			if not blocking.has(coord):
+				blocking[coord] = []
+			blocking[coord].append(index)
 	var kept: Array[MapProp] = []
 	for prop: MapProp in _map.props:
 		if not wanted.has(prop.coord):
@@ -314,10 +347,13 @@ func refresh_props_at(coords: Array[Vector2i]) -> void:
 	kept.append_array(fresh)
 	_map.props = kept
 	_map_view.replace_props(wanted, fresh)
-	for coord: Vector2i in coords:
-		_prop_tiles.erase(coord)
-	for prop: MapProp in fresh:
-		_prop_tiles[prop.coord] = _prop_tiles.get(prop.coord, "") + _prop_key(prop)
+	for coord: Vector2i in wanted:
+		if keys.has(coord):
+			_prop_tiles[coord] = keys[coord]
+		else:
+			_prop_tiles.erase(coord)
+		_set_block_cell(coord, blocking.get(coord, []))
+	_blocks_layer.queue_redraw()
 	update_tiles(coords)
 	_overlay.queue_redraw()
 
@@ -353,6 +389,7 @@ func set_contour(on: bool) -> void:
 
 func set_blocks(on: bool) -> void:
 	_show_blocks = on
+	_blocks_layer.queue_redraw()
 	_overlay.queue_redraw()
 
 
@@ -459,6 +496,8 @@ func _process(_delta: float) -> void:
 	_map_view.update_tiles(coords)
 	_overview.update_tiles(coords, _map)
 	refresh_marks(coords)
+	# A altura do hexágono move os bloqueios desenhados nele.
+	_blocks_layer.queue_redraw()
 
 
 func _gui_input(event: InputEvent) -> void:
@@ -583,6 +622,7 @@ func _apply_view() -> void:
 	_area_layer.visible = _show_areas
 	_area_stripes.visible = _show_areas
 	_action_layer.visible = _show_actions
+	_blocks_layer.queue_redraw()
 	_overlay.queue_redraw()
 	view_changed.emit()
 
@@ -658,7 +698,7 @@ func draw_overlay(node: Node2D) -> void:
 		if rect.has_area():
 			node.draw_rect(rect, UiPalette.ACCENT, false, OUTLINE_WIDTH)
 	if _show_blocks:
-		_draw_blocks(node)
+		_draw_block_edit(node)
 	if _has_hover:
 		var under: Array[Vector2i] = [_hovered]
 		if brush.is_valid():
@@ -720,47 +760,116 @@ func _screen_point(flat: Vector2) -> Vector2:
 	return _origin + (flat - Vector2(0.0, _draft.rise_at(HexMapView.grid_coord(flat)))) * _zoom
 
 
+## A conta inteira, só ao abrir a ilha: depois, o `refresh_props_at` refaz os hexágonos
+## mexidos e o `refresh_walls`, as paredes.
 func _refresh_blocks() -> void:
-	_block_lines.clear()
-	_block_custom.clear()
-	if _draft == null:
-		_block_hexes.clear()
-		return
-	var typed := GameData.prop_block_types()
-	for index: int in _draft.props.size():
-		var prop: Dictionary = _draft.props[index]
-		var custom := prop.has("block")
-		if not custom and not typed.has(int(prop.get("prop_type_id", 0))):
-			continue
+	_block_cells.clear()
+	_block_counts.clear()
+	if _draft != null:
+		var typed := GameData.prop_block_types()
+		var blocking: Dictionary[Vector2i, Array] = {}
+		for index: int in _draft.props.size():
+			var data: Dictionary = _draft.props[index]
+			if not _blocks(data, typed):
+				continue
+			var coord := _draft.prop_coord(index)
+			if not blocking.has(coord):
+				blocking[coord] = []
+			blocking[coord].append(index)
+		for coord: Vector2i in blocking:
+			_set_block_cell(coord, blocking[coord])
+	_refresh_wall_blocks()
+
+
+static func _blocks(data: Dictionary, typed: Dictionary[int, bool]) -> bool:
+	return data.has("block") or typed.has(int(data.get("prop_type_id", 0)))
+
+
+## Troca os bloqueios das peças de um hexágono pelos das peças `indices` do rascunho.
+func _set_block_cell(coord: Vector2i, indices: Array) -> void:
+	var old: BlockCell = _block_cells.get(coord)
+	if old != null:
+		for hex: Vector2i in old.hexes:
+			var left: int = _block_counts[hex] - 1
+			if left > 0:
+				_block_counts[hex] = left
+			else:
+				_block_counts.erase(hex)
+		_block_cells.erase(coord)
+	var cell := BlockCell.new()
+	for index: int in indices:
+		var custom := _draft.prop_is_custom(index)
 		for line: PackedVector2Array in _draft.prop_world_lines(index):
-			_block_lines.append(line)
-			_block_custom.append(custom)
-	var all_lines: Array[PackedVector2Array] = _block_lines.duplicate()
-	for wall: MapWall in _draft.walls:
-		all_lines.append(wall.points)
-	_block_hexes = IslandBlocks.blocked_hexes(all_lines)
+			cell.lines.append(line)
+			cell.custom.append(custom)
+	if cell.lines.is_empty():
+		return
+	cell.hexes = IslandBlocks.blocked_hexes(cell.lines)
+	for hex: Vector2i in cell.hexes:
+		_block_counts[hex] = _block_counts.get(hex, 0) + 1
+	_block_cells[coord] = cell
+
+
+func _refresh_wall_blocks() -> void:
+	var lines: Array[PackedVector2Array] = []
+	if _draft != null:
+		for wall: MapWall in _draft.walls:
+			lines.append(wall.points)
+	_wall_hexes = IslandBlocks.blocked_hexes(lines)
+	_blocks_layer.queue_redraw()
 
 
 ## Um X vermelho em cada hexágono que o servidor conta como bloqueado, e as linhas de
-## bloqueio das peças, tracejadas: as do tipo numa cor, as ajustadas noutra.
-func _draw_blocks(node: Node2D) -> void:
+## bloqueio das peças, tracejadas: as do tipo numa cor, as ajustadas noutra. Só o que
+## cai na tela.
+func draw_blocks(node: Node2D) -> void:
+	if _draft == null or not _show_blocks:
+		return
+	# O corte é pelo chão plano, sem a altura: só o que passa dele procura a altura.
+	var screen := Rect2(Vector2.ZERO, size)
+	var near := screen.grow(HexMapView.STEP_X * _zoom)
 	var reach := Vector2(10.0, 7.0) * _zoom
-	for coord: Vector2i in _block_hexes:
-		if not _draft.tiles.has(coord):
+	var mark := Color(UiPalette.DANGER, 0.55)
+	var near_flat := _flat_screen_area(near)
+	for coord: Vector2i in _block_counts:
+		_draw_block_mark(node, coord, near, near_flat, reach, mark)
+	for coord: Vector2i in _wall_hexes:
+		if not _block_counts.has(coord):
+			_draw_block_mark(node, coord, near, near_flat, reach, mark)
+	var wide := _flat_screen_area(screen.grow(BLOCK_REACH * _zoom))
+	for coord: Vector2i in _block_cells:
+		if not wide.has_point(HexMapView.flat_center(coord)):
 			continue
-		var center := _screen_origin(coord) + HexMapView.SURFACE_CENTER * _zoom
-		node.draw_line(center - reach, center + reach, Color(UiPalette.DANGER, 0.55), OUTLINE_WIDTH)
-		node.draw_line(center + Vector2(-reach.x, reach.y), center + Vector2(reach.x, -reach.y), Color(UiPalette.DANGER, 0.55), OUTLINE_WIDTH)
-	for index: int in _block_lines.size():
-		var line := _block_lines[index]
-		var color := UiPalette.ACCENT if _block_custom[index] else UiPalette.WARNING
-		for at: int in range(1, line.size()):
-			node.draw_dashed_line(_screen_point(line[at - 1]), _screen_point(line[at]), color, OUTLINE_WIDTH, WALL_DASH)
-	if all_block_points:
-		for index: int in _block_lines.size():
-			var color := UiPalette.ACCENT if _block_custom[index] else UiPalette.WARNING
-			for point: Vector2 in _block_lines[index]:
-				node.draw_circle(_screen_point(point), 2.5, color)
+		var cell := _block_cells[coord]
+		for index: int in cell.lines.size():
+			var line := cell.lines[index]
+			var color := UiPalette.ACCENT if cell.custom[index] else UiPalette.WARNING
+			for at: int in range(1, line.size()):
+				node.draw_dashed_line(_screen_point(line[at - 1]), _screen_point(line[at]), color, OUTLINE_WIDTH, WALL_DASH)
+			if all_block_points:
+				for point: Vector2 in line:
+					node.draw_circle(_screen_point(point), 2.5, color)
+
+
+## Um retângulo da tela no chão plano, crescido para baixo pela altura máxima: um
+## hexágono alto aparece acima do ponto dele.
+func _flat_screen_area(screen: Rect2) -> Rect2:
+	var flat := Rect2((screen.position - _origin) / _zoom, screen.size / _zoom)
+	return flat.grow_individual(0.0, 0.0, 0.0, HexMapView.LEVEL_HEIGHTS[-1])
+
+
+func _draw_block_mark(node: Node2D, coord: Vector2i, near: Rect2, near_flat: Rect2, reach: Vector2, color: Color) -> void:
+	if not near_flat.has_point(HexMapView.flat_center(coord)) or not _draft.tiles.has(coord):
+		return
+	var center := _screen_origin(coord) + HexMapView.SURFACE_CENTER * _zoom
+	if not near.has_point(center):
+		return
+	node.draw_line(center - reach, center + reach, color, OUTLINE_WIDTH)
+	node.draw_line(center + Vector2(-reach.x, reach.y), center + Vector2(reach.x, -reach.y), color, OUTLINE_WIDTH)
+
+
+## Os pontos do bloqueio da peça em edição e a linha em desenho, que seguem o ponteiro.
+func _draw_block_edit(node: Node2D) -> void:
 	if editing_prop_block and selected_prop >= 0 and selected_prop < _draft.props.size():
 		for line: PackedVector2Array in _draft.prop_world_lines(selected_prop):
 			for point: Vector2 in line:
