@@ -30,7 +30,6 @@ WALL_LAMP_RADIUS = 18
 # tipo de peça, slug, quantas variantes
 TYPES = [
     (18, "lamp_post", 2),
-    (22, "refuge_building", 1),
     (23, "shop_building", 1),
     (24, "town_house", 9),
     (25, "town_house_medium", 12),

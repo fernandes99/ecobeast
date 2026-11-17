@@ -1,7 +1,8 @@
 extends SceneTree
 ## A arte da cidade das ilhas, no estilo de .specs/town-art/style-guide.md, desenhada só
 ## por código: um PNG por variante, em res://assets/props/<slug>/<variante>.png
-## (free-props/02, free-objects/04). A arte das paredes sai do assets/walls/make_walls.py.
+## (free-props/02, free-objects/04). A arte das paredes sai do assets/walls/make_walls.py, e
+## a do prédio do Refúgio, do assets/props/make_refuge_building.py (refuge-art/01).
 ## Da pasta client/: godot --headless -s res://assets/map_objects/make_town.gd [-- <slug>...]
 ##
 ## A célula tem a largura do formato, simétrica em volta do ponto de apoio, e o pé dela é
@@ -20,7 +21,6 @@ const SHAPES := {
 }
 ## slug: formato, quantas variantes e, nos animados, quantos quadros.
 const TYPES := {
-	"refuge_building": ["triangle", 1],
 	"shop_building": ["triangle", 1],
 	"town_house": ["one", 9],
 	"town_house_medium": ["pair", 12],
@@ -65,10 +65,6 @@ const SILL := Color("#fffaf0")
 const FOUNDATION := Color("#a8a8b4")
 const FOUNDATION_DARK := Color("#80808c")
 const WHITE := Color("#ffffff")
-const HEART := Color("#e84858")
-const HEART_SHINE := Color("#ffc0c8")
-const SPROUT := Color("#58c050")
-const SPROUT_DARK := Color("#3a9a40")
 const LAMP := Color("#ffe070")
 const LAMP_SHINE := Color("#fff8c8")
 const SHADOW := Color(0.0, 0.0, 0.0, 0.18)
@@ -302,44 +298,6 @@ static func _flower_box(s: Image, at: Vector2i, width: int) -> void:
 
 
 # --- As construções-chave ----------------------------------------------------------
-
-func _draw_refuge_building(_variant: int, _frame: int) -> void:
-	var s := Image.create(112, 80, false, Image.FORMAT_RGBA8)
-	_roof(s, Rect2i(0, 0, 112, 34), ROOF_RED)
-	_wall(s, Rect2i(3, 34, 106, 46), PLASTER)
-	_fill(s, Rect2i(3, 36, 106, 3), ROOF_RED[1])
-	_fill(s, Rect2i(3, 36, 106, 1), ROOF_RED[0])
-	_fill(s, Rect2i(3, 39, 106, 1), ROOF_RED[2])
-	for x: int in [9, 25, 76, 92]:
-		_window(s, Rect2i(x, 48, 11, 11))
-		_flower_box(s, Vector2i(x - 1, 61), 13)
-	_glass_door(s, Rect2i(45, 54, 22, 23), STONE[2], 2)
-	_fill(s, Rect2i(40, 47, 32, 4), ROOF_RED[1])
-	_fill(s, Rect2i(40, 47, 32, 1), ROOF_RED[0])
-	_fill(s, Rect2i(40, 51, 32, 1), ROOF_RED[3])
-	for x: int in range(41, 72, 4):
-		_dot(s, x, 52, ROOF_RED[2])
-	_emblem(s, Vector2(56.0, 19.0), 10.0, ROOF_RED[3])
-	_stamp(s, Vector2i(51, 14), [
-		".RRR...RRR.",
-		"RSSRR.RRRRR",
-		"RSRRRRRRRRR",
-		"RRRRRRRRRRR",
-		"RRRRRRRRRRR",
-		".RRRRRRRRR.",
-		"..RRRRRRR..",
-		"...RRRRR...",
-		"....RRR....",
-		".....R.....",
-	], {"R": HEART, "S": HEART_SHINE})
-	_stamp(s, Vector2i(58, 10), [
-		"..LLL",
-		".LLLD",
-		".LDD.",
-		"D....",
-	], {"L": SPROUT, "D": SPROUT_DARK})
-	_place_building(_outline(s, ROOF_RED[3]))
-
 
 func _draw_shop_building(_variant: int, _frame: int) -> void:
 	var s := Image.create(112, 76, false, Image.FORMAT_RGBA8)

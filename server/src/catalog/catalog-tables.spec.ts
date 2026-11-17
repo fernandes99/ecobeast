@@ -660,9 +660,16 @@ describe('carga inicial do dia e da noite (day-night/01 e 03)', () => {
   it('o Poste de luz acende nas 2 variantes, e as casas do pacote em todas as cores', () => {
     const of = (type: number) => lights.filter((l) => l.prop_type_id === type);
     expect(of(18).map(({ variant }) => variant)).toEqual([1, 2]);
-    for (const type of [95, 96, 97, 98, 100])
+    for (const type of [22, 95, 96, 97, 98, 100])
       expect(new Set(of(type).map(({ variant }) => variant))).toEqual(
         new Set([0]),
       );
+  });
+
+  it('o prédio do Refúgio tem 8 cores, 4 janelas e 2 lanternas (refuge-art/01)', () => {
+    expect(props.find(({ id }) => id === 22)?.variants).toBe(8);
+    const refuge = lights.filter(({ prop_type_id }) => prop_type_id === 22);
+    expect(refuge.map(({ position }) => position)).toEqual([0, 1, 2, 3, 4, 5]);
+    expect(refuge.filter(({ color }) => color === 'ffd890')).toHaveLength(2);
   });
 });

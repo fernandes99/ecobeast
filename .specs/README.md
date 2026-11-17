@@ -82,6 +82,7 @@ O Ecobeast é um jogo mobile (Android/iOS, retrato): o cliente em **Godot 4.7 co
 | [timber-cottage](timber-cottage/) | A casinha enxaimel da imagem do dono, como peça solta em 8 cores |
 | [chimney-smoke](chimney-smoke/) | A casa com chaminé pode ficar sem a fumaça, peça por peça, escolhida no editor |
 | [editor-performance](editor-performance/) | O editor de ilhas sem travar numa ilha cheia, e o botão que para as animações do mapa nele |
+| [refuge-art](refuge-art/) | O prédio do Refúgio com a arte da imagem do dono, no padrão das casas: 8 cores, fumaça e luzes |
 
 As próximas iniciativas estão no [roadmap.md](roadmap.md).
 

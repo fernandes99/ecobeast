@@ -16,4 +16,6 @@ Como ele acha cada luz:
 
 O `x` e o `y` são o pixel do centro da luz a partir do pé (o meio da borda de baixo da arte: `x = coluna − largura // 2`, `y = linha − altura`). Na peça espelhada, o jogo usa a coluna `−x − 1 + largura % 2`.
 
+**Fora do script:** as peças lidas das imagens do dono, o prédio do Refúgio (tipo 22) e a Casinha enxaimel (tipo 100), têm as luzes postas à mão nas specs delas ([refuge-art](../../../.specs/refuge-art/), [timber-cottage](../../../.specs/timber-cottage/)): o vidro de uma janela pode ter o cinza da pedra, e a estufa do Refúgio não acende.
+
 **Peça nova:** ponha o tipo em `TYPES` (e em `LAMPS`, se a luz for uma lâmpada amarela), rode o script e compare com o JSON de antes. As linhas novas entram no banco por uma migração, ou à mão pelo painel do Supabase.

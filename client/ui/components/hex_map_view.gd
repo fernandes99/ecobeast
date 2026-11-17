@@ -92,6 +92,7 @@ const PROP_SMOKE: Dictionary[String, Dictionary] = {
 	"small_house": {"offset": Vector2i(-48, -144), "size": 48, "frames": 6, "fps": 6.0},
 	"small_townhouse": {"offset": Vector2i(-48, -164), "size": 48, "frames": 6, "fps": 6.0},
 	"timber_house": {"offset": Vector2i(-41, -179), "size": 48, "frames": 6, "fps": 6.0},
+	"refuge_building": {"offset": Vector2i(-57, -156), "size": 48, "frames": 6, "fps": 6.0},
 }
 const NO_PLACE := Vector2i(-2147483648, 0)
 ## O corte de altura do editor: acima dele, o hexágono fica transparente (terrain-height/03).
