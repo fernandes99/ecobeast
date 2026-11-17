@@ -173,6 +173,15 @@ export class DraftPropDto extends EditorHexDto {
   @IsOptional()
   @IsInt(integer('action_type_id'))
   action_type_id?: number | null;
+
+  @ApiPropertyOptional({
+    description:
+      'Se a casa fica sem a fumaça da chaminé. Sem o campo, ela solta fumaça (só nos tipos que têm chaminé).',
+    example: true,
+  })
+  @IsOptional()
+  @IsBoolean({ message: 'no_smoke precisa ser verdadeiro ou falso.' })
+  no_smoke?: boolean | null;
 }
 
 export class DraftTrailDto {

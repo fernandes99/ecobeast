@@ -1100,7 +1100,7 @@ func _collect_decorations(sheet: Array[Array], files: Array[Dictionary], row: in
 			var path := PROP_PATH % [slug, prop.variant]
 			if not files[band].has(path):
 				files[band][path] = []
-			files[band][path].append([base, prop.mirrored])
+			files[band][path].append([base, prop.mirrored, prop.no_smoke])
 
 
 ## Os pontos ocupados pelas peças de cada hexágono: `[ponto, raio]` (nature-variety/01).
@@ -1401,7 +1401,8 @@ func _add_file_props(row: HexRowView, path: String, placed: Array) -> void:
 		_add_smoke(row, slug, int(size.x), placed)
 
 
-## Os quadros da fumaça trocam no shader, cada casa num ponto do ciclo.
+## Os quadros da fumaça trocam no shader, cada casa num ponto do ciclo. A casa marcada
+## `no_smoke` fica sem ela (chimney-smoke/01).
 func _add_smoke(row: HexRowView, slug: String, width: int, placed: Array) -> void:
 	var smoke: Dictionary = PROP_SMOKE[slug]
 	var offset: Vector2i = smoke["offset"]
@@ -1411,6 +1412,8 @@ func _add_smoke(row: HexRowView, slug: String, width: int, placed: Array) -> voi
 	var wind := PackedFloat32Array()
 	var frames := PackedFloat32Array()
 	for entry: Array in placed:
+		if entry[2]:
+			continue
 		var base: Vector2i = entry[0]
 		var left := float(base.x + offset.x)
 		if entry[1]:

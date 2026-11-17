@@ -79,6 +79,8 @@ O Ecobeast é um jogo mobile (Android/iOS, retrato): o cliente em **Godot 4.7 co
 | [stone-cottage](stone-cottage/) | A casinha de pedra da imagem do dono, como peça solta em 8 cores |
 | [home-island](home-island/) | Liora como a casa do jogador: o app abre nela, o Hub vira o menu do Domador e as viagens saem da ação Viagem |
 | [liora-intro](liora-intro/) | A introdução em Liora: o Domador sem nome, os NPCs pessoas, a criação por cima do mapa, o inicial numa cena e as cenas do roteiro |
+| [timber-cottage](timber-cottage/) | A casinha enxaimel da imagem do dono, como peça solta em 8 cores |
+| [chimney-smoke](chimney-smoke/) | A casa com chaminé pode ficar sem a fumaça, peça por peça, escolhida no editor |
 
 As próximas iniciativas estão no [roadmap.md](roadmap.md).
 

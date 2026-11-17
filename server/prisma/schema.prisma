@@ -1167,6 +1167,8 @@ model IslandProp {
   customBlock  Boolean @default(false) @map("custom_block")
   /// Acontece quando o Domador encosta no bloqueio da peça (free-objects/03).
   actionTypeId Int?    @map("action_type_id")
+  /// A casa fica sem a fumaça da chaminé (chimney-smoke/01).
+  noSmoke      Boolean @default(false) @map("no_smoke")
 
   islandMap  IslandMap         @relation(fields: [islandMapId], references: [id], onDelete: Cascade)
   propType   PropType          @relation(fields: [propTypeId], references: [id], onDelete: Restrict)

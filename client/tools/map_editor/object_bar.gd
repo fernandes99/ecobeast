@@ -1,12 +1,13 @@
 class_name ObjectBar
 extends PanelContainer
 ## A barra logo abaixo da peça escolhida no mapa (map-editor/05, free-props/03):
-## variante, espelho, bloqueio e apagar, pelos mesmos métodos do ObjectPanel.
+## variante, espelho, fumaça da chaminé, bloqueio e apagar, pelos mesmos métodos do ObjectPanel.
 
 var _panel: ObjectPanel
 var _variant: Label
 var _mirror: Button
 var _blocks: Button
+var _smoke: Button
 
 
 func _init(panel: ObjectPanel) -> void:
@@ -31,6 +32,8 @@ func _init(panel: ObjectPanel) -> void:
 	row.add_child(VSeparator.new())
 	_mirror = _toggle("mirror", "Espelhar (M)", _panel.toggle_mirror)
 	row.add_child(_mirror)
+	_smoke = _toggle("smoke", "Fumaça da chaminé", _panel.toggle_smoke)
+	row.add_child(_smoke)
 	_blocks = _toggle("lock", "Editar o bloqueio da peça escolhida.", _panel.toggle_blocks)
 	row.add_child(_blocks)
 	var delete := _button("trash", "Apagar (Delete)", _panel.delete_selected)
@@ -43,6 +46,8 @@ func refresh() -> void:
 	_mirror.set_pressed_no_signal(_panel.is_mirrored())
 	_blocks.set_pressed_no_signal(_panel.editing_blocks)
 	_blocks.visible = _panel.selected_prop >= 0
+	_smoke.visible = _panel.has_smoke()
+	_smoke.set_pressed_no_signal(_panel.is_smoke_on())
 
 
 func _toggle(icon_name: String, tip: String, action: Callable) -> Button:

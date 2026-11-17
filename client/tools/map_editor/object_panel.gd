@@ -297,6 +297,29 @@ func toggle_blocks() -> void:
 	_on_blocks_toggled(not editing_blocks)
 
 
+## Liga e desliga a fumaça da chaminé da peça escolhida (chimney-smoke/01).
+func toggle_smoke() -> void:
+	if not has_smoke():
+		return
+	var piece := _selected_piece()
+	var step := _step("Fumaça da peça")
+	if bool(piece.get("no_smoke", false)):
+		piece.erase("no_smoke")
+	else:
+		piece["no_smoke"] = true
+	_finish(step)
+
+
+## Se a peça escolhida é de um tipo com fumaça na chaminé.
+func has_smoke() -> bool:
+	var piece := _selected_piece()
+	return not piece.is_empty() and HexMapView.PROP_SMOKE.has(_slug(int(piece.get("prop_type_id", 0))))
+
+
+func is_smoke_on() -> bool:
+	return not bool(_selected_piece().get("no_smoke", false))
+
+
 func delete_selected() -> void:
 	if _draft == null or selected_prop < 0:
 		return

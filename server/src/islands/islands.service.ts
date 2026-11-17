@@ -161,6 +161,7 @@ export class IslandsService {
           customBlock,
           blocks,
           actionTypeId,
+          noSmoke,
         }) => ({
           propTypeId,
           q,
@@ -175,6 +176,7 @@ export class IslandsService {
               }
             : {}),
           ...(actionTypeId === null ? {} : { actionTypeId }),
+          ...(noSmoke ? { noSmoke: true as const } : {}),
         }),
       ),
       trails: trails.map(({ groundType, width, points }) => ({

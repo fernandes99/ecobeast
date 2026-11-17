@@ -27,6 +27,7 @@ interface DraftProp {
   prop_type_id: number;
   block?: { closed: boolean; points: number[] }[];
   action_type_id?: number;
+  no_smoke?: boolean;
   q: number;
   r: number;
   dx: number;
@@ -700,6 +701,33 @@ describe('Editor de ilhas (e2e)', () => {
         .send(body)
         .expect(400);
       expect(bad.body.message).toBe('A peça 1 tem uma ação que não existe.');
+    });
+
+    it('salva e lê de volta a peça sem fumaça, e a com fumaça volta sem o campo (chimney-smoke/01)', async () => {
+      const house = (
+        await prisma.propType.findUniqueOrThrow({
+          where: { slug: 'big_house' },
+        })
+      ).id;
+      const body = draft();
+      body.props = [
+        { ...(await prop()), prop_type_id: house, no_smoke: true },
+        {
+          ...(await prop([square])),
+          prop_type_id: house,
+          dx: 5,
+          no_smoke: true,
+        },
+        { ...(await prop()), prop_type_id: house, dx: -5, no_smoke: false },
+      ];
+      const id = await create(body);
+      const read = (await call('get', `/islands/${id}`).expect(200))
+        .body as Draft;
+      const byX = (a: DraftProp, b: DraftProp) => a.dx - b.dx;
+      const { no_smoke: _off, ...withSmoke } = body.props[2]!;
+      expect([...read.props!].sort(byX)).toEqual(
+        [body.props[0]!, body.props[1]!, withSmoke].sort(byX),
+      );
     });
 
     it('recusa uma linha de bloqueio fora dos limites (400)', async () => {

@@ -68,6 +68,8 @@ export interface DraftProp extends HexCoord {
   block?: BlockLine[];
   /** A ação que acontece ao encostar no bloqueio (free-objects/03). */
   actionTypeId?: number;
+  /** A casa fica sem a fumaça da chaminé (chimney-smoke/01); só existe quando é verdade. */
+  noSmoke?: true;
 }
 
 /**

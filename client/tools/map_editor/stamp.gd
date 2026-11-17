@@ -156,6 +156,8 @@ static func _copy_extras(from: Dictionary, to: Dictionary) -> void:
 		to["block"] = (from["block"] as Array).duplicate(true)
 	if int(from.get("action_type_id", 0)) > 0:
 		to["action_type_id"] = int(from["action_type_id"])
+	if bool(from.get("no_smoke", false)):
+		to["no_smoke"] = true
 
 
 static func list(dir := DIR) -> Array[Dictionary]:

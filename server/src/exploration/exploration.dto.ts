@@ -221,6 +221,13 @@ export class MapPropDto extends HexCoordDto {
     example: 1,
   })
   action_type_id?: number;
+
+  @ApiPropertyOptional({
+    description:
+      'Só `true`, quando a casa fica sem a fumaça da chaminé. Sem o campo, ela solta fumaça (nos tipos que têm chaminé).',
+    example: true,
+  })
+  no_smoke?: true;
 }
 
 export class MapNpcDto extends HexCoordDto {
@@ -541,5 +548,6 @@ export function toPropDto(prop: DraftProp): MapPropDto {
     ...(prop.actionTypeId === undefined
       ? {}
       : { action_type_id: prop.actionTypeId }),
+    ...(prop.noSmoke ? { no_smoke: true as const } : {}),
   };
 }

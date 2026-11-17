@@ -344,9 +344,9 @@ describe('carga inicial das peças soltas (free-props/01, free-objects/04, veget
     }[]
   >('prop_type_blocks.json');
 
-  it('tem os 99 tipos, de 1 a 99, com pelo menos 1 variante', () => {
+  it('tem os 100 tipos, de 1 a 100, com pelo menos 1 variante', () => {
     expect(props.map(({ id }) => id)).toEqual(
-      Array.from({ length: 99 }, (_, index) => index + 1),
+      Array.from({ length: 100 }, (_, index) => index + 1),
     );
     for (const { variants } of props)
       expect(variants).toBeGreaterThanOrEqual(1);
@@ -429,10 +429,19 @@ describe('carga inicial das peças soltas (free-props/01, free-objects/04, veget
     });
   });
 
+  it('a casinha enxaimel da imagem do dono é a peça 100, em 8 cores (timber-cottage/01)', () => {
+    expect(props.find(({ id }) => id === 100)).toEqual({
+      id: 100,
+      slug: 'timber_cottage',
+      name: 'Casinha enxaimel',
+      variants: 8,
+    });
+  });
+
   it('os prédios bloqueiam em todas as variantes, e as pedras e árvores grandes dos pacotes nas variantes 1 e 2', () => {
     const all = blocks.filter(({ variant }) => variant === 0);
     expect(all.map(({ prop_type_id }) => prop_type_id)).toEqual([
-      22, 23, 24, 25, 26, 27, 95, 96, 97, 98, 99,
+      22, 23, 24, 25, 26, 27, 95, 96, 97, 98, 99, 100,
     ]);
     const packs = blocks.filter(({ variant }) => variant > 0);
     const large = [
@@ -641,7 +650,7 @@ describe('carga inicial do dia e da noite (day-night/01 e 03)', () => {
   it('o Poste de luz acende nas 2 variantes, e as casas do pacote em todas as cores', () => {
     const of = (type: number) => lights.filter((l) => l.prop_type_id === type);
     expect(of(18).map(({ variant }) => variant)).toEqual([1, 2]);
-    for (const type of [95, 96, 97, 98])
+    for (const type of [95, 96, 97, 98, 100])
       expect(new Set(of(type).map(({ variant }) => variant))).toEqual(
         new Set([0]),
       );

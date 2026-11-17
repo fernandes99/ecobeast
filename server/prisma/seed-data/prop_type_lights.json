@@ -145,5 +145,6 @@
 	{ "id": 144, "prop_type_id": 98, "variant": 0, "position": 1, "x": -19, "y": -54, "radius": 9, "color": "ffcf70" },
 	{ "id": 145, "prop_type_id": 98, "variant": 0, "position": 2, "x": 19, "y": -54, "radius": 9, "color": "ffcf70" },
 	{ "id": 146, "prop_type_id": 98, "variant": 0, "position": 3, "x": -25, "y": -24, "radius": 9, "color": "ffcf70" },
-	{ "id": 147, "prop_type_id": 98, "variant": 0, "position": 4, "x": 24, "y": -24, "radius": 9, "color": "ffcf70" }
+	{ "id": 147, "prop_type_id": 98, "variant": 0, "position": 4, "x": 24, "y": -24, "radius": 9, "color": "ffcf70" },
+	{ "id": 148, "prop_type_id": 100, "variant": 0, "position": 0, "x": 20, "y": -26, "radius": 9, "color": "ffcf70" }
 ]

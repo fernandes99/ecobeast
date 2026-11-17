@@ -289,7 +289,7 @@ func _current_prop_tiles() -> Dictionary[Vector2i, String]:
 
 
 static func _prop_key(prop: MapProp) -> String:
-	return "%d:%d:%d:%d:%s;" % [prop.prop_type_id, prop.offset.x, prop.offset.y, prop.variant, prop.mirrored]
+	return "%d:%d:%d:%d:%s:%s;" % [prop.prop_type_id, prop.offset.x, prop.offset.y, prop.variant, prop.mirrored, prop.no_smoke]
 
 
 ## Como o `refresh_props`, só nos hexágonos de `coords` (vegetation-brush/02): numa ilha

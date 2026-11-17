@@ -99,6 +99,7 @@ export function toDraft(dto: IslandDraftDto): IslandDraft {
       ...(prop.action_type_id === undefined || prop.action_type_id === null
         ? {}
         : { actionTypeId: prop.action_type_id }),
+      ...(prop.no_smoke === true ? { noSmoke: true as const } : {}),
     })),
     trails: (dto.trails ?? []).map(({ ground, width, points }) => ({
       ground,
@@ -427,17 +428,30 @@ export class IslandsEditorService {
 
     const props = draft.props
       .filter(({ block }) => block === undefined)
-      .map(({ propTypeId, q, r, dx, dy, variant, mirrored, actionTypeId }) => ({
-        islandMapId: map.id,
-        propTypeId,
-        q,
-        r,
-        dx,
-        dy,
-        variant,
-        mirrored,
-        actionTypeId: actionTypeId ?? null,
-      }));
+      .map(
+        ({
+          propTypeId,
+          q,
+          r,
+          dx,
+          dy,
+          variant,
+          mirrored,
+          actionTypeId,
+          noSmoke,
+        }) => ({
+          islandMapId: map.id,
+          propTypeId,
+          q,
+          r,
+          dx,
+          dy,
+          variant,
+          mirrored,
+          actionTypeId: actionTypeId ?? null,
+          noSmoke: noSmoke === true,
+        }),
+      );
     for (let first = 0; first < props.length; first += TILE_CHUNK) {
       await tx.islandProp.createMany({
         data: props.slice(first, first + TILE_CHUNK),
@@ -449,7 +463,17 @@ export class IslandsEditorService {
     if (custom.length > 0) {
       const created = await tx.islandProp.createManyAndReturn({
         data: custom.map(
-          ({ propTypeId, q, r, dx, dy, variant, mirrored, actionTypeId }) => ({
+          ({
+            propTypeId,
+            q,
+            r,
+            dx,
+            dy,
+            variant,
+            mirrored,
+            actionTypeId,
+            noSmoke,
+          }) => ({
             islandMapId: map.id,
             propTypeId,
             q,
@@ -460,6 +484,7 @@ export class IslandsEditorService {
             mirrored,
             customBlock: true,
             actionTypeId: actionTypeId ?? null,
+            noSmoke: noSmoke === true,
           }),
         ),
         select: { id: true },
