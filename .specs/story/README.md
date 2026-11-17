@@ -73,5 +73,6 @@ Tomadas no planejamento (corrigíveis; ao mudar uma, atualize aqui e nas specs a
 | [03](03-map-steps.md) | Os passos no mapa: pôr e tirar atores, andar, virar, câmera, seguir o Domador e abrir tela | concluída |
 | [04](04-scenes-tool.md) | A ferramenta Cenas do F2: a lista de cenas da ilha, o gatilho, os passos com os blocos, pegar hexágono no mapa, salvar e Testar daqui | concluída |
 | [05](05-story-line.md) | A Linha da história: as cenas ligadas pelos Marcos, com os avisos | concluída |
+| [06](06-scene-timeline.md) | A linha do tempo das cenas: os passos em cartões embaixo do mapa do F2, os ramos em faixas juntas e o painel lateral reorganizado, com o topo, o passo escolhido e as seções dobráveis | concluída |
 
 O desenho que as fases compartilham está em [architecture.md](architecture.md).

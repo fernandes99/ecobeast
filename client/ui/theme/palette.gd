@@ -110,3 +110,13 @@ const AURA_SHINE := Color("#FFFFFF")
 ## Modulate de um painel tocável enquanto o dedo está nele: clareia, porque
 ## escurecer não aparece no fundo escuro.
 const PRESSED_TINT := Color(1.25, 1.25, 1.25)
+
+## A cor de cada grupo de passo na ferramenta Cenas do editor (story/06). A revisar.
+const STORY_STEP_COLORS: Dictionary[String, Color] = {
+	"talk": Color("#7C5CD6"),
+	"choice": Color("#D6455C"),
+	"mark": Color("#4A7BD1"),
+	"actor": Color("#2E9E5B"),
+	"camera": Color("#C27A1A"),
+	"screen": Color("#5B7590"),
+}

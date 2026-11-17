@@ -30,6 +30,7 @@ var _publish_button: Button
 var _islands_button: Button
 var _story_button: Button
 var _story_line := StoryLineView.new()
+var _scene_timeline := SceneTimeline.new()
 var _islands_popup: PopupPanel
 var _undo_button: Button
 var _redo_button: Button
@@ -838,7 +839,19 @@ func _build() -> void:
 	_canvas.pointer_dragged.connect(_on_pointer_dragged)
 	_tools.brush_changed.connect(_on_brush_changed)
 	_canvas.view_changed.connect(_place_object_bar)
-	body.add_child(_canvas)
+	var map_column := VBoxContainer.new()
+	map_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	map_column.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	map_column.add_theme_constant_override(&"separation", 0)
+	body.add_child(map_column)
+	map_column.add_child(_canvas)
+	_scene_timeline.set_steps(_tools.scene_panel.steps())
+	map_column.add_child(_scene_timeline)
+	_tools.scene_panel.scene_opened.connect(func() -> void:
+		_scene_timeline.reset()
+		_refresh_timeline())
+	_tools.scene_panel.changed.connect(_refresh_timeline)
+	_tools.brush_changed.connect(_refresh_timeline)
 	_object_bar = ObjectBar.new(_tools.object_panel)
 	_object_bar.visible = false
 	_canvas.add_child(_object_bar)
@@ -1038,3 +1051,10 @@ func _open_from_story_line(slug: String) -> void:
 		return
 	_tools.set_tool(EditorTools.Tool.SCENES)
 	_tools.scene_panel.select_scene(slug)
+
+
+## A faixa de passos aparece com a ferramenta Cenas e uma cena aberta (story/06).
+func _refresh_timeline() -> void:
+	var open := _tools.tool == EditorTools.Tool.SCENES and _tools.scene_panel.has_scene()
+	if open != _scene_timeline.visible:
+		_scene_timeline.show_scene(open)

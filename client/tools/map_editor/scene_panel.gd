@@ -1,11 +1,14 @@
 class_name ScenePanel
 extends VBoxContainer
 
-## A ferramenta Cenas (story/04): as cenas da ilha aberta, os campos, o gatilho, os
-## atores e os passos (`SceneSteps`), salvas em `res://story/scenes/<slug>.json`.
+## A ferramenta Cenas (story/04 e 06): as cenas da ilha aberta, o passo escolhido
+## (`SceneSteps`, com os cartões na `SceneTimeline` embaixo do mapa) e as seções da cena,
+## dos atores e do teste, salvas em `res://story/scenes/<slug>.json`.
 
 ## Mudou algo que o mapa desenha.
 signal changed
+## Outra cena foi aberta (ou nenhuma): a faixa volta ao começo.
+signal scene_opened
 signal message(text: String, error: bool)
 signal test_requested(scene: StoryScene, marks: Array[String])
 
@@ -56,6 +59,11 @@ var _delete_button: Button
 var _hint := Label.new()
 var _empty_hint := Label.new()
 var _confirm := ConfirmationDialog.new()
+var _scene_actions := VBoxContainer.new()
+var _scene_fold := FoldableContainer.new()
+var _actors_fold := FoldableContainer.new()
+var _test_fold := FoldableContainer.new()
+var _folds_set := false
 
 
 func _init() -> void:
@@ -92,17 +100,41 @@ func _init() -> void:
 	new_row.add_child(_button("Criar", _create))
 	new_row.add_child(_button("Cancelar", func() -> void: _new_box.hide()))
 
-	_empty_hint.text = "Escolha uma cena na lista acima ou crie uma com Nova cena. Os botões Salvar e Testar daqui ficam no fim do painel da cena."
+	_scene_actions.add_theme_constant_override(&"separation", 4)
+	_box.add_child(_scene_actions)
+	var actions := HBoxContainer.new()
+	_scene_actions.add_child(actions)
+	_save_button = _button("Salvar", save)
+	actions.add_child(_save_button)
+	_discard_button = _button("Descartar", _discard)
+	actions.add_child(_discard_button)
+	_test_button = _button("▶ Testar daqui", _test)
+	_test_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	actions.add_child(_test_button)
+	_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_hint.add_theme_color_override(&"font_color", UiPalette.TEXT_SECONDARY)
+	_scene_actions.add_child(_hint)
+
+	_empty_hint.text = "Escolha uma cena na lista acima ou crie uma com Nova cena."
 	_empty_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_empty_hint.add_theme_color_override(&"font_color", UiPalette.TEXT_SECONDARY)
 	_box.add_child(_empty_hint)
-	_body.add_theme_constant_override(&"separation", 6)
+	_body.add_theme_constant_override(&"separation", 8)
 	_box.add_child(_body)
-	_field_label("Nome")
+
+	_body.add_child(HSeparator.new())
+	_steps.changed.connect(func() -> void: _edit(Callable()))
+	_steps.pick_requested.connect(_start_pick)
+	_steps.selection_changed.connect(func() -> void: changed.emit())
+	_body.add_child(_steps)
+	_body.add_child(HSeparator.new())
+
+	var scene_box := _fold(_scene_fold, "Cena: nome, Marcos e gatilho")
+	_field_label("Nome", scene_box)
 	_name_edit.text_changed.connect(func(text: String) -> void: _edit(func() -> void: _scene.name = text))
-	_body.add_child(_name_edit)
+	scene_box.add_child(_name_edit)
 	var row := HBoxContainer.new()
-	_body.add_child(row)
+	scene_box.add_child(row)
 	_repeatable.text = "Repetível"
 	_repeatable.tooltip_text = "Roda sempre que o gatilho disparar e não liga o próprio Marco."
 	_repeatable.focus_mode = Control.FOCUS_NONE
@@ -114,51 +146,39 @@ func _init() -> void:
 	row.add_child(priority_label)
 	_priority.changed.connect(func() -> void: _edit(func() -> void: _scene.priority = int(_priority.value())))
 	row.add_child(_priority)
-	_marks_field("Precisa dos Marcos", _requires, func(marks: Array[String]) -> void: _scene.requires = marks)
-	_marks_field("Não pode ter os Marcos", _forbids, func(marks: Array[String]) -> void: _scene.forbids = marks)
-
-	_field_label("Gatilho")
+	_marks_field("Precisa dos Marcos", _requires, func(marks: Array[String]) -> void: _scene.requires = marks, scene_box)
+	_marks_field("Não pode ter os Marcos", _forbids, func(marks: Array[String]) -> void: _scene.forbids = marks, scene_box)
+	_field_label("Gatilho", scene_box)
 	_trigger.focus_mode = Control.FOCUS_NONE
 	for pair: Array in TRIGGERS:
 		_trigger.add_item(pair[0])
 	_trigger.item_selected.connect(_on_trigger_selected)
-	_body.add_child(_trigger)
+	scene_box.add_child(_trigger)
 	_npc_option.focus_mode = Control.FOCUS_NONE
 	_npc_option.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_npc_option.item_selected.connect(func(index: int) -> void: _edit(func() -> void: _scene.trigger["npc_id"] = _npc_option.get_item_id(index)))
 	_npc_row.add_child(_npc_option)
-	_body.add_child(_npc_row)
+	scene_box.add_child(_npc_row)
 	_area_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_area_row.add_child(_area_label)
 	_area_button.focus_mode = Control.FOCUS_NONE
 	_area_button.pressed.connect(_toggle_area_pick)
 	_area_row.add_child(_area_button)
-	_body.add_child(_area_row)
+	scene_box.add_child(_area_row)
 
-	_field_label("Atores")
+	var actors_box := _fold(_actors_fold, "Atores")
 	_actors_box.add_theme_constant_override(&"separation", 4)
-	_body.add_child(_actors_box)
-	_body.add_child(_button("+ Ator", _add_actor))
+	actors_box.add_child(_actors_box)
+	actors_box.add_child(_button("+ Ator", _add_actor))
 
-	_steps.changed.connect(func() -> void: _edit(Callable()))
-	_steps.pick_requested.connect(_start_pick)
-	_body.add_child(_steps)
-
-	_body.add_child(HSeparator.new())
-	_field_label("Marcos do teste (separados por vírgula)")
-	_body.add_child(_test_marks)
-	var actions := HBoxContainer.new()
-	_body.add_child(actions)
-	_save_button = _button("Salvar", save)
-	actions.add_child(_save_button)
-	_discard_button = _button("Descartar", _discard)
-	actions.add_child(_discard_button)
-	_test_button = _button("Testar daqui", _test)
-	actions.add_child(_test_button)
-	_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_hint.add_theme_color_override(&"font_color", UiPalette.TEXT_SECONDARY)
-	_body.add_child(_hint)
+	var test_box := _fold(_test_fold, "Teste")
+	_field_label("Marcos do teste (separados por vírgula)", test_box)
+	test_box.add_child(_test_marks)
 	_refresh()
+
+
+func steps() -> SceneSteps:
+	return _steps
 
 
 func set_draft(draft: IslandDraft) -> void:
@@ -347,6 +367,7 @@ func _open_scene(slug: String) -> void:
 		_test_marks.text = ", ".join(_scene.requires)
 	_fill_list()
 	_fill_scene()
+	scene_opened.emit()
 	changed.emit()
 
 
@@ -388,8 +409,12 @@ func _on_list_selected(index: int) -> void:
 
 func _fill_scene() -> void:
 	if _scene == null:
+		_steps.set_scene(null, Vector2i.ZERO)
 		_refresh()
 		return
+	if not _folds_set:
+		_scene_fold.folded = false
+		_folds_set = true
 	_name_edit.text = _scene.name
 	_repeatable.set_pressed_no_signal(_scene.repeatable)
 	_priority.set_value(_scene.priority)
@@ -573,6 +598,7 @@ func _create() -> void:
 	_test_marks.text = ""
 	_fill_list()
 	_fill_scene()
+	scene_opened.emit()
 	changed.emit()
 
 
@@ -630,6 +656,7 @@ func _refresh() -> void:
 	_blocked.visible = not has_island
 	_box.visible = has_island
 	_body.visible = _scene != null
+	_scene_actions.visible = _scene != null
 	_empty_hint.visible = _scene == null
 	_delete_button.disabled = _scene == null or Story.library.find(_scene.slug) == null
 	if _scene == null:
@@ -653,10 +680,10 @@ func _refresh() -> void:
 	_hint.text = reason
 
 
-func _marks_field(title: String, edit: LineEdit, apply: Callable) -> void:
-	_field_label(title)
+func _marks_field(title: String, edit: LineEdit, apply: Callable, parent: Control) -> void:
+	_field_label(title, parent)
 	var row := HBoxContainer.new()
-	_body.add_child(row)
+	parent.add_child(row)
 	edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	edit.placeholder_text = "separados por vírgula"
 	edit.text_changed.connect(func(text: String) -> void:
@@ -688,11 +715,22 @@ func _split(text: String) -> Array[String]:
 	return marks
 
 
-func _field_label(text: String) -> void:
+func _field_label(text: String, parent: Control) -> void:
 	var label := Label.new()
 	label.text = text
 	label.add_theme_color_override(&"font_color", UiPalette.TEXT_SECONDARY)
-	_body.add_child(label)
+	parent.add_child(label)
+
+
+## Uma seção que abre e fecha, com o conteúdo numa coluna.
+func _fold(fold: FoldableContainer, title: String) -> VBoxContainer:
+	fold.title = title
+	fold.folded = true
+	_body.add_child(fold)
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override(&"separation", 6)
+	fold.add_child(column)
+	return column
 
 
 func _button(text: String, pressed: Callable) -> Button:

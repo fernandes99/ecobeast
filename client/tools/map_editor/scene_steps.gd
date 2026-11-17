@@ -1,211 +1,166 @@
 class_name SceneSteps
 extends VBoxContainer
 
-## Os passos de uma cena na ferramenta Cenas (story/04): a árvore com os blocos, os
-## botões e os campos do passo escolhido. Mexe direto nas listas da cena.
+## Os passos de uma cena na ferramenta Cenas (story/04 e 06): o passo escolhido, os
+## campos dele e as regras de pôr, apagar e mover. A faixa (`SceneTimeline`) mostra os
+## cartões e chama estas regras. Mexe direto nas listas da cena.
 
+## A cena mudou (algum campo ou a ordem dos passos).
 signal changed
+## Os passos foram postos, apagados ou mudados de lugar: a faixa monta de novo.
+signal structure_changed
+signal selection_changed
 ## Pede um hexágono do mapa; `done` recebe o `Vector2i`.
 signal pick_requested(done: Callable)
 
-const TREE_HEIGHT := 260.0
-const TEXT_HEIGHT := 90.0
-const SHORT_TEXT := 34
+const TEXT_HEIGHT := 120.0
 const TAMER := "tamer"
+const ICONS := "res://tools/map_editor/icons/story/%s.svg"
 const TYPE_NAMES: Dictionary[String, String] = {
 	"say": "Fala", "choice": "Escolha", "if_mark": "Se tiver o Marco", "set_mark": "Ligar Marco",
 	"wait": "Esperar", "fade": "Escurecer ou clarear", "show": "Mostrar ator", "hide": "Esconder ator",
 	"move": "Andar", "face": "Virar", "camera": "Câmera", "camera_back": "Câmera volta",
 	"follow": "Seguir o Domador", "unfollow": "Parar de seguir", "open_screen": "Abrir tela",
 }
+## Os grupos de cor, na ordem do menu, com os tipos de cada um (story/06).
+const GROUPS: Dictionary[String, Array] = {
+	"talk": ["say"],
+	"choice": ["choice", "if_mark"],
+	"mark": ["set_mark"],
+	"actor": ["show", "hide", "move", "face", "follow", "unfollow"],
+	"camera": ["camera", "camera_back", "fade", "wait"],
+	"screen": ["open_screen"],
+}
+const ICON_NAMES: Dictionary[String, String] = {"set_mark": "mark", "open_screen": "screen"}
 const SCREEN_NAMES: Dictionary[String, String] = {
 	"appearance": "Aparência", "heal_station": "Refúgio", "shop": "Loja", "team": "Equipe",
 	"bag": "Mochila", "codex": "Bestiário",
 }
+const NOTHING_CHOSEN := "Toque num cartão embaixo do mapa para editar o passo."
+
+## O que está escolhido: {"list": Array, "index": int} para um passo,
+## {"option": Dictionary, "options": Array, "list": Array} para uma opção de escolha.
+var chosen: Dictionary = {}
 
 var _scene: StoryScene = null
 var _start := Vector2i.ZERO
-var _tree := Tree.new()
-var _add_menu := MenuButton.new()
-var _option_button := Button.new()
-var _delete_button := Button.new()
-var _up_button := Button.new()
-var _down_button := Button.new()
+var _title := Label.new()
+var _actions := HBoxContainer.new()
+var _add_after := MenuButton.new()
 var _fields := VBoxContainer.new()
-## O que o item da árvore escolhido é: {"list": Array, "index": int} para um passo,
-## {"list": Array} para um bloco.
-var _chosen: Dictionary = {}
 
 
 func _init() -> void:
 	add_theme_constant_override(&"separation", 6)
-	var title := Label.new()
-	title.text = "Passos"
-	EditorTools.section_title(title)
-	add_child(title)
-	_tree.custom_minimum_size.y = TREE_HEIGHT
-	_tree.hide_root = true
-	_tree.focus_mode = Control.FOCUS_CLICK
-	_tree.item_selected.connect(_on_item_selected)
-	add_child(_tree)
-	var buttons := HFlowContainer.new()
-	buttons.add_theme_constant_override(&"h_separation", 4)
-	add_child(buttons)
-	_add_menu.text = "+ Passo"
-	_add_menu.flat = false
-	for type: String in TYPE_NAMES:
-		_add_menu.get_popup().add_item(TYPE_NAMES[type])
-	_add_menu.get_popup().index_pressed.connect(func(index: int) -> void: _add_step(TYPE_NAMES.keys()[index]))
-	buttons.add_child(_add_menu)
-	for pair: Array in [[_option_button, "+ Opção", _add_option], [_delete_button, "Apagar", _delete], [_up_button, "Subir", _move.bind(-1)], [_down_button, "Descer", _move.bind(1)]]:
-		var button: Button = pair[0]
-		button.text = pair[1]
-		button.focus_mode = Control.FOCUS_NONE
-		button.pressed.connect(pair[2])
-		buttons.add_child(button)
+	_title.theme_type_variation = &"BoldLabel"
+	_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	add_child(_title)
+	_actions.add_theme_constant_override(&"separation", 4)
+	add_child(_actions)
+	_add_after.text = "+ depois deste"
+	_add_after.flat = false
+	fill_type_menu(_add_after.get_popup(), func(type: String) -> void: add_after(type))
+	_actions.add_child(_add_after)
+	_actions.add_child(_button("← Mover", func() -> void: move_chosen(-1)))
+	_actions.add_child(_button("Mover →", func() -> void: move_chosen(1)))
+	var delete := _button("Apagar", delete_chosen)
+	delete.theme_type_variation = &"DangerButton"
+	_actions.add_child(delete)
 	_fields.add_theme_constant_override(&"separation", 6)
 	add_child(_fields)
 
 
-func set_scene(scene: StoryScene, start: Vector2i) -> void:
-	_scene = scene
+func set_scene(value: StoryScene, start: Vector2i) -> void:
+	_scene = value
 	_start = start
-	_chosen = {}
-	rebuild()
+	chosen = {}
+	_show_fields()
+	structure_changed.emit()
+
+
+func scene() -> StoryScene:
+	return _scene
+
+
+func select(target: Dictionary) -> void:
+	chosen = target
+	_show_fields()
+	selection_changed.emit()
 
 
 ## O passo escolhido, ou vazio.
 func chosen_step() -> Dictionary:
-	if not _chosen.has("index"):
+	if not chosen.has("index"):
 		return {}
-	var list: Array = _chosen["list"]
-	var index: int = _chosen["index"]
+	var list: Array = chosen["list"]
+	var index: int = chosen["index"]
 	return list[index] if index < list.size() and list[index] is Dictionary else {}
 
 
-func rebuild() -> void:
-	_tree.clear()
-	var root := _tree.create_item()
-	if _scene != null:
-		_add_items(root, _scene.steps)
-	_refresh_buttons()
-	_show_fields()
-
-
-func _add_items(parent: TreeItem, list: Array) -> void:
-	for index: int in list.size():
-		var step: Variant = list[index]
-		if not step is Dictionary:
-			continue
-		var d: Dictionary = step
-		var item := _tree.create_item(parent)
-		item.set_text(0, _summary(d))
-		item.set_metadata(0, {"list": list, "index": index})
-		if _same(_chosen, list, index):
-			item.select(0)
-		match DictFields.get_string(d, "type"):
-			"choice":
-				var options := DictFields.get_array(d, "options")
-				for option_index: int in options.size():
-					var option: Dictionary = options[option_index]
-					var header := _tree.create_item(item)
-					header.set_text(0, "Opção: %s" % _short(DictFields.get_string(option, "text")))
-					if not option.get("steps") is Array:
-						option["steps"] = []
-					header.set_metadata(0, {"list": option["steps"], "option": option, "options": options})
-					if is_same(_chosen.get("option"), option):
-						header.select(0)
-					_add_items(header, option["steps"])
-			"if_mark":
-				for key: String in ["then", "else"]:
-					if not d.get(key) is Array:
-						d[key] = []
-					var header := _tree.create_item(item)
-					header.set_text(0, "Então" if key == "then" else "Senão")
-					header.set_metadata(0, {"list": d[key]})
-					if not _chosen.has("index") and not _chosen.has("option") and is_same(_chosen.get("list"), d[key]):
-						header.select(0)
-					_add_items(header, d[key])
-
-
-func _same(chosen: Dictionary, list: Array, index: int) -> bool:
+func is_chosen(list: Array, index: int) -> bool:
 	return chosen.has("index") and is_same(chosen["list"], list) and chosen["index"] == index
 
 
-func _summary(step: Dictionary) -> String:
-	var type := DictFields.get_string(step, "type")
-	var title: String = TYPE_NAMES.get(type, type)
-	match type:
-		"say":
-			var speaker: Variant = step.get("speaker")
-			var who := "Narração" if speaker == null else ("Domador" if speaker == TAMER else str(speaker))
-			return "%s · %s: %s" % [title, who, _short(DictFields.get_string(step, "text"))]
-		"if_mark", "set_mark":
-			return "%s %s" % [title, DictFields.get_string(step, "mark")]
-		"wait", "camera_back":
-			return "%s · %s s" % [title, EditorNumberField.format(DictFields.get_float(step, "seconds"), false)]
-		"fade":
-			return "%s · %s" % ["Escurecer" if step.get("to") == "black" else "Clarear", EditorNumberField.format(DictFields.get_float(step, "seconds"), false)]
-		"move":
-			return "%s · %s → (%d, %d)" % [title, _actor_name(step.get("actor")), DictFields.get_int(step, "q"), DictFields.get_int(step, "r")]
-		"camera":
-			return "%s → (%d, %d)" % [title, DictFields.get_int(step, "q"), DictFields.get_int(step, "r")]
-		"face":
-			var toward: Variant = step.get("toward")
-			var coord: Variant = StoryValidator.coord_of(toward)
-			var target := "(%d, %d)" % [coord.x, coord.y] if coord != null else _actor_name(toward)
-			return "%s · %s → %s" % [title, _actor_name(step.get("actor")), target]
-		"show", "hide", "follow", "unfollow":
-			return "%s · %s" % [title, _actor_name(step.get("actor"))]
-		"open_screen":
-			return "%s · %s" % [title, SCREEN_NAMES.get(str(step.get("screen")), str(step.get("screen")))]
-	return title
+# As regras de mexer nos passos.
 
-
-func _actor_name(actor: Variant) -> String:
-	return "Domador" if actor == TAMER else str(actor)
-
-
-func _short(text: String) -> String:
-	return text if text.length() <= SHORT_TEXT else text.substr(0, SHORT_TEXT - 3) + "..."
-
-
-func _on_item_selected() -> void:
-	var item := _tree.get_selected()
-	_chosen = item.get_metadata(0) if item != null else {}
-	_refresh_buttons()
-	_show_fields()
-
-
-func _refresh_buttons() -> void:
-	var is_step := _chosen.has("index")
-	_delete_button.disabled = not is_step and not _chosen.has("option")
-	_up_button.disabled = not is_step
-	_down_button.disabled = not is_step
-	var step := chosen_step()
-	_option_button.disabled = not (DictFields.get_string(step, "type") == "choice" and DictFields.get_array(step, "options").size() < StoryValidator.MAX_OPTIONS)
-	_add_menu.disabled = _scene == null
-
-
-## Depois do escolhido; num bloco escolhido, no fim dele.
-func _add_step(type: String) -> void:
+func add_step(type: String, list: Array, index: int) -> void:
 	if _scene == null:
 		return
-	var step := _new_step(type)
-	var list: Array = _scene.steps
-	var index := list.size()
-	if _chosen.has("index"):
-		list = _chosen["list"]
-		index = int(_chosen["index"]) + 1
-	elif _chosen.has("list"):
-		list = _chosen["list"]
-		index = list.size()
-	list.insert(index, step)
-	_chosen = {"list": list, "index": index}
-	_changed()
+	index = clampi(index, 0, list.size())
+	list.insert(index, new_step(type))
+	_restructured({"list": list, "index": index})
 
 
-func _new_step(type: String) -> Dictionary:
+func add_after(type: String) -> void:
+	if not chosen.has("index"):
+		return
+	add_step(type, chosen["list"], int(chosen["index"]) + 1)
+
+
+func delete_chosen() -> void:
+	if chosen.has("option"):
+		delete_option()
+		return
+	if not chosen.has("index"):
+		return
+	var list: Array = chosen["list"]
+	var index: int = chosen["index"]
+	list.remove_at(index)
+	_restructured({"list": list, "index": mini(index, list.size() - 1)} if not list.is_empty() else {})
+
+
+func move_chosen(offset: int) -> void:
+	if not chosen.has("index"):
+		return
+	var list: Array = chosen["list"]
+	var index: int = chosen["index"]
+	var target := index + offset
+	if target < 0 or target >= list.size():
+		return
+	var step: Variant = list[index]
+	list[index] = list[target]
+	list[target] = step
+	_restructured({"list": list, "index": target})
+
+
+func add_option(choice: Dictionary) -> void:
+	var options := DictFields.get_array(choice, "options")
+	if options.size() >= StoryValidator.MAX_OPTIONS:
+		return
+	var option := {"text": "Opção %d" % (options.size() + 1), "steps": []}
+	options.append(option)
+	_restructured({"option": option, "options": options, "list": option["steps"]})
+
+
+func delete_option() -> void:
+	var options: Array = chosen.get("options", [])
+	if options.size() <= StoryValidator.MIN_OPTIONS:
+		return
+	options.erase(chosen["option"])
+	_restructured({})
+
+
+func new_step(type: String) -> Dictionary:
 	var first_actor := str(_scene.actors[0].get("key", "")) if not _scene.actors.is_empty() else ""
 	match type:
 		"say":
@@ -239,58 +194,86 @@ func _new_step(type: String) -> Dictionary:
 	return {"type": type}
 
 
-func _add_option() -> void:
-	var options := DictFields.get_array(chosen_step(), "options")
-	if options.size() >= StoryValidator.MAX_OPTIONS:
-		return
-	options.append({"text": "Opção %d" % (options.size() + 1), "steps": []})
-	_changed()
-
-
-func _delete() -> void:
-	if _chosen.has("option"):
-		var options: Array = _chosen["options"]
-		if options.size() > StoryValidator.MIN_OPTIONS:
-			options.erase(_chosen["option"])
-		_chosen = {}
-		_changed()
-		return
-	if not _chosen.has("index"):
-		return
-	var list: Array = _chosen["list"]
-	list.remove_at(int(_chosen["index"]))
-	_chosen = {}
-	_changed()
-
-
-func _move(offset: int) -> void:
-	if not _chosen.has("index"):
-		return
-	var list: Array = _chosen["list"]
-	var index: int = _chosen["index"]
-	var target := index + offset
-	if target < 0 or target >= list.size():
-		return
-	var step: Variant = list[index]
-	list[index] = list[target]
-	list[target] = step
-	_chosen = {"list": list, "index": target}
-	_changed()
-
-
-func _changed() -> void:
-	rebuild()
+func _restructured(target: Dictionary) -> void:
+	chosen = target
+	_show_fields()
+	structure_changed.emit()
+	selection_changed.emit()
 	changed.emit()
 
 
-## Mudou um campo: a árvore só troca o texto, sem perder a escolha.
-func _field_changed() -> void:
-	var item := _tree.get_selected()
-	if item != null and _chosen.has("index"):
-		item.set_text(0, _summary(chosen_step()))
-	elif item != null and _chosen.has("option"):
-		item.set_text(0, "Opção: %s" % _short(DictFields.get_string(_chosen["option"], "text")))
-	changed.emit()
+# Nomes, grupos, ícones e resumos, também usados pela faixa.
+
+static func type_group(type: String) -> String:
+	for group: String in GROUPS:
+		if (GROUPS[group] as Array).has(type):
+			return group
+	return "screen"
+
+
+static func type_color(type: String) -> Color:
+	return UiPalette.STORY_STEP_COLORS.get(type_group(type), UiPalette.SURFACE_RAISED)
+
+
+static func type_icon(type: String) -> Texture2D:
+	return load(ICONS % ICON_NAMES.get(type, type)) as Texture2D
+
+
+## O menu dos tipos, agrupados pela cor, com o ícone de cada um.
+static func fill_type_menu(popup: PopupMenu, picked: Callable) -> void:
+	popup.clear()
+	var types: Array[String] = []
+	for group: String in GROUPS:
+		if popup.item_count > 0:
+			popup.add_separator()
+		for type: String in GROUPS[group]:
+			popup.add_icon_item(type_icon(type), TYPE_NAMES[type], types.size())
+			popup.set_item_icon_modulate(popup.item_count - 1, type_color(type).lightened(0.25))
+			popup.set_item_icon_max_width(popup.item_count - 1, 18)
+			types.append(type)
+	popup.id_pressed.connect(func(id: int) -> void: picked.call(types[id]))
+
+
+## O resumo do passo para o cartão, sem o nome do tipo.
+static func summary(step: Dictionary) -> String:
+	var type := DictFields.get_string(step, "type")
+	match type:
+		"say":
+			var speaker: Variant = step.get("speaker")
+			var who := "Narração" if speaker == null else _actor_name(speaker)
+			return "%s: %s" % [who, DictFields.get_string(step, "text")]
+		"choice":
+			var texts: Array[String] = []
+			for option: Variant in DictFields.get_array(step, "options"):
+				if option is Dictionary:
+					texts.append("“%s”" % DictFields.get_string(option, "text"))
+			return "%d opções: %s" % [texts.size(), " / ".join(texts)]
+		"if_mark":
+			return "Se tiver %s" % DictFields.get_string(step, "mark")
+		"set_mark":
+			return "Liga %s" % DictFields.get_string(step, "mark")
+		"wait", "camera_back":
+			return "%s s" % EditorNumberField.format(DictFields.get_float(step, "seconds"), false)
+		"fade":
+			return "%s em %s s" % ["Escurece" if step.get("to") == "black" else "Clareia", EditorNumberField.format(DictFields.get_float(step, "seconds"), false)]
+		"move":
+			return "%s → (%d, %d)%s" % [_actor_name(step.get("actor")), DictFields.get_int(step, "q"), DictFields.get_int(step, "r"), "" if DictFields.get_bool(step, "wait", true) else "\nsem esperar"]
+		"camera":
+			return "→ (%d, %d) em %s s" % [DictFields.get_int(step, "q"), DictFields.get_int(step, "r"), EditorNumberField.format(DictFields.get_float(step, "seconds"), false)]
+		"face":
+			var toward: Variant = step.get("toward")
+			var coord: Variant = StoryValidator.coord_of(toward)
+			var target := "(%d, %d)" % [coord.x, coord.y] if coord != null else _actor_name(toward)
+			return "%s → %s" % [_actor_name(step.get("actor")), target]
+		"show", "hide", "follow", "unfollow":
+			return _actor_name(step.get("actor"))
+		"open_screen":
+			return SCREEN_NAMES.get(str(step.get("screen")), str(step.get("screen")))
+	return ""
+
+
+static func _actor_name(actor: Variant) -> String:
+	return "Domador" if actor == TAMER else str(actor)
 
 
 # Os campos do passo escolhido.
@@ -298,14 +281,23 @@ func _field_changed() -> void:
 func _show_fields() -> void:
 	for child: Node in _fields.get_children():
 		child.queue_free()
-	if _chosen.has("option"):
-		var option: Dictionary = _chosen["option"]
+	_actions.visible = chosen.has("index")
+	if chosen.has("option"):
+		var option: Dictionary = chosen["option"]
+		_title.text = "Opção da escolha"
 		_text_field("Texto da opção", option, "text", false)
+		var delete := _button("Apagar opção", delete_option)
+		delete.theme_type_variation = &"DangerButton"
+		delete.disabled = (chosen["options"] as Array).size() <= StoryValidator.MIN_OPTIONS
+		_fields.add_child(delete)
 		return
 	var step := chosen_step()
 	if step.is_empty():
+		_title.text = NOTHING_CHOSEN
 		return
-	match DictFields.get_string(step, "type"):
+	var type := DictFields.get_string(step, "type")
+	_title.text = "Passo %d · %s" % [int(chosen["index"]) + 1, TYPE_NAMES.get(type, type)]
+	match type:
 		"say":
 			_choice_field("Quem fala", step, "speaker", _speaker_options())
 			_text_field("Fala · {nome} vira o nome do Domador", step, "text", true)
@@ -334,15 +326,11 @@ func _show_fields() -> void:
 			var options := _actor_options(true)
 			options.push_front(["Um hexágono", "__hex"])
 			var toward: Variant = step.get("toward")
-			if StoryValidator.coord_of(toward) != null:
-				step["__toward"] = "__hex"
-			else:
-				step["__toward"] = toward
-			_choice_field("Para", step, "__toward", options, func(value: Variant) -> void:
-				step.erase("__toward")
+			var current: Variant = "__hex" if StoryValidator.coord_of(toward) != null else toward
+			var holder := {"toward": current}
+			_choice_field("Para", holder, "toward", options, func(value: Variant) -> void:
 				step["toward"] = {"q": _start.x, "r": _start.y} if value == "__hex" else value
 				_show_fields())
-			step.erase("__toward")
 			if StoryValidator.coord_of(toward) != null:
 				_hex_field("Hexágono", step["toward"])
 		"camera":
@@ -353,6 +341,18 @@ func _show_fields() -> void:
 			for key: String in SCREEN_NAMES:
 				screens.append([SCREEN_NAMES[key], key])
 			_choice_field("Tela", step, "screen", screens)
+		"choice", "if_mark":
+			pass
+	if type == "choice" or type == "if_mark":
+		var hint := Label.new()
+		hint.text = "Use \"Abrir ramos\" no cartão para ver e editar os passos de cada ramo."
+		hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		hint.add_theme_color_override(&"font_color", UiPalette.TEXT_SECONDARY)
+		_fields.add_child(hint)
+
+
+func _field_changed() -> void:
+	changed.emit()
 
 
 func _speaker_options() -> Array:
@@ -367,6 +367,14 @@ func _actor_options(with_tamer: bool) -> Array:
 	for actor: Dictionary in _scene.actors:
 		options.append([str(actor.get("key", "")), str(actor.get("key", ""))])
 	return options
+
+
+func _button(text: String, pressed: Callable) -> Button:
+	var button := Button.new()
+	button.text = text
+	button.focus_mode = Control.FOCUS_NONE
+	button.pressed.connect(pressed)
+	return button
 
 
 func _label(text: String) -> void:
@@ -435,7 +443,8 @@ func _choice_field(title: String, target: Dictionary, key: String, options: Arra
 			option.select(index)
 	if option.selected < 0 and not options.is_empty():
 		option.select(0)
-		target[key] = options[0][1]
+		if not on_change.is_valid():
+			target[key] = options[0][1]
 	option.item_selected.connect(func(index: int) -> void:
 		var value: Variant = options[index][1]
 		if on_change.is_valid():
