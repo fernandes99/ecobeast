@@ -9,6 +9,7 @@ const ACTION_SCREENS: Dictionary[String, StringName] = {
 	"refuge": &"heal_station",
 	"shop": &"shop",
 }
+const MAP_MARKER_ACTIONS: Array[String] = ["refuge", "shop"]
 const NOTHING_HERE_TEXT := "Nada por aqui."
 const NO_PATH_TEXT := "Não dá para chegar lá."
 ## Encostado numa peça: a até isto das linhas dela, em pixels da arte (free-objects/03).
@@ -83,6 +84,10 @@ var _debug_spawn_ids: Array[int] = []
 var _debug_tamer_ids: Array[int] = []
 var _pinch := PinchZoom.new()
 var _pinch_start_zoom := HexMapView.DEFAULT_ZOOM
+var _minimap_image := MinimapImage.new()
+var _markers: Array[MapMarker] = []
+## Abrir o mapa grande no meio de uma caminhada a para onde o Domador está (minimap/02).
+var _stop_walk := false
 
 @onready var _map_area: Control = %MapArea
 @onready var _map_view: HexMapView = %MapView
@@ -115,6 +120,11 @@ var _pinch_start_zoom := HexMapView.DEFAULT_ZOOM
 @onready var _building_names: BuildingNamesLayer = %BuildingNames
 @onready var _day_light: DayLightLayer = %DayLight
 @onready var _fog: FogLayer = %Fog
+@onready var _minimap: Minimap = %Minimap
+@onready var _top_row: HBoxContainer = %TopRow
+@onready var _day_phase_badge: Control = %DayPhaseBadge
+@onready var _minimap_space: Control = %MinimapSpace
+@onready var _island_map: IslandMapPanel = %IslandMap
 
 
 func setup(params: Dictionary) -> void:
@@ -160,6 +170,8 @@ func _ready() -> void:
 	_refresh_rounded_button()
 	_refresh_height_cue_buttons()
 	resized.connect(_fit_view.call_deferred)
+	_top_row.resized.connect(_fit_island_name)
+	_minimap.tapped.connect(_open_island_map)
 	visibility_changed.connect(_on_visibility_changed)
 	WorldClock.sync()
 	_begin()
@@ -188,6 +200,9 @@ func _show_debug_time() -> void:
 
 
 func handle_back() -> bool:
+	if _island_map.visible:
+		_island_map.close_panel()
+		return true
 	return _loading or _challenger != null or _talking != null
 
 
@@ -226,6 +241,9 @@ func _begin() -> void:
 	_reveal_player()
 	_show_island()
 	_add_npcs()
+	_markers = _build_markers()
+	_rebuild_minimap()
+	_minimap.show()
 	_refresh_wild_sprites()
 	_map_view.show()
 	_marker.show()
@@ -255,7 +273,7 @@ func _input(event: InputEvent) -> void:
 
 ## O mapa acima do painel de botões, quando o toque nele valeria; senão, nenhuma.
 func _zoom_area() -> Rect2:
-	if _map == null or _showing_whole_map or _challenger != null or _talking != null:
+	if _map == null or _showing_whole_map or _challenger != null or _talking != null or _island_map.visible:
 		return Rect2()
 	var top := _map_area.get_global_rect().position
 	return Rect2(top, Vector2(_map_area.size.x, _controls_panel.get_global_rect().position.y - top.y))
@@ -282,7 +300,7 @@ func _on_map_input(event: InputEvent) -> void:
 
 
 func _tap(point: Vector2) -> void:
-	if _map == null or _showing_whole_map or _challenger != null or _talking != null:
+	if _map == null or _showing_whole_map or _challenger != null or _talking != null or _island_map.visible:
 		return
 	var art_point := (point - _map_view.position) / _map_view.pixel_scale()
 	if _walking:
@@ -343,6 +361,7 @@ func _go_to(art_point: Vector2) -> void:
 ## Quadro a quadro: o hexágono muda quando os pés cruzam a borda (wild-battle/15).
 func _walk(route: PackedVector2Array) -> void:
 	_walking = true
+	_stop_walk = false
 	_message.hide()
 	_show_route(route)
 	_marker.play_run()
@@ -350,7 +369,7 @@ func _walk(route: PackedVector2Array) -> void:
 	var traveled := 0.0
 	var origin := _player_coord
 	var tamer: MapTamer = null
-	while traveled < total and _next_point == null and tamer == null:
+	while traveled < total and _next_point == null and tamer == null and not _stop_walk:
 		await get_tree().process_frame
 		var delta := get_process_delta_time()
 		traveled = minf(total, traveled + WalkRoute.WALK_SPEED * delta)
@@ -375,6 +394,11 @@ func _walk(route: PackedVector2Array) -> void:
 	if _next_point == null or tamer != null:
 		_marker.play_idle()
 	_walking = false
+	if _stop_walk:
+		_stop_walk = false
+		_npc_target = null
+		_prop_target = -1
+		return
 	if tamer != null:
 		_next_point = null
 		_npc_target = null
@@ -403,6 +427,7 @@ func _place_player(delta: float) -> void:
 	_map_view.set_actor_depth(_marker, _player_point, _feet_row())
 	_reveal_player()
 	_move_map(_player_centered_position())
+	_minimap.set_center(_player_point)
 
 
 ## O terreno das linhas da frente que cobre o Domador fica transparente (terrain-height/03).
@@ -499,6 +524,7 @@ func _on_visibility_changed() -> void:
 func _show_island() -> void:
 	_island_plate.visible = _map.island_id > 0
 	_island_name.text = _map.island_name
+	_fit_island_name.call_deferred()
 	_building_labels.clear()
 	# Uma camada por linha, para a linha seguinte e os atores ficarem por cima.
 	var rows: Dictionary[int, Array] = {}
@@ -523,6 +549,57 @@ func _show_island() -> void:
 	_refresh_building_names()
 
 
+## O nome da ilha corta com reticências antes de chegar no minimapa (minimap/01).
+func _fit_island_name() -> void:
+	var font := _island_name.get_theme_font(&"font")
+	var font_size := _island_name.get_theme_font_size(&"font_size")
+	var wanted := font.get_string_size(_island_name.text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
+	var separation := _top_row.get_theme_constant(&"separation")
+	var plate := _island_plate.get_theme_stylebox(&"panel").get_minimum_size().x
+	var room := _top_row.size.x - _minimap_space.custom_minimum_size.x - _day_phase_badge.get_combined_minimum_size().x - separation * 2 - plate
+	_island_name.custom_minimum_size.x = clampf(wanted, 0.0, maxf(room, 0.0))
+
+
+func _open_island_map() -> void:
+	if _map == null or _challenger != null or _talking != null:
+		return
+	if _walking:
+		_stop_walk = true
+		_next_point = null
+	_debug_menu.hide()
+	_island_map.open(_minimap_image, _markers, _discovery, _showing_whole_map, _player_point, _map.island_name)
+
+
+func _rebuild_minimap() -> void:
+	_minimap_image.build(_map, _discovery, _showing_whole_map)
+	_minimap.set_source(_minimap_image, _markers, _discovery)
+	_minimap.set_show_all(_showing_whole_map)
+	_minimap.set_center(_player_point)
+
+
+## O Refúgio e a Loja, das ações e das peças com ação, e os NPCs (minimap/architecture).
+func _build_markers() -> Array[MapMarker]:
+	var markers: Array[MapMarker] = []
+	for action: MapAction in _map.actions:
+		var kind := _marker_kind(action.action_type_id)
+		if kind != &"":
+			markers.append(MapMarker.make(kind, BuildingNamesLayer.middle_of(action.tiles)))
+	for prop: MapProp in _map.props:
+		var kind := _marker_kind(prop.action_type_id)
+		if kind != &"":
+			markers.append(MapMarker.make(kind, prop.coord, HexMapView.flat_center(prop.coord) + Vector2(prop.offset)))
+	for sprite: NpcSprite in _npc_sprites:
+		markers.append(MapMarker.following(sprite))
+	return markers
+
+
+func _marker_kind(action_type_id: int) -> StringName:
+	if action_type_id <= 0:
+		return &""
+	var slug := str(GameData.get_row("action_types", action_type_id).get("slug", ""))
+	return StringName(slug) if MAP_MARKER_ACTIONS.has(slug) else &""
+
+
 func _refresh_building_names() -> void:
 	_building_names.clear()
 	for label: Dictionary in _building_labels:
@@ -537,6 +614,7 @@ func _discover() -> void:
 		return
 	Session.queue_island_discoveries(_map.island_id, found)
 	_fog.reveal(found)
+	_minimap_image.reveal(found)
 	_refresh_building_names()
 	_refresh_lights()
 
@@ -751,6 +829,7 @@ func _forget_island() -> void:
 	Session.queue_island_discoveries(_map.island_id, _discovery.reveal_around(_map, _player_coord))
 	_fog.set_map(_map, _discovery)
 	_fog.visible = not _showing_whole_map
+	_rebuild_minimap()
 	_refresh_building_names()
 	_refresh_lights()
 
@@ -762,6 +841,7 @@ func _toggle_whole_map() -> void:
 	_showing_whole_map = not _showing_whole_map
 	_debug_zoom_button.text = NORMAL_ZOOM_TEXT if _showing_whole_map else WHOLE_MAP_TEXT
 	_fog.visible = not _showing_whole_map
+	_rebuild_minimap()
 	_refresh_building_names()
 	_refresh_wild_sprites()
 	_fit_view()
