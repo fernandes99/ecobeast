@@ -87,3 +87,12 @@ func _on_delete_pressed() -> void:
 func _update_delete_button() -> void:
 	var island := _selected()
 	_delete_button.disabled = island.is_empty() or DictFields.get_string(island, "status") != "draft"
+
+
+## O nome de cada ilha da lista, pelo id (story/05).
+func island_names() -> Dictionary[int, String]:
+	var names: Dictionary[int, String] = {}
+	for island: Dictionary in _islands:
+		names[DictFields.get_int(island, "id")] = DictFields.get_string(island, "name")
+	return names
+

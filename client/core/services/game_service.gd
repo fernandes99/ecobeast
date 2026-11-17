@@ -52,6 +52,10 @@ extends RefCounted
 @abstract func add_island_discoveries(island_id: int, coords: Array[Vector2i]) -> Result
 
 
+## Liga Marcos da história; `data` é a lista inteira depois (story/01).
+@abstract func add_story_marks(marks: Array[String]) -> Result
+
+
 ## Só com as rotas de teste ligadas no servidor.
 @abstract func forget_island_discoveries(island_id: int) -> Result
 

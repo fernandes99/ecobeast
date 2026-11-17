@@ -64,6 +64,7 @@ function player(creatures: CreatureRow[] = []): PlayerRow {
     creatures,
     inventory: [],
     appearanceParts: [{ appearancePartId: 1, paletteId: null }],
+    storyMarks: [],
   };
 }
 
@@ -82,7 +83,16 @@ describe('toPlayerDto', () => {
         skin_palette_id: 1,
         parts: [{ part_id: 1, palette_id: null }],
       },
+      story_marks: [],
     });
+  });
+
+  it('devolve os Marcos da história como textos', () => {
+    const row = {
+      ...player(),
+      storyMarks: [{ mark: 'avo_chega' }, { mark: 'sabe_da_mira' }],
+    };
+    expect(toPlayerDto(row).story_marks).toEqual(['avo_chega', 'sabe_da_mira']);
   });
 
   it('converte a Mochila para o contrato do cliente', () => {

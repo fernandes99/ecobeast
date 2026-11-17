@@ -90,6 +90,15 @@ func update_appearance(appearance: TamerAppearance) -> Result:
 	return result
 
 
+func add_story_marks(marks: Array[String]) -> Result:
+	@warning_ignore("redundant_await")
+	var result: Result = await _service.add_story_marks(marks)
+	if result.ok and player != null:
+		player.story_marks = result.data
+		player_changed.emit()
+	return result
+
+
 func heal_team() -> Result:
 	@warning_ignore("redundant_await")
 	var result: Result = await _service.heal_team()

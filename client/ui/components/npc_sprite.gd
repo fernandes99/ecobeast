@@ -8,6 +8,14 @@ extends CreatureSprite
 const MIN_REST := 2.0
 const MAX_REST := 5.0
 const HIT_MARGIN := 3.0
+## O que `walk_to` devolve (story/03).
+const ARRIVED := 0
+const WALKING := 1
+const JUMPED := 2
+## O passo de uma cena, em pixels da arte por segundo. A revisar.
+const STORY_SPEED := 60.0
+
+signal arrived
 
 var npc: MapNpc = null
 var coord := Vector2i.ZERO
@@ -17,6 +25,9 @@ var _map: ExplorationMap = null
 var _path: Array[Vector2i] = []
 var _rest_left := 0.0
 var _held := false
+## Numa cena (story/03): não sorteia passeio e só anda por `walk_to`.
+var scripted := false
+var walk_speed := WALK_SPEED
 
 
 static func first_frame(slug: String) -> Texture2D:
@@ -61,24 +72,61 @@ func hits(art_point: Vector2) -> bool:
 	return Rect2(position - Vector2(cell.x / 2.0, cell.y), cell).grow(HIT_MARGIN).has_point(art_point)
 
 
+## Anda até o hexágono pelo caminho dos NPCs; sem caminho, aparece lá.
+func walk_to(target: Vector2i) -> int:
+	_path.clear()
+	if target == coord:
+		return ARRIVED
+	var goals: Dictionary[Vector2i, bool] = {target: true}
+	_path = _map.path_to_any(coord, goals, Vector2.INF, false)
+	if _path.is_empty():
+		coord = target
+		_exact = _view.surface_center(coord)
+		position = _exact.round()
+		_follow_depth()
+		play_idle()
+		return JUMPED
+	face_toward(_view.surface_center(_path[0]) - _exact)
+	play_walk()
+	return WALKING
+
+
+func is_walking() -> bool:
+	return not _path.is_empty()
+
+
+## Volta ao passeio da ilha depois de uma cena.
+func resume() -> void:
+	scripted = false
+	walk_speed = WALK_SPEED
+	_held = false
+	_path.clear()
+	_rest()
+
+
 func _process(delta: float) -> void:
-	if _view == null or _map == null or _held or npc.still:
+	if _view == null or _map == null or _held:
 		return
 	if _path.is_empty():
+		if scripted or npc.still:
+			return
 		_rest_left -= delta
 		if _rest_left <= 0.0:
 			_start_trip()
 		return
 	var next := _path[0]
 	var target := _view.surface_center(next)
-	_exact = _exact.move_toward(target, WALK_SPEED * delta)
+	_exact = _exact.move_toward(target, walk_speed * delta)
 	position = _exact.round()
 	if coord != next and _exact.distance_to(target) < _exact.distance_to(_view.surface_center(coord)):
 		coord = next
 	_follow_depth()
 	if _exact == target:
 		_path.pop_front()
-		if _path.is_empty():
+		if _path.is_empty() and scripted:
+			play_idle()
+			arrived.emit()
+		elif _path.is_empty():
 			_rest()
 		else:
 			face_toward(_view.surface_center(_path[0]) - _exact)

@@ -12,6 +12,8 @@ var created_at: String
 var party: Array[CreatureInstance] = []
 var inventory: Array[InventorySlot] = []
 var appearance := TamerAppearance.new()
+## Os Marcos da história, em ordem alfabética (story/01).
+var story_marks: Array[String] = []
 
 
 func has_starter() -> bool:
@@ -48,4 +50,13 @@ static func from_dict(d: Dictionary) -> Player:
 		if slot_dict is Dictionary:
 			player.inventory.append(InventorySlot.from_dict(slot_dict))
 	player.appearance = TamerAppearance.from_dict(DictFields.get_dict(d, "appearance"))
+	player.story_marks = _strings(DictFields.get_array(d, "story_marks"))
 	return player
+
+
+static func _strings(items: Array) -> Array[String]:
+	var result: Array[String] = []
+	for item: Variant in items:
+		if item is String:
+			result.append(item)
+	return result

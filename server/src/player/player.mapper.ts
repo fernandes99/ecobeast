@@ -35,6 +35,7 @@ export const PLAYER_INCLUDE = {
     orderBy: { slot: { layer: 'asc' } },
     select: { appearancePartId: true, paletteId: true },
   },
+  storyMarks: { orderBy: { mark: 'asc' }, select: { mark: true } },
 } satisfies Prisma.PlayerInclude;
 
 export type PlayerRow = Prisma.PlayerGetPayload<{
@@ -92,6 +93,7 @@ export function toPlayerDto(row: PlayerRow): PlayerDto {
         palette_id: paletteId,
       })),
     },
+    story_marks: row.storyMarks.map(({ mark }) => mark),
   };
 }
 

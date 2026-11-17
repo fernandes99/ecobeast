@@ -50,6 +50,8 @@ var action_colors: Dictionary[int, Color] = {}
 var action_names: Dictionary[int, String] = {}
 var selected_action := -1
 var selected_npc := -1
+## As marcas da cena aberta na ferramenta Cenas (story/04), de `ScenePanel.marks`.
+var scene_marks: Callable = Callable()
 var _npc_sprites: Array[NpcSprite] = []
 
 var _map_view: HexMapView
@@ -632,6 +634,8 @@ func draw_overlay(node: Node2D) -> void:
 			for coord: Vector2i in _draft.npc_tiles(selected_npc):
 				_outline(node, coord, UiPalette.WARNING)
 		_outline(node, _draft.npc_coord(selected_npc), UiPalette.ACCENT)
+	if scene_marks.is_valid():
+		_draw_scene_marks(node, scene_marks.call())
 	if selected_trail >= 0 and selected_trail < _draft.trails.size():
 		_draw_trail(node, _draft.trails[selected_trail])
 	_draw_invisible_walls(node)
@@ -801,3 +805,31 @@ func _draw_actions(node: Node2D) -> void:
 		var baseline := at + Vector2(-width / 2.0, NAME_SIZE / 2.0)
 		node.draw_string_outline(font, baseline, label, HORIZONTAL_ALIGNMENT_LEFT, -1, NAME_SIZE, 4, UiPalette.BACKGROUND_DEEP)
 		node.draw_string(font, baseline, label, HORIZONTAL_ALIGNMENT_LEFT, -1, NAME_SIZE, UiPalette.TEXT)
+
+
+## A área do gatilho, os atores com hexágono e o destino do passo escolhido, com a
+## seta de onde o ator está até lá (story/04).
+func _draw_scene_marks(node: Node2D, marks: Dictionary) -> void:
+	for coord: Vector2i in marks.get("area", []):
+		_outline(node, coord, UiPalette.ACCENT)
+	for actor: Dictionary in marks.get("actors", []):
+		var coord: Vector2i = actor["coord"]
+		var slug := str(GameData.get_npc(int(actor["npc_id"])).get("sprite", ""))
+		var texture := NpcSprite.first_frame(slug)
+		var foot := _screen_origin(coord) + HexMapView.SURFACE_CENTER * _zoom
+		if texture != null:
+			var drawn := texture.get_size() * _zoom
+			var tint := Color(1.0, 1.0, 1.0, 0.45 if bool(actor["hidden"]) else 1.0)
+			node.draw_texture_rect(texture, Rect2(foot - Vector2(drawn.x / 2.0, drawn.y), drawn), false, tint)
+		_outline(node, coord, UiPalette.WARNING)
+	var target: Variant = marks.get("target")
+	if target is Vector2i:
+		_outline(node, target, UiPalette.HP_HIGH)
+		var from: Variant = marks.get("from")
+		if from is Vector2i and from != target:
+			var start := _screen_origin(from) + HexMapView.SURFACE_CENTER * _zoom
+			var end := _screen_origin(target) + HexMapView.SURFACE_CENTER * _zoom
+			node.draw_line(start, end, UiPalette.HP_HIGH, OUTLINE_WIDTH)
+			var back := (start - end).normalized() * 10.0
+			node.draw_line(end, end + back.rotated(0.5), UiPalette.HP_HIGH, OUTLINE_WIDTH)
+			node.draw_line(end, end + back.rotated(-0.5), UiPalette.HP_HIGH, OUTLINE_WIDTH)

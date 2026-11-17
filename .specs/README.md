@@ -74,6 +74,7 @@ O Ecobeast é um jogo mobile (Android/iOS, retrato): o cliente em **Godot 4.7 co
 | [fog-of-war](fog-of-war/) | A névoa no mapa de Explorar: só o que o Domador descobriu aparece, e nas ilhas a descoberta fica guardada na conta |
 | [minimap](minimap/) | O minimapa redondo e dourado de Explorar e o mapa grande da ilha, com o descoberto, o Domador e os ícones do Refúgio, da Loja e dos NPCs |
 | [timber-house](timber-house/) | A casa enxaimel do pacote Glassblower's Workshop, montada pelos tiles dele, em 8 cores, com a fumaça e as luzes das janelas |
+| [story](story/) | As cenas da história: o roteiro no cliente, os Marcos do jogador no servidor, a ferramenta Cenas do F2 e a Linha da história |
 | [browt-line](browt-line/) | O inicial de Flora refeito: Browt, Eagrow e Sowingle, com 4 Técnicas físicas e a marca Espinheiro |
 
 As próximas iniciativas estão no [roadmap.md](roadmap.md).

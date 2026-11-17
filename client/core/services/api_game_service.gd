@@ -6,6 +6,7 @@ const STARTER_PATH := "/v1/me/starter"
 const CREATURE_PATH := "/v1/me/creatures/%s"
 const APPEARANCE_PATH := "/v1/me/appearance"
 const HEAL_PATH := "/v1/me/heal"
+const STORY_MARKS_PATH := "/v1/me/story/marks"
 const SHOP_BUY_PATH := "/v1/me/shop/buy"
 const ITEM_USE_PATH := "/v1/me/items/use"
 const STORAGE_PATH := "/v1/me/storage"
@@ -124,6 +125,19 @@ func add_island_discoveries(island_id: int, coords: Array[Vector2i]) -> Result:
 	if not response.ok:
 		return Result.failure(response.error)
 	return Result.success(null)
+
+
+func add_story_marks(marks: Array[String]) -> Result:
+	var response: ApiResponse = await Api.request(HTTPClient.METHOD_POST, STORY_MARKS_PATH, {"marks": marks}, true)
+	if not response.ok:
+		return Result.failure(response.error)
+	if not response.data is Dictionary:
+		return Result.failure(ApiResponse.SERVER_ERROR)
+	var result: Array[String] = []
+	for mark: Variant in DictFields.get_array(response.data, "story_marks"):
+		if mark is String:
+			result.append(mark)
+	return Result.success(result)
 
 
 func forget_island_discoveries(island_id: int) -> Result:

@@ -99,6 +99,7 @@ describe('toCombatant', () => {
       creatures: [row],
       inventory: [],
       appearanceParts: [],
+      storyMarks: [],
     });
     expect(toCombatant(row).stats).toEqual(party[0]!.stats);
   });

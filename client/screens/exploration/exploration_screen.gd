@@ -1,3 +1,4 @@
+class_name ExplorationScreen
 extends Control
 
 const PortraitScene := preload("res://ui/components/creature_portrait.tscn")
@@ -49,6 +50,9 @@ const CREATURE_RADIUS := 16
 const TAMER_LIGHT_LIFT := 10.0
 const TAMER_LIGHT_RADIUS := 36.0
 const TAMER_LIGHT_COLOR := Color("ffe8c0")
+const DEBUG_SCENES_TEXT := "Debug: cenas da ilha"
+const DEBUG_NO_SCENES_TEXT := "Esta ilha não tem cenas."
+const DEBUG_BACK_TEXT := "Voltar"
 
 var _island_id: int = 0
 var _map: ExplorationMap = null
@@ -88,6 +92,19 @@ var _minimap_image := MinimapImage.new()
 var _markers: Array[MapMarker] = []
 ## Abrir o mapa grande no meio de uma caminhada a para onde o Domador está (minimap/02).
 var _stop_walk := false
+## A história (story/02 e 03).
+var _story := StoryPlayer.new()
+var _story_choices := StoryChoicePanel.new()
+var _story_fade := ColorRect.new()
+var _story_test := false
+## A cena de área que espera a caminhada acabar.
+var _area_scene: StoryScene = null
+## O ponto da arte no centro da tela; INF é o Domador.
+var _camera_focus := Vector2.INF
+var _followers: Array[NpcSprite] = []
+## Os hexágonos por onde o Domador passou, do mais recente ao mais antigo.
+var _trail: Array[Vector2i] = []
+var _debug_scenes := VBoxContainer.new()
 
 @onready var _map_area: Control = %MapArea
 @onready var _map_view: HexMapView = %MapView
@@ -129,6 +146,7 @@ var _stop_walk := false
 
 func setup(params: Dictionary) -> void:
 	_island_id = int(params.get("island_id", 0))
+	_story_test = bool(params.get("story_test", false))
 
 
 func _ready() -> void:
@@ -165,6 +183,7 @@ func _ready() -> void:
 	for team_size: int in [1, 2, 3]:
 		(get_node("%%DebugTamer%dButton" % team_size) as Button).pressed.connect(_debug_tamer.bind(team_size))
 	_greeting.tapped.connect(_on_greeting_tapped)
+	_build_story()
 	_refresh_god_button()
 	_refresh_contour_button()
 	_refresh_rounded_button()
@@ -203,10 +222,12 @@ func handle_back() -> bool:
 	if _island_map.visible:
 		_island_map.close_panel()
 		return true
-	return _loading or _challenger != null or _talking != null
+	return _loading or _challenger != null or _talking != null or _story.playing
 
 
 func _exit_tree() -> void:
+	if _story_test:
+		Story.end_test()
 	Music.fade_out()
 	Session.send_island_discoveries()
 
@@ -256,6 +277,7 @@ func _begin() -> void:
 		_fill_debug_species()
 	# O botão de debug muda a altura do painel.
 	_fit_view.call_deferred()
+	_start_story.call_deferred()
 
 
 func _input(event: InputEvent) -> void:
@@ -273,7 +295,7 @@ func _input(event: InputEvent) -> void:
 
 ## O mapa acima do painel de botões, quando o toque nele valeria; senão, nenhuma.
 func _zoom_area() -> Rect2:
-	if _map == null or _showing_whole_map or _challenger != null or _talking != null or _island_map.visible:
+	if _map == null or _showing_whole_map or _challenger != null or _talking != null or _island_map.visible or _story.playing:
 		return Rect2()
 	var top := _map_area.get_global_rect().position
 	return Rect2(top, Vector2(_map_area.size.x, _controls_panel.get_global_rect().position.y - top.y))
@@ -300,7 +322,7 @@ func _on_map_input(event: InputEvent) -> void:
 
 
 func _tap(point: Vector2) -> void:
-	if _map == null or _showing_whole_map or _challenger != null or _talking != null or _island_map.visible:
+	if _map == null or _showing_whole_map or _challenger != null or _talking != null or _island_map.visible or _story.playing:
 		return
 	var art_point := (point - _map_view.position) / _map_view.pixel_scale()
 	if _walking:
@@ -384,7 +406,12 @@ func _walk(route: PackedVector2Array) -> void:
 			_map_view.set_current(coord)
 			_discover()
 			_refresh_wild_sprites()
-			tamer = _map.tamer_at(coord)
+			_lead_followers(origin)
+			if not _story.playing:
+				tamer = _map.tamer_at(coord)
+				_area_scene = Story.scene_for_tile(_map.island_id, coord)
+				if _area_scene != null:
+					_stop_walk = true
 		_place_player(delta)
 		_trim_route(traveled)
 	while _shown_rise != _map.rise_at(_player_point):
@@ -394,10 +421,18 @@ func _walk(route: PackedVector2Array) -> void:
 	if _next_point == null or tamer != null:
 		_marker.play_idle()
 	_walking = false
+	if _story.playing:
+		_stop_walk = false
+		_next_point = null
+		return
 	if _stop_walk:
 		_stop_walk = false
 		_npc_target = null
 		_prop_target = -1
+		if _area_scene != null:
+			var scene := _area_scene
+			_area_scene = null
+			_play_scene(scene)
 		return
 	if tamer != null:
 		_next_point = null
@@ -663,7 +698,9 @@ func _add_npcs() -> void:
 
 func _npc_hit(art_point: Vector2) -> NpcSprite:
 	for sprite: NpcSprite in _npc_sprites:
-		if sprite.npc.has_talk() and _discovery.is_discovered(sprite.coord) and sprite.hits(art_point):
+		if not sprite.visible or _followers.has(sprite) or not _discovery.is_discovered(sprite.coord) or not sprite.hits(art_point):
+			continue
+		if sprite.npc.has_talk() or Story.scene_for_npc(_map.island_id, sprite.npc.npc_id) != null:
 			return sprite
 	return null
 
@@ -759,6 +796,15 @@ func _go_to_prop(index: int) -> void:
 
 
 func _talk(npc: NpcSprite) -> void:
+	var scene := Story.scene_for_npc(_map.island_id, npc.npc.npc_id)
+	if scene != null:
+		npc.hold(true, _player_art_point())
+		_marker.face_toward(npc.position - _player_art_point())
+		_marker.play_idle()
+		await _play_scene(scene, npc)
+		if is_instance_valid(npc) and not _followers.has(npc):
+			npc.resume()
+		return
 	var lines := npc.npc.lines()
 	if lines.is_empty():
 		_run_action_type(npc.npc.action_type_id)
@@ -857,6 +903,7 @@ func _toggle_debug_menu() -> void:
 func _show_debug_part(spawn: bool) -> void:
 	_debug_spawn.visible = spawn
 	_debug_main.visible = not spawn
+	_debug_scenes.visible = false
 
 
 func _toggle_god() -> void:
@@ -1084,7 +1131,7 @@ func _fit_view() -> void:
 		creature.scale = _marker.scale
 	for tamer: TamerSprite in _tamer_sprites.values():
 		tamer.scale = _marker.scale
-	for npc: NpcSprite in _npc_sprites:
+	for npc: NpcSprite in _npc_sprites + _followers:
 		npc.scale = _marker.scale
 	_sync_view_layers()
 
@@ -1126,14 +1173,18 @@ func _refresh_lights() -> void:
 ## Parte do centro já arredondado: em uma tela de tamanho ímpar, ele cai no meio de
 ## um pixel, e arredondar depois da conta deixaria o Domador fora do hexágono.
 func _player_centered_position() -> Vector2:
-	return _map_view.snapped_to_pixels(size / 2.0) - _player_art_point() * _map_view.pixel_scale()
+	var focus := _camera_focus if _camera_focus.is_finite() else _player_art_point()
+	return _map_view.snapped_to_pixels(size / 2.0) - focus * _map_view.pixel_scale()
 
 
 ## Sempre em pixels reais inteiros, para a pixel art não borrar no caminho. O Domador
 ## é filho do mapa: a posição dele desconta o mapa, e ele fica parado na tela.
 func _move_map(value: Vector2) -> void:
 	_map_view.position = _map_view.snapped_to_pixels(value)
-	_marker.position = (_map_view.snapped_to_pixels(size / 2.0) - _map_view.position) / _map_view.pixel_scale()
+	if _camera_focus.is_finite():
+		_marker.position = _player_art_point()
+	else:
+		_marker.position = (_map_view.snapped_to_pixels(size / 2.0) - _map_view.position) / _map_view.pixel_scale()
 	_sync_view_layers()
 
 
@@ -1141,3 +1192,222 @@ func _show_message(text: String, variation: StringName) -> void:
 	_message.text = text
 	_message.theme_type_variation = variation
 	_message.show()
+
+
+# A história (story/02 e 03).
+
+func _build_story() -> void:
+	_story_fade.color = Color(UiPalette.BACKGROUND_DEEP, 0.0)
+	_story_fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_story_fade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_map_area.add_child(_story_fade)
+	var column := _greeting.get_parent()
+	column.add_child(_story_choices)
+	column.move_child(_story_choices, _greeting.get_index())
+	_story.setup(self, _greeting, _story_choices, _story_fade)
+	add_child(_story)
+	var scenes_button := Button.new()
+	scenes_button.text = DEBUG_SCENES_TEXT
+	scenes_button.pressed.connect(_show_debug_scenes)
+	_debug_main.add_child(scenes_button)
+	# No topo: a lista do menu é longa e o fim dela fica embaixo do painel de controles.
+	_debug_main.move_child(scenes_button, 0)
+	_debug_scenes.visible = false
+	_debug_main.get_parent().add_child(_debug_scenes)
+
+
+## Ao entrar: a cena de teste do editor, ou a de área do hexágono de chegada, ou a `auto`.
+func _start_story() -> void:
+	if _map == null or _map.island_id <= 0:
+		return
+	if _story_test and Story.is_testing():
+		await _story.play(Story.test_scene())
+		Story.end_test()
+		_story_test = false
+		return
+	var scene := Story.scene_for_tile(_map.island_id, _player_coord)
+	if scene != null:
+		_play_scene(scene)
+	else:
+		_play_auto()
+
+
+func _play_scene(scene: StoryScene, touched: NpcSprite = null) -> void:
+	if _story.playing or scene == null:
+		return
+	await _story.play(scene, touched)
+	_play_auto()
+
+
+func _play_auto() -> void:
+	if _map == null or _story.playing:
+		return
+	var scene := Story.scene_for_auto(_map.island_id)
+	if scene != null:
+		_play_scene(scene)
+
+
+func _show_debug_scenes() -> void:
+	for child: Node in _debug_scenes.get_children():
+		child.queue_free()
+	var scenes := Story.library.for_island(_map.island_id if _map != null else 0)
+	if scenes.is_empty():
+		var label := Label.new()
+		label.text = DEBUG_NO_SCENES_TEXT
+		_debug_scenes.add_child(label)
+	for scene: StoryScene in scenes:
+		var button := Button.new()
+		button.text = "%s (%s)" % [scene.name, scene.slug]
+		button.pressed.connect(_debug_play_scene.bind(scene))
+		_debug_scenes.add_child(button)
+	var back := Button.new()
+	back.text = DEBUG_BACK_TEXT
+	back.pressed.connect(_show_debug_part.bind(false))
+	_debug_scenes.add_child(back)
+	_debug_main.hide()
+	_debug_spawn.hide()
+	_debug_scenes.show()
+
+
+## Toca a cena sem gravar nada, com os Marcos que ela exige (story/02, RF-15).
+func _debug_play_scene(scene: StoryScene) -> void:
+	_debug_menu.hide()
+	if _story.playing or _walking:
+		return
+	Story.begin_test(scene, scene.requires)
+	await _story.play(scene)
+	Story.end_test()
+
+
+func story_began() -> void:
+	_npc_target = null
+	_prop_target = -1
+	_debug_menu.hide()
+	_message.hide()
+	_controls_panel.hide()
+	_minimap.hide()
+
+
+func story_ended() -> void:
+	_controls_panel.show()
+	_minimap.show()
+	_fit_view.call_deferred()
+
+
+func story_island_npc(npc_id: int, touched: NpcSprite) -> NpcSprite:
+	if touched != null and touched.npc.npc_id == npc_id:
+		return touched
+	for sprite: NpcSprite in _followers + _npc_sprites:
+		if sprite.npc.npc_id == npc_id:
+			return sprite
+	return null
+
+
+func story_add_actor(npc_id: int, coord: Variant) -> NpcSprite:
+	var slug := str(GameData.get_npc(npc_id).get("sprite", ""))
+	if not coord is Vector2i or not CreatureSprite.has_sheets(slug) or not _map.has(coord):
+		return null
+	var npc := MapNpc.new()
+	npc.npc_id = npc_id
+	npc.coord = coord
+	npc.still = true
+	var sprite := NpcSprite.new(npc, slug)
+	sprite.place_on(_map_view, _map)
+	sprite.scale = _marker.scale
+	return sprite
+
+
+## Ao fim da cena: quem segue fica; o NPC da ilha volta a passear; o resto sai do mapa.
+func story_release(sprite: NpcSprite, _created: bool) -> void:
+	if _followers.has(sprite):
+		return
+	if _npc_sprites.has(sprite):
+		sprite.resume()
+	else:
+		sprite.queue_free()
+
+
+func story_set_follow(sprite: NpcSprite, on: bool) -> void:
+	if on and not _followers.has(sprite):
+		_followers.append(sprite)
+		sprite.scripted = true
+		sprite.walk_speed = WalkRoute.WALK_SPEED
+	elif not on and _followers.has(sprite):
+		_followers.erase(sprite)
+		sprite.walk_speed = NpcSprite.STORY_SPEED
+
+
+## Cada seguidor anda até onde o da frente estava: o primeiro, até o hexágono que o
+## Domador acabou de deixar.
+func _lead_followers(left: Vector2i) -> void:
+	_trail.push_front(left)
+	_trail.resize(mini(_trail.size(), maxi(_followers.size(), 1)))
+	for index: int in _followers.size():
+		if index < _trail.size():
+			_followers[index].walk_to(_trail[index])
+
+
+func story_walk_tamer(coord: Vector2i) -> void:
+	while _walking:
+		_stop_walk = true
+		await get_tree().process_frame
+	var goals: Dictionary[Vector2i, bool] = {coord: true}
+	var hexes: Array[Vector2i] = [_player_coord]
+	if coord != _player_coord:
+		var path := _map.path_to_any(_player_coord, goals, _player_point)
+		if path.is_empty():
+			push_warning("Cena: o Domador não acha caminho até (%d, %d)." % [coord.x, coord.y])
+			return
+		hexes.append_array(path)
+	var finish := HexMapView.flat_center(coord)
+	if finish.distance_to(_player_point) < 1.0:
+		return
+	var route := WalkRoute.points(_map, _player_point, hexes, finish)
+	if route.size() < 2:
+		return
+	await _walk(route)
+
+
+func story_tamer_point() -> Vector2:
+	return _player_art_point()
+
+
+func story_hex_point(coord: Vector2i) -> Vector2:
+	return HexMapView.flat_center(coord) - Vector2(0.0, _rise_at(coord))
+
+
+func story_face_tamer(point: Vector2) -> void:
+	if point != _player_art_point():
+		_marker.face_toward(point - _player_art_point())
+
+
+func story_camera_to(coord: Vector2i, seconds: float) -> void:
+	await _slide_camera(story_hex_point(coord), seconds)
+
+
+func story_camera_back(seconds: float) -> void:
+	if not _camera_focus.is_finite():
+		return
+	await _slide_camera(_player_art_point(), seconds)
+	_camera_focus = Vector2.INF
+	_move_map(_player_centered_position())
+
+
+func _slide_camera(target: Vector2, seconds: float) -> void:
+	var start := _camera_focus if _camera_focus.is_finite() else _player_art_point()
+	_camera_focus = start
+	var tween := create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tween.tween_method(_set_camera_focus, start, target, maxf(seconds, 0.01))
+	await tween.finished
+
+
+func _set_camera_focus(point: Vector2) -> void:
+	_camera_focus = point
+	_move_map(_player_centered_position())
+
+
+func story_open_screen(screen: StringName) -> void:
+	Router.push(screen)
+	await get_tree().process_frame
+	while not is_visible_in_tree():
+		await visibility_changed

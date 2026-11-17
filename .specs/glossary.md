@@ -26,6 +26,8 @@ O jogador nunca vê a coluna "Referência": ela só existe para quem implementa 
 | Evolução            | Evolução (evoluir)               | `Evolution` / `EvolutionRule`\*        | `evolutions`                                      |
 | Centro Pokémon      | Refúgio                          | `HealStation`                          | —                                                 |
 | Inicial             | Ecobeast inicial                 | starter                                | `starter_options`                                 |
+| —                   | Cena                             | `StoryScene`\*                         | `res://story/scenes/<slug>.json` (no cliente)     |
+| —                   | Marco (da história)              | `StoryMarks`\*                         | `player_story_marks`                              |
 
 ## Por que alguns nomes mudaram
 

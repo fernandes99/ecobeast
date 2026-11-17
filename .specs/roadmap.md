@@ -65,6 +65,7 @@ O que vem depois do MVP de estrutura (entrada, escolha do inicial e Hub). Cada l
 | 49  | [`fog-of-war`](fog-of-war/) | A névoa no mapa de Explorar: só aparece o que o Domador descobriu, a até 4 hexágonos de onde passou, e nas ilhas a descoberta fica guardada no servidor (`island_discoveries`) | islands, camera-zoom, day-night | concluída (falta o dono conferir) |
 | 50  | [`minimap`](minimap/) | O minimapa redondo de moldura dourada em pixel art no canto de Explorar, com o Domador no centro e só o descoberto colorido, e o mapa grande da ilha inteira, aberto por ele, com zoom, arrasto e os ícones do Refúgio, da Loja e dos NPCs | fog-of-war | concluída (falta o dono conferir) |
 | 51  | [`timber-house`](timber-house/) | A casa enxaimel do pacote Glassblower's Workshop, montada pelos tiles do `Exterior.tmx`, vira a peça 98 em 8 cores (telhado, madeira, pedra e reboco), com a fumaça da Casa grande na chaminé e as 5 janelas acesas à noite | home-pack, day-night | concluída (falta o dono conferir) |
+| 52  | [`story`](story/) | As cenas da história: o roteiro mora no cliente (`res://story/scenes/`), o servidor guarda só os Marcos do jogador (`player_story_marks`), a ferramenta Cenas do F2 escreve e testa as cenas, e a Linha da história mostra a ordem e os buracos | island-npcs, islands, map-editor | concluída (falta o dono conferir) |
 
 ## Pós-lançamento (do GDD)
 

@@ -99,6 +99,10 @@ func _boot() -> void:
 		if status == GameData.LOAD_OFFLINE:
 			_show_load_error(OFFLINE_MESSAGE)
 			return
+		var story_errors := Story.load_scenes()
+		if not story_errors.is_empty():
+			_show_data_errors(story_errors)
+			return
 		_catalog_loaded = true
 		WorldClock.sync()
 

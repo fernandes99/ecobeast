@@ -272,6 +272,14 @@ export class PlayerDto {
     type: () => AppearanceDto,
   })
   appearance: AppearanceDto;
+
+  @ApiProperty({
+    description:
+      'Os Marcos da história que o Domador ligou, em ordem alfabética. O servidor ' +
+      'não sabe o que eles significam: o roteiro mora no jogo.',
+    example: ['avo_chega', 'sabe_da_mira'],
+  })
+  story_marks: string[];
 }
 
 export class PlayerResponseDto {

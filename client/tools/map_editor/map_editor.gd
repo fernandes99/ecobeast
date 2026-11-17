@@ -28,6 +28,8 @@ var _message_label: Label
 var _save_button: Button
 var _publish_button: Button
 var _islands_button: Button
+var _story_button: Button
+var _story_line := StoryLineView.new()
 var _islands_popup: PopupPanel
 var _undo_button: Button
 var _redo_button: Button
@@ -234,7 +236,10 @@ func save() -> bool:
 		message += " %d parede(s) passavam fora da ilha e foram cortadas." % clipped_walls
 	if clipped_bridges > 0:
 		message += " %d ponte(s) tinham uma ponta fora da terra e foram apagadas." % clipped_bridges
-	_set_message(message)
+	var stale := ScenePanel.stale_warnings(_draft)
+	if not stale.is_empty():
+		message += " " + " ".join(stale)
+	_set_message(message, not stale.is_empty())
 	_status = DictFields.get_string(response.data, "status")
 	_mark_saved()
 	_update_header()
@@ -454,6 +459,7 @@ func _redo() -> void:
 
 func _update_header() -> void:
 	_status_label.text = IslandList.status_name(_status) if _draft != null else "Nenhuma ilha aberta"
+	_tools.scene_panel.set_published(_draft != null and (_status == "published" or _status == "changed"))
 	_save_button.disabled = _draft == null or _busy
 	_publish_button.disabled = _draft == null or _busy or _dirty or _status == "published"
 	_publish_button.tooltip_text = "Salve antes de publicar." if _dirty else "Confere a ilha e a deixa pronta para o jogo."
@@ -583,6 +589,9 @@ func _tool_key(key: InputEventKey) -> bool:
 	if _tools.tool == EditorTools.Tool.STAMP and key.keycode == KEY_M:
 		_tools.stamp_panel.toggle_mirror()
 		return true
+	if _tools.tool == EditorTools.Tool.SCENES and key.keycode == KEY_ESCAPE and _tools.scene_panel.is_picking():
+		_tools.scene_panel.cancel_pick()
+		return true
 	if _tools.tool == EditorTools.Tool.NPC and _tools.npc_panel.selected >= 0:
 		if key.keycode == KEY_DELETE or key.keycode == KEY_BACKSPACE:
 			_tools.npc_panel.delete_selected()
@@ -678,6 +687,8 @@ func _build() -> void:
 	_editor.add_theme_constant_override(&"separation", 8)
 	_editor.visible = false
 	stack.add_child(_editor)
+	stack.add_child(_story_line)
+	_story_line.scene_requested.connect(_open_from_story_line)
 
 	var header := HBoxContainer.new()
 	header.add_theme_constant_override(&"separation", 8)
@@ -699,6 +710,9 @@ func _build() -> void:
 	_islands_button = header_button("Ilhas", "islands", "As ilhas: abrir, criar e apagar.")
 	_islands_button.pressed.connect(_open_islands)
 	header.add_child(_islands_button)
+	_story_button = header_button("Linha da história", "scene", "Todas as cenas, ligadas pelos Marcos, com os avisos.")
+	_story_button.pressed.connect(func() -> void: _story_line.open(_list.island_names()))
+	header.add_child(_story_button)
 	_undo_button = header_button("", "undo", "Desfazer (Ctrl+Z)")
 	_undo_button.pressed.connect(_undo)
 	header.add_child(_undo_button)
@@ -766,6 +780,9 @@ func _build() -> void:
 	_tools.npc_panel.selection_changed.connect(func(index: int) -> void:
 		_canvas.selected_npc = index
 		_canvas.refresh_brush())
+	_tools.scene_panel.changed.connect(func() -> void: _canvas.refresh_brush())
+	_tools.scene_panel.message.connect(func(text: String, error: bool) -> void: _set_message(text, error))
+	_tools.scene_panel.test_requested.connect(_test_scene)
 	_tools.path_panel.changed.connect(func() -> void:
 		_canvas.selected_trail = _tools.path_panel.selected
 		_canvas.refresh_brush())
@@ -798,6 +815,8 @@ func _build() -> void:
 	_canvas.hovered.connect(_on_hovered)
 	_canvas.brush = _tools.brush_coords
 	_canvas.marked = _tools.marked_coords
+	_canvas.scene_marks = func() -> Dictionary:
+		return _tools.scene_panel.map_marks() if _tools.tool == EditorTools.Tool.SCENES else {}
 	_canvas.fence_preview = _tools.fence_points
 	_canvas.bridge_preview = _tools.bridge_points
 	_canvas.brush_color = func(coord: Vector2i) -> Color: return _tools.brush_color(_draft, coord)
@@ -996,3 +1015,26 @@ func _on_area_focus(key: int) -> void:
 	_canvas.set_area_focus(key)
 	if key > 0 and not _areas_check.button_pressed:
 		_areas_check.button_pressed = true
+
+
+## Testar daqui (story/04): fecha o editor e toca a cena na ilha publicada, com os
+## Marcos de teste, sem gravar nada.
+func _test_scene(scene: StoryScene, marks: Array[String]) -> void:
+	if _draft == null or Session.player == null:
+		_set_message(ScenePanel.NO_PLAYER_TEXT, true)
+		return
+	Story.begin_test(scene, marks)
+	hide()
+	Router.push(&"exploration", {"island_id": _draft.id, "story_test": true})
+
+
+## Uma caixa da Linha da história: abre a ilha da cena e a escolhe na ferramenta Cenas.
+func _open_from_story_line(slug: String) -> void:
+	var scene := Story.library.find(slug)
+	if scene == null:
+		return
+	await _open_island(scene.island_id)
+	if _draft == null or _draft.id != scene.island_id:
+		return
+	_tools.set_tool(EditorTools.Tool.SCENES)
+	_tools.scene_panel.select_scene(slug)

@@ -23,6 +23,7 @@ server/
   src/codex/             o Bestiário do usuário logado (/v1/me/codex) e o CodexService, que as lutas, a Evolução e o inicial usam para registrar visto e capturado
   src/editor/            os editores (/v1/editor): ilhas em rascunho e publicadas, o gerador de mapas e as Técnicas do F1 (/v1/editor/skills), só para quem está em MAP_EDITOR_USER_IDS
   src/islands/           as ilhas publicadas para o jogador (/v1/me/islands) e o IslandsService, que lê uma versão de ilha para o editor e para a exploração numa ilha, e os hexágonos que cada Domador já descobriu nelas (/v1/me/islands/:id/discoveries, o DiscoveriesService)
+  src/story/             os Marcos da história do usuário logado (/v1/me/story/marks), guardados sem significado: o roteiro mora no jogo
   src/world-clock/       a hora do mundo (GET /v1/world-clock, sem login); a conta mora em src/domain/world-clock/
   src/common/            peças compartilhadas pelas rotas
   src/catalog/           um módulo por recurso do catálogo

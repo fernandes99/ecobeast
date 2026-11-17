@@ -855,6 +855,7 @@ model Player {
   codex           CodexEntry[]
   appearanceParts PlayerAppearancePart[]
   discoveries     IslandDiscovery[]
+  storyMarks      PlayerStoryMark[]
 
   @@index([bodyTypeId])
   @@index([skinPaletteId])
@@ -1352,5 +1353,20 @@ model IslandNpcTile {
 
   @@id([islandNpcId, q, r])
   @@map("island_npc_tiles")
+  @@schema("ecobeasts")
+}
+
+/// Um Marco da história que o Domador ligou (story/01). O servidor guarda o
+/// texto sem saber o que ele significa; o roteiro mora no cliente.
+model PlayerStoryMark {
+  playerId  String   @map("player_id") @db.Uuid
+  /// CHECK ^[a-z0-9_]{1,48}$ (migration story_marks)
+  mark      String
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@id([playerId, mark])
+  @@map("player_story_marks")
   @@schema("ecobeasts")
 }

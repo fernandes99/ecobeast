@@ -17,6 +17,7 @@ import { InventoryModule } from './inventory/inventory.module.js';
 import { PlayerModule } from './player/player.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { ProgressionModule } from './progression/progression.module.js';
+import { StoryModule } from './story/story.module.js';
 import { TeamModule } from './team/team.module.js';
 import { WorldClockModule } from './world-clock/world-clock.module.js';
 
@@ -47,6 +48,7 @@ import { WorldClockModule } from './world-clock/world-clock.module.js';
     EditorModule,
     IslandsModule,
     WorldClockModule,
+    StoryModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

@@ -160,6 +160,7 @@ describe('Rotas do jogador (e2e)', () => {
       party: [],
       inventory: [],
       appearance: DEFAULT_APPEARANCE,
+      story_marks: [],
     });
   });
 
