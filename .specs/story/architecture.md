@@ -112,7 +112,7 @@ Da fase 02 (conversa):
 
 | `type` | Campos | Faz |
 | --- | --- | --- |
-| `say` | `speaker` (a `key` de um ator, `"tamer"` ou `null` para narração), `text` | a caixa de fala, com o nome de quem fala; espera o toque |
+| `say` | `speaker` (a `key` de um ator, `"tamer"` ou `null` para narração), `text` | a caixa de fala, com o nome de quem fala; espera o toque e fecha a caixa, menos antes de uma `choice` |
 | `choice` | `options`: de 2 a 4, cada uma com `text` e `steps` | os botões; roda os passos da opção tocada |
 | `if_mark` | `mark`, `then`, `else` (listas de passos; `else` pode faltar) | roda um ou outro conforme o Marco (contando os ligados nesta cena) |
 | `set_mark` | `mark` | liga o Marco (fica pendente até a cena terminar) |

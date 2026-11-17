@@ -98,9 +98,18 @@ func _release_actors() -> void:
 
 
 func _run(steps: Array) -> void:
-	for step: Variant in steps:
-		if step is Dictionary:
-			await _step(step)
+	for i: int in steps.size():
+		if not steps[i] is Dictionary:
+			continue
+		var step: Dictionary = steps[i]
+		await _step(step)
+		if step.get("type") == "say" and not _is_choice(steps[i + 1] if i + 1 < steps.size() else null):
+			_greeting.close()
+
+
+## A fala antes de uma escolha fica aberta, como a pergunta dela.
+static func _is_choice(step: Variant) -> bool:
+	return step is Dictionary and step.get("type") == "choice"
 
 
 func _step(step: Dictionary) -> void:
@@ -115,6 +124,7 @@ func _step(step: Dictionary) -> void:
 				texts.append(_text(DictFields.get_string(option as Dictionary, "text")))
 			_choices.show_options(texts)
 			var index: int = await _choices.chosen
+			_greeting.close()
 			await _run(DictFields.get_array(options[index] as Dictionary, "steps"))
 		"if_mark":
 			var mark := DictFields.get_string(step, "mark")

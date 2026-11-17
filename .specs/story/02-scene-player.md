@@ -49,8 +49,8 @@ Com os Marcos no servidor ([01](01-story-marks.md)), falta o jogo ler as cenas e
 
 - **RF-08:** `StoryPlayer` (`res://screens/exploration/story_player.gd`, `class_name StoryPlayer`, um `Control` que cobre a tela e para os toques enquanto toca) tem `signal finished`, `func play(scene: StoryScene) -> void` (com `await`, volta quando a cena e a gravação terminam) e `var playing: bool`. Ele cria os filhos dele: um `TamerGreetingPanel` (na mesma posição do da tela), o `StoryChoicePanel` e o `ColorRect` do escurecer, que cobre o mapa e fica abaixo da caixa de fala e das opções.
 - **RF-09:** Os passos desta fase, como na [architecture](architecture.md#os-passos):
-  - `say`: a caixa mostra "<nome>: <texto>" (o nome do NPC do ator pelo `GameData.get_npc`, ou o do Domador para `tamer`) ou só o texto na narração (`speaker` nulo), e espera o `tapped`. `{nome}` vira `Session.player.name`;
-  - `choice`: o `StoryChoicePanel` (`res://screens/exploration/story_choice_panel.gd`, uma coluna de botões com o tema da caixa de fala, logo acima dela) mostra as opções; a caixa de fala continua com a última fala; tocar numa roda os passos dela;
+  - `say`: a caixa mostra "<nome>: <texto>" (o nome do NPC do ator pelo `GameData.get_npc`, ou o do Domador para `tamer`) ou só o texto na narração (`speaker` nulo), e espera o `tapped`. `{nome}` vira `Session.player.name`. Depois do toque, a caixa fecha, menos quando o próximo passo é uma `choice` (mudança pedida pelo dono depois da fase: a caixa ficava aberta com a última fala durante a câmera, as esperas e os movimentos);
+  - `choice`: o `StoryChoicePanel` (`res://screens/exploration/story_choice_panel.gd`, uma coluna de botões com o tema da caixa de fala, logo acima dela) mostra as opções; a caixa de fala continua com a última fala; tocar numa fecha a caixa e roda os passos dela;
   - `if_mark`: o Marco vale se está em `Story.marks()` ou foi ligado nesta cena;
   - `set_mark`: junta o Marco à lista da cena;
   - `wait`: espera `seconds`;
