@@ -1,0 +1,50 @@
+[
+	{
+		"id": 1,
+		"slug": "narration",
+		"name": "Narração",
+		"chars_per_second": 50,
+		"letters_per_blip": 3,
+		"pitch_variation": 4
+	},
+	{
+		"id": 2,
+		"slug": "tamer",
+		"name": "Domador",
+		"chars_per_second": 60,
+		"letters_per_blip": 2,
+		"pitch_variation": 5
+	},
+	{
+		"id": 3,
+		"slug": "low",
+		"name": "Grave",
+		"chars_per_second": 42,
+		"letters_per_blip": 3,
+		"pitch_variation": 5
+	},
+	{
+		"id": 4,
+		"slug": "medium",
+		"name": "Média",
+		"chars_per_second": 52,
+		"letters_per_blip": 2,
+		"pitch_variation": 4
+	},
+	{
+		"id": 5,
+		"slug": "high",
+		"name": "Aguda",
+		"chars_per_second": 66,
+		"letters_per_blip": 2,
+		"pitch_variation": 10
+	},
+	{
+		"id": 6,
+		"slug": "chirp",
+		"name": "Pio",
+		"chars_per_second": 40,
+		"letters_per_blip": 3,
+		"pitch_variation": 12
+	}
+]

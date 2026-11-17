@@ -21,11 +21,16 @@ import {
 import { AuthGuard } from '../auth/auth.guard.js';
 import { AppearanceDto } from '../player/player.dto.js';
 import { EditorGuard } from './editor.guard.js';
-import { NpcAppearanceResponseDto } from './npcs-editor.dto.js';
+import {
+  NpcAppearanceResponseDto,
+  NpcVoiceBodyDto,
+  NpcVoiceResponseDto,
+} from './npcs-editor.dto.js';
 import {
   NPC_IS_CREATURE,
   NPC_NOT_FOUND,
   NpcsEditorService,
+  VOICE_NOT_FOUND,
 } from './npcs-editor.service.js';
 
 const npcId = new ParseIntPipe({
@@ -67,5 +72,23 @@ export class NpcsEditorController {
     @Body() body: AppearanceDto,
   ): Promise<NpcAppearanceResponseDto> {
     return this.npcs.setAppearance(id, body);
+  }
+
+  @Put(':id/voice')
+  @ApiOperation({
+    summary: 'Trocar a voz de um NPC',
+    description:
+      'Troca a voz com que o NPC fala na caixa de fala, em todas as ilhas. ' +
+      'O próximo `GET /v1/catalog` já a traz.',
+  })
+  @ApiOkResponse({ type: NpcVoiceResponseDto })
+  @ApiBadRequestResponse({
+    description: `Voz que não existe: "${VOICE_NOT_FOUND}"; \`voice_id\` que não é inteiro.`,
+  })
+  setVoice(
+    @Param('id', npcId) id: number,
+    @Body() body: NpcVoiceBodyDto,
+  ): Promise<NpcVoiceResponseDto> {
+    return this.npcs.setVoice(id, body.voice_id);
   }
 }

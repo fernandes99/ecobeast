@@ -17,7 +17,7 @@ const table = (
 });
 
 /**
- * As 47 tabelas do catálogo em ordem de dependência: cada FK aponta para uma
+ * As 48 tabelas do catálogo em ordem de dependência: cada FK aponta para uma
  * tabela que vem antes (a autorreferência de species é tratada no seed).
  * Usada pelo seed e pelo catálogo inteiro (GET /v1/catalog).
  */
@@ -53,6 +53,7 @@ export const CATALOG_TABLES: readonly CatalogTable[] = [
   table('appearance_slots', 'appearanceSlot'),
   table('palettes', 'palette'),
   table('appearance_parts', 'appearancePart'),
+  table('voices', 'voice'),
   table('npcs', 'npc'),
   table('npc_appearance_parts', 'npcAppearancePart', [
     'npc_id',

@@ -141,6 +141,24 @@ func get_npc(id: int) -> Dictionary:
 	return catalog.get_row("npcs", id)
 
 
+## A linha da voz (`slug`, `chars_per_second`, `letters_per_blip`, `pitch_variation`), ou vazia.
+func get_voice(id: int) -> Dictionary:
+	return catalog.get_voice(id)
+
+
+func voice_by_slug(slug: String) -> Dictionary:
+	return catalog.voice_by_slug(slug)
+
+
+## A voz do NPC do catálogo, ou vazia.
+func npc_voice(npc_id: int) -> Dictionary:
+	return get_voice(int(get_npc(npc_id).get("voice_id", 0))) if npc_id > 0 else {}
+
+
+func set_npc_voice(npc_id: int, voice_id: int) -> void:
+	catalog.set_npc_voice(npc_id, voice_id)
+
+
 func get_rows(table_name: String) -> Array[Dictionary]:
 	return catalog.get_rows(table_name)
 

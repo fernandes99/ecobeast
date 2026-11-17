@@ -6,6 +6,7 @@ const CATALOG_WRITERS = [
   'test/prop-types-editor.e2e-spec.ts',
   'test/day-phase-spawns.e2e-spec.ts',
   'test/npcs-editor.e2e-spec.ts',
+  'test/npc-voice.e2e-spec.ts',
   // Liga e desliga a ilha casa, que é uma só para o banco inteiro.
   'test/home-island.e2e-spec.ts',
 ];

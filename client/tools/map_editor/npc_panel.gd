@@ -7,6 +7,7 @@ signal edited(step: EditorHistory.Step, merge: bool)
 signal selection_changed(index: int)
 ## A aparência de um NPC pessoa foi salva, e o catálogo veio de novo (liora-intro/02).
 signal looks_changed
+signal message(text: String, error: bool)
 
 const ICON_SCALE := 3
 const DIALOGUE_HEIGHT := 140.0
@@ -14,6 +15,7 @@ const NO_ACTION := 0
 const DIALOGUE_STEP := "Diálogo do NPC"
 const APPEARANCE_SCREEN := "res://screens/appearance/appearance_screen.tscn"
 const APPEARANCE_WINDOW_SIZE := Vector2i(540, 960)
+const LISTEN_FALLBACK := "Olá! Tudo bem por aqui?"
 
 var npc_id := 0
 var selected := -1
@@ -29,6 +31,8 @@ var _mark_button: Button
 var _dialogue: TextEdit
 var _action_option: OptionButton
 var _appearance_button: Button
+var _voice_option: OptionButton
+var _preview: TamerGreetingPanel
 var _list: VBoxContainer
 var _group := ButtonGroup.new()
 
@@ -89,6 +93,7 @@ func _init() -> void:
 	_appearance_button.focus_mode = Control.FOCUS_NONE
 	_appearance_button.pressed.connect(_open_appearance)
 	_selected_box.add_child(_appearance_button)
+	_build_voice_row()
 
 	var action_row := HBoxContainer.new()
 	_selected_box.add_child(action_row)
@@ -111,6 +116,41 @@ func _init() -> void:
 	delete.pressed.connect(delete_selected)
 	_selected_box.add_child(delete)
 	refresh()
+
+
+## A voz do NPC do catálogo e o Ouvir, com a fala numa caixa pequena (dialogue-voices/03).
+func _build_voice_row() -> void:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override(&"separation", 6)
+	_selected_box.add_child(row)
+	var label := Label.new()
+	label.text = "Voz"
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(label)
+	_voice_option = OptionButton.new()
+	_voice_option.focus_mode = Control.FOCUS_NONE
+	for voice: Dictionary in GameData.get_rows("voices"):
+		_voice_option.add_item(str(voice.get("name", "")), int(voice.get("id", 0)))
+	_voice_option.item_selected.connect(_on_voice_selected)
+	row.add_child(_voice_option)
+	var listen := Button.new()
+	listen.text = "Ouvir"
+	listen.icon = load(MapEditor.ICONS % "play") as Texture2D
+	listen.expand_icon = false
+	listen.add_theme_constant_override(&"icon_max_width", 16)
+	listen.focus_mode = Control.FOCUS_NONE
+	listen.tooltip_text = "Toca a primeira fala do NPC com a voz da lista."
+	listen.pressed.connect(_listen)
+	row.add_child(listen)
+	var note := Label.new()
+	note.text = "A voz vale para este NPC em todas as ilhas."
+	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	note.add_theme_color_override(&"font_color", UiPalette.TEXT_SECONDARY)
+	_selected_box.add_child(note)
+	_preview = TamerGreetingPanel.new()
+	_preview.hide()
+	_preview.tapped.connect(_preview.close)
+	_selected_box.add_child(_preview)
 
 
 func _build_list() -> void:
@@ -142,6 +182,7 @@ func select(index: int) -> void:
 		index = -1
 	if index != selected:
 		marking = false
+		_preview.close()
 	selected = index
 	refresh()
 	selection_changed.emit(selected)
@@ -159,6 +200,7 @@ func refresh() -> void:
 	var npc: Dictionary = _draft.npcs[selected]
 	var row := GameData.get_npc(int(npc.get("npc_id", 0)))
 	_appearance_button.visible = TamerAppearance.for_npc(int(npc.get("npc_id", 0))) != null
+	_voice_option.select(maxi(0, _voice_option.get_item_index(int(row.get("voice_id", 0)))))
 	var coord := _draft.npc_coord(selected)
 	var walk := _draft.npc_tiles(selected).size() + 1
 	_selected_label.text = "%s  ·  (%d, %d)  ·  passeio de %d hexágonos" % [row.get("name", "?"), coord.x, coord.y, walk]
@@ -253,6 +295,43 @@ func _on_action_changed(item: int) -> void:
 		_draft.npcs[selected]["action_type_id"] = id
 	step.npcs_after = _draft.npcs.duplicate(true)
 	edited.emit(step, false)
+
+
+func _selected_npc_id() -> int:
+	return int(_draft.npcs[selected].get("npc_id", 0)) if _draft != null and selected >= 0 else 0
+
+
+func _on_voice_selected(item: int) -> void:
+	var id := _selected_npc_id()
+	if id <= 0:
+		return
+	var before := int(GameData.get_npc(id).get("voice_id", 0))
+	var voice_id := _voice_option.get_item_id(item)
+	if voice_id == before:
+		return
+	_voice_option.disabled = true
+	var response := await EditorApi.set_npc_voice(id, voice_id)
+	_voice_option.disabled = false
+	var npc_name := str(GameData.get_npc(id).get("name", ""))
+	if not response.ok:
+		if _selected_npc_id() == id:
+			_voice_option.select(maxi(0, _voice_option.get_item_index(before)))
+		message.emit(response.error, true)
+		return
+	GameData.set_npc_voice(id, voice_id)
+	message.emit("Voz de %s: %s." % [npc_name, GameData.get_voice(voice_id).get("name", "")], false)
+
+
+func _listen() -> void:
+	var id := _selected_npc_id()
+	if id <= 0:
+		return
+	var npc := MapNpc.new()
+	npc.dialogue = str(_draft.npcs[selected].get("dialogue", ""))
+	var lines := npc.lines()
+	var text := lines[0] if not lines.is_empty() else LISTEN_FALLBACK
+	var voice := GameData.get_voice(_voice_option.get_selected_id())
+	_preview.say("%s: %s" % [GameData.get_npc(id).get("name", ""), text], voice)
 
 
 ## A tela Aparência no modo NPC, numa janela por cima do editor.

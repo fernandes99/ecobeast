@@ -7,10 +7,14 @@ import { BundleService } from '../catalog/bundle/bundle.service.js';
 import { checkedAppearance } from '../player/appearance-check.js';
 import type { AppearanceDto } from '../player/player.dto.js';
 import { PrismaService } from '../prisma/prisma.service.js';
-import type { NpcAppearanceResponseDto } from './npcs-editor.dto.js';
+import type {
+  NpcAppearanceResponseDto,
+  NpcVoiceResponseDto,
+} from './npcs-editor.dto.js';
 
 export const NPC_NOT_FOUND = 'NPC não encontrado.';
 export const NPC_IS_CREATURE = 'Esse NPC é um Ecobeast.';
+export const VOICE_NOT_FOUND = 'Essa voz não existe.';
 const MAX_ID = 2_147_483_647;
 
 @Injectable()
@@ -64,5 +68,29 @@ export class NpcsEditorService {
         palette_id: paletteId,
       })),
     };
+  }
+
+  /** Troca a voz de um NPC e libera o catálogo novo. */
+  async setVoice(id: number, voiceId: number): Promise<NpcVoiceResponseDto> {
+    const npc =
+      id >= 1 && id <= MAX_ID
+        ? await this.prisma.npc.findUnique({
+            where: { id },
+            select: { id: true },
+          })
+        : null;
+    if (!npc) throw new NotFoundException(NPC_NOT_FOUND);
+    const voice =
+      voiceId >= 1 && voiceId <= MAX_ID
+        ? await this.prisma.voice.findUnique({
+            where: { id: voiceId },
+            select: { id: true },
+          })
+        : null;
+    if (!voice) throw new BadRequestException(VOICE_NOT_FOUND);
+
+    await this.prisma.npc.update({ where: { id }, data: { voiceId } });
+    this.bundle.invalidate();
+    return { id, voice_id: voiceId };
   }
 }

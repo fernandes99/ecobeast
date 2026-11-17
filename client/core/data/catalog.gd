@@ -208,6 +208,25 @@ func get_row(table_name: String, id: int) -> Dictionary:
 	return by_id[id]
 
 
+## A linha da voz, ou vazia (dialogue-voices/01).
+func get_voice(id: int) -> Dictionary:
+	return _rows_by_id.get("voices", {}).get(id, {})
+
+
+func voice_by_slug(slug: String) -> Dictionary:
+	for row: Dictionary in _rows("voices"):
+		if row["slug"] == slug:
+			return row
+	return {}
+
+
+## Troca a voz de um NPC depois que o editor a salvou (dialogue-voices/03).
+func set_npc_voice(npc_id: int, voice_id: int) -> void:
+	var row: Dictionary = _rows_by_id.get("npcs", {}).get(npc_id, {})
+	if not row.is_empty():
+		row["voice_id"] = voice_id
+
+
 func _text_by_id(table_name: String, id: int, column: String) -> String:
 	var row: Dictionary = _rows_by_id.get(table_name, {}).get(id, {})
 	return row.get(column, "")

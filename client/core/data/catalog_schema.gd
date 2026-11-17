@@ -184,6 +184,17 @@ const TABLES := {
 		"key": ["id"],
 		"columns": {"id": ID, "slug": SLUG, "name": TEXT, "kind": {"type": "string", "values": GROUND_KINDS}, "hardness": {"type": "int", "min": 1, "max": 3}},
 	},
+	"voices": {
+		"key": ["id"],
+		"columns": {
+			"id": ID,
+			"slug": SLUG,
+			"name": TEXT,
+			"chars_per_second": {"type": "int", "min": 20, "max": 90},
+			"letters_per_blip": {"type": "int", "min": 1, "max": 4},
+			"pitch_variation": {"type": "int", "min": 0, "max": 25},
+		},
+	},
 	"npcs": {
 		"key": ["id"],
 		"columns": {
@@ -194,6 +205,7 @@ const TABLES := {
 			"sprite": {"type": "string", "nullable": true, "pattern": "^[a-z0-9_]+$"},
 			"body_type_id": {"type": "int", "nullable": true, "fk": "body_types"},
 			"skin_palette_id": {"type": "int", "nullable": true, "fk": "palettes"},
+			"voice_id": {"type": "int", "fk": "voices"},
 		},
 	},
 	"npc_appearance_parts": {

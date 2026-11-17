@@ -13,6 +13,8 @@ const RETRY_TEXT := "Tentar de novo"
 const CLEAR_SECONDS := 0.3
 const CAMERA_BACK_SECONDS := 0.5
 const TAMER := "tamer"
+const NARRATION_VOICE := "narration"
+const TAMER_VOICE := "tamer"
 
 var playing := false
 
@@ -104,7 +106,7 @@ func _run(steps: Array) -> void:
 func _step(step: Dictionary) -> void:
 	match DictFields.get_string(step, "type"):
 		"say":
-			_greeting.say(_line(step))
+			_greeting.say(_line(step), _speaker_voice(step))
 			await _greeting.tapped
 		"choice":
 			var options := DictFields.get_array(step, "options")
@@ -209,6 +211,16 @@ func _face(step: Dictionary) -> void:
 
 func _actor(step: Dictionary) -> NpcSprite:
 	return _actors.get(DictFields.get_string(step, "actor"), null)
+
+
+## A narração, o Domador ou o NPC do ator (dialogue-voices/02).
+func _speaker_voice(step: Dictionary) -> Dictionary:
+	var speaker: Variant = step.get("speaker")
+	if speaker == null:
+		return GameData.voice_by_slug(NARRATION_VOICE)
+	if speaker == TAMER:
+		return GameData.voice_by_slug(TAMER_VOICE)
+	return GameData.npc_voice(DictFields.get_int(_scene.actor(str(speaker)), "npc_id"))
 
 
 func _line(step: Dictionary) -> String:

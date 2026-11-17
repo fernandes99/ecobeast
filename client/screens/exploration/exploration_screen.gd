@@ -8,6 +8,8 @@ const PortraitScene := preload("res://ui/components/creature_portrait.tscn")
 
 const LOADING_TEXT := "Gerando mapa..."
 const ISLAND_LOADING_TEXT := "Chegando na ilha..."
+## A voz dos Domadores NPC, que não têm NPC no catálogo (dialogue-voices/02).
+const NPC_TAMER_VOICE := "medium"
 const ACTION_TINT_ALPHA := 0.45
 const ACTION_SCREENS: Dictionary[String, StringName] = {
 	"refuge": &"heal_station",
@@ -737,7 +739,7 @@ func _challenge(tamer: MapTamer) -> void:
 	_debug_menu.hide()
 	_message.hide()
 	_set_controls_enabled(false)
-	_greeting.say("%s: %s" % [GameData.get_npc_tamer_name(tamer.name_id), GameData.get_npc_tamer_greeting(tamer.greeting_id)])
+	_greeting.say("%s: %s" % [GameData.get_npc_tamer_name(tamer.name_id), GameData.get_npc_tamer_greeting(tamer.greeting_id)], GameData.voice_by_slug(NPC_TAMER_VOICE))
 
 
 func _add_npcs() -> void:
@@ -877,7 +879,7 @@ func _talk(npc: NpcSprite) -> void:
 
 func _say_line() -> void:
 	var npc_name := str(GameData.get_npc(_talking.npc.npc_id).get("name", ""))
-	_greeting.say("%s: %s" % [npc_name, _talk_lines[_talk_index]])
+	_greeting.say("%s: %s" % [npc_name, _talk_lines[_talk_index]], GameData.npc_voice(_talking.npc.npc_id))
 
 
 func _on_greeting_tapped() -> void:

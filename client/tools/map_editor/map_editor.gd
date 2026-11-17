@@ -839,6 +839,7 @@ func _build() -> void:
 		_canvas.refresh_brush())
 	_tools.scene_panel.changed.connect(func() -> void: _canvas.refresh_brush())
 	_tools.scene_panel.message.connect(func(text: String, error: bool) -> void: _set_message(text, error))
+	_tools.npc_panel.message.connect(func(text: String, error: bool) -> void: _set_message(text, error))
 	_tools.scene_panel.test_requested.connect(_test_scene)
 	_tools.path_panel.changed.connect(func() -> void:
 		_canvas.selected_trail = _tools.path_panel.selected

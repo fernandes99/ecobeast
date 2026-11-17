@@ -6,7 +6,8 @@
 		"description": "Mora na vila e conhece todo mundo.",
 		"sprite": "ruvo",
 		"body_type_id": null,
-		"skin_palette_id": null
+		"skin_palette_id": null,
+		"voice_id": 6
 	},
 	{
 		"id": 2,
@@ -15,7 +16,8 @@
 		"description": "Vigia a entrada da vila.",
 		"sprite": "ruvak",
 		"body_type_id": null,
-		"skin_palette_id": null
+		"skin_palette_id": null,
+		"voice_id": 6
 	},
 	{
 		"id": 3,
@@ -24,7 +26,8 @@
 		"description": "O avô do Domador, que mora na Vila Raiz.",
 		"sprite": null,
 		"body_type_id": 1,
-		"skin_palette_id": 4
+		"skin_palette_id": 4,
+		"voice_id": 3
 	},
 	{
 		"id": 4,
@@ -33,7 +36,8 @@
 		"description": "Amiga de infância do Domador, de volta do Instituto Meridian.",
 		"sprite": null,
 		"body_type_id": 2,
-		"skin_palette_id": 1
+		"skin_palette_id": 1,
+		"voice_id": 5
 	},
 	{
 		"id": 5,
@@ -42,7 +46,8 @@
 		"description": "Cuida do Refúgio da Vila Raiz e dos Ecobeasts jovens.",
 		"sprite": null,
 		"body_type_id": 1,
-		"skin_palette_id": 6
+		"skin_palette_id": 6,
+		"voice_id": 4
 	},
 	{
 		"id": 6,
@@ -51,6 +56,7 @@
 		"description": "O Ecobeast que o Domador observa no campo.",
 		"sprite": "puffcoo",
 		"body_type_id": null,
-		"skin_palette_id": null
+		"skin_palette_id": null,
+		"voice_id": 6
 	}
 ]

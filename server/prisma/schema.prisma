@@ -241,6 +241,25 @@ model PropTypeLight {
   @@schema("ecobeasts")
 }
 
+model Voice {
+  id             Int    @id @default(autoincrement())
+  /// O arquivo assets/sounds/voices/<slug>.wav do jogo. CHECK ^[a-z0-9_]+$ (migration dialogue_voices)
+  slug           String @unique
+  /// O que o editor mostra.
+  name           String
+  /// Letras por segundo na caixa de fala. CHECK 20 a 90 (migration dialogue_voices)
+  charsPerSecond Int    @map("chars_per_second")
+  /// Um bipe a cada tantas letras. CHECK 1 a 4 (migration dialogue_voices)
+  lettersPerBlip Int    @map("letters_per_blip")
+  /// Quanto a altura varia, em %. CHECK 0 a 25 (migration dialogue_voices)
+  pitchVariation Int    @map("pitch_variation")
+
+  npcs Npc[]
+
+  @@map("voices")
+  @@schema("ecobeasts")
+}
+
 model Npc {
   id            Int     @id @default(autoincrement())
   /// CHECK ^[a-z0-9_]+$ (migration island_npcs)
@@ -255,14 +274,18 @@ model Npc {
   bodyTypeId    Int?    @map("body_type_id")
   /// A pele do NPC pessoa, junto com o corpo (migration person_npcs)
   skinPaletteId Int?    @map("skin_palette_id")
+  /// A voz na caixa de fala; um NPC novo nasce com a Média (migration dialogue_voices)
+  voiceId       Int     @default(4) @map("voice_id")
 
   bodyType        BodyType?           @relation(fields: [bodyTypeId], references: [id], onDelete: Restrict)
+  voice           Voice               @relation(fields: [voiceId], references: [id], onDelete: Restrict)
   skinPalette     Palette?            @relation(fields: [skinPaletteId], references: [id], onDelete: Restrict)
   islandNpcs      IslandNpc[]
   appearanceParts NpcAppearancePart[]
 
   @@index([bodyTypeId])
   @@index([skinPaletteId])
+  @@index([voiceId])
   @@map("npcs")
   @@schema("ecobeasts")
 }

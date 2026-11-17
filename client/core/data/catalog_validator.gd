@@ -3,6 +3,7 @@ extends RefCounted
 
 const TEMPERAMENT_COUNT := 25
 const HIDDEN_TRAIT_SLOT := 3
+const VOICES_REQUIRED: Array[String] = ["narration", "tamer", "medium"]
 
 var _errors: Array[String] = []
 var _rows: Dictionary = {}
@@ -38,6 +39,7 @@ func _run(tables: Dictionary) -> Array[String]:
 	_check_ground_effect_stats()
 	_check_npcs()
 	_check_npc_appearance_parts()
+	_check_voices()
 	return _errors
 
 
@@ -497,3 +499,10 @@ func _row_error(table_name: String, line: int, message: String) -> void:
 
 func _table_error(table_name: String, message: String) -> void:
 	_errors.append("%s.json: %s" % [table_name, message])
+
+
+## As falas sem NPC usam estas vozes pelo slug (dialogue-voices/01).
+func _check_voices() -> void:
+	for slug: String in VOICES_REQUIRED:
+		if not _rows["voices"].any(func(row: Dictionary) -> bool: return row["slug"] == slug):
+			_table_error("voices", "falta a voz '%s'" % slug)

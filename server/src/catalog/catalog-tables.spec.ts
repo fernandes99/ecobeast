@@ -5,9 +5,9 @@ import { CATALOG_TABLES, SEED_DATA_DIR } from './catalog-tables.js';
 describe('CATALOG_TABLES', () => {
   const names = CATALOG_TABLES.map((table) => table.name);
 
-  it('tem as 47 tabelas, sem repetição', () => {
-    expect(names).toHaveLength(47);
-    expect(new Set(names).size).toBe(47);
+  it('tem as 48 tabelas, sem repetição', () => {
+    expect(names).toHaveLength(48);
+    expect(new Set(names).size).toBe(48);
   });
 
   it('casa com os arquivos .json da pasta de dados do seed', () => {
@@ -50,6 +50,7 @@ describe('CATALOG_TABLES', () => {
     expect(names.indexOf('ground_effects')).toBeLessThan(
       names.indexOf('ground_effect_stats'),
     );
+    expect(names.indexOf('voices')).toBeLessThan(names.indexOf('npcs'));
     expect(names.at(-1)).toBe('starter_options');
   });
 
@@ -520,6 +521,68 @@ describe('carga inicial dos NPCs (island-npcs/01)', () => {
         .map(({ appearance_slot_id }) => appearance_slot_id);
       expect(new Set(slots).size).toBe(slots.length);
       expect(slots).toContain(1);
+    }
+  });
+});
+
+describe('carga inicial das vozes (dialogue-voices/01)', () => {
+  const read = <T>(file: string): T =>
+    JSON.parse(readFileSync(join(SEED_DATA_DIR, file), 'utf8')) as T;
+  const voices = read<
+    {
+      id: number;
+      slug: string;
+      chars_per_second: number;
+      letters_per_blip: number;
+      pitch_variation: number;
+    }[]
+  >('voices.json');
+  const npcs = read<{ slug: string; voice_id: number }[]>('npcs.json');
+
+  it('tem as 6 vozes com ids estáveis, dentro dos limites', () => {
+    expect(voices.map(({ id, slug }) => [id, slug])).toEqual([
+      [1, 'narration'],
+      [2, 'tamer'],
+      [3, 'low'],
+      [4, 'medium'],
+      [5, 'high'],
+      [6, 'chirp'],
+    ]);
+    for (const voice of voices) {
+      expect(voice.chars_per_second).toBeGreaterThanOrEqual(20);
+      expect(voice.chars_per_second).toBeLessThanOrEqual(90);
+      expect(voice.letters_per_blip).toBeGreaterThanOrEqual(1);
+      expect(voice.letters_per_blip).toBeLessThanOrEqual(4);
+      expect(voice.pitch_variation).toBeGreaterThanOrEqual(0);
+      expect(voice.pitch_variation).toBeLessThanOrEqual(25);
+    }
+  });
+
+  it('cada NPC tem a voz da spec', () => {
+    expect(
+      Object.fromEntries(npcs.map(({ slug, voice_id }) => [slug, voice_id])),
+    ).toEqual({
+      village_ruvo: 6,
+      guard_ruvak: 6,
+      grandpa: 3,
+      mira: 5,
+      refuge_keeper: 4,
+      liora_puffcoo: 6,
+    });
+  });
+
+  it('cada voz tem o som no jogo', () => {
+    for (const { slug } of voices) {
+      expect(
+        existsSync(
+          join(
+            SEED_DATA_DIR,
+            '../../../client/assets/sounds/voices',
+            `${slug}.wav`,
+          ),
+        ),
+        slug,
+      ).toBe(true);
     }
   });
 });
