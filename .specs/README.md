@@ -73,6 +73,7 @@ O Ecobeast é um jogo mobile (Android/iOS, retrato): o cliente em **Godot 4.7 co
 | [puffcoo-line](puffcoo-line/) | Puffcoo e Galecrest, a linha de Vento, com o estado Atordoado, as marcas que baixam atributos e as Técnicas que mexem no campo |
 | [fog-of-war](fog-of-war/) | A névoa no mapa de Explorar: só o que o Domador descobriu aparece, e nas ilhas a descoberta fica guardada na conta |
 | [minimap](minimap/) | O minimapa redondo e dourado de Explorar e o mapa grande da ilha, com o descoberto, o Domador e os ícones do Refúgio, da Loja e dos NPCs |
+| [timber-house](timber-house/) | A casa enxaimel do pacote Glassblower's Workshop, montada pelos tiles dele, em 8 cores, com a fumaça e as luzes das janelas |
 
 As próximas iniciativas estão no [roadmap.md](roadmap.md).
 

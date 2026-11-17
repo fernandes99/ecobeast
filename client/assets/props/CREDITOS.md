@@ -8,4 +8,6 @@ As pastas abaixo vêm de três pacotes gratuitos da craftpix.net, usados pela li
 
 As pastas `big_house`, `small_house` e `small_townhouse` vêm do **Main Characters Home Free Top-Down Pixel Art Asset**, também da craftpix.net e pela mesma licença: a casa de `exterior.png` e a fumaça da chaminé de `Smoke_animation.png`, recortadas pelo `make_houses.py`. A pequena e o sobrado pequeno são a casa remontada por colunas, sem pixel novo, e as variantes 2 a 8 mudam só a cor do telhado, da pedra e do frontão (home-pack/01 e 03).
 
+A pasta `timber_house` vem do **Free Glassblower's Workshop Top-Down Pixel Art Asset**, também da craftpix.net e pela mesma licença: a casa enxaimel do `Exterior.tmx` (pasta `Tiled_files`), montada pelos tiles dela pelo `make_timber_house.py`, sem pixel novo, com a porta fechada; as variantes 2 a 8 mudam só a cor do telhado, da madeira, da pedra e do reboco. A fumaça da chaminé é a da `big_house` (timber-house/01).
+
 O resto das pastas tem arte do projeto.

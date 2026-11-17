@@ -8,7 +8,7 @@ python -I find_lights.py > ../../../server/prisma/seed-data/prop_type_lights.jso
 
 Como ele acha cada luz:
 
-- **Janela:** os pixels de vidro (azul claro: `b ≥ 140`, `b − r ≥ 40`, `b ≥ g`) viram grupos, e os grupos a até 2 px um do outro viram uma janela só (as vidraças de uma mesma janela). A luz fica no centro do retângulo da janela, com o raio de metade do lado maior mais 4, entre 6 e 16 px, e a cor `ffcf70`.
+- **Janela:** os pixels de vidro (azul claro: `b ≥ 140`, `b − r ≥ 40`, `b ≥ g`) viram grupos, e os grupos a até 2 px um do outro viram uma janela só (as vidraças de uma mesma janela). A luz fica no centro do retângulo da janela, com o raio de metade do lado maior mais 4, entre 6 e 16 px, e a cor `ffcf70`. Um grupo com menos de 4 px num lado não é janela (as maçanetas azuis da Casa enxaimel).
 - **Telhado ou parede azul:** um grupo com 20 px de largura ou 16 de altura que começa nos 45% de cima da arte não é janela.
 - **Cores da mesma casa:** as variantes com a mesma silhueta (o mesmo canal alfa) só mudam de cor. Elas ficam com as luzes da que achou mais janelas, porque um telhado azul ou roxo engole a janela encostada nele.
 - **Lâmpada:** os pixels amarelos (`r > 200`, `g > 150`, `b < 140`) numa faixa da arte escolhida à mão (`LAMPS`, por tipo e variante): o Poste de luz (raio 28, cor `ffd890`) e as duas lanternas do Observatório (raio 18).

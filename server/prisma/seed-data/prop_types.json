@@ -580,5 +580,11 @@
 		"slug": "small_townhouse",
 		"name": "Sobrado pequeno",
 		"variants": 8
+	},
+	{
+		"id": 98,
+		"slug": "timber_house",
+		"name": "Casa enxaimel",
+		"variants": 8
 	}
 ]

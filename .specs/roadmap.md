@@ -64,6 +64,7 @@ O que vem depois do MVP de estrutura (entrada, escolha do inicial e Hub). Cada l
 | 48  | [`puffcoo-line`](puffcoo-line/) | Puffcoo e Galecrest, a primeira linha de Vento (ave comum de dia, evolução no 20), com o estado Atordoado (não anda na próxima vez; o Vento é imune), as marcas que mudam atributos de quem termina a vez nelas (`ground_effect_stats`: Penas no ar e Redemoinho) os vários golpes e o dano fixo no motor e 5 Técnicas novas: Pena Afiada, Vento a Favor, Rajada de Penas, Nuvem de Penas e Vendaval | board-battle, day-phase-spawns | concluída (falta o dono conferir) |
 | 49  | [`fog-of-war`](fog-of-war/) | A névoa no mapa de Explorar: só aparece o que o Domador descobriu, a até 4 hexágonos de onde passou, e nas ilhas a descoberta fica guardada no servidor (`island_discoveries`) | islands, camera-zoom, day-night | concluída (falta o dono conferir) |
 | 50  | [`minimap`](minimap/) | O minimapa redondo de moldura dourada em pixel art no canto de Explorar, com o Domador no centro e só o descoberto colorido, e o mapa grande da ilha inteira, aberto por ele, com zoom, arrasto e os ícones do Refúgio, da Loja e dos NPCs | fog-of-war | concluída (falta o dono conferir) |
+| 51  | [`timber-house`](timber-house/) | A casa enxaimel do pacote Glassblower's Workshop, montada pelos tiles do `Exterior.tmx`, vira a peça 98 em 8 cores (telhado, madeira, pedra e reboco), com a fumaça da Casa grande na chaminé e as 5 janelas acesas à noite | home-pack, day-night | concluída (falta o dono conferir) |
 
 ## Pós-lançamento (do GDD)
 

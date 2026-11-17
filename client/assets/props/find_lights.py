@@ -5,6 +5,7 @@ Uso: python -I find_lights.py   (precisa do Pillow; roda de dentro de assets/pro
 Imprime as linhas de server/prisma/seed-data/prop_type_lights.json. Como acha (ver LUZES.md):
 - janela: os pixels de vidro (azul claro: b ≥ 140, b − r ≥ 40, b ≥ g), juntos em grupos, e os
   grupos a até 2 px um do outro viram uma janela só; o centro do retângulo é a luz;
+- um grupo com menos de 4 px num lado é uma maçaneta, não janela;
 - telhado ou parede azul fica de fora: um grupo grande (20 px de largura ou 16 de altura) que
   começa nos 45% de cima da arte;
 - lâmpada: os pixels amarelos (r > 200, g > 150, b < 140) numa faixa escolhida à mão (LAMPS);
@@ -38,6 +39,7 @@ TYPES = [
     (95, "big_house", 8),
     (96, "small_house", 8),
     (97, "small_townhouse", 8),
+    (98, "timber_house", 8),
 ]
 
 # as lâmpadas: (slug, variante) -> [(x0, y0, x1, y1) da faixa onde procurar o amarelo, raio]
@@ -124,7 +126,7 @@ def lights_of(slug: str, variant: int) -> list:
     for box in merge(groups(image, is_glass, skip_above=SKIP_ABOVE.get(slug, 0))):
         box_width = box[2] - box[0] + 1
         box_height = box[3] - box[1] + 1
-        if box_width * box_height < 6:
+        if box_width * box_height < 6 or min(box_width, box_height) < 4:
             continue
         # um telhado ou uma parede azul: grande e no alto da arte
         if (box_width >= 20 or box_height >= 16) and box[1] < height * 0.45:
