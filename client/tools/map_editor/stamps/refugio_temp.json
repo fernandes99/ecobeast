@@ -1,0 +1,382 @@
+{
+	"name": "Refugio Temp",
+	"props": [
+		{
+			"dq": -3,
+			"dr": 0,
+			"dx": 7,
+			"dy": 25,
+			"mirrored": true,
+			"prop_type_id": 18,
+			"variant": 2
+		},
+		{
+			"dq": -3,
+			"dr": 1,
+			"dx": 29,
+			"dy": 0,
+			"mirrored": false,
+			"prop_type_id": 99,
+			"variant": 1
+		},
+		{
+			"dq": -2,
+			"dr": 0,
+			"dx": 20,
+			"dy": -18,
+			"mirrored": true,
+			"prop_type_id": 43,
+			"variant": 3
+		},
+		{
+			"dq": -2,
+			"dr": 1,
+			"dx": 10,
+			"dy": 14,
+			"mirrored": false,
+			"prop_type_id": 43,
+			"variant": 2
+		},
+		{
+			"dq": -3,
+			"dr": 1,
+			"dx": -10,
+			"dy": -11,
+			"mirrored": false,
+			"prop_type_id": 51,
+			"variant": 3
+		},
+		{
+			"dq": -3,
+			"dr": 1,
+			"dx": 0,
+			"dy": -20,
+			"mirrored": true,
+			"prop_type_id": 47,
+			"variant": 1
+		},
+		{
+			"dq": -2,
+			"dr": 0,
+			"dx": 17,
+			"dy": 0,
+			"mirrored": true,
+			"prop_type_id": 43,
+			"variant": 3
+		},
+		{
+			"dq": -2,
+			"dr": 0,
+			"dx": -16,
+			"dy": 1,
+			"mirrored": true,
+			"prop_type_id": 47,
+			"variant": 1
+		},
+		{
+			"dq": -2,
+			"dr": 1,
+			"dx": -9,
+			"dy": -23,
+			"mirrored": false,
+			"prop_type_id": 13,
+			"variant": 3
+		},
+		{
+			"dq": -2,
+			"dr": 0,
+			"dx": 1,
+			"dy": -14,
+			"mirrored": true,
+			"prop_type_id": 13,
+			"variant": 3
+		},
+		{
+			"dq": -2,
+			"dr": 0,
+			"dx": 8,
+			"dy": 15,
+			"mirrored": true,
+			"prop_type_id": 13,
+			"variant": 1
+		},
+		{
+			"dq": 1,
+			"dr": 0,
+			"dx": 1,
+			"dy": 14,
+			"mirrored": true,
+			"prop_type_id": 39,
+			"variant": 1
+		},
+		{
+			"dq": -1,
+			"dr": 2,
+			"dx": -2,
+			"dy": -12,
+			"mirrored": false,
+			"prop_type_id": 22,
+			"variant": 1
+		},
+		{
+			"dq": 0,
+			"dr": 2,
+			"dx": -10,
+			"dy": -24,
+			"mirrored": false,
+			"prop_type_id": 39,
+			"variant": 1
+		},
+		{
+			"dq": 1,
+			"dr": -1,
+			"dx": 9,
+			"dy": 16,
+			"mirrored": false,
+			"prop_type_id": 28,
+			"variant": 1
+		},
+		{
+			"dq": -2,
+			"dr": 1,
+			"dx": 10,
+			"dy": 3,
+			"mirrored": false,
+			"prop_type_id": 6,
+			"variant": 1
+		},
+		{
+			"dq": -2,
+			"dr": 1,
+			"dx": 17,
+			"dy": -11,
+			"mirrored": true,
+			"prop_type_id": 75,
+			"variant": 3
+		},
+		{
+			"dq": -2,
+			"dr": 1,
+			"dx": -2,
+			"dy": 6,
+			"mirrored": false,
+			"prop_type_id": 75,
+			"variant": 1
+		},
+		{
+			"dq": 0,
+			"dr": -1,
+			"dx": 24,
+			"dy": 3,
+			"mirrored": false,
+			"prop_type_id": 6,
+			"variant": 4
+		},
+		{
+			"dq": 0,
+			"dr": -1,
+			"dx": 4,
+			"dy": 4,
+			"mirrored": true,
+			"prop_type_id": 6,
+			"variant": 2
+		},
+		{
+			"dq": 0,
+			"dr": -1,
+			"dx": 4,
+			"dy": -11,
+			"mirrored": false,
+			"prop_type_id": 6,
+			"variant": 4
+		},
+		{
+			"dq": -1,
+			"dr": -1,
+			"dx": 1,
+			"dy": 8,
+			"mirrored": true,
+			"prop_type_id": 75,
+			"variant": 3
+		},
+		{
+			"dq": -1,
+			"dr": -1,
+			"dx": 14,
+			"dy": -1,
+			"mirrored": true,
+			"prop_type_id": 75,
+			"variant": 4
+		},
+		{
+			"dq": -1,
+			"dr": -1,
+			"dx": 11,
+			"dy": 15,
+			"mirrored": false,
+			"prop_type_id": 80,
+			"variant": 4
+		},
+		{
+			"dq": -1,
+			"dr": 2,
+			"dx": -24,
+			"dy": 0,
+			"mirrored": true,
+			"prop_type_id": 6,
+			"variant": 1
+		},
+		{
+			"dq": -1,
+			"dr": 2,
+			"dx": -16,
+			"dy": 3,
+			"mirrored": false,
+			"prop_type_id": 6,
+			"variant": 2
+		},
+		{
+			"dq": -2,
+			"dr": 2,
+			"dx": 22,
+			"dy": -8,
+			"mirrored": false,
+			"prop_type_id": 80,
+			"variant": 3
+		}
+	],
+	"tiles": [
+		{
+			"bare": false,
+			"dq": -3,
+			"dr": 0,
+			"ground": "dirt_trail"
+		},
+		{
+			"bare": true,
+			"dq": -3,
+			"dr": 1,
+			"ground": ""
+		},
+		{
+			"bare": true,
+			"dq": -2,
+			"dr": 0,
+			"ground": ""
+		},
+		{
+			"bare": true,
+			"dq": -2,
+			"dr": 1,
+			"ground": ""
+		},
+		{
+			"bare": true,
+			"dq": -2,
+			"dr": -1,
+			"ground": "worn_trail"
+		},
+		{
+			"bare": true,
+			"dq": -1,
+			"dr": -1,
+			"ground": ""
+		},
+		{
+			"bare": true,
+			"dq": -1,
+			"dr": 0,
+			"ground": ""
+		},
+		{
+			"bare": true,
+			"dq": -1,
+			"dr": 1,
+			"ground": ""
+		},
+		{
+			"bare": true,
+			"dq": -2,
+			"dr": 2,
+			"ground": ""
+		},
+		{
+			"bare": true,
+			"dq": -1,
+			"dr": 2,
+			"ground": ""
+		},
+		{
+			"bare": true,
+			"dq": 0,
+			"dr": 1,
+			"ground": ""
+		},
+		{
+			"bare": false,
+			"dq": 0,
+			"dr": 2,
+			"ground": "dirt_trail"
+		},
+		{
+			"bare": false,
+			"dq": 1,
+			"dr": 1,
+			"ground": "dirt_trail"
+		},
+		{
+			"bare": true,
+			"dq": 2,
+			"dr": 0,
+			"ground": "dirt_trail"
+		},
+		{
+			"bare": true,
+			"dq": 1,
+			"dr": 0,
+			"ground": ""
+		},
+		{
+			"bare": true,
+			"dq": 2,
+			"dr": -1,
+			"ground": "dirt_trail"
+		},
+		{
+			"bare": true,
+			"dq": 2,
+			"dr": -2,
+			"ground": "dirt_trail"
+		},
+		{
+			"bare": true,
+			"dq": 1,
+			"dr": -2,
+			"ground": "worn_trail"
+		},
+		{
+			"bare": true,
+			"dq": 1,
+			"dr": -1,
+			"ground": ""
+		},
+		{
+			"bare": true,
+			"dq": 0,
+			"dr": -1,
+			"ground": ""
+		},
+		{
+			"bare": true,
+			"dq": 0,
+			"dr": 0,
+			"ground": ""
+		},
+		{
+			"bare": true,
+			"dq": 0,
+			"dr": -2,
+			"ground": "worn_trail"
+		}
+	]
+}
