@@ -13,6 +13,8 @@ signal logged_in
 const DISCOVERY_BATCH := 1000
 
 var player: Player = null
+## A ilha casa, onde o jogo abre; 0 sem casa (home-island/02).
+var home_island_id: int = 0
 var storage: Array[CreatureInstance] = []
 
 var _service: GameService = ApiGameService.new()
@@ -58,6 +60,14 @@ func load_player() -> Result:
 func create_player(raw_name: String) -> Result:
 	@warning_ignore("redundant_await")
 	var result: Result = await _service.create_player(raw_name)
+	if result.ok:
+		_set_player(result.data)
+	return result
+
+
+func set_tamer_name(raw_name: String) -> Result:
+	@warning_ignore("redundant_await")
+	var result: Result = await _service.set_tamer_name(raw_name)
 	if result.ok:
 		_set_player(result.data)
 	return result
@@ -175,6 +185,17 @@ func start_exploration(island_id: int = 0) -> Result:
 func list_islands() -> Result:
 	@warning_ignore("redundant_await")
 	return await _service.list_islands()
+
+
+## Lê qual ilha publicada é a casa do jogador.
+func load_home() -> Result:
+	var result := await list_islands()
+	if result.ok:
+		home_island_id = 0
+		for island: IslandSummary in result.data:
+			if island.home:
+				home_island_id = island.id
+	return result
 
 
 func add_island_discoveries(island_id: int, coords: Array[Vector2i]) -> Result:

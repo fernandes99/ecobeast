@@ -7,7 +7,6 @@ extends Node
 
 signal finished
 
-const NAME_TOKEN := "{nome}"
 const SAVE_ERROR := "Não deu para salvar a história. %s"
 const RETRY_TEXT := "Tentar de novo"
 const CLEAR_SECONDS := 0.3
@@ -142,6 +141,10 @@ func _step(step: Dictionary) -> void:
 				_screen.story_set_follow(sprite, step.get("type") == "follow")
 		"open_screen":
 			await _screen.story_open_screen(StringName(DictFields.get_string(step, "screen")))
+		"create_tamer":
+			await _screen.story_create_tamer()
+		"choose_starter":
+			await _screen.story_choose_starter()
 
 
 func _move(step: Dictionary) -> void:
@@ -204,7 +207,7 @@ func _line(step: Dictionary) -> String:
 
 
 func _text(text: String) -> String:
-	return text.replace(NAME_TOKEN, Session.player.name if Session.player != null else "")
+	return StoryText.render(text, Session.player)
 
 
 func _fade_to(alpha: float, seconds: float) -> void:

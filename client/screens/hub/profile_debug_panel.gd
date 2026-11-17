@@ -35,7 +35,8 @@ func _on_reset_pressed() -> void:
 	_reset_button.disabled = true
 	var result: Result = await Session.reset_progress()
 	if result.ok:
-		Router.go_to(&"title")
+		result = await Home.start()
+	if result.ok:
 		return
 	_reset_button.disabled = false
 	_disarm()

@@ -26,5 +26,12 @@
 		"name": "Casa",
 		"color_hex": "#A47551",
 		"kind": "open_screen"
+	},
+	{
+		"id": 5,
+		"slug": "travel",
+		"name": "Viagem",
+		"color_hex": "#3FA7A0",
+		"kind": "open_screen"
 	}
 ]

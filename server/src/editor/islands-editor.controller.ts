@@ -31,12 +31,16 @@ import {
   IslandCreatedResponseDto,
   IslandDraftDto,
   IslandDraftResponseDto,
+  IslandHomeBodyDto,
   IslandListResponseDto,
   IslandPublishedResponseDto,
   IslandSavedResponseDto,
 } from './islands-editor.dto.js';
 import { ISLAND_NOT_FOUND } from '../islands/islands.service.js';
-import { IslandsEditorService } from './islands-editor.service.js';
+import {
+  HOME_NEEDS_PUBLISHED,
+  IslandsEditorService,
+} from './islands-editor.service.js';
 
 const islandId = new ParseIntPipe({
   exceptionFactory: () => new NotFoundException(ISLAND_NOT_FOUND),
@@ -105,6 +109,24 @@ export class IslandsEditorController {
     @Body() body: IslandDraftDto,
   ): Promise<IslandSavedResponseDto> {
     return this.islands.saveDraft(id, body);
+  }
+
+  @Put(':id/home')
+  @ApiOperation({
+    summary: 'Ligar a casa do jogador',
+    description:
+      'Com `home` verdadeiro, a ilha vira a casa do jogador e a de qualquer ' +
+      'outra é desligada, numa transação. O jogo abre na casa.',
+  })
+  @ApiOkResponse({ type: IslandDraftResponseDto })
+  @ApiBadRequestResponse({
+    description: `Ilha nunca publicada: "${HOME_NEEDS_PUBLISHED}"`,
+  })
+  setHome(
+    @Param('id', islandId) id: number,
+    @Body() body: IslandHomeBodyDto,
+  ): Promise<IslandDraftResponseDto> {
+    return this.islands.setHome(id, body.home);
   }
 
   @Post(':id/publish')

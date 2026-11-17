@@ -37,6 +37,8 @@ import type {
 
 export const PUBLISHED_CANNOT_BE_DELETED =
   'Uma ilha publicada não pode ser apagada.';
+export const HOME_NEEDS_PUBLISHED =
+  'Publique a ilha antes de fazer dela a casa do jogador.';
 
 const DRAFT = 'draft';
 const PUBLISHED = 'published';
@@ -219,7 +221,28 @@ export class IslandsEditorService {
       ...toDto(draft),
       updated_at: island.draftUpdatedAt.toISOString(),
       published_at: island.publishedAt?.toISOString() ?? null,
+      home: island.isHome,
     };
+  }
+
+  /** Liga ou desliga a casa do jogador; ligar numa ilha desliga a de outra. */
+  async setHome(id: number, home: boolean): Promise<IslandDraftResponseDto> {
+    const island = await this.island(id);
+    if (home && !island.publishedAt) {
+      throw new BadRequestException(HOME_NEEDS_PUBLISHED);
+    }
+    await this.prisma.$transaction([
+      ...(home
+        ? [
+            this.prisma.island.updateMany({
+              where: { isHome: true, id: { not: id } },
+              data: { isHome: false },
+            }),
+          ]
+        : []),
+      this.prisma.island.update({ where: { id }, data: { isHome: home } }),
+    ]);
+    return this.read(id);
   }
 
   async saveDraft(
@@ -288,6 +311,7 @@ export class IslandsEditorService {
     return {
       maps: island.maps,
       publishedAt: island.publishedAt,
+      isHome: island.isHome,
       draftId: draft.id,
       draftUpdatedAt: draft.updatedAt,
     };

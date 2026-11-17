@@ -14,14 +14,14 @@ server/
   src/prisma/            PrismaService (global)
   src/health/            GET /health
   src/auth/              login com Google (Supabase Auth), AuthGuard e @CurrentUser()
-  src/player/            o Domador do usuário logado (/v1/me)
+  src/player/            o Domador do usuário logado (/v1/me), que pode nascer sem nome e ganhá-lo uma vez (PUT /v1/me/name), e a conferência da aparência (appearance-check.ts), que os NPCs pessoas também usam
   src/battle/            o que toda luta usa: o BattleStore (a luta na memória), a leitura da equipe e a gravação do fim
   src/board-battle/      a luta no tabuleiro do usuário logado (/v1/me/board-battle)
   src/exploration/       o mapa de exploração do usuário logado (/v1/me/exploration), sorteado ou de uma ilha publicada, com os Ecobeasts e os Domadores NPC guardados na memória
   src/inventory/         a Loja e a Mochila do usuário logado (/v1/me/shop e /v1/me/items)
   src/team/              a equipe e o Santuário do usuário logado (/v1/me/team e /v1/me/storage)
   src/codex/             o Bestiário do usuário logado (/v1/me/codex) e o CodexService, que as lutas, a Evolução e o inicial usam para registrar visto e capturado
-  src/editor/            os editores (/v1/editor): ilhas em rascunho e publicadas, o gerador de mapas e as Técnicas do F1 (/v1/editor/skills), só para quem está em MAP_EDITOR_USER_IDS
+  src/editor/            os editores (/v1/editor): ilhas em rascunho e publicadas (e a ilha casa, PUT /v1/editor/islands/:id/home), o gerador de mapas, as Técnicas do F1 (/v1/editor/skills) e a aparência dos NPCs pessoas (/v1/editor/npcs/:id/appearance), só para quem está em MAP_EDITOR_USER_IDS
   src/islands/           as ilhas publicadas para o jogador (/v1/me/islands) e o IslandsService, que lê uma versão de ilha para o editor e para a exploração numa ilha, e os hexágonos que cada Domador já descobriu nelas (/v1/me/islands/:id/discoveries, o DiscoveriesService)
   src/story/             os Marcos da história do usuário logado (/v1/me/story/marks), guardados sem significado: o roteiro mora no jogo
   src/world-clock/       a hora do mundo (GET /v1/world-clock, sem login); a conta mora em src/domain/world-clock/

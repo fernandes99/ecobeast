@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   ArrayMaxSize,
@@ -12,10 +12,24 @@ import type { StatBlock } from '../domain/rules/types.js';
 
 export const INVALID_NAME = 'Use de 2 a 16 letras, números ou espaços.';
 
+export const NAME_TAKEN = 'Seu Domador já tem nome.';
+
 export class CreatePlayerBodyDto {
+  @ApiPropertyOptional({
+    description:
+      'Nome do Domador. Espaços nas pontas saem e espaços repetidos viram um; depois, de 2 a 16 letras, números ou espaços. ' +
+      'Sem o campo, o Domador nasce sem nome (`""`), e a introdução dá o nome depois (`PUT /v1/me/name`).',
+    example: 'Ana Maria',
+  })
+  @IsOptional()
+  @IsString({ message: INVALID_NAME })
+  name?: string;
+}
+
+export class SetNameBodyDto {
   @ApiProperty({
     description:
-      'Nome do Domador. Espaços nas pontas saem e espaços repetidos viram um; depois, de 2 a 16 letras, números ou espaços.',
+      'Nome do Domador, com a mesma regra da criação: de 2 a 16 letras, números ou espaços.',
     example: 'Ana Maria',
   })
   @IsString({ message: INVALID_NAME })

@@ -242,18 +242,27 @@ model PropTypeLight {
 }
 
 model Npc {
-  id          Int    @id @default(autoincrement())
+  id            Int     @id @default(autoincrement())
   /// CHECK ^[a-z0-9_]+$ (migration island_npcs)
-  slug        String @unique
+  slug          String  @unique
   /// O que a caixa de fala mostra.
-  name        String
+  name          String
   /// Só para o editor.
-  description String
-  /// A pasta assets/creatures/<sprite>/ do jogo. CHECK ^[a-z0-9_]+$ (migration island_npcs)
-  sprite      String
+  description   String
+  /// A pasta assets/creatures/<sprite>/ do jogo; nulo é NPC pessoa. CHECK ^[a-z0-9_]+$ (migration island_npcs)
+  sprite        String?
+  /// O corpo do NPC pessoa. CHECK sprite ou corpo, nunca os dois: npcs_look_check (migration person_npcs)
+  bodyTypeId    Int?    @map("body_type_id")
+  /// A pele do NPC pessoa, junto com o corpo (migration person_npcs)
+  skinPaletteId Int?    @map("skin_palette_id")
 
-  islandNpcs IslandNpc[]
+  bodyType        BodyType?           @relation(fields: [bodyTypeId], references: [id], onDelete: Restrict)
+  skinPalette     Palette?            @relation(fields: [skinPaletteId], references: [id], onDelete: Restrict)
+  islandNpcs      IslandNpc[]
+  appearanceParts NpcAppearancePart[]
 
+  @@index([bodyTypeId])
+  @@index([skinPaletteId])
   @@map("npcs")
   @@schema("ecobeasts")
 }
@@ -267,6 +276,7 @@ model BodyType {
 
   parts   AppearancePart[]
   players Player[]
+  npcs    Npc[]
 
   @@map("body_types")
   @@schema("ecobeasts")
@@ -287,6 +297,7 @@ model AppearanceSlot {
 
   parts       AppearancePart[]
   playerParts PlayerAppearancePart[]
+  npcParts    NpcAppearancePart[]
 
   @@map("appearance_slots")
   @@schema("ecobeasts")
@@ -307,6 +318,7 @@ model AppearancePart {
   slot        AppearanceSlot         @relation(fields: [appearanceSlotId], references: [id], onDelete: Restrict)
   bodyType    BodyType?              @relation(fields: [bodyTypeId], references: [id], onDelete: Restrict)
   playerParts PlayerAppearancePart[]
+  npcParts    NpcAppearancePart[]
 
   @@index([appearanceSlotId])
   @@index([bodyTypeId])
@@ -333,6 +345,8 @@ model Palette {
 
   skinPlayers Player[]
   playerParts PlayerAppearancePart[]
+  skinNpcs    Npc[]
+  npcParts    NpcAppearancePart[]
 
   @@map("palettes")
   @@schema("ecobeasts")
@@ -865,6 +879,26 @@ model Player {
 
 /// Uma peça vestida pelo Domador (tamer-appearance/01). O lugar se repete
 /// aqui para a chave garantir uma peça por lugar.
+/// Uma peça vestida por um NPC pessoa (liora-intro/02), com as regras da do Domador.
+model NpcAppearancePart {
+  npcId            Int  @map("npc_id")
+  appearanceSlotId Int  @map("appearance_slot_id")
+  appearancePartId Int  @map("appearance_part_id")
+  paletteId        Int? @map("palette_id")
+
+  npc     Npc            @relation(fields: [npcId], references: [id], onDelete: Cascade)
+  slot    AppearanceSlot @relation(fields: [appearanceSlotId], references: [id], onDelete: Restrict)
+  part    AppearancePart @relation(fields: [appearancePartId], references: [id], onDelete: Restrict)
+  palette Palette?       @relation(fields: [paletteId], references: [id], onDelete: Restrict)
+
+  @@id([npcId, appearanceSlotId])
+  @@index([appearanceSlotId])
+  @@index([appearancePartId])
+  @@index([paletteId])
+  @@map("npc_appearance_parts")
+  @@schema("ecobeasts")
+}
+
 model PlayerAppearancePart {
   playerId         String @map("player_id") @db.Uuid
   appearanceSlotId Int    @map("appearance_slot_id")
@@ -1000,6 +1034,8 @@ model Island {
   id          Int       @id @default(autoincrement())
   createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
   publishedAt DateTime? @map("published_at") @db.Timestamptz(3)
+  /// A casa do jogador. Só uma: índice único parcial islands_one_home (migration home_island)
+  isHome      Boolean   @default(false) @map("is_home")
 
   maps        IslandMap[]
   discoveries IslandDiscovery[]

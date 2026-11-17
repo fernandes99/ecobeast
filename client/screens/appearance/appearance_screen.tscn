@@ -3,6 +3,7 @@
 [ext_resource type="Script" path="res://screens/appearance/appearance_screen.gd" id="1_script"]
 [ext_resource type="PackedScene" path="res://ui/components/safe_area.tscn" id="2_safe_area"]
 [ext_resource type="Script" path="res://ui/components/tamer_sprite.gd" id="3_tamer"]
+[ext_resource type="Script" path="res://ui/components/tamer_editor.gd" id="4_editor"]
 
 [node name="AppearanceScreen" type="Control"]
 layout_mode = 3
@@ -63,27 +64,11 @@ grow_vertical = 0
 theme_type_variation = &"OutlineButton"
 text = "Girar"
 
-[node name="TabsScroll" type="ScrollContainer" parent="SafeArea/Column"]
+[node name="Editor" type="VBoxContainer" parent="SafeArea/Column"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 80)
-layout_mode = 2
-vertical_scroll_mode = 0
-
-[node name="Tabs" type="HBoxContainer" parent="SafeArea/Column/TabsScroll"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="OptionsScroll" type="ScrollContainer" parent="SafeArea/Column"]
 layout_mode = 2
 size_flags_vertical = 3
-horizontal_scroll_mode = 0
-
-[node name="Options" type="VBoxContainer" parent="SafeArea/Column/OptionsScroll"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/separation = 12
+script = ExtResource("4_editor")
 
 [node name="Message" type="Label" parent="SafeArea/Column"]
 unique_name_in_owner = true

@@ -21,6 +21,7 @@ const TYPE_NAMES: Dictionary[String, String] = {
 	"wait": "Esperar", "fade": "Escurecer ou clarear", "show": "Mostrar ator", "hide": "Esconder ator",
 	"move": "Andar", "face": "Virar", "camera": "Câmera", "camera_back": "Câmera volta",
 	"follow": "Seguir o Domador", "unfollow": "Parar de seguir", "open_screen": "Abrir tela",
+	"create_tamer": "Criar o Domador", "choose_starter": "Escolher o inicial",
 }
 ## Os grupos de cor, na ordem do menu, com os tipos de cada um (story/06).
 const GROUPS: Dictionary[String, Array] = {
@@ -29,7 +30,7 @@ const GROUPS: Dictionary[String, Array] = {
 	"mark": ["set_mark"],
 	"actor": ["show", "hide", "move", "face", "follow", "unfollow"],
 	"camera": ["camera", "camera_back", "fade", "wait"],
-	"screen": ["open_screen"],
+	"screen": ["open_screen", "create_tamer", "choose_starter"],
 }
 const ICON_NAMES: Dictionary[String, String] = {"set_mark": "mark", "open_screen": "screen"}
 const SCREEN_NAMES: Dictionary[String, String] = {
@@ -300,7 +301,7 @@ func _show_fields() -> void:
 	match type:
 		"say":
 			_choice_field("Quem fala", step, "speaker", _speaker_options())
-			_text_field("Fala · {nome} vira o nome do Domador", step, "text", true)
+			_text_field("Fala · {nome} vira o nome do Domador; {cansado|cansada} muda com o corpo", step, "text", true)
 		"if_mark", "set_mark":
 			_text_field("Marco", step, "mark", false)
 		"wait", "camera_back":
@@ -341,6 +342,12 @@ func _show_fields() -> void:
 			for key: String in SCREEN_NAMES:
 				screens.append([SCREEN_NAMES[key], key])
 			_choice_field("Tela", step, "screen", screens)
+		"create_tamer", "choose_starter":
+			var note := Label.new()
+			note.text = "Só vale em cenas da ilha casa. " + ("Abre o nome e a aparência por cima do mapa; com nome, só a aparência." if type == "create_tamer" else "Abre a escolha do inicial; quem já tem inicial pula o passo.")
+			note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			note.add_theme_color_override(&"font_color", UiPalette.TEXT_SECONDARY)
+			_fields.add_child(note)
 		"choice", "if_mark":
 			pass
 	if type == "choice" or type == "if_mark":

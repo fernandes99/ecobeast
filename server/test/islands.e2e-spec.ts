@@ -253,12 +253,15 @@ describe('Ilhas do jogador (e2e)', () => {
 
       const { body } = await user.list().expect(200);
 
-      const list = (body as { islands: { id: number; name: string }[] })
-        .islands;
+      const list = (
+        body as { islands: { id: number; name: string; home: boolean }[] }
+      ).islands;
       expect(list).toContainEqual({
         id: published,
         name: 'Ilha publicada de teste',
+        home: false,
       });
+      expect(list.filter(({ home }) => home).length).toBeLessThanOrEqual(1);
       expect(list.some((island) => island.id === draftOnly)).toBe(false);
       const ids = list.map(({ id }) => id);
       expect(ids).toEqual([...ids].sort((a, b) => a - b));

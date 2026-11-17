@@ -36,6 +36,8 @@ func _run(tables: Dictionary) -> Array[String]:
 	_check_day_phases()
 	_check_prop_type_lights()
 	_check_ground_effect_stats()
+	_check_npcs()
+	_check_npc_appearance_parts()
 	return _errors
 
 
@@ -430,6 +432,56 @@ func _check_ground_effect_stats() -> void:
 	for i: int in rows.size():
 		if rows[i]["stages"] == 0:
 			_row_error("ground_effect_stats", lines[i], "stages não pode ser 0")
+
+
+## Um NPC é o desenho de um Ecobeast ou uma pessoa, com corpo e pele (liora-intro/02).
+func _check_npcs() -> void:
+	var rows: Array[Dictionary] = _rows["npcs"]
+	var lines: Array[int] = _lines["npcs"]
+	for i: int in rows.size():
+		var npc := rows[i]
+		var person: bool = npc["body_type_id"] != null
+		if (npc["sprite"] == null) != person:
+			_row_error("npcs", lines[i], "precisa de sprite ou de body_type_id, nunca os dois")
+		elif (npc["skin_palette_id"] != null) != person:
+			_row_error("npcs", lines[i], "skin_palette_id vai junto com body_type_id")
+		elif person and str(_row_by_id("palettes", npc["skin_palette_id"]).get("kind", "")) != "skin":
+			_row_error("npcs", lines[i], "skin_palette_id não é uma paleta de pele")
+
+
+## As peças de um NPC pessoa seguem as regras das do Domador.
+func _check_npc_appearance_parts() -> void:
+	var rows: Array[Dictionary] = _rows["npc_appearance_parts"]
+	var lines: Array[int] = _lines["npc_appearance_parts"]
+	var worn: Dictionary[int, Array] = {}
+	for i: int in rows.size():
+		var row := rows[i]
+		var npc := _row_by_id("npcs", row["npc_id"])
+		var part := _row_by_id("appearance_parts", row["appearance_part_id"])
+		var slot := _row_by_id("appearance_slots", row["appearance_slot_id"])
+		if npc.is_empty() or part.is_empty() or slot.is_empty():
+			continue
+		if npc["body_type_id"] == null:
+			_row_error("npc_appearance_parts", lines[i], "o NPC %d é um Ecobeast" % row["npc_id"])
+			continue
+		if part["appearance_slot_id"] != row["appearance_slot_id"]:
+			_row_error("npc_appearance_parts", lines[i], "a peça %d não é do lugar %d" % [row["appearance_part_id"], row["appearance_slot_id"]])
+		if part["body_type_id"] != null and part["body_type_id"] != npc["body_type_id"]:
+			_row_error("npc_appearance_parts", lines[i], "a peça %d não serve no corpo do NPC" % row["appearance_part_id"])
+		var kind: Variant = slot["palette_kind"]
+		if kind == null and row["palette_id"] != null:
+			_row_error("npc_appearance_parts", lines[i], "o lugar %d não aceita cor" % row["appearance_slot_id"])
+		elif kind != null and (row["palette_id"] == null or _row_by_id("palettes", row["palette_id"]).get("kind", "") != kind):
+			_row_error("npc_appearance_parts", lines[i], "precisa de uma paleta %s" % kind)
+		var slots: Array = worn.get(int(row["npc_id"]), [])
+		slots.append(int(row["appearance_slot_id"]))
+		worn[int(row["npc_id"])] = slots
+	for npc: Dictionary in _rows["npcs"]:
+		if npc["body_type_id"] == null:
+			continue
+		for slot: Dictionary in _rows["appearance_slots"]:
+			if slot["required"] and not worn.get(int(npc["id"]), []).has(int(slot["id"])):
+				_table_error("npc_appearance_parts", "o NPC %d está sem %s" % [npc["id"], slot["name"]])
 
 
 func _for_each_species(callback: Callable) -> void:

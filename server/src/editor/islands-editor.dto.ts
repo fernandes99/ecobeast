@@ -464,6 +464,15 @@ export class IslandDraftResponseDto extends IslandDraftDto {
     description: 'A última publicação.',
   })
   published_at: string | null;
+
+  @ApiProperty({ description: 'É a casa do jogador (no máximo uma ilha).' })
+  home: boolean;
+}
+
+export class IslandHomeBodyDto {
+  @ApiProperty({ description: 'Liga ou desliga a casa do jogador.' })
+  @IsBoolean({ message: 'home precisa ser verdadeiro ou falso.' })
+  home: boolean;
 }
 
 export class IslandSummaryDto {

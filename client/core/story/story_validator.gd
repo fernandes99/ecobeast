@@ -20,7 +20,11 @@ const STEPS: Dictionary[String, String] = {
 	"say": "", "choice": "", "if_mark": "", "set_mark": "", "wait": "", "fade": "",
 	"show": "actor", "hide": "actor", "move": "actor_or_tamer", "face": "actor_or_tamer",
 	"camera": "", "camera_back": "", "follow": "actor", "unfollow": "actor", "open_screen": "",
+	"create_tamer": "", "choose_starter": "",
 }
+## Os passos da introdução (liora-intro/03), que só valem na ilha casa.
+const HOME_STEPS: Array[String] = ["create_tamer", "choose_starter"]
+const HOME_ONLY := "só vale em cenas da ilha casa."
 
 static var _slug_regex := RegEx.create_from_string(SLUG_PATTERN)
 static var _key_regex := RegEx.create_from_string(KEY_PATTERN)
@@ -195,6 +199,43 @@ static func _check_text(text: Variant, fail: Callable) -> void:
 		fail.call("falta o texto.")
 	elif (text as String).length() > MAX_TEXT:
 		fail.call("o texto passa de %d caracteres." % MAX_TEXT)
+	else:
+		var error := StoryText.check(text)
+		if not error.is_empty():
+			fail.call(error)
+
+
+## Os erros dos passos da introdução numa cena fora da ilha casa (liora-intro/03). A casa
+## é do servidor: isto roda ao tocar a cena e no F2, e não no `load_scenes()`.
+static func home_errors(scene: StoryScene, home_island_id: int) -> Array[String]:
+	var errors: Array[String] = []
+	if home_island_id > 0 and scene.island_id == home_island_id:
+		return errors
+	_home_steps(scene.steps, "", errors, scene.slug)
+	return errors
+
+
+static func _home_steps(steps: Variant, prefix: String, errors: Array[String], slug: String) -> void:
+	if not steps is Array:
+		return
+	var list: Array = steps
+	for index: int in list.size():
+		var step: Variant = list[index]
+		if not step is Dictionary:
+			continue
+		var d: Dictionary = step
+		var path := "%s%d" % [prefix, index + 1]
+		var type := DictFields.get_string(d, "type")
+		if HOME_STEPS.has(type):
+			errors.append("Cena %s: passo %s: %s" % [slug, path, HOME_ONLY])
+		elif type == "choice":
+			var options := DictFields.get_array(d, "options")
+			for option_index: int in options.size():
+				if options[option_index] is Dictionary:
+					_home_steps((options[option_index] as Dictionary).get("steps", []), "%s.%d." % [path, option_index + 1], errors, slug)
+		elif type == "if_mark":
+			_home_steps(d.get("then", []), "%s.1." % path, errors, slug)
+			_home_steps(d.get("else", []), "%s.2." % path, errors, slug)
 
 
 static func _check_mark(mark: Variant, fail: Callable) -> void:

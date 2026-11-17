@@ -1353,9 +1353,9 @@ func _leave() -> void:
 			return
 	_leaving = true
 	Music.fade_out()
-	if _exits_to_hub():
-		# A exploração acabou no servidor: o mapa fecha junto (npc-tamers/04).
-		Router.go_to(&"hub")
+	if _exits_to_hub() or not Router.can_go_back():
+		# A exploração acabou no servidor, ou a luta veio da Viagem: volta para casa (home-island/03).
+		Home.go()
 	else:
 		Router.back()
 

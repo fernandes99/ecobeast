@@ -3,7 +3,8 @@ extends CreatureSprite
 
 ## Um NPC da ilha (island-npcs/03), com as folhas de explorar do Ecobeast, na escala do
 ## Domador: parado no hexágono dele, ou passeando de centro em centro pelos hexágonos do
-## passeio, com pausas entre as viagens.
+## passeio, com pausas entre as viagens. O NPC pessoa (liora-intro/02) não tem folhas
+## próprias e desenha um TamerSprite com a aparência dele.
 
 const MIN_REST := 2.0
 const MAX_REST := 5.0
@@ -14,6 +15,7 @@ const WALKING := 1
 const JUMPED := 2
 ## O passo de uma cena, em pixels da arte por segundo. A revisar.
 const STORY_SPEED := 60.0
+const PERSON_ICON := "res://ui/icons/person.svg"
 
 signal arrived
 
@@ -28,6 +30,32 @@ var _held := false
 ## Numa cena (story/03): não sorteia passeio e só anda por `walk_to`.
 var scripted := false
 var walk_speed := WALK_SPEED
+var _look: TamerSprite = null
+
+
+## O NPC no mapa, ou null quando ele não tem desenho (sem folhas e sem aparência).
+static func make(map_npc: MapNpc) -> NpcSprite:
+	if not can_draw(map_npc.npc_id):
+		return null
+	return NpcSprite.new(map_npc, slug_of(map_npc.npc_id))
+
+
+static func can_draw(npc_id: int) -> bool:
+	return TamerAppearance.for_npc(npc_id) != null or has_sheets(slug_of(npc_id))
+
+
+## A pasta do Ecobeast do NPC; vazio para o NPC pessoa.
+static func slug_of(npc_id: int) -> String:
+	var sprite: Variant = GameData.get_npc(npc_id).get("sprite")
+	return str(sprite) if sprite != null else ""
+
+
+## Um quadro parado para as listas e as marcas do editor: o do Ecobeast ou, para a
+## pessoa, o ícone de pessoa.
+static func icon_frame(npc_id: int) -> Texture2D:
+	if TamerAppearance.for_npc(npc_id) != null:
+		return load(PERSON_ICON) as Texture2D
+	return first_frame(slug_of(npc_id))
 
 
 static func first_frame(slug: String) -> Texture2D:
@@ -43,6 +71,39 @@ func _init(map_npc: MapNpc, slug: String) -> void:
 	super(slug)
 	npc = map_npc
 	coord = map_npc.coord
+	var appearance := TamerAppearance.for_npc(map_npc.npc_id)
+	if appearance != null:
+		_look = TamerSprite.new()
+		_look.set_appearance(appearance)
+		add_child(_look)
+		play_idle()
+
+
+func play_idle() -> void:
+	if _look == null:
+		super()
+		return
+	_sync_look()
+	_look.play_idle()
+
+
+func play_walk() -> void:
+	if _look == null:
+		super()
+		return
+	_sync_look()
+	_look.play_run()
+
+
+func face_toward(direction: Vector2) -> void:
+	super(direction)
+	if _look != null:
+		_sync_look()
+
+
+func _sync_look() -> void:
+	_look._row = _row
+	_look.flip_h = flip_h
 
 
 ## Com `map` nulo (o editor), ele fica parado.

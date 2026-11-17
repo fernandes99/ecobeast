@@ -19,15 +19,22 @@ const SHADE_FADE := 0.10
 ## cores ficam em UiPalette.ACTION_COLORS. `art` é a ação que empresta a arte a
 ## quem ainda não tem a sua.
 const ACTIONS: Array[Dictionary] = [
-	{"id": &"explore", "title": "Explorar zona", "subtitle": "Conheça novas áreas e capture criaturas."},
-	{"id": &"islands", "title": "Ilhas", "subtitle": "Visite as ilhas do mundo.", "art": &"explore"},
-	{"id": &"challenge", "title": "Desafiar", "subtitle": "Enfrente outros Domadores."},
-	{"id": &"arenas", "title": "Arenas", "subtitle": "Derrote os 8 Mestres e conquiste a Liga."},
+	{"id": &"travel", "title": "Viagem", "subtitle": "Visite as ilhas e as zonas do mundo.", "art": &"explore"},
 	{"id": &"shop", "title": "Loja", "subtitle": "Compre itens, Esferas de Vínculo e mais."},
 	{"id": &"heal", "title": "Refúgio", "subtitle": "Cure sua equipe."},
 	{"id": &"storage", "title": "Santuário", "subtitle": "Guarde suas criaturas."},
 	{"id": &"codex", "title": "Bestiário", "subtitle": "Veja todas as espécies."},
 	{"id": &"bag", "title": "Mochila", "subtitle": "Organize seus itens."},
+]
+## Com a ilha casa, o Hub é o menu do Domador, aberto por cima dela (home-island/02):
+## as viagens, a Loja e o Refúgio ficam no mapa.
+const BACK_TAB := "Voltar"
+const MENU_ACTIONS: Array[StringName] = [&"storage", &"codex", &"bag"]
+const MENU_TABS: Array[Dictionary] = [
+	{"label": BACK_TAB, "icon": "home"},
+	{"label": "Equipe", "icon": "team"},
+	{"label": "Bestiário", "icon": "book"},
+	{"label": "Perfil", "icon": "person"},
 ]
 const TABS: Array[Dictionary] = [
 	{"label": "Home", "icon": "home"},
@@ -38,10 +45,7 @@ const TABS: Array[Dictionary] = [
 ]
 
 const DESTINATIONS: Dictionary[String, Dictionary] = {
-	"Explorar zona": {"id": &"exploration", "params": {}},
-	"Ilhas": {"id": &"islands", "params": {}},
-	"Desafiar": {"id": &"board_battle", "params": {"challenge": true}},
-	"Arenas": {"id": &"placeholder", "params": {"title": "Arenas"}},
+	"Viagem": {"id": &"travel", "params": {}},
 	"Loja": {"id": &"shop", "params": {}},
 	"Refúgio": {"id": &"heal_station", "params": {}},
 	"Santuário": {"id": &"storage", "params": {}},
@@ -78,13 +82,16 @@ func _ready() -> void:
 		var slot: CreatureSlot = CreatureSlotScene.instantiate()
 		slot.pressed.connect(_open_details.bind(index))
 		_party_row.add_child(slot)
+	var menu := Home.has_home()
 	for action: Dictionary in ACTIONS:
+		if menu and not MENU_ACTIONS.has(action["id"]):
+			continue
 		var tile: ActionTile = ActionTileScene.instantiate()
 		var colors: Array = UiPalette.ACTION_COLORS[action["id"]]
 		tile.setup(action["id"], action["title"], action["subtitle"], colors[0], colors[1], action.get("art", &""))
 		tile.pressed.connect(_open.bind(action["title"]))
 		_actions_grid.add_child(tile)
-	for tab: Dictionary in TABS:
+	for tab: Dictionary in MENU_TABS if menu else TABS:
 		_tabs.add_child(_make_tab(tab["label"], tab["icon"]))
 	%EditButton.pressed.connect(_open.bind("Equipe"))
 	# O Domador ainda não sobe de nível (o GDD não define como).
@@ -171,13 +178,12 @@ func _refresh() -> void:
 
 
 func _open(label: String) -> void:
+	if label == BACK_TAB:
+		Router.back()
+		return
 	if not DESTINATIONS.has(label):
 		return
 	var destination := DESTINATIONS[label]
-	if destination["id"] == &"board_battle":
-		var center := get_viewport().get_visible_rect().size / 2.0
-		if not await BattleIntro.cover(center, &"tamer"):
-			return
 	Router.push(destination["id"], destination["params"])
 
 

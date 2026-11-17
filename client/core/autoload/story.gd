@@ -6,6 +6,8 @@ extends Node
 var library := StoryLibrary.new()
 var _test_scene: StoryScene = null
 var _test_marks: Array[String] = []
+## As cenas `auto` repetíveis que já tocaram nesta entrada na ilha (liora-intro/03).
+var _auto_played: Dictionary[String, bool] = {}
 
 
 func load_scenes() -> Array[String]:
@@ -39,8 +41,19 @@ func can_run(scene: StoryScene, island_id: int) -> bool:
 	return true
 
 
+## Uma `auto` repetível roda uma vez por entrada: o fim de toda cena procura outra `auto`,
+## e ela voltaria logo depois de si mesma.
 func scene_for_auto(island_id: int) -> StoryScene:
-	return _best(island_id, func(trigger: Dictionary) -> bool: return DictFields.get_string(trigger, "type") == "auto")
+	return _best(island_id, func(trigger: Dictionary) -> bool: return DictFields.get_string(trigger, "type") == "auto", true)
+
+
+func begin_entry() -> void:
+	_auto_played.clear()
+
+
+func note_auto_played(scene: StoryScene) -> void:
+	if scene.repeatable:
+		_auto_played[scene.slug] = true
 
 
 func scene_for_npc(island_id: int, npc_id: int) -> StoryScene:
@@ -119,12 +132,14 @@ func used_marks() -> Array[String]:
 	return result
 
 
-func _best(island_id: int, matches: Callable) -> StoryScene:
+func _best(island_id: int, matches: Callable, once_per_entry: bool = false) -> StoryScene:
 	if _test_scene != null or island_id <= 0:
 		return null
 	var best: StoryScene = null
 	for scene: StoryScene in library.scenes:
 		if not matches.call(scene.trigger) or not can_run(scene, island_id):
+			continue
+		if once_per_entry and _auto_played.has(scene.slug):
 			continue
 		if best == null or scene.priority > best.priority or (scene.priority == best.priority and scene.slug < best.slug):
 			best = scene

@@ -2,6 +2,8 @@ class_name EditorTools
 extends VBoxContainer
 
 signal message(text: String)
+## O catálogo dos NPCs mudou (a aparência de um NPC pessoa): o mapa os desenha de novo.
+signal npcs_redrawn
 signal brush_changed
 signal edited(step: EditorHistory.Step, merge: bool)
 
@@ -317,6 +319,7 @@ func _init() -> void:
 	_npc_section = npcs_box.get_parent()
 	npc_panel = NpcPanel.new()
 	npc_panel.edited.connect(func(step: EditorHistory.Step, merge: bool) -> void: edited.emit(step, merge))
+	npc_panel.looks_changed.connect(func() -> void: npcs_redrawn.emit())
 	npcs_box.add_child(npc_panel)
 
 	var scenes_box := _section("Cenas")

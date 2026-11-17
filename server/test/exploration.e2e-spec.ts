@@ -84,13 +84,15 @@ describe('Rota do mapa de exploração (e2e)', () => {
     expect((body as { message: string }).message).toBe(NO_PLAYER);
   });
 
-  it('sem equipe, dá 409', async () => {
+  it('sem equipe, a zona dá 409 (liora-intro/01)', async () => {
     const user = await newUser();
     await user.create().expect(201);
 
     const { body } = await user.explore().expect(409);
 
-    expect((body as { message: string }).message).toBe(NO_PLAYER);
+    expect((body as { message: string }).message).toBe(
+      'Escolha seu primeiro Ecobeast antes de viajar.',
+    );
   });
 
   it('devolve um mapa no formato do contrato', async () => {

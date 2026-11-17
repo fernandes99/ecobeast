@@ -2,6 +2,7 @@ class_name ApiGameService
 extends GameService
 
 const ME_PATH := "/v1/me"
+const NAME_PATH := "/v1/me/name"
 const STARTER_PATH := "/v1/me/starter"
 const CREATURE_PATH := "/v1/me/creatures/%s"
 const APPEARANCE_PATH := "/v1/me/appearance"
@@ -33,8 +34,14 @@ func get_player() -> Result:
 	return _player_result(await Api.request(HTTPClient.METHOD_GET, ME_PATH, null, true))
 
 
+## Sem nome, o Domador nasce sem nome, e a introdução o nomeia (liora-intro/01).
 func create_player(raw_name: String) -> Result:
-	return _player_result(await Api.request(HTTPClient.METHOD_POST, ME_PATH, {"name": raw_name}, true))
+	var body := {} if raw_name.is_empty() else {"name": raw_name}
+	return _player_result(await Api.request(HTTPClient.METHOD_POST, ME_PATH, body, true))
+
+
+func set_tamer_name(raw_name: String) -> Result:
+	return _player_result(await Api.request(HTTPClient.METHOD_PUT, NAME_PATH, {"name": raw_name}, true))
 
 
 func choose_starter(species_id: int) -> Result:

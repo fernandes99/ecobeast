@@ -9,8 +9,15 @@ const ACTION_TINT_ALPHA := 0.45
 const ACTION_SCREENS: Dictionary[String, StringName] = {
 	"refuge": &"heal_station",
 	"shop": &"shop",
+	"travel": &"travel",
 }
-const MAP_MARKER_ACTIONS: Array[String] = ["refuge", "shop"]
+const MAP_MARKER_ACTIONS: Array[String] = ["refuge", "shop", "travel"]
+const MENU_ICON := "res://ui/icons/person.svg"
+## Sem equipe, em Liora (liora-intro/03).
+const NO_TEAM_TRAVEL_TEXT := "Você precisa de um Ecobeast para viajar."
+const NO_TEAM_HEAL_TEXT := "Você ainda não tem Ecobeasts para cuidar."
+## Na criação, o Domador fica no meio da parte de cima, acima do painel.
+const CREATOR_CENTER := 0.24
 const NOTHING_HERE_TEXT := "Nada por aqui."
 const NO_PATH_TEXT := "Não dá para chegar lá."
 ## Encostado numa peça: a até isto das linhas dela, em pixels da arte (free-objects/03).
@@ -101,6 +108,9 @@ var _story_test := false
 var _area_scene: StoryScene = null
 ## O ponto da arte no centro da tela; INF é o Domador.
 var _camera_focus := Vector2.INF
+## A altura da tela onde o Domador fica, de 0 a 1 (a criação o sobe).
+var _center_ratio := 0.5
+var _creating := false
 var _followers: Array[NpcSprite] = []
 ## Os hexágonos por onde o Domador passou, do mais recente ao mais antigo.
 var _trail: Array[Vector2i] = []
@@ -152,13 +162,19 @@ func setup(params: Dictionary) -> void:
 func _ready() -> void:
 	if Session.player != null:
 		_marker.set_appearance(Session.player.appearance)
+	Session.player_changed.connect(_refresh_team_controls)
 	_map_view.zoom_level = ViewSettings.explore_zoom()
 	_pinch.pinch_started.connect(func(_center: Vector2) -> void: _pinch_start_zoom = _map_view.zoom_level)
 	_pinch.pinched.connect(func(ratio: float, _center: Vector2) -> void: _set_zoom(roundi(_pinch_start_zoom * ratio)))
 	_map_area.gui_input.connect(_on_map_input)
 	_encounter_button.pressed.connect(_search)
 	_bag_button.pressed.connect(Router.push.bind(&"bag"))
-	_back_button.pressed.connect(Router.back)
+	if _at_home():
+		_back_button.text = "Menu"
+		_back_button.icon = load(MENU_ICON) as Texture2D
+		_back_button.pressed.connect(_open_menu)
+	else:
+		_back_button.pressed.connect(_leave)
 	_debug_button.pressed.connect(_toggle_debug_menu)
 	_debug_zoom_button.pressed.connect(_toggle_whole_map)
 	_debug_forget_button.pressed.connect(_forget_island)
@@ -222,7 +238,33 @@ func handle_back() -> bool:
 	if _island_map.visible:
 		_island_map.close_panel()
 		return true
-	return _loading or _challenger != null or _talking != null or _story.playing
+	if _loading or _challenger != null or _talking != null or _story_busy():
+		return true
+	if _at_home():
+		_open_menu()
+		return true
+	if not _story_test:
+		_leave()
+		return true
+	return false
+
+
+## Em casa, o Voltar vira o menu do Domador (home-island/02); o teste de cena do F2 sai como sempre.
+func _at_home() -> bool:
+	return Home.is_home(_island_id) and not _story_test
+
+
+## Fora de casa, sair é voltar para ela (home-island/03); o teste de cena volta ao F2.
+func _leave() -> void:
+	if _story_test:
+		Router.back()
+	elif not _back_button.disabled:
+		Home.go()
+
+
+func _open_menu() -> void:
+	if not _back_button.disabled:
+		Router.push(&"hub")
 
 
 func _exit_tree() -> void:
@@ -277,6 +319,8 @@ func _begin() -> void:
 		_fill_debug_species()
 	# O botão de debug muda a altura do painel.
 	_fit_view.call_deferred()
+	Story.begin_entry()
+	_refresh_team_controls()
 	_start_story.call_deferred()
 
 
@@ -295,7 +339,7 @@ func _input(event: InputEvent) -> void:
 
 ## O mapa acima do painel de botões, quando o toque nele valeria; senão, nenhuma.
 func _zoom_area() -> Rect2:
-	if _map == null or _showing_whole_map or _challenger != null or _talking != null or _island_map.visible or _story.playing:
+	if _map == null or _showing_whole_map or _challenger != null or _talking != null or _island_map.visible or _story_busy():
 		return Rect2()
 	var top := _map_area.get_global_rect().position
 	return Rect2(top, Vector2(_map_area.size.x, _controls_panel.get_global_rect().position.y - top.y))
@@ -322,7 +366,7 @@ func _on_map_input(event: InputEvent) -> void:
 
 
 func _tap(point: Vector2) -> void:
-	if _map == null or _showing_whole_map or _challenger != null or _talking != null or _island_map.visible or _story.playing:
+	if _map == null or _showing_whole_map or _challenger != null or _talking != null or _island_map.visible or _story_busy():
 		return
 	var art_point := (point - _map_view.position) / _map_view.pixel_scale()
 	if _walking:
@@ -407,7 +451,7 @@ func _walk(route: PackedVector2Array) -> void:
 			_discover()
 			_refresh_wild_sprites()
 			_lead_followers(origin)
-			if not _story.playing:
+			if not _story_busy():
 				tamer = _map.tamer_at(coord)
 				_area_scene = Story.scene_for_tile(_map.island_id, coord)
 				if _area_scene != null:
@@ -421,7 +465,7 @@ func _walk(route: PackedVector2Array) -> void:
 	if _next_point == null or tamer != null:
 		_marker.play_idle()
 	_walking = false
-	if _story.playing:
+	if _story_busy():
 		_stop_walk = false
 		_next_point = null
 		return
@@ -514,7 +558,7 @@ func _clear_route() -> void:
 
 
 func _search() -> void:
-	if _walking or _challenger != null:
+	if _walking or _challenger != null or not _has_team():
 		return
 	if _map.has_creature(_player_coord):
 		_open_battle({"coord": _player_coord}, &"wild")
@@ -672,6 +716,9 @@ func _run_action_type(type_id: int) -> void:
 		return
 	var type := GameData.get_row("action_types", type_id)
 	var screen: StringName = ACTION_SCREENS.get(str(type.get("slug", "")), &"")
+	if not _has_team() and (screen == &"travel" or screen == &"heal_station"):
+		_show_message(NO_TEAM_TRAVEL_TEXT if screen == &"travel" else NO_TEAM_HEAL_TEXT, &"SecondaryLabel")
+		return
 	if screen != &"":
 		_debug_menu.hide()
 		Router.push(screen)
@@ -687,10 +734,9 @@ func _challenge(tamer: MapTamer) -> void:
 
 func _add_npcs() -> void:
 	for npc: MapNpc in _map.npcs:
-		var slug := str(GameData.get_npc(npc.npc_id).get("sprite", ""))
-		if not CreatureSprite.has_sheets(slug):
+		var sprite := NpcSprite.make(npc)
+		if sprite == null:
 			continue
-		var sprite := NpcSprite.new(npc, slug)
 		sprite.place_on(_map_view, _map)
 		sprite.scale = _marker.scale
 		_npc_sprites.append(sprite)
@@ -1172,9 +1218,13 @@ func _refresh_lights() -> void:
 
 ## Parte do centro já arredondado: em uma tela de tamanho ímpar, ele cai no meio de
 ## um pixel, e arredondar depois da conta deixaria o Domador fora do hexágono.
+func _screen_center() -> Vector2:
+	return Vector2(size.x / 2.0, size.y * _center_ratio)
+
+
 func _player_centered_position() -> Vector2:
 	var focus := _camera_focus if _camera_focus.is_finite() else _player_art_point()
-	return _map_view.snapped_to_pixels(size / 2.0) - focus * _map_view.pixel_scale()
+	return _map_view.snapped_to_pixels(_screen_center()) - focus * _map_view.pixel_scale()
 
 
 ## Sempre em pixels reais inteiros, para a pixel art não borrar no caminho. O Domador
@@ -1184,7 +1234,7 @@ func _move_map(value: Vector2) -> void:
 	if _camera_focus.is_finite():
 		_marker.position = _player_art_point()
 	else:
-		_marker.position = (_map_view.snapped_to_pixels(size / 2.0) - _map_view.position) / _map_view.pixel_scale()
+		_marker.position = (_map_view.snapped_to_pixels(_screen_center()) - _map_view.position) / _map_view.pixel_scale()
 	_sync_view_layers()
 
 
@@ -1221,7 +1271,8 @@ func _start_story() -> void:
 	if _map == null or _map.island_id <= 0:
 		return
 	if _story_test and Story.is_testing():
-		await _story.play(Story.test_scene())
+		if _playable(Story.test_scene()):
+			await _story.play(Story.test_scene())
 		Story.end_test()
 		_story_test = false
 		return
@@ -1233,18 +1284,55 @@ func _start_story() -> void:
 
 
 func _play_scene(scene: StoryScene, touched: NpcSprite = null) -> void:
-	if _story.playing or scene == null:
+	if _story_busy() or scene == null or not _playable(scene):
 		return
 	await _story.play(scene, touched)
 	_play_auto()
 
 
 func _play_auto() -> void:
-	if _map == null or _story.playing:
+	if _map == null or _story_busy():
 		return
 	var scene := Story.scene_for_auto(_map.island_id)
 	if scene != null:
+		Story.note_auto_played(scene)
 		_play_scene(scene)
+	elif Home.is_home(_map.island_id) and Session.player != null and not Session.player.has_name():
+		_open_creation()
+
+
+## Os passos da introdução só tocam na ilha casa; fora dela, a cena não toca.
+func _playable(scene: StoryScene) -> bool:
+	var errors := StoryValidator.home_errors(scene, Session.home_island_id)
+	for error: String in errors:
+		push_warning(error)
+	return errors.is_empty()
+
+
+func _story_busy() -> bool:
+	return _story.playing or _creating
+
+
+func _has_team() -> bool:
+	return Session.player != null and Session.player.has_starter()
+
+
+## Sem equipe (liora-intro/03): sem Procurar e sem o Menu; voltam quando o inicial chega.
+func _refresh_team_controls() -> void:
+	var team := _has_team()
+	_encounter_button.visible = team
+	if _at_home():
+		_back_button.visible = team
+
+
+## Na casa sem nome e sem cena para dar o nome, a criação abre sozinha.
+func _open_creation() -> void:
+	_creating = true
+	story_began()
+	await story_create_tamer()
+	_creating = false
+	story_ended()
+	_play_auto()
 
 
 func _show_debug_scenes() -> void:
@@ -1272,7 +1360,7 @@ func _show_debug_scenes() -> void:
 ## Toca a cena sem gravar nada, com os Marcos que ela exige (story/02, RF-15).
 func _debug_play_scene(scene: StoryScene) -> void:
 	_debug_menu.hide()
-	if _story.playing or _walking:
+	if _story_busy() or _walking:
 		return
 	Story.begin_test(scene, scene.requires)
 	await _story.play(scene)
@@ -1304,14 +1392,13 @@ func story_island_npc(npc_id: int, touched: NpcSprite) -> NpcSprite:
 
 
 func story_add_actor(npc_id: int, coord: Variant) -> NpcSprite:
-	var slug := str(GameData.get_npc(npc_id).get("sprite", ""))
-	if not coord is Vector2i or not CreatureSprite.has_sheets(slug) or not _map.has(coord):
+	if not coord is Vector2i or not NpcSprite.can_draw(npc_id) or not _map.has(coord):
 		return null
 	var npc := MapNpc.new()
 	npc.npc_id = npc_id
 	npc.coord = coord
 	npc.still = true
-	var sprite := NpcSprite.new(npc, slug)
+	var sprite := NpcSprite.make(npc)
 	sprite.place_on(_map_view, _map)
 	sprite.scale = _marker.scale
 	return sprite
@@ -1406,8 +1493,35 @@ func _set_camera_focus(point: Vector2) -> void:
 	_move_map(_player_centered_position())
 
 
-func story_open_screen(screen: StringName) -> void:
-	Router.push(screen)
+## O passo `create_tamer`: a criação por cima do mapa, com o Domador maior e acima do painel.
+func story_create_tamer() -> void:
+	var panel := TamerCreatorPanel.new()
+	panel.appearance_changed.connect(_marker.set_appearance)
+	add_child(panel)
+	var zoom := _map_view.zoom_level
+	_map_view.zoom_level = HexMapView.MAX_ZOOM
+	_center_ratio = CREATOR_CENTER
+	_fit_view()
+	await panel.done
+	panel.queue_free()
+	_map_view.zoom_level = zoom
+	_center_ratio = 0.5
+	if Session.player != null:
+		_marker.set_appearance(Session.player.appearance)
+	_refresh_wild_sprites()
+	_fit_view()
+
+
+## O passo `choose_starter`: a escolha do inicial, sem Voltar; quem já tem inicial pula.
+func story_choose_starter() -> void:
+	if _has_team():
+		return
+	await story_open_screen(&"starter_select", {"story": true})
+	_refresh_team_controls()
+
+
+func story_open_screen(screen: StringName, params: Dictionary = {}) -> void:
+	Router.push(screen, params)
 	await get_tree().process_frame
 	while not is_visible_in_tree():
 		await visibility_changed

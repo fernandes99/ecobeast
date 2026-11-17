@@ -13,14 +13,13 @@ const SCREENS: Dictionary[StringName, String] = {
 	&"exploration": "res://screens/exploration/exploration_screen.tscn",
 	&"heal_station": "res://screens/heal_station/heal_station_screen.tscn",
 	&"hub": "res://screens/hub/hub_screen.tscn",
-	&"islands": "res://screens/islands/islands_screen.tscn",
 	&"login": "res://screens/login/login_screen.tscn",
 	&"placeholder": "res://screens/placeholder/placeholder_screen.tscn",
 	&"shop": "res://screens/shop/shop_screen.tscn",
 	&"starter_select": "res://screens/starter_select/starter_select_screen.tscn",
 	&"storage": "res://screens/storage/storage_screen.tscn",
 	&"team": "res://screens/team/team_screen.tscn",
-	&"title": "res://screens/title/title_screen.tscn",
+	&"travel": "res://screens/travel/travel_screen.tscn",
 }
 
 var _host: Control

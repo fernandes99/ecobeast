@@ -191,6 +191,10 @@ func set_draft(draft: IslandDraft) -> void:
 	_open_scene(scenes[0].slug if not scenes.is_empty() else "")
 
 
+## A ilha aberta é a casa do jogador: só nela valem os passos da introdução (liora-intro/03).
+var home := false
+
+
 func set_published(published: bool) -> void:
 	_published = published
 	_refresh()
@@ -334,6 +338,10 @@ func save() -> void:
 	_slug = _scene.slug
 	_fill_list()
 	_refresh()
+	var outside := StoryValidator.home_errors(_scene, _scene.island_id if home else 0)
+	if not outside.is_empty():
+		message.emit("Cena salva, mas: " + outside[0], true)
+		return
 	message.emit("Cena salva em story/scenes/%s.json." % _scene.slug, false)
 
 

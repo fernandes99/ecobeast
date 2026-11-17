@@ -5,6 +5,9 @@ const CATALOG_WRITERS = [
   'test/skills-editor.e2e-spec.ts',
   'test/prop-types-editor.e2e-spec.ts',
   'test/day-phase-spawns.e2e-spec.ts',
+  'test/npcs-editor.e2e-spec.ts',
+  // Liga e desliga a ilha casa, que é uma só para o banco inteiro.
+  'test/home-island.e2e-spec.ts',
 ];
 
 export default defineConfig({
@@ -24,7 +27,7 @@ export default defineConfig({
     // Os e2e falam com o Supabase pela rede.
     testTimeout: 30_000,
     hookTimeout: 30_000,
-    // Os editores de Técnicas e de tipos de peça e o teste das partes do dia gravam no catálogo: rodam depois dos que o leem.
+    // Os editores de Técnicas e de tipos de peça e o teste das partes do dia gravam no catálogo, e o da casa troca a ilha casa: rodam depois dos que leem.
     projects: [
       {
         extends: true,

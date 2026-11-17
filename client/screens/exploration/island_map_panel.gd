@@ -16,11 +16,12 @@ const BACKDROP_ALPHA := 0.92
 const FRAME_BORDER := 5
 const ZOOM_BUTTON_SIZE := 56.0
 const ZOOM_BUTTON_MARGIN := 12.0
-const LEGEND_KINDS: Array[StringName] = [&"pin", &"refuge", &"shop", &"npc"]
+const LEGEND_KINDS: Array[StringName] = [&"pin", &"refuge", &"shop", &"travel", &"npc"]
 const LEGEND_NAMES: Dictionary[StringName, String] = {
 	&"pin": "Você",
 	&"refuge": "Refúgio",
 	&"shop": "Loja",
+	&"travel": "Viagem",
 	&"npc": "NPC",
 }
 

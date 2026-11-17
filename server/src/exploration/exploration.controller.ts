@@ -30,7 +30,11 @@ import {
   StartExplorationBodyDto,
 } from './exploration.dto.js';
 import { ISLAND_NOT_FOUND } from '../islands/islands.service.js';
-import { ExplorationService, NO_PLAYER } from './exploration.service.js';
+import {
+  ExplorationService,
+  NO_PLAYER,
+  NO_TEAM,
+} from './exploration.service.js';
 
 const CLOSED =
   '`ENABLE_TEST_BATTLE` desligada, ou sem exploração: "' + NO_EXPLORATION + '"';
@@ -73,17 +77,15 @@ export class ExplorationController {
     description: `A ilha não existe ou nunca foi publicada: "${ISLAND_NOT_FOUND}"`,
   })
   @ApiConflictResponse({
-    description: `Sem Domador ou sem equipe: "${NO_PLAYER}"`,
+    description:
+      `Sem Domador: "${NO_PLAYER}"; sem equipe, fora da ilha casa: "${NO_TEAM}". ` +
+      'Sem equipe, a ilha casa abre (é onde a introdução escolhe o primeiro Ecobeast).',
   })
   start(
     @CurrentUser() userId: string,
     @Body() body: StartExplorationBodyDto,
   ): Promise<ExplorationResponseDto> {
-    return this.exploration.start(
-      userId,
-      body?.island_id,
-      body?.debug_minute,
-    );
+    return this.exploration.start(userId, body?.island_id, body?.debug_minute);
   }
 
   @Post('spawns')

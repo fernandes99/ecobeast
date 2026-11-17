@@ -10,6 +10,11 @@ export class PlayerIslandDto {
     example: 'Ilha das Brumas',
   })
   name: string;
+
+  @ApiProperty({
+    description: 'É a casa do jogador, onde o jogo abre (no máximo uma).',
+  })
+  home: boolean;
 }
 
 export class PlayerIslandsResponseDto {

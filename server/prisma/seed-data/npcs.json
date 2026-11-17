@@ -4,13 +4,44 @@
 		"slug": "village_ruvo",
 		"name": "Ruvo da vila",
 		"description": "Mora na vila e conhece todo mundo.",
-		"sprite": "ruvo"
+		"sprite": "ruvo",
+		"body_type_id": null,
+		"skin_palette_id": null
 	},
 	{
 		"id": 2,
 		"slug": "guard_ruvak",
 		"name": "Ruvak, o guardião",
 		"description": "Vigia a entrada da vila.",
-		"sprite": "ruvak"
+		"sprite": "ruvak",
+		"body_type_id": null,
+		"skin_palette_id": null
+	},
+	{
+		"id": 3,
+		"slug": "grandpa",
+		"name": "Avô",
+		"description": "O avô do Domador, que mora na Vila Raiz.",
+		"sprite": null,
+		"body_type_id": 1,
+		"skin_palette_id": 4
+	},
+	{
+		"id": 4,
+		"slug": "mira",
+		"name": "Mira",
+		"description": "Amiga de infância do Domador, de volta do Instituto Meridian.",
+		"sprite": null,
+		"body_type_id": 2,
+		"skin_palette_id": 1
+	},
+	{
+		"id": 5,
+		"slug": "refuge_keeper",
+		"name": "Responsável do Refúgio",
+		"description": "Cuida do Refúgio da Vila Raiz e dos Ecobeasts jovens.",
+		"sprite": null,
+		"body_type_id": 1,
+		"skin_palette_id": 6
 	}
 ]

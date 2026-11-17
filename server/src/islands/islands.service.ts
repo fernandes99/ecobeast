@@ -25,13 +25,32 @@ export interface PublishedIsland {
 export class IslandsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async listPublished(): Promise<{ id: number; name: string }[]> {
+  async listPublished(): Promise<
+    { id: number; name: string; home: boolean }[]
+  > {
     const maps = await this.prisma.islandMap.findMany({
       where: { kind: PUBLISHED },
       orderBy: { islandId: 'asc' },
-      select: { islandId: true, name: true },
+      select: {
+        islandId: true,
+        name: true,
+        island: { select: { isHome: true } },
+      },
     });
-    return maps.map(({ islandId, name }) => ({ id: islandId, name }));
+    return maps.map(({ islandId, name, island }) => ({
+      id: islandId,
+      name,
+      home: island.isHome,
+    }));
+  }
+
+  /** O id da casa do jogador, ou nulo sem casa (home-island). */
+  async homeId(): Promise<number | null> {
+    const home = await this.prisma.island.findFirst({
+      where: { isHome: true },
+      select: { id: true },
+    });
+    return home?.id ?? null;
   }
 
   async readPublished(islandId: number): Promise<PublishedIsland | null> {

@@ -5,11 +5,15 @@ extends VBoxContainer
 
 signal edited(step: EditorHistory.Step, merge: bool)
 signal selection_changed(index: int)
+## A aparência de um NPC pessoa foi salva, e o catálogo veio de novo (liora-intro/02).
+signal looks_changed
 
 const ICON_SCALE := 3
 const DIALOGUE_HEIGHT := 140.0
 const NO_ACTION := 0
 const DIALOGUE_STEP := "Diálogo do NPC"
+const APPEARANCE_SCREEN := "res://screens/appearance/appearance_screen.tscn"
+const APPEARANCE_WINDOW_SIZE := Vector2i(540, 960)
 
 var npc_id := 0
 var selected := -1
@@ -24,6 +28,9 @@ var _still_button: Button
 var _mark_button: Button
 var _dialogue: TextEdit
 var _action_option: OptionButton
+var _appearance_button: Button
+var _list: VBoxContainer
+var _group := ButtonGroup.new()
 
 
 func _init() -> void:
@@ -32,24 +39,10 @@ func _init() -> void:
 	hint.text = "NPC novo:"
 	hint.add_theme_color_override(&"font_color", UiPalette.TEXT_SECONDARY)
 	add_child(hint)
-	var list := VBoxContainer.new()
-	list.add_theme_constant_override(&"separation", 6)
-	add_child(list)
-	var group := ButtonGroup.new()
-	for row: Dictionary in GameData.get_rows("npcs"):
-		var id := int(row.get("id", 0))
-		var slug := str(row.get("sprite", ""))
-		var button := EditorTools.tool_button("%s\n%s" % [row.get("name", ""), row.get("description", "")], group)
-		button.icon = _icon(slug)
-		button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		button.disabled = button.icon == null
-		if button.disabled:
-			button.tooltip_text = "Sem as folhas assets/creatures/%s/explore/idle.png e walk.png." % slug
-		button.pressed.connect(_pick_npc.bind(id))
-		list.add_child(button)
-		_npc_buttons[id] = button
-		if npc_id == 0 and not button.disabled:
-			npc_id = id
+	_list = VBoxContainer.new()
+	_list.add_theme_constant_override(&"separation", 6)
+	add_child(_list)
+	_build_list()
 
 	_selected_box = VBoxContainer.new()
 	_selected_box.add_theme_constant_override(&"separation", 6)
@@ -90,6 +83,13 @@ func _init() -> void:
 	_dialogue.text_changed.connect(_on_dialogue_changed)
 	_selected_box.add_child(_dialogue)
 
+	_appearance_button = Button.new()
+	_appearance_button.text = "Aparência"
+	_appearance_button.tooltip_text = "Veste o NPC pessoa: o corpo, a pele, as peças e as cores. Vale para ele em todas as ilhas."
+	_appearance_button.focus_mode = Control.FOCUS_NONE
+	_appearance_button.pressed.connect(_open_appearance)
+	_selected_box.add_child(_appearance_button)
+
 	var action_row := HBoxContainer.new()
 	_selected_box.add_child(action_row)
 	var action_label := Label.new()
@@ -111,6 +111,25 @@ func _init() -> void:
 	delete.pressed.connect(delete_selected)
 	_selected_box.add_child(delete)
 	refresh()
+
+
+func _build_list() -> void:
+	for child: Node in _list.get_children():
+		child.queue_free()
+	_npc_buttons.clear()
+	for row: Dictionary in GameData.get_rows("npcs"):
+		var id := int(row.get("id", 0))
+		var button := EditorTools.tool_button("%s\n%s" % [row.get("name", ""), row.get("description", "")], _group)
+		button.icon = _icon(id)
+		button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		button.disabled = button.icon == null
+		if button.disabled:
+			button.tooltip_text = "Sem as folhas assets/creatures/%s/explore/idle.png e walk.png." % NpcSprite.slug_of(id)
+		button.pressed.connect(_pick_npc.bind(id))
+		_list.add_child(button)
+		_npc_buttons[id] = button
+		if npc_id == 0 and not button.disabled:
+			npc_id = id
 
 
 func set_draft(draft: IslandDraft) -> void:
@@ -139,6 +158,7 @@ func refresh() -> void:
 	_selected_box.visible = true
 	var npc: Dictionary = _draft.npcs[selected]
 	var row := GameData.get_npc(int(npc.get("npc_id", 0)))
+	_appearance_button.visible = TamerAppearance.for_npc(int(npc.get("npc_id", 0))) != null
 	var coord := _draft.npc_coord(selected)
 	var walk := _draft.npc_tiles(selected).size() + 1
 	_selected_label.text = "%s  ·  (%d, %d)  ·  passeio de %d hexágonos" % [row.get("name", "?"), coord.x, coord.y, walk]
@@ -235,11 +255,38 @@ func _on_action_changed(item: int) -> void:
 	edited.emit(step, false)
 
 
-## O primeiro quadro parado, só a parte desenhada, ampliado em pixels inteiros.
-static func _icon(slug: String) -> Texture2D:
-	var frame := NpcSprite.first_frame(slug)
+## A tela Aparência no modo NPC, numa janela por cima do editor.
+func _open_appearance() -> void:
+	if _draft == null or selected < 0:
+		return
+	var id := int(_draft.npcs[selected].get("npc_id", 0))
+	var window := Window.new()
+	window.title = "Aparência de %s" % GameData.get_npc(id).get("name", "")
+	window.size = APPEARANCE_WINDOW_SIZE
+	window.exclusive = true
+	var screen: Control = (load(APPEARANCE_SCREEN) as PackedScene).instantiate()
+	screen.call(&"setup", {"npc_id": id})
+	screen.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	window.add_child(screen)
+	screen.connect(&"closed", func(saved: bool) -> void:
+		window.queue_free()
+		if saved:
+			_build_list()
+			refresh()
+			looks_changed.emit())
+	window.close_requested.connect(window.queue_free)
+	add_child(window)
+	window.popup_centered()
+
+
+## O primeiro quadro parado, só a parte desenhada, ampliado em pixels inteiros; a pessoa
+## usa o ícone de pessoa.
+static func _icon(id: int) -> Texture2D:
+	var frame := NpcSprite.icon_frame(id)
 	if frame == null:
 		return null
+	if TamerAppearance.for_npc(id) != null:
+		return frame
 	var image := frame.get_image()
 	var used := image.get_used_rect()
 	if used.has_area():

@@ -5,6 +5,7 @@ const ISLANDS_PATH := "/v1/editor/islands"
 const GENERATOR_PATH := "/v1/editor/map-generator"
 const SKILLS_PATH := "/v1/editor/skills"
 const PROP_TYPES_PATH := "/v1/editor/prop-types"
+const NPCS_PATH := "/v1/editor/npcs"
 const TIMEOUT_SECONDS := 60.0
 const NOT_FOUND := 404
 const FORBIDDEN := 403
@@ -28,6 +29,14 @@ static func save_island(id: int, draft: Dictionary) -> ApiResponse:
 
 static func publish_island(id: int) -> ApiResponse:
 	return await _call(HTTPClient.METHOD_POST, "%s/%d/publish" % [ISLANDS_PATH, id])
+
+
+static func set_island_home(id: int, home: bool) -> ApiResponse:
+	return await _call(HTTPClient.METHOD_PUT, "%s/%d/home" % [ISLANDS_PATH, id], {"home": home})
+
+
+static func set_npc_appearance(id: int, appearance: Dictionary) -> ApiResponse:
+	return await _call(HTTPClient.METHOD_PUT, "%s/%d/appearance" % [NPCS_PATH, id], appearance)
 
 
 static func delete_island(id: int) -> ApiResponse:

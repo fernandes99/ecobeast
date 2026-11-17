@@ -57,6 +57,8 @@ var _confirm_dialog: ConfirmationDialog
 
 var _draft: IslandDraft = null
 var _status := ""
+var _home := false
+var _home_check: CheckBox
 var _dirty := false
 var _saved_version := 0
 var _generator_loaded := false
@@ -134,11 +136,14 @@ func _open_island(id: int) -> void:
 		return
 	_set_message("")
 	_show_island(IslandDraft.from_dict(response.data), DictFields.get_string(response.data, "status"))
+	_home = DictFields.get_bool(response.data, "home")
+	_update_header()
 
 
 func _show_island(draft: IslandDraft, status: String) -> void:
 	_draft = draft
 	_status = status
+	_home = false
 	_name_edit.text = draft.name if draft != null else ""
 	_name_edit.editable = draft != null
 	_canvas.selected_action = -1
@@ -296,6 +301,21 @@ func publish() -> void:
 	_status = DictFields.get_string(response.data, "status")
 	_update_header()
 	_refresh_list()
+
+
+func _set_home(on: bool) -> void:
+	if _draft == null or _busy:
+		return
+	_busy = true
+	_update_header()
+	var response: ApiResponse = await EditorApi.set_island_home(_draft.id, on)
+	_busy = false
+	if response.ok:
+		_home = DictFields.get_bool(response.data, "home")
+		_set_message("Esta ilha é a casa do jogador." if _home else "Esta ilha deixou de ser a casa do jogador.")
+	else:
+		_set_message(response.error, true)
+	_update_header()
 
 
 func _on_name_changed(text: String) -> void:
@@ -464,6 +484,11 @@ func _update_header() -> void:
 	_save_button.disabled = _draft == null or _busy
 	_publish_button.disabled = _draft == null or _busy or _dirty or _status == "published"
 	_publish_button.tooltip_text = "Salve antes de publicar." if _dirty else "Confere a ilha e a deixa pronta para o jogo."
+	var published := _draft != null and _draft.id > 0 and (_status == "published" or _status == "changed")
+	_home_check.set_pressed_no_signal(_home)
+	_tools.scene_panel.home = _home
+	_home_check.disabled = not published or _busy
+	_home_check.tooltip_text = "O jogo abre nesta ilha. Só uma ilha é a casa." if published else "Publique a ilha primeiro."
 	_undo_button.disabled = _draft == null or not _history.can_undo()
 	_redo_button.disabled = _draft == null or not _history.can_redo()
 
@@ -737,6 +762,11 @@ func _build() -> void:
 	_publish_button.focus_mode = Control.FOCUS_NONE
 	_publish_button.pressed.connect(publish)
 	header.add_child(_publish_button)
+	_home_check = CheckBox.new()
+	_home_check.text = "Casa do jogador"
+	_home_check.focus_mode = Control.FOCUS_NONE
+	_home_check.toggled.connect(_set_home)
+	header.add_child(_home_check)
 
 	_layers_popup = _popup_panel()
 	var layers := VBoxContainer.new()
@@ -770,6 +800,9 @@ func _build() -> void:
 	_tools = EditorTools.new()
 	_tools.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_tools.message.connect(func(text: String) -> void: _set_message(text, true))
+	_tools.npcs_redrawn.connect(func() -> void:
+		_canvas.refresh_npcs()
+		_set_message("Aparência do NPC salva."))
 	_tools.edited.connect(_on_tools_edited)
 	_tools.area_panel.delete_requested.connect(_on_area_delete)
 	_tools.area_panel.focus_changed.connect(_on_area_focus)

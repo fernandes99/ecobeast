@@ -37,6 +37,7 @@ const MAP_AREA_COLORS: Array[Color] = [
 const ACTION_COLORS: Dictionary[StringName, Array] = {
 	&"explore": [Color("#3E9B4F"), Color("#0B4436")],
 	&"islands": [Color("#2C8FA8"), Color("#0B3A47")],
+	&"travel": [Color("#2C8FA8"), Color("#0B3A47")],
 	&"challenge": [Color("#B9473F"), Color("#3A2433")],
 	&"arenas": [Color("#4A52C8"), Color("#1D335F")],
 	&"shop": [Color("#D08A22"), Color("#4D3C28")],

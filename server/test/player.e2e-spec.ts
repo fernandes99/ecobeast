@@ -73,6 +73,8 @@ describe('Rotas do jogador (e2e)', () => {
       id,
       read: () => server().get('/v1/me').set(auth),
       create: (body: object) => server().post('/v1/me').set(auth).send(body),
+      setName: (body: object) =>
+        server().put('/v1/me/name').set(auth).send(body),
       starter: (body: object) =>
         server().post('/v1/me/starter').set(auth).send(body),
       remove: () => server().delete('/v1/me').set(auth),
@@ -99,6 +101,7 @@ describe('Rotas do jogador (e2e)', () => {
       server().delete('/v1/me'),
       server().patch(`/v1/me/creatures/${randomUUID()}`).send({ nickname: '' }),
       server().put('/v1/me/appearance').send(DEFAULT_APPEARANCE),
+      server().put('/v1/me/name').send({ name: 'Ana' }),
     ]);
     for (const res of responses) {
       expect(res.status).toBe(401);
@@ -197,11 +200,70 @@ describe('Rotas do jogador (e2e)', () => {
     expect(res.body.message).toBe(INVALID_NAME);
   });
 
-  it('recusa corpo sem nome ou com nome que não é texto', async () => {
+  it('recusa nome que não é texto', async () => {
     const user = await newUser();
-    const empty = await user.create({}).expect(400);
-    expect(empty.body.message).toBe(INVALID_NAME);
-    await user.create({ name: 123 }).expect(400);
+    const res = await user.create({ name: 123 }).expect(400);
+    expect(res.body.message).toBe(INVALID_NAME);
+  });
+
+  describe('o Domador sem nome (liora-intro/01)', () => {
+    it('sem nome, cria o Domador com o nome vazio', async () => {
+      const user = await newUser();
+      const res = await user.create({}).expect(201);
+      expect(res.body.player.name).toBe('');
+      expect(res.body.player.coins).toBe(1000);
+      const read = await user.read().expect(200);
+      expect(read.body.player.name).toBe('');
+    });
+
+    it('sem corpo, também cria sem nome', async () => {
+      const user = await newUser();
+      const res = await request(app.getHttpServer())
+        .post('/v1/me')
+        .set('Authorization', `Bearer ${await tokens.sign(user.id)}`)
+        .expect(201);
+      expect(res.body.player.name).toBe('');
+    });
+
+    it('dá o nome uma vez, normalizado, e recusa a segunda', async () => {
+      const user = await newUser();
+      await user.create({}).expect(201);
+      const named = await user.setName({ name: '  Ana   Maria ' }).expect(200);
+      expect(named.body.player.name).toBe('Ana Maria');
+      const again = await user.setName({ name: 'Outra' }).expect(409);
+      expect(again.body.message).toBe('Seu Domador já tem nome.');
+      expect((await user.read()).body.player.name).toBe('Ana Maria');
+    });
+
+    it('dois nomes ao mesmo tempo gravam um só', async () => {
+      const user = await newUser();
+      await user.create({}).expect(201);
+      const statuses = (
+        await Promise.all([
+          user.setName({ name: 'Ana' }),
+          user.setName({ name: 'Bia' }),
+        ])
+      )
+        .map((res) => res.status)
+        .sort();
+      expect(statuses).toEqual([200, 409]);
+    });
+
+    it('recusa nome inválido (400) e Domador que não existe (409)', async () => {
+      const user = await newUser();
+      const missing = await user.setName({ name: 'Ana' }).expect(409);
+      expect(missing.body.message).toBe('Crie seu Domador primeiro.');
+      await user.create({}).expect(201);
+      const invalid = await user.setName({ name: 'A' }).expect(400);
+      expect(invalid.body.message).toBe(INVALID_NAME);
+      await user.setName({}).expect(400);
+    });
+
+    it('um Domador criado com nome não pode receber outro', async () => {
+      const user = await newUser();
+      await user.create({ name: 'Ana' }).expect(201);
+      await user.setName({ name: 'Bia' }).expect(409);
+    });
   });
 
   it('aceita letras acentuadas e números no nome', async () => {

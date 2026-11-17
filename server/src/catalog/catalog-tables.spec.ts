@@ -5,9 +5,9 @@ import { CATALOG_TABLES, SEED_DATA_DIR } from './catalog-tables.js';
 describe('CATALOG_TABLES', () => {
   const names = CATALOG_TABLES.map((table) => table.name);
 
-  it('tem as 46 tabelas, sem repetição', () => {
-    expect(names).toHaveLength(46);
-    expect(new Set(names).size).toBe(46);
+  it('tem as 47 tabelas, sem repetição', () => {
+    expect(names).toHaveLength(47);
+    expect(new Set(names).size).toBe(47);
   });
 
   it('casa com os arquivos .json da pasta de dados do seed', () => {
@@ -258,12 +258,13 @@ describe('carga inicial dos tipos de ação (island-villages/01)', () => {
     expect(types.every(({ kind }) => kind === 'open_screen')).toBe(true);
   });
 
-  it('tem Refúgio, Loja, Arena e Casa, nessa ordem', () => {
+  it('tem Refúgio, Loja, Arena, Casa e Viagem, nessa ordem', () => {
     expect(types.map(({ slug, name }) => [slug, name])).toEqual([
       ['refuge', 'Refúgio'],
       ['shop', 'Loja'],
       ['arena', 'Arena'],
       ['house', 'Casa'],
+      ['travel', 'Viagem'],
     ]);
   });
 
@@ -452,17 +453,54 @@ describe('carga inicial das peças soltas (free-props/01, free-objects/04, veget
 describe('carga inicial dos NPCs (island-npcs/01)', () => {
   const read = <T>(file: string): T =>
     JSON.parse(readFileSync(join(SEED_DATA_DIR, file), 'utf8')) as T;
-  const npcs =
-    read<{ id: number; slug: string; sprite: string }[]>('npcs.json');
+  const npcs = read<
+    {
+      id: number;
+      slug: string;
+      sprite: string | null;
+      body_type_id: number | null;
+      skin_palette_id: number | null;
+    }[]
+  >('npcs.json');
   const species = read<{ slug: string }[]>('species.json');
+  const parts = read<{ npc_id: number; appearance_slot_id: number }[]>(
+    'npc_appearance_parts.json',
+  );
 
-  it('tem os 2 NPCs de teste, com o sprite de um Ecobeast', () => {
+  it('tem os 2 NPCs de Ecobeast e as 3 pessoas da introdução (liora-intro/02)', () => {
     expect(npcs.map(({ id, slug }) => [id, slug])).toEqual([
       [1, 'village_ruvo'],
       [2, 'guard_ruvak'],
+      [3, 'grandpa'],
+      [4, 'mira'],
+      [5, 'refuge_keeper'],
     ]);
-    for (const { sprite } of npcs) {
-      expect(species.some(({ slug }) => slug === sprite)).toBe(true);
+  });
+
+  it('cada NPC tem o sprite de um Ecobeast ou o corpo e a pele, nunca os dois', () => {
+    for (const npc of npcs) {
+      if (npc.sprite === null) {
+        expect(npc.body_type_id).not.toBeNull();
+        expect(npc.skin_palette_id).not.toBeNull();
+      } else {
+        expect(species.some(({ slug }) => slug === npc.sprite)).toBe(true);
+        expect(npc.body_type_id).toBeNull();
+        expect(npc.skin_palette_id).toBeNull();
+      }
+    }
+  });
+
+  it('as peças são só dos NPCs pessoas, uma por lugar, com o rosto', () => {
+    const people = npcs.filter(({ sprite }) => sprite === null);
+    for (const { npc_id } of parts) {
+      expect(people.some(({ id }) => id === npc_id)).toBe(true);
+    }
+    for (const { id } of people) {
+      const slots = parts
+        .filter(({ npc_id }) => npc_id === id)
+        .map(({ appearance_slot_id }) => appearance_slot_id);
+      expect(new Set(slots).size).toBe(slots.length);
+      expect(slots).toContain(1);
     }
   });
 });

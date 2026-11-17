@@ -14,8 +14,11 @@ static func has_sheets(slug: String) -> bool:
 	return ResourceLoader.exists(SHEET_PATH % [slug, IDLE]) and ResourceLoader.exists(SHEET_PATH % [slug, WALK])
 
 
+## Sem slug, fica sem folhas: o NPC pessoa desenha um TamerSprite por dentro (liora-intro/02).
 func _init(slug: String) -> void:
 	super()
+	if slug.is_empty():
+		return
 	if not _frames_by_slug.has(slug):
 		_add_sheet(IDLE, SHEET_PATH % [slug, IDLE], IDLE_SECONDS)
 		_add_sheet(WALK, SHEET_PATH % [slug, WALK], WALK_SECONDS)

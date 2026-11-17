@@ -60,6 +60,7 @@ import {
 } from './spawn-data.js';
 
 export const NO_PLAYER = 'Crie seu Domador primeiro.';
+export const NO_TEAM = 'Escolha seu primeiro Ecobeast antes de viajar.';
 const SEED_RANGE = 2 ** 32;
 
 function toMapTamerDto({
@@ -92,7 +93,20 @@ export class ExplorationService {
     debugMinute?: number,
   ): Promise<ExplorationResponseDto> {
     const teamAverage = await partyAverageLevel(this.prisma, userId);
-    if (teamAverage === null) throw new ConflictException(NO_PLAYER);
+    // Sem equipe, só a ilha casa abre: a introdução acontece nela (liora-intro/01).
+    if (teamAverage === null) {
+      const player = await this.prisma.player.findUnique({
+        where: { id: userId },
+        select: { id: true },
+      });
+      if (!player) throw new ConflictException(NO_PLAYER);
+      if (
+        islandId === undefined ||
+        islandId !== (await this.islands.homeId())
+      ) {
+        throw new ConflictException(NO_TEAM);
+      }
+    }
     const minute =
       debugMinute !== undefined &&
       this.config.get('ENABLE_TEST_BATTLE', { infer: true })
@@ -101,6 +115,7 @@ export class ExplorationService {
     if (islandId !== undefined) {
       return this.startIsland(userId, islandId, minute);
     }
+    if (teamAverage === null) throw new ConflictException(NO_TEAM);
 
     const map = generateMap(Math.floor(secureRandom() * SEED_RANGE));
     const [species, texts, born] = await Promise.all([

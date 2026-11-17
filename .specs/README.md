@@ -77,6 +77,8 @@ O Ecobeast é um jogo mobile (Android/iOS, retrato): o cliente em **Godot 4.7 co
 | [story](story/) | As cenas da história: o roteiro no cliente, os Marcos do jogador no servidor, a ferramenta Cenas do F2 e a Linha da história |
 | [browt-line](browt-line/) | O inicial de Flora refeito: Browt, Eagrow e Sowingle, com 4 Técnicas físicas e a marca Espinheiro |
 | [stone-cottage](stone-cottage/) | A casinha de pedra da imagem do dono, como peça solta em 8 cores |
+| [home-island](home-island/) | Liora como a casa do jogador: o app abre nela, o Hub vira o menu do Domador e as viagens saem da ação Viagem |
+| [liora-intro](liora-intro/) | A introdução em Liora: o Domador sem nome, os NPCs pessoas, a criação por cima do mapa, o inicial numa cena e as cenas do roteiro |
 
 As próximas iniciativas estão no [roadmap.md](roadmap.md).
 

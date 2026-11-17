@@ -9,13 +9,18 @@ import { BattleStore } from '../battle/battle.store.js';
 import { CodexService } from '../codex/codex.service.js';
 import { secureRandom } from '../common/secure-random.js';
 import { Env } from '../config/env.js';
-import { appearanceError } from '../domain/appearance/appearance.js';
 import { createCreature } from '../domain/rules/creature-factory.js';
 import { MAX_LEVEL, totalXpForLevel } from '../domain/rules/xp-curve.js';
 import { Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { checkedAppearance } from './appearance-check.js';
 import { loadCreatureBlueprint, newCreatureData } from './creature-params.js';
-import { AppearanceDto, INVALID_NAME, PlayerDto } from './player.dto.js';
+import {
+  AppearanceDto,
+  INVALID_NAME,
+  NAME_TAKEN,
+  PlayerDto,
+} from './player.dto.js';
 import { creatureStats, PLAYER_INCLUDE, toPlayerDto } from './player.mapper.js';
 
 const NAME_PATTERN = /^[\p{L}\p{N} ]{2,16}$/u;
@@ -44,6 +49,12 @@ function normalizeName(raw: string): string {
   return raw.trim().replace(/\s+/g, ' ');
 }
 
+function checkedName(raw: string): string {
+  const name = normalizeName(raw);
+  if (!NAME_PATTERN.test(name)) throw new BadRequestException(INVALID_NAME);
+  return name;
+}
+
 function isUniqueViolation(error: unknown): boolean {
   return (
     error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -68,9 +79,9 @@ export class PlayerService {
     return player ? toPlayerDto(player) : null;
   }
 
-  async create(userId: string, rawName: string): Promise<PlayerDto> {
-    const name = normalizeName(rawName);
-    if (!NAME_PATTERN.test(name)) throw new BadRequestException(INVALID_NAME);
+  /** Sem nome, o Domador nasce com `""`, e a introdução o nomeia (liora-intro/01). */
+  async create(userId: string, rawName?: string): Promise<PlayerDto> {
+    const name = rawName === undefined ? '' : checkedName(rawName);
     try {
       const player = await this.prisma.player.create({
         data: {
@@ -86,6 +97,23 @@ export class PlayerService {
       if (isUniqueViolation(error)) throw new ConflictException(PLAYER_EXISTS);
       throw error;
     }
+  }
+
+  /** Dá o nome uma vez só: o UPDATE só pega quem ainda não tem nome. */
+  async setName(userId: string, rawName: string): Promise<PlayerDto> {
+    const name = checkedName(rawName);
+    const { count } = await this.prisma.player.updateMany({
+      where: { id: userId, name: '' },
+      data: { name },
+    });
+    if (count === 0) {
+      const exists = await this.prisma.player.findUnique({
+        where: { id: userId },
+        select: { id: true },
+      });
+      throw new ConflictException(exists ? NAME_TAKEN : NO_PLAYER);
+    }
+    return (await this.get(userId))!;
   }
 
   async chooseStarter(userId: string, speciesId: number): Promise<PlayerDto> {
@@ -146,38 +174,7 @@ export class PlayerService {
     });
     if (!player) throw new ConflictException(NO_PLAYER);
 
-    const [bodies, slots, parts, palettes] = await Promise.all([
-      this.prisma.bodyType.findMany({ select: { id: true, name: true } }),
-      this.prisma.appearanceSlot.findMany({
-        select: { id: true, name: true, paletteKind: true, required: true },
-      }),
-      this.prisma.appearancePart.findMany({
-        select: {
-          id: true,
-          name: true,
-          appearanceSlotId: true,
-          bodyTypeId: true,
-        },
-      }),
-      this.prisma.palette.findMany({ select: { id: true, kind: true } }),
-    ]);
-    const catalogParts = parts.map(({ appearanceSlotId, ...part }) => ({
-      ...part,
-      slotId: appearanceSlotId,
-    }));
-    const worn = appearance.parts.map(({ part_id, palette_id }) => ({
-      partId: part_id,
-      paletteId: palette_id ?? null,
-    }));
-    const error = appearanceError(
-      {
-        bodyTypeId: appearance.body_type_id,
-        skinPaletteId: appearance.skin_palette_id,
-        parts: worn,
-      },
-      { bodies, slots, parts: catalogParts, palettes },
-    );
-    if (error) throw new BadRequestException(error);
+    const worn = await checkedAppearance(this.prisma, appearance);
 
     await this.prisma.$transaction([
       this.prisma.player.update({
@@ -191,10 +188,9 @@ export class PlayerService {
         where: { playerId: userId },
       }),
       this.prisma.playerAppearancePart.createMany({
-        data: worn.map(({ partId, paletteId }) => ({
+        data: worn.map(({ slotId, partId, paletteId }) => ({
           playerId: userId,
-          appearanceSlotId: catalogParts.find(({ id }) => id === partId)!
-            .slotId,
+          appearanceSlotId: slotId,
           appearancePartId: partId,
           paletteId,
         })),

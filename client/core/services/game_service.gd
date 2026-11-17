@@ -9,6 +9,9 @@ extends RefCounted
 @abstract func create_player(raw_name: String) -> Result
 
 
+@abstract func set_tamer_name(raw_name: String) -> Result
+
+
 @abstract func choose_starter(species_id: int) -> Result
 
 

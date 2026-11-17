@@ -28,6 +28,9 @@ O jogador nunca vê a coluna "Referência": ela só existe para quem implementa 
 | Inicial             | Ecobeast inicial                 | starter                                | `starter_options`                                 |
 | —                   | Cena                             | `StoryScene`\*                         | `res://story/scenes/<slug>.json` (no cliente)     |
 | —                   | Marco (da história)              | `StoryMarks`\*                         | `player_story_marks`                              |
+| —                   | Ilha casa (Liora)                | `Home`\*                               | `islands.is_home`                                 |
+| —                   | Viagem                           | ação `travel`\*                        | `action_types.slug = "travel"`                    |
+| —                   | Menu do Domador                  | `hub`\*                                | `res://screens/hub/`                              |
 
 ## Por que alguns nomes mudaram
 

@@ -33,6 +33,7 @@ import {
   CreatePlayerBodyDto,
   MaybePlayerResponseDto,
   PlayerResponseDto,
+  SetNameBodyDto,
   SetNicknameBodyDto,
 } from './player.dto.js';
 import { CREATURE_NOT_FOUND, PlayerService } from './player.service.js';
@@ -66,7 +67,9 @@ export class PlayerController {
   @ApiOperation({
     summary: 'Criar o Domador',
     description:
-      'Cria o Domador desta conta, no nível 1, com 1000 moedas e sem equipe.',
+      'Cria o Domador desta conta, no nível 1, com 1000 moedas e sem equipe. ' +
+      'Sem `name` (ou sem corpo), ele nasce sem nome (`""`): a introdução de Liora ' +
+      'dá o nome pelo `PUT /v1/me/name`.',
   })
   @ApiCreatedResponse({ type: PlayerResponseDto })
   @ApiBadRequestResponse({
@@ -79,7 +82,28 @@ export class PlayerController {
     @CurrentUser() userId: string,
     @Body() body: CreatePlayerBodyDto,
   ): Promise<PlayerResponseDto> {
-    return { player: await this.players.create(userId, body.name) };
+    return { player: await this.players.create(userId, body?.name) };
+  }
+
+  @Put('name')
+  @ApiOperation({
+    summary: 'Dar o nome ao Domador',
+    description:
+      'Dá o nome ao Domador que nasceu sem nome. Só vale uma vez: renomear não existe.',
+  })
+  @ApiOkResponse({ type: PlayerResponseDto })
+  @ApiBadRequestResponse({
+    description: 'Nome inválido: "Use de 2 a 16 letras, números ou espaços."',
+  })
+  @ApiConflictResponse({
+    description:
+      'Sem Domador: "Crie seu Domador primeiro." Com nome: "Seu Domador já tem nome."',
+  })
+  async setName(
+    @CurrentUser() userId: string,
+    @Body() body: SetNameBodyDto,
+  ): Promise<PlayerResponseDto> {
+    return { player: await this.players.setName(userId, body.name) };
   }
 
   @Post('starter')

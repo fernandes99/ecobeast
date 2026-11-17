@@ -186,7 +186,24 @@ const TABLES := {
 	},
 	"npcs": {
 		"key": ["id"],
-		"columns": {"id": ID, "slug": SLUG, "name": TEXT, "description": TEXT, "sprite": {"type": "string", "pattern": "^[a-z0-9_]+$"}},
+		"columns": {
+			"id": ID,
+			"slug": SLUG,
+			"name": TEXT,
+			"description": TEXT,
+			"sprite": {"type": "string", "nullable": true, "pattern": "^[a-z0-9_]+$"},
+			"body_type_id": {"type": "int", "nullable": true, "fk": "body_types"},
+			"skin_palette_id": {"type": "int", "nullable": true, "fk": "palettes"},
+		},
+	},
+	"npc_appearance_parts": {
+		"key": ["npc_id", "appearance_slot_id"],
+		"columns": {
+			"npc_id": {"type": "int", "fk": "npcs"},
+			"appearance_slot_id": {"type": "int", "fk": "appearance_slots"},
+			"appearance_part_id": {"type": "int", "fk": "appearance_parts"},
+			"palette_id": {"type": "int", "nullable": true, "fk": "palettes"},
+		},
 	},
 	"prop_types": {
 		"key": ["id"],

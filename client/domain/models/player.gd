@@ -20,6 +20,11 @@ func has_starter() -> bool:
 	return not party.is_empty()
 
 
+## O Domador nasce sem nome (`""`) e ganha o nome na introdução (liora-intro/01).
+func has_name() -> bool:
+	return not name.is_empty()
+
+
 func quantity_of(item_id: int) -> int:
 	for slot: InventorySlot in inventory:
 		if slot.item_id == item_id:

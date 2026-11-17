@@ -100,7 +100,7 @@ Uma cena só pode rodar se: a ilha é a da cena, todos os `requires` estão liga
 
 | `type` | Campos | Dispara quando |
 | --- | --- | --- |
-| `auto` | — | o Domador está na ilha e a cena pode rodar: ao entrar na ilha e logo depois de outra cena terminar |
+| `auto` | — | o Domador está na ilha e a cena pode rodar: ao entrar na ilha e logo depois de outra cena terminar. Uma `auto` repetível roda no máximo uma vez por entrada ([liora-intro/03](../liora-intro/03-intro-steps.md), RF-16) |
 | `npc` | `npc_id` | o Domador toca, por perto, num NPC da ilha com esse `npc_id` do catálogo; a cena toma o lugar do diálogo dele. É o `npc_id`, e não o `id` de `map.npcs`, porque esse `id` muda quando a ilha ganha ou perde NPCs numa versão nova |
 | `area` | `tiles`: lista de `{ q, r }` | o Domador termina um passo num desses hexágonos |
 
@@ -129,9 +129,16 @@ Da fase 03 (mapa):
 | `camera` | `q`, `r`, `seconds` | a câmera desliza até o hexágono e fica |
 | `camera_back` | `seconds` | a câmera volta ao Domador |
 | `follow` / `unfollow` | `actor` | o ator passa a seguir o Domador (fica depois da cena, até o `unfollow` ou sair da ilha) |
-| `open_screen` | `screen`: `"appearance"`, `"heal_station"`, `"shop"`, `"team"`, `"bag"` ou `"codex"` | abre a tela por cima da cena (`Router.push`) e espera voltar. O nome e a escolha do inicial ficam de fora: numa ilha o Domador já tem os dois, e a introdução de Liora decide como eles entram numa cena |
+| `open_screen` | `screen`: `"appearance"`, `"heal_station"`, `"shop"`, `"team"`, `"bag"` ou `"codex"` | abre a tela por cima da cena (`Router.push`) e espera voltar. O nome e a escolha do inicial ficam de fora: eles são os passos abaixo |
 
-O texto aceita `{nome}`, o nome do Domador.
+Da [liora-intro/03](../liora-intro/03-intro-steps.md), só nas cenas da ilha casa:
+
+| `type` | Campos | Faz |
+| --- | --- | --- |
+| `create_tamer` | — | abre a criação por cima do mapa (o nome, se falta, e a aparência) e espera o "Pronto" |
+| `choose_starter` | — | abre a escolha do inicial, sem Voltar, e espera a escolha; quem já tem inicial pula |
+
+O texto das falas e das opções aceita `{nome}`, o nome do Domador, e `{forma masculina|forma feminina}`, que segue o corpo dele ([liora-intro](../liora-intro/architecture.md#o-texto-das-falas)).
 
 ### Durante a cena
 

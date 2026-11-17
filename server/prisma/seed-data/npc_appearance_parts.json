@@ -1,0 +1,92 @@
+[
+	{
+		"npc_id": 3,
+		"appearance_slot_id": 1,
+		"appearance_part_id": 1,
+		"palette_id": null
+	},
+	{
+		"npc_id": 3,
+		"appearance_slot_id": 2,
+		"appearance_part_id": 13,
+		"palette_id": 23
+	},
+	{
+		"npc_id": 3,
+		"appearance_slot_id": 3,
+		"appearance_part_id": 17,
+		"palette_id": 22
+	},
+	{
+		"npc_id": 3,
+		"appearance_slot_id": 4,
+		"appearance_part_id": 11,
+		"palette_id": 19
+	},
+	{
+		"npc_id": 3,
+		"appearance_slot_id": 5,
+		"appearance_part_id": 3,
+		"palette_id": 12
+	},
+	{
+		"npc_id": 4,
+		"appearance_slot_id": 1,
+		"appearance_part_id": 2,
+		"palette_id": null
+	},
+	{
+		"npc_id": 4,
+		"appearance_slot_id": 2,
+		"appearance_part_id": 15,
+		"palette_id": 3
+	},
+	{
+		"npc_id": 4,
+		"appearance_slot_id": 3,
+		"appearance_part_id": 16,
+		"palette_id": 24
+	},
+	{
+		"npc_id": 4,
+		"appearance_slot_id": 4,
+		"appearance_part_id": 11,
+		"palette_id": 20
+	},
+	{
+		"npc_id": 4,
+		"appearance_slot_id": 5,
+		"appearance_part_id": 5,
+		"palette_id": 10
+	},
+	{
+		"npc_id": 5,
+		"appearance_slot_id": 1,
+		"appearance_part_id": 1,
+		"palette_id": null
+	},
+	{
+		"npc_id": 5,
+		"appearance_slot_id": 2,
+		"appearance_part_id": 13,
+		"palette_id": 24
+	},
+	{
+		"npc_id": 5,
+		"appearance_slot_id": 3,
+		"appearance_part_id": 16,
+		"palette_id": 16
+	},
+	{
+		"npc_id": 5,
+		"appearance_slot_id": 4,
+		"appearance_part_id": 10,
+		"palette_id": 16
+	},
+	{
+		"npc_id": 5,
+		"appearance_slot_id": 5,
+		"appearance_part_id": 4,
+		"palette_id": 9
+	}
+]

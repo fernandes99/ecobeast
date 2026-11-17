@@ -167,10 +167,11 @@ func refresh_npcs() -> void:
 	if _draft == null:
 		return
 	for npc: MapNpc in _draft.map_npcs():
-		var slug := str(GameData.get_npc(npc.npc_id).get("sprite", ""))
-		if not CreatureSprite.has_sheets(slug) or not _draft.tiles.has(npc.coord):
+		if not _draft.tiles.has(npc.coord):
 			continue
-		var sprite := NpcSprite.new(npc, slug)
+		var sprite := NpcSprite.make(npc)
+		if sprite == null:
+			continue
 		sprite.place_on(_map_view, null)
 		_npc_sprites.append(sprite)
 	_overlay.queue_redraw()
@@ -814,8 +815,7 @@ func _draw_scene_marks(node: Node2D, marks: Dictionary) -> void:
 		_outline(node, coord, UiPalette.ACCENT)
 	for actor: Dictionary in marks.get("actors", []):
 		var coord: Vector2i = actor["coord"]
-		var slug := str(GameData.get_npc(int(actor["npc_id"])).get("sprite", ""))
-		var texture := NpcSprite.first_frame(slug)
+		var texture := NpcSprite.icon_frame(int(actor["npc_id"]))
 		var foot := _screen_origin(coord) + HexMapView.SURFACE_CENTER * _zoom
 		if texture != null:
 			var drawn := texture.get_size() * _zoom

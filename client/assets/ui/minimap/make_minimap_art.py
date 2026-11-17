@@ -24,6 +24,7 @@ CREAM = (246, 236, 214, 255)
 HEART = (214, 64, 80, 255)
 BROWN_LINE = (90, 58, 32, 255)
 INK = (60, 60, 80, 255)
+WOOD = (176, 116, 60, 255)
 
 RING = 64
 HOLE = 48
@@ -158,6 +159,15 @@ def icons():
         "...oo..",
         ".......",
     ], {"o": INK, "w": WHITE, "i": INK})
+    stamp_icon("travel", (7, 7), [
+        "...o...",
+        "...ow..",
+        "...oww.",
+        "...owww",
+        "...o...",
+        "ohhhhho",
+        ".ooooo.",
+    ], {"o": BROWN_LINE, "w": WHITE, "h": WOOD})
 
 
 def stamp_icon(name, size, rows, colors):

@@ -115,7 +115,11 @@ func _boot() -> void:
 func _load_player() -> void:
 	var result: Result = await Session.load_player()
 	if result.ok:
-		_open_first_screen(Session.player)
+		result = await Session.load_home()
+	if result.ok:
+		result = await Home.start()
+	if result.ok:
+		_hide_load_error()
 	elif Session.has_auth_session():
 		_show_load_error(result.error)
 	# Sem sessão, o Api.session_lost já levou à tela de login.
@@ -135,15 +139,6 @@ func _show_load_error(message: String) -> void:
 func _hide_load_error() -> void:
 	%LoadErrorView.visible = false
 	%ScreenHost.visible = true
-
-
-func _open_first_screen(player: Player) -> void:
-	if player == null:
-		Router.go_to(&"title")
-	elif not player.has_starter():
-		Router.go_to(&"starter_select")
-	else:
-		Router.go_to(&"hub")
 
 
 func _show_data_errors(errors: Array[String]) -> void:

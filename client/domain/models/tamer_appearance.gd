@@ -16,6 +16,32 @@ static func standard() -> TamerAppearance:
 	return appearance
 
 
+## A aparência de um NPC pessoa pelo catálogo (liora-intro/02), ou null para um NPC de
+## Ecobeast ou que não existe.
+static func for_npc(npc_id: int) -> TamerAppearance:
+	if npc_id <= 0:
+		return null
+	var npc := GameData.get_npc(npc_id)
+	if npc.get("body_type_id") == null or npc.get("skin_palette_id") == null:
+		return null
+	var appearance := TamerAppearance.new()
+	appearance.body_type_id = int(npc["body_type_id"])
+	appearance.skin_palette_id = int(npc["skin_palette_id"])
+	var rows: Array[Dictionary] = []
+	for row: Dictionary in GameData.get_rows("npc_appearance_parts"):
+		if int(row["npc_id"]) == npc_id:
+			rows.append(row)
+	rows.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return _slot_layer(a) < _slot_layer(b))
+	for row: Dictionary in rows:
+		var palette: Variant = row["palette_id"]
+		appearance.parts.append({"part_id": int(row["appearance_part_id"]), "palette_id": int(palette) if palette != null else -1})
+	return appearance
+
+
+static func _slot_layer(row: Dictionary) -> int:
+	return int(GameData.get_row("appearance_slots", int(row["appearance_slot_id"])).get("layer", 0))
+
+
 func duplicate_appearance() -> TamerAppearance:
 	var copy := TamerAppearance.new()
 	copy.body_type_id = body_type_id
