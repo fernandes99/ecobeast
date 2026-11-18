@@ -1,9 +1,9 @@
 class_name WalkRoute
 extends RefCounted
 
-## Pixels da arte por segundo, medidos com a altura esticada: a 160, um hexágono leva
-## pelo menos 0,34 s em qualquer direção, e o servidor exige 0,3 s.
-const WALK_SPEED := 160.0
+## Pixels da arte por segundo, medidos com a altura esticada: a 130, um hexágono leva
+## pelo menos 0,43 s em qualquer direção, e o servidor exige 0,3 s.
+const WALK_SPEED := 130.0
 ## A grade é achatada (42 de uma linha à outra, contra 55,4 de um hexágono regular de 64).
 const Y_STRETCH := 55.4256 / 42.0
 const SAMPLE_STEP := 4.0
