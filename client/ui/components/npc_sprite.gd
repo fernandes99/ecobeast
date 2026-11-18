@@ -152,6 +152,16 @@ func walk_to(target: Vector2i) -> int:
 	return WALKING
 
 
+## Aparece no hexágono, parado, sem andar (o teleporte, minimap/03).
+func jump_to(target: Vector2i) -> void:
+	_path.clear()
+	coord = target
+	_exact = _view.surface_center(coord)
+	position = _exact.round()
+	_follow_depth()
+	play_idle()
+
+
 func is_walking() -> bool:
 	return not _path.is_empty()
 

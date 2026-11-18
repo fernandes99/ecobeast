@@ -96,6 +96,10 @@ extends RefCounted
 @abstract func debug_tamer(coord: Vector2i, size: int) -> Result
 
 
+## O teleporte de depuração do mapa grande (minimap/03): a posição conferida vira `coord`.
+@abstract func set_exploration_position(coord: Vector2i) -> Result
+
+
 @abstract func evolve(uid: String, accept: bool) -> Result
 
 

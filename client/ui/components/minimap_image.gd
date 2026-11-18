@@ -91,6 +91,10 @@ func art_to_image(flat: Vector2) -> Vector2:
 	return (flat - _origin) / ART_PER_PIXEL
 
 
+func image_to_art(point: Vector2) -> Vector2:
+	return _origin + point * ART_PER_PIXEL
+
+
 ## Uma cópia da imagem de agora (sem janela, a textura não devolve a atualizada).
 func snapshot() -> Image:
 	return _image.duplicate() as Image

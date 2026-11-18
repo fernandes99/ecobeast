@@ -298,6 +298,11 @@ func debug_tamer(coord: Vector2i, size: int) -> Result:
 	return await _service.debug_tamer(coord, size)
 
 
+func set_exploration_position(coord: Vector2i) -> Result:
+	@warning_ignore("redundant_await")
+	return await _service.set_exploration_position(coord)
+
+
 func debug_almost_level_up() -> Result:
 	@warning_ignore("redundant_await")
 	var result: Result = await _service.debug_almost_level_up()

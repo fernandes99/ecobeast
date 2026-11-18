@@ -88,3 +88,4 @@ O desenho técnico compartilhado está no [architecture.md](architecture.md).
 | --- | --- | --- | --- |
 | 1 | [01-minimap](01-minimap.md) | A imagem do mapa descoberto, a arte da moldura e dos ícones e o minimapa redondo no canto da tela de Explorar | concluída (falta o dono conferir) |
 | 2 | [02-island-map](02-island-map.md) | O mapa grande, aberto pelo minimapa, com o zoom, o arrasto, os ícones, a legenda e o Fechar | concluída (falta o dono conferir) |
+| 3 | [03-admin-teleport](03-admin-teleport.md) | O teleporte de depuração: tocar num hexágono do mapa grande leva o Domador para ele, só para quem está em `MAP_EDITOR_USER_IDS` | concluída (falta o dono conferir) |

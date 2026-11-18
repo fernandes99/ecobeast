@@ -1,9 +1,10 @@
-import { Body, Controller, Delete, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Post, Put, UseGuards } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiConflictResponse,
   ApiBadRequestResponse,
   ApiCreatedResponse,
+  ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
@@ -13,6 +14,7 @@ import {
 } from '@nestjs/swagger';
 import { AuthGuard } from '../auth/auth.guard.js';
 import { CurrentUser } from '../auth/current-user.decorator.js';
+import { EditorGuard, NOT_AN_EDITOR } from '../editor/editor.guard.js';
 import {
   INVALID_ENEMY,
   NO_CHALLENGER,
@@ -24,8 +26,11 @@ import {
   DebugSpawnResponseDto,
   DebugTamerBodyDto,
   DebugTamerResponseDto,
+  ExplorationPositionDto,
   ExplorationResponseDto,
+  HexCoordDto,
   INVALID_DEBUG_MINUTE,
+  INVALID_POSITION,
   INVALID_TAMER,
   StartExplorationBodyDto,
 } from './exploration.dto.js';
@@ -144,5 +149,30 @@ export class ExplorationController {
   @ApiNotFoundResponse({ description: CLOSED })
   debugClear(@CurrentUser() userId: string): DebugClearResponseDto {
     return this.exploration.debugClear(userId);
+  }
+
+  @Put('position')
+  @UseGuards(EditorGuard)
+  @ApiOperation({
+    summary: 'Teleporte de depuração',
+    description:
+      'Troca a posição conferida da exploração guardada pelo hexágono dado, ' +
+      'como se o Domador tivesse andado até ele, e o Procurar e o Domador NPC ' +
+      'valem nele na hora. O servidor não confere se o hexágono é andável. Só ' +
+      'para quem está em `MAP_EDITOR_USER_IDS`.',
+  })
+  @ApiOkResponse({ type: HexCoordDto })
+  @ApiBadRequestResponse({ description: `"${INVALID_POSITION}"` })
+  @ApiForbiddenResponse({
+    description: `Quem chama não está em \`MAP_EDITOR_USER_IDS\`: "${NOT_AN_EDITOR}"`,
+  })
+  @ApiNotFoundResponse({
+    description: `Com \`MAP_EDITOR_USER_IDS\` vazia, "Rota não encontrada."; sem exploração: "${NO_EXPLORATION}"`,
+  })
+  setPosition(
+    @CurrentUser() userId: string,
+    @Body() body: ExplorationPositionDto,
+  ): HexCoordDto {
+    return this.exploration.setPosition(userId, body);
   }
 }

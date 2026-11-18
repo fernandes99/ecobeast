@@ -8,6 +8,7 @@ const PortraitScene := preload("res://ui/components/creature_portrait.tscn")
 
 const LOADING_TEXT := "Gerando mapa..."
 const ISLAND_LOADING_TEXT := "Chegando na ilha..."
+const TELEPORT_BLOCKED_TEXT := "Debug: não dá para ir para esse hexágono."
 ## A voz dos Domadores NPC, que não têm NPC no catálogo (dialogue-voices/02).
 const NPC_TAMER_VOICE := "medium"
 const ACTION_TINT_ALPHA := 0.45
@@ -123,6 +124,7 @@ var _creating := false
 var _followers: Array[NpcSprite] = []
 ## Os hexágonos por onde o Domador passou, do mais recente ao mais antigo.
 var _trail: Array[Vector2i] = []
+var _teleporting := false
 var _debug_scenes := VBoxContainer.new()
 
 @onready var _map_area: Control = %MapArea
@@ -216,6 +218,7 @@ func _ready() -> void:
 	resized.connect(_fit_view.call_deferred)
 	_top_row.resized.connect(_fit_island_name)
 	_minimap.tapped.connect(_open_island_map)
+	_island_map.hex_tapped.connect(_teleport)
 	visibility_changed.connect(_on_visibility_changed)
 	WorldClock.sync()
 	_begin()
@@ -657,6 +660,52 @@ func _open_island_map() -> void:
 		_next_point = null
 	_debug_menu.hide()
 	_island_map.open(_minimap_image, _markers, _discovery, _showing_whole_map, _player_point, _map.island_name)
+
+
+## O teleporte de depuração do mapa grande (minimap/03).
+func _teleport(coord: Vector2i) -> void:
+	if _map == null or _teleporting or _story_busy() or _talking != null or _challenger != null:
+		return
+	if not _map.has(coord) or _map.is_blocked_hex(coord) or _map.is_walled_hex(coord):
+		_island_map.close_panel()
+		_show_message(TELEPORT_BLOCKED_TEXT, &"DangerLabel")
+		return
+	_teleporting = true
+	var result: Result = await Session.set_exploration_position(coord)
+	_teleporting = false
+	if not result.ok:
+		_island_map.close_panel()
+		_show_message(result.error, &"DangerLabel")
+		return
+	while _walking:
+		_stop_walk = true
+		await get_tree().process_frame
+	_island_map.close_panel()
+	_clear_route()
+	_next_point = null
+	_npc_target = null
+	_prop_target = -1
+	_player_coord = coord
+	_player_point = HexMapView.flat_center(coord)
+	_shown_rise = _map.rise_at(_player_point)
+	_marker.play_idle()
+	_map_view.set_current(coord)
+	_place_player(0.0)
+	_discover()
+	_refresh_wild_sprites()
+	_place_followers()
+
+
+func _place_followers() -> void:
+	var spots: Array[Vector2i] = []
+	for near: Vector2i in _map.neighbors(_player_coord):
+		if _map.has(near) and not _map.is_blocked_hex(near) and not _map.is_walled_hex(near):
+			spots.append(near)
+	_trail.clear()
+	for index: int in _followers.size():
+		var spot := spots[index % spots.size()] if not spots.is_empty() else _player_coord
+		_followers[index].jump_to(spot)
+		_trail.append(spot)
 
 
 func _rebuild_minimap() -> void:

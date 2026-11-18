@@ -42,6 +42,7 @@ var _wall_cells: Dictionary[Vector2i, Array] = {}
 ## O pé do Domador não chega a menos disto de uma parede, em pixels da arte (free-fences/02).
 const WALL_REACH := 3.0
 const WALL_SAMPLE := 4.0
+const CENTER_REACH := 8.0
 ## A água bloqueia fora do piso das pontes (bridges/04): o segmento é conferido de
 ## tanto em tanto.
 const WATER_SAMPLE := 2.0
@@ -346,6 +347,19 @@ func set_prop_lines(type_lines: Dictionary) -> void:
 		_lines_by_prop.append(world)
 		_prop_lines.append_array(world)
 	_index_walls()
+
+
+## O centro do hexágono a até 8 px de uma parede ou linha de peça, ou dentro de uma linha
+## fechada: a conta do servidor (prop-depth-blocks/02). O teleporte não para ali (minimap/03).
+func is_walled_hex(coord: Vector2i) -> bool:
+	var center := HexMapView.flat_center(coord)
+	for segment: PackedVector2Array in _wall_cells.get(coord, NO_SEGMENTS):
+		if center.distance_to(Geometry2D.get_closest_point_to_segment(center, segment[0], segment[1])) <= CENTER_REACH:
+			return true
+	for line: PackedVector2Array in _prop_lines:
+		if line.size() >= 4 and line[0] == line[line.size() - 1] and Geometry2D.is_point_in_polygon(center, line.slice(0, line.size() - 1)):
+			return true
+	return false
 
 
 func prop_world_lines(index: int) -> Array[PackedVector2Array]:

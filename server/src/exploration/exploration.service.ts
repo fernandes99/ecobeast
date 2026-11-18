@@ -23,6 +23,7 @@ import {
   spawnAreas,
 } from '../domain/islands/area-spawns.js';
 import { minuteOfDay } from '../domain/world-clock/world-clock.js';
+import type { HexCoord } from '../domain/exploration/hex.js';
 import type { TamerSize } from '../domain/tamers/tamer-config.js';
 import {
   type MapTamer,
@@ -298,6 +299,22 @@ export class ExplorationService {
     };
     exploration.tamers.set(tamer.id, tamer);
     return { tamer: toMapTamerDto(tamer) };
+  }
+
+  /**
+   * O teleporte de depuração (minimap/03): a posição vira a conferida agora, e o
+   * Procurar vale nela na hora. O mapa não mora aqui; quem confere se dá para
+   * pisar é o jogo.
+   */
+  setPosition(userId: string, position: HexCoord): HexCoord {
+    const exploration = this.store.get(userId);
+    if (!exploration) throw new NotFoundException(NO_EXPLORATION);
+    this.store.set(userId, {
+      ...exploration,
+      position: { q: position.q, r: position.r },
+      positionAt: Date.now(),
+    });
+    return { q: position.q, r: position.r };
   }
 
   debugClear(userId: string): DebugClearResponseDto {

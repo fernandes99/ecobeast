@@ -2,9 +2,11 @@ class_name IslandMapPanel
 extends Control
 ## O mapa grande da ilha (.specs/minimap/02-island-map.md), aberto pelo minimapa: a
 ## mesma MinimapImage na moldura dourada, com zoom em degraus inteiros, arrasto, os
-## marcadores descobertos, a legenda e o Fechar. Só mostra; não anda o Domador.
+## marcadores descobertos, a legenda e o Fechar. Só mostra; no jogo de depuração, um
+## toque escolhe o hexágono do teleporte (minimap/03).
 
 signal closed
+signal hex_tapped(coord: Vector2i)
 
 const SafeAreaScene := preload("res://ui/components/safe_area.tscn")
 const ZONE_TITLE := "Mapa da zona"
@@ -16,6 +18,8 @@ const BACKDROP_ALPHA := 0.92
 const FRAME_BORDER := 5
 const ZOOM_BUTTON_SIZE := 56.0
 const ZOOM_BUTTON_MARGIN := 12.0
+## Quanto o dedo pode andar, em pontos da tela, e ainda ser um toque.
+const TAP_SLOP := 12.0
 const LEGEND_KINDS: Array[StringName] = [&"pin", &"refuge", &"shop", &"travel", &"npc"]
 const LEGEND_NAMES: Dictionary[StringName, String] = {
 	&"pin": "Você",
@@ -36,6 +40,8 @@ var _offset := Vector2.ZERO
 var _pinch := PinchZoom.new()
 var _pinch_start_scale := 1
 var _dragging := false
+var _press_at := Vector2.ZERO
+var _press_moved := false
 
 var _title := Label.new()
 var _frame := Control.new()
@@ -210,10 +216,18 @@ func _zoom_to(target: int, anchor: Vector2) -> void:
 func _on_area_input(event: InputEvent) -> void:
 	var button := event as InputEventMouseButton
 	if button != null and button.button_index == MOUSE_BUTTON_LEFT:
+		var was_dragging := _dragging
 		_dragging = button.pressed and not _pinch.blocks_tap()
+		if button.pressed:
+			_press_at = button.position
+			_press_moved = false
+		elif was_dragging and not _press_moved and OS.is_debug_build() and _image != null:
+			hex_tapped.emit(HexMapView.grid_coord(_image.image_to_art((button.position - _offset) / _scale)))
 		return
 	var motion := event as InputEventMouseMotion
 	if motion != null and _dragging and not _pinch.blocks_tap() and _image != null:
+		if motion.position.distance_to(_press_at) > TAP_SLOP:
+			_press_moved = true
 		_offset = clamped_offset(_offset + motion.relative, _image_points(), _area.size)
 
 

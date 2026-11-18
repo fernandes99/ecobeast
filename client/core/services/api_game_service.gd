@@ -23,6 +23,9 @@ const BOARD_ACTION_PATH := "/v1/me/board-battle/action"
 const DEBUG_XP_PATH := "/v1/me/debug/xp"
 const DEBUG_SPAWNS_PATH := "/v1/me/exploration/spawns"
 const DEBUG_TAMERS_PATH := "/v1/me/exploration/tamers"
+const POSITION_PATH := "/v1/me/exploration/position"
+const NOT_EDITOR_TELEPORT := "Debug: o teleporte é só para quem está em MAP_EDITOR_USER_IDS."
+const ROUTE_NOT_FOUND := "Rota não encontrada."
 const CODEX_PATH := "/v1/me/codex"
 const ISLANDS_PATH := "/v1/me/islands"
 const DISCOVERIES_PATH := "/v1/me/islands/%d/discoveries"
@@ -205,6 +208,15 @@ func board_action(body: Dictionary) -> Result:
 	if response.code == HTTPClient.RESPONSE_NOT_FOUND:
 		return Result.success(null)
 	return _board_result(response)
+
+
+func set_exploration_position(coord: Vector2i) -> Result:
+	var response: ApiResponse = await Api.request(HTTPClient.METHOD_PUT, POSITION_PATH, {"q": coord.x, "r": coord.y}, true)
+	if response.code == HTTPClient.RESPONSE_FORBIDDEN or (response.code == HTTPClient.RESPONSE_NOT_FOUND and response.error == ROUTE_NOT_FOUND):
+		return Result.failure(NOT_EDITOR_TELEPORT)
+	if not response.ok:
+		return Result.failure(response.error)
+	return Result.success(coord)
 
 
 func debug_almost_level_up() -> Result:

@@ -551,3 +551,39 @@ export function toPropDto(prop: DraftProp): MapPropDto {
     ...(prop.noSmoke ? { no_smoke: true as const } : {}),
   };
 }
+
+export const INVALID_POSITION = 'q e r precisam ser inteiros de -1000 a 1000.';
+
+const MAX_POSITION = 1000;
+
+const IsPositionCoord = () =>
+  ValidateBy(
+    {
+      name: 'isPositionCoord',
+      validator: {
+        validate: (value: unknown) =>
+          typeof value === 'number' &&
+          Number.isInteger(value) &&
+          Math.abs(value) <= MAX_POSITION,
+      },
+    },
+    { message: INVALID_POSITION },
+  );
+
+export class ExplorationPositionDto {
+  @ApiProperty({
+    description: 'Coluna do hexágono, em coordenadas axiais.',
+    example: 3,
+  })
+  @IsPositionCoord()
+  q: number;
+
+  @ApiProperty({
+    description: 'Linha do hexágono, em coordenadas axiais.',
+    example: -2,
+  })
+  // Um erro por vez: a validação junta as mensagens numa frase só.
+  @ValidateIf((body: ExplorationPositionDto) => Number.isInteger(body.q))
+  @IsPositionCoord()
+  r: number;
+}

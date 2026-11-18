@@ -17,7 +17,7 @@ server/
   src/player/            o Domador do usuário logado (/v1/me), que pode nascer sem nome e ganhá-lo uma vez (PUT /v1/me/name), e a conferência da aparência (appearance-check.ts), que os NPCs pessoas também usam
   src/battle/            o que toda luta usa: o BattleStore (a luta na memória), a leitura da equipe e a gravação do fim
   src/board-battle/      a luta no tabuleiro do usuário logado (/v1/me/board-battle)
-  src/exploration/       o mapa de exploração do usuário logado (/v1/me/exploration), sorteado ou de uma ilha publicada, com os Ecobeasts e os Domadores NPC guardados na memória
+  src/exploration/       o mapa de exploração do usuário logado (/v1/me/exploration), sorteado ou de uma ilha publicada, com os Ecobeasts e os Domadores NPC guardados na memória, e o teleporte de depuração (PUT /v1/me/exploration/position, só para quem está em MAP_EDITOR_USER_IDS)
   src/inventory/         a Loja e a Mochila do usuário logado (/v1/me/shop e /v1/me/items)
   src/team/              a equipe e o Santuário do usuário logado (/v1/me/team e /v1/me/storage)
   src/codex/             o Bestiário do usuário logado (/v1/me/codex) e o CodexService, que as lutas, a Evolução e o inicial usam para registrar visto e capturado
