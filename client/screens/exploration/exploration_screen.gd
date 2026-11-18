@@ -9,6 +9,8 @@ const PortraitScene := preload("res://ui/components/creature_portrait.tscn")
 const LOADING_TEXT := "Gerando mapa..."
 const ISLAND_LOADING_TEXT := "Chegando na ilha..."
 const TELEPORT_BLOCKED_TEXT := "Debug: não dá para ir para esse hexágono."
+## O deslize até o degrau inteiro ao soltar a pinça e na roda (camera-zoom/03). A revisar.
+const ZOOM_SETTLE_SECONDS := 0.15
 ## A voz dos Domadores NPC, que não têm NPC no catálogo (dialogue-voices/02).
 const NPC_TAMER_VOICE := "medium"
 const ACTION_TINT_ALPHA := 0.45
@@ -102,7 +104,10 @@ var _talk_index := 0
 var _debug_spawn_ids: Array[int] = []
 var _debug_tamer_ids: Array[int] = []
 var _pinch := PinchZoom.new()
-var _pinch_start_zoom := HexMapView.DEFAULT_ZOOM
+var _pinch_start_zoom := float(HexMapView.DEFAULT_ZOOM)
+var _zoom_tween: Tween = null
+## O degrau para onde o deslize do zoom vai (camera-zoom/03).
+var _zoom_target := HexMapView.DEFAULT_ZOOM
 var _minimap_image := MinimapImage.new()
 var _markers: Array[MapMarker] = []
 ## Abrir o mapa grande no meio de uma caminhada a para onde o Domador está (minimap/02).
@@ -175,8 +180,9 @@ func _ready() -> void:
 		_marker.set_appearance(Session.player.appearance)
 	Session.player_changed.connect(_refresh_team_controls)
 	_map_view.zoom_level = ViewSettings.explore_zoom()
-	_pinch.pinch_started.connect(func(_center: Vector2) -> void: _pinch_start_zoom = _map_view.zoom_level)
-	_pinch.pinched.connect(func(ratio: float, _center: Vector2) -> void: _set_zoom(roundi(_pinch_start_zoom * ratio)))
+	_pinch.pinch_started.connect(_on_pinch_started)
+	_pinch.pinched.connect(func(ratio: float, _center: Vector2) -> void: _show_zoom(_pinch_start_zoom * ratio))
+	_pinch.pinch_ended.connect(func() -> void: _settle_zoom(roundi(_camera_zoom())))
 	_map_area.gui_input.connect(_on_map_input)
 	_encounter_button.pressed.connect(_search)
 	_bag_button.pressed.connect(Router.push.bind(&"bag"))
@@ -347,7 +353,7 @@ func _input(event: InputEvent) -> void:
 	var step := _pinch.wheel(event, area)
 	if step != 0:
 		get_viewport().set_input_as_handled()
-		_set_zoom(_map_view.zoom_level + step)
+		_settle_zoom((_zoom_target if _zoom_tween != null else _map_view.zoom_level) + step)
 
 
 ## O mapa acima do painel de botões, quando o toque nele valeria; senão, nenhuma.
@@ -358,14 +364,51 @@ func _zoom_area() -> Rect2:
 	return Rect2(top, Vector2(_map_area.size.x, _controls_panel.get_global_rect().position.y - top.y))
 
 
-func _set_zoom(level: int) -> void:
-	level = clampi(level, HexMapView.MIN_ZOOM, HexMapView.MAX_ZOOM)
-	if level == _map_view.zoom_level:
-		return
-	_map_view.zoom_level = level
-	ViewSettings.set_explore_zoom(level)
-	_refresh_wild_sprites()
+func _on_pinch_started(_center: Vector2) -> void:
+	_stop_zoom_tween()
+	_pinch_start_zoom = _camera_zoom()
+
+
+## O zoom fracionário da pinça e do deslize, entre 1 e 4; o degrau mais perto vale para
+## o raio dos seres (camera-zoom/03).
+func _show_zoom(zoom: float) -> void:
+	zoom = clampf(zoom, HexMapView.MIN_ZOOM, HexMapView.MAX_ZOOM)
+	var level := roundi(zoom)
+	if level != _map_view.zoom_level:
+		_map_view.zoom_level = level
+		_refresh_wild_sprites()
+	_map_view.story_zoom = zoom
 	_fit_view()
+
+
+## Desliza até o degrau, que já fica guardado no aparelho.
+func _settle_zoom(level: int) -> void:
+	level = clampi(level, HexMapView.MIN_ZOOM, HexMapView.MAX_ZOOM)
+	_stop_zoom_tween()
+	_zoom_target = level
+	ViewSettings.set_explore_zoom(level)
+	var from := _camera_zoom()
+	if is_equal_approx(from, level):
+		_finish_zoom(level)
+		return
+	_zoom_tween = create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	_zoom_tween.tween_method(_show_zoom, from, float(level), ZOOM_SETTLE_SECONDS)
+	_zoom_tween.finished.connect(_finish_zoom.bind(level))
+
+
+func _finish_zoom(level: int) -> void:
+	_zoom_tween = null
+	_map_view.story_zoom = 0.0
+	if level != _map_view.zoom_level:
+		_map_view.zoom_level = level
+		_refresh_wild_sprites()
+	_fit_view()
+
+
+func _stop_zoom_tween() -> void:
+	if _zoom_tween != null:
+		_zoom_tween.kill()
+		_zoom_tween = null
 
 
 func _on_map_input(event: InputEvent) -> void:
@@ -1433,6 +1476,9 @@ func _debug_play_scene(scene: StoryScene) -> void:
 
 
 func story_began() -> void:
+	if _zoom_tween != null:
+		_stop_zoom_tween()
+		_finish_zoom(_zoom_target)
 	_npc_target = null
 	_prop_target = -1
 	_debug_menu.hide()

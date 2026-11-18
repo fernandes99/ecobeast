@@ -55,3 +55,4 @@ Do planejamento, aprovadas pelo dono em 2026-11-14:
 | --- | --- | --- | --- |
 | 1 | [01-explore-zoom](01-explore-zoom.md) | A pinça ao explorar, em degraus, guardada no aparelho | concluída (falta o dono conferir no celular) |
 | 2 | [02-battle-zoom](02-battle-zoom.md) | A pinça e o arrasto no tabuleiro da luta | concluída (falta o dono conferir no celular) |
+| 3 | [03-smooth-explore-zoom](03-smooth-explore-zoom.md) | O zoom de Explorar suave: a pinça segue os dedos entre 1 e 4 e assenta no degrau inteiro mais perto ao soltar | concluída (falta o dono conferir no celular) |

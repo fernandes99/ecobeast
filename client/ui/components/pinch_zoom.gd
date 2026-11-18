@@ -5,6 +5,8 @@ extends RefCounted
 signal pinch_started(center: Vector2)
 ## A distância entre os dedos dividida pela do começo da pinça.
 signal pinched(ratio: float, center: Vector2)
+## Saiu um dos dois dedos, ou a pinça foi cancelada (camera-zoom/03).
+signal pinch_ended
 
 var _touches: Dictionary[int, Vector2] = {}
 var _start_distance := 0.0
@@ -29,6 +31,8 @@ func feed(event: InputEvent, area: Rect2) -> bool:
 		_touches.erase(touch.index)
 		if _touches.size() < 2:
 			_pinching = false
+			if was_pinching:
+				pinch_ended.emit()
 		if _touches.is_empty():
 			_blocking = false
 		return was_pinching
@@ -60,9 +64,12 @@ func blocks_tap() -> bool:
 
 
 func cancel() -> void:
+	var was_pinching := _pinching
 	_touches.clear()
 	_pinching = false
 	_blocking = false
+	if was_pinching:
+		pinch_ended.emit()
 
 
 func _all_inside(area: Rect2) -> bool:
