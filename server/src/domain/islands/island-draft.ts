@@ -50,6 +50,8 @@ export interface DraftTile extends HexCoord {
   area?: number;
   /** Sem as decorações naturais sorteadas (free-props/05). */
   bare?: boolean;
+  /** O slug da zona, só fora da Comum (biome-zones/03). */
+  zone?: string;
 }
 
 export interface DraftAction {
@@ -154,6 +156,8 @@ export interface KnownIds {
   bridgeSlugs: ReadonlySet<string>;
   /** As linhas de bloqueio padrão de cada tipo de peça. */
   propBlocks: TypeBlocks;
+  /** O bioma de cada zona, pelo slug. */
+  zoneBiomes: ReadonlyMap<string, string>;
 }
 
 const at = ({ q, r }: HexCoord): string => `(${q}, ${r})`;
@@ -191,6 +195,15 @@ function tileError(tile: DraftTile, known: KnownIds): string | null {
   }
   if (tile.bare !== undefined && typeof tile.bare !== 'boolean') {
     return `O hexágono ${at(tile)} tem a marca bare que não é verdadeira nem falsa.`;
+  }
+  if (tile.zone !== undefined) {
+    const biome = known.zoneBiomes.get(tile.zone);
+    if (biome === undefined) {
+      return `O hexágono ${at(tile)} tem uma zona que não existe.`;
+    }
+    if (biome !== tile.biome) {
+      return `O hexágono ${at(tile)} tem a zona ${tile.zone}, que não é do bioma ${tile.biome}.`;
+    }
   }
   return null;
 }
@@ -604,7 +617,7 @@ export function canonicalDraft(draft: IslandDraft): string {
     start: { q: draft.start.q, r: draft.start.r },
     tiles: [...draft.tiles]
       .sort(byRowThenColumn)
-      .map(({ q, r, biome, height, variant, ground, area, bare }) => ({
+      .map(({ q, r, biome, height, variant, ground, area, bare, zone }) => ({
         q,
         r,
         biome,
@@ -614,6 +627,7 @@ export function canonicalDraft(draft: IslandDraft): string {
         area: area === undefined ? null : renumber.get(area),
         // Só quando verdadeira: uma ilha sem marcas tem o hash de antes.
         ...(bare === true ? { bare: true } : {}),
+        ...(zone === undefined ? {} : { zone }),
       })),
     actions: draft.actions.map(({ actionTypeId, tiles }) => ({
       actionTypeId,

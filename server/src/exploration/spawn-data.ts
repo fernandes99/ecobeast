@@ -1,3 +1,5 @@
+import type { Biome } from '../domain/exploration/map-generator.js';
+import type { MapZone } from '../domain/exploration/map-zones.js';
 import { DEFAULT_SPAWN_CONFIG } from '../domain/exploration/spawn-config.js';
 import {
   type EncounterBiome,
@@ -11,10 +13,13 @@ import type { PrismaService } from '../prisma/prisma.service.js';
 export async function loadSpawnSpecies(
   prisma: PrismaService,
 ): Promise<SpawnSpecies[]> {
-  const [rows, evolutions] = await Promise.all([
+  const [rows, evolutions, zoneRows] = await Promise.all([
     prisma.speciesBiome.findMany({ include: { biome: true } }),
     prisma.evolution.findMany({
       select: { speciesId: true, evolvedSpeciesId: true, minLevel: true },
+    }),
+    prisma.speciesBiomeZone.findMany({
+      select: { speciesId: true, ratePercent: true, biomeZone: true },
     }),
   ]);
   const bySpecies = new Map<number, SpawnSpecies>();
@@ -27,7 +32,24 @@ export async function loadSpawnSpecies(
     species.rates[biome.slug as EncounterBiome] = rate;
     bySpecies.set(speciesId, species);
   }
+  for (const { speciesId, ratePercent, biomeZone } of zoneRows) {
+    const species = bySpecies.get(speciesId);
+    if (!species) continue;
+    species.zoneRates = { ...species.zoneRates, [biomeZone.slug]: ratePercent };
+  }
   return [...bySpecies.values()];
+}
+
+export async function loadZones(prisma: PrismaService): Promise<MapZone[]> {
+  const rows = await prisma.biomeZone.findMany({
+    select: { slug: true, share: true, sortOrder: true, biome: true },
+  });
+  return rows.map(({ slug, share, sortOrder, biome }) => ({
+    slug,
+    biome: biome.slug as Biome,
+    share,
+    sortOrder,
+  }));
 }
 
 /** Os ids dos Ecobeasts que nascem na parte do dia do `minute` (day-phase-spawns/01). */

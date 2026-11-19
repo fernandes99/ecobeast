@@ -64,6 +64,12 @@ var _map_view: HexMapView
 var _overview: IslandOverview
 var _overlay: Overlay
 var _area_layer: HexTintLayer
+var _zone_layer: HexTintLayer
+## A cor das zonas por cima, enquanto a ferramenta Zona está aberta (biome-zones/03).
+var show_zones := false:
+	set(value):
+		show_zones = value
+		refresh_zones()
 var _area_stripes: HexTintLayer
 var _action_layer: HexTintLayer
 var _dim_layer: HexTintLayer
@@ -140,6 +146,8 @@ func _init() -> void:
 	add_child(_area_layer)
 	_area_stripes = HexTintLayer.new(true, IslandDraft.MAX_TILES)
 	add_child(_area_stripes)
+	_zone_layer = HexTintLayer.new(false, IslandDraft.MAX_TILES)
+	add_child(_zone_layer)
 	_action_layer = HexTintLayer.new(false, IslandDraft.MAX_TILES)
 	add_child(_action_layer)
 	_blocks_layer = BlocksLayer.new()
@@ -176,6 +184,7 @@ func show_draft(draft: IslandDraft, fit: bool = true) -> void:
 	_refresh_blocks()
 	refresh_npcs()
 	refresh_marks()
+	refresh_zones()
 	if fit and draft != null:
 		fit_whole_island()
 	_apply_view()
@@ -440,6 +449,24 @@ func refresh_marks(coords: Array[Vector2i] = []) -> void:
 	_overlay.queue_redraw()
 
 
+func refresh_zones(coords: Array[Vector2i] = []) -> void:
+	if _zone_layer == null:
+		return
+	_zone_layer.visible = show_zones
+	if not show_zones or _draft == null:
+		_zone_layer.clear_all()
+		return
+	var targets: Array[Vector2i] = coords
+	if targets.is_empty():
+		_zone_layer.clear_all()
+		targets.assign(_draft.tiles.keys())
+	for coord: Vector2i in targets:
+		var tile: HexTile = _draft.tiles.get(coord)
+		_zone_layer.clear_hex(coord)
+		if tile != null and not tile.zone.is_empty():
+			_zone_layer.set_hex(coord, Color(ZonePanel.color_of(tile.zone), AREA_ALPHA), tile.height)
+
+
 ## Escurece todo hexágono fora da área `key`; 0 tira o foco.
 func set_area_focus(key: int) -> void:
 	if key == _focus_key:
@@ -496,6 +523,7 @@ func _process(_delta: float) -> void:
 	_map_view.update_tiles(coords)
 	_overview.update_tiles(coords, _map)
 	refresh_marks(coords)
+	refresh_zones(coords)
 	# A altura do hexágono move os bloqueios desenhados nele.
 	_blocks_layer.queue_redraw()
 
@@ -615,12 +643,13 @@ func _apply_view() -> void:
 	if not overview:
 		_map_view.fixed_scale = _zoom
 		_map_view.position = _origin.round()
-	for layer: HexTintLayer in [_area_layer, _area_stripes, _action_layer, _dim_layer]:
+	for layer: HexTintLayer in [_area_layer, _area_stripes, _action_layer, _dim_layer, _zone_layer]:
 		layer.position = _overview.position if overview else _map_view.position
 		layer.scale = Vector2.ONE * _zoom
 		layer.set_raised(not overview)
 	_area_layer.visible = _show_areas
 	_area_stripes.visible = _show_areas
+	_zone_layer.visible = show_zones
 	_action_layer.visible = _show_actions
 	_blocks_layer.queue_redraw()
 	_overlay.queue_redraw()

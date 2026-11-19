@@ -20,6 +20,8 @@ export interface SpawnSpecies {
   speciesId: number;
   naturalLevel: number;
   rates: Partial<Record<EncounterBiome, number>>;
+  /** O multiplicador da taxa por slug de zona, em %; sem a zona, 100 (biome-zones/01). */
+  zoneRates?: Partial<Record<string, number>>;
 }
 
 export interface MapSpawn extends HexCoord {
@@ -114,19 +116,20 @@ function biomeRolls(
   teamAverage: number,
   config: SpawnConfig,
 ): BiomeRoll[] {
-  const byBiome = new Map<EncounterBiome, MapTile[]>();
+  const byZone = new Map<string, MapTile[]>();
   for (const tile of tiles) {
-    const biome = tile.biome;
-    const group = byBiome.get(biome);
+    const zone = tile.zone ?? tile.biome;
+    const group = byZone.get(zone);
     if (group) group.push(tile);
-    else byBiome.set(biome, [tile]);
+    else byZone.set(zone, [tile]);
   }
-  return [...byBiome].flatMap(([biome, biomeTiles]) => {
+  return [...byZone].flatMap(([zone, zoneTiles]) => {
+    const biome = zoneTiles[0]!.biome;
     const candidates = species
       .map((entry) => ({
         species: entry,
         weight: spawnWeight(
-          entry.rates[biome] ?? 0,
+          ((entry.rates[biome] ?? 0) * (entry.zoneRates?.[zone] ?? 100)) / 100,
           entry.naturalLevel,
           teamAverage,
           config,
@@ -135,7 +138,7 @@ function biomeRolls(
       .filter(({ weight }) => weight > 0);
     const total = candidates.reduce((sum, { weight }) => sum + weight, 0);
     return total > 0
-      ? [{ tiles: biomeTiles, candidates, weight: biomeTiles.length * total }]
+      ? [{ tiles: zoneTiles, candidates, weight: zoneTiles.length * total }]
       : [];
   });
 }

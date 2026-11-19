@@ -38,10 +38,10 @@ describe('restrições do banco (e2e)', () => {
     expect(rows.map((row) => row.table_name)).toEqual([]);
   });
 
-  it('as 78 tabelas e o histórico de migrations ficam no schema ecobeasts', async () => {
+  it('as 80 tabelas e o histórico de migrations ficam no schema ecobeasts', async () => {
     const rows = await prisma.$queryRaw<{ n: number }[]>`
       SELECT count(*)::int AS n FROM information_schema.tables WHERE table_schema = 'ecobeasts'`;
-    expect(rows[0].n).toBe(78);
+    expect(rows[0].n).toBe(80);
   });
 
   it('recusa uma marca que muda um atributo em 0 estágio (puffcoo-line)', async () => {
@@ -216,6 +216,36 @@ describe('restrições do banco (e2e)', () => {
     });
     expectRejected(result, 'species_day_phases_day_phase_id_fkey');
   });
+
+  it.each([-1, 101])(
+    'recusa zona com share %i, fora de 0 a 100 (biome-zones/01)',
+    async (share) => {
+      const result = await attempt(prisma, async (tx) => {
+        await tx.biomeZone.create({
+          data: {
+            slug: 'zz_teste',
+            biomeId: 1,
+            name: 'Teste',
+            share,
+            sortOrder: 9,
+          },
+        });
+      });
+      expectRejected(result, 'biome_zones_share_check');
+    },
+  );
+
+  it.each([-1, 1001])(
+    'recusa rate_percent %i, fora de 0 a 1000 (biome-zones/01)',
+    async (ratePercent) => {
+      const result = await attempt(prisma, async (tx) => {
+        await tx.speciesBiomeZone.create({
+          data: { speciesId: 1, biomeZoneId: 12, ratePercent },
+        });
+      });
+      expectRejected(result, 'species_biome_zones_rate_percent_check');
+    },
+  );
 
   it.each(['', 'x'.repeat(21)])(
     'recusa nome de Domador "%s" fora de 1 a 20 caracteres',

@@ -89,6 +89,13 @@ const TABLES := {
 		"key": ["id"],
 		"columns": {"id": ID, "slug": SLUG, "name": TEXT, "description": TEXT},
 	},
+	"biome_zones": {
+		"key": ["id"],
+		"columns": {
+			"id": ID, "slug": SLUG, "biome_id": {"type": "int", "fk": "biomes"}, "name": TEXT,
+			"share": {"type": "int", "min": 0, "max": 100}, "sort_order": {"type": "int"},
+		},
+	},
 	"day_phases": {
 		"key": ["id"],
 		"columns": {"id": ID, "slug": SLUG, "name": TEXT, "start_minute": {"type": "int", "unique": true, "min": 0, "max": 1439}},
@@ -346,6 +353,14 @@ const TABLES := {
 			"species_id": {"type": "int", "fk": "species"},
 			"biome_id": {"type": "int", "fk": "biomes"},
 			"rate": {"type": "int", "min": 0, "max": 100},
+		},
+	},
+	"species_biome_zones": {
+		"key": ["species_id", "biome_zone_id"],
+		"columns": {
+			"species_id": {"type": "int", "fk": "species"},
+			"biome_zone_id": {"type": "int", "fk": "biome_zones"},
+			"rate_percent": {"type": "int", "min": 0, "max": 1000},
 		},
 	},
 	"species_day_phases": {

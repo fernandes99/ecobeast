@@ -172,6 +172,7 @@ var _cells: Array[Vector2i] = []
 var _ground := HexMapView.new()
 var _ground_seed := 0
 var _biome := DEFAULT_BIOME
+var _zone := ""
 var _height := DEFAULT_HEIGHT
 var _outside: Array[Vector2i] = []
 var _overlay := Node2D.new()
@@ -206,9 +207,10 @@ func _ready() -> void:
 	gui_input.connect(_on_gui_input)
 
 
-func set_board(cells: Array[Vector2i], biome: String = DEFAULT_BIOME, height: int = DEFAULT_HEIGHT) -> void:
+func set_board(cells: Array[Vector2i], biome: String = DEFAULT_BIOME, height: int = DEFAULT_HEIGHT, zone: String = "") -> void:
 	_cells = cells
 	_biome = biome
+	_zone = zone
 	_height = height
 	_ground_seed = randi()
 	var low := Vector2(INF, INF)
@@ -247,6 +249,7 @@ func cover(area: Rect2) -> void:
 			var tile := HexTile.new()
 			tile.coord = Vector2i(column, row)
 			tile.biome = _biome
+			tile.zone = _zone
 			tile.height = _height
 			tile.variant = 1
 			map.tiles[tile.coord] = tile

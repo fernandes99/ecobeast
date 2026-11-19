@@ -104,13 +104,11 @@ describe('Rota do mapa de exploração (e2e)', () => {
     expect(Number.isInteger(map.seed)).toBe(true);
     expect(map.tiles.length).toBeGreaterThan(0);
     expect(map.tiles).toContainEqual(expect.objectContaining(map.start));
-    expect(Object.keys(map.tiles[0]!).sort()).toEqual([
-      'biome',
-      'height',
-      'q',
-      'r',
-      'variant',
-    ]);
+    const fields = ['biome', 'height', 'q', 'r', 'variant', 'zone'];
+    for (const tile of map.tiles) {
+      expect(Object.keys(tile).every((key) => fields.includes(key))).toBe(true);
+    }
+    expect(map.tiles.some((tile) => 'zone' in tile)).toBe(true);
   });
 
   it('devolve os Ecobeasts sem nível nem nome', async () => {

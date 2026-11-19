@@ -27,6 +27,9 @@ import {
   withDefaults,
 } from '../domain/exploration/map-config.js';
 import { generateMap } from '../domain/exploration/map-generator.js';
+import { assignZones } from '../domain/exploration/map-zones.js';
+import { loadZones } from '../exploration/spawn-data.js';
+import { PrismaService } from '../prisma/prisma.service.js';
 import { EditorGuard } from './editor.guard.js';
 import {
   ConfigRangeDto,
@@ -70,6 +73,8 @@ function configOf(raw: Record<string, unknown> = {}): Partial<MapConfig> {
 @UseGuards(AuthGuard, EditorGuard)
 @Controller('editor/map-generator')
 export class MapGeneratorController {
+  constructor(private readonly prisma: PrismaService) {}
+
   @Get()
   @ApiOperation({
     summary: 'Parâmetros do gerador',
@@ -99,8 +104,16 @@ export class MapGeneratorController {
   })
   @ApiOkResponse({ type: MapGeneratorResponseDto })
   @ApiBadRequestResponse({ description: 'Um parâmetro fora da faixa.' })
-  generate(@Body() body: MapGeneratorBodyDto): MapGeneratorResponseDto {
-    const map = generateMap(body.seed, withDefaults(configOf(body.config)));
-    return { start: map.start, tiles: map.tiles, bridges: map.bridges };
+  async generate(
+    @Body() body: MapGeneratorBodyDto,
+  ): Promise<MapGeneratorResponseDto> {
+    const config = withDefaults(configOf(body.config));
+    const map = generateMap(body.seed, config);
+    const zones = await loadZones(this.prisma);
+    return {
+      start: map.start,
+      tiles: assignZones(map.tiles, body.seed, zones, config),
+      bridges: map.bridges,
+    };
   }
 }

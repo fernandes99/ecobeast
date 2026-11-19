@@ -21,6 +21,7 @@ interface Tile {
   ground?: string;
   area?: number;
   bare?: boolean;
+  zone?: string;
 }
 
 interface DraftProp {
@@ -510,6 +511,36 @@ describe('Editor de ilhas (e2e)', () => {
         .expect(400);
       expect(response.body.message).toBe(
         'bare precisa ser verdadeiro ou falso.',
+      );
+    });
+  });
+
+  describe('a zona do hexágono (biome-zones/03)', () => {
+    it('salva e lê de volta a zona, e a Comum volta sem zona', async () => {
+      const body = draft();
+      body.tiles[0]!.zone = 'temperate_woods';
+      body.tiles[1]!.zone = 'temperate';
+      const id = await create(body);
+      const read = (await call('get', `/islands/${id}`).expect(200))
+        .body as Draft;
+      const at = (tile: Tile) =>
+        read.tiles.find(({ q, r }) => q === tile.q && r === tile.r)!;
+      expect(at(body.tiles[0]!).zone).toBe('temperate_woods');
+      expect('zone' in at(body.tiles[1]!)).toBe(false);
+    });
+
+    it.each([
+      ['hill_scree', 'tem a zona hill_scree, que não é do bioma temperate.'],
+      ['zz_nenhuma', 'tem uma zona que não existe.'],
+    ])('recusa a zona %s (400)', async (zone, message) => {
+      const id = await create();
+      const body = draft();
+      body.tiles[0]!.zone = zone;
+      const response = await call('put', `/islands/${id}/draft`)
+        .send(body)
+        .expect(400);
+      expect(response.body.message).toBe(
+        `O hexágono (${body.tiles[0]!.q}, ${body.tiles[0]!.r}) ${message}`,
       );
     });
   });

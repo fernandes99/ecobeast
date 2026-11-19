@@ -11,6 +11,8 @@ var biome: String
 var height: int
 var variant: int
 var ground: String = ""
+## O slug da zona, vazio na Comum (biome-zones/02).
+var zone: String = ""
 ## Sem as decorações naturais sorteadas do bioma, numa ilha (free-props/05).
 var bare := false
 
@@ -36,5 +38,6 @@ static func from_dict(d: Dictionary) -> HexTile:
 	tile.height = tile_height
 	tile.variant = DictFields.get_int(d, "variant", 1)
 	tile.ground = DictFields.get_string(d, "ground")
+	tile.zone = DictFields.get_string(d, "zone")
 	tile.bare = DictFields.get_bool(d, "bare")
 	return tile

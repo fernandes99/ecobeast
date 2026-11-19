@@ -1,0 +1,194 @@
+[
+	{
+		"id": 1,
+		"slug": "temperate",
+		"biome_id": 1,
+		"name": "Comum",
+		"share": 40,
+		"sort_order": 3
+	},
+	{
+		"id": 2,
+		"slug": "boreal",
+		"biome_id": 2,
+		"name": "Comum",
+		"share": 40,
+		"sort_order": 3
+	},
+	{
+		"id": 3,
+		"slug": "stone",
+		"biome_id": 3,
+		"name": "Comum",
+		"share": 40,
+		"sort_order": 1
+	},
+	{
+		"id": 4,
+		"slug": "hill",
+		"biome_id": 4,
+		"name": "Comum",
+		"share": 40,
+		"sort_order": 2
+	},
+	{
+		"id": 5,
+		"slug": "mountain",
+		"biome_id": 5,
+		"name": "Comum",
+		"share": 100,
+		"sort_order": 1
+	},
+	{
+		"id": 6,
+		"slug": "wshallow",
+		"biome_id": 6,
+		"name": "Comum",
+		"share": 100,
+		"sort_order": 1
+	},
+	{
+		"id": 7,
+		"slug": "wdeep",
+		"biome_id": 7,
+		"name": "Comum",
+		"share": 100,
+		"sort_order": 1
+	},
+	{
+		"id": 8,
+		"slug": "desert",
+		"biome_id": 8,
+		"name": "Comum",
+		"share": 40,
+		"sort_order": 2
+	},
+	{
+		"id": 9,
+		"slug": "snow",
+		"biome_id": 9,
+		"name": "Comum",
+		"share": 40,
+		"sort_order": 2
+	},
+	{
+		"id": 10,
+		"slug": "beach",
+		"biome_id": 10,
+		"name": "Comum",
+		"share": 100,
+		"sort_order": 1
+	},
+	{
+		"id": 11,
+		"slug": "wford",
+		"biome_id": 11,
+		"name": "Comum",
+		"share": 100,
+		"sort_order": 1
+	},
+	{
+		"id": 12,
+		"slug": "temperate_clearing",
+		"biome_id": 1,
+		"name": "Clareira",
+		"share": 15,
+		"sort_order": 1
+	},
+	{
+		"id": 13,
+		"slug": "temperate_meadow",
+		"biome_id": 1,
+		"name": "Campo florido",
+		"share": 15,
+		"sort_order": 2
+	},
+	{
+		"id": 14,
+		"slug": "temperate_shrubland",
+		"biome_id": 1,
+		"name": "Arbustal",
+		"share": 15,
+		"sort_order": 4
+	},
+	{
+		"id": 15,
+		"slug": "temperate_woods",
+		"biome_id": 1,
+		"name": "Bosque",
+		"share": 15,
+		"sort_order": 5
+	},
+	{
+		"id": 16,
+		"slug": "boreal_clearing",
+		"biome_id": 2,
+		"name": "Clareira",
+		"share": 30,
+		"sort_order": 1
+	},
+	{
+		"id": 17,
+		"slug": "boreal_ferns",
+		"biome_id": 2,
+		"name": "Samambaial",
+		"share": 30,
+		"sort_order": 2
+	},
+	{
+		"id": 18,
+		"slug": "hill_scree",
+		"biome_id": 4,
+		"name": "Pedregal",
+		"share": 30,
+		"sort_order": 1
+	},
+	{
+		"id": 19,
+		"slug": "hill_dry_brush",
+		"biome_id": 4,
+		"name": "Mato seco",
+		"share": 30,
+		"sort_order": 3
+	},
+	{
+		"id": 20,
+		"slug": "stone_crags",
+		"biome_id": 3,
+		"name": "Rochedo",
+		"share": 60,
+		"sort_order": 2
+	},
+	{
+		"id": 21,
+		"slug": "desert_dunes",
+		"biome_id": 8,
+		"name": "Dunas",
+		"share": 30,
+		"sort_order": 1
+	},
+	{
+		"id": 22,
+		"slug": "desert_cacti",
+		"biome_id": 8,
+		"name": "Cactal",
+		"share": 30,
+		"sort_order": 3
+	},
+	{
+		"id": 23,
+		"slug": "snow_field",
+		"biome_id": 9,
+		"name": "Campo de neve",
+		"share": 30,
+		"sort_order": 1
+	},
+	{
+		"id": 24,
+		"slug": "snow_pines",
+		"biome_id": 9,
+		"name": "Pinheiral nevado",
+		"share": 30,
+		"sort_order": 3
+	}
+]

@@ -17,7 +17,7 @@ const table = (
 });
 
 /**
- * As 48 tabelas do catálogo em ordem de dependência: cada FK aponta para uma
+ * As 50 tabelas do catálogo em ordem de dependência: cada FK aponta para uma
  * tabela que vem antes (a autorreferência de species é tratada no seed).
  * Usada pelo seed e pelo catálogo inteiro (GET /v1/catalog).
  */
@@ -27,6 +27,7 @@ export const CATALOG_TABLES: readonly CatalogTable[] = [
   table('growth_rates', 'growthRate'),
   table('rarities', 'rarity'),
   table('biomes', 'biome'),
+  table('biome_zones', 'biomeZone'),
   table('day_phases', 'dayPhase'),
   table('skill_categories', 'skillCategory'),
   table('skill_targets', 'skillTarget'),
@@ -74,6 +75,10 @@ export const CATALOG_TABLES: readonly CatalogTable[] = [
   table('species_stats', 'speciesStat', ['species_id', 'stat_id']),
   table('species_traits', 'speciesTrait', ['species_id', 'slot']),
   table('species_biomes', 'speciesBiome', ['species_id', 'biome_id']),
+  table('species_biome_zones', 'speciesBiomeZone', [
+    'species_id',
+    'biome_zone_id',
+  ]),
   table('species_day_phases', 'speciesDayPhase', [
     'species_id',
     'day_phase_id',

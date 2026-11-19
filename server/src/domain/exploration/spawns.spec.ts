@@ -350,6 +350,76 @@ describe('rollSpawns', () => {
     expect(inWrongPlace).toEqual([]);
   });
 
+  describe('por zona (biome-zones/01)', () => {
+    const woods = (r: number): MapTile[] =>
+      tiles('temperate', 100, r).map((tile) => ({
+        ...tile,
+        zone: 'temperate_woods',
+      }));
+    const ratioOf = (spawns: { r: number }[]): number =>
+      count(spawns, ({ r }) => r === 1) / count(spawns, ({ r }) => r === 0);
+
+    it('sem exceção, a zona tem a mesma chance da Comum', () => {
+      const species: SpawnSpecies = {
+        speciesId: 1,
+        naturalLevel: 1,
+        rates: { temperate: 50 },
+      };
+      const spawns = rollSpawns(
+        [...tiles('temperate', 100, 0), ...woods(1)],
+        [species],
+        10,
+        seededRandom(21),
+        { ...CONFIG, count: 60_000 },
+      );
+      expect(ratioOf(spawns)).toBeGreaterThan(0.95);
+      expect(ratioOf(spawns)).toBeLessThan(1.05);
+    });
+
+    it('com 200%, a espécie nasce o dobro na zona', () => {
+      const species: SpawnSpecies = {
+        speciesId: 1,
+        naturalLevel: 1,
+        rates: { temperate: 50 },
+        zoneRates: { temperate_woods: 200 },
+      };
+      const spawns = rollSpawns(
+        [...tiles('temperate', 100, 0), ...woods(1)],
+        [species],
+        10,
+        seededRandom(22),
+        { ...CONFIG, count: 90_000 },
+      );
+      expect(ratioOf(spawns)).toBeGreaterThan(1.9);
+      expect(ratioOf(spawns)).toBeLessThan(2.1);
+    });
+
+    it('com 0%, a espécie não nasce na zona', () => {
+      const banned: SpawnSpecies = {
+        speciesId: 1,
+        naturalLevel: 1,
+        rates: { temperate: 50 },
+        zoneRates: { temperate_woods: 0 },
+      };
+      const other: SpawnSpecies = {
+        speciesId: 2,
+        naturalLevel: 1,
+        rates: { temperate: 50 },
+      };
+      const spawns = rollSpawns(
+        [...tiles('temperate', 50, 0), ...woods(1)],
+        [banned, other],
+        10,
+        seededRandom(23),
+        CONFIG,
+      );
+      expect(
+        spawns.filter(({ speciesId, r }) => speciesId === 1 && r === 1),
+      ).toEqual([]);
+      expect(spawns.some(({ r }) => r === 1)).toBe(true);
+    });
+  });
+
   it('taxa 0 no banco é o mesmo que não ter linha', () => {
     const species: SpawnSpecies = {
       speciesId: 1,
@@ -368,10 +438,16 @@ describe('rollSpawns', () => {
 
   it('nenhum Seedlet nasce na água de um mapa gerado, ilhas à parte', () => {
     const map = generateMap(1234);
-    const spawns = rollSpawns(map.tiles, [SEEDLET, NILU], 10, seededRandom(12), {
-      ...CONFIG,
-      count: 5000,
-    });
+    const spawns = rollSpawns(
+      map.tiles,
+      [SEEDLET, NILU],
+      10,
+      seededRandom(12),
+      {
+        ...CONFIG,
+        count: 5000,
+      },
+    );
     const byKey = new Map(
       map.tiles.map((tile) => [`${tile.q},${tile.r}`, tile]),
     );

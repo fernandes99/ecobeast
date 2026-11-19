@@ -56,6 +56,7 @@ var _against_tamer: bool = false
 var _challenge: bool = false
 var _tamer_name := ""
 var _biome := BoardView.DEFAULT_BIOME
+var _zone := ""
 var _height := BoardView.DEFAULT_HEIGHT
 var _view: BoardBattleView = null
 var _incoming: BoardBattleView = null
@@ -152,6 +153,7 @@ func setup(params: Dictionary) -> void:
 	_coord = params.get("tamer_coord", params.get("coord", Vector2i.ZERO))
 	_test_slots = params.get("test_slots", 0)
 	_biome = params.get("biome", BoardView.DEFAULT_BIOME)
+	_zone = params.get("zone", "")
 	_height = params.get("height", BoardView.DEFAULT_HEIGHT)
 
 
@@ -322,7 +324,7 @@ func _begin() -> void:
 	var turn: BoardTurn = result.data
 	_remember_xp(turn.view)
 	_meet_tamer(turn.view)
-	_board.set_board(turn.view.board_cells, _biome, _height)
+	_board.set_board(turn.view.board_cells, _biome, _height, _zone)
 	_zoom = 1.0
 	_fit_board()
 	BattleIntro.reveal()

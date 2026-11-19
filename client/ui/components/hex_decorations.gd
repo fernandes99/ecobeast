@@ -157,8 +157,23 @@ const RECIPES: Dictionary = {
 	"desert": [["cactus", 0.22, 1, 2], ["sand_rock", 0.14, 1, 1], ["dry_shrub", 0.18, 1, 1], ["pebbles", 0.12, 1, 2], ["dry_tuft", 0.3, 1, 3], ["tumbleweed", 0.12, 1, 1], ["bleached_branch", 0.1, 1, 1], ["desert_flower", 0.12, 1, 2], ["dune_grass", 0.3, 1, 3]],
 	"snow": [["snow_pine", 0.4, 1, 3], ["snow_rock", 0.14, 1, 1], ["snow_bush", 0.24, 1, 2], ["snow_tuft", 0.4, 1, 3], ["snow_log", 0.08, 1, 1], ["winter_berry", 0.14, 1, 1], ["frozen_branch", 0.12, 1, 1], ["ice_shards", 0.1, 1, 1]],
 	"beach": [["driftwood", 0.08, 1, 1], ["beach_rock", 0.1, 1, 1], ["dune_grass", 0.3, 1, 2], ["shells", 0.3, 1, 2], ["starfish", 0.08, 1, 1]],
+	# As zonas (biome-zones/02); a Comum de cada bioma é a receita dele, acima.
+	"temperate_woods": [["oak", 0.5, 1, 2], ["tree", 0.5, 1, 2], ["birch", 0.4, 1, 2], ["bush", 0.2, 1, 1], ["log", 0.1, 1, 1], ["stump", 0.08, 1, 1], ["fallen_branch", 0.2, 1, 1], ["mushrooms", 0.2, 1, 2], ["tuft", 0.4, 1, 3]],
+	"temperate_shrubland": [["bush", 0.8, 2, 4], ["berry_bush", 0.2, 1, 1], ["pebbles", 0.1, 1, 1], ["flowers", 0.1, 1, 1], ["tall_grass", 0.3, 1, 2], ["tuft", 0.5, 1, 3]],
+	"temperate_clearing": [["tuft", 0.35, 1, 2], ["clover", 0.15, 1, 1]],
+	"temperate_meadow": [["flowers", 0.8, 2, 4], ["wildflowers", 0.7, 1, 3], ["yellow_flowers", 0.4, 1, 2], ["tall_grass", 0.2, 1, 1], ["clover", 0.3, 1, 2], ["tuft", 0.5, 1, 3]],
+	"boreal_clearing": [["pebbles", 0.1, 1, 1], ["fern", 0.3, 1, 2], ["mushrooms", 0.1, 1, 1]],
+	"boreal_ferns": [["pine", 0.15, 1, 1], ["mossy_rock", 0.15, 1, 1], ["dark_bush", 0.3, 1, 2], ["fern", 0.9, 3, 5], ["mushrooms", 0.25, 1, 2]],
+	"hill_scree": [["rock", 0.5, 1, 2], ["brown_rock", 0.2, 1, 1], ["pebbles", 0.6, 1, 3], ["dry_tuft", 0.2, 1, 2]],
+	"hill_dry_brush": [["dry_shrub", 0.8, 2, 3], ["thistle", 0.4, 1, 2], ["dry_branch", 0.2, 1, 1], ["dry_tuft", 0.6, 2, 4]],
+	"stone_crags": [["spire", 0.5, 1, 2], ["boulder", 0.5, 1, 2], ["rock_pile", 0.3, 1, 1], ["lichen_rock", 0.2, 1, 1]],
+	"desert_dunes": [["pebbles", 0.05, 1, 1], ["dune_grass", 0.15, 1, 1]],
+	"desert_cacti": [["cactus", 0.8, 2, 3], ["sand_rock", 0.1, 1, 1], ["desert_flower", 0.3, 1, 2], ["dry_tuft", 0.2, 1, 2]],
+	"snow_field": [["ice_shards", 0.05, 1, 1], ["snow_tuft", 0.15, 1, 1]],
+	"snow_pines": [["snow_pine", 0.9, 2, 4], ["snow_bush", 0.15, 1, 1], ["snow_log", 0.1, 1, 1], ["frozen_branch", 0.15, 1, 1]],
 }
 const PLACE_TRIES := 8
+static var _warned_zones: Dictionary = {}
 ## A chance de um hexágono ter um enxame de vagalumes, por bioma (fireflies/01). A revisar.
 const SWARM_CHANCE: Dictionary[String, float] = {"temperate": 0.12, "boreal": 0.18}
 const SWARM_RADIUS := 6.0
@@ -180,7 +195,7 @@ static func decorations_of(tile: HexTile, map_seed: int) -> Array[Decoration]:
 	var decorations: Array[Decoration] = []
 	var random := RandomNumberGenerator.new()
 	random.seed = hash([map_seed, tile.coord])
-	for entry: Array in RECIPES.get(tile.biome, []):
+	for entry: Array in recipe_of(tile):
 		if random.randf() >= (entry[1] as float):
 			continue
 		for _index: int in random.randi_range(entry[2], entry[3]):
@@ -188,6 +203,17 @@ static func decorations_of(tile: HexTile, map_seed: int) -> Array[Decoration]:
 			if decoration != null:
 				decorations.append(decoration)
 	return decorations
+
+
+## A receita da zona, ou a do bioma na Comum e numa zona que o jogo ainda não desenha.
+static func recipe_of(tile: HexTile) -> Array:
+	if not tile.zone.is_empty():
+		if RECIPES.has(tile.zone):
+			return RECIPES[tile.zone]
+		if not _warned_zones.has(tile.zone):
+			_warned_zones[tile.zone] = true
+			push_warning("HexDecorations: a zona '%s' não tem receita; usando a do bioma." % tile.zone)
+	return RECIPES.get(tile.biome, [])
 
 
 ## O ponto do enxame de vagalumes do hexágono, a partir do centro, ou null. O gerador é

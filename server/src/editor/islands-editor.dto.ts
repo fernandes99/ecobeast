@@ -88,6 +88,16 @@ export class DraftTileDto extends EditorHexDto {
   @IsOptional()
   @IsBoolean({ message: 'bare precisa ser verdadeiro ou falso.' })
   bare?: boolean;
+
+  @ApiPropertyOptional({
+    description:
+      'O slug da zona (`biome_zones`), do bioma do hexágono. Sem ela, ou com o slug do bioma, o hexágono fica na Comum (biome-zones/03).',
+    example: 'temperate_woods',
+    nullable: true,
+  })
+  @IsOptional()
+  @IsString(text('zone'))
+  zone?: string | null;
 }
 
 export class DraftActionDto {

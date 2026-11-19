@@ -115,8 +115,30 @@ model Biome {
 
   species     SpeciesBiome[]
   islandTiles IslandTile[]
+  zones       BiomeZone[]
 
   @@map("biomes")
+  @@schema("ecobeasts")
+}
+
+/// As zonas de cada bioma (.specs/biome-zones/01-zone-records.md). A Comum tem o slug do bioma.
+model BiomeZone {
+  id        Int    @id @default(autoincrement())
+  /// CHECK ^[a-z0-9_]+$ (migration biome_zones)
+  slug      String @unique
+  biomeId   Int    @map("biome_id")
+  /// CHECK 1–40 caracteres (migration biome_zones)
+  name      String
+  /// A parte do bioma no mapa sorteado, dividida pela soma das zonas dele. CHECK 0–100 (migration biome_zones)
+  share     Int
+  sortOrder Int    @map("sort_order")
+
+  biome       Biome              @relation(fields: [biomeId], references: [id], onDelete: Restrict)
+  species     SpeciesBiomeZone[]
+  islandTiles IslandTile[]
+
+  @@index([biomeId])
+  @@map("biome_zones")
   @@schema("ecobeasts")
 }
 
@@ -262,23 +284,23 @@ model Voice {
 }
 
 model Npc {
-  id            Int     @id @default(autoincrement())
+  id              Int     @id @default(autoincrement())
   /// CHECK ^[a-z0-9_]+$ (migration island_npcs)
-  slug          String  @unique
+  slug            String  @unique
   /// O que a caixa de fala mostra.
-  name          String
+  name            String
   /// Só para o editor.
-  description   String
+  description     String
   /// A pasta assets/creatures/<sprite>/ do jogo; nulo é NPC pessoa. CHECK ^[a-z0-9_]+$ (migration island_npcs)
-  sprite        String?
+  sprite          String?
   /// O corpo do NPC pessoa. CHECK sprite ou corpo, nunca os dois: npcs_look_check (migration person_npcs)
-  bodyTypeId    Int?    @map("body_type_id")
+  bodyTypeId      Int?    @map("body_type_id")
   /// A pele do NPC pessoa, junto com o corpo (migration person_npcs)
-  skinPaletteId Int?    @map("skin_palette_id")
+  skinPaletteId   Int?    @map("skin_palette_id")
   /// A voz na caixa de fala; um NPC novo nasce com a Média (migration dialogue_voices)
-  voiceId       Int     @default(4) @map("voice_id")
+  voiceId         Int     @default(4) @map("voice_id")
   /// A fala que o NPC ganha ao ser posto no F2. CHECK até 2.000 caracteres (migration village_crowd)
-  defaultDialogue String @default("") @map("default_dialogue")
+  defaultDialogue String  @default("") @map("default_dialogue")
 
   bodyType        BodyType?           @relation(fields: [bodyTypeId], references: [id], onDelete: Restrict)
   voice           Voice               @relation(fields: [voiceId], references: [id], onDelete: Restrict)
@@ -578,6 +600,7 @@ model Species {
   starterOption  StarterOption?
   creatures      CreatureInstance[]
   biomes         SpeciesBiome[]
+  biomeZones     SpeciesBiomeZone[]
   dayPhases      SpeciesDayPhase[]
   codexEntries   CodexEntry[]
   islandAreas    IslandAreaSpecies[]
@@ -616,6 +639,22 @@ model SpeciesBiome {
   @@id([speciesId, biomeId])
   @@index([biomeId])
   @@map("species_biomes")
+  @@schema("ecobeasts")
+}
+
+/// O multiplicador da taxa do bioma numa zona, em %; sem linha, 100.
+model SpeciesBiomeZone {
+  speciesId   Int @map("species_id")
+  biomeZoneId Int @map("biome_zone_id")
+  /// CHECK 0–1000 (migration biome_zones)
+  ratePercent Int @map("rate_percent")
+
+  species   Species   @relation(fields: [speciesId], references: [id], onDelete: Restrict)
+  biomeZone BiomeZone @relation(fields: [biomeZoneId], references: [id], onDelete: Restrict)
+
+  @@id([speciesId, biomeZoneId])
+  @@index([biomeZoneId])
+  @@map("species_biome_zones")
   @@schema("ecobeasts")
 }
 
@@ -1131,8 +1170,11 @@ model IslandTile {
   groundTypeId Int?    @map("ground_type_id")
   /// Sem as decorações naturais sorteadas do bioma (free-props/05).
   bare         Boolean @default(false)
+  /// A zona do hexágono; nulo é a Comum do bioma (biome-zones/03).
+  biomeZoneId  Int?    @map("biome_zone_id")
 
   islandMap  IslandMap   @relation(fields: [islandMapId], references: [id], onDelete: Cascade)
+  biomeZone  BiomeZone?  @relation(fields: [biomeZoneId], references: [id], onDelete: SetNull)
   biome      Biome       @relation(fields: [biomeId], references: [id], onDelete: Restrict)
   area       IslandArea? @relation(fields: [areaId], references: [id], onDelete: SetNull)
   groundType GroundType? @relation(fields: [groundTypeId], references: [id], onDelete: Restrict)
@@ -1141,6 +1183,7 @@ model IslandTile {
   @@index([biomeId])
   @@index([areaId])
   @@index([groundTypeId])
+  @@index([biomeZoneId])
   @@map("island_tiles")
   @@schema("ecobeasts")
 }

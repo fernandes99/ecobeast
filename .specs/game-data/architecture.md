@@ -31,6 +31,7 @@ species ──< evolutions >── species              (evolution_triggers)
 species ──> growth_rates, rarities, species (evolves_from)
 species ──< starter_options
 species ──< species_biomes >── biomes
+species ──< species_biome_zones >── biome_zones >── biomes
 species ──< species_day_phases >── day_phases
 temperaments ──> stats (aumentado, diminuído)
 ```
@@ -252,6 +253,25 @@ Colunas que o tipo do efeito não usa ficam `null`.
 | rate       | int  | 0–100, o peso da espécie na disputa pelas vagas do bioma                    |
 
 Como elas viram Ecobeasts no mapa está em [biome-encounters/architecture.md](../biome-encounters/architecture.md).
+
+**`biome_zones`** — as zonas de cada bioma, com plantas próprias e, no mapa sorteado, a taxa mudada por `species_biome_zones` ([biome-zones](../biome-zones/)). A zona Comum de um bioma é a linha com o slug dele (ids 1 a 11).
+
+| Coluna     | Tipo   | Observação                                                                 |
+| ---------- | ------ | -------------------------------------------------------------------------- |
+| id         | int    |                                                                            |
+| slug       | string | `temperate_woods`; a receita de plantas do jogo é achada por ele           |
+| biome_id   | int    | FK → biomes                                                                |
+| name       | string | "Bosque"                                                                   |
+| share      | int    | 0–100, a parte do bioma no mapa sorteado, dividida pela soma das zonas dele |
+| sort_order | int    | a ordem das manchas no mapa sorteado, dentro do bioma                      |
+
+**`species_biome_zones`** — as exceções de nascimento por zona, só no mapa sorteado. Chave (`species_id`, `biome_zone_id`). A taxa na zona é `species_biomes.rate × rate_percent / 100`; sem linha, vale 100.
+
+| Coluna        | Tipo | Observação          |
+| ------------- | ---- | ------------------- |
+| species_id    | int  | FK → species        |
+| biome_zone_id | int  | FK → biome_zones    |
+| rate_percent  | int  | 0–1000              |
 
 **`species_day_phases`** — as partes do dia em que cada espécie nasce como selvagem, no mapa sorteado e nas áreas das ilhas. Chave (`species_id`, `day_phase_id`). Sem linha para uma parte do dia, a espécie não nasce nela; as equipes dos Domadores NPC não olham esta tabela. Como o sorteio a usa está em [day-phase-spawns](../day-phase-spawns/).
 

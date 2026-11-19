@@ -476,6 +476,8 @@ func _on_brush_changed() -> void:
 	_canvas.all_block_points = _tools.tool == EditorTools.Tool.BLOCKS
 	_canvas.refresh_brush()
 	_place_object_bar()
+	if _canvas.show_zones != (_tools.tool == EditorTools.Tool.ZONE):
+		_canvas.show_zones = _tools.tool == EditorTools.Tool.ZONE
 	if _tools.tool == EditorTools.Tool.ACTION and not _actions_check.button_pressed:
 		_actions_check.button_pressed = true
 	elif _tools.tool == EditorTools.Tool.AREA and not _areas_check.button_pressed:

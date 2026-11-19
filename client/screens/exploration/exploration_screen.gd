@@ -1108,6 +1108,7 @@ func _battle_params(params: Dictionary) -> Dictionary:
 	var tile: HexTile = _map.tile_at(_player_coord) if _map != null else null
 	if tile != null:
 		params["biome"] = tile.biome
+		params["zone"] = tile.zone
 		params["height"] = tile.height
 	return params
 

@@ -91,6 +91,7 @@ export class IslandsService {
           include: {
             biome: { select: { slug: true } },
             groundType: { select: { slug: true } },
+            biomeZone: { select: { slug: true } },
           },
         }),
         client.islandAction.findMany({
@@ -134,7 +135,17 @@ export class IslandsService {
       name: map.name,
       start: { q: map.startQ, r: map.startR },
       tiles: tiles.map(
-        ({ q, r, biome, height, variant, groundType, areaId, bare }) => ({
+        ({
+          q,
+          r,
+          biome,
+          height,
+          variant,
+          groundType,
+          areaId,
+          bare,
+          biomeZone,
+        }) => ({
           q,
           r,
           biome: biome.slug as Biome,
@@ -143,6 +154,7 @@ export class IslandsService {
           ...(groundType === null ? {} : { ground: groundType.slug }),
           ...(areaId === null ? {} : { area: keys.get(areaId)! }),
           ...(bare ? { bare } : {}),
+          ...(biomeZone === null ? {} : { zone: biomeZone.slug }),
         }),
       ),
       actions: actions.map(({ actionTypeId, tiles: occupied }) => ({

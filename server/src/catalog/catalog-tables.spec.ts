@@ -5,9 +5,9 @@ import { CATALOG_TABLES, SEED_DATA_DIR } from './catalog-tables.js';
 describe('CATALOG_TABLES', () => {
   const names = CATALOG_TABLES.map((table) => table.name);
 
-  it('tem as 48 tabelas, sem repetição', () => {
-    expect(names).toHaveLength(48);
-    expect(new Set(names).size).toBe(48);
+  it('tem as 50 tabelas, sem repetição', () => {
+    expect(names).toHaveLength(50);
+    expect(new Set(names).size).toBe(50);
   });
 
   it('casa com os arquivos .json da pasta de dados do seed', () => {
@@ -33,6 +33,9 @@ describe('CATALOG_TABLES', () => {
     );
     expect(names.indexOf('species')).toBeLessThan(
       names.indexOf('species_biomes'),
+    );
+    expect(names.indexOf('biome_zones')).toBeLessThan(
+      names.indexOf('species_biome_zones'),
     );
     expect(names.indexOf('day_phases')).toBeLessThan(
       names.indexOf('species_day_phases'),
@@ -784,5 +787,47 @@ describe('carga inicial do dia e da noite (day-night/01 e 03)', () => {
     const refuge = lights.filter(({ prop_type_id }) => prop_type_id === 22);
     expect(refuge.map(({ position }) => position)).toEqual([0, 1, 2, 3, 4, 5]);
     expect(refuge.filter(({ color }) => color === 'ffd890')).toHaveLength(2);
+  });
+});
+
+describe('carga inicial das zonas (biome-zones/01)', () => {
+  const read = <T>(name: string) =>
+    JSON.parse(
+      readFileSync(join(SEED_DATA_DIR, `${name}.json`), 'utf8'),
+    ) as T[];
+  const biomes = read<{ id: number; slug: string }>('biomes');
+  const zones = read<{ id: number; slug: string; biome_id: number }>(
+    'biome_zones',
+  );
+  const exceptions = read<{ biome_zone_id: number; rate_percent: number }>(
+    'species_biome_zones',
+  );
+
+  it('tem a Comum de cada bioma, com o id e o slug dele', () => {
+    for (const biome of biomes) {
+      expect(zones.find((zone) => zone.id === biome.id)).toMatchObject({
+        slug: biome.slug,
+        biome_id: biome.id,
+      });
+    }
+  });
+
+  it('tem as 13 zonas novas, cada uma de um bioma que existe', () => {
+    const others = zones.filter(({ id }) => id > biomes.length);
+    expect(others).toHaveLength(13);
+    for (const zone of others) {
+      expect(biomes.some(({ id }) => id === zone.biome_id)).toBe(true);
+      expect(
+        zone.slug.startsWith(
+          `${biomes.find(({ id }) => id === zone.biome_id)!.slug}_`,
+        ),
+      ).toBe(true);
+    }
+  });
+
+  it('as exceções apontam para zonas que existem', () => {
+    for (const { biome_zone_id } of exceptions) {
+      expect(zones.some(({ id }) => id === biome_zone_id)).toBe(true);
+    }
   });
 });

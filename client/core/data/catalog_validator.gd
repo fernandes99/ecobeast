@@ -40,6 +40,7 @@ func _run(tables: Dictionary) -> Array[String]:
 	_check_npcs()
 	_check_npc_appearance_parts()
 	_check_voices()
+	_check_biome_zones()
 	return _errors
 
 
@@ -506,3 +507,15 @@ func _check_voices() -> void:
 	for slug: String in VOICES_REQUIRED:
 		if not _rows["voices"].any(func(row: Dictionary) -> bool: return row["slug"] == slug):
 			_table_error("voices", "falta a voz '%s'" % slug)
+
+
+## A Comum de cada bioma é a zona com o slug dele (biome-zones/01).
+func _check_biome_zones() -> void:
+	var lines: Array[int] = _lines["biomes"]
+	var rows: Array[Dictionary] = _rows["biomes"]
+	for i: int in rows.size():
+		var biome: Dictionary = rows[i]
+		var common: bool = _rows["biome_zones"].any(func(zone: Dictionary) -> bool:
+			return zone["slug"] == biome["slug"] and zone["biome_id"] == biome["id"])
+		if not common:
+			_row_error("biomes", lines[i], "bioma '%s' sem a zona Comum em biome_zones.json" % biome["slug"])

@@ -55,6 +55,8 @@ export interface MapTile extends HexCoord {
   biome: Biome;
   height: number;
   variant: number;
+  /** O slug da zona, só fora da Comum (biome-zones/01). */
+  zone?: string;
 }
 
 /** Uma ponte no formato de `MapBridgeDto` (bridges/01). */

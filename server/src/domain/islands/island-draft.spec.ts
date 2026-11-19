@@ -34,6 +34,11 @@ const known: KnownIds = {
   wallSlugs: new Set(['wood_fence', 'invisible_wall']),
   bridgeSlugs: new Set(['wood_bridge', 'rope_bridge']),
   propBlocks: new Map(),
+  zoneBiomes: new Map([
+    ['temperate', 'temperate'],
+    ['temperate_woods', 'temperate'],
+    ['hill_scree', 'hill'],
+  ]),
 };
 
 function island(): IslandDraft {
@@ -215,6 +220,36 @@ describe('draftError', () => {
     expect(draftError(draft, known)).toBe(
       'O hexágono (1, 0) tem um chão que não existe.',
     );
+  });
+
+  it('aceita a zona do bioma do hexágono (biome-zones/03)', () => {
+    const draft = island();
+    draft.tiles[0]!.zone = 'temperate_woods';
+    expect(draftError(draft, known)).toBeNull();
+  });
+
+  it('recusa uma zona que não existe (biome-zones/03)', () => {
+    const draft = island();
+    draft.tiles[0]!.zone = 'temperate_lava';
+    expect(draftError(draft, known)).toBe(
+      'O hexágono (0, 0) tem uma zona que não existe.',
+    );
+  });
+
+  it('recusa a zona de outro bioma (biome-zones/03)', () => {
+    const draft = island();
+    draft.tiles[0]!.zone = 'hill_scree';
+    expect(draftError(draft, known)).toBe(
+      'O hexágono (0, 0) tem a zona hill_scree, que não é do bioma temperate.',
+    );
+  });
+
+  it('leva a zona no hash só quando ela existe (biome-zones/03)', () => {
+    const before = draftHash(island());
+    const draft = island();
+    draft.tiles[0]!.zone = 'temperate_woods';
+    expect(draftHash(draft)).not.toBe(before);
+    expect(draftHash(island())).toBe(before);
   });
 
   it('recusa duas áreas com a mesma key', () => {

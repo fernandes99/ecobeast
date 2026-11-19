@@ -53,6 +53,13 @@ export class MapTileDto extends HexCoordDto {
 
   @ApiPropertyOptional({
     description:
+      'O slug da zona (`biome_zones`), só fora da Comum do bioma (biome-zones/01).',
+    example: 'temperate_woods',
+  })
+  zone?: string;
+
+  @ApiPropertyOptional({
+    description:
       'O slug de um `ground_types` (trilha ou piso). Só aparece nas ilhas, no hexágono com chão.',
     example: 'dirt_trail',
   })

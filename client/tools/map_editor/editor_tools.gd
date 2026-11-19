@@ -7,10 +7,10 @@ signal npcs_redrawn
 signal brush_changed
 signal edited(step: EditorHistory.Step, merge: bool)
 
-enum Tool { BIOME, HEIGHT, GROUND, ADD, REMOVE, START, OBJECT, ACTION, AREA, STAMP, ERASER, PATH, VEGETATION, NPC, FENCE, BLOCKS, BRIDGE, SCENES }
+enum Tool { BIOME, HEIGHT, GROUND, ADD, REMOVE, START, OBJECT, ACTION, AREA, STAMP, ERASER, PATH, VEGETATION, NPC, FENCE, BLOCKS, BRIDGE, SCENES, ZONE }
 
-const TOOL_NAMES: Array[String] = ["Bioma", "Altura", "Chão", "Pôr hexágono", "Tirar hexágono", "Chegada", "Peças", "Ação", "Área", "Carimbo", "Borracha", "Caminho", "Vegetação", "NPC", "Cerca", "Bloqueios", "Ponte", "Cenas"]
-const TOOL_ICONS: Array[String] = ["biome", "height", "ground", "hex_add", "hex_remove", "flag", "object", "action", "area", "stamp", "eraser", "path", "vegetation", "npc", "fence", "blocks", "bridge", "scene"]
+const TOOL_NAMES: Array[String] = ["Bioma", "Altura", "Chão", "Pôr hexágono", "Tirar hexágono", "Chegada", "Peças", "Ação", "Área", "Carimbo", "Borracha", "Caminho", "Vegetação", "NPC", "Cerca", "Bloqueios", "Ponte", "Cenas", "Zona"]
+const TOOL_ICONS: Array[String] = ["biome", "height", "ground", "hex_add", "hex_remove", "flag", "object", "action", "area", "stamp", "eraser", "path", "vegetation", "npc", "fence", "blocks", "bridge", "scene", "zone"]
 const TOOL_HINTS: Array[String] = [
 	"Troca o bioma dos hexágonos que já existem. A altura só muda se você escolher uma abaixo.",
 	"Troca só a altura dos hexágonos que já existem.",
@@ -30,16 +30,18 @@ const TOOL_HINTS: Array[String] = [
 	"Edita as linhas de bloqueio de qualquer peça. Botão direito apaga um ponto.",
 	"Clique numa margem e depois na outra para pôr a ponte. Esc ou o botão direito desistem. Clique numa ponte para escolher, trocar o estilo ou apagar.",
 	"Escolha uma cena no painel. Os botões \"Escolher no mapa\" pegam hexágonos da ilha.",
+	"Pinta a zona escolhida, só nos hexágonos do bioma dela. Botão direito volta para a Comum.",
 ]
 ## Os grupos da coluna (map-editor/06): as ferramentas parecidas viram abas do grupo.
 const GROUPS: Array[Dictionary] = [
-	{"name": "Terreno", "icon": "biome", "tools": [Tool.BIOME, Tool.HEIGHT, Tool.ADD, Tool.REMOVE]},
+	{"name": "Terreno", "icon": "biome", "tools": [Tool.BIOME, Tool.HEIGHT, Tool.ZONE, Tool.ADD, Tool.REMOVE]},
 	{"name": "Chão", "icon": "ground", "tools": [Tool.GROUND, Tool.PATH]},
 	{"name": "Peças", "icon": "object", "tools": [Tool.OBJECT, Tool.VEGETATION, Tool.BLOCKS, Tool.STAMP, Tool.ERASER, Tool.FENCE, Tool.BRIDGE]},
 	{"name": "Jogo", "icon": "flag", "tools": [Tool.START, Tool.ACTION, Tool.AREA, Tool.NPC, Tool.SCENES]},
 ]
 const TAB_ICON_WIDTH := 18
 const NO_AREA_MESSAGE := "Crie ou escolha uma área no painel antes de pintar."
+const NO_ZONE_MESSAGE := "Escolha uma zona no painel antes de pintar."
 const BIOMES: Array[String] = ["temperate", "boreal", "stone", "hill", "mountain", "desert", "snow", "beach", "wshallow", "wford", "wdeep"]
 const BIOME_SWATCH_HEIGHT := 1
 const TOOL_BUTTON_SIZE := Vector2(76.0, 58.0)
@@ -122,6 +124,8 @@ var object_panel: ObjectPanel
 var _object_section: Control
 var _object_done := false
 var area_panel: AreaPanel
+var zone_panel: ZonePanel
+var _zone_section: Control
 var stamp_panel: StampPanel
 var _stamp_section: Control
 var path_panel: PathPanel
@@ -238,6 +242,11 @@ func _init() -> void:
 			keep_grid.add_child(button)
 		button.pressed.connect(_pick_biome_height.bind(value))
 		_biome_height_buttons.append(button)
+
+	var zones_box := _section("Zona")
+	_zone_section = zones_box.get_parent()
+	zone_panel = ZonePanel.new()
+	zones_box.add_child(zone_panel)
 
 	var heights_box := _section("Altura  ·  Shift+0 a 9")
 	_height_section = heights_box.get_parent()
@@ -502,7 +511,7 @@ func paint(draft: IslandDraft, center: Vector2i) -> Array[Vector2i]:
 		return changed
 	if tool == Tool.VEGETATION:
 		return _paint_vegetation(draft, center)
-	if _secondary and tool != Tool.AREA and tool != Tool.ERASER:
+	if _secondary and tool != Tool.AREA and tool != Tool.ERASER and tool != Tool.ZONE:
 		return changed
 	if tool == Tool.START:
 		if draft.tiles.has(center) and draft.start != center and editable(draft, center):
@@ -606,6 +615,7 @@ func _change(draft: IslandDraft, coord: Vector2i) -> bool:
 			var changed := false
 			if tile.biome != biome:
 				tile.biome = biome
+				tile.zone = ""
 				if tile.variant > IslandDraft.max_variant(biome):
 					tile.variant = IslandDraft.roll_variant(biome, detail_chance, _rng)
 				changed = true
@@ -644,6 +654,23 @@ func _change(draft: IslandDraft, coord: Vector2i) -> bool:
 			if tile == null or tile.bare == not _secondary:
 				return false
 			tile.bare = not _secondary
+			return true
+		Tool.ZONE:
+			if tile == null:
+				return false
+			if _secondary:
+				if tile.zone.is_empty():
+					return false
+				tile.zone = ""
+				return true
+			if zone_panel.selected.is_empty():
+				if not _full_warned:
+					_full_warned = true
+					message.emit(NO_ZONE_MESSAGE)
+				return false
+			if zone_panel.biome_of(zone_panel.selected) != tile.biome or tile.zone == zone_panel.selected:
+				return false
+			tile.zone = zone_panel.selected
 			return true
 		Tool.AREA:
 			if tile == null:
@@ -1246,6 +1273,7 @@ func _refresh() -> void:
 	_object_section.visible = tool == Tool.OBJECT
 	_action_section.visible = tool == Tool.ACTION
 	_area_section.visible = tool == Tool.AREA
+	_zone_section.visible = tool == Tool.ZONE
 	_stamp_section.visible = tool == Tool.STAMP
 	_path_section.visible = tool == Tool.PATH
 	_fence_section.visible = tool == Tool.FENCE

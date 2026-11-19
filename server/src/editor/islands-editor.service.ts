@@ -65,7 +65,7 @@ export function toDraft(dto: IslandDraftDto): IslandDraft {
     name: dto.name,
     start: { q: dto.start.q, r: dto.start.r },
     tiles: dto.tiles.map(
-      ({ q, r, biome, height, variant, ground, area, bare }) => ({
+      ({ q, r, biome, height, variant, ground, area, bare, zone }) => ({
         q,
         r,
         biome,
@@ -74,6 +74,9 @@ export function toDraft(dto: IslandDraftDto): IslandDraft {
         ...(ground === undefined || ground === null ? {} : { ground }),
         ...(area === undefined || area === null ? {} : { area }),
         ...(bare === true ? { bare } : {}),
+        ...(zone === undefined || zone === null || zone === biome
+          ? {}
+          : { zone }),
       }),
     ),
     actions: dto.actions.map(({ action_type_id, tiles }) => ({
@@ -322,18 +325,31 @@ export class IslandsEditorService {
   }
 
   private async knownIds(): Promise<KnownIds> {
-    const [actions, grounds, species, props, npcs, walls, bridges, blocks, interiors] =
-      await Promise.all([
-        this.prisma.actionType.findMany({ select: { id: true } }),
-        this.prisma.groundType.findMany({ select: { slug: true } }),
-        this.prisma.species.findMany({ select: { id: true } }),
-        this.prisma.propType.findMany({ select: { id: true, variants: true } }),
-        this.prisma.npc.findMany({ select: { id: true } }),
-        this.prisma.wallType.findMany({ select: { slug: true } }),
-        this.prisma.bridgeType.findMany({ select: { slug: true } }),
-        this.islands.readTypeBlocks(),
-        this.prisma.interior.findMany({ select: { id: true } }),
-      ]);
+    const [
+      actions,
+      grounds,
+      species,
+      props,
+      npcs,
+      walls,
+      bridges,
+      blocks,
+      interiors,
+      zones,
+    ] = await Promise.all([
+      this.prisma.actionType.findMany({ select: { id: true } }),
+      this.prisma.groundType.findMany({ select: { slug: true } }),
+      this.prisma.species.findMany({ select: { id: true } }),
+      this.prisma.propType.findMany({ select: { id: true, variants: true } }),
+      this.prisma.npc.findMany({ select: { id: true } }),
+      this.prisma.wallType.findMany({ select: { slug: true } }),
+      this.prisma.bridgeType.findMany({ select: { slug: true } }),
+      this.islands.readTypeBlocks(),
+      this.prisma.interior.findMany({ select: { id: true } }),
+      this.prisma.biomeZone.findMany({
+        select: { slug: true, biome: { select: { slug: true } } },
+      }),
+    ]);
     return {
       actionTypeIds: new Set(actions.map(({ id }) => id)),
       groundSlugs: new Set(grounds.map(({ slug }) => slug)),
@@ -344,6 +360,7 @@ export class IslandsEditorService {
       wallSlugs: new Set(walls.map(({ slug }) => slug)),
       bridgeSlugs: new Set(bridges.map(({ slug }) => slug)),
       propBlocks: blocks,
+      zoneBiomes: new Map(zones.map(({ slug, biome }) => [slug, biome.slug])),
     };
   }
 
@@ -398,8 +415,13 @@ export class IslandsEditorService {
         ({ id, slug }) => [slug, id],
       ),
     );
+    const zoneIds = new Map(
+      (await tx.biomeZone.findMany({ select: { id: true, slug: true } })).map(
+        ({ id, slug }) => [slug, id],
+      ),
+    );
     const tiles = draft.tiles.map(
-      ({ q, r, biome, height, variant, ground, area, bare }) => ({
+      ({ q, r, biome, height, variant, ground, area, bare, zone }) => ({
         islandMapId: map.id,
         q,
         r,
@@ -409,6 +431,7 @@ export class IslandsEditorService {
         groundTypeId: ground === undefined ? null : groundIds.get(ground)!,
         areaId: area === undefined ? null : areaIds.get(area)!,
         bare: bare === true,
+        biomeZoneId: zone === undefined ? null : zoneIds.get(zone)!,
       }),
     );
     for (let first = 0; first < tiles.length; first += TILE_CHUNK) {

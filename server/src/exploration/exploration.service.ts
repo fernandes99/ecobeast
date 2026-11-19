@@ -12,6 +12,7 @@ import {
 } from '../battle/battle.dto.js';
 import { secureRandom } from '../common/secure-random.js';
 import { generateMap } from '../domain/exploration/map-generator.js';
+import { assignZones } from '../domain/exploration/map-zones.js';
 import {
   bornIn,
   type MapSpawn,
@@ -55,6 +56,7 @@ import { DiscoveriesService } from '../islands/discoveries.service.js';
 import { ExplorationStore } from './exploration.store.js';
 import {
   loadSpawnSpecies,
+  loadZones,
   loadTamerTexts,
   partyAverageLevel,
   speciesBornAt,
@@ -118,12 +120,17 @@ export class ExplorationService {
     }
     if (teamAverage === null) throw new ConflictException(NO_TEAM);
 
-    const map = generateMap(Math.floor(secureRandom() * SEED_RANGE));
-    const [species, texts, born] = await Promise.all([
+    const generated = generateMap(Math.floor(secureRandom() * SEED_RANGE));
+    const [species, texts, born, zones] = await Promise.all([
       loadSpawnSpecies(this.prisma),
       loadTamerTexts(this.prisma),
       speciesBornAt(this.prisma, minute),
+      loadZones(this.prisma),
     ]);
+    const map = {
+      ...generated,
+      tiles: assignZones(generated.tiles, generated.seed, zones),
+    };
     const spawns = rollSpawns(
       map.tiles,
       bornIn(species, born),
@@ -191,7 +198,7 @@ export class ExplorationService {
         start: draft.start,
         // A área de cada hexágono fica no servidor.
         tiles: draft.tiles.map(
-          ({ q, r, biome, height, variant, ground, bare }) => ({
+          ({ q, r, biome, height, variant, ground, bare, zone }) => ({
             q,
             r,
             biome,
@@ -199,6 +206,7 @@ export class ExplorationService {
             variant,
             ...(ground === undefined ? {} : { ground }),
             ...(bare === true ? { bare } : {}),
+            ...(zone === undefined ? {} : { zone }),
           }),
         ),
         creatures: spawns.map(toMapCreatureDto),
