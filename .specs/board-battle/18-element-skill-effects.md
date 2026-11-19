@@ -34,7 +34,7 @@ São 26 Técnicas com ícone. Faltavam 22: 6 de Fogo, 9 de Água e 7 de Flora.
   | Linha | Cor no kit | Elementos |
   | --- | --- | --- |
   | 1 | laranja e amarelo | Volt, Luz |
-  | 2 | roxo e rosa | Toxina, Mente |
+  | 2 | roxo e rosa | Toxina, Psíquico |
   | 3 | azul-claro | Água, Gelo |
   | 4 | verde | Flora, Inseto |
   | 5 | marrom | Instinto |

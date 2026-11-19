@@ -77,6 +77,7 @@ Cada material tem 4 tons: claro, base, escuro e contorno. Um objeto usa só as c
 | Fundação | 3 linhas `#a8a8b4`, a de baixo `#80808c`, com uma junta `#80808c` a cada 6 px |
 | Laranja das bandeiras | `#f8a868` claro, `#f08030` base, `#c05420` escuro |
 | Ouro | `#fff090` claro, `#f8c838` base, `#c8901c` escuro, `#7a5410` contorno |
+| Arcano (cristal e portal do [Altar-portal](../portal-altar/)) | `#d4ccff` claro, `#a99bff` base, `#6c5ce7` escuro, `#3b2c92` contorno, brilho ciano `#7fe8ff` |
 | Luz de lâmpada | `#ffe070`, brilho `#fff8c8` |
 | Flores | `#f05050`, `#f8d040`, `#ffffff`, `#f890c0`, miolo `#f8a028` |
 | Folhagem de canteiro | `#86d266` claro, `#3f9c48` base, `#2a7038` escuro |

@@ -76,7 +76,7 @@ describe('carga inicial dos biomas (biome-encounters/01)', () => {
     'species_biomes',
   );
   const biomeId = (slug: string) => biomes.find((b) => b.slug === slug)!.id;
-  const BROWT = 7;
+  const SEEDLET = 7;
 
   it('tem os 11 biomas de encontro', () => {
     expect(biomes.map(({ slug }) => slug).sort()).toEqual(
@@ -109,10 +109,10 @@ describe('carga inicial dos biomas (biome-encounters/01)', () => {
     expect(new Set(pairs).size).toBe(pairs.length);
   });
 
-  it('o Browt é bem mais comum no boreal que na montanha, e não está na água', () => {
+  it('o Seedlet é bem mais comum no boreal que na montanha, e não está na água', () => {
     const rate = (slug: string) =>
       rates.find(
-        (row) => row.species_id === BROWT && row.biome_id === biomeId(slug),
+        (row) => row.species_id === SEEDLET && row.biome_id === biomeId(slug),
       )?.rate;
     expect(rate('boreal')).toBeGreaterThan(rate('mountain')! * 10);
     expect(rate('wshallow')).toBeUndefined();
@@ -494,7 +494,47 @@ describe('carga inicial dos NPCs (island-npcs/01)', () => {
       [4, 'mira'],
       [5, 'refuge_keeper'],
       [6, 'liora_puffcoo'],
+      [7, 'villager_tome'],
+      [8, 'villager_baltazar'],
+      [9, 'villager_caio'],
+      [10, 'villager_severino'],
+      [11, 'villager_joaquim'],
+      [12, 'villager_lucia'],
+      [13, 'villager_benedita'],
+      [14, 'villager_clara'],
+      [15, 'villager_rosa'],
+      [16, 'villager_dalia'],
     ]);
+  });
+
+  it('os moradores têm pele de pele, cores do tipo do lugar e a fala padrão (village-crowd/01)', () => {
+    const palettes = read<{ id: number; kind: string }[]>('palettes.json');
+    const slots = read<{ id: number; palette_kind: string | null }[]>(
+      'appearance_slots.json',
+    );
+    const kind = (id: number | null) =>
+      palettes.find((palette) => palette.id === id)?.kind ?? null;
+    const villagers = read<
+      { id: number; skin_palette_id: number; default_dialogue: string }[]
+    >('npcs.json').filter(({ id }) => id >= 7 && id <= 16);
+    expect(villagers).toHaveLength(10);
+    for (const villager of villagers) {
+      expect(kind(villager.skin_palette_id), String(villager.id)).toBe('skin');
+      expect(villager.default_dialogue.length).toBeGreaterThan(0);
+      expect(villager.default_dialogue.length).toBeLessThanOrEqual(2000);
+    }
+    for (const part of read<
+      {
+        npc_id: number;
+        appearance_slot_id: number;
+        palette_id: number | null;
+      }[]
+    >('npc_appearance_parts.json')) {
+      const slot = slots.find(({ id }) => id === part.appearance_slot_id)!;
+      expect(kind(part.palette_id), `${part.npc_id}/${slot.id}`).toBe(
+        slot.palette_kind,
+      );
+    }
   });
 
   it('cada NPC tem o sprite de um Ecobeast ou o corpo e a pele, nunca os dois', () => {
@@ -568,6 +608,16 @@ describe('carga inicial das vozes (dialogue-voices/01)', () => {
       mira: 5,
       refuge_keeper: 4,
       liora_puffcoo: 6,
+      villager_tome: 4,
+      villager_baltazar: 3,
+      villager_caio: 4,
+      villager_severino: 3,
+      villager_joaquim: 4,
+      villager_lucia: 5,
+      villager_benedita: 4,
+      villager_clara: 5,
+      villager_rosa: 4,
+      villager_dalia: 5,
     });
   });
 

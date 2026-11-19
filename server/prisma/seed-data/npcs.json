@@ -7,7 +7,8 @@
 		"sprite": "ruvo",
 		"body_type_id": null,
 		"skin_palette_id": null,
-		"voice_id": 6
+		"voice_id": 6,
+		"default_dialogue": ""
 	},
 	{
 		"id": 2,
@@ -17,7 +18,8 @@
 		"sprite": "ruvak",
 		"body_type_id": null,
 		"skin_palette_id": null,
-		"voice_id": 6
+		"voice_id": 6,
+		"default_dialogue": ""
 	},
 	{
 		"id": 3,
@@ -27,7 +29,8 @@
 		"sprite": null,
 		"body_type_id": 1,
 		"skin_palette_id": 4,
-		"voice_id": 3
+		"voice_id": 3,
+		"default_dialogue": ""
 	},
 	{
 		"id": 4,
@@ -37,7 +40,8 @@
 		"sprite": null,
 		"body_type_id": 2,
 		"skin_palette_id": 1,
-		"voice_id": 5
+		"voice_id": 5,
+		"default_dialogue": ""
 	},
 	{
 		"id": 5,
@@ -47,7 +51,8 @@
 		"sprite": null,
 		"body_type_id": 1,
 		"skin_palette_id": 6,
-		"voice_id": 4
+		"voice_id": 4,
+		"default_dialogue": ""
 	},
 	{
 		"id": 6,
@@ -57,6 +62,117 @@
 		"sprite": "puffcoo",
 		"body_type_id": null,
 		"skin_palette_id": null,
-		"voice_id": 6
+		"voice_id": 6,
+		"default_dialogue": ""
+	},
+	{
+		"id": 7,
+		"slug": "villager_tome",
+		"name": "Tomé",
+		"description": "Morador da Vila Raiz.",
+		"sprite": null,
+		"body_type_id": 1,
+		"skin_palette_id": 4,
+		"voice_id": 4,
+		"default_dialogue": "Bom dia! A colheita está boa este ano."
+	},
+	{
+		"id": 8,
+		"slug": "villager_baltazar",
+		"name": "Baltazar",
+		"description": "Morador da Vila Raiz.",
+		"sprite": null,
+		"body_type_id": 1,
+		"skin_palette_id": 6,
+		"voice_id": 3,
+		"default_dialogue": "Na minha época, os Ecobeasts selvagens chegavam até a praça."
+	},
+	{
+		"id": 9,
+		"slug": "villager_caio",
+		"name": "Caio",
+		"description": "Morador da Vila Raiz.",
+		"sprite": null,
+		"body_type_id": 1,
+		"skin_palette_id": 5,
+		"voice_id": 4,
+		"default_dialogue": "Um dia eu ainda vou ser Domador também!"
+	},
+	{
+		"id": 10,
+		"slug": "villager_severino",
+		"name": "Severino",
+		"description": "Morador da Vila Raiz.",
+		"sprite": null,
+		"body_type_id": 1,
+		"skin_palette_id": 7,
+		"voice_id": 3,
+		"default_dialogue": "Cuidado com o mato alto. Sempre tem Ecobeast escondido lá."
+	},
+	{
+		"id": 11,
+		"slug": "villager_joaquim",
+		"name": "Joaquim",
+		"description": "Morador da Vila Raiz.",
+		"sprite": null,
+		"body_type_id": 1,
+		"skin_palette_id": 1,
+		"voice_id": 4,
+		"default_dialogue": "O vento está forte hoje. Bom dia para soltar pipa."
+	},
+	{
+		"id": 12,
+		"slug": "villager_lucia",
+		"name": "Lúcia",
+		"description": "Moradora da Vila Raiz.",
+		"sprite": null,
+		"body_type_id": 2,
+		"skin_palette_id": 4,
+		"voice_id": 5,
+		"default_dialogue": "Que bom te ver por aqui! A vila anda movimentada."
+	},
+	{
+		"id": 13,
+		"slug": "villager_benedita",
+		"name": "Benedita",
+		"description": "Moradora da Vila Raiz.",
+		"sprite": null,
+		"body_type_id": 2,
+		"skin_palette_id": 5,
+		"voice_id": 4,
+		"default_dialogue": "Já passou no Refúgio? Eles cuidam muito bem dos Ecobeasts."
+	},
+	{
+		"id": 14,
+		"slug": "villager_clara",
+		"name": "Clara",
+		"description": "Moradora da Vila Raiz.",
+		"sprite": null,
+		"body_type_id": 2,
+		"skin_palette_id": 1,
+		"voice_id": 5,
+		"default_dialogue": "Estou procurando flores para a minha horta."
+	},
+	{
+		"id": 15,
+		"slug": "villager_rosa",
+		"name": "Rosa",
+		"description": "Moradora da Vila Raiz.",
+		"sprite": null,
+		"body_type_id": 2,
+		"skin_palette_id": 8,
+		"voice_id": 4,
+		"default_dialogue": "Dizem que à noite aparecem vagalumes perto do campo."
+	},
+	{
+		"id": 16,
+		"slug": "villager_dalia",
+		"name": "Dália",
+		"description": "Moradora da Vila Raiz.",
+		"sprite": null,
+		"body_type_id": 2,
+		"skin_palette_id": 6,
+		"voice_id": 5,
+		"default_dialogue": "A Loja recebeu Esferas novas. Vale a pena dar uma olhada."
 	}
 ]

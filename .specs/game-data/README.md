@@ -29,6 +29,7 @@ Tomadas com o dono do projeto:
 | Um arquivo por tabela, com ids e FKs (no estilo da PokeAPI)          | Vira migração SQL quase 1:1                                         |
 | As 3 linhas iniciais completas (9 espécies)                          | Valida Ascensão e learnset no modelo desde já                       |
 | Linha de Fogo do GDD; linhas de Água e Flora propostas no planejamento | O dono revisa nomes e números (marcados _a revisar_)               |
+| O Elemento 10 se chama Psíquico, e não Mente (2026-11-19)           | Pedido do dono: o nome lembra o Pokémon, mas é uma palavra comum e não copia nada |
 
 Tomadas no planejamento (corrigíveis; ao mudar uma, atualize aqui e nas specs afetadas):
 
@@ -60,8 +61,9 @@ Tomadas no planejamento (corrigíveis; ao mudar uma, atualize aqui e nas specs a
 | [01-data-layer](01-data-layer.md)             | Schema em código, leitura dos JSON, validador, `GameData` e modelos        | concluída |
 | [02-core-tables](02-core-tables.md)           | Tabelas de referência: elementos e efetividade, stats, temperamentos etc.  | concluída |
 | [03-starter-content](03-starter-content.md)   | As 3 linhas iniciais: espécies, traços, técnicas, learnsets e Ascensões    | concluída |
-| [04-hushling-line](04-hushling-line.md)       | Hushling e Echofrost, com as primeiras Técnicas de Gelo e Mente            | concluída |
+| [04-hushling-line](04-hushling-line.md)       | Hushling e Echofrost, com as primeiras Técnicas de Gelo e Psíquico            | concluída |
 | [05-insect-element](05-insect-element.md)     | O Elemento Inseto e a eficácia dele                                        | concluída |
 | [06-clod-line](06-clod-line.md)               | Clod, Crag e Ingot, com as primeiras Técnicas de Terra                     | concluída |
+| [07-psychic-element](07-psychic-element.md)   | O Elemento Mente passa a se chamar Psíquico                                | concluída |
 
 O schema completo está em [architecture.md](architecture.md).

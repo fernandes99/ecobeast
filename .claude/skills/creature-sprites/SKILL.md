@@ -1,6 +1,6 @@
 ---
 name: creature-sprites
-description: Cria as folhas de pixel art idle.png e walk.png de um Ecobeast a partir do front.png dele, em 5 ângulos, no formato de client/assets/tamer. Use sempre que o usuário pedir sprite animado, idle, walk, andar, pixel art ou spritesheet de uma criatura ou Ecobeast (Ruvo, Nilu, Browt, Ruvak e os outros), mesmo sem dizer "folha", e também para ajustar ou redesenhar uma folha que já existe.
+description: Cria as folhas de pixel art idle.png e walk.png de um Ecobeast a partir do front.png dele, em 5 ângulos, no formato de client/assets/tamer. Use sempre que o usuário pedir sprite animado, idle, walk, andar, pixel art ou spritesheet de uma criatura ou Ecobeast (Ruvo, Nilu, Seedlet, Ruvak e os outros), mesmo sem dizer "folha", e também para ajustar ou redesenhar uma folha que já existe.
 ---
 
 # Folhas de pixel art dos Ecobeasts
@@ -18,7 +18,7 @@ O tamanho vem da altura do catálogo, na escala do Domador: um Ecobeast pequeno 
 
 - Células de 32×32, em 5 linhas: frente, diagonal descendo para a direita, lado direito, diagonal subindo para a direita e costas. O lado esquerdo sai espelhando no jogo, com `flip_h`, então nunca é desenhado.
 - Os pés encostam na última linha da célula, perto da coluna 16: é o ponto que o jogo põe no centro do hexágono.
-- **Altura:** o Domador tem 1,70 m e ocupa 25 pixels, então `pixels = height_m × 25 / 1,70`, arredondado. `height_m` está no catálogo (`GET /v1/species/<slug>`; o `server/prisma/seed-data/` é só a carga inicial), e `weight_kg` diz se o corpo é esguio ou pesado. Hoje: Nilu e Browt 4, Ruvo 7, Nilgar 13, Ruvak e Eagrow 15, Nilgorr 22, Ruvaroth 24 e Sowingle 26. Qualquer altura até 2,18 m cabe na célula.
+- **Altura:** o Domador tem 1,70 m e ocupa 25 pixels, então `pixels = height_m × 25 / 1,70`, arredondado. `height_m` está no catálogo (`GET /v1/species/<slug>`; o `server/prisma/seed-data/` é só a carga inicial), e `weight_kg` diz se o corpo é esguio ou pesado. Hoje: Nilu 4, Seedlet e Tidebud 6, Ruvo 7, Nilgar 13, Ruvak e Grovequill 15, Kelpcoil 16, Nilgorr 22, Ruvaroth 24, Arbornix 26 e Tempestide 29. Qualquer altura até 2,18 m cabe na célula.
 - A altura é da folha inteira, com orelhas e chamas. A verificação aceita 1 pixel de diferença.
 - Sem transparência parcial, com até 32 cores e a mesma densidade de pixels do Domador.
 
@@ -26,7 +26,7 @@ O tamanho vem da altura do catálogo, na escala do Domador: um Ecobeast pequeno 
 
 Os comandos rodam na raiz do repositório. `S` é `.claude/skills/creature-sprites/scripts`, `<criatura>` é `client/assets/creatures/<slug>`, `<pasta>` é `<criatura>/explore` (as folhas do mapa; as da luta ficam em `<criatura>/battle`, veja a seção no fim) e `<prévias>` é uma pasta temporária, fora do projeto. Rode o Python com `-I`.
 
-1. **Olhe a criatura.** Abra `<criatura>/front.png` com a ferramenta Read e rode `python -I S/reference.py <criatura>/front.png <prévias>/referencia.png`. Abra a redução: ela mostra as proporções e lista as cores.
+1. **Olhe a criatura.** Sem `front.png` ainda, corte a imagem da linha que o dono mandou (guardada em `art-source/<slug da primeira forma>/line.webp`) com `python -I S/crop_line.py <imagem> <slug> [<slug> ...]`, os slugs da esquerda para a direita. Ele aceita a imagem com fundo transparente ou com fundo de uma cor lisa, como o verde do prompt da skill `creature-front-prompt`, que tira pela cor dos cantos. Abra `<criatura>/front.png` com a ferramenta Read e rode `python -I S/reference.py <criatura>/front.png <prévias>/referencia.png`. Abra a redução: ela mostra as proporções e lista as cores.
 2. **Calcule a altura e liste o que a torna reconhecível.** Antes de desenhar, escreva para si: a altura em pixels, a anatomia (quantas patas, como se apoia), a silhueta, os olhos, as cores e o traço marcante, como a chama do Ruvo. Quanto menor a altura, menos cabe: escolha o que precisa sobreviver. O dono quer reconhecer a criatura, não um boneco genérico recolorido.
 3. **Desenhe** `<pasta>/sprites.py`, copiando a estrutura do exemplo mais parecido: paleta tirada do `front.png`, cabeça e corpo para cada ângulo, patas e traços marcantes, tudo entregue a `rig`, que monta o idle e o walk. `recolored` tira o rosto para as vistas de costas, e `swayed` gera os 4 quadros de chama, folha ou água. Desenhe do zero o que for da criatura. Só o `spritekit` e a estrutura se repetem.
 4. **Gere e olhe.** Rode `python -I <pasta>/sprites.py <prévias>/previa` e abra `idle_quadros.png` e `walk_quadros.png`. A primeira versão quase nunca fica boa: conte com duas ou três rodadas, corrigindo o que você vê.
@@ -51,7 +51,7 @@ Os comandos rodam na raiz do repositório. `S` é `.claude/skills/creature-sprit
 | Quatro patas | Diagonais juntas: traseira de perto com dianteira de longe, com 3 quadros de diferença |
 | Duas patas  | As duas pernas com 3 quadros de diferença, com o corpo balançando mais                  |
 | Mais patas  | Lados alternados, em grupos, com passos curtos, como um caranguejo                      |
-| Sem patas   | O corpo ondula ou encolhe e estica, sempre encostado no chão: a verificação exige algo na última linha em todo quadro |
+| Sem patas   | O corpo ondula ou encolhe e estica, sempre encostado no chão: a verificação exige algo na última linha em todo quadro. O Tidebud, o Kelpcoil e o Tempestide flutuam em pé, com `rig` sem patas, a cauda enrolada no chão como traço preso e a parte de cima balançando |
 
 O corpo fica 1 pixel mais baixo nos quadros 0 e 3, com os pés mais abertos, e a cabeça chega um quadro depois. Em uma criatura pequena, só a cabeça desce: descer o corpo esconde as patas, e ela parece deitar. Uma lista com menos de 6 valores precisa emendar: a chama do Ruvo usa 0, 1, 2, 3, 2 e 1.
 

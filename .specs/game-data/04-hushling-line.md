@@ -5,7 +5,7 @@
 
 ## Contexto
 
-Depois das 3 linhas iniciais, esta é a primeira espécie nova do catálogo. Ela estreia os Elementos Gelo e Mente, que ainda não tinham nenhum Ecobeast nem Técnica.
+Depois das 3 linhas iniciais, esta é a primeira espécie nova do catálogo. Ela estreia os Elementos Gelo e Psíquico, que ainda não tinham nenhum Ecobeast nem Técnica.
 
 Conceito: um arminho das neves que nunca faz barulho e guarda em gelo cada som que ouve. Ele só ascende quando confia no Domador, e leva no peito a primeira palavra que ouviu dele.
 
@@ -31,7 +31,7 @@ Linhas novas no banco (schema `ecobeasts`), nas tabelas `species`, `species_elem
 | id  | name      | Elementos    | XP  | Altura (m) | Peso (kg) | Descrição (Bestiário)                                                                                     |
 | --- | --------- | ------------ | --- | ---------- | --------- | --------------------------------------------------------------------------------------------------------- |
 | 10  | Hushling  | Gelo         | 58  | 0.3        | 1.2       | Arminho das neves de orelhas enormes. Nunca faz barulho: guarda cada som que ouve em flocos presos ao pelo. |
-| 11  | Echofrost | Gelo / Mente | 205 | 1.7        | 46.0      | Leva no peito um cristal com a primeira palavra que ouviu de seu Domador. Esse gelo nunca derrete.        |
+| 11  | Echofrost | Gelo / Psíquico | 205 | 1.7        | 46.0      | Leva no peito um cristal com a primeira palavra que ouviu de seu Domador. Esse gelo nunca derrete.        |
 
 - **RF-02:** Atributos (entre parênteses, o Treino que a espécie dá ao ser derrotada; o resto é 0):
 
@@ -54,9 +54,9 @@ Linhas novas no banco (schema `ecobeasts`), nas tabelas `species`, `species_elem
 | `manto_de_neve`    | Manto de Neve    | Gelo     | Suporte   | 0     | 0    | 20 | Si mesmo; +1 Def.E           |
 | `lanca_de_cristal` | Lança de Cristal | Gelo     | Especial  | 80    | 100  | 15 | 10% Congelado                |
 | `inverno_mudo`     | Inverno Mudo     | Gelo     | Especial  | 110   | 80   | 5  | 20% Congelado                |
-| `eco_mental`       | Eco Mental       | Mente    | Especial  | 65    | 100  | 20 | 10% Confuso                  |
-| `grito_congelado`  | Grito Congelado  | Mente    | Especial  | 90    | 100  | 10 | 20% Amedrontado              |
-| `palavra_guardada` | Palavra Guardada | Mente    | Suporte   | 0     | 0    | 10 | Si mesmo; cura 50% do HP máx |
+| `eco_mental`       | Eco Mental       | Psíquico    | Especial  | 65    | 100  | 20 | 10% Confuso                  |
+| `grito_congelado`  | Grito Congelado  | Psíquico    | Especial  | 90    | 100  | 10 | 20% Amedrontado              |
+| `palavra_guardada` | Palavra Guardada | Psíquico    | Suporte   | 0     | 0    | 10 | Si mesmo; cura 50% do HP máx |
 
 **Learnsets**
 

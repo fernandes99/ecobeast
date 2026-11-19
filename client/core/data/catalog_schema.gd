@@ -206,6 +206,7 @@ const TABLES := {
 			"body_type_id": {"type": "int", "nullable": true, "fk": "body_types"},
 			"skin_palette_id": {"type": "int", "nullable": true, "fk": "palettes"},
 			"voice_id": {"type": "int", "fk": "voices"},
+			"default_dialogue": TEXT,
 		},
 	},
 	"npc_appearance_parts": {

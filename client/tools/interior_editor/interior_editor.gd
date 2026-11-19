@@ -373,7 +373,10 @@ func _start_npc(cell: Vector2i) -> void:
 		return
 	if index < 0:
 		var values := _npc_panel.values()
-		var error := _draft.place_npc(cell, int(values["npc_id"]), str(values["dialogue"]), int(values["action_type_id"]))
+		var dialogue := str(values["dialogue"])
+		if dialogue.is_empty():
+			dialogue = str(GameData.get_npc(int(values["npc_id"])).get("default_dialogue", ""))
+		var error := _draft.place_npc(cell, int(values["npc_id"]), dialogue, int(values["action_type_id"]))
 		if not error.is_empty():
 			_set_message(error, true)
 			return

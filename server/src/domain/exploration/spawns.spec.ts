@@ -157,7 +157,7 @@ describe('wildLevel', () => {
 });
 
 describe('rollSpawns', () => {
-  const BROWT: SpawnSpecies = {
+  const SEEDLET: SpawnSpecies = {
     speciesId: 7,
     naturalLevel: 1,
     rates: { boreal: 100, mountain: 5 },
@@ -171,7 +171,7 @@ describe('rollSpawns', () => {
   it('devolve a quantidade da configuração, com ids de 1 em diante', () => {
     const spawns = rollSpawns(
       tiles('boreal', 50),
-      [BROWT],
+      [SEEDLET],
       10,
       seededRandom(1),
       CONFIG,
@@ -185,7 +185,7 @@ describe('rollSpawns', () => {
   it('usa a configuração do jogo quando nenhuma é dada', () => {
     const spawns = rollSpawns(
       tiles('boreal', 50),
-      [BROWT],
+      [SEEDLET],
       10,
       seededRandom(1),
     );
@@ -195,7 +195,7 @@ describe('rollSpawns', () => {
   it('todo Ecobeast fica em um hexágono do mapa', () => {
     const map = tiles('boreal', 10, 3);
     const keys = new Set(map.map(({ q, r }) => `${q},${r}`));
-    const spawns = rollSpawns(map, [BROWT], 10, seededRandom(2), CONFIG);
+    const spawns = rollSpawns(map, [SEEDLET], 10, seededRandom(2), CONFIG);
     expect(spawns.every(({ q, r }) => keys.has(`${q},${r}`))).toBe(true);
   });
 
@@ -251,7 +251,7 @@ describe('rollSpawns', () => {
   });
 
   it('a mesma espécie aparece na mesma proporção, com ou sem concorrente', () => {
-    const browt: SpawnSpecies = {
+    const seedlet: SpawnSpecies = {
       speciesId: 1,
       naturalLevel: 1,
       rates: { temperate: 100, stone: 10 },
@@ -262,7 +262,7 @@ describe('rollSpawns', () => {
       rates: { stone: 90 },
     };
     const map = [...tiles('temperate', 100, 0), ...tiles('stone', 100, 1)];
-    const spawns = rollSpawns(map, [browt, rival], 10, seededRandom(6), {
+    const spawns = rollSpawns(map, [seedlet, rival], 10, seededRandom(6), {
       ...CONFIG,
       count: 200_000,
     }).filter(({ speciesId }) => speciesId === 1);
@@ -326,7 +326,7 @@ describe('rollSpawns', () => {
   it('dois Ecobeasts podem cair no mesmo hexágono', () => {
     const spawns = rollSpawns(
       tiles('boreal', 5),
-      [BROWT],
+      [SEEDLET],
       10,
       seededRandom(9),
       CONFIG,
@@ -337,14 +337,14 @@ describe('rollSpawns', () => {
   it('ninguém nasce onde não tem taxa', () => {
     const spawns = rollSpawns(
       [...tiles('boreal', 50, 0), ...tiles('wshallow', 50, 1)],
-      [BROWT, NILU],
+      [SEEDLET, NILU],
       10,
       seededRandom(10),
       CONFIG,
     );
     const inWrongPlace = spawns.filter(
       ({ speciesId, r }) =>
-        (speciesId === BROWT.speciesId && r === 1) ||
+        (speciesId === SEEDLET.speciesId && r === 1) ||
         (speciesId === NILU.speciesId && r === 0),
     );
     expect(inWrongPlace).toEqual([]);
@@ -366,9 +366,9 @@ describe('rollSpawns', () => {
     expect(spawns.every(({ r }) => r === 1)).toBe(true);
   });
 
-  it('nenhum Browt nasce na água de um mapa gerado, ilhas à parte', () => {
+  it('nenhum Seedlet nasce na água de um mapa gerado, ilhas à parte', () => {
     const map = generateMap(1234);
-    const spawns = rollSpawns(map.tiles, [BROWT, NILU], 10, seededRandom(12), {
+    const spawns = rollSpawns(map.tiles, [SEEDLET, NILU], 10, seededRandom(12), {
       ...CONFIG,
       count: 5000,
     });
@@ -377,7 +377,7 @@ describe('rollSpawns', () => {
     );
     const eluBiomes = new Set(
       spawns
-        .filter(({ speciesId }) => speciesId === BROWT.speciesId)
+        .filter(({ speciesId }) => speciesId === SEEDLET.speciesId)
         .map(({ q, r }) => byKey.get(`${q},${r}`)!.biome),
     );
     expect([...eluBiomes].sort()).toEqual(['boreal', 'mountain']);
@@ -395,14 +395,14 @@ describe('rollSpawns', () => {
 
   it('sem hexágono do bioma da espécie, o mapa nasce vazio', () => {
     expect(
-      rollSpawns(tiles('stone', 5), [BROWT], 10, seededRandom(14), CONFIG),
+      rollSpawns(tiles('stone', 5), [SEEDLET], 10, seededRandom(14), CONFIG),
     ).toEqual([]);
   });
 
   it('não altera o que recebe', () => {
     const map = tiles('boreal', 5);
     const copy = structuredClone(map);
-    rollSpawns(map, [BROWT], 10, seededRandom(15), CONFIG);
+    rollSpawns(map, [SEEDLET], 10, seededRandom(15), CONFIG);
     expect(map).toEqual(copy);
   });
 
@@ -411,7 +411,7 @@ describe('rollSpawns', () => {
       const map = [...tiles('boreal', 20, 0), ...tiles('wshallow', 20, 1)];
       const spawns = rollSpawns(
         map,
-        bornIn([BROWT, NILU], new Set([NILU.speciesId])),
+        bornIn([SEEDLET, NILU], new Set([NILU.speciesId])),
         10,
         seededRandom(16),
         CONFIG,
@@ -427,7 +427,7 @@ describe('rollSpawns', () => {
       expect(
         rollSpawns(
           tiles('boreal', 5),
-          bornIn([BROWT], new Set()),
+          bornIn([SEEDLET], new Set()),
           10,
           seededRandom(17),
           CONFIG,
@@ -440,12 +440,12 @@ describe('rollSpawns', () => {
       expect(
         rollSpawns(
           map,
-          bornIn([BROWT, NILU], new Set([BROWT.speciesId, NILU.speciesId])),
+          bornIn([SEEDLET, NILU], new Set([SEEDLET.speciesId, NILU.speciesId])),
           10,
           seededRandom(18),
           CONFIG,
         ),
-      ).toEqual(rollSpawns(map, [BROWT, NILU], 10, seededRandom(18), CONFIG));
+      ).toEqual(rollSpawns(map, [SEEDLET, NILU], 10, seededRandom(18), CONFIG));
     });
   });
 });

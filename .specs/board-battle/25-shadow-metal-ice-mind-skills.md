@@ -1,11 +1,11 @@
-# 25. Ícone, efeito e som de seis Técnicas de Sombra, Metal, Gelo e Mente
+# 25. Ícone, efeito e som de seis Técnicas de Sombra, Metal, Gelo e Psíquico
 
 - **Status:** concluída (falta o dono ver e ouvir no editor)
 - **Depende de:** [22](22-earth-ice-mind-skills.md) (o mesmo caminho)
 
 ## Contexto
 
-Em 2026-11-14, Claude cruzou as Técnicas do catálogo com os arquivos do cliente e achou oito sem ícone, efeito e som: Garra do Eclipse (Sombra), Martelo de Ferro (Metal), Lança de Cristal (Gelo), Inverno Mudo (Gelo), Grito Congelado (Mente), Palavra Guardada (Mente), Desabamento (Terra) e Abalo Profundo (Terra). O dono mandou a imagem com os ícones das seis primeiras, em 3 colunas e 2 linhas, nessa ordem, e pediu que Claude criasse os sons e escolhesse os efeitos no kit.
+Em 2026-11-14, Claude cruzou as Técnicas do catálogo com os arquivos do cliente e achou oito sem ícone, efeito e som: Garra do Eclipse (Sombra), Martelo de Ferro (Metal), Lança de Cristal (Gelo), Inverno Mudo (Gelo), Grito Congelado (Psíquico), Palavra Guardada (Psíquico), Desabamento (Terra) e Abalo Profundo (Terra). O dono mandou a imagem com os ícones das seis primeiras, em 3 colunas e 2 linhas, nessa ordem, e pediu que Claude criasse os sons e escolhesse os efeitos no kit.
 
 ## Escopo
 
@@ -27,8 +27,8 @@ Em 2026-11-14, Claude cruzou as Técnicas do catálogo com os arquivos do client
   | Martelo de Ferro | Metal (6ª, cinza) | inimigo | 10/486 | uma pancada que estoura em lascas e faíscas |
   | Lança de Cristal | Gelo (3ª, azul-claro) | inimigo | 11/529 | um espinho de gelo que sobe do chão e se desfaz |
   | Inverno Mudo | Gelo (3ª, azul-claro) | inimigo | 13/615 | um floco de neve enorme que se abre e se parte |
-  | Grito Congelado | Mente (2ª, rosa e roxo) | inimigo | 13/633 | uma caveira que cresce e se desfaz, o medo |
-  | Palavra Guardada | Mente (2ª, rosa e roxo) | si mesmo | 14/655 | uma flor de lótus que se abre devagar |
+  | Grito Congelado | Psíquico (2ª, rosa e roxo) | inimigo | 13/633 | uma caveira que cresce e se desfaz, o medo |
+  | Palavra Guardada | Psíquico (2ª, rosa e roxo) | si mesmo | 14/655 | uma flor de lótus que se abre devagar |
 
 - **RF-03:** O som de cada Técnica, por síntese, sem gravação de terceiros, no `element_skills.py` (_a revisar_):
 

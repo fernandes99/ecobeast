@@ -118,11 +118,11 @@ Proposta: 15 elementos, com uma tabela própria (não a cópia da tabela do Pok�
 | Vento | Flora, Toxina | Volt, Metal, Terra | — | Volt, Gelo |
 | Gelo | Flora, Terra, Vento, Arcano, Inseto | Fogo, Água, Gelo, Metal | — | Fogo, Metal |
 | Metal | Gelo, Instinto | Fogo, Água, Volt, Metal | — | Fogo, Terra |
-| Toxina | Flora, Luz | Toxina, Terra, Sombra | Metal | Terra, Vento, Mente |
-| Mente | Instinto, Toxina | Mente, Metal | Sombra | Sombra |
-| Sombra | Mente, Luz | Sombra, Arcano | — | Luz |
+| Toxina | Flora, Luz | Toxina, Terra, Sombra | Metal | Terra, Vento, Psíquico |
+| Psíquico | Instinto, Toxina | Psíquico, Metal | Sombra | Sombra |
+| Sombra | Psíquico, Luz | Sombra, Arcano | — | Luz |
 | Luz | Sombra, Arcano, Inseto | Luz, Fogo, Metal | — | Toxina, Sombra |
-| Instinto | — | Metal, Terra | — | Metal, Mente |
+| Instinto | — | Metal, Terra | — | Metal, Psíquico |
 | Arcano | Arcano | Metal, Luz | — | Gelo, Luz, Arcano |
 | Inseto | Flora, Terra | Fogo, Metal, Luz | — | Fogo, Gelo, Luz |
 

@@ -1,11 +1,11 @@
-# 22. Ícone, efeito e som de seis Técnicas de Terra, Gelo e Mente
+# 22. Ícone, efeito e som de seis Técnicas de Terra, Gelo e Psíquico
 
 - **Status:** concluída (falta o dono ver e ouvir no editor)
 - **Depende de:** [21](21-metal-shadow-ice-skills.md) (o mesmo caminho)
 
 ## Contexto
 
-Em 2026-11-13, depois da [21](21-metal-shadow-ice-skills.md), Claude listou as próximas seis Técnicas sem ícone, pelo nível em que os Ecobeasts as aprendem: Nuvem de Poeira (Terra), Floco Cortante (Gelo), Arremesso de Torrão (Terra), Manto de Neve (Gelo), Eco Mental (Mente) e Garra de Pedra (Terra). O dono mandou a imagem com os seis ícones, em 3 colunas e 2 linhas, nessa ordem.
+Em 2026-11-13, depois da [21](21-metal-shadow-ice-skills.md), Claude listou as próximas seis Técnicas sem ícone, pelo nível em que os Ecobeasts as aprendem: Nuvem de Poeira (Terra), Floco Cortante (Gelo), Arremesso de Torrão (Terra), Manto de Neve (Gelo), Eco Mental (Psíquico) e Garra de Pedra (Terra). O dono mandou a imagem com os seis ícones, em 3 colunas e 2 linhas, nessa ordem.
 
 São as primeiras Técnicas de Terra com efeito. A 7ª linha do kit, a da Terra na [18](18-element-skill-effects.md) (RF-01), é um marrom arroxeado que, num teste, saiu rosado e não parecia terra nem poeira. Por isso, a Terra passa a usar a 6ª linha, cinza, tingida com a cor dela, como o Vento na [20](20-instinct-wind-skills.md).
 
@@ -31,7 +31,7 @@ São as primeiras Técnicas de Terra com efeito. A 7ª linha do kit, a da Terra 
   | Floco Cortante | Gelo (3ª, azul-claro) | inimigo | 7/325 | um floco em estrela que se abre e se parte |
   | Arremesso de Torrão | Terra (6ª, tingida) | inimigo | 2/76 | um torrão que bate e se esfarela em pedaços |
   | Manto de Neve | Gelo (3ª, azul-claro) | si mesmo | 1/26 | anéis de neve girando em volta do corpo |
-  | Eco Mental | Mente (2ª, rosa e roxo) | inimigo | 10/475 | uma onda em anel que se espalha, como um eco |
+  | Eco Mental | Psíquico (2ª, rosa e roxo) | inimigo | 10/475 | uma onda em anel que se espalha, como um eco |
   | Garra de Pedra | Terra (6ª, tingida) | inimigo | 6/295 | garras curvas de pedra que giram e riscam |
 
 - **RF-04:** O som de cada Técnica, por síntese, sem gravação de terceiros, no `element_skills.py` (_a revisar_):

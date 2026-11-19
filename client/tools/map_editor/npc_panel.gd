@@ -222,7 +222,8 @@ func place(coord: Vector2i) -> EditorHistory.Step:
 	if _draft == null or npc_id <= 0:
 		return null
 	var step := _step("Pôr NPC")
-	_draft.npcs.append({"npc_id": npc_id, "q": coord.x, "r": coord.y, "still": false, "tiles": [], "dialogue": "", "action_type_id": null})
+	var dialogue := str(GameData.get_npc(npc_id).get("default_dialogue", ""))
+	_draft.npcs.append({"npc_id": npc_id, "q": coord.x, "r": coord.y, "still": false, "tiles": [], "dialogue": dialogue, "action_type_id": null})
 	step.npcs_after = _draft.npcs.duplicate(true)
 	select(_draft.npcs.size() - 1)
 	return step

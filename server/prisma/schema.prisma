@@ -277,6 +277,8 @@ model Npc {
   skinPaletteId Int?    @map("skin_palette_id")
   /// A voz na caixa de fala; um NPC novo nasce com a Média (migration dialogue_voices)
   voiceId       Int     @default(4) @map("voice_id")
+  /// A fala que o NPC ganha ao ser posto no F2. CHECK até 2.000 caracteres (migration village_crowd)
+  defaultDialogue String @default("") @map("default_dialogue")
 
   bodyType        BodyType?           @relation(fields: [bodyTypeId], references: [id], onDelete: Restrict)
   voice           Voice               @relation(fields: [voiceId], references: [id], onDelete: Restrict)

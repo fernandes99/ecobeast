@@ -85,6 +85,10 @@ O Ecobeast é um jogo mobile (Android/iOS, retrato): o cliente em **Godot 4.7 co
 | [dialogue-voices](dialogue-voices/) | As falas com voz: um bipe retrô enquanto o texto aparece, uma voz por personagem, escolhida no F2 |
 | [refuge-art](refuge-art/) | O prédio do Refúgio com a arte da imagem do dono, no padrão das casas: 8 cores, fumaça e luzes |
 | [interiors](interiors/) | O lado de dentro dos prédios: a sala de quadrados com o tileset do Main Characters Home, o Domador andando e falando com os NPCs lá dentro, e o modo Interiores do F2 |
+| [village-crowd](village-crowd/) | Os moradores genéricos da vila, para o dono pôr passeando no F2, cada um com uma fala padrão |
+| [seedlet-line](seedlet-line/) | O inicial de Flora com a arte nova e outros nomes: Seedlet, Grovequill e Arbornix, nos ids do Browt, do Eagrow e do Sowingle |
+| [tidebud-line](tidebud-line/) | O cavalo-marinho de folhas e raios, a primeira linha de Volt: Tidebud, Kelpcoil e Tempestide, com as primeiras Técnicas de Volt e a marca Maré Elétrica |
+| [portal-altar](portal-altar/) | O altar-portal do Veilmoth, a mariposa arcana que teleporta, como peça solta com e sem a mariposa |
 
 As próximas iniciativas estão no [roadmap.md](roadmap.md).
 

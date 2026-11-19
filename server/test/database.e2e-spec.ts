@@ -623,6 +623,21 @@ describe('restrições do banco (e2e)', () => {
       expectRejected(result, 'island_npcs_dialogue_check');
     });
 
+    it('recusa fala padrão de NPC com mais de 2.000 caracteres (village-crowd/01)', async () => {
+      const result = await attempt(prisma, (tx) =>
+        tx.npc.create({
+          data: {
+            slug: 'zz_test_default_dialogue',
+            name: 'Teste',
+            description: 'Teste.',
+            sprite: 'ruvo',
+            defaultDialogue: 'a'.repeat(2_001),
+          },
+        }),
+      );
+      expectRejected(result, 'npcs_default_dialogue_check');
+    });
+
     it('recusa traço com largura 7 ou com um ponto só (free-trails/03)', async () => {
       for (const [width, points, check] of [
         [7, [0, 0, 10, 0], 'island_trails_width_check'],
