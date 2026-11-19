@@ -6,6 +6,7 @@ const GENERATOR_PATH := "/v1/editor/map-generator"
 const SKILLS_PATH := "/v1/editor/skills"
 const PROP_TYPES_PATH := "/v1/editor/prop-types"
 const NPCS_PATH := "/v1/editor/npcs"
+const INTERIORS_PATH := "/v1/editor/interiors"
 const TIMEOUT_SECONDS := 60.0
 const NOT_FOUND := 404
 const FORBIDDEN := 403
@@ -45,6 +46,26 @@ static func set_npc_voice(id: int, voice_id: int) -> ApiResponse:
 
 static func delete_island(id: int) -> ApiResponse:
 	return await _call(HTTPClient.METHOD_DELETE, "%s/%d" % [ISLANDS_PATH, id])
+
+
+static func list_interiors() -> ApiResponse:
+	return await _call(HTTPClient.METHOD_GET, INTERIORS_PATH)
+
+
+static func read_interior(id: int) -> ApiResponse:
+	return await _call(HTTPClient.METHOD_GET, "%s/%d" % [INTERIORS_PATH, id])
+
+
+static func create_interior(interior_name: String, width: int, height: int) -> ApiResponse:
+	return await _call(HTTPClient.METHOD_POST, INTERIORS_PATH, {"name": interior_name, "width": width, "height": height})
+
+
+static func save_interior(id: int, body: Dictionary) -> ApiResponse:
+	return await _call(HTTPClient.METHOD_PUT, "%s/%d" % [INTERIORS_PATH, id], body)
+
+
+static func delete_interior(id: int) -> ApiResponse:
+	return await _call(HTTPClient.METHOD_DELETE, "%s/%d" % [INTERIORS_PATH, id])
 
 
 static func generator_params() -> ApiResponse:

@@ -21,7 +21,8 @@ server/
   src/inventory/         a Loja e a Mochila do usuário logado (/v1/me/shop e /v1/me/items)
   src/team/              a equipe e o Santuário do usuário logado (/v1/me/team e /v1/me/storage)
   src/codex/             o Bestiário do usuário logado (/v1/me/codex) e o CodexService, que as lutas, a Evolução e o inicial usam para registrar visto e capturado
-  src/editor/            os editores (/v1/editor): ilhas em rascunho e publicadas (e a ilha casa, PUT /v1/editor/islands/:id/home), o gerador de mapas, as Técnicas do F1 (/v1/editor/skills), a aparência dos NPCs pessoas (/v1/editor/npcs/:id/appearance) e a voz dos NPCs (/v1/editor/npcs/:id/voice), só para quem está em MAP_EDITOR_USER_IDS
+  src/editor/            os editores (/v1/editor): ilhas em rascunho e publicadas (e a ilha casa, PUT /v1/editor/islands/:id/home), o gerador de mapas, as Técnicas do F1 (/v1/editor/skills), a aparência dos NPCs pessoas (/v1/editor/npcs/:id/appearance), a voz dos NPCs (/v1/editor/npcs/:id/voice) e as salas dos interiores (/v1/editor/interiors), só para quem está em MAP_EDITOR_USER_IDS
+  src/interiors/         a sala de um interior para o jogo (GET /v1/interiors/:id) e o InteriorsService, que o editor também usa; as regras da sala moram em src/domain/interiors/
   src/islands/           as ilhas publicadas para o jogador (/v1/me/islands) e o IslandsService, que lê uma versão de ilha para o editor e para a exploração numa ilha, e os hexágonos que cada Domador já descobriu nelas (/v1/me/islands/:id/discoveries, o DiscoveriesService)
   src/story/             os Marcos da história do usuário logado (/v1/me/story/marks), guardados sem significado: o roteiro mora no jogo
   src/world-clock/       a hora do mundo (GET /v1/world-clock, sem login); a conta mora em src/domain/world-clock/

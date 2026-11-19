@@ -228,6 +228,13 @@ export class MapPropDto extends HexCoordDto {
     example: true,
   })
   no_smoke?: true;
+
+  @ApiPropertyOptional({
+    description:
+      'Id em `interiors`, só quando a peça tem sala: tocar nela abre a sala (`GET /v1/interiors/:id`), no lugar da tela da ação.',
+    example: 1,
+  })
+  interior_id?: number;
 }
 
 export class MapNpcDto extends HexCoordDto {
@@ -549,6 +556,7 @@ export function toPropDto(prop: DraftProp): MapPropDto {
       ? {}
       : { action_type_id: prop.actionTypeId }),
     ...(prop.noSmoke ? { no_smoke: true as const } : {}),
+    ...(prop.interiorId === undefined ? {} : { interior_id: prop.interiorId }),
   };
 }
 

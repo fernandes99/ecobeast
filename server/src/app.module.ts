@@ -11,6 +11,7 @@ import { CodexModule } from './codex/codex.module.js';
 import { Env, validateEnv } from './config/env.js';
 import { EditorModule } from './editor/editor.module.js';
 import { ExplorationModule } from './exploration/exploration.module.js';
+import { InteriorsModule } from './interiors/interiors.module.js';
 import { IslandsModule } from './islands/islands.module.js';
 import { HealthModule } from './health/health.module.js';
 import { InventoryModule } from './inventory/inventory.module.js';
@@ -47,6 +48,7 @@ import { WorldClockModule } from './world-clock/world-clock.module.js';
     CodexModule,
     EditorModule,
     IslandsModule,
+    InteriorsModule,
     WorldClockModule,
     StoryModule,
   ],

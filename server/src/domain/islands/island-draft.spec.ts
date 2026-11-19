@@ -30,6 +30,7 @@ const known: KnownIds = {
     [BENCH, 2],
   ]),
   npcIds: new Set([1, 2]),
+  interiorIds: new Set([1]),
   wallSlugs: new Set(['wood_fence', 'invisible_wall']),
   bridgeSlugs: new Set(['wood_bridge', 'rope_bridge']),
   propBlocks: new Map(),

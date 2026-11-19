@@ -187,6 +187,11 @@ func list_islands() -> Result:
 	return await _service.list_islands()
 
 
+func load_interior(id: int) -> Result:
+	@warning_ignore("redundant_await")
+	return await _service.load_interior(id)
+
+
 ## Lê qual ilha publicada é a casa do jogador.
 func load_home() -> Result:
 	var result := await list_islands()

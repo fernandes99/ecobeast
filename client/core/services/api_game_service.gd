@@ -11,6 +11,7 @@ const STORY_MARKS_PATH := "/v1/me/story/marks"
 const SHOP_BUY_PATH := "/v1/me/shop/buy"
 const ITEM_USE_PATH := "/v1/me/items/use"
 const STORAGE_PATH := "/v1/me/storage"
+const INTERIOR_PATH := "/v1/interiors/%d"
 const TEAM_ORDER_PATH := "/v1/me/team/order"
 const TEAM_BRING_PATH := "/v1/me/team/bring"
 const TEAM_STORE_PATH := "/v1/me/team/store"
@@ -233,6 +234,16 @@ func debug_spawn(species_id: int, coord: Vector2i) -> Result:
 		return Result.failure(ApiResponse.SERVER_ERROR)
 	var creature := MapCreature.from_dict(data)
 	return Result.success(creature) if creature != null else Result.failure(ApiResponse.SERVER_ERROR)
+
+
+func load_interior(id: int) -> Result:
+	var response: ApiResponse = await Api.request(HTTPClient.METHOD_GET, INTERIOR_PATH % id, null, true)
+	if not response.ok:
+		return Result.failure(response.error)
+	var room: Interior = Interior.from_dict(response.data) if response.data is Dictionary else null
+	if room == null:
+		return Result.failure(ApiResponse.SERVER_ERROR)
+	return Result.success(room)
 
 
 func load_codex() -> Result:

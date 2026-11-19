@@ -38,10 +38,10 @@ describe('restrições do banco (e2e)', () => {
     expect(rows.map((row) => row.table_name)).toEqual([]);
   });
 
-  it('as 72 tabelas e o histórico de migrations ficam no schema ecobeasts', async () => {
+  it('as 78 tabelas e o histórico de migrations ficam no schema ecobeasts', async () => {
     const rows = await prisma.$queryRaw<{ n: number }[]>`
       SELECT count(*)::int AS n FROM information_schema.tables WHERE table_schema = 'ecobeasts'`;
-    expect(rows[0].n).toBe(73);
+    expect(rows[0].n).toBe(78);
   });
 
   it('recusa uma marca que muda um atributo em 0 estágio (puffcoo-line)', async () => {
@@ -53,6 +53,15 @@ describe('restrições do banco (e2e)', () => {
       });
     });
     expectRejected(result, 'ground_effect_stats_stages_check');
+  });
+
+  it('recusa uma porta fora da sala (interiors)', async () => {
+    const result = await attempt(prisma, async (tx) => {
+      await tx.$executeRaw`
+        INSERT INTO "ecobeasts"."interiors" (name, width, height, door_x, door_y, updated_at)
+        VALUES ('Teste', 8, 6, 8, 5, now())`;
+    });
+    expectRejected(result, 'interiors_door_check');
   });
 
   it('recusa uma parte do dia que começa depois do minuto 1439 (day-night)', async () => {

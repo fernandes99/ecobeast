@@ -14,16 +14,8 @@ const ZOOM_SETTLE_SECONDS := 0.15
 ## A voz dos Domadores NPC, que não têm NPC no catálogo (dialogue-voices/02).
 const NPC_TAMER_VOICE := "medium"
 const ACTION_TINT_ALPHA := 0.45
-const ACTION_SCREENS: Dictionary[String, StringName] = {
-	"refuge": &"heal_station",
-	"shop": &"shop",
-	"travel": &"travel",
-}
 const MAP_MARKER_ACTIONS: Array[String] = ["refuge", "shop", "travel"]
 const MENU_ICON := "res://ui/icons/person.svg"
-## Sem equipe, em Liora (liora-intro/03).
-const NO_TEAM_TRAVEL_TEXT := "Você precisa de um Ecobeast para viajar."
-const NO_TEAM_HEAL_TEXT := "Você ainda não tem Ecobeasts para cuidar."
 ## Na criação, o Domador fica no meio da parte de cima, acima do painel.
 const CREATOR_CENTER := 0.24
 ## Na casa, o campo e a vila em volta do início já vêm descobertos (liora-intro/04). A revisar.
@@ -547,7 +539,7 @@ func _walk(route: PackedVector2Array) -> void:
 		var piece := _prop_target
 		_prop_target = -1
 		if _touching_prop(piece):
-			_run_action_type(_map.props[piece].action_type_id)
+			_open_prop(piece)
 	elif _npc_target != null:
 		var npc := _npc_target
 		_npc_target = null
@@ -814,16 +806,22 @@ func _run_action(index: int) -> void:
 
 
 func _run_action_type(type_id: int) -> void:
-	if type_id <= 0:
+	if ActionScreens.screen_for(type_id) == &"":
 		return
-	var type := GameData.get_row("action_types", type_id)
-	var screen: StringName = ACTION_SCREENS.get(str(type.get("slug", "")), &"")
-	if not _has_team() and (screen == &"travel" or screen == &"heal_station"):
-		_show_message(NO_TEAM_TRAVEL_TEXT if screen == &"travel" else NO_TEAM_HEAL_TEXT, &"SecondaryLabel")
-		return
-	if screen != &"":
+	_debug_menu.hide()
+	var text := ActionScreens.open(type_id)
+	if not text.is_empty():
+		_show_message(text, &"SecondaryLabel")
+
+
+## A peça com sala abre o interior (interiors/02); a outra roda a ação dela.
+func _open_prop(index: int) -> void:
+	var prop := _map.props[index]
+	if prop.interior_id > 0:
 		_debug_menu.hide()
-		Router.push(screen)
+		Router.push(&"interior", {"interior_id": prop.interior_id})
+		return
+	_run_action_type(prop.action_type_id)
 
 
 func _challenge(tamer: MapTamer) -> void:
@@ -880,7 +878,7 @@ func _prop_hit(art_point: Vector2) -> int:
 	var best := -1
 	for index: int in _map.props.size():
 		var prop := _map.props[index]
-		if prop.action_type_id <= 0 or not _discovery.is_discovered(prop.coord):
+		if (prop.action_type_id <= 0 and prop.interior_id <= 0) or not _discovery.is_discovered(prop.coord):
 			continue
 		if best >= 0 and prop.foot().y < _map.props[best].foot().y:
 			continue
@@ -921,7 +919,7 @@ func _touching_prop(index: int) -> bool:
 func _go_to_prop(index: int) -> void:
 	var prop := _map.props[index]
 	if _touching_prop(index):
-		_run_action_type(prop.action_type_id)
+		_open_prop(index)
 		return
 	var lines := _map.prop_world_lines(index)
 	var finish := prop.foot() if lines.is_empty() else ExplorationMap.nearest_on_lines(lines, _player_point)

@@ -84,6 +84,7 @@ O Ecobeast é um jogo mobile (Android/iOS, retrato): o cliente em **Godot 4.7 co
 | [editor-performance](editor-performance/) | O editor de ilhas sem travar numa ilha cheia, e o botão que para as animações do mapa nele |
 | [dialogue-voices](dialogue-voices/) | As falas com voz: um bipe retrô enquanto o texto aparece, uma voz por personagem, escolhida no F2 |
 | [refuge-art](refuge-art/) | O prédio do Refúgio com a arte da imagem do dono, no padrão das casas: 8 cores, fumaça e luzes |
+| [interiors](interiors/) | O lado de dentro dos prédios: a sala de quadrados com o tileset do Main Characters Home, o Domador andando e falando com os NPCs lá dentro, e o modo Interiores do F2 |
 
 As próximas iniciativas estão no [roadmap.md](roadmap.md).
 

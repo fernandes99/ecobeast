@@ -70,6 +70,8 @@ export interface DraftProp extends HexCoord {
   actionTypeId?: number;
   /** A casa fica sem a fumaça da chaminé (chimney-smoke/01); só existe quando é verdade. */
   noSmoke?: true;
+  /** A sala que a peça abre (interiors/01); só existe quando há. */
+  interiorId?: number;
 }
 
 /**
@@ -147,6 +149,7 @@ export interface KnownIds {
   /** O máximo de variantes de cada tipo de peça solta. */
   propVariants: ReadonlyMap<number, number>;
   npcIds: ReadonlySet<number>;
+  interiorIds: ReadonlySet<number>;
   wallSlugs: ReadonlySet<string>;
   bridgeSlugs: ReadonlySet<string>;
   /** As linhas de bloqueio padrão de cada tipo de peça. */
@@ -267,6 +270,14 @@ function propsError(
       !known.actionTypeIds.has(prop.actionTypeId)
     ) {
       return `A peça ${index + 1} tem uma ação que não existe.`;
+    }
+  }
+  for (const prop of props) {
+    if (
+      prop.interiorId !== undefined &&
+      !known.interiorIds.has(prop.interiorId)
+    ) {
+      return 'Esse interior não existe.';
     }
   }
   if (
@@ -630,6 +641,7 @@ export function canonicalDraft(draft: IslandDraft): string {
           mirrored,
           block,
           actionTypeId,
+          interiorId,
         }) => ({
           propTypeId,
           q,
@@ -641,6 +653,7 @@ export function canonicalDraft(draft: IslandDraft): string {
           // Só quando há: uma ilha sem ajuste nem ação tem o hash de antes.
           ...(block === undefined ? {} : { block: canonicalBlock(block) }),
           ...(actionTypeId === undefined ? {} : { actionTypeId }),
+          ...(interiorId === undefined ? {} : { interiorId }),
         }),
       ),
     // Só com traços: uma ilha sem traços tem o hash de antes.

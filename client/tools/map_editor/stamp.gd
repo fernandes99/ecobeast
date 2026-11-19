@@ -158,6 +158,8 @@ static func _copy_extras(from: Dictionary, to: Dictionary) -> void:
 		to["action_type_id"] = int(from["action_type_id"])
 	if bool(from.get("no_smoke", false)):
 		to["no_smoke"] = true
+	if int(from.get("interior_id", 0)) > 0:
+		to["interior_id"] = int(from["interior_id"])
 
 
 static func list(dir := DIR) -> Array[Dictionary]:

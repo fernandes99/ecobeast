@@ -182,6 +182,15 @@ export class DraftPropDto extends EditorHexDto {
   @IsOptional()
   @IsBoolean({ message: 'no_smoke precisa ser verdadeiro ou falso.' })
   no_smoke?: boolean | null;
+
+  @ApiPropertyOptional({
+    description:
+      'Id em `interiors`: tocar na peça abre a sala, no lugar da tela da ação. Sem o campo, a peça não tem sala.',
+    example: 1,
+  })
+  @IsOptional()
+  @IsInt(integer('interior_id'))
+  interior_id?: number | null;
 }
 
 export class DraftTrailDto {

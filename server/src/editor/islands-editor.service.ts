@@ -100,6 +100,9 @@ export function toDraft(dto: IslandDraftDto): IslandDraft {
         ? {}
         : { actionTypeId: prop.action_type_id }),
       ...(prop.no_smoke === true ? { noSmoke: true as const } : {}),
+      ...(prop.interior_id === undefined || prop.interior_id === null
+        ? {}
+        : { interiorId: prop.interior_id }),
     })),
     trails: (dto.trails ?? []).map(({ ground, width, points }) => ({
       ground,
@@ -319,7 +322,7 @@ export class IslandsEditorService {
   }
 
   private async knownIds(): Promise<KnownIds> {
-    const [actions, grounds, species, props, npcs, walls, bridges, blocks] =
+    const [actions, grounds, species, props, npcs, walls, bridges, blocks, interiors] =
       await Promise.all([
         this.prisma.actionType.findMany({ select: { id: true } }),
         this.prisma.groundType.findMany({ select: { slug: true } }),
@@ -329,6 +332,7 @@ export class IslandsEditorService {
         this.prisma.wallType.findMany({ select: { slug: true } }),
         this.prisma.bridgeType.findMany({ select: { slug: true } }),
         this.islands.readTypeBlocks(),
+        this.prisma.interior.findMany({ select: { id: true } }),
       ]);
     return {
       actionTypeIds: new Set(actions.map(({ id }) => id)),
@@ -336,6 +340,7 @@ export class IslandsEditorService {
       speciesIds: new Set(species.map(({ id }) => id)),
       propVariants: new Map(props.map(({ id, variants }) => [id, variants])),
       npcIds: new Set(npcs.map(({ id }) => id)),
+      interiorIds: new Set(interiors.map(({ id }) => id)),
       wallSlugs: new Set(walls.map(({ slug }) => slug)),
       bridgeSlugs: new Set(bridges.map(({ slug }) => slug)),
       propBlocks: blocks,
@@ -439,6 +444,7 @@ export class IslandsEditorService {
           mirrored,
           actionTypeId,
           noSmoke,
+          interiorId,
         }) => ({
           islandMapId: map.id,
           propTypeId,
@@ -450,6 +456,7 @@ export class IslandsEditorService {
           mirrored,
           actionTypeId: actionTypeId ?? null,
           noSmoke: noSmoke === true,
+          interiorId: interiorId ?? null,
         }),
       );
     for (let first = 0; first < props.length; first += TILE_CHUNK) {
@@ -473,6 +480,7 @@ export class IslandsEditorService {
             mirrored,
             actionTypeId,
             noSmoke,
+            interiorId,
           }) => ({
             islandMapId: map.id,
             propTypeId,
@@ -485,6 +493,7 @@ export class IslandsEditorService {
             customBlock: true,
             actionTypeId: actionTypeId ?? null,
             noSmoke: noSmoke === true,
+            interiorId: interiorId ?? null,
           }),
         ),
         select: { id: true },

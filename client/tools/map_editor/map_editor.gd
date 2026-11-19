@@ -30,6 +30,8 @@ var _publish_button: Button
 var _islands_button: Button
 var _story_button: Button
 var _story_line := StoryLineView.new()
+var _interior_editor := InteriorEditor.new()
+var _interiors_button: Button
 var _scene_timeline := SceneTimeline.new()
 var _islands_popup: PopupPanel
 var _undo_button: Button
@@ -93,8 +95,35 @@ func _ready() -> void:
 
 
 func close() -> void:
+	if _interior_editor.visible:
+		if await _interior_editor.resolve_unsaved(ask_unsaved):
+			hide()
+		return
 	if await _resolve_unsaved():
 		hide()
+
+
+## Pergunta se salva as mudanças: "save", "discard" ou "cancel".
+func ask_unsaved() -> String:
+	_unsaved_dialog.popup_centered()
+	var answer: String = await _unsaved_answered
+	return answer
+
+
+## O modo Interiores (interiors/03) troca o conteúdo da janela.
+func _show_interiors() -> void:
+	if not await _resolve_unsaved():
+		return
+	_editor.visible = false
+	_interior_editor.visible = true
+	_interior_editor.open()
+
+
+func _show_islands() -> void:
+	if not await _interior_editor.resolve_unsaved(ask_unsaved):
+		return
+	_interior_editor.visible = false
+	_editor.visible = true
 
 
 func _on_visibility_changed() -> void:
@@ -127,7 +156,8 @@ func _refresh_list() -> void:
 		_show_blocked(response.error)
 		return
 	_blocked.visible = false
-	_editor.visible = true
+	_editor.visible = not _interior_editor.visible
+	_load_interior_list()
 	_list.set_islands(DictFields.get_array(response.data, "islands"), _draft.id if _draft != null else 0)
 	if not _generator_loaded:
 		var params: ApiResponse = await EditorApi.generator_params()
@@ -135,6 +165,12 @@ func _refresh_list() -> void:
 			_new_panel.set_generator_params(params.data)
 			_tools.detail_chance = _new_panel.detail_chance()
 			_generator_loaded = true
+
+
+func _load_interior_list() -> void:
+	var response: ApiResponse = await EditorApi.list_interiors()
+	if response.ok:
+		_tools.object_panel.set_interiors(DictFields.get_array(response.data, "interiors"))
 
 
 func _open_island(id: int) -> void:
@@ -271,8 +307,7 @@ func save() -> bool:
 func _resolve_unsaved() -> bool:
 	if not _dirty or _draft == null:
 		return true
-	_unsaved_dialog.popup_centered()
-	var answer: String = await _unsaved_answered
+	var answer := await ask_unsaved()
 	if answer == "save":
 		return await save()
 	if answer == "discard":
@@ -551,6 +586,9 @@ func _on_window_input(event: InputEvent) -> void:
 	if key.keycode == KEY_F2:
 		set_input_as_handled()
 		close()
+	elif _interior_editor.visible:
+		if _interior_editor.handle_input(key):
+			set_input_as_handled()
 	elif key.keycode == KEY_S and key.ctrl_pressed:
 		set_input_as_handled()
 		save()
@@ -730,6 +768,11 @@ func _build() -> void:
 	_editor.visible = false
 	stack.add_child(_editor)
 	stack.add_child(_story_line)
+	_interior_editor.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_interior_editor.visible = false
+	_interior_editor.islands_requested.connect(_show_islands)
+	_interior_editor.interiors_changed.connect(func(rows: Array) -> void: _tools.object_panel.set_interiors(rows))
+	stack.add_child(_interior_editor)
 	_story_line.scene_requested.connect(_open_from_story_line)
 
 	var header := HBoxContainer.new()
@@ -755,6 +798,9 @@ func _build() -> void:
 	_story_button = header_button("Linha da história", "scene", "Todas as cenas, ligadas pelos Marcos, com os avisos.")
 	_story_button.pressed.connect(func() -> void: _story_line.open(_list.island_names()))
 	header.add_child(_story_button)
+	_interiors_button = header_button("Interiores", "object", "As salas dos prédios: o lado de dentro do Refúgio e das casas.")
+	_interiors_button.pressed.connect(_show_interiors)
+	header.add_child(_interiors_button)
 	_undo_button = header_button("", "undo", "Desfazer (Ctrl+Z)")
 	_undo_button.pressed.connect(_undo)
 	header.add_child(_undo_button)

@@ -154,9 +154,10 @@ model ActionType {
   /// O que a ação faz. CHECK open_screen (migration island_villages)
   kind     String
 
-  actions IslandAction[]
-  npcs    IslandNpc[]
-  props   IslandProp[]
+  actions      IslandAction[]
+  npcs         IslandNpc[]
+  props        IslandProp[]
+  interiorNpcs InteriorNpc[]
 
   @@map("action_types")
   @@schema("ecobeasts")
@@ -282,6 +283,7 @@ model Npc {
   skinPalette     Palette?            @relation(fields: [skinPaletteId], references: [id], onDelete: Restrict)
   islandNpcs      IslandNpc[]
   appearanceParts NpcAppearancePart[]
+  interiorNpcs    InteriorNpc[]
 
   @@index([bodyTypeId])
   @@index([skinPaletteId])
@@ -1192,15 +1194,19 @@ model IslandProp {
   actionTypeId Int?    @map("action_type_id")
   /// A casa fica sem a fumaça da chaminé (chimney-smoke/01).
   noSmoke      Boolean @default(false) @map("no_smoke")
+  /// A sala que a peça abre, no lugar da tela da ação (interiors/01).
+  interiorId   Int?    @map("interior_id")
 
   islandMap  IslandMap         @relation(fields: [islandMapId], references: [id], onDelete: Cascade)
   propType   PropType          @relation(fields: [propTypeId], references: [id], onDelete: Restrict)
   blocks     IslandPropBlock[]
   actionType ActionType?       @relation(fields: [actionTypeId], references: [id], onDelete: Restrict)
+  interior   Interior?         @relation(fields: [interiorId], references: [id], onDelete: Restrict)
 
   @@index([islandMapId])
   @@index([propTypeId])
   @@index([actionTypeId])
+  @@index([interiorId])
   @@map("island_props")
   @@schema("ecobeasts")
 }
@@ -1429,5 +1435,112 @@ model PlayerStoryMark {
 
   @@id([playerId, mark])
   @@map("player_story_marks")
+  @@schema("ecobeasts")
+}
+
+/// O lado de dentro de um prédio, uma sala de quadrados de 16 px (interiors/01).
+model Interior {
+  id        Int      @id @default(autoincrement())
+  /// CHECK de 1 a 40 caracteres (migration interiors)
+  name      String
+  /// CHECK de 4 a 64 (migration interiors)
+  width     Int      @db.SmallInt
+  /// CHECK de 4 a 64 (migration interiors)
+  height    Int      @db.SmallInt
+  /// O quadrado onde o Domador nasce e por onde sai. CHECK dentro da sala (migration interiors)
+  doorX     Int      @map("door_x") @db.SmallInt
+  doorY     Int      @map("door_y") @db.SmallInt
+  updatedAt DateTime @map("updated_at") @db.Timestamptz(3)
+
+  tiles   InteriorTile[]
+  objects InteriorObject[]
+  blocks  InteriorBlock[]
+  npcs    InteriorNpc[]
+  props   IslandProp[]
+
+  @@map("interiors")
+  @@schema("ecobeasts")
+}
+
+/// Um tile de uma camada da sala.
+model InteriorTile {
+  interiorId Int    @map("interior_id")
+  /// CHECK floor, floor_detail, wall ou wall_detail (migration interiors)
+  layer      String
+  /// CHECK >= 0 (migration interiors)
+  x          Int    @db.SmallInt
+  y          Int    @db.SmallInt
+  /// A folha do pacote. CHECK ^[a-z0-9_]+$ (migration interiors)
+  sheet      String
+  /// CHECK de 0 a 63 (migration interiors)
+  col        Int    @db.SmallInt
+  /// CHECK de 0 a 63 (migration interiors)
+  row        Int    @db.SmallInt
+
+  interior Interior @relation(fields: [interiorId], references: [id], onDelete: Cascade)
+
+  @@id([interiorId, layer, x, y])
+  @@map("interior_tiles")
+  @@schema("ecobeasts")
+}
+
+/// Um retângulo de tiles de uma folha, posto inteiro, ordenado pelo pé.
+model InteriorObject {
+  id         Int    @id @default(autoincrement())
+  interiorId Int    @map("interior_id")
+  /// O quadrado do canto de cima à esquerda. CHECK >= 0 (migration interiors)
+  x          Int    @db.SmallInt
+  y          Int    @db.SmallInt
+  /// CHECK ^[a-z0-9_]+$ (migration interiors)
+  sheet      String
+  /// O tile do canto de cima à esquerda na folha. CHECK de 0 a 63 (migration interiors)
+  col        Int    @db.SmallInt
+  row        Int    @db.SmallInt
+  /// CHECK de 1 a 8 tiles (migration interiors)
+  width      Int    @db.SmallInt
+  height     Int    @db.SmallInt
+
+  interior Interior @relation(fields: [interiorId], references: [id], onDelete: Cascade)
+
+  @@index([interiorId])
+  @@map("interior_objects")
+  @@schema("ecobeasts")
+}
+
+/// Um quadrado bloqueado: da parede sólida, da linha de baixo de um objeto ou à mão.
+model InteriorBlock {
+  interiorId Int @map("interior_id")
+  /// CHECK >= 0 (migration interiors)
+  x          Int @db.SmallInt
+  y          Int @db.SmallInt
+
+  interior Interior @relation(fields: [interiorId], references: [id], onDelete: Cascade)
+
+  @@id([interiorId, x, y])
+  @@map("interior_blocks")
+  @@schema("ecobeasts")
+}
+
+/// Um NPC parado num quadrado da sala.
+model InteriorNpc {
+  id           Int    @id @default(autoincrement())
+  interiorId   Int    @map("interior_id")
+  npcId        Int    @map("npc_id")
+  /// CHECK >= 0 (migration interiors)
+  x            Int    @db.SmallInt
+  y            Int    @db.SmallInt
+  /// Vazio é sem fala. CHECK até 2.000 caracteres (migration interiors)
+  dialogue     String
+  /// Nulo é sem ação.
+  actionTypeId Int?   @map("action_type_id")
+
+  interior   Interior    @relation(fields: [interiorId], references: [id], onDelete: Cascade)
+  npc        Npc         @relation(fields: [npcId], references: [id], onDelete: Restrict)
+  actionType ActionType? @relation(fields: [actionTypeId], references: [id], onDelete: Restrict)
+
+  @@index([interiorId])
+  @@index([npcId])
+  @@index([actionTypeId])
+  @@map("interior_npcs")
   @@schema("ecobeasts")
 }

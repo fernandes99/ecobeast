@@ -9,6 +9,8 @@ const CATALOG_WRITERS = [
   'test/npc-voice.e2e-spec.ts',
   // Liga e desliga a ilha casa, que é uma só para o banco inteiro.
   'test/home-island.e2e-spec.ts',
+  // Cria e apaga salas e uma ilha de teste.
+  'test/interiors.e2e-spec.ts',
 ];
 
 export default defineConfig({

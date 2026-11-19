@@ -43,6 +43,8 @@ var _close_button: Button
 var _type_block_button: Button
 var _action_select: OptionButton
 var _action_ids: Array[int] = []
+var _interior_select: OptionButton
+var _interior_ids: Array[int] = []
 
 
 func _init() -> void:
@@ -127,6 +129,19 @@ func _init() -> void:
 		_action_ids.append(int(row.get("id", 0)))
 	_action_select.item_selected.connect(_on_action_selected)
 	action_row.add_child(_action_select)
+	var interior_row := HBoxContainer.new()
+	interior_row.add_theme_constant_override(&"separation", 6)
+	_selected_box.add_child(interior_row)
+	var interior_title := Label.new()
+	interior_title.text = "Sala"
+	interior_row.add_child(interior_title)
+	_interior_select = OptionButton.new()
+	_interior_select.focus_mode = Control.FOCUS_NONE
+	_interior_select.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_interior_select.tooltip_text = "Tocar na peça abre esta sala, no lugar da tela da ação (modo Interiores)."
+	_interior_select.item_selected.connect(_on_interior_selected)
+	interior_row.add_child(_interior_select)
+	set_interiors([])
 	_block_box = VBoxContainer.new()
 	_block_box.add_theme_constant_override(&"separation", 6)
 	_selected_box.add_child(_block_box)
@@ -238,6 +253,7 @@ func refresh() -> void:
 	_blocks_button.visible = chosen
 	if chosen:
 		_action_select.select(maxi(0, _action_ids.find(int(_draft.props[selected_prop].get("action_type_id", 0)))))
+		_interior_select.select(maxi(0, _interior_ids.find(int(_draft.props[selected_prop].get("interior_id", 0)))))
 	_blocks_button.set_pressed_no_signal(editing_blocks)
 	_block_box.visible = editing_blocks and chosen
 	if _block_box.visible:
@@ -523,6 +539,35 @@ func _on_action_selected(item: int) -> void:
 		piece["action_type_id"] = chosen
 	else:
 		piece.erase("action_type_id")
+	_finish(step)
+
+
+## As salas da lista Sala (interiors/03): `[{id, name}]`, pela rota do editor.
+func set_interiors(rows: Array) -> void:
+	_interior_select.clear()
+	_interior_ids.clear()
+	_interior_select.add_item("Nenhuma")
+	_interior_ids.append(0)
+	for row: Variant in rows:
+		if row is Dictionary:
+			_interior_select.add_item(str((row as Dictionary).get("name", "")))
+			_interior_ids.append(int((row as Dictionary).get("id", 0)))
+	if _draft != null:
+		refresh()
+
+
+func _on_interior_selected(item: int) -> void:
+	if selected_prop < 0:
+		return
+	var piece: Dictionary = _draft.props[selected_prop]
+	var chosen := _interior_ids[item]
+	if int(piece.get("interior_id", 0)) == chosen:
+		return
+	var step := _step("Trocar a sala da peça")
+	if chosen > 0:
+		piece["interior_id"] = chosen
+	else:
+		piece.erase("interior_id")
 	_finish(step)
 
 

@@ -100,6 +100,10 @@ extends RefCounted
 @abstract func set_exploration_position(coord: Vector2i) -> Result
 
 
+## A sala de um interior (interiors/01), com o `Interior` em `data`.
+@abstract func load_interior(id: int) -> Result
+
+
 @abstract func evolve(uid: String, accept: bool) -> Result
 
 

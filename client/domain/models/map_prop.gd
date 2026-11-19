@@ -19,6 +19,8 @@ var custom_block := false
 var action_type_id: int = 0
 ## A casa fica sem a fumaça da chaminé (chimney-smoke/01).
 var no_smoke := false
+## A sala que tocar na peça abre (interiors/01), ou 0.
+var interior_id: int = 0
 ## As linhas ajustadas, como o servidor manda: `{"closed": bool, "points": [x0, y0, …]}`.
 var block: Array[Dictionary] = []
 
@@ -32,6 +34,7 @@ static func from_dict(d: Dictionary) -> MapProp:
 	prop.mirrored = DictFields.get_bool(d, "mirrored")
 	prop.action_type_id = DictFields.get_int(d, "action_type_id")
 	prop.no_smoke = DictFields.get_bool(d, "no_smoke")
+	prop.interior_id = maxi(0, DictFields.get_int(d, "interior_id"))
 	if d.get("block") is Array:
 		prop.custom_block = true
 		prop.block = MapProp.lines_from(d["block"])
