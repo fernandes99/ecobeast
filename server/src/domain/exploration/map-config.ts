@@ -16,11 +16,9 @@ export interface MapConfig {
   springLakeChance: number;
   throughRiverChance: number;
   crossingSpacing: number;
-  fordShare: number;
   wetLimit: number;
-  stoneFraction: number;
-  desertFraction: number;
-  snowFraction: number;
+  climate: number;
+  stoneFrom: number;
   hillFrom: number;
   mountainFrom: number;
   detailChance: number;
@@ -45,13 +43,11 @@ export const DEFAULT_MAP_CONFIG: MapConfig = {
   springLakeChance: 0.35,
   throughRiverChance: 0.3,
   crossingSpacing: 14,
-  fordShare: 0.5,
-  wetLimit: 0.5,
-  stoneFraction: 0.15,
-  desertFraction: 0.12,
-  snowFraction: 0.12,
-  hillFrom: 0.6,
-  mountainFrom: 0.95,
+  wetLimit: 0.58,
+  climate: 0,
+  stoneFrom: 0.72,
+  hillFrom: 0.86,
+  mountainFrom: 0.96,
   detailChance: 0.2,
   cleanupPasses: 3,
 };
@@ -82,11 +78,9 @@ export const MAP_CONFIG_RANGES: Record<keyof MapConfig, ConfigRange> = {
   springLakeChance: fraction,
   throughRiverChance: fraction,
   crossingSpacing: { min: 4, max: 60, integer: true },
-  fordShare: fraction,
   wetLimit: fraction,
-  stoneFraction: fraction,
-  desertFraction: fraction,
-  snowFraction: fraction,
+  climate: { min: 0, max: 4, integer: true },
+  stoneFrom: fraction,
   hillFrom: fraction,
   mountainFrom: fraction,
   detailChance: fraction,

@@ -2,6 +2,8 @@
 
 O mapa sorteado ganha um mar de verdade, com a Praia na beira dele, e um gerador de lagos e rios. Os rios que cortam a terra ganham travessias: pontes automáticas e vaus, uma água rasa e transparente que dá pé.
 
+> Desde a [map-realism/02](../map-realism/02-no-ford.md), o Vau saiu do jogo, e as travessias são só pontes.
+
 ## Contexto
 
 Em 2026-11-15, o dono pediu: "agora faça um novo bioma, a ideia é ser uma praia, ela deve nascer perto de um mar, o mar deve ter muita agua, vai ter agua rasa e muita agua profunda para se tornar um mar. além disso faça também um algoritmo que vai criar além do mar, rios e lagos, pesquise boas praticas dessas criações. rios vão poder nascer em um pequeno lago/nascente, mas não necessariamente todos os lagos vão ter rios."

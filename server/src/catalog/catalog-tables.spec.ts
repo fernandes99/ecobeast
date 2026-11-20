@@ -84,7 +84,7 @@ describe('carga inicial dos biomas (biome-encounters/01)', () => {
   const biomeId = (slug: string) => biomes.find((b) => b.slug === slug)!.id;
   const SEEDLET = 7;
 
-  it('tem os 11 biomas de encontro', () => {
+  it('tem os 10 biomas de encontro', () => {
     expect(biomes.map(({ slug }) => slug).sort()).toEqual(
       [
         'beach',
@@ -96,7 +96,6 @@ describe('carga inicial dos biomas (biome-encounters/01)', () => {
         'stone',
         'temperate',
         'wdeep',
-        'wford',
         'wshallow',
       ].sort(),
     );

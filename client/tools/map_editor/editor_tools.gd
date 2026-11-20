@@ -42,7 +42,7 @@ const GROUPS: Array[Dictionary] = [
 const TAB_ICON_WIDTH := 18
 const NO_AREA_MESSAGE := "Crie ou escolha uma área no painel antes de pintar."
 const NO_ZONE_MESSAGE := "Escolha uma zona no painel antes de pintar."
-const BIOMES: Array[String] = ["temperate", "boreal", "stone", "hill", "mountain", "desert", "snow", "beach", "wshallow", "wford", "wdeep"]
+const BIOMES: Array[String] = ["temperate", "boreal", "stone", "hill", "mountain", "desert", "snow", "beach", "wshallow", "wdeep"]
 const BIOME_SWATCH_HEIGHT := 1
 const TOOL_BUTTON_SIZE := Vector2(76.0, 58.0)
 const TOOL_ICON_WIDTH := 26
@@ -62,7 +62,6 @@ const BIOME_NAMES: Dictionary[String, String] = {
 	"desert": "Deserto",
 	"snow": "Neve",
 	"beach": "Praia",
-	"wford": "Vau",
 	"wshallow": "Água rasa",
 	"wdeep": "Água profunda",
 }

@@ -51,7 +51,7 @@ describe('assignZones', () => {
 
   it('deixa a Montanha, a Praia e as águas sem zona', () => {
     const tiles = assignZones(generateMap(5).tiles, 5, SEED_ZONES);
-    const single = ['mountain', 'beach', 'wshallow', 'wdeep', 'wford'];
+    const single = ['mountain', 'beach', 'wshallow', 'wdeep'];
     expect(
       tiles.filter(
         (tile) => single.includes(tile.biome) && tile.zone !== undefined,

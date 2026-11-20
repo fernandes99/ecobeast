@@ -324,6 +324,7 @@ export function placeRivers<C extends WaterCell<C>>(
   wobble: (cell: C) => number,
   random: Random,
   config: MapConfig,
+  canSpring: (cell: C) => boolean = () => true,
 ): { rivers: River<C>[]; ponds: Lake<C>[] } {
   const rivers: River<C>[] = [];
   const ponds: Lake<C>[] = [];
@@ -345,6 +346,7 @@ export function placeRivers<C extends WaterCell<C>>(
       (cell) =>
         !cell.wet &&
         down.has(cell) &&
+        canSpring(cell) &&
         drain.get(cell)! >= high &&
         (fromWater.get(cell) ?? Infinity) >= SPRING_GAP,
     );
@@ -385,6 +387,7 @@ export function placeRivers<C extends WaterCell<C>>(
       (cell) =>
         !cell.wet &&
         down.has(cell) &&
+        canSpring(cell) &&
         drain.get(cell)! >= middle &&
         (fromWater.get(cell) ?? Infinity) >= pondReach + 2 &&
         fromBorder.get(cell)! >= pondReach + BORDER_GAP,
@@ -487,8 +490,8 @@ export function descend<C extends WaterCell<C>>(
 export interface Crossing<C> {
   /** Os hexágonos de rio da linha, de margem a margem. */
   cells: C[];
-  /** As duas margens da ponte; sem elas, a linha vira vau. */
-  bridge?: [C, C];
+  /** As duas margens da ponte. */
+  bridge: [C, C];
 }
 
 interface Span<C> {
@@ -536,18 +539,18 @@ function spansAt<C extends WaterCell<C>>(
 }
 
 /**
- * As travessias (coast-rivers/03): a cada `crossingSpacing` hexágonos da linha do meio de
- * um rio que atravessa, a linha reta mais curta de margem a margem vira ponte (se
- * `canBridge` aceita as margens e o sorteio não deu vau) ou uma fileira de vaus. Depois,
- * enquanto uma linha dessas liga a terra da chegada a uma terra que não chega até ela,
- * ela ganha mais uma travessia. A terra que só o mar ou um lago separa fica como está.
+ * As pontes (coast-rivers/03, map-realism/02): a cada `crossingSpacing` hexágonos da linha
+ * do meio de um rio que atravessa, a linha reta mais curta de margem a margem que `canBridge`
+ * aceita vira ponte. Depois, enquanto uma linha dessas liga a terra da chegada a uma terra
+ * que não chega até ela, ela ganha mais uma ponte; se nenhuma linha dessas é aceita, `level`
+ * acerta as margens da mais curta. A terra que só o mar ou um lago separa fica como está.
  */
 export function placeCrossings<C extends WaterCell<C>>(
   rivers: River<C>[],
   lakes: Lake<C>[],
   start: C,
   canBridge: (a: C, b: C) => boolean,
-  random: Random,
+  level: (a: C, b: C) => void,
   config: MapConfig,
 ): { crossings: Crossing<C>[]; absorbed: C[] } {
   const crossings: Crossing<C>[] = [];
@@ -556,16 +559,17 @@ export function placeCrossings<C extends WaterCell<C>>(
   // Para fechar um canto entre um rio e um lago, a travessia também passa pela beira do lago.
   const inland = new Set([...river, ...lakes.flatMap(({ cells }) => cells)]);
   const add = ({ cells, banks }: Span<C>) => {
-    const bridge = canBridge(...banks) && random() >= config.fordShare;
-    crossings.push(bridge ? { cells, bridge: banks } : { cells });
+    crossings.push({ cells, bridge: banks });
     for (const cell of cells) crossed.add(cell);
   };
+  const bridgeable = (span: Span<C>) => canBridge(...span.banks);
   for (const { path } of rivers.filter(({ source }) => source === 'edge')) {
     const half = Math.floor(config.crossingSpacing / 2);
     for (let at = half; at < path.length; at += config.crossingSpacing) {
       for (let shift = 0; shift <= half; shift += 1) {
         const span = [path[at + shift], path[at - shift]]
           .flatMap((cell) => (cell ? spansAt(cell, river, crossed) : []))
+          .filter(bridgeable)
           .sort((a, b) => a.cells.length - b.cells.length)[0];
         if (span) {
           add(span);
@@ -577,12 +581,21 @@ export function placeCrossings<C extends WaterCell<C>>(
   for (let fix = 0; fix < MAX_FIXES; fix += 1) {
     const reached = walkable(start, crossings);
     let gap: Span<C> | undefined;
+    let uneven: Span<C> | undefined;
     for (const cell of inland) {
       if (crossed.has(cell)) continue;
-      gap = spansAt(cell, inland, crossed).find(
+      const gaps = spansAt(cell, inland, crossed).filter(
         ({ banks: [a, b] }) => reached.has(a) !== reached.has(b),
       );
+      gap = gaps.find(bridgeable);
       if (gap) break;
+      if (!uneven || (gaps[0] && gaps[0].cells.length < uneven.cells.length)) {
+        uneven = gaps[0] ?? uneven;
+      }
+    }
+    if (!gap && uneven) {
+      level(...uneven.banks);
+      gap = uneven;
     }
     if (!gap) break;
     add(gap);
@@ -628,17 +641,13 @@ function absorbSlivers<C extends WaterCell<C>>(
   return absorbed;
 }
 
-/** A terra que se alcança de `start` andando, pelos vaus e pelas pontes. */
+/** A terra que se alcança de `start` andando e pelas pontes. */
 function walkable<C extends WaterCell<C>>(
   start: C,
   crossings: Crossing<C>[],
 ): Set<C> {
-  const fords = new Set(
-    crossings.filter((c) => !c.bridge).flatMap((c) => c.cells),
-  );
   const links = new Map<C, C[]>();
   for (const { bridge } of crossings) {
-    if (!bridge) continue;
     const [a, b] = bridge;
     links.set(a, [...(links.get(a) ?? []), b]);
     links.set(b, [...(links.get(b) ?? []), a]);
@@ -648,7 +657,7 @@ function walkable<C extends WaterCell<C>>(
   while (pending.length > 0) {
     const cell = pending.pop()!;
     for (const next of [...cell.neighbors, ...(links.get(cell) ?? [])]) {
-      if (seen.has(next) || (next.wet && !fords.has(next))) continue;
+      if (seen.has(next) || next.wet) continue;
       seen.add(next);
       pending.push(next);
     }

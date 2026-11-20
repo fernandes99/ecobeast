@@ -80,14 +80,6 @@
 		"sort_order": 1
 	},
 	{
-		"id": 11,
-		"slug": "wford",
-		"biome_id": 11,
-		"name": "Comum",
-		"share": 100,
-		"sort_order": 1
-	},
-	{
 		"id": 12,
 		"slug": "temperate_clearing",
 		"biome_id": 1,

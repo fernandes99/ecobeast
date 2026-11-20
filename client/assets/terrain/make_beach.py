@@ -5,8 +5,6 @@ Uso: python -I make_beach.py   (precisa do Pillow; roda de dentro de assets/terr
 - surfaces/beach.png, a partir de surfaces/hill.png, com pontinhos de concha;
 - a linha 8 de transitions/transitions.png e a linha 5 de transitions/drips.png, a partir das da Colina;
 - as linhas 47 a 50 de decorations/decorations.png: conchas, estrela-do-mar, tronco à deriva e pedra de praia;
-- surfaces/wford.png, a amostra parada do Vau para o editor: o cascalho com a água rasa a 45% por cima
-  (no mapa, o HexMapView desenha as duas camadas, com a água ondulando).
 Rodar de novo regrava só essas linhas.
 """
 
@@ -30,8 +28,6 @@ DRIFTWOOD = [(104, 92, 78), (160, 148, 128), (196, 186, 166), (226, 220, 204)]
 WET_ROCK = [(44, 42, 40), (74, 72, 68), (98, 96, 90), (126, 122, 114), (158, 154, 144), (190, 186, 176)]
 BARNACLE = [(214, 208, 196), (240, 236, 226)]
 FIRST_DECORATION_ROW = 47
-FORD_BED_SHADE = 0.82
-FORD_WATER_ALPHA = 0.45
 
 
 def surface():
@@ -125,16 +121,8 @@ def decorations():
     art.put_rows(sheet, rows, height, FIRST_DECORATION_ROW).save(file)
 
 
-def ford_swatch():
-    bed = Image.open(art.path("grounds", "gravel_trail.png")).convert("RGB")
-    bed = bed.point(lambda value: round(value * FORD_BED_SHADE))
-    water = Image.open(art.path("surfaces", "wshallow.png")).convert("RGB")
-    Image.blend(bed, water, FORD_WATER_ALPHA).save(art.path("surfaces", "wford.png"))
-
-
 if __name__ == "__main__":
     surface()
     transitions()
     decorations()
-    ford_swatch()
     print("ok")

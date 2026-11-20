@@ -58,11 +58,5 @@
 		"slug": "beach",
 		"name": "Praia",
 		"description": "Areia clara na beira do mar, com conchas e o vento salgado."
-	},
-	{
-		"id": 11,
-		"slug": "wford",
-		"name": "Vau",
-		"description": "Água rasa sobre o cascalho, onde dá pé para atravessar."
 	}
 ]

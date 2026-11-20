@@ -40,11 +40,9 @@ const CONFIG: MapConfig = {
   springLakeChance: 0,
   throughRiverChance: 0.3,
   crossingSpacing: 14,
-  fordShare: 0.5,
   wetLimit: 0.6,
-  stoneFraction: 0.15,
-  desertFraction: 0.12,
-  snowFraction: 0.12,
+  climate: 0,
+  stoneFrom: 0.72,
   hillFrom: 0.8,
   mountainFrom: 0.9,
   detailChance: 0.2,
@@ -140,7 +138,7 @@ describe('generateShapedMap', () => {
     maps = SEEDS.map((seed) => generateShapedMap(seed, CONFIG));
   });
 
-  it('só existem as nove regiões', () => {
+  it('só existem as oito regiões', () => {
     expect([...SHAPED_BIOMES].sort()).toEqual(
       [
         'beach',
@@ -150,24 +148,61 @@ describe('generateShapedMap', () => {
         'stone',
         'temperate',
         'wdeep',
-        'wford',
         'wshallow',
       ].sort(),
     );
   });
 
-  it('o deserto e a neve ficam perto da fração deles na terra (desert-snow/01)', () => {
-    const land = maps.flatMap(({ tiles }) =>
-      tiles.filter(({ biome }) => !isWater(biome)),
+  it('há mapas sem Neve, sem Deserto e sem os dois (map-realism/01)', () => {
+    const has = (map: ShapedMap, biome: ShapedBiome) =>
+      map.tiles.some((tile) => tile.biome === biome);
+    expect(maps.some((map) => !has(map, 'snow') && has(map, 'desert'))).toBe(
+      true,
     );
-    for (const [biome, share] of [
-      ['desert', CONFIG.desertFraction],
-      ['snow', CONFIG.snowFraction],
-    ] as const) {
-      const count = land.filter((tile) => tile.biome === biome).length;
-      expect(count / land.length).toBeGreaterThan(share - 0.06);
-      expect(count / land.length).toBeLessThan(share + 0.06);
+    expect(maps.some((map) => has(map, 'snow') && !has(map, 'desert'))).toBe(
+      true,
+    );
+    expect(maps.some((map) => !has(map, 'snow') && !has(map, 'desert'))).toBe(
+      true,
+    );
+  });
+
+  it('a Neve fica a mais de 2 hexágonos da Planície, do Deserto e da Praia', () => {
+    for (const map of maps) {
+      const fromSnow = distanceTo(map, ({ biome }) => biome === 'snow');
+      const close = map.tiles.filter(
+        (tile) =>
+          ['temperate', 'desert', 'beach'].includes(tile.biome) &&
+          (fromSnow.get(hexKey(tile)) ?? Infinity) <= 2,
+      );
+      expect(close).toEqual([]);
     }
+  });
+
+  it('o Deserto não encosta no Boreal', () => {
+    for (const map of maps) {
+      const byKey = indexed(map);
+      const touching = map.tiles.filter(
+        (tile) =>
+          tile.biome === 'desert' &&
+          neighborsOf(tile, byKey).some(({ biome }) => biome === 'boreal'),
+      );
+      expect(touching).toEqual([]);
+    }
+  });
+
+  it('o clima fixado em `climate` dá Neve no Frio e Deserto no Quente', () => {
+    const share = (climate: number, biome: ShapedBiome) => {
+      const tiles = SEEDS.slice(0, 20).flatMap(
+        (seed) => generateShapedMap(seed, { ...CONFIG, climate }).tiles,
+      );
+      const land = tiles.filter((tile) => !isWater(tile.biome));
+      return land.filter((tile) => tile.biome === biome).length / land.length;
+    };
+    expect(share(2, 'snow')).toBeGreaterThan(0.15);
+    expect(share(2, 'desert')).toBe(0);
+    expect(share(3, 'desert')).toBeGreaterThan(0.15);
+    expect(share(3, 'snow')).toBe(0);
   });
 
   it('nenhum deserto encosta na neve', () => {
@@ -182,31 +217,14 @@ describe('generateShapedMap', () => {
     }
   });
 
-  it('o deserto e a neve não mudam a água, as formas nem as variantes', () => {
-    const none = { ...CONFIG, desertFraction: 0, snowFraction: 0 };
+  it('o clima não muda o recorte, o mar nem as variantes', () => {
     for (const seed of SEEDS.slice(0, 20)) {
-      const plain = generateShapedMap(seed, none);
-      const map = generateShapedMap(seed, CONFIG);
-      expect(
-        plain.tiles.some(({ biome }) => biome === 'desert' || biome === 'snow'),
-      ).toBe(false);
-      expect(
-        map.tiles.map(({ q, r, shape, variant, biome }) => [
-          q,
-          r,
-          shape,
-          variant,
-          isWater(biome),
-        ]),
-      ).toEqual(
-        plain.tiles.map(({ q, r, shape, variant, biome }) => [
-          q,
-          r,
-          shape,
-          variant,
-          isWater(biome),
-        ]),
+      const cold = generateShapedMap(seed, { ...CONFIG, climate: 2 });
+      const hot = generateShapedMap(seed, { ...CONFIG, climate: 3 });
+      expect(hot.tiles.map(({ q, r, variant }) => [q, r, variant])).toEqual(
+        cold.tiles.map(({ q, r, variant }) => [q, r, variant]),
       );
+      expect([...seaOf(hot)].sort()).toEqual([...seaOf(cold)].sort());
     }
   });
 
@@ -237,6 +255,37 @@ describe('generateShapedMap', () => {
     expect(generateShapedMap(555, CONFIG).tiles).not.toEqual(
       generateShapedMap(556, CONFIG).tiles,
     );
+  });
+
+  it('o mapa não tem buracos (map-realism/01)', () => {
+    for (const map of maps) {
+      const inside = new Set(map.tiles.map(hexKey));
+      const qs = map.tiles.map(({ q }) => q);
+      const rs = map.tiles.map(({ r }) => r);
+      const low = { q: Math.min(...qs) - 1, r: Math.min(...rs) - 1 };
+      const high = { q: Math.max(...qs) + 1, r: Math.max(...rs) + 1 };
+      const outer = new Set([hexKey(low)]);
+      const pending = [low];
+      while (pending.length > 0) {
+        for (const next of hexNeighbors(pending.pop()!)) {
+          const key = hexKey(next);
+          if (
+            next.q < low.q ||
+            next.q > high.q ||
+            next.r < low.r ||
+            next.r > high.r ||
+            outer.has(key) ||
+            inside.has(key)
+          ) {
+            continue;
+          }
+          outer.add(key);
+          pending.push(next);
+        }
+      }
+      const area = (high.q - low.q + 1) * (high.r - low.r + 1);
+      expect(inside.size + outer.size).toBe(area);
+    }
   });
 
   it('o recorte do mapa muda com a seed', () => {
@@ -384,7 +433,7 @@ describe('generateShapedMap', () => {
     }
   });
 
-  it('a terra encostada no mar é Praia, menos a montanha e a beira do rio, e a Praia não passa da largura', () => {
+  it('a terra encostada no mar é Praia, ou Pedra na costa fria, menos a montanha e a beira do rio, e a Praia não passa da largura', () => {
     for (const map of maps) {
       const byKey = indexed(map);
       const sea = seaOf(map);
@@ -402,7 +451,8 @@ describe('generateShapedMap', () => {
             !isWater(tile.biome) &&
             tile.shape !== 'mont' &&
             !byRiver &&
-            tile.biome !== 'beach') ||
+            tile.biome !== 'beach' &&
+            tile.biome !== 'stone') ||
           (tile.biome === 'beach' &&
             (distance > CONFIG.beachMaxWidth || byRiver))
         );
@@ -434,12 +484,12 @@ describe('generateShapedMap', () => {
     expect([...seen].sort()).toEqual([...SHAPED_BIOMES].sort());
   });
 
-  it('nenhum bioma de terra é raridade ao longo das seeds', () => {
+  it('nenhum bioma de terra some ao longo das seeds', () => {
     for (const biome of SHAPED_BIOMES.filter((slug) => !isWater(slug))) {
       const containing = maps.filter(({ tiles }) =>
         tiles.some((tile) => tile.biome === biome),
       );
-      expect(containing.length / maps.length).toBeGreaterThan(0.25);
+      expect(containing.length / maps.length).toBeGreaterThan(0.1);
     }
   });
 
@@ -462,35 +512,31 @@ describe('generateShapedMap', () => {
     expect([...shapes].sort()).toEqual([...TERRAIN_SHAPES].sort());
   });
 
-  it('a pedra é principalmente chão plano', () => {
+  it('a pedra fica no alto, com boa parte em chão plano (map-realism/01)', () => {
     const stone = maps.flatMap(({ tiles }) =>
       tiles.filter(({ biome }) => biome === 'stone'),
     );
     const flat = stone.filter(({ shape }) => shape === 'flat');
-    expect(flat.length / stone.length).toBeGreaterThan(0.5);
+    expect(flat.length / stone.length).toBeGreaterThan(0.3);
   });
 
-  it('a pedra fica perto de `stoneFraction` da terra', () => {
-    const land = maps.flatMap(({ tiles }) =>
-      tiles.filter(({ biome }) => !isWater(biome)),
-    );
-    const stone = land.filter(({ biome }) => biome === 'stone');
-    expect(stone.length / land.length).toBeGreaterThan(
-      CONFIG.stoneFraction - 0.05,
-    );
-    expect(stone.length / land.length).toBeLessThan(
-      CONFIG.stoneFraction + 0.05,
-    );
-  });
-
-  it('mais `stoneFraction` dá mais pedra', () => {
+  it('a Pedra fica no alto: mais `stoneFrom` dá menos pedra', () => {
     const stoneCount = (config: MapConfig) =>
-      generateShapedMap(9, config).tiles.filter(
-        ({ biome }) => biome === 'stone',
-      ).length;
-    expect(stoneCount({ ...CONFIG, stoneFraction: 0.4 })).toBeGreaterThan(
-      stoneCount(CONFIG),
+      SEEDS.slice(0, 10)
+        .flatMap((seed) => generateShapedMap(seed, config).tiles)
+        .filter(({ biome }) => biome === 'stone').length;
+    expect(stoneCount({ ...CONFIG, stoneFrom: 0.5 })).toBeGreaterThan(
+      stoneCount({ ...CONFIG, stoneFrom: 0.85 }),
     );
+  });
+
+  it('a Colina fica abaixo de 12% da terra no jogo', () => {
+    for (const seed of SEEDS.slice(0, 5)) {
+      const tiles = generateMap(seed).tiles;
+      const land = tiles.filter((tile) => !isWater(tile.biome));
+      const hills = land.filter((tile) => tile.biome === 'hill');
+      expect(hills.length / land.length).toBeLessThan(0.12);
+    }
   });
 
   it('há montanhas em vários biomas de terra', () => {
@@ -576,9 +622,7 @@ describe('os lagos e os rios (coast-rivers/02)', () => {
         );
         expect(outside.length, `rio ${index}`).toBeGreaterThan(0);
         for (const cell of river.cells) {
-          expect(['wshallow', 'wford']).toContain(
-            byKey.get(hexKey(cell))!.biome,
-          );
+          expect(['wshallow']).toContain(byKey.get(hexKey(cell))!.biome);
         }
       });
     }
@@ -786,12 +830,9 @@ describe('os rios que atravessam e as travessias (coast-rivers/03)', () => {
     maps = SEEDS.slice(0, 60).map((seed) => generateShapedMap(seed, CROSSING));
   });
 
-  it('há rios que atravessam, vaus e pontes ao longo das seeds', () => {
+  it('há rios que atravessam e pontes ao longo das seeds', () => {
     expect(
       maps.some((map) => map.rivers.some(({ source }) => source === 'edge')),
-    ).toBe(true);
-    expect(
-      maps.some((map) => map.tiles.some(({ biome }) => biome === 'wford')),
     ).toBe(true);
     expect(maps.some((map) => map.bridges.length > 0)).toBe(true);
   });
@@ -860,27 +901,13 @@ describe('os rios que atravessam e as travessias (coast-rivers/03)', () => {
     }
   });
 
-  it('o vau fica no rio e tem a variante de 1 a 3', () => {
-    for (const map of maps) {
-      const river = new Set(
-        map.rivers.flatMap(({ cells }) => cells).map(hexKey),
-      );
-      const inland = new Set([...river, ...map.lakes.flat().map(hexKey)]);
-      for (const tile of map.tiles.filter(({ biome }) => biome === 'wford')) {
-        expect(inland.has(hexKey(tile))).toBe(true);
-        expect(tile.variant).toBeLessThanOrEqual(3);
-      }
-    }
-  });
-
-  it('sem rio que atravessa, não há vau nem ponte; com 1, todo rio vem da borda', () => {
+  it('sem rio que atravessa, não há ponte; com 1, todo rio vem da borda', () => {
     for (const seed of SEEDS.slice(0, 20)) {
       const none = generateShapedMap(seed, {
         ...CROSSING,
         throughRiverChance: 0,
       });
       expect(none.bridges).toEqual([]);
-      expect(none.tiles.some(({ biome }) => biome === 'wford')).toBe(false);
       expect(none.rivers.some(({ source }) => source === 'edge')).toBe(false);
       const all = generateShapedMap(seed, {
         ...CROSSING,
@@ -888,29 +915,6 @@ describe('os rios que atravessam e as travessias (coast-rivers/03)', () => {
       });
       expect(all.rivers.every(({ source }) => source === 'edge')).toBe(true);
     }
-  });
-
-  it('com `fordShare` 1, as travessias são só vaus; com 0, há mais pontes e menos vau', () => {
-    let fewBridges = 0;
-    let manyBridges = 0;
-    let fewFords = 0;
-    let manyFords = 0;
-    const fords = (map: ShapedMap) =>
-      map.tiles.filter(({ biome }) => biome === 'wford').length;
-    for (const seed of SEEDS.slice(0, 30)) {
-      const onlyFords = generateShapedMap(seed, { ...CROSSING, fordShare: 1 });
-      expect(onlyFords.bridges).toEqual([]);
-      manyFords += fords(onlyFords);
-      const mostlyBridges = generateShapedMap(seed, {
-        ...CROSSING,
-        fordShare: 0,
-      });
-      manyBridges += mostlyBridges.bridges.length;
-      fewFords += fords(mostlyBridges);
-      fewBridges += onlyFords.bridges.length;
-    }
-    expect(manyBridges).toBeGreaterThan(fewBridges);
-    expect(fewFords).toBeLessThan(manyFords);
   });
 });
 
@@ -969,7 +973,6 @@ describe('terrainOf', () => {
     ['beach', 'flat', 'beach', 1],
     ['beach', 'hill', 'beach', 2],
     ['beach', 'mont', 'mountain', 4],
-    ['wford', 'flat', 'wford', 0],
   ] as const)('%s com %s vira %s na altura %d', (biome, shape, to, height) => {
     expect(terrainOf(biome, shape)).toEqual({ biome: to, height });
   });
@@ -982,7 +985,7 @@ describe('generateMap', () => {
     maps = SEEDS.slice(0, 40).map((seed) => generateMap(seed, CONFIG));
   });
 
-  it('são os 11 biomas do catálogo', () => {
+  it('são os 10 biomas do catálogo', () => {
     expect([...BIOMES].sort()).toEqual(
       [
         'beach',
@@ -994,7 +997,6 @@ describe('generateMap', () => {
         'stone',
         'temperate',
         'wdeep',
-        'wford',
         'wshallow',
       ].sort(),
     );
