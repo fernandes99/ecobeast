@@ -15,6 +15,7 @@ import {
   placeRivers,
   RiverSource,
 } from './map-water.js';
+import { type GeneratedProp, placeGiantRocks } from './map-rocks.js';
 
 export const BIOMES = [
   'temperate',
@@ -69,6 +70,8 @@ export interface GeneratedMap {
   start: HexCoord;
   tiles: MapTile[];
   bridges: GeneratedBridge[];
+  /** As pedras gigantes das Montanhas (giant-rocks/02). */
+  props: GeneratedProp[];
 }
 
 export interface ShapedTile extends HexCoord {
@@ -82,6 +85,8 @@ export interface ShapedMap {
   start: HexCoord;
   tiles: ShapedTile[];
   bridges: GeneratedBridge[];
+  /** As pedras gigantes das Montanhas (giant-rocks/02). */
+  props: GeneratedProp[];
   /** Os lagos e os rios, só para quem gera o mapa (coast-rivers/02). */
   lakes: HexCoord[][];
   rivers: { path: HexCoord[]; cells: HexCoord[]; source: RiverSource }[];
@@ -147,6 +152,7 @@ const BASIC_VARIANTS = 3;
 const TEMPERATURE_SALT = 0x5eed7e;
 /** O mar, os lagos e os rios vêm de outro sorteio à parte (coast-rivers/01). */
 const WATER_SALT = 0x5ea5a1;
+const ROCKS_SALT = 0x60c4b1;
 const MEANDER_SCALE = 6;
 const BRIDGE_TYPE = 'wood_bridge';
 const BRIDGE_WIDTH = 28;
@@ -200,6 +206,7 @@ export function generateMap(
       variant,
     })),
     bridges: map.bridges,
+    props: map.props,
   };
 }
 
@@ -295,35 +302,42 @@ export function generateShapedMap(
 
   const plain = (body: Cell[]) => body.map(({ q, r }) => ({ q, r }));
   const origin = flatCenter({ q: 0, r: 0 });
+  const tiles = cells.map(({ q, r, biome, shape }) => {
+    const variant = rollVariant(shape, random, config);
+    return {
+      q,
+      r,
+      biome,
+      shape,
+      variant: variant > maxVariant(biome) ? variant - BASIC_VARIANTS : variant,
+    };
+  });
+  const bridges = crossings.flatMap(({ bridge }) => {
+    const [a, b] = bridge.map(flatCenter);
+    return [
+      {
+        type: BRIDGE_TYPE,
+        points: [
+          a!.x - origin.x,
+          a!.y - origin.y,
+          b!.x - origin.x,
+          b!.y - origin.y,
+        ],
+        width: BRIDGE_WIDTH,
+      },
+    ];
+  });
   return {
     seed,
     start,
-    tiles: cells.map(({ q, r, biome, shape }) => {
-      const variant = rollVariant(shape, random, config);
-      return {
-        q,
-        r,
-        biome,
-        shape,
-        variant:
-          variant > maxVariant(biome) ? variant - BASIC_VARIANTS : variant,
-      };
-    }),
-    bridges: crossings.flatMap(({ bridge }) => {
-      const [a, b] = bridge.map(flatCenter);
-      return [
-        {
-          type: BRIDGE_TYPE,
-          points: [
-            a!.x - origin.x,
-            a!.y - origin.y,
-            b!.x - origin.x,
-            b!.y - origin.y,
-          ],
-          width: BRIDGE_WIDTH,
-        },
-      ];
-    }),
+    tiles,
+    bridges,
+    props: placeGiantRocks(
+      tiles,
+      start,
+      bridges,
+      seededRandom(seed ^ ROCKS_SALT),
+    ),
     lakes: [...lakes, ...ponds].map(({ cells: body }) => plain(body)),
     rivers: rivers.map(({ path, cells: body, source }) => ({
       path: plain(path),

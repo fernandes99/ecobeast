@@ -24,7 +24,8 @@ import {
   spawnAreas,
 } from '../domain/islands/area-spawns.js';
 import { minuteOfDay } from '../domain/world-clock/world-clock.js';
-import type { HexCoord } from '../domain/exploration/hex.js';
+import { type HexCoord, hexKey } from '../domain/exploration/hex.js';
+import { rockHexes } from '../domain/exploration/map-rocks.js';
 import type { TamerSize } from '../domain/tamers/tamer-config.js';
 import {
   type MapTamer,
@@ -131,14 +132,18 @@ export class ExplorationService {
       ...generated,
       tiles: assignZones(generated.tiles, generated.seed, zones),
     };
+    const rocks = new Set(
+      generated.props.flatMap((prop) => [...rockHexes(prop)]),
+    );
+    const open = map.tiles.filter((tile) => !rocks.has(hexKey(tile)));
     const spawns = rollSpawns(
-      map.tiles,
+      open,
       bornIn(species, born),
       teamAverage,
       secureRandom,
     );
     const tamers = rollMapTamers(
-      map.tiles,
+      open,
       map.start,
       species,
       teamAverage,
@@ -158,7 +163,7 @@ export class ExplorationService {
         tamers: tamers.map(toMapTamerDto),
         island: null,
         actions: [],
-        props: [],
+        props: generated.props.map(toPropDto),
         trails: [],
         walls: [],
         npcs: [],

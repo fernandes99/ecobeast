@@ -8,6 +8,8 @@ const PACK_TREES: Array[String] = ["leafy_tree", "moss_tree", "fruit_tree", "blo
 const PACK_BUSHES: Array[String] = ["autumn_bush", "dry_twigs", "blue_flower_bush", "orange_flower_bush", "pink_bud_plant", "red_bromeliad", "round_bush", "light_bush", "barrel_cactus", "arm_cactus", "wild_fern", "star_fern", "snowy_bush"]
 const PACK_STONES: Array[String] = ["sand_stone", "rust_crystal", "ice_crystal", "moss_stone", "white_stone", "slab_stone", "clay_stone", "lava_stone"]
 const PACK_ODD_STONES: Array[String] = ["rust_crystal", "ice_crystal", "lava_stone"]
+## As pedras gigantes da Montanha (giant-rocks/01).
+const GIANT_ROCKS: Array[String] = ["giant_crag", "giant_pinnacles", "giant_slab", "giant_boulders", "giant_ridge", "snowy_crag", "snowy_pinnacles", "snowy_boulders"]
 const GROUPS: Array[Dictionary] = [
 	{"name": "Árvores", "kinds": ["tree", "pine", "birch", "oak", "fir", "snow_pine"], "per_tile": 1.0, "off": ["snow_pine"]},
 	{"name": "Arbustos", "kinds": ["bush", "dark_bush", "dry_shrub", "fern", "berry_bush", "thistle", "winter_berry", "snow_bush", "tumbleweed", "cactus"], "per_tile": 2.0, "off": ["winter_berry", "snow_bush", "tumbleweed", "cactus"]},
@@ -23,6 +25,7 @@ const GROUPS: Array[Dictionary] = [
 	{"name": "Pedras grandes (pacote)", "kinds": PACK_STONES, "per_tile": 1.0, "variants": [1, 2], "off": PACK_ODD_STONES},
 	{"name": "Pedras médias (pacote)", "kinds": PACK_STONES, "per_tile": 1.0, "variants": [3, 3], "off": PACK_ODD_STONES},
 	{"name": "Pedras pequenas (pacote)", "kinds": PACK_STONES, "per_tile": 2.0, "variants": [4, 5], "off": PACK_ODD_STONES},
+	{"name": "Pedras gigantes", "kinds": GIANT_ROCKS, "per_tile": 0.25, "off": ["snowy_crag", "snowy_pinnacles", "snowy_boulders"]},
 ]
 const DENSITIES: Array[float] = [0.5, 1.0, 2.0]
 const DENSITY_NAMES: Array[String] = ["Pouca", "Média", "Muita"]

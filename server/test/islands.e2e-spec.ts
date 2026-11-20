@@ -39,6 +39,7 @@ interface IslandMap {
     dy: number;
     variant: number;
     mirrored: boolean;
+    block?: { closed: boolean; points: number[] }[];
   }[];
   trails: { ground: string; width: number; points: number[] }[];
   walls: { type: string; points: number[] }[];
@@ -442,13 +443,33 @@ describe('Ilhas do jogador (e2e)', () => {
       );
     });
 
-    it('sem corpo, sorteia o mapa de sempre, sem ilha, ações nem objetos, e só com as pontes dos rios', async () => {
+    it('sem corpo, sorteia o mapa de sempre, sem ilha nem ações, só com as pontes dos rios e as pedras gigantes', async () => {
       const user = await newUser();
       const { body } = await user.explore().expect(201);
       const map = (body as { map: IslandMap }).map;
       expect(map.island).toBeNull();
       expect(map.actions).toEqual([]);
-      expect(map.props).toEqual([]);
+      // As pedras gigantes das Montanhas, com a linha do pé (giant-rocks/02).
+      const mountains = new Set(
+        map.tiles
+          .filter((tile) => tile.biome === 'mountain')
+          .map((tile) => `${tile.q},${tile.r}`),
+      );
+      for (const prop of map.props) {
+        expect(prop.prop_type_id).toBeGreaterThanOrEqual(131);
+        expect(prop.prop_type_id).toBeLessThanOrEqual(138);
+        expect(prop.block).toHaveLength(1);
+        expect(mountains.has(`${prop.q},${prop.r}`)).toBe(true);
+      }
+      const rocks = new Set(
+        map.props.flatMap((prop) => [
+          `${prop.q},${prop.r}`,
+          ...(prop.prop_type_id === 135 ? [`${prop.q + 1},${prop.r}`] : []),
+        ]),
+      );
+      for (const creature of map.creatures) {
+        expect(rocks.has(`${creature.q},${creature.r}`)).toBe(false);
+      }
       expect(map.trails).toEqual([]);
       expect(map.walls).toEqual([]);
       // As pontes de madeira dos rios que atravessam o mapa (coast-rivers/03).

@@ -58,6 +58,7 @@ static func generated(island_name: String, data: Dictionary) -> IslandDraft:
 		var bridge: MapBridge = MapBridge.from_dict(entry) if entry is Dictionary else null
 		if bridge != null:
 			draft.bridges.append(bridge)
+	draft.props = DictFields.get_array(data, "props").duplicate(true)
 	return draft
 
 

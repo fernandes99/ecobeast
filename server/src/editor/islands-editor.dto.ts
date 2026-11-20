@@ -14,7 +14,11 @@ import {
 } from 'class-validator';
 import { BIOMES, MAX_HEIGHT } from '../domain/exploration/map-generator.js';
 import type { Biome } from '../domain/exploration/map-generator.js';
-import { MapBridgeDto, MapTileDto } from '../exploration/exploration.dto.js';
+import {
+  MapBridgeDto,
+  MapPropDto,
+  MapTileDto,
+} from '../exploration/exploration.dto.js';
 
 const integer = (field: string) => ({
   message: `${field} precisa ser um número inteiro.`,
@@ -583,6 +587,13 @@ export class MapGeneratorResponseDto {
       'As pontes de madeira dos rios que atravessam o mapa (coast-rivers/03).',
   })
   bridges: MapBridgeDto[];
+
+  @ApiProperty({
+    type: [MapPropDto],
+    description:
+      'As pedras gigantes das Montanhas, com a linha de bloqueio em `block` (giant-rocks/02).',
+  })
+  props: MapPropDto[];
 }
 
 export class ConfigRangeDto {

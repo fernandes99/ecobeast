@@ -27,6 +27,7 @@ import {
   withDefaults,
 } from '../domain/exploration/map-config.js';
 import { generateMap } from '../domain/exploration/map-generator.js';
+import { toPropDto } from '../exploration/exploration.dto.js';
 import { assignZones } from '../domain/exploration/map-zones.js';
 import { loadZones } from '../exploration/spawn-data.js';
 import { PrismaService } from '../prisma/prisma.service.js';
@@ -114,6 +115,7 @@ export class MapGeneratorController {
       start: map.start,
       tiles: assignZones(map.tiles, body.seed, zones, config),
       bridges: map.bridges,
+      props: map.props.map(toPropDto),
     };
   }
 }
