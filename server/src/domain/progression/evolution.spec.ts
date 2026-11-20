@@ -28,23 +28,23 @@ const rules: EvolutionRule[] = [
 
 describe('evolutionOffer', () => {
   it('oferece ao chegar ao nível mínimo', () => {
-    expect(evolutionOffer(RUVO, 15, 16, rules)).toBe(RUVAK);
+    expect(evolutionOffer(RUVO, 15, 16, rules, 'day')).toBe(RUVAK);
   });
 
   it('oferece de novo a quem já passou do nível e subiu outra vez', () => {
-    expect(evolutionOffer(RUVO, 17, 18, rules)).toBe(RUVAK);
+    expect(evolutionOffer(RUVO, 17, 18, rules, 'day')).toBe(RUVAK);
   });
 
   it('não oferece abaixo do nível mínimo', () => {
-    expect(evolutionOffer(RUVO, 14, 15, rules)).toBeNull();
+    expect(evolutionOffer(RUVO, 14, 15, rules, 'day')).toBeNull();
   });
 
   it('não oferece sem subir de nível', () => {
-    expect(evolutionOffer(RUVO, 20, 20, rules)).toBeNull();
+    expect(evolutionOffer(RUVO, 20, 20, rules, 'day')).toBeNull();
   });
 
   it('só olha o gatilho de nível', () => {
-    expect(evolutionOffer(7, 1, 50, rules)).toBeNull();
+    expect(evolutionOffer(7, 1, 50, rules, 'day')).toBeNull();
   });
 
   it('com duas regras, vale a de menor id', () => {
@@ -58,7 +58,63 @@ describe('evolutionOffer', () => {
       },
       ...rules,
     ];
-    expect(evolutionOffer(RUVO, 15, 16, twoWays)).toBe(RUVAK);
+    expect(evolutionOffer(RUVO, 15, 16, twoWays, 'day')).toBe(RUVAK);
+  });
+
+  describe('por horário', () => {
+    const MANTORN = 26;
+    const branched: EvolutionRule[] = [
+      {
+        id: 58,
+        speciesId: MANTORN,
+        evolvedSpeciesId: 27,
+        trigger: 'time_of_day',
+        minLevel: 36,
+        timeOfDay: 'day',
+      },
+      {
+        id: 59,
+        speciesId: MANTORN,
+        evolvedSpeciesId: 28,
+        trigger: 'time_of_day',
+        minLevel: 36,
+        timeOfDay: 'night',
+      },
+    ];
+
+    it('de dia, oferece a regra do dia', () => {
+      expect(evolutionOffer(MANTORN, 35, 36, branched, 'day')).toBe(27);
+    });
+
+    it('à noite, oferece a regra da noite', () => {
+      expect(evolutionOffer(MANTORN, 35, 36, branched, 'night')).toBe(28);
+    });
+
+    it('não oferece abaixo do nível mínimo', () => {
+      expect(evolutionOffer(MANTORN, 34, 35, branched, 'day')).toBeNull();
+    });
+
+    it('sem nível mínimo, vale em qualquer nível', () => {
+      const anyLevel: EvolutionRule[] = [
+        { ...branched[1]!, minLevel: null },
+      ];
+      expect(evolutionOffer(MANTORN, 1, 2, anyLevel, 'night')).toBe(28);
+      expect(evolutionOffer(MANTORN, 1, 2, anyLevel, 'day')).toBeNull();
+    });
+
+    it('com a regra de nível e a de horário, vale a de menor id', () => {
+      const mixed: EvolutionRule[] = [
+        ...branched,
+        {
+          id: 60,
+          speciesId: MANTORN,
+          evolvedSpeciesId: 99,
+          trigger: 'level',
+          minLevel: 30,
+        },
+      ];
+      expect(evolutionOffer(MANTORN, 35, 36, mixed, 'night')).toBe(28);
+    });
   });
 });
 

@@ -24,3 +24,10 @@ export function dayPhaseAt<T extends { startMinute: number }>(
     sorted.findLast((phase) => phase.startMinute <= minute) ?? sorted.at(-1)!
   );
 }
+
+export type DayPart = 'day' | 'night';
+
+/** A Manhã e a Tarde são o dia; o Final de tarde e a Noite, a noite (prayling-line/01). */
+export function dayPartOf(phaseSlug: string): DayPart {
+  return phaseSlug === 'morning' || phaseSlug === 'afternoon' ? 'day' : 'night';
+}

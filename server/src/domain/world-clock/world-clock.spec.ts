@@ -1,4 +1,10 @@
-import { CYCLE_MS, EPOCH_MS, dayPhaseAt, minuteOfDay } from './world-clock.js';
+import {
+  CYCLE_MS,
+  EPOCH_MS,
+  dayPartOf,
+  dayPhaseAt,
+  minuteOfDay,
+} from './world-clock.js';
 
 const PHASES = [
   { id: 1, startMinute: 360 },
@@ -48,5 +54,17 @@ describe('dayPhaseAt', () => {
   it('não depende da ordem da lista', () => {
     expect(dayPhaseAt(800, [...PHASES].reverse()).id).toBe(2);
     expect(dayPhaseAt(100, [...PHASES].reverse()).id).toBe(4);
+  });
+});
+
+describe('dayPartOf', () => {
+  it('a Manhã e a Tarde são o dia', () => {
+    expect(dayPartOf('morning')).toBe('day');
+    expect(dayPartOf('afternoon')).toBe('day');
+  });
+
+  it('o Final de tarde e a Noite são a noite', () => {
+    expect(dayPartOf('dusk')).toBe('night');
+    expect(dayPartOf('night')).toBe('night');
   });
 });

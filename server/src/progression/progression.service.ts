@@ -16,6 +16,12 @@ import {
   skillsBetween,
 } from '../domain/progression/learnset.js';
 import type { LearnsetEntry } from '../domain/rules/creature-factory.js';
+import {
+  type DayPart,
+  dayPartOf,
+  dayPhaseAt,
+  minuteOfDay,
+} from '../domain/world-clock/world-clock.js';
 import { Prisma } from '../generated/prisma/client.js';
 import {
   CREATURE_INCLUDE,
@@ -94,15 +100,17 @@ export class ProgressionService {
     const plans = new Map<string, VictoryPlan>();
     if (creatures.length === 0) return plans;
 
-    const learning = await this.loadLearning(
-      creatures.map((creature) => creature.speciesId),
-    );
+    const [learning, dayPart] = await Promise.all([
+      this.loadLearning(creatures.map((creature) => creature.speciesId)),
+      this.currentDayPart(),
+    ]);
     for (const creature of creatures) {
       const evolutionSpeciesId = evolutionOffer(
         creature.speciesId,
         creature.levelBefore,
         creature.levelAfter,
         learning.evolutions,
+        dayPart,
       );
       if (evolutionSpeciesId !== null) {
         plans.set(creature.uid, {
@@ -402,8 +410,17 @@ export class ProgressionService {
         evolvedSpeciesId: row.evolvedSpeciesId,
         trigger: row.evolutionTrigger.slug,
         minLevel: row.minLevel,
+        timeOfDay: row.timeOfDay,
       })),
     };
+  }
+
+  private async currentDayPart(): Promise<DayPart> {
+    const phases = await this.prisma.dayPhase.findMany({
+      select: { slug: true, startMinute: true },
+    });
+    if (phases.length === 0) return 'day';
+    return dayPartOf(dayPhaseAt(minuteOfDay(Date.now()), phases).slug);
   }
 }
 

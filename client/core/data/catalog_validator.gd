@@ -396,6 +396,8 @@ func _check_evolutions() -> void:
 			_row_error("evolutions", lines[i], "espécie não pode evoluir para ela mesma")
 		if _slug_of("evolution_triggers", row["evolution_trigger_id"]) == "level" and row["min_level"] == null:
 			_row_error("evolutions", lines[i], "gatilho 'level' precisa de min_level")
+		if _slug_of("evolution_triggers", row["evolution_trigger_id"]) == "time_of_day" and row["time_of_day"] == null:
+			_row_error("evolutions", lines[i], "gatilho 'time_of_day' precisa de time_of_day")
 		var evolved := _row_by_id("species", row["evolved_species_id"])
 		if not evolved.is_empty() and evolved["evolves_from_species_id"] != row["species_id"]:
 			_row_error("evolutions", lines[i], "espécie %d deveria ter evolves_from_species_id = %d"

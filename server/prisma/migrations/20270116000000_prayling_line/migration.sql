@@ -1,0 +1,105 @@
+-- A linha do Prayling: o louva-a-deus, a primeira de Inseto, que vira Luz de dia ou Sombra à noite (.specs/prayling-line/02-prayling-line.md).
+
+INSERT INTO "ecobeasts"."species" ("id", "slug", "name", "description", "growth_rate_id", "rarity_id", "base_xp_yield", "capture_rate", "gender_ratio", "height_m", "weight_kg", "evolves_from_species_id") VALUES
+    (25, 'prayling', 'Prayling', 'Fica imóvel por horas com as patas dobradas, como se rezasse. Quem chega perto achando que é um galho leva um susto, porque ele nunca erra a primeira mordida.', 2, 2, 60, 45, 0.5, 0.4, 0.5, NULL),
+    (26, 'mantorn', 'Mantorn', 'Os braços viraram foices de espinho. Frio e paciente, observa a presa sem piscar e só se move quando já é tarde demais para ela fugir.', 2, 2, 140, 45, 0.5, 1.0, 3.8, 25),
+    (27, 'solantis', 'Solantis', 'Quando evolui sob o sol, as asas viram pétalas de luz. Pousa entre as flores brilhando tanto que os insetos voam até ele sozinhos, e não voltam.', 2, 2, 230, 45, 0.5, 1.5, 9.5, 26),
+    (28, 'umbrantis', 'Umbrantis', 'Quando evolui no escuro, fica seco como uma folha morta. Não caça, espera. Dizem que quem dorme no mato sente as foices dele roçarem antes do amanhecer.', 2, 2, 230, 45, 0.5, 1.5, 8.0, 26);
+INSERT INTO "ecobeasts"."species_elements" ("species_id", "slot", "element_id") VALUES
+    (25, 1, 15),
+    (26, 1, 15),
+    (27, 1, 15),
+    (27, 2, 12),
+    (28, 1, 15),
+    (28, 2, 11);
+INSERT INTO "ecobeasts"."species_stats" ("species_id", "stat_id", "base_value", "training_yield") VALUES
+    (25, 1, 45, 0),
+    (25, 2, 65, 1),
+    (25, 3, 40, 0),
+    (25, 4, 30, 0),
+    (25, 5, 40, 0),
+    (25, 6, 90, 0),
+    (26, 1, 60, 0),
+    (26, 2, 90, 2),
+    (26, 3, 55, 0),
+    (26, 4, 40, 0),
+    (26, 5, 55, 0),
+    (26, 6, 120, 0),
+    (27, 1, 75, 0),
+    (27, 2, 110, 3),
+    (27, 3, 70, 0),
+    (27, 4, 80, 0),
+    (27, 5, 80, 0),
+    (27, 6, 110, 0),
+    (28, 1, 70, 0),
+    (28, 2, 135, 3),
+    (28, 3, 60, 0),
+    (28, 4, 50, 0),
+    (28, 5, 70, 0),
+    (28, 6, 140, 0);
+INSERT INTO "ecobeasts"."species_traits" ("species_id", "trait_id", "slot", "is_hidden") VALUES
+    (25, 2, 1, false),
+    (25, 4, 3, true),
+    (26, 2, 1, false),
+    (26, 4, 3, true),
+    (27, 2, 1, false),
+    (27, 4, 3, true),
+    (28, 2, 1, false),
+    (28, 4, 3, true);
+INSERT INTO "ecobeasts"."species_skills" ("species_id", "skill_id", "skill_learn_method_id", "level") VALUES
+    (25, 1, 1, 1),
+    (25, 28, 1, 1),
+    (25, 3, 1, 6),
+    (25, 14, 1, 11),
+    (25, 59, 1, 16),
+    (25, 11, 1, 24),
+    (26, 11, 2, 0),
+    (26, 1, 1, 1),
+    (26, 28, 1, 1),
+    (26, 3, 1, 6),
+    (26, 14, 1, 11),
+    (26, 59, 1, 16),
+    (26, 60, 1, 42),
+    (27, 60, 2, 0),
+    (27, 1, 1, 1),
+    (27, 28, 1, 1),
+    (27, 3, 1, 6),
+    (27, 14, 1, 11),
+    (27, 59, 1, 16),
+    (27, 11, 1, 24),
+    (28, 12, 2, 0),
+    (28, 1, 1, 1),
+    (28, 28, 1, 1),
+    (28, 3, 1, 6),
+    (28, 14, 1, 11),
+    (28, 59, 1, 16),
+    (28, 11, 1, 24);
+INSERT INTO "ecobeasts"."evolutions" ("id", "species_id", "evolved_species_id", "evolution_trigger_id", "min_level", "time_of_day") VALUES
+    (57, 25, 26, 1, 18, NULL),
+    (58, 26, 27, 4, 36, 'day'),
+    (59, 26, 28, 4, 36, 'night');
+INSERT INTO "ecobeasts"."species_biomes" ("species_id", "biome_id", "rate") VALUES
+    (25, 1, 25),
+    (25, 2, 30),
+    (25, 4, 15),
+    (26, 1, 8),
+    (26, 2, 10),
+    (26, 4, 5),
+    (27, 1, 2),
+    (27, 4, 2),
+    (28, 2, 3);
+INSERT INTO "ecobeasts"."species_day_phases" ("species_id", "day_phase_id") VALUES
+    (25, 1),
+    (25, 2),
+    (25, 3),
+    (25, 4),
+    (26, 1),
+    (26, 2),
+    (26, 3),
+    (26, 4),
+    (27, 1),
+    (27, 2),
+    (28, 3),
+    (28, 4);
+SELECT setval(pg_get_serial_sequence('"ecobeasts"."species"', 'id'), (SELECT MAX("id") FROM "ecobeasts"."species"));
+SELECT setval(pg_get_serial_sequence('"ecobeasts"."evolutions"', 'id'), (SELECT MAX("id") FROM "ecobeasts"."evolutions"));

@@ -1,9 +1,12 @@
+import type { DayPart } from '../world-clock/world-clock.js';
+
 export interface EvolutionRule {
   id: number;
   speciesId: number;
   evolvedSpeciesId: number;
   trigger: string;
   minLevel: number | null;
+  timeOfDay?: string | null;
 }
 
 export interface SpeciesTraitRow {
@@ -13,27 +16,33 @@ export interface SpeciesTraitRow {
 }
 
 /**
- * A espécie em que ele pode evoluir, ou nulo. Só o gatilho de nível vale, e só
- * para quem subiu de nível; com mais de uma regra, vale a de menor id. Quem
- * cancelou recebe a oferta de novo no próximo nível, porque nada guarda a recusa.
+ * A espécie em que ele pode evoluir, ou nulo. Valem o gatilho de nível e o de
+ * horário (na parte do dia `dayPart`), e só para quem subiu de nível; com mais
+ * de uma regra, vale a de menor id. Quem cancelou recebe a oferta de novo no
+ * próximo nível, porque nada guarda a recusa.
  */
 export function evolutionOffer(
   speciesId: number,
   levelBefore: number,
   levelAfter: number,
   rules: EvolutionRule[],
+  dayPart: DayPart,
 ): number | null {
   if (levelAfter <= levelBefore) return null;
   const rule = rules
-    .filter(
-      (row) =>
-        row.speciesId === speciesId &&
-        row.trigger === 'level' &&
-        row.minLevel !== null &&
-        row.minLevel <= levelAfter,
-    )
+    .filter((row) => row.speciesId === speciesId && offers(row))
     .sort((a, b) => a.id - b.id)[0];
   return rule?.evolvedSpeciesId ?? null;
+
+  function offers(row: EvolutionRule): boolean {
+    if (row.trigger === 'level') {
+      return row.minLevel !== null && row.minLevel <= levelAfter;
+    }
+    if (row.trigger === 'time_of_day') {
+      return row.timeOfDay === dayPart && (row.minLevel ?? 1) <= levelAfter;
+    }
+    return false;
+  }
 }
 
 /**

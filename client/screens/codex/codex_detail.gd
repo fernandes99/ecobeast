@@ -12,6 +12,8 @@ const HEIGHT_TEXT := "%s m"
 const WEIGHT_TEXT := "%s kg"
 const LEVEL_TEXT := "nv. %d"
 const ARROW_TEXT := "›"
+const OR_TEXT := "ou"
+const TIME_TEXTS := {"day": "de dia", "night": "à noite"}
 const LINE_PORTRAIT_SIZE := 88
 const LINE_NAME_FONT_SIZE := 18
 
@@ -85,10 +87,14 @@ func _decimal(value: float) -> String:
 
 func _show_line(current_id: int) -> void:
 	_clear(_line_row)
+	var previous_id := -1
 	for step: Dictionary in GameData.get_evolution_line(current_id):
 		var rule: EvolutionRule = step["rule"]
 		if rule != null:
+			if rule.species_id != previous_id:
+				_line_row.add_child(_make_label(OR_TEXT, &"SecondaryLabel", LINE_NAME_FONT_SIZE))
 			_line_row.add_child(_make_arrow(rule))
+		previous_id = step["species_id"]
 		_line_row.add_child(_make_form(step["species_id"], step["species_id"] == current_id))
 
 
@@ -98,8 +104,12 @@ func _make_arrow(rule: EvolutionRule) -> Control:
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var arrow := _make_label(ARROW_TEXT, &"TitleLabel", 36)
 	box.add_child(arrow)
-	var condition := LEVEL_TEXT % rule.min_level if rule.trigger_slug == "level" and rule.min_level > 0 else ""
-	box.add_child(_make_label(condition, &"SecondaryLabel", LINE_NAME_FONT_SIZE))
+	var conditions: Array[String] = []
+	if (rule.trigger_slug == "level" or rule.trigger_slug == "time_of_day") and rule.min_level > 0:
+		conditions.append(LEVEL_TEXT % rule.min_level)
+	if rule.trigger_slug == "time_of_day":
+		conditions.append(TIME_TEXTS.get(rule.time_of_day, ""))
+	box.add_child(_make_label("\n".join(conditions), &"SecondaryLabel", LINE_NAME_FONT_SIZE))
 	return box
 
 
