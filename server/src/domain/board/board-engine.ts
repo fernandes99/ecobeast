@@ -74,6 +74,7 @@ import type {
   BoardAction,
   BoardContext,
   BoardEntry,
+  Board,
   BoardInput,
   BoardState,
   BoardVez,
@@ -102,6 +103,7 @@ export interface BoardOptions {
   partyFree?: number;
   canFlee?: boolean;
   opponent?: Opponent;
+  board?: Board;
 }
 
 export function startBoardBattle(
@@ -117,6 +119,7 @@ export function startBoardBattle(
     partyFree = 0,
     canFlee = true,
     opponent = 'wild',
+    board = makeBoard(),
   }: BoardOptions = {},
 ): BoardOutcome {
   const playerSide = newSide(player, slots.player);
@@ -135,7 +138,7 @@ export function startBoardBattle(
     coins,
     coinsChange: 0,
     partyFree,
-    board: makeBoard(),
+    board,
     cells: { player: [], enemy: [] },
     marks: [],
     round: 0,
@@ -152,7 +155,11 @@ export function startBoardBattle(
     const count = state[side].activeIndices.length;
     state.cells[side] = state[side].activeIndices.map(() => null);
     for (const spot of occupiedSpots(state, side)) {
-      enterBoard(context, spot, startCell(side, spot.position, count));
+      enterBoard(
+        context,
+        spot,
+        startCell(side, spot.position, count, state.board),
+      );
     }
   }
   advance(context);

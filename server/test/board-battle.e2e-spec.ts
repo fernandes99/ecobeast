@@ -4,6 +4,7 @@ import request from 'supertest';
 import type { App } from 'supertest/types.js';
 import { BattleStore } from '../src/battle/battle.store.js';
 import type { BattleEvent } from '../src/domain/battle/types.js';
+import { hexDistance } from '../src/domain/exploration/hex.js';
 import { ExplorationStore } from '../src/exploration/exploration.store.js';
 import { Item, Prisma, PrismaClient } from '../src/generated/prisma/client.js';
 import { createTestApp } from './support/app.js';
@@ -33,7 +34,12 @@ interface BoardBody {
     phase: string;
     result: string | null;
     round: number;
-    board: { cells: Cell[]; zones: { player: Cell[]; enemy: Cell[] } };
+    board: {
+      cells: Cell[];
+      zones: { player: Cell[]; enemy: Cell[] };
+      columns: number;
+      rows: number;
+    };
     marks: unknown[];
     queue: { side: string; position: number }[];
     player: {
@@ -203,11 +209,20 @@ describe('Rotas da luta no tabuleiro (e2e)', () => {
   it('um 1×1 de teste traz o tabuleiro, as áreas, onde cada um está e a fila', async () => {
     const user = await strongUser();
     const body = await start(user, { enemies: [WEAK_ENEMY] });
-    expect(body.battle.board.cells).toHaveLength(18);
-    expect(body.battle.board.zones.player).toHaveLength(6);
-    expect(body.battle.board.zones.enemy).toHaveLength(6);
-    expect(body.battle.player.cells).toEqual([{ q: -1, r: 4 }]);
-    expect(body.battle.enemy.cells).toEqual([{ q: 1, r: 1 }]);
+    const { columns, rows, cells, zones } = body.battle.board;
+    for (const side of [columns, rows]) {
+      expect(side).toBeGreaterThanOrEqual(4);
+      expect(side).toBeLessThanOrEqual(10);
+    }
+    expect(cells.length).toBeLessThanOrEqual(columns * rows);
+    expect(cells.length).toBeGreaterThanOrEqual(
+      Math.ceil(columns * rows * 0.8),
+    );
+    expect(zones.player.length).toBeGreaterThan(0);
+    expect(zones.enemy.length).toBeGreaterThan(0);
+    const [player] = body.battle.player.cells;
+    const [enemy] = body.battle.enemy.cells;
+    expect(hexDistance(player!, enemy!)).toBe(3);
     expect(body.battle.queue[0]).toEqual({ side: 'player', position: 0 });
     expect(body.battle.round).toBe(1);
     for (const skill of body.battle.player.team[0]!.skills) {
@@ -238,17 +253,23 @@ describe('Rotas da luta no tabuleiro (e2e)', () => {
 
   it('andar 1 hexágono funciona; 2 é recusado com 400, e a luta segue igual', async () => {
     const user = await strongUser();
-    await start(user, { enemies: [WEAK_ENEMY] });
+    const started = await start(user, { enemies: [WEAK_ENEMY] });
+    const from = started.battle.player.cells[0]!;
     const res = await user
-      .act({ position: 0, move: { q: -1, r: 2 }, action: { type: 'wait' } })
+      .act({
+        position: 0,
+        move: { q: from.q, r: from.r - 2 },
+        action: { type: 'wait' },
+      })
       .expect(400);
     expect(res.body.message).toBe(CANNOT_REACH);
+    const step = { q: from.q, r: from.r - 1 };
     const body = await act(user, {
       position: 0,
-      move: { q: -1, r: 3 },
+      move: step,
       action: { type: 'wait' },
     });
-    expect(body.battle.player.cells).toEqual([{ q: -1, r: 3 }]);
+    expect(body.battle.player.cells).toEqual([step]);
   });
 
   it('corpo sem action fora do choose_next é malformado', async () => {
@@ -312,13 +333,17 @@ describe('Rotas da luta no tabuleiro (e2e)', () => {
     await prisma.inventoryItem.create({
       data: { playerId: user.id, itemId: sphere.id, quantity: 1 },
     });
-    await start(user, { enemies: [WEAK_ENEMY] });
+    const started = await start(user, { enemies: [WEAK_ENEMY] });
     const { catalog } = app.get(BattleStore).get(user.id)!;
     catalog.captureRates.set(RUVO, 100);
     catalog.items.get(sphere.id)!.captureBonus = 1000;
     const body = await act(user, {
       position: 0,
-      action: { type: 'capture', item_id: sphere.id, target: { q: 1, r: 1 } },
+      action: {
+        type: 'capture',
+        item_id: sphere.id,
+        target: started.battle.enemy.cells[0]!,
+      },
     });
     expect(body.battle.result).toBe('captured');
     expect(body.captured_to).toBe('party');
@@ -334,13 +359,17 @@ describe('Rotas da luta no tabuleiro (e2e)', () => {
     await prisma.inventoryItem.create({
       data: { playerId: user.id, itemId: sphere.id, quantity: 1 },
     });
-    await start(user, { enemies: [WEAK_ENEMY] });
+    const started = await start(user, { enemies: [WEAK_ENEMY] });
     const { catalog } = app.get(BattleStore).get(user.id)!;
     catalog.captureRates.set(RUVO, 100);
     catalog.items.get(sphere.id)!.captureBonus = 1000;
     const body = await act(user, {
       position: 0,
-      action: { type: 'capture', item_id: sphere.id, target: { q: 1, r: 1 } },
+      action: {
+        type: 'capture',
+        item_id: sphere.id,
+        target: started.battle.enemy.cells[0]!,
+      },
     });
     expect(body.captured_to).toBe('storage');
     const stored = await prisma.creatureInstance.count({
@@ -521,7 +550,8 @@ describe('Rotas da luta no tabuleiro (e2e)', () => {
     const res = await user.wild().expect(201);
     const body = res.body as BoardBody;
     expect(body.spawn_id).toBe(1);
-    expect(body.battle.board.cells).toHaveLength(18);
+    const { columns, rows, cells } = body.battle.board;
+    expect(cells.length).toBeLessThanOrEqual(columns * rows);
     expect(app.get(ExplorationStore).get(user.id)!.spawns.has(1)).toBe(false);
   });
 

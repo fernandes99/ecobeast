@@ -97,7 +97,8 @@ export function makeBoardState(
   const placed = (which: SideSlug, count: number, team: Combatant[]) =>
     Array.from({ length: count }, (_, position) =>
       position < team.length
-        ? (cells[which]?.[position] ?? startCell(which, position, count))
+        ? (cells[which]?.[position] ??
+          startCell(which, position, count, makeBoard()))
         : null,
     );
   const state: BoardState = {

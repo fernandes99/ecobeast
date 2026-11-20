@@ -30,6 +30,7 @@ import {
   applyBoardVez,
   startBoardBattle,
 } from '../domain/board/board-engine.js';
+import { rollBoard } from '../domain/board/board.js';
 import type { BoardInput, BoardState } from '../domain/board/types.js';
 import type { HexCoord } from '../domain/exploration/hex.js';
 import { rollChallenger, type TamerCreature } from '../domain/tamers/tamers.js';
@@ -258,6 +259,7 @@ export class BoardBattleService {
         slots: { player: Math.min(slots, standing), enemy: slots },
         partyFree: PARTY_SIZE - team.creatures.length,
         opponent,
+        board: rollBoard(slots, secureRandom),
       },
     );
     const wilds = enemies.map(({ creature, statIds }) => ({

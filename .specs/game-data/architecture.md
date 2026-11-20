@@ -99,7 +99,7 @@ temperaments ──> stats (aumentado, diminuído)
 
 **`skill_learn_methods`** — `id`, `slug` (`level_up`, `evolution`, `teachable`), `name`.
 
-**`status_conditions`** — `id`, `slug`, `name`, `is_volatile` (bool: some ao trocar de criatura).
+**`status_conditions`** — `id`, `slug`, `name`, `is_volatile` (bool: some ao trocar de criatura), `description` (o que o estado faz, com os números das regras; mostrada no F1, `.specs/status-descriptions/`).
 
 **`status_condition_immunities`** — chave (`status_condition_id`, `element_id`): criaturas desse elemento não recebem o status.
 

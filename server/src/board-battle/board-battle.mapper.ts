@@ -19,7 +19,12 @@ export function toBoardBattleDto(
   return {
     ...dto,
     round: state.round,
-    board: state.board,
+    board: {
+      cells: state.board.cells,
+      zones: state.board.zones,
+      columns: state.board.size.columns,
+      rows: state.board.size.rows,
+    },
     marks: state.marks.map(({ cell, groundEffectId, remaining }) => ({
       ...cell,
       ground_effect_id: groundEffectId,

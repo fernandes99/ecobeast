@@ -8,25 +8,27 @@ A luta contra um Domador NPC é a mesma, com `opponent: 'tamer'`: sem Esfera, se
 
 O tabuleiro é uma lista de hexágonos, com a ponta para cima, em **coordenadas axiais** `{q, r}`, as mesmas do mapa de Explorar zona (`server/src/domain/exploration/hex.ts`). A distância é `hexDistance`, e os vizinhos são `hexNeighbors`.
 
-O tabuleiro de agora tem 3 colunas × 6 linhas, 18 hexágonos. Começou com 6 × 7 e diminuiu na [06](06-board-look.md), decisão do dono em 2026-11-05: os hexágonos ficavam pequenos na tela. A linha 0 fica em cima, e as linhas ímpares ficam deslocadas meio hexágono para a direita. A casa da coluna `c` na linha `r` é `{q: c - floor(r / 2), r}`.
+O tamanho é sorteado a cada luta pelo servidor ([board-size/01](../board-size/01-board-size-rules.md)): o `BoardBattleService.begin` chama o `rollBoardSize(slots, random)`, que sorteia as colunas e depois as linhas, cada uma uniforme na faixa do formato pedido (_a revisar_), e o tamanho fica no `Board.size`. A vista manda `cells`, `zones`, `columns` e `rows`.
 
-| Área | Linhas | Quem começa nela |
-| --- | --- | --- |
-| Do inimigo | 0 e 1 | Os selvagens |
-| Do meio | 2 e 3 | Ninguém |
-| Do jogador | 4 e 5 | Os Ecobeasts do jogador |
+| Formato | Colunas e linhas |
+| --- | --- |
+| 1×1 | de 4 a 10 |
+| 2×2 | de 6 a 12 |
+| 3×3 | de 8 a 16 |
 
-**Largada:** cada lado começa na linha da frente da sua área, na linha 1 o inimigo e na 4 o jogador, nas colunas da tabela. Assim, os dois lados ficam a 3 hexágonos.
+Depois, o `biteBoard` tira de 1 a 5 mordidas da borda ([board-size/03](../board-size/03-board-bites.md)): cada uma, de 1 a 3 casas juntas, começa numa casa da borda e fica a até 1 hexágono dela, sem tirar as casas de começo de 1, 2 e 3 vagas nem os vizinhos delas, sem partir o tabuleiro e deixando pelo menos 80% das casas (`rollBoard` faz as duas coisas, e o serviço entrega o tabuleiro pronto ao motor, pela opção `board`). As zonas perdem as casas que saíram, e o `Board.size` continua o retângulo sorteado.
+
+Sem tabuleiro, o motor usa o `makeBoard()` padrão, de `DEFAULT_BOARD_SIZE`, 3 × 6, o tabuleiro que valeu até a board-size (os testes do motor continuam nele). O 3 × 6 veio de 6 × 7 na [06](06-board-look.md), decisão do dono em 2026-11-05: os hexágonos ficavam pequenos na tela; hoje a pinça resolve isso num campo grande. A linha 0 fica em cima, e as linhas ímpares ficam deslocadas meio hexágono para a direita. A casa da coluna `c` na linha `r` é `{q: c - floor(r / 2), r}`.
+
+**Largada:** com `rows` linhas, a linha da frente do inimigo é `floor((rows - 4) / 2)`, e a do jogador fica 3 linhas abaixo dela: os dois lados começam perto do meio, a 3 hexágonos, como no 3 × 6 (linhas 1 e 4). A área de cada lado é a linha da frente e a de trás dela (acima do inimigo, abaixo do jogador), se houver, de ponta a ponta. As colunas ficam em volta do centro `c = floor((columns - 1) / 2)`:
 
 | Vagas | Colunas |
 | --- | --- |
-| 1 | 1 |
-| 2 | 0 e 2 |
-| 3 | 0, 1 e 2 |
+| 1 | `c` |
+| 2 | `c - 1` e `c + 1` |
+| 3 | `c - 2`, `c` e `c + 2`, ou `c - 1`, `c` e `c + 1` quando não cabem |
 
-As colunas são _a revisar_. Um tabuleiro futuro, sorteado ou por bioma, só muda a lista de hexágonos e as áreas, e o contrato continua o mesmo: o servidor manda as duas coisas.
-
-**Constantes** (_a revisar_), em `server/src/domain/board/board.ts`: `BOARD_COLUMNS = 3`, `BOARD_ROWS = 6`, `MOVE_RANGE = 1`. O andar começou em 3 e passou para 1 na [05](05-board-actions.md), decisão do dono em 2026-11-05, depois de jogar a tela: 3 hexágonos cobriam quase o tabuleiro todo. O jogo usa o mesmo número, em `BoardGeometry.MOVE_RANGE`.
+**Constantes** (_a revisar_), em `server/src/domain/board/board.ts`: `BOARD_SIZE_RANGES`, `DEFAULT_BOARD_SIZE` e `MOVE_RANGE = 1`. O andar começou em 3 e passou para 1 na [05](05-board-actions.md), decisão do dono em 2026-11-05, depois de jogar a tela: 3 hexágonos cobriam quase o tabuleiro todo. O jogo usa o mesmo número, em `BoardGeometry.MOVE_RANGE`.
 
 ## Estado
 

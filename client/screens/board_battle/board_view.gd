@@ -263,6 +263,11 @@ func cover(area: Rect2) -> void:
 	_redraw()
 
 
+## O tamanho, sem escala, de um tabuleiro retangular de `columns × rows` (board-size/02).
+static func rect_size(columns: int, rows: int) -> Vector2:
+	return Vector2(columns * STEP_X + (ROW_SHIFT if rows > 1 else 0.0), (rows - 1) * STEP_Y + HEX_HEIGHT)
+
+
 func board_size() -> Vector2:
 	return _board_size
 

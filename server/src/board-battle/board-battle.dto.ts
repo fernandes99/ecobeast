@@ -204,6 +204,18 @@ export class BoardDto {
     type: () => BoardZonesDto,
   })
   zones: BoardZonesDto;
+
+  @ApiProperty({
+    description: 'As colunas do tabuleiro, sorteadas pelo formato da luta.',
+    example: 7,
+  })
+  columns: number;
+
+  @ApiProperty({
+    description: 'As linhas do tabuleiro, sorteadas pelo formato da luta.',
+    example: 9,
+  })
+  rows: number;
 }
 
 export class GroundMarkDto extends HexCoordDto {

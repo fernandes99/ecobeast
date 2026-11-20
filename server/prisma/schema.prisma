@@ -499,8 +499,9 @@ model StatusCondition {
   id         Int     @id @default(autoincrement())
   /// CHECK ^[a-z0-9_]+$ (migration init)
   slug       String  @unique
-  name       String
-  isVolatile Boolean @map("is_volatile")
+  name        String
+  isVolatile  Boolean @map("is_volatile")
+  description String
 
   immunities    StatusConditionImmunity[]
   skillEffects  SkillEffect[]

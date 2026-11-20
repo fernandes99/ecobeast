@@ -6,8 +6,14 @@ import type {
 } from '../battle/types.js';
 import type { HexCoord } from '../exploration/hex.js';
 
+export interface BoardSize {
+  columns: number;
+  rows: number;
+}
+
 export interface Board {
   cells: HexCoord[];
+  size: BoardSize;
   /** Em ordem de entrada: a linha da frente primeiro, e as colunas em ordem. */
   zones: Record<SideSlug, HexCoord[]>;
 }

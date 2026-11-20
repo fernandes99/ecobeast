@@ -31,6 +31,8 @@ describe('toBoardBattleDto', () => {
     expect(dto.round).toBe(2);
     expect(dto.board.cells).toHaveLength(18);
     expect(dto.board.zones.player[0]).toEqual(at(0, 4));
+    expect(dto.board).toMatchObject({ columns: 3, rows: 6 });
+    expect(dto.board).not.toHaveProperty('size');
     expect(dto.marks).toEqual([
       { ...at(2, 3), ground_effect_id: FIRE_GROUND, remaining: 4 },
     ]);

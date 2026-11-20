@@ -42,6 +42,7 @@ func _status(id: int, box: VBoxContainer) -> void:
 	var volatile: bool = status.get("is_volatile", false)
 	box.add_child(ContentViewer.text(status["name"], ContentViewer.TITLE_SIZE))
 	box.add_child(ContentViewer.text("só na luta" if volatile else "continua depois da luta", 0, UiPalette.TEXT_SECONDARY))
+	box.add_child(ContentViewer.paragraph(str(status.get("description", "")), UiPalette.TEXT))
 
 	var immune := ContentViewer.flow(6)
 	for row: Dictionary in GameData.get_rows("status_condition_immunities"):

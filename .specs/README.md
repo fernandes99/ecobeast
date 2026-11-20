@@ -94,6 +94,8 @@ O Ecobeast é um jogo mobile (Android/iOS, retrato): o cliente em **Godot 4.7 co
 | [village-pack](village-pack/) | As casas, os objetos e as cercas do tileset Village do Fantasy Dreamland Reborn: 10 casas em 8 cores, 17 objetos, as placas do Refúgio e da Loja e 2 paredes |
 | [editor-ui](editor-ui/) | O F2 mais fácil: as peças em 13 categorias, com busca e grade de miniaturas, e o topo que cabe na janela |
 | [prop-cleanup](prop-cleanup/) | Peças que o dono não quer mais saem do catálogo, das ilhas e da arte: o poste, a placa, o prédio da Loja, as casas da cidade e o Observatório |
+| [status-descriptions](status-descriptions/) | Cada estado da luta ganha a descrição do que faz, com os números das regras, vista no F1 |
+| [item-icons](item-icons/) | O padrão dos ícones dos itens (pixel art de 32×32, mostrada em múltiplos inteiros) os Tônicos e o Bálsamo Puro com a arte de um pacote da craftpix.net e as Esferas em pixel art |
 
 As próximas iniciativas estão no [roadmap.md](roadmap.md).
 

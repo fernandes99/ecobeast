@@ -29,8 +29,8 @@ theme_override_font_sizes/font_size = 18
 [node name="CaughtMark" type="TextureRect" parent="Content/Head"]
 unique_name_in_owner = true
 visible = false
-texture_filter = 4
-custom_minimum_size = Vector2(26, 26)
+texture_filter = 1
+custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 mouse_filter = 2
 expand_mode = 1

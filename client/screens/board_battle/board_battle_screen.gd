@@ -50,6 +50,13 @@ const DEBUG_MARGIN := 16.0
 ## O zoom multiplica o ajuste do tabuleiro inteiro (camera-zoom/02).
 const MAX_ZOOM := 2.5
 const WHEEL_ZOOM_STEP := 1.25
+## A abertura da câmera (board-size/02, a revisar): parada em cada time e a passagem.
+const OPENING_HOLD := 2.0
+const OPENING_PAN := 0.8
+## O tabuleiro de antes da board-size: o hexágono dele inteiro na área é o da abertura.
+const HEX_REFERENCE := Vector2i(3, 6)
+## Os eventos que tocam antes da abertura: o tabuleiro se monta com eles.
+const OPENING_SETUP: Array[String] = ["battle_started", "creature_entered", "round_started"]
 ## Até quanto o dedo pode correr, em pontos da tela lógica, para ainda ser um toque.
 const MAX_TAP_TRAVEL := 24.0
 
@@ -117,6 +124,12 @@ var _pinch_anchor := Vector2.ZERO
 var _press_at: Variant = null
 var _drag_last := Vector2.ZERO
 var _dragging := false
+var _opening_hold := OPENING_HOLD
+var _opening_pan := OPENING_PAN
+var _opening_pending := false
+var _opening := false
+var _opening_skip := false
+var _opening_tween: Tween
 
 @onready var _enemy_card: BoardCreatureCard = %EnemyCard
 @onready var _player_card: BoardCreatureCard = %PlayerCard
@@ -187,7 +200,7 @@ func _ready() -> void:
 	_log_box.gui_input.connect(_on_log_input)
 	_exit_button.pressed.connect(_leave)
 	_board.cell_tapped.connect(_on_cell_tapped)
-	_board.taps_blocked = func() -> bool: return _dragging or _pinch.blocks_tap()
+	_board.taps_blocked = func() -> bool: return _opening or _dragging or _pinch.blocks_tap()
 	_pinch.pinch_started.connect(_on_pinch_started)
 	_pinch.pinched.connect(_on_pinched)
 	_board_area.item_rect_changed.connect(_fit_board)
@@ -197,6 +210,11 @@ func _ready() -> void:
 
 
 func _input(event: InputEvent) -> void:
+	if _opening:
+		if _is_press(event):
+			_skip_opening()
+		get_viewport().set_input_as_handled()
+		return
 	var area := _zoom_area()
 	if _pinch.feed(event, area):
 		get_viewport().set_input_as_handled()
@@ -256,7 +274,7 @@ func _zoom_around(point: Vector2, board_point: Vector2, zoom: float) -> void:
 	var base := _base_ratio()
 	if base <= 0.0:
 		return
-	_zoom = clampf(zoom, 1.0, MAX_ZOOM)
+	_zoom = clampf(zoom, 1.0, _max_zoom())
 	var ratio := base * _zoom
 	var slot := _board_slot()
 	_view_focus = (slot.get_center() - (point - board_point * ratio)) / ratio
@@ -328,8 +346,8 @@ func _begin() -> void:
 	_remember_xp(turn.view)
 	_meet_tamer(turn.view)
 	_board.set_board(turn.view.board_cells, _biome, _height, _zone)
-	_zoom = 1.0
-	_fit_board()
+	_frame_cells(turn.view.player_cells.values())
+	_opening_pending = true
 	BattleIntro.reveal()
 	await _show_turn(turn)
 	_narrator.begin_turns()
@@ -408,8 +426,108 @@ func _reserve_bottom() -> void:
 	_bottom.custom_minimum_size.y = _log_box.get_combined_minimum_size().y + _player_card.get_combined_minimum_size().y + tallest + gap * 2
 
 
+## O zoom em que o hexágono fica do tamanho do 3 × 6 inteiro na mesma área, o de antes da board-size.
+func _hex_zoom() -> float:
+	var base := _base_ratio()
+	if base <= 0.0:
+		return 1.0
+	return maxf(1.0, _fit_ratio(BoardView.rect_size(HEX_REFERENCE.x, HEX_REFERENCE.y)) / base)
+
+
+func _max_zoom() -> float:
+	return MAX_ZOOM * _hex_zoom()
+
+
+## O time do jogador, o inimigo e quem faz a primeira vez, no zoom do hexágono (board-size/02).
+func _play_opening(first_key: String) -> void:
+	_opening_pending = false
+	_opening = true
+	_opening_skip = false
+	_zoom = _hex_zoom()
+	var player_center := _team_center("player:")
+	var last := _board.cell_center(_board.token_cell(first_key)) if _board.has_token(first_key) else player_center
+	_set_focus(player_center)
+	await _opening_wait(_opening_hold)
+	await _opening_pan_to(_team_center("enemy:"))
+	await _opening_wait(_opening_hold)
+	await _opening_pan_to(last)
+	if _opening_skip:
+		_set_focus(last)
+	_opening = false
+
+
+## Os Ecobeasts entram já no zoom da abertura, sem o campo inteiro antes dela.
+func _frame_cells(cells: Array) -> void:
+	_zoom = _hex_zoom()
+	if cells.is_empty():
+		_fit_board()
+		return
+	var total := Vector2.ZERO
+	for cell: Vector2i in cells:
+		total += _board.cell_center(cell)
+	_set_focus(total / cells.size())
+
+
+func _first_actor(events: Array[Dictionary]) -> String:
+	for event: Dictionary in events:
+		if DictFields.get_string(event, "type") == "vez_started":
+			return "%s:%d" % [DictFields.get_string(event, "side"), DictFields.get_int(event, "position")]
+	return ""
+
+
+func _team_center(prefix: String) -> Vector2:
+	var total := Vector2.ZERO
+	var count := 0
+	for key: String in _names:
+		if key.begins_with(prefix) and _board.has_token(key):
+			total += _board.cell_center(_board.token_cell(key))
+			count += 1
+	return total / count if count > 0 else _view_focus
+
+
+func _set_focus(point: Vector2) -> void:
+	_view_focus = point
+	_fit_board()
+
+
+func _opening_wait(seconds: float) -> void:
+	var left := seconds
+	while left > 0.0 and not _opening_skip:
+		await get_tree().process_frame
+		left -= get_process_delta_time()
+
+
+func _opening_pan_to(point: Vector2) -> void:
+	if _opening_skip:
+		return
+	if _opening_pan <= 0.0:
+		_set_focus(point)
+		return
+	_opening_tween = create_tween()
+	_opening_tween.tween_method(_set_focus, _view_focus, point, _opening_pan).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	while _opening_tween.is_running():
+		await get_tree().process_frame
+
+
+func _skip_opening() -> void:
+	_opening_skip = true
+	if _opening_tween != null:
+		_opening_tween.kill()
+
+
+static func _is_press(event: InputEvent) -> bool:
+	var button := event as InputEventMouseButton
+	if button != null:
+		return button.pressed
+	var touch := event as InputEventScreenTouch
+	return touch != null and touch.pressed
+
+
 func _base_ratio() -> float:
-	var board_size := _board.board_size()
+	return _fit_ratio(_board.board_size())
+
+
+func _fit_ratio(board_size: Vector2) -> float:
 	if board_size == Vector2.ZERO:
 		return 0.0
 	var area := _board_area.size
@@ -450,7 +568,11 @@ func _show_turn(turn: BoardTurn) -> void:
 	_board.light([], Color.TRANSPARENT)
 	_narrator.set_team_names(_team_names(turn.view))
 	for event: Dictionary in turn.events:
+		if _opening_pending and not OPENING_SETUP.has(DictFields.get_string(event, "type")):
+			await _play_opening(_first_actor(turn.events))
 		await _play_event(event)
+	if _opening_pending:
+		await _play_opening(_first_actor(turn.events))
 	if turn.view.phase == "ended":
 		_play_end_music(turn.view.result)
 	var destination := _narrator.describe_captured_to(turn.captured_to)

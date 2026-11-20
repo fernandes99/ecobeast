@@ -1,5 +1,7 @@
-import { always } from '../battle/testing.js';
-import { hexDistance } from '../exploration/hex.js';
+import type { HexCoord } from '../exploration/hex.js';
+import { always, sequence } from '../battle/testing.js';
+import { hexDistance, hexKey, hexNeighbors } from '../exploration/hex.js';
+import { seededRandom } from '../exploration/seeded-random.js';
 import {
   areaOf,
   NO_ENEMY_THERE,
@@ -7,11 +9,12 @@ import {
   STRAIGHT_LINE,
 } from './areas.js';
 import {
-  BOARD_COLUMNS,
-  BOARD_ROWS,
+  DEFAULT_BOARD_SIZE,
   makeBoard,
   MOVE_RANGE,
   reachable,
+  rollBoard,
+  rollBoardSize,
   startCell,
 } from './board.js';
 import { roundQueue } from './queue.js';
@@ -29,7 +32,8 @@ import {
 describe('tabuleiro', () => {
   it('tem 3 × 6 hexágonos, com duas linhas em cada área', () => {
     const board = makeBoard();
-    expect(BOARD_COLUMNS * BOARD_ROWS).toBe(18);
+    expect(DEFAULT_BOARD_SIZE).toEqual({ columns: 3, rows: 6 });
+    expect(board.size).toEqual(DEFAULT_BOARD_SIZE);
     expect(board.cells).toHaveLength(18);
     expect(board.zones.enemy).toHaveLength(6);
     expect(board.zones.player).toHaveLength(6);
@@ -42,24 +46,146 @@ describe('tabuleiro', () => {
   });
 
   it('num 1×1, os dois começam na coluna 1, a 3 hexágonos, nas linhas 1 e 4', () => {
-    const enemy = startCell('enemy', 0, 1);
-    const player = startCell('player', 0, 1);
+    const enemy = startCell('enemy', 0, 1, makeBoard());
+    const player = startCell('player', 0, 1, makeBoard());
     expect(enemy).toEqual(at(1, 1));
     expect(player).toEqual(at(1, 4));
     expect(hexDistance(enemy, player)).toBe(3);
   });
 
   it('num 2×2, cada lado ocupa as colunas 0 e 2; num 3×3, as 3', () => {
-    expect([0, 1].map((p) => startCell('player', p, 2))).toEqual([
+    expect([0, 1].map((p) => startCell('player', p, 2, makeBoard()))).toEqual([
       at(0, 4),
       at(2, 4),
     ]);
-    expect([0, 1, 2].map((p) => startCell('player', p, 3))).toEqual([
-      at(0, 4),
-      at(1, 4),
-      at(2, 4),
+    expect(
+      [0, 1, 2].map((p) => startCell('player', p, 3, makeBoard())),
+    ).toEqual([at(0, 4), at(1, 4), at(2, 4)]);
+  });
+});
+
+describe('tamanho sorteado (board-size/01)', () => {
+  it('sorteia as duas pontas de cada faixa e nunca sai delas', () => {
+    expect([1, 2, 3].map((slots) => rollBoardSize(slots, always(0)))).toEqual([
+      { columns: 4, rows: 4 },
+      { columns: 6, rows: 6 },
+      { columns: 8, rows: 8 },
+    ]);
+    expect(
+      [1, 2, 3].map((slots) => rollBoardSize(slots, always(0.999))),
+    ).toEqual([
+      { columns: 10, rows: 10 },
+      { columns: 12, rows: 12 },
+      { columns: 16, rows: 16 },
     ]);
   });
+
+  it('um formato fora da tabela usa a faixa do 1', () => {
+    expect(rollBoardSize(7, always(0.999))).toEqual({ columns: 10, rows: 10 });
+  });
+
+  it('sorteia as colunas antes das linhas, cada eixo sozinho', () => {
+    expect(rollBoardSize(1, sequence(0, 0.999))).toEqual({
+      columns: 4,
+      rows: 10,
+    });
+  });
+
+  it('num 7 × 5, as zonas ficam em volta das linhas de frente 0 e 3', () => {
+    const board = makeBoard({ columns: 7, rows: 5 });
+    expect(board.cells).toHaveLength(35);
+    expect(board.size).toEqual({ columns: 7, rows: 5 });
+    expect(board.zones.enemy.map(({ r }) => r)).toEqual(Array(7).fill(0));
+    expect(board.zones.player.map(({ r }) => r)).toEqual([
+      ...Array(7).fill(3),
+      ...Array(7).fill(4),
+    ]);
+  });
+
+  it('num 4 × 4, nenhuma casa de zona fica fora do tabuleiro', () => {
+    const board = makeBoard({ columns: 4, rows: 4 });
+    const keys = new Set(board.cells.map(({ q, r }) => `${q},${r}`));
+    const zones = [...board.zones.enemy, ...board.zones.player];
+    expect(zones.every(({ q, r }) => keys.has(`${q},${r}`))).toBe(true);
+    expect(board.zones.enemy.every(({ r }) => r === 0)).toBe(true);
+    expect(board.zones.player.every(({ r }) => r === 3)).toBe(true);
+  });
+
+  it('num 10 × 10, os lados começam nas colunas centrais, a 3 hexágonos', () => {
+    const board = makeBoard({ columns: 10, rows: 10 });
+    const starts = (side: 'player' | 'enemy', slots: number) =>
+      Array.from({ length: slots }, (_, p) => startCell(side, p, slots, board));
+    expect(starts('enemy', 1)).toEqual([at(4, 3)]);
+    expect(starts('player', 1)).toEqual([at(4, 6)]);
+    expect(starts('player', 2)).toEqual([at(3, 6), at(5, 6)]);
+    expect(starts('enemy', 3)).toEqual([at(2, 3), at(4, 3), at(6, 3)]);
+    expect(hexDistance(starts('enemy', 1)[0]!, starts('player', 1)[0]!)).toBe(
+      3,
+    );
+  });
+});
+
+describe('mordidas na borda (board-size/03)', () => {
+  const connected = (cells: HexCoord[]) => {
+    const keys = new Set(cells.map(hexKey));
+    const seen = new Set([hexKey(cells[0]!)]);
+    const queue = [cells[0]!];
+    while (queue.length > 0) {
+      for (const next of hexNeighbors(queue.pop()!)) {
+        const key = hexKey(next);
+        if (keys.has(key) && !seen.has(key)) {
+          seen.add(key);
+          queue.push(next);
+        }
+      }
+    }
+    return seen.size === keys.size;
+  };
+
+  for (const slots of [1, 2, 3]) {
+    it(`num ${slots}×${slots}, o campo mordido continua inteiro e jogável`, () => {
+      let bitten = 0;
+      let big = 0;
+      for (let seed = 1; seed <= 300; seed++) {
+        const board = rollBoard(slots, seededRandom(seed));
+        const { columns, rows } = board.size;
+        const keys = new Set(board.cells.map(hexKey));
+        const full = columns * rows;
+        expect(connected(board.cells)).toBe(true);
+        expect(board.cells.length).toBeGreaterThanOrEqual(
+          Math.ceil(full * 0.8),
+        );
+        expect(board.cells.length).toBeLessThanOrEqual(full);
+        for (const zone of [board.zones.player, board.zones.enemy]) {
+          expect(zone.every((cell) => keys.has(hexKey(cell)))).toBe(true);
+        }
+        for (const count of [1, 2, 3]) {
+          for (const side of ['player', 'enemy'] as const) {
+            for (let position = 0; position < count; position++) {
+              const start = startCell(side, position, count, board);
+              expect(keys.has(hexKey(start))).toBe(true);
+              for (const near of hexNeighbors(start)) {
+                const inside =
+                  near.r >= 0 &&
+                  near.r < rows &&
+                  near.q + Math.floor(near.r / 2) >= 0 &&
+                  near.q + Math.floor(near.r / 2) < columns;
+                if (inside) expect(keys.has(hexKey(near))).toBe(true);
+              }
+            }
+          }
+        }
+        if (columns * rows === 16) {
+          expect(full - board.cells.length).toBeLessThanOrEqual(3);
+        }
+        if (columns >= 6 && rows >= 6) {
+          big++;
+          if (board.cells.length < full) bitten++;
+        }
+      }
+      if (big > 0) expect(bitten / big).toBeGreaterThan(0.9);
+    });
+  }
 });
 
 describe('andar', () => {

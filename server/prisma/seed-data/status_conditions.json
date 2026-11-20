@@ -1,11 +1,11 @@
 [
-	{ "id": 1, "slug": "burn", "name": "Queimado", "is_volatile": false },
-	{ "id": 2, "slug": "poison", "name": "Envenenado", "is_volatile": false },
-	{ "id": 3, "slug": "paralysis", "name": "Paralisado", "is_volatile": false },
-	{ "id": 4, "slug": "sleep", "name": "Adormecido", "is_volatile": false },
-	{ "id": 5, "slug": "freeze", "name": "Congelado", "is_volatile": false },
-	{ "id": 6, "slug": "confusion", "name": "Confuso", "is_volatile": true },
-	{ "id": 7, "slug": "fear", "name": "Amedrontado", "is_volatile": true },
-	{ "id": 8, "slug": "trapped", "name": "Preso", "is_volatile": true },
-	{ "id": 9, "slug": "dazed", "name": "Atordoado", "is_volatile": true }
+	{ "id": 1, "slug": "burn", "name": "Queimado", "is_volatile": false, "description": "Perde 1/16 do HP máximo no fim de cada vez, e as Técnicas físicas dele causam metade do dano. A chance de captura fica 1,5 vez maior." },
+	{ "id": 2, "slug": "poison", "name": "Envenenado", "is_volatile": false, "description": "Perde 1/8 do HP máximo no fim de cada vez. A chance de captura fica 1,5 vez maior." },
+	{ "id": 3, "slug": "paralysis", "name": "Paralisado", "is_volatile": false, "description": "A Velocidade cai pela metade, e em cada vez há 25% de chance de não agir. A chance de captura fica 1,5 vez maior." },
+	{ "id": 4, "slug": "sleep", "name": "Adormecido", "is_volatile": false, "description": "Não age por 1 a 3 vezes, sorteadas ao adormecer e de novo ao voltar ao campo, e depois acorda. A chance de captura fica 2,5 vezes maior." },
+	{ "id": 5, "slug": "freeze", "name": "Congelado", "is_volatile": false, "description": "Não age, e em cada vez há 20% de chance de descongelar e agir. A chance de captura fica 2,5 vezes maior." },
+	{ "id": 6, "slug": "confusion", "name": "Confuso", "is_volatile": true, "description": "Por 2 a 5 vezes, há 33% de chance de se golpear em vez de agir, com um golpe físico de Poder 40." },
+	{ "id": 7, "slug": "fear", "name": "Amedrontado", "is_volatile": true, "description": "Perde a próxima vez." },
+	{ "id": 8, "slug": "trapped", "name": "Preso", "is_volatile": true, "description": "Por 2 vezes, não anda nem pode ser trocado, e o time dele não pode fugir." },
+	{ "id": 9, "slug": "dazed", "name": "Atordoado", "is_volatile": true, "description": "Não anda na próxima vez, mas ainda pode agir." }
 ]

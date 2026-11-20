@@ -3,6 +3,7 @@ extends Control
 
 const SPRITE_PATH := "res://assets/items/%s.png"
 const INITIAL_SCALE := 0.45
+const PIXEL_ART_MAX_WIDTH := 64
 
 @export var icon_size: int = 96
 
@@ -37,7 +38,9 @@ func _refresh() -> void:
 	if _item != null:
 		var path := SPRITE_PATH % _item.slug
 		if ResourceLoader.exists(path):
-			_sprite.texture = load(path) as Texture2D
+			var texture := load(path) as Texture2D
+			_sprite.texture = texture
+			_sprite.texture_filter = TEXTURE_FILTER_NEAREST if texture.get_width() <= PIXEL_ART_MAX_WIDTH else TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 			_sprite.visible = true
 		else:
 			_show_placeholder()

@@ -133,6 +133,7 @@ const TABLES := {
 			"slug": SLUG,
 			"name": TEXT,
 			"is_volatile": {"type": "bool"},
+			"description": TEXT,
 		},
 	},
 	"ground_effects": {
