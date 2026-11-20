@@ -11,7 +11,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[5]
 sys.path.insert(0, str(ROOT / ".claude/skills/creature-sprites/scripts"))
 
-from spritekit import build, rig, swayed  # noqa: E402
+from spritekit import build, rig, stretched, swayed  # noqa: E402
 
 PALETTE = {
     "K": (0, 40, 40),      # contorno
@@ -26,23 +26,23 @@ PALETTE = {
 }
 
 HEADS = {
-    "front": ([
+    "front": (stretched([
         "KGGGGGK",
         "KGYYYGK",
         "KYEYEYK",
         ".KYBYK.",
         "..KYK..",
         "..KYK..",
-    ], 13, 18),
-    "lower": ([
+    ], rows=(4,)), 13, 14),
+    "lower": (stretched([
         "..KKKK..",
         ".KGGGGK.",
         ".KYEYEYK",
         "..KYYBBK",
         "..KYYK..",
         "..KYYK..",
-    ], 13, 18),
-    "side": ([
+    ], rows=(4,)), 13, 14),
+    "side": (stretched([
         "....KKKK..",
         "...KGGYYK.",
         "...KGYEYBB",
@@ -50,62 +50,62 @@ HEADS = {
         "..KYYYK...",
         "..KYYK....",
         "..KYYK....",
-    ], 13, 18),
-    "upper": ([
+    ], rows=(5,)), 13, 14),
+    "upper": (stretched([
         "..KKKK..",
         ".KGGGGK.",
         ".KGGGGYK",
         "..KGGYBK",
         "..KGGK..",
         "..KGGK..",
-    ], 13, 18),
-    "back": ([
+    ], rows=(4,)), 13, 14),
+    "back": (stretched([
         "KGGGGGK",
         "KGGgGGK",
         "KGgGgGK",
         ".KGGGK.",
         "..KGK..",
         "..KGK..",
-    ], 13, 18),
+    ], rows=(4,)), 13, 14),
 }
 BODIES = {
-    "front": ([
+    "front": (stretched([
         "..KYYYK..",
         ".KgYYYgK.",
         "KGgYYYgGK",
         "KgGYYYGgK",
         ".KgGyGgK.",
-    ], 12, 23),
-    "lower": ([
+    ], rows=(2,)), 12, 20),
+    "lower": (stretched([
         "....KKYYK.",
         "..KGgGYYK.",
         ".KGgGGYYYK",
         ".KgGgGyYYK",
         "..KKgGyyK.",
-    ], 8, 23),
-    "side": ([
+    ], rows=(2,)), 8, 20),
+    "side": (stretched([
         "..KKGGGK...",
         ".KGgGLGGYK.",
         "KGgGGLGYYYK",
         "KgGgGGYYYK.",
         ".KKgGyyyK..",
-    ], 7, 23),
-    "upper": ([
+    ], rows=(2,)), 7, 20),
+    "upper": (stretched([
         "....KKGGK.",
         "..KGgGGGK.",
         ".KGLGgGLGK",
         ".KgGLGgGGK",
         "..KKKKKKK.",
-    ], 8, 23),
-    "back": ([
+    ], rows=(2,)), 8, 20),
+    "back": (stretched([
         "..KGGGK..",
         ".KGLGLGK.",
         "KGgGGGgGK",
         "KgGLGLGgK",
         ".KKKKKKK.",
-    ], 12, 23),
+    ], rows=(2,)), 12, 20),
 }
-NEAR = ["F", "F", "F", "FF"]
+NEAR = ["F", "F", "F", "F", "F", "FF"]
 LEGS = {
     "front": [(14, 0, NEAR, 0), (17, 3, NEAR, 0)],
     "back": [(14, 0, NEAR, 0), (17, 3, NEAR, 0)],
@@ -155,9 +155,9 @@ TAIL_FRAMES = {
     "upper": swayed(TAIL_UPPER, (0, 0, 1, 0)),
     "back": swayed(TAIL_BACK, (0, 0, 1, 0)),
 }
-TAIL_AT = {"side": (-1, 21), "lower": (1, 22), "upper": (3, 25), "back": (11, 26)}
-CREST_AT = {"front": (12, 17), "back": (12, 17), "lower": (13, 17), "upper": (13, 17)}
-CREST_SIDE_AT = {"side": (13, 17)}
+TAIL_AT = {"side": (-1, 18), "lower": (1, 19), "upper": (3, 22), "back": (11, 23)}
+CREST_AT = {"front": (12, 13), "back": (12, 13), "lower": (13, 13), "upper": (13, 13)}
+CREST_SIDE_AT = {"side": (13, 13)}
 TRAITS = [
     {"frames": TAIL_FRAMES, "at": TAIL_AT, "behind": ("lower", "side")},
     {"frames": CREST, "at": CREST_AT, "follows": "head"},
@@ -165,4 +165,4 @@ TRAITS = [
 ]
 
 if __name__ == "__main__":
-    build(Path(__file__).parent, sys.argv[1], PALETTE, rig(HEADS, BODIES, LEGS, 28, TRAITS))
+    build(Path(__file__).parent, sys.argv[1], PALETTE, rig(HEADS, BODIES, LEGS, 26, TRAITS))

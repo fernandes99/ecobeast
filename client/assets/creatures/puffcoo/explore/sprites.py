@@ -1,8 +1,9 @@
 """Puffcoo: as folhas idle.png e walk.png. Uso: python sprites.py <pasta das prévias>
 
-Com 0,30 m, ela tem 4 pixels de altura, e sobram só a bolinha cinza, a barriga clara, os
-olhos, o bico laranja e os pés. O corpo não sobe nem desce: quem se mexe são as asinhas,
-que batem, e os pés, em passinhos curtos de pombo.
+Com 0,30 m, ela tem 8 pixels de altura pela regra do mapa (creature-scale): 6 de desenho e
+o contorno cinza-escuro por fora. Cabem a bolinha cinza com a luz no alto da cabeça, a
+barriga clara, os olhos, o bico laranja, as asinhas e os pés. O corpo não sobe nem desce:
+quem se mexe são as asinhas, que batem, e os pés, em passinhos curtos de pombo.
 """
 import sys
 from pathlib import Path
@@ -13,60 +14,73 @@ sys.path.insert(0, str(ROOT / ".claude/skills/creature-sprites/scripts"))
 from spritekit import build, recolored, rig  # noqa: E402
 
 PALETTE = {
-    "E": (24, 24, 48),     # olho
-    "G": (144, 144, 168),  # penas
-    "L": (184, 184, 204),  # barriga
-    "D": (96, 96, 124),    # asa e cauda
-    "O": (224, 136, 48),   # bico
-    "F": (232, 96, 64),    # pés
+    "o": (46, 46, 76),     # contorno
+    "G": (144, 146, 174),  # penas
+    "H": (184, 186, 208),  # penas na luz
+    "L": (204, 204, 222),  # barriga
+    "D": (100, 102, 134),  # asa e cauda
+    "e": (24, 24, 48),     # olho
+    "O": (228, 140, 52),   # bico
+    "F": (232, 98, 64),    # pés
 }
+OUTLINE = {"*": "o", "O": "q", "F": "q"}
+PALETTE["q"] = (120, 48, 30)
 
-HEAD_FRONT = [
-    "..GGG..",
-    ".GEOEG.",
-    ".GLLLG.",
+TOP = 25
+FRONT = [
+    "..GHHHG..",
+    ".GHGGGGG.",
+    "GGeGOGeGG",
+    "GGLLLLLGG",
+    ".GGLLLGG.",
 ]
-HEAD_LOWER = [
-    "..GGG..",
-    ".GGEOE.",
-    ".GGLLG.",
+LOWER = [
+    "..GHHHG..",
+    ".GGHGGGG.",
+    "GGGeGGeOO",
+    "GGGLLLLG.",
+    ".GGLLLGG.",
 ]
-HEAD_SIDE = [
-    "..GGG..",
-    ".GGGEO.",
-    "DGGLLG.",
+SIDE = [
+    "...GHHG..",
+    "..GHGGGG.",
+    "DGGGGGeOO",
+    "DDGGLLLG.",
+    ".DGGLLG..",
 ]
-HEAD_BACK = [
-    "..GGG..",
-    ".GGGGG.",
-    ".GGDGG.",
+BACK = [
+    "..GHHHG..",
+    ".GHGGGGG.",
+    "GGGGGGGGG",
+    "GGGGDGGGG",
+    ".GGDDDGG.",
 ]
 HEADS = {
-    "front": (HEAD_FRONT, 13, 28),
-    "lower": (HEAD_LOWER, 13, 28),
-    "side": (HEAD_SIDE, 12, 28),
-    "upper": (recolored(HEAD_LOWER, "EOL", "GGG"), 13, 28),
-    "back": (HEAD_BACK, 13, 28),
+    "front": (FRONT, 12, TOP),
+    "lower": (LOWER, 12, TOP),
+    "side": (SIDE, 11, TOP),
+    "upper": (recolored(LOWER, "eOL", "GGG"), 12, TOP),
+    "back": (BACK, 12, TOP),
 }
 LEG = ["F"]
 LEGS = {
-    "front": [(15, 0, LEG, 1), (17, 3, LEG, 1)],
-    "lower": [(15, 0, LEG, 1), (17, 3, LEG, 1)],
+    "front": [(14, 0, LEG, 1), (18, 3, LEG, 1)],
+    "lower": [(14, 0, LEG, 1), (17, 3, LEG, 1)],
     "side": [(14, 0, LEG, 1), (16, 3, LEG, 1)],
-    "upper": [(15, 0, LEG, 1), (17, 3, LEG, 1)],
-    "back": [(15, 0, LEG, 1), (17, 3, LEG, 1)],
+    "upper": [(14, 0, LEG, 1), (17, 3, LEG, 1)],
+    "back": [(14, 0, LEG, 1), (18, 3, LEG, 1)],
 }
 DOWN = [".", "D"]
 UP = ["D", "."]
 FLAP = [DOWN, UP, DOWN, DOWN]
 FLAP_LATE = [DOWN, DOWN, UP, DOWN]
-LEFT_WING_AT = {"front": (13, 29), "lower": (13, 29), "upper": (13, 29), "back": (13, 29)}
-RIGHT_WING_AT = {"front": (19, 29), "lower": (19, 29), "upper": (19, 29), "back": (19, 29)}
-SIDE_WING_AT = {"side": (14, 29)}
+LEFT_WING_AT = {"front": (11, 27), "lower": (11, 27), "upper": (11, 27), "back": (11, 27)}
+RIGHT_WING_AT = {"front": (21, 27), "back": (21, 27)}
+SIDE_WING_AT = {"side": (15, 27)}
 TRAITS = [
     {"frames": FLAP, "at": LEFT_WING_AT},
     {"frames": FLAP_LATE, "at": RIGHT_WING_AT},
-    {"frames": FLAP, "at": SIDE_WING_AT},
+    {"frames": [["D", "D"], ["DD", ".."], ["D", "D"], ["D", "D"]], "at": SIDE_WING_AT},
 ]
 
 if __name__ == "__main__":
@@ -74,5 +88,6 @@ if __name__ == "__main__":
         Path(__file__).parent,
         sys.argv[1],
         PALETTE,
-        rig(HEADS, {}, LEGS, 31, TRAITS, idle_head=(0, 0, 0, 0), idle_body=(0, 0, 0, 0), walk_head=(0, 0, 0, 0, 0, 0), walk_body=(0, 0, 0, 0, 0, 0), foot_reach=(1, 0, -1, -1, 0, 1), foot_lift=(0, 0, 0, 0, 0, 0)),
+        rig(HEADS, {}, LEGS, 30, TRAITS, idle_head=(0, 0, 0, 0), idle_body=(0, 0, 0, 0), walk_head=(0, 0, 0, 0, 0, 0), walk_body=(0, 0, 0, 0, 0, 0), foot_reach=(1, 0, -1, -1, 0, 1), foot_lift=(0, 0, 0, 0, 0, 0)),
+        outline=OUTLINE,
     )

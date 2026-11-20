@@ -155,7 +155,7 @@ Ele usa `set_actor_row` com a linha do hexágono, então a [profundidade](#plano
 
 É só enfeite: o servidor não sabe que ele existe, e ele some ao sair da tela do mapa.
 
-**Escala:** o tamanho de um Ecobeast no mapa vem da altura do catálogo. O Domador tem 1,70 m e 25 pixels, então um Ecobeast tem `height_m × 25 / 1,70` pixels: o Ruvo, com 0,50 m, tem 7. A célula de 32×32 não muda, e a verificação da skill `creature-sprites` confere a altura.
+**Escala:** o tamanho de um Ecobeast no mapa vem da altura do catálogo. O Domador tem 1,70 m e 25 pixels, e um Ecobeast tem `height_m × 25 / 1,70 + 4` pixels, entre 6 e 32: o Ruvo, com 0,50 m, tem 11. Até a [creature-scale](../creature-scale/README.md), a regra não tinha o `+ 4` nem os limites, e o Ruvo tinha 7. A célula de 32×32 não muda, e a verificação da skill `creature-sprites` confere a altura.
 
 ## Arremates
 

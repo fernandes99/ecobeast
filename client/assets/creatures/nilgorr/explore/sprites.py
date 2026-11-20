@@ -1,6 +1,7 @@
 """Nilgorr: as folhas idle.png e walk.png. Uso: python sprites.py <pasta das prévias>
 
-Com 1,50 m e 160 kg, ele tem 22 pixels de altura e o corpo mais pesado do catálogo: um
+Com 1,50 m e 160 kg, ele tem 26 pixels de altura pela regra do mapa (creature-scale), com
+o desenho de 22 crescido pelo `stretched` no casco, nos olhos, nas patas e nas pinças, e o corpo mais pesado do catálogo: um
 caranguejo baixo e largo, com casco de pedra sobre uma bolha de água, duas antenas de
 água e pinças enormes. Anda devagar, com passos curtos, em grupos alternados.
 """
@@ -10,7 +11,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[5]
 sys.path.insert(0, str(ROOT / ".claude/skills/creature-sprites/scripts"))
 
-from spritekit import build, recolored, rig, swayed  # noqa: E402
+from spritekit import build, recolored, rig, stretched, swayed  # noqa: E402
 
 PALETTE = {
     "K": (20, 28, 60),     # contorno
@@ -25,7 +26,7 @@ PALETTE = {
     "A": (73, 200, 240),   # olho claro
 }
 
-HEAD_FRONT = [
+HEAD_FRONT = stretched([
     ".......KKKKKK.......",
     ".....KKLLLWLLKK.....",
     "...KKLLBLLLLBLLKK...",
@@ -39,8 +40,8 @@ HEAD_FRONT = [
     "...KDDDSSSSSSDDDK...",
     "....KKDDsKKsDDKK....",
     "......KKKKKKKK......",
-]
-HEAD_LOWER = [
+], rows=(5, 9))
+HEAD_LOWER = stretched([
     "........KKKKKK......",
     "......KKLLLWLLKK....",
     "....KKLLBLLLLBLLK...",
@@ -54,8 +55,8 @@ HEAD_LOWER = [
     "....KDDDDSSSSSSSK...",
     ".....KKDDDsKKsDK....",
     ".......KKKKKKKK.....",
-]
-HEAD_SIDE = [
+], rows=(5, 9))
+HEAD_SIDE = stretched([
     "......KKKKKK........",
     "....KKLLLWLLKK......",
     "..KKLLBLLLLBLLK.....",
@@ -69,16 +70,16 @@ HEAD_SIDE = [
     "..KDDDDDDDSSSSSSSK..",
     "...KKDDDDDsKKssKK...",
     ".....KKKKKKKKKK.....",
-]
+], rows=(5, 9))
 HEADS = {
-    "front": (HEAD_FRONT, 6, 12),
-    "lower": (HEAD_LOWER, 6, 12),
-    "side": (HEAD_SIDE, 5, 12),
-    "upper": (recolored(HEAD_LOWER, "EA", "SS"), 6, 12),
-    "back": (recolored(HEAD_FRONT, "EA", "SS"), 6, 12),
+    "front": (HEAD_FRONT, 6, 8),
+    "lower": (HEAD_LOWER, 6, 8),
+    "side": (HEAD_SIDE, 5, 8),
+    "upper": (recolored(HEAD_LOWER, "EA", "SS"), 6, 8),
+    "back": (recolored(HEAD_FRONT, "EA", "SS"), 6, 8),
 }
-LEG_NEAR = ["KSSK", "KSSK", "KSSK", "KSsK", "KDsK", "KDDK", ".KK."]
-LEG_FAR = [".KsK", ".KsK", ".KsK", "KsK.", "KDK.", "KDK.", "KK.."]
+LEG_NEAR = stretched(["KSSK", "KSSK", "KSSK", "KSsK", "KDsK", "KDDK", ".KK."], rows=(1, 2))
+LEG_FAR = stretched([".KsK", ".KsK", ".KsK", "KsK.", "KDK.", "KDK.", "KK.."], rows=(1, 2))
 LEGS = {
     "front": [(6, 0, LEG_FAR, 1), (9, 3, LEG_NEAR, 1), (15, 0, LEG_NEAR, 1), (19, 3, LEG_FAR, 1)],
     "back": [(6, 0, LEG_FAR, 1), (9, 3, LEG_NEAR, 1), (15, 0, LEG_NEAR, 1), (19, 3, LEG_FAR, 1)],
@@ -86,7 +87,7 @@ LEGS = {
     "lower": [(7, 0, LEG_FAR, 1), (10, 3, LEG_NEAR, 1), (15, 0, LEG_NEAR, 1), (19, 3, LEG_FAR, 1)],
     "upper": [(7, 0, LEG_FAR, 1), (10, 3, LEG_NEAR, 1), (15, 0, LEG_NEAR, 1), (19, 3, LEG_FAR, 1)],
 }
-CLAW_OPEN = [
+CLAW_OPEN = stretched([
     ".KKK...",
     "KSGSK..",
     "KSSSK.K",
@@ -96,8 +97,8 @@ CLAW_OPEN = [
     ".KLLLK.",
     "..KLK..",
     "...K...",
-]
-CLAW_SHUT = [
+], rows=(4,))
+CLAW_SHUT = stretched([
     ".KKK...",
     "KSGSK..",
     "KSSSKK.",
@@ -107,7 +108,7 @@ CLAW_SHUT = [
     ".KLLLK.",
     "..KLK..",
     "...K...",
-]
+], rows=(4,))
 
 
 def claws(left, gap):
@@ -122,12 +123,12 @@ ANTENNAE = swayed([
     ".L...L",
     ".L..L.",
 ])
-ANTENNAE_AT = {"front": (12, 10), "lower": (14, 10), "side": (11, 10), "upper": (14, 10), "back": (12, 10)}
-CLAWS_AT = {"front": (2, 19), "back": (2, 19), "lower": (3, 19), "upper": (3, 19)}
+ANTENNAE_AT = {"front": (12, 6), "lower": (14, 6), "side": (11, 6), "upper": (14, 6), "back": (12, 6)}
+CLAWS_AT = {"front": (2, 16), "back": (2, 16), "lower": (3, 16), "upper": (3, 16)}
 TRAITS = [
     {"frames": ANTENNAE, "at": ANTENNAE_AT, "behind": ("front", "lower", "side", "upper", "back"), "follows": "head"},
     {"frames": ALL_CLAWS, "at": CLAWS_AT, "follows": "body"},
-    {"frames": ONE_CLAW, "at": {"side": (19, 20)}, "follows": "body"},
+    {"frames": ONE_CLAW, "at": {"side": (19, 17)}, "follows": "body"},
 ]
 
 if __name__ == "__main__":
@@ -135,5 +136,5 @@ if __name__ == "__main__":
         Path(__file__).parent,
         sys.argv[1],
         PALETTE,
-        rig(HEADS, {}, LEGS, 25, TRAITS, idle_head=(0, 0, 1, 0), idle_body=(0, 0, 1, 0), walk_head=(0, 1, 0, 0, 1, 0), walk_body=(0, 1, 0, 0, 1, 0), foot_reach=(1, 0, -1, -1, 0, 1), foot_lift=(0, 0, 0, 0, 1, 1)),
+        rig(HEADS, {}, LEGS, 23, TRAITS, idle_head=(0, 0, 1, 0), idle_body=(0, 0, 1, 0), walk_head=(0, 1, 0, 0, 1, 0), walk_body=(0, 1, 0, 0, 1, 0), foot_reach=(1, 0, -1, -1, 0, 1), foot_lift=(0, 0, 0, 0, 1, 1)),
     )

@@ -1,6 +1,7 @@
 """Nilgar: as folhas idle.png e walk.png. Uso: python sprites.py <pasta das prévias>
 
-Com 0,90 m, ele tem 13 pixels de altura. É um caranguejo armado: concha azul com a ponta
+Com 0,90 m, ele tem 17 pixels de altura pela regra do mapa (creature-scale), com o desenho de
+13 pixels crescido pelo `stretched`. É um caranguejo armado: concha azul com a ponta
 de água, duas pinças grandes que abrem e fecham, e patas curtas que correm em passos
 miúdos, em grupos alternados.
 """
@@ -10,7 +11,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[5]
 sys.path.insert(0, str(ROOT / ".claude/skills/creature-sprites/scripts"))
 
-from spritekit import build, recolored, rig  # noqa: E402
+from spritekit import build, recolored, rig, stretched  # noqa: E402
+
+GROW = {"rows": (4, 7, 8), "cols": (5, 6)}
 
 PALETTE = {
     "K": (18, 36, 92),     # contorno
@@ -24,7 +27,7 @@ PALETTE = {
     "A": (73, 200, 240),   # olho claro
 }
 
-HEAD_FRONT = [
+HEAD_FRONT = stretched([
     ".....KK.....",
     "....KLLK....",
     "...KLWLLK...",
@@ -36,8 +39,8 @@ HEAD_FRONT = [
     "..KCCCCCCK..",
     ".KGGDDDDGGK.",
     "..KKKKKKKK..",
-]
-HEAD_LOWER = [
+], **GROW)
+HEAD_LOWER = stretched([
     "......KK....",
     ".....KLLK...",
     "....KLWLLK..",
@@ -49,8 +52,8 @@ HEAD_LOWER = [
     "...KCCCCCK..",
     "..KGGDDDGGK.",
     "...KKKKKKK..",
-]
-HEAD_SIDE = [
+], **GROW)
+HEAD_SIDE = stretched([
     "....KK......",
     "...KLLK.....",
     "..KLWLLK....",
@@ -62,19 +65,19 @@ HEAD_SIDE = [
     "...KKCCCCCK.",
     "..KGGDDDGGK.",
     "...KKKKKKK..",
-]
+], **GROW)
 HEADS = {
-    "front": (HEAD_FRONT, 10, 19),
-    "lower": (HEAD_LOWER, 10, 19),
-    "side": (HEAD_SIDE, 10, 19),
-    "upper": (recolored(HEAD_LOWER, "CEA", "DDD"), 10, 19),
-    "back": (recolored(HEAD_FRONT, "CEA", "DDD"), 10, 19),
+    "front": (HEAD_FRONT, 9, 15),
+    "lower": (HEAD_LOWER, 9, 15),
+    "side": (HEAD_SIDE, 9, 15),
+    "upper": (recolored(HEAD_LOWER, "CEA", "DDD"), 9, 15),
+    "back": (recolored(HEAD_FRONT, "CEA", "DDD"), 9, 15),
 }
-LEG_NEAR = ["KGK", "DDD"]
-LEG_FAR = ["KD", "DD"]
+LEG_NEAR = ["KGK", "KGK", "DDD"]
+LEG_FAR = ["KD", "KD", "DD"]
 LEGS = {
-    "front": [(10, 0, LEG_FAR, 1), (13, 3, LEG_NEAR, 1), (17, 0, LEG_NEAR, 1), (20, 3, LEG_FAR, 1)],
-    "back": [(10, 0, LEG_FAR, 1), (13, 3, LEG_NEAR, 1), (17, 0, LEG_NEAR, 1), (20, 3, LEG_FAR, 1)],
+    "front": [(9, 0, LEG_FAR, 1), (13, 3, LEG_NEAR, 1), (17, 0, LEG_NEAR, 1), (21, 3, LEG_FAR, 1)],
+    "back": [(9, 0, LEG_FAR, 1), (13, 3, LEG_NEAR, 1), (17, 0, LEG_NEAR, 1), (21, 3, LEG_FAR, 1)],
     "side": [(11, 0, LEG_FAR, 1), (13, 3, LEG_NEAR, 1), (15, 0, LEG_NEAR, 1), (17, 3, LEG_FAR, 1)],
     "lower": [(11, 0, LEG_FAR, 1), (13, 3, LEG_NEAR, 1), (16, 0, LEG_NEAR, 1), (19, 3, LEG_FAR, 1)],
     "upper": [(11, 0, LEG_FAR, 1), (13, 3, LEG_NEAR, 1), (16, 0, LEG_NEAR, 1), (19, 3, LEG_FAR, 1)],
@@ -86,31 +89,31 @@ def claws(left, right, gap):
     return [a + "." * gap + b[::-1] for a, b in zip(left, right)]
 
 
-CLAW_OPEN = [
+CLAW_OPEN = stretched([
     ".KK...",
     "KLLK.K",
     "KLWLKL",
     "KLLLLK",
     ".KBLK.",
     "..KK..",
-]
-CLAW_SHUT = [
+], rows=(2,))
+CLAW_SHUT = stretched([
     "......",
     ".KKKK.",
     "KLLLLK",
     "KLWLLK",
     ".KBLLK",
     "..KKK.",
-]
-ALL_CLAWS = [claws(CLAW_OPEN, CLAW_OPEN, 10), claws(CLAW_OPEN, CLAW_OPEN, 10), claws(CLAW_SHUT, CLAW_SHUT, 10), claws(CLAW_OPEN, CLAW_OPEN, 10)]
+], rows=(2,))
+ALL_CLAWS = [claws(CLAW_OPEN, CLAW_OPEN, 12), claws(CLAW_OPEN, CLAW_OPEN, 12), claws(CLAW_SHUT, CLAW_SHUT, 12), claws(CLAW_OPEN, CLAW_OPEN, 12)]
 ONE_CLAW = [CLAW_OPEN, CLAW_OPEN, CLAW_SHUT, CLAW_OPEN]
-TIP = [["L"], ["W"], ["L"], ["L"]]
-CLAWS_AT = {"front": (5, 24), "back": (5, 24), "lower": (5, 24), "upper": (5, 24)}
+TIP = [["LL"], ["WW"], ["LW"], ["LL"]]
+CLAWS_AT = {"front": (4, 22), "back": (4, 22), "lower": (4, 22), "upper": (4, 22)}
 TRAITS = [
-    {"frames": [["D"], ["L"], ["D"], ["L"]], "at": {"back": (15, 22), "upper": (16, 22)}, "follows": "head"},
+    {"frames": [["D"], ["L"], ["D"], ["L"]], "at": {"back": (15, 18), "upper": (16, 18)}, "follows": "head"},
     {"frames": ALL_CLAWS, "at": CLAWS_AT, "follows": "body"},
-    {"frames": ONE_CLAW, "at": {"side": (19, 25)}, "follows": "body"},
-    {"frames": TIP, "at": {"front": (15, 21), "lower": (17, 21), "side": (15, 21)}, "follows": "head"},
+    {"frames": ONE_CLAW, "at": {"side": (20, 22)}, "follows": "body"},
+    {"frames": TIP, "at": {"front": (14, 17), "lower": (17, 17), "side": (14, 17)}, "follows": "head"},
 ]
 
 if __name__ == "__main__":
@@ -118,5 +121,5 @@ if __name__ == "__main__":
         Path(__file__).parent,
         sys.argv[1],
         PALETTE,
-        rig(HEADS, {}, LEGS, 30, TRAITS, idle_head=(0, 0, 1, 0), idle_body=(0, 0, 1, 0), walk_head=(0, 1, 0, 0, 1, 0), walk_body=(0, 1, 0, 0, 1, 0), foot_reach=(1, 0, -1, -1, 0, 1), foot_lift=(0, 0, 0, 0, 1, 1)),
+        rig(HEADS, {}, LEGS, 29, TRAITS, idle_head=(0, 0, 1, 0), idle_body=(0, 0, 1, 0), walk_head=(0, 1, 0, 0, 1, 0), walk_body=(0, 1, 0, 0, 1, 0), foot_reach=(1, 0, -1, -1, 0, 1), foot_lift=(0, 0, 0, 0, 1, 1)),
     )

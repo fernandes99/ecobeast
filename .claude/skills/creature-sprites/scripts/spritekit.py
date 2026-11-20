@@ -12,15 +12,19 @@ CELL = 32
 # A mesma ordem de assets/tamer: o lado esquerdo sai espelhando no jogo.
 VIEWS = ("front", "lower", "side", "upper", "back")
 FRAMES = {"idle": 4, "walk": 6}
-# A escala de tudo no mapa: o Domador tem 1,70 m e ocupa 25 pixels da folha.
+# A escala parte do Domador (1,70 m em 25 pixels), e cada Ecobeast ganha 4 pixels, entre 6
+# e 32 (creature-scale/01).
 TAMER_HEIGHT_M = 1.70
 TAMER_HEIGHT_PX = 25
+EXTRA_PX = 4
+MIN_PX = 6
+MAX_PX = 32
 GROUND = (204, 204, 204)
 
 
 def height_in_pixels(height_m):
-    """Quantos pixels de altura um Ecobeast tem, na escala do Domador."""
-    return round(height_m * TAMER_HEIGHT_PX / TAMER_HEIGHT_M)
+    """Quantos pixels de altura um Ecobeast tem no mapa."""
+    return min(MAX_PX, max(MIN_PX, round(height_m * TAMER_HEIGHT_PX / TAMER_HEIGHT_M + EXTRA_PX)))
 
 
 def read_png(path):
@@ -99,6 +103,19 @@ def recolored(drawing, before, after):
     """O mesmo desenho com outras cores: o rosto vira pelo na vista de costas."""
     table = str.maketrans(before, after)
     return [row.translate(table) for row in drawing]
+
+
+def stretched(drawing, rows=(), cols=()):
+    """O desenho com as linhas e as colunas listadas repetidas: a parte cresce sem ampliar
+    os pixels. Escolha linhas e colunas lisas (o meio da testa, do tronco ou da pata), e não
+    o contorno, os olhos ou a boca (creature-scale)."""
+    result = []
+    for j, row in enumerate(drawing):
+        line = "".join(mark * (2 if i in cols else 1) for i, mark in enumerate(row))
+        result.append(line)
+        if j in rows:
+            result.append(line)
+    return result
 
 
 def swayed(drawing, amounts=(0, 1, 0, -1)):
@@ -312,11 +329,42 @@ def _save_gif(path, cells, frames, delay, zoom=4):
     Path(path).write_bytes(gif)
 
 
-def build(folder, preview_folder, palette, animations):
+def outlined(pixels, palette, outline):
+    """O contorno de 1 pixel por fora da silhueta, na cor escura da parte vizinha.
+
+    `outline` é {chave da parte: chave do contorno}, com "*" para as outras partes. Os
+    vizinhos de 4 lados são lidos nesta ordem: baixo, cima, esquerda e direita, e o primeiro
+    decide a cor. Com contorno, o desenho fica entre as linhas e colunas 1 e 30.
+    """
+    key_of = {color: key for key, color in palette.items()}
+    result = [row[:] for row in pixels]
+    for y in range(CELL):
+        for x in range(CELL):
+            if pixels[y][x] is None:
+                continue
+            if x in (0, CELL - 1) or y in (0, CELL - 1):
+                raise ValueError("com contorno, o pixel em (%d, %d) precisa sair da borda da célula" % (x, y))
+    for y in range(CELL):
+        for x in range(CELL):
+            if pixels[y][x] is not None:
+                continue
+            for nx, ny in ((x, y + 1), (x, y - 1), (x - 1, y), (x + 1, y)):
+                if not (0 <= nx < CELL and 0 <= ny < CELL):
+                    continue
+                near = pixels[ny][nx]
+                if near is not None:
+                    key = key_of[near]
+                    result[y][x] = palette[outline.get(key, outline["*"])]
+                    break
+    return result
+
+
+def build(folder, preview_folder, palette, animations, outline=None):
     """Escreve idle.png e walk.png em `folder`, e as prévias em `preview_folder`.
 
     `animations` é {"idle": draw, "walk": draw}, com draw(canvas, view, frame) desenhando
-    uma célula, e `view` sendo um dos nomes de VIEWS.
+    uma célula, e `view` sendo um dos nomes de VIEWS. Com `outline` (veja `outlined`), cada
+    célula ganha o contorno por fora, e a altura da folha fica 2 pixels maior que o desenho.
     """
     folder = Path(folder)
     preview_folder = Path(preview_folder)
@@ -331,7 +379,7 @@ def build(folder, preview_folder, palette, animations):
             for frame in range(frames):
                 canvas = Canvas(palette)
                 draw(canvas, view, frame)
-                line.append(canvas.pixels)
+                line.append(outlined(canvas.pixels, palette, outline) if outline else canvas.pixels)
             cells.append(line)
         write_png(folder / (name + ".png"), CELL * frames, CELL * len(VIEWS), _sheet_rows(cells, frames))
         _save_preview(preview_folder / (name + "_quadros.png"), cells, frames)

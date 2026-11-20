@@ -1,9 +1,8 @@
 """Ruvo: as folhas idle.png e walk.png. Uso: python sprites.py <pasta das prévias>
 
-Com 0,50 m, ele tem 7 pixels de altura, na escala do Domador (veja a skill
-creature-sprites). Nesse tamanho, cada olho é um pixel, e o contorno escuro comeria o
-corpo: quem separa as partes é a cor. Os pés ficam presos no idle, e no walk cada pata
-anda sozinha, com as diagonais alternando.
+Com 0,50 m, ele tem 11 pixels de altura pela regra do mapa (creature-scale): 9 de desenho
+e o contorno marrom por fora, vermelho na chama. A cabeça de filhote, com as orelhas, o
+focinho creme e a crista de fogo, fica com 6 deles; a chama da cauda balança atrás.
 """
 import sys
 from pathlib import Path
@@ -11,124 +10,113 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[5]
 sys.path.insert(0, str(ROOT / ".claude/skills/creature-sprites/scripts"))
 
-from spritekit import build, rig  # noqa: E402
+from spritekit import build, rig, swayed  # noqa: E402
 
 PALETTE = {
-    "K": (60, 20, 16),     # olho e pata de longe
-    "O": (240, 120, 24),   # laranja
-    "L": (248, 164, 48),   # laranja claro
-    "S": (216, 72, 24),    # laranja na sombra
-    "T": (160, 44, 24),    # vermelho escuro: orelha e pata
-    "C": (248, 220, 174),  # creme
-    "P": (224, 112, 104),  # focinho
-    "Y": (255, 220, 88),   # chama clara
-    "y": (255, 160, 32),   # chama média
-    "F": (240, 88, 24),    # chama forte
+    "o": (92, 34, 18),     # contorno
+    "q": (150, 34, 20),    # contorno da chama
+    "R": (228, 106, 38),   # laranja
+    "Y": (248, 162, 72),   # laranja na luz
+    "r": (184, 66, 26),    # laranja na sombra
+    "C": (248, 222, 176),  # creme
+    "c": (222, 180, 134),  # creme na sombra
+    "e": (52, 24, 14),     # olho
+    "n": (204, 92, 92),    # focinho
+    "P": (132, 42, 24),    # pata
+    "F": (255, 220, 80),   # chama clara
+    "y": (255, 152, 40),   # chama média
+    "f": (234, 72, 36),    # chama forte
 }
+OUTLINE = {"*": "o", "F": "q", "y": "q", "f": "q"}
 
-# Desenho, coluna e linha de cada parte em cada ângulo. Os pés ficam na linha 31.
+TOP = 22
 HEADS = {
     "front": ([
-        ".T...T.",
-        ".TOOOT.",
-        "OOLLLOO",
-        "OKOCOKO",
-        "CCCPCCC",
-    ], 13, 25),
+        "RC.....CR",
+        "RRRRRRRRR",
+        "RYeYRYeYR",
+        "RReCCCeRR",
+        "rCCCnCCCr",
+        ".cCCCCCc.",
+    ], 12, TOP),
     "lower": ([
-        "T...T.",
-        "TOOOT.",
-        "OOLLOO",
-        "OKOOKO",
-        "CCCPCC",
-    ], 15, 25),
+        "RC....CR",
+        "RRRRRRRR",
+        "RRYeYYeR",
+        "rRReCCeC",
+        ".rRCCCnC",
+        "..rcCCC.",
+    ], 13, TOP),
     "side": ([
-        "T.T...",
-        "TOOOO.",
-        "OOOKOC",
-        "OOCCCP",
-    ], 15, 25),
+        ".RC.....",
+        "RRRR....",
+        "RYYYR...",
+        "RRRReCC.",
+        "rRRCCCCn",
+        ".rrcCCc.",
+    ], 14, TOP),
     "upper": ([
-        "T...T.",
-        "TOOOT.",
-        "OOLLOO",
-        "OOOOOC",
-        "SOOOOC",
-    ], 15, 25),
+        "RR....RR",
+        "RRRRRRRR",
+        "RYYYYYYR",
+        "RRRRRRRR",
+        "rRRRRRRR",
+        ".rRRRRr.",
+    ], 13, TOP),
     "back": ([
-        ".T...T.",
-        ".TOOOT.",
-        "OOLLLOO",
-        "OOOOOOO",
-        "SOOOOOS",
-    ], 13, 25),
+        "RR.....RR",
+        "RRRRRRRRR",
+        "RYYYYYYYR",
+        "RRRRRRRRR",
+        "rRRRRRRRr",
+        ".rrRRRrr.",
+    ], 12, TOP),
 }
 BODIES = {
-    "front": (["CCC"], 15, 30),
+    "front": (["rRCCCRr"], 13, 28),
     "lower": ([
-        "OLO",
-        "OOOO",
-    ], 12, 28),
+        "RYRRR..",
+        "rRRRCC.",
+    ], 11, 27),
     "side": ([
-        "OLLOOOOC",
-        "OOOOOOCC",
-    ], 12, 28),
+        "RYYYRR..",
+        "rRRRRCc.",
+    ], 9, 27),
     "upper": ([
-        "OLO",
-        "OOOO",
-    ], 12, 28),
-    "back": (["OOO"], 15, 30),
+        "RYYRR..",
+        "rRRRRR.",
+    ], 11, 27),
+    "back": (["rRRRRRr"], 13, 28),
 }
-FLAME = [
-    [
-        ".y.",
-        "yYy",
-        "yFy",
-        ".F.",
-    ],
-    [
-        "y..",
-        "yYy",
-        "yFy",
-        ".F.",
-    ],
-    [
-        ".y.",
-        "yYy",
-        "YFy",
-        ".F.",
-    ],
-    [
-        "..y",
-        "yYy",
-        "yFy",
-        ".F.",
-    ],
-]
-FLAMES = {"front": (19, 26), "lower": (9, 26), "side": (9, 26), "upper": (11, 27), "back": (15, 27)}
-CRESTS = {"front": (16, 26), "lower": (17, 26), "side": (17, 26), "upper": (17, 26), "back": (16, 26)}
-CREST_MARKS = ["Y", "y", "Y", "F"]
+FLAME = swayed([
+    ".f.",
+    "fyf",
+    "yFy",
+    "yFf",
+    "fyf",
+    ".f.",
+])
+FLAMES = {"front": (19, 23), "lower": (9, 23), "side": (6, 22), "upper": (9, 24), "back": (14, 25)}
+CRESTS = {"front": (16, 22), "lower": (16, 22), "side": (15, 22), "upper": (16, 22), "back": (16, 22)}
+CREST_MARKS = ["F", "y", "F", "f"]
 
-LEGS_Y = 30
-IDLE_HEAD = (0, 1, 1, 0)
-# Só a cabeça desce: em 7 pixels, descer o corpo esconderia as patas.
+LEGS_Y = 29
+IDLE_HEAD = (0, 0, 1, 0)
 WALK_HEAD = (1, 0, 0, 1, 0, 0)
-# Cada pata em um ponto do ciclo: quanto o pé está à frente do quadril e fora do chão.
 FOOT_REACH = (1, 0, -1, -1, 0, 1)
 FOOT_LIFT = (0, 0, 0, 0, 1, 1)
-# Coluna do quadril, ponto do ciclo, estilo e alcance, de trás para a frente.
-NEAR = ["OO", "TT"]
-FAR = ["S", "K"]
+NEAR = ["RR", "PP"]
+FAR = ["r", "P"]
+SLIM = ["R", "P"]
 LEGS = {
     "front": [(14, 0, NEAR, 0), (17, 3, NEAR, 0)],
     "back": [(14, 0, NEAR, 0), (17, 3, NEAR, 0)],
-    "side": [(14, 3, FAR, 1), (17, 0, FAR, 1), (12, 0, NEAR, 1), (19, 3, NEAR, 1)],
-    "lower": [(16, 3, FAR, 1), (12, 0, NEAR, 1), (18, 3, NEAR, 1)],
-    "upper": [(16, 3, FAR, 1), (13, 0, NEAR, 1), (18, 3, NEAR, 1)],
+    "side": [(11, 3, FAR, 1), (15, 0, FAR, 1), (10, 0, SLIM, 1), (14, 3, SLIM, 1)],
+    "lower": [(12, 3, FAR, 1), (11, 0, SLIM, 1), (15, 3, NEAR, 1)],
+    "upper": [(16, 3, FAR, 1), (12, 0, SLIM, 1), (15, 3, SLIM, 1)],
 }
 TRAITS = [
     {"frames": [[mark] for mark in CREST_MARKS], "at": CRESTS, "follows": "head", "walk": (0, 1, 2, 3, 0, 1)},
-    # De trás, a cauda fica na frente de tudo; nos outros ângulos, atrás do corpo.
     {"frames": FLAME, "at": FLAMES, "behind": ("front", "lower", "side")},
 ]
 
@@ -138,4 +126,5 @@ if __name__ == "__main__":
         sys.argv[1],
         PALETTE,
         rig(HEADS, BODIES, LEGS, LEGS_Y, TRAITS, idle_head=IDLE_HEAD, idle_body=(0, 0, 0, 0), walk_head=WALK_HEAD, walk_body=(0, 0, 0, 0, 0, 0), foot_reach=FOOT_REACH, foot_lift=FOOT_LIFT),
+        outline=OUTLINE,
     )

@@ -7,7 +7,7 @@ description: Cria as folhas de pixel art idle.png e walk.png de um Ecobeast a pa
 
 Esta skill transforma o `front.png` de um Ecobeast em duas folhas desenhadas à mão, pixel a pixel. Um `front.png` mostra um ângulo só, e reduzir a imagem borra e não cria os outros quatro. Por isso cada parte da criatura é um desenho em texto, e o código só monta as partes em cada quadro. Os exemplos estão em `client/assets/creatures/<slug>/explore/sprites.py`: leia o mais parecido antes de começar. Nilu é o menor; Ruvo é pequeno, de quatro patas; Ruvak é médio; Ruvaroth é grande; Puffcoo e Galecrest são aves; Nilgar e Nilgorr são caranguejos.
 
-O tamanho vem da altura do catálogo, na escala do Domador: um Ecobeast pequeno é pequeno de verdade. Fale com o dono em pt-BR. Ele é iniciante em Godot, então explique os conceitos do motor quando aparecerem.
+O tamanho vem da altura do catálogo, pela regra do mapa (`.specs/creature-scale/`): a escala do Domador mais 4 pixels, para os filhotes ficarem legíveis. Fale com o dono em pt-BR. Ele é iniciante em Godot, então explique os conceitos do motor quando aparecerem.
 
 ## Formato
 
@@ -18,9 +18,10 @@ O tamanho vem da altura do catálogo, na escala do Domador: um Ecobeast pequeno 
 
 - Células de 32×32, em 5 linhas: frente, diagonal descendo para a direita, lado direito, diagonal subindo para a direita e costas. O lado esquerdo sai espelhando no jogo, com `flip_h`, então nunca é desenhado.
 - Os pés encostam na última linha da célula, perto da coluna 16: é o ponto que o jogo põe no centro do hexágono.
-- **Altura:** o Domador tem 1,70 m e ocupa 25 pixels, então `pixels = height_m × 25 / 1,70`, arredondado. `height_m` está no catálogo (`GET /v1/species/<slug>`; o `server/prisma/seed-data/` é só a carga inicial), e `weight_kg` diz se o corpo é esguio ou pesado. Hoje: Nilu 4, Seedlet e Tidebud 6, Ruvo 7, Nilgar 13, Ruvak e Grovequill 15, Kelpcoil 16, Nilgorr 22, Ruvaroth 24, Arbornix 26 e Tempestide 29. Qualquer altura até 2,18 m cabe na célula.
+- **Altura:** `pixels = arredondar(height_m × 25 / 1,70 + 4)`, no mínimo 6 e no máximo 32 (`height_in_pixels` do `spritekit.py`). O Domador tem 1,70 m e 25 pixels, e todo Ecobeast ganha 4 pixels a mais que essa escala. `height_m` está no catálogo (`GET /v1/catalog`, que o `check_sheets.py` lê; o `server/prisma/seed-data/` é só a carga inicial), e `weight_kg` diz se o corpo é esguio ou pesado. Hoje: Nilu, Puffcoo e Hushling 8, Seedlet, Tidebud e Clod 10, Ruvo 11, Nilgar 17, Ruvak, Grovequill e Crag 19, Kelpcoil 20, Nilgorr e Galecrest 26, Ruvaroth e Ingot 28, Echofrost 29, Arbornix 30 e Tempestide 32. A partir de uns 1,90 m, tudo tem 32 pixels, a altura da célula: nada sobe acima da primeira linha, então o balanço do idle desce, nunca sobe.
+- **Largura:** até 32 pixels em todo quadro. Uma criatura que passaria disso, como o Ruvaroth e o Nilgorr, fica mais compacta, com a cauda, a chama e as pinças mais perto do corpo, e nunca cortada.
 - A altura é da folha inteira, com orelhas e chamas. A verificação aceita 1 pixel de diferença.
-- Sem transparência parcial, com até 32 cores e a mesma densidade de pixels do Domador.
+- Sem transparência parcial, com até 16 cores, de preferência (a conferência barra acima de 32), e a mesma densidade de pixels do Domador.
 
 ## Passos
 
@@ -28,9 +29,9 @@ Os comandos rodam na raiz do repositório. `S` é `.claude/skills/creature-sprit
 
 1. **Olhe a criatura.** Sem `front.png` ainda, corte a imagem da linha que o dono mandou (guardada em `art-source/<slug da primeira forma>/line.webp`) com `python -I S/crop_line.py <imagem> <slug> [<slug> ...]`, os slugs da esquerda para a direita. Ele aceita a imagem com fundo transparente ou com fundo de uma cor lisa, como o verde do prompt da skill `creature-front-prompt`, que tira pela cor dos cantos. Abra `<criatura>/front.png` com a ferramenta Read e rode `python -I S/reference.py <criatura>/front.png <prévias>/referencia.png`. Abra a redução: ela mostra as proporções e lista as cores.
 2. **Calcule a altura e liste o que a torna reconhecível.** Antes de desenhar, escreva para si: a altura em pixels, a anatomia (quantas patas, como se apoia), a silhueta, os olhos, as cores e o traço marcante, como a chama do Ruvo. Quanto menor a altura, menos cabe: escolha o que precisa sobreviver. O dono quer reconhecer a criatura, não um boneco genérico recolorido.
-3. **Desenhe** `<pasta>/sprites.py`, copiando a estrutura do exemplo mais parecido: paleta tirada do `front.png`, cabeça e corpo para cada ângulo, patas e traços marcantes, tudo entregue a `rig`, que monta o idle e o walk. `recolored` tira o rosto para as vistas de costas, e `swayed` gera os 4 quadros de chama, folha ou água. Desenhe do zero o que for da criatura. Só o `spritekit` e a estrutura se repetem.
+3. **Desenhe** `<pasta>/sprites.py`, copiando a estrutura do exemplo mais parecido: paleta tirada do `front.png`, cabeça e corpo para cada ângulo, patas e traços marcantes, tudo entregue a `rig`, que monta o idle e o walk. `recolored` tira o rosto para as vistas de costas, e `swayed` gera os 4 quadros de chama, folha ou água. Desenhe do zero o que for da criatura. Só o `spritekit` e a estrutura se repetem. Para o contorno, passe `outline={"*": "<chave escura>", ...}` ao `build`: ele contorna a silhueta por fora em cada quadro, com a cor escura de cada parte, e o desenho fica 2 pixels mais baixo que a altura pedida (os 6 pequenos, como a Nilu e o Ruvo, fazem assim). Para crescer uma folha que já existe sem trocar o desenho, `stretched(desenho, rows=..., cols=...)` repete linhas e colunas lisas de uma parte (os médios e os grandes, como o Ruvak e o Ruvaroth).
 4. **Gere e olhe.** Rode `python -I <pasta>/sprites.py <prévias>/previa` e abra `idle_quadros.png` e `walk_quadros.png`. A primeira versão quase nunca fica boa: conte com duas ou três rodadas, corrigindo o que você vê.
-5. **Confira.** Rode `python -I S/check_sheets.py <pasta>`. Com a saída diferente de zero, conserte e gere de novo.
+5. **Confira.** Com o servidor no ar (`cd server && npm run start:dev`; é dele que vem a altura), rode `python -I S/check_sheets.py <pasta>`. Com a saída diferente de zero, conserte e gere de novo.
 6. **Importe no Godot:** `godot --headless --path client --import`. Isso cria os `.import`, que vão para o repositório junto com as folhas. O Godot fica em `/c/Godot/Godot_v4.7.2-stable_win64_console.exe`.
 7. **Entregue.** Diga onde estão as folhas e os GIFs de prévia, que mostram o movimento fora do jogo, com o caminho completo. Para ver no jogo, é só o dono rodar com F5, abrir Explorar zona e tocar em "Debug": quem tem as duas folhas fica ativo no spawn, sem mudar código. Diga também o que não foi visto rodando. Só commite se o dono pedir.
 
@@ -38,9 +39,11 @@ Os comandos rodam na raiz do repositório. `S` é `.claude/skills/creature-sprit
 
 **Partes separadas.** Cabeça, corpo, patas e cada traço marcante são desenhos próprios. No `draw`, a ordem de carimbar é a profundidade: quem vem depois fica por cima. O que fica atrás da criatura na frente fica na frente dela nas costas, como a cauda do Ruvo.
 
-**Até uns 12 pixels de altura.** Não há lugar para contorno: ele comeria o corpo, e quem separa as partes é a cor. Cada olho é um pixel, e cada pata é uma coluna. Fique com a silhueta e um traço marcante. Abaixo de 7 pixels, a cabeça nem desce, porque cobriria os pés: quem se mexe são as patas e o traço marcante.
-
-**Acima disso.** Volte ao contorno escuro e aos olhos com brilho. A cabeça de um filhote é grande para o corpo, e uma evolução fica mais alta e com a cabeça menor.
+**Acabamento, em qualquer tamanho.** A referência é a dos animais do pacote Fantasy Dreamland Reborn, que o dono escolheu: um pintinho de 10 a 12 pixels com 8 cores, legível de longe. Nenhum pixel do pacote entra numa folha: ele é só a régua de tamanho e de acabamento.
+- Contorno de 1 pixel em toda a silhueta, escuro e puxado para a cor da parte (marrom no laranja, azul-marinho no azul, verde-escuro na folha), nunca preto puro. Ele entra também entre partes que se cobrem, como a cabeça na frente do corpo.
+- Cada material com até 3 tons: luz em cima, base e sombra embaixo. A luz vem de cima.
+- Até uns 14 pixels, cada olho é 1 pixel escuro, ou 1×2 nos maiores desse grupo; acima disso, olhos maiores com brilho. A cabeça de um filhote é grande para o corpo, e uma evolução fica mais alta e com a cabeça menor.
+- Abaixo de 10 pixels, a cabeça nem desce, porque cobriria os pés: quem se mexe são as patas e o traço marcante. Os rascunhos de frente da Nilu (8), do Seedlet (10) e do Ruvo (11), aprovados pelo dono, estão em `art-source/creature-scale/front_drafts.py`.
 
 **Idle.** Copie o ritmo do Domador: a cabeça desce 0, 1, 2 e 0 pixels, o corpo 0, 1, 1 e 0, e os pés ficam presos. Em uma criatura pequena, 2 pixels é demais: a cabeça desce 0, 1, 1 e 0, e o corpo fica parado. Sempre que a criatura tiver algo vivo, como chama, água ou folhas, mude isso a cada quadro: é o que impede o quarto quadro de repetir o primeiro.
 
@@ -65,7 +68,7 @@ Confira isto nas prévias, porque são erros que os scripts não pegam. Os da li
 - **Coleira:** uma linha de contorno entre a cabeça e o peito parece coleira. Deixe o peito emendar na cabeça.
 - **Corpo fino de lado:** a cabeça cobre o corpo. Comece o corpo mais alto na vista de lado.
 - **Chama sem contraste:** contorno vermelho na chama, e não o contorno escuro do corpo.
-- **Fora de escala:** ela foi desenhada sem olhar a altura, e parecia maior que o Domador. Calcule antes de desenhar.
+- **Fora de escala:** ela foi desenhada sem olhar a altura, e parecia maior que o Domador. Calcule pela regra antes de desenhar.
 - **Água-viva:** um caranguejo de patas longas e pinças soltas parece uma água-viva. Patas curtas, base larga e pinças encostadas na frente do corpo.
 - **Pata solta:** um vão entre o corpo e as patas passa em todos os scripts. Confira `legs_top` contra a última linha do corpo.
 

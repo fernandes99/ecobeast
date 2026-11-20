@@ -1,6 +1,7 @@
 """Galecrest: as folhas idle.png e walk.png. Uso: python sprites.py <pasta das prévias>
 
-Com 1,50 m, ele tem 22 pixels de altura. É uma ave em pé, em duas pernas laranja, com a
+Com 1,50 m, ele tem 26 pixels de altura pela regra do mapa (creature-scale): o desenho de 22
+pixels cresce pelo `stretched`, na cabeça, no peito, nas asas e nas pernas. É uma ave em pé, em duas pernas laranja, com a
 cabeça verde-azulada, o bico laranja, a crista branca, o peito branco com as listras
 verde-azuladas, as asas verde-azuladas de pontas claras junto ao corpo, que se abrem um
 pouco no idle e no andar, e a cauda longa listrada, sempre atrás do corpo.
@@ -11,7 +12,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[5]
 sys.path.insert(0, str(ROOT / ".claude/skills/creature-sprites/scripts"))
 
-from spritekit import build, recolored, rig, swayed  # noqa: E402
+from spritekit import build, recolored, rig, stretched, swayed  # noqa: E402
 
 PALETTE = {
     "K": (14, 40, 52),     # contorno
@@ -38,7 +39,7 @@ def mirror(drawing):
     return [row[::-1] for row in drawing]
 
 
-HEAD_FRONT = [
+HEAD_FRONT = stretched([
     "..KKKKK..",
     ".KTTtTTK.",
     "KTTTTTTTK",
@@ -46,8 +47,8 @@ HEAD_FRONT = [
     "KWRETERWK",
     ".KWWOWWK.",
     "..KWoWK..",
-]
-HEAD_LOWER = [
+], rows=(2,))
+HEAD_LOWER = stretched([
     "..KKKKK...",
     ".KTTTtTK..",
     "KTTTTTTTK.",
@@ -55,8 +56,8 @@ HEAD_LOWER = [
     "KTWRETERKK",
     ".KWWWWWOoK",
     "..KWWWWKK.",
-]
-HEAD_SIDE = [
+], rows=(2,))
+HEAD_SIDE = stretched([
     "..KKKK....",
     ".KTTtTK...",
     "KTTTTTTK..",
@@ -64,8 +65,8 @@ HEAD_SIDE = [
     "KTTTWERTKK",
     ".KTWWWWOOK",
     "..KWWWKoK.",
-]
-HEAD_BACK = [
+], rows=(2,))
+HEAD_BACK = stretched([
     "..KKKKK..",
     ".KTTtTTK.",
     "KTTTTTTTK",
@@ -73,15 +74,15 @@ HEAD_BACK = [
     "KDTTTTTDK",
     ".KDTTTDK.",
     "..KDTDK..",
-]
+], rows=(2,))
 HEADS = {
-    "front": (HEAD_FRONT, 12, 12),
-    "lower": (HEAD_LOWER, 13, 12),
-    "side": (HEAD_SIDE, 15, 12),
-    "upper": (recolored(HEAD_LOWER, "ECRWOo", "TTTTKK"), 13, 12),
-    "back": (HEAD_BACK, 12, 12),
+    "front": (HEAD_FRONT, 12, 8),
+    "lower": (HEAD_LOWER, 13, 8),
+    "side": (HEAD_SIDE, 15, 8),
+    "upper": (recolored(HEAD_LOWER, "ECRWOo", "TTTTKK"), 13, 8),
+    "back": (HEAD_BACK, 12, 8),
 }
-BODY_FRONT = [
+BODY_FRONT = stretched([
     "...KWWWWWK...",
     "..KWWWWWWWK..",
     ".KTWWWWWWWTK.",
@@ -93,8 +94,8 @@ BODY_FRONT = [
     ".KSWWSWSWWSK.",
     "..KSSWWWSSK..",
     "...KKSSSKK...",
-]
-BODY_LOWER = [
+], rows=(4,))
+BODY_LOWER = stretched([
     "....KWWWWWK..",
     "...KWWWWWWWK.",
     "..KTTWWWWTWK.",
@@ -106,8 +107,8 @@ BODY_LOWER = [
     ".KSSWWSWWWSK.",
     "..KSSWWWWSK..",
     "...KKSSSKK...",
-]
-BODY_SIDE = [
+], rows=(4,))
+BODY_SIDE = stretched([
     "......KWWWK..",
     ".....KTWWWWK.",
     "....KTTWWTWK.",
@@ -119,8 +120,8 @@ BODY_SIDE = [
     "..KDTTSSWWWSK",
     "...KDSSWWSSK.",
     "....KKSSSKK..",
-]
-BODY_UPPER = [
+], rows=(4,))
+BODY_UPPER = stretched([
     "....KTTTTTK..",
     "...KTTTTTTTK.",
     "..KTTTTTTTTK.",
@@ -132,8 +133,8 @@ BODY_UPPER = [
     ".KDDTTTTTDDK.",
     "..KDDTTTDDK..",
     "...KKDDDKK...",
-]
-BODY_BACK = [
+], rows=(4,))
+BODY_BACK = stretched([
     "...KTTTTTK...",
     "..KTTTTTTTK..",
     ".KTTTTtTTTTK.",
@@ -145,16 +146,16 @@ BODY_BACK = [
     ".KDDTTTTTDDK.",
     "..KDDTTTDDK..",
     "...KKDDDKK...",
-]
+], rows=(4,))
 BODIES = {
-    "front": (BODY_FRONT, 10, 17),
-    "lower": (BODY_LOWER, 10, 17),
-    "side": (BODY_SIDE, 9, 17),
-    "upper": (BODY_UPPER, 10, 17),
-    "back": (BODY_BACK, 10, 17),
+    "front": (BODY_FRONT, 10, 14),
+    "lower": (BODY_LOWER, 10, 14),
+    "side": (BODY_SIDE, 9, 14),
+    "upper": (BODY_UPPER, 10, 14),
+    "back": (BODY_BACK, 10, 14),
 }
-NEAR = ["KOK", "KOK", "KOK", "KOOK", "OOOO"]
-FAR = ["KoK", "KoK", "KoK", "KooK", "oooo"]
+NEAR = stretched(["KOK", "KOK", "KOK", "KOOK", "OOOO"], rows=(1, 2))
+FAR = stretched(["KoK", "KoK", "KoK", "KooK", "oooo"], rows=(1, 2))
 LEGS = {
     "front": [(12, 0, NEAR, 0), (17, 3, NEAR, 0)],
     "back": [(12, 0, NEAR, 0), (17, 3, NEAR, 0)],
@@ -162,7 +163,7 @@ LEGS = {
     "lower": [(15, 3, FAR, 0.5), (12, 0, NEAR, 0.5)],
     "upper": [(15, 3, FAR, 0.5), (12, 0, NEAR, 0.5)],
 }
-WING = [
+WING = stretched([
     ".KK.",
     "KTTK",
     "KTTK",
@@ -173,8 +174,8 @@ WING = [
     "KDGK",
     ".KGK",
     "..K.",
-]
-WING_SIDE = [
+], rows=(4,))
+WING_SIDE = stretched([
     "..KKK....",
     ".KTTTKK..",
     "KTTTTTTK.",
@@ -185,7 +186,7 @@ WING_SIDE = [
     "...KGGGK.",
     "....KKGK.",
     "......KK.",
-]
+], rows=(3,))
 LEFT_WING = flared(WING, (0, -1, -2, -1))
 RIGHT_WING = [mirror(frame) for frame in LEFT_WING]
 SIDE_WING = flared(mirror(WING_SIDE), (0, 1, 1, 0))
@@ -252,12 +253,12 @@ TAIL_FRAMES = {
     "upper": swayed(TAIL_UPPER, (0, 0, 1, 0)),
     "back": swayed(TAIL_BACK, (0, 0, 1, 0)),
 }
-TAIL_AT = {"front": (8, 25), "side": (1, 22), "lower": (2, 23), "upper": (3, 22), "back": (9, 23)}
-LEFT_WING_AT = {"front": (6, 18), "back": (6, 18), "lower": (7, 18)}
-RIGHT_WING_AT = {"front": (19, 18), "back": (19, 18), "upper": (19, 18)}
-SIDE_WING_AT = {"side": (9, 18), "lower": (10, 18), "upper": (8, 18)}
-CREST_AT = {"front": (14, 10), "back": (14, 10), "lower": (15, 10), "upper": (15, 10)}
-CREST_SIDE_AT = {"side": (13, 10)}
+TAIL_AT = {"front": (8, 23), "side": (1, 20), "lower": (2, 21), "upper": (3, 20), "back": (9, 21)}
+LEFT_WING_AT = {"front": (6, 15), "back": (6, 15), "lower": (7, 15)}
+RIGHT_WING_AT = {"front": (19, 15), "back": (19, 15), "upper": (19, 15)}
+SIDE_WING_AT = {"side": (9, 15), "lower": (10, 15), "upper": (8, 15)}
+CREST_AT = {"front": (14, 6), "back": (14, 6), "lower": (15, 6), "upper": (15, 6)}
+CREST_SIDE_AT = {"side": (13, 6)}
 TRAITS = [
     {"frames": TAIL_FRAMES, "at": TAIL_AT, "behind": ("front", "lower", "side")},
     {"frames": CREST, "at": CREST_AT, "follows": "head"},
@@ -268,4 +269,4 @@ TRAITS = [
 ]
 
 if __name__ == "__main__":
-    build(Path(__file__).parent, sys.argv[1], PALETTE, rig(HEADS, BODIES, LEGS, 27, TRAITS))
+    build(Path(__file__).parent, sys.argv[1], PALETTE, rig(HEADS, BODIES, LEGS, 25, TRAITS))

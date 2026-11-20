@@ -1,9 +1,9 @@
 """Seedlet: as folhas idle.png e walk.png. Uso: python sprites.py <pasta das prévias>
 
-Com 0,40 m, ele tem 6 pixels de altura. Sobram a crista de folhas verde-limão, a cabeça
-grande verde com o rosto creme e os olhos escuros, o corpo creme, as quatro patas de pés
-escuros e a cauda com a ponta em folha. Só a cabeça desce: em 6 pixels, descer o corpo
-esconderia as patas. A crista e a folha da cauda balançam.
+Com 0,40 m, ele tem 10 pixels de altura pela regra do mapa (creature-scale): 8 de desenho e
+o contorno verde-escuro por fora. Cabem a crista de folhas, a cabeça de filhote com o rosto
+creme e os olhos, as patas escuras e a cauda de folha, que balança. No walk, as patas andam
+em diagonal, como as do Ruvo.
 """
 import sys
 from pathlib import Path
@@ -11,86 +11,102 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[5]
 sys.path.insert(0, str(ROOT / ".claude/skills/creature-sprites/scripts"))
 
-from spritekit import build, rig  # noqa: E402
+from spritekit import build, rig, swayed  # noqa: E402
 
 PALETTE = {
-    "L": (176, 216, 48),   # verde-limão
-    "G": (72, 168, 48),    # folha
-    "g": (0, 104, 72),     # folha na sombra
-    "C": (240, 216, 144),  # creme
-    "c": (200, 176, 104),  # creme na sombra
-    "E": (0, 48, 48),      # olho e pé
-    "F": (24, 64, 64),     # pé de longe
+    "o": (26, 62, 38),     # contorno
+    "G": (98, 186, 60),    # folha
+    "g": (46, 132, 74),    # folha na sombra
+    "Y": (194, 230, 80),   # folha na luz
+    "C": (246, 234, 178),  # creme
+    "c": (214, 196, 136),  # creme na sombra
+    "e": (18, 52, 34),     # olho
+    "m": (190, 120, 90),   # boca
+    "T": (36, 80, 92),     # pata
 }
+OUTLINE = {"*": "o"}
 
+TOP = 23
 HEADS = {
     "front": ([
-        "gGGGGGg",
-        "gCECECg",
-        ".CCCCC.",
-    ], 13, 27),
+        ".Y..G..Y.",
+        ".GY.G.YG.",
+        "GgGGYGGgG",
+        "GCeCCCeCG",
+        "CCeCCCeCC",
+        ".cCCmCCc.",
+    ], 12, TOP),
     "lower": ([
-        "gGGGGG",
-        "gECCEC",
-        ".cCCCC",
-    ], 14, 27),
+        ".Y..G.Y.",
+        ".GY.GYG.",
+        "GgGGGYGG",
+        "GGCeCCeC",
+        "gCCeCCeC",
+        ".gcCCmC.",
+    ], 13, TOP),
     "side": ([
-        "gGGGG.",
-        "gGCCEC",
-        ".gCCCC",
-    ], 15, 27),
+        "Y.G....",
+        "GYGG...",
+        "gGGGYG.",
+        "GGGCeCC",
+        "gGCCeCC",
+        ".gcCCm.",
+    ], 14, TOP),
     "upper": ([
-        "gGGGGG",
-        "gGGGGC",
-        ".gGGCC",
-    ], 14, 27),
+        ".Y..G.Y.",
+        ".GY.GYG.",
+        "GgGGGYGG",
+        "GGGGGGGG",
+        "gGGGGGGG",
+        ".ggGGGg.",
+    ], 13, TOP),
     "back": ([
-        "gGGGGGg",
-        "gGGgGGg",
-        ".gGGGg.",
-    ], 13, 27),
+        ".Y..G..Y.",
+        ".GY.G.YG.",
+        "GgGGYGGgG",
+        "GGGGGGGGG",
+        "gGGGGGGGg",
+        ".ggGGGgg.",
+    ], 12, TOP),
 }
 BODIES = {
-    "front": (["CCC"], 15, 30),
-    "lower": (["gGGC", "GCCC"], 12, 29),
-    "side": (["gGG", "gCCC"], 12, 29),
-    "upper": (["gGGG", "GGGC"], 12, 29),
-    "back": (["GGG"], 15, 30),
+    "front": (["CCCCC"], 14, 29),
+    "lower": ([
+        "GGGCC..",
+        "gGCCc..",
+    ], 11, 28),
+    "side": ([
+        "YGGGGC.",
+        "gGGCCc.",
+    ], 9, 28),
+    "upper": ([
+        "GYGGG..",
+        "gGGGg..",
+    ], 11, 28),
+    "back": (["gGGGg"], 14, 29),
 }
-CREST = {
-    "front": [".L.L.", "L.L.L", ".L.L.", ".LL.L"],
-    "lower": ["L.L.", ".L.L", "L.L.", "L..L"],
-    "side": ["LL..", "L.L.", "LL..", ".LL."],
-    "upper": ["L.L.", ".L.L", "L.L.", "L..L"],
-    "back": [".L.L.", "L.L.L", ".L.L.", ".LL.L"],
-}
-CREST_AT = {"front": (14, 26), "lower": (15, 26), "side": (15, 26), "upper": (15, 26), "back": (14, 26)}
-TAIL_LEAF = [
-    ["LG", "Gg"],
-    ["L.", "Gg"],
-    ["LG", "Gg"],
-    [".G", "Gg"],
-]
-TAIL_AT = {"front": (20, 27), "lower": (10, 27), "side": (10, 27), "upper": (10, 27), "back": (15, 27)}
-TAIL_STEM = {"front": (20, 29), "lower": (11, 29), "side": (11, 29), "upper": (11, 29), "back": (16, 29)}
+LEAF = swayed([
+    "Y.",
+    "GY",
+    "gG",
+    ".g",
+])
+LEAVES = {"front": (19, 24), "lower": (8, 24), "side": (6, 23), "upper": (9, 25), "back": (14, 26)}
 
-LEGS_Y = 30
-WALK_HEAD = (1, 0, 0, 1, 0, 0)
+LEGS_Y = 29
 FOOT_REACH = (1, 0, -1, -1, 0, 1)
 FOOT_LIFT = (0, 0, 0, 0, 1, 1)
-NEAR = ["C", "E"]
-FAR = ["c", "F"]
+NEAR = ["T", "T"]
+FAR = ["T", "T"]
 LEGS = {
     "front": [(14, 0, NEAR, 0), (18, 3, NEAR, 0)],
     "back": [(14, 0, NEAR, 0), (18, 3, NEAR, 0)],
-    "side": [(13, 3, FAR, 1), (15, 0, FAR, 1), (12, 0, NEAR, 1), (16, 3, NEAR, 1)],
-    "lower": [(16, 3, FAR, 1), (12, 0, NEAR, 1), (17, 3, NEAR, 1)],
-    "upper": [(16, 3, FAR, 1), (12, 0, NEAR, 1), (17, 3, NEAR, 1)],
+    "side": [(11, 3, FAR, 1), (15, 0, FAR, 1), (10, 0, NEAR, 1), (14, 3, NEAR, 1)],
+    "lower": [(12, 3, FAR, 1), (11, 0, NEAR, 1), (15, 3, NEAR, 1)],
+    "upper": [(16, 3, FAR, 1), (12, 0, NEAR, 1), (15, 3, NEAR, 1)],
 }
 TRAITS = [
-    {"frames": [["c"]] * 4, "at": TAIL_STEM, "behind": ("front", "lower", "side")},
-    {"frames": TAIL_LEAF, "at": TAIL_AT, "behind": ("front", "lower", "side"), "walk": (0, 1, 2, 3, 0, 1)},
-    {"frames": {view: [[row] for row in rows] for view, rows in CREST.items()}, "at": CREST_AT, "follows": "head", "walk": (0, 1, 2, 3, 0, 1)},
+    {"frames": LEAF, "at": LEAVES, "behind": ("front", "lower", "side")},
 ]
 
 if __name__ == "__main__":
@@ -98,5 +114,6 @@ if __name__ == "__main__":
         Path(__file__).parent,
         sys.argv[1],
         PALETTE,
-        rig(HEADS, BODIES, LEGS, LEGS_Y, TRAITS, idle_head=(0, 1, 1, 0), idle_body=(0, 0, 0, 0), walk_head=WALK_HEAD, walk_body=(0, 0, 0, 0, 0, 0), foot_reach=FOOT_REACH, foot_lift=FOOT_LIFT),
+        rig(HEADS, BODIES, LEGS, LEGS_Y, TRAITS, idle_head=(0, 0, 1, 0), idle_body=(0, 0, 0, 0), walk_head=(1, 0, 0, 1, 0, 0), walk_body=(0, 0, 0, 0, 0, 0), foot_reach=FOOT_REACH, foot_lift=FOOT_LIFT),
+        outline=OUTLINE,
     )

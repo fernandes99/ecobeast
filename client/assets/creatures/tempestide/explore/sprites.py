@@ -1,6 +1,8 @@
 """Tempestide: as folhas idle.png e walk.png. Uso: python sprites.py <pasta das prévias>
 
-Com 2,00 m, ele tem 29 pixels de altura. É um dragão-marinho enorme em pé, em S: os chifres
+Com 2,00 m, ele tem 32 pixels de altura, o máximo da regra do mapa (creature-scale): o desenho
+de 29 cresce pelo `stretched`, nos olhos, no peito e no tronco, e ocupa a célula inteira.
+Nada sobe acima da primeira linha: o balanço do idle desce. É um dragão-marinho enorme em pé, em S: os chifres
 dourados em galho, a cabeça verde-azulada com o focinho amarelo, o pescoço e a barriga
 creme, as veias douradas, os cristais azuis, os véus de folha dos lados e das costas, que
 balançam, e a cauda enrolada no chão. Sem patas, ele flutua: a parte de cima balança, a
@@ -12,7 +14,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[5]
 sys.path.insert(0, str(ROOT / ".claude/skills/creature-sprites/scripts"))
 
-from spritekit import VIEWS, build, recolored, rig, swayed  # noqa: E402
+from spritekit import VIEWS, build, recolored, rig, stretched, swayed  # noqa: E402
 
 PALETTE = {
     "K": (8, 56, 56),      # contorno
@@ -30,7 +32,7 @@ PALETTE = {
     "Z": (48, 160, 240),   # raio
 }
 
-FRONT = [
+FRONT = stretched([
     "...A.A...A.A...",
     "....AA...AA....",
     ".....AL.LA.....",
@@ -56,8 +58,8 @@ FRONT = [
     "......KgK......",
     "......KgK......",
     "......KgK......",
-]
-BACK = [
+], rows=(5, 12, 17))
+BACK = stretched([
     "...A.A...A.A...",
     "....AA...AA....",
     ".....AL.LA.....",
@@ -83,8 +85,8 @@ BACK = [
     "......KgK......",
     "......KgK......",
     "......KgK......",
-]
-SIDE = [
+], rows=(5, 12, 17))
+SIDE = stretched([
     "........A..A......",
     ".......AA.AA......",
     "........AAA.A.....",
@@ -110,13 +112,13 @@ SIDE = [
     ".......KgGYK......",
     ".......KgGGK......",
     ".......KgGGK......",
-]
+], rows=(5, 12, 17))
 HEADS = {
-    "front": (FRONT, 9, 3),
-    "lower": (SIDE, 6, 3),
-    "side": (SIDE, 7, 3),
-    "upper": (recolored(SIDE, "YyE", "GgG"), 6, 3),
-    "back": (BACK, 9, 3),
+    "front": (FRONT, 9, 0),
+    "lower": (SIDE, 6, 0),
+    "side": (SIDE, 7, 0),
+    "upper": (recolored(SIDE, "YyE", "GgG"), 6, 0),
+    "back": (BACK, 9, 0),
 }
 CURL = ["KgGGK....", "KgKKggK..", "KgKKgGgK.", ".KgggggK."]
 PUSH = [".KgGGK...", "KgKKgK...", "KgKgK....", "KgggK...."]
@@ -145,8 +147,8 @@ VEIL = [
 ]
 LEFT_VEIL = swayed(VEIL, (0, -1, 0, 1))
 RIGHT_VEIL = [[row[::-1] for row in frame] for frame in swayed(VEIL, (0, 1, 0, -1))]
-LEFT_VEIL_AT = {"front": (6, 12), "back": (6, 12), "lower": (5, 13)}
-RIGHT_VEIL_AT = {"front": (19, 12), "back": (19, 12)}
+LEFT_VEIL_AT = {"front": (6, 10), "back": (6, 10), "lower": (5, 11)}
+RIGHT_VEIL_AT = {"front": (19, 10), "back": (19, 10)}
 DORSAL = swayed([
     "....LL.",
     "...LGl.",
@@ -162,7 +164,7 @@ DORSAL = swayed([
     ".LGl...",
     "..Ll...",
 ], (0, -1, 0, 1))
-DORSAL_AT = {"side": (4, 12), "upper": (3, 12), "lower": (3, 12)}
+DORSAL_AT = {"side": (4, 10), "upper": (3, 10), "lower": (3, 10)}
 BOLT = ["..Z", ".Zs", "Z..", ".Z.", "Z.."]
 SMALL = [".s", "Z.", ".Z"]
 NONE = ["."]

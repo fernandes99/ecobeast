@@ -1,6 +1,7 @@
 """Arbornix: as folhas idle.png e walk.png. Uso: python sprites.py <pasta das prévias>
 
-Com 1,80 m, ele tem 26 pixels de altura. É uma fênix de folhas em pé, em duas pernas escuras
+Com 1,80 m, ele tem 30 pixels de altura pela regra do mapa (creature-scale): o desenho de 26
+cresce pelo `stretched`, na cabeça, no peito, nas asas e nas pernas. É uma fênix de folhas em pé, em duas pernas escuras
 de garras, com os chifres dourados, a cabeça verde-azulada de olhos verdes, a garganta e o
 peito creme, o bico claro, as asas de folhas erguidas, de pontas creme e com um losango
 claro que brilha, que batem devagar, e a cauda longa, sempre atrás do corpo.
@@ -11,7 +12,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[5]
 sys.path.insert(0, str(ROOT / ".claude/skills/creature-sprites/scripts"))
 
-from spritekit import build, recolored, rig, swayed  # noqa: E402
+from spritekit import build, recolored, rig, stretched, swayed  # noqa: E402
 
 PALETTE = {
     "K": (0, 40, 40),      # contorno
@@ -37,7 +38,7 @@ def mirror(drawing):
     return [row[::-1] for row in drawing]
 
 
-HEAD_FRONT = [
+HEAD_FRONT = stretched([
     "..KKKKK..",
     ".KGGGGGK.",
     "KGGGGGGGK",
@@ -45,8 +46,8 @@ HEAD_FRONT = [
     "KYYYBYYYK",
     ".KYYBBYK.",
     "..KYYYK..",
-]
-HEAD_LOWER = [
+], rows=(2,))
+HEAD_LOWER = stretched([
     "..KKKKK...",
     ".KGGGGGK..",
     "KGGGGGGGK.",
@@ -54,8 +55,8 @@ HEAD_LOWER = [
     "KYYYYYYBBK",
     ".KYYYYKBBK",
     "..KYYYK.K.",
-]
-HEAD_SIDE = [
+], rows=(2,))
+HEAD_SIDE = stretched([
     "..KKKK....",
     ".KGGGGK...",
     "KGGGGGGK..",
@@ -63,8 +64,8 @@ HEAD_SIDE = [
     "KGYYYYYBBK",
     ".KYYYYKBBK",
     "..KYYYK.K.",
-]
-HEAD_BACK = [
+], rows=(2,))
+HEAD_BACK = stretched([
     "..KKKKK..",
     ".KGGGGGK.",
     "KGGGGGGGK",
@@ -72,15 +73,15 @@ HEAD_BACK = [
     "KgGGGGGgK",
     ".KgGGGgK.",
     "..KgGgK..",
-]
+], rows=(2,))
 HEADS = {
-    "front": (HEAD_FRONT, 12, 9),
-    "lower": (HEAD_LOWER, 13, 9),
-    "side": (HEAD_SIDE, 15, 9),
-    "upper": (recolored(HEAD_LOWER, "EC", "GG"), 13, 9),
-    "back": (HEAD_BACK, 12, 9),
+    "front": (HEAD_FRONT, 12, 5),
+    "lower": (HEAD_LOWER, 13, 5),
+    "side": (HEAD_SIDE, 15, 5),
+    "upper": (recolored(HEAD_LOWER, "EC", "GG"), 13, 5),
+    "back": (HEAD_BACK, 12, 5),
 }
-BODY_FRONT = [
+BODY_FRONT = stretched([
     "...KYYYYYK...",
     "..KYYYYYYYK..",
     ".KGGYYYYYGGK.",
@@ -93,8 +94,8 @@ BODY_FRONT = [
     "..KgyYYYygK..",
     "..KggyyyggK..",
     "...KKgggKK...",
-]
-BODY_LOWER = [
+], rows=(6,))
+BODY_LOWER = stretched([
     "....KYYYYK...",
     "...KGYYYYYK..",
     "..KGGGYYYYGK.",
@@ -107,8 +108,8 @@ BODY_LOWER = [
     "..KglyYYYyK..",
     "..KggyyyygK..",
     "...KKgggKK...",
-]
-BODY_SIDE = [
+], rows=(6,))
+BODY_SIDE = stretched([
     "......KYYYK..",
     ".....KGYYYYK.",
     "....KGGYYYYK.",
@@ -121,8 +122,8 @@ BODY_SIDE = [
     "..KgglLLlyyK.",
     "...KKgggyyK..",
     ".....KKKKK...",
-]
-BODY_UPPER = [
+], rows=(6,))
+BODY_UPPER = stretched([
     "....KGGGGK...",
     "...KGGGGGGK..",
     "..KGGGGGGGGK.",
@@ -135,8 +136,8 @@ BODY_UPPER = [
     "..KgglLlggK..",
     "..KKggggKK...",
     "....KKKK.....",
-]
-BODY_BACK = [
+], rows=(6,))
+BODY_BACK = stretched([
     "...KGGGGGK...",
     "..KGGGGGGGK..",
     ".KGGGGGGGGGK.",
@@ -149,16 +150,16 @@ BODY_BACK = [
     "..KgglLlggK..",
     "..KKggggKK...",
     "....KKKK.....",
-]
+], rows=(6,))
 BODIES = {
-    "front": (BODY_FRONT, 10, 15),
-    "lower": (BODY_LOWER, 10, 15),
-    "side": (BODY_SIDE, 9, 15),
-    "upper": (BODY_UPPER, 10, 15),
-    "back": (BODY_BACK, 10, 15),
+    "front": (BODY_FRONT, 10, 12),
+    "lower": (BODY_LOWER, 10, 12),
+    "side": (BODY_SIDE, 9, 12),
+    "upper": (BODY_UPPER, 10, 12),
+    "back": (BODY_BACK, 10, 12),
 }
-NEAR = ["KFK", "KFK", "KFK", "KFFK", "FKFF"]
-FAR = ["KfK", "KfK", "KfK", "KffK", "fKff"]
+NEAR = stretched(["KFK", "KFK", "KFK", "KFFK", "FKFF"], rows=(1, 2))
+FAR = stretched(["KfK", "KfK", "KfK", "KffK", "fKff"], rows=(1, 2))
 LEGS = {
     "front": [(12, 0, NEAR, 0), (17, 3, NEAR, 0)],
     "back": [(12, 0, NEAR, 0), (17, 3, NEAR, 0)],
@@ -166,7 +167,7 @@ LEGS = {
     "lower": [(15, 3, FAR, 0.5), (12, 0, NEAR, 0.5)],
     "upper": [(15, 3, FAR, 0.5), (12, 0, NEAR, 0.5)],
 }
-WING = [
+WING = stretched([
     "KK.....",
     "KHK....",
     "KHLK...",
@@ -179,8 +180,8 @@ WING = [
     "...KLlK",
     "...KlgK",
     "....KK.",
-]
-WING_SIDE = [
+], rows=(6,))
+WING_SIDE = stretched([
     "KK.......",
     "KHKK.....",
     "KHHLKK...",
@@ -192,7 +193,7 @@ WING_SIDE = [
     "...KHLlGK",
     "....KLlgK",
     ".....KKK.",
-]
+], rows=(5,))
 LEFT_WING = swayed(WING, (0, -1, -2, -1))
 RIGHT_WING = [mirror(frame) for frame in LEFT_WING]
 SIDE_WING = swayed(WING_SIDE, (0, -1, -2, -1))
@@ -254,12 +255,12 @@ TAIL_FRAMES = {
     "upper": swayed(TAIL_UPPER, (0, 0, 1, 0)),
     "back": swayed(TAIL_BACK, (0, 0, 1, 0)),
 }
-TAIL_AT = {"side": (0, 19), "lower": (2, 20), "upper": (3, 20), "back": (10, 21)}
-LEFT_WING_AT = {"front": (3, 9), "back": (3, 9), "lower": (3, 9), "upper": (3, 9)}
-RIGHT_WING_AT = {"front": (19, 9), "back": (19, 9), "lower": (19, 9), "upper": (19, 9)}
-SIDE_WING_AT = {"side": (7, 7)}
-CREST_AT = {"front": (12, 6), "back": (12, 6), "lower": (13, 6), "upper": (13, 6)}
-CREST_SIDE_AT = {"side": (11, 6)}
+TAIL_AT = {"side": (0, 16), "lower": (2, 17), "upper": (3, 17), "back": (10, 18)}
+LEFT_WING_AT = {"front": (3, 6), "back": (3, 6), "lower": (3, 6), "upper": (3, 6)}
+RIGHT_WING_AT = {"front": (19, 6), "back": (19, 6), "lower": (19, 6), "upper": (19, 6)}
+SIDE_WING_AT = {"side": (7, 4)}
+CREST_AT = {"front": (12, 2), "back": (12, 2), "lower": (13, 2), "upper": (13, 2)}
+CREST_SIDE_AT = {"side": (11, 2)}
 TRAITS = [
     {"frames": TAIL_FRAMES, "at": TAIL_AT, "behind": ("lower", "side")},
     {"frames": CREST, "at": CREST_AT, "follows": "head"},
@@ -270,4 +271,4 @@ TRAITS = [
 ]
 
 if __name__ == "__main__":
-    build(Path(__file__).parent, sys.argv[1], PALETTE, rig(HEADS, BODIES, LEGS, 27, TRAITS))
+    build(Path(__file__).parent, sys.argv[1], PALETTE, rig(HEADS, BODIES, LEGS, 25, TRAITS))

@@ -8,7 +8,7 @@
 | `slug` | text | `^[a-z0-9_]+$`, único |
 | `name` | text | pt-BR, o que a caixa de fala mostra |
 | `description` | text | pt-BR, só para o editor |
-| `sprite` | text | `^[a-z0-9_]+$`: a pasta `assets/creatures/<sprite>/explore/`, com `idle.png` e `walk.png` (as folhas do `CreatureSprite`, na escala do Domador: 1,70 m são 25 px) |
+| `sprite` | text | `^[a-z0-9_]+$`: a pasta `assets/creatures/<sprite>/explore/`, com `idle.png` e `walk.png` (as folhas do `CreatureSprite`, com a altura pela regra da [creature-scale](../creature-scale/README.md): a escala do Domador mais 4 px) |
 
 Os primeiros, para testar (o dono troca e cria os dele pelo painel):
 

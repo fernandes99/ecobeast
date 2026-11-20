@@ -2,10 +2,14 @@
 
 Uso: python check_sheets.py <pasta da criatura>
 
-A pasta tem o slug da criatura: é por ele que a altura vem do catálogo.
+A pasta tem o slug da criatura: é por ele que a altura vem do catálogo do servidor, em
+ECOBEAST_API_URL (padrão http://localhost:3100), que precisa estar no ar.
 """
 import json
+import os
 import sys
+import urllib.error
+import urllib.request
 from pathlib import Path
 
 # Com `python -I`, a pasta do script não entra na busca de módulos.
@@ -13,7 +17,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from spritekit import CELL, FRAMES, VIEWS, height_in_pixels, read_png  # noqa: E402
 
-SEED = Path(__file__).resolve().parents[4] / "server/prisma/seed-data/species.json"
+API_URL = os.environ.get("ECOBEAST_API_URL", "http://localhost:3100")
 # A chama de um quadro ou a ponta de uma orelha podem mudar a conta em um pixel.
 HEIGHT_MARGIN = 1
 
@@ -35,9 +39,15 @@ def box(cell):
 
 def expected_height(slug):
     """Em pixels; None se a pasta não for de um Ecobeast do catálogo."""
-    for row in json.loads(SEED.read_text(encoding="utf-8")):
+    try:
+        with urllib.request.urlopen(API_URL + "/v1/catalog", timeout=10) as response:
+            species = json.load(response)["tables"]["species"]
+    except (urllib.error.URLError, OSError):
+        print("FALHA: o servidor precisa estar no ar para ler as alturas do catálogo (%s)" % API_URL)
+        sys.exit(1)
+    for row in species:
         if row["slug"] == slug:
-            return height_in_pixels(row["height_m"])
+            return height_in_pixels(float(row["height_m"]))
     return None
 
 
@@ -72,7 +82,7 @@ def check(path, name, height):
         print("%s %-5s ocupa x %d-%d, y %d-%d" % (name, view_name, boxes[0][0], boxes[0][1], boxes[0][2], boxes[0][3]))
     print("%s: %dx%d, %d cores, %d pixels de altura" % (name, width, sheet_height, len(colors), tallest))
     if height is not None and abs(tallest - height) > HEIGHT_MARGIN:
-        errors.append("%s: %d pixels de altura, e o catálogo pede %d na escala do Domador" % (name, tallest, height))
+        errors.append("%s: %d pixels de altura, e o catálogo pede %d pela regra do mapa (creature-scale)" % (name, tallest, height))
     return errors
 
 
