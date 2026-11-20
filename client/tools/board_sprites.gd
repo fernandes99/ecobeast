@@ -4,8 +4,8 @@ extends SceneTree
 ## mostra 2× maior, sem filtro. A altura sai da altura do catálogo.
 ##
 ## Uso, na raiz do repositório:
-##   godot --headless --path client -s res://tools/board_sprites.gd
-## Depois, `godot --headless --path client --import` cria os `.import`.
+##   godot --headless --path client -s res://tools/board_sprites.gd [-- slug ...]
+## Sem slugs, refaz o de todos os Ecobeasts com `front.png`. Depois, `godot --headless --path client --import` cria os `.import`.
 
 const CREATURES_DIR := "res://assets/creatures"
 ## As alturas vêm do seed do servidor; sem ele, todos ficam com 1 m.
@@ -22,7 +22,10 @@ const PADDING := 2
 func _initialize() -> void:
 	var heights := _heights()
 	var made := 0
+	var only := OS.get_cmdline_user_args()
 	for slug: String in DirAccess.get_directories_at(CREATURES_DIR):
+		if not only.is_empty() and slug not in only:
+			continue
 		var front := "%s/%s/front.png" % [CREATURES_DIR, slug]
 		if not FileAccess.file_exists(front):
 			continue

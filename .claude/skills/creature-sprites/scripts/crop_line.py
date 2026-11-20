@@ -2,7 +2,7 @@
 
 Uso, da raiz: python -I .claude/skills/creature-sprites/scripts/crop_line.py <imagem> <slug> [<slug> ...]
 
-Os slugs vão da esquerda para a direita. Cada forma é a peça maior da coluna dela, e as
+Os slugs vão da esquerda para a direita; um "-" descarta a forma daquela coluna. Cada forma é a peça maior da coluna dela, e as
 peças menores (folhas soltas, raios) vão para a forma de centro mais perto.
 
 Uma imagem sem transparência, com o fundo de uma cor lisa (o verde #00FF00 do prompt da
@@ -16,6 +16,8 @@ from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[4]
 NOISE = 16
+# Pixel art: o alfa sai 0 ou 255; o webp com perda deixa o miolo em 252 e a borda meio apagada.
+SOLID = 128
 MIN_PIECE = 100
 KEY = 100
 EDGE = 170
@@ -88,6 +90,8 @@ def main(source, slugs):
         cx = sum(p[0] for p in loose) / len(loose)
         groups[min(range(count), key=lambda i: abs((box(bodies[i])[0] + box(bodies[i])[2]) / 2 - cx))].extend(loose)
     for slug, pts in zip(slugs, groups):
+        if slug == "-":
+            continue
         keep = Image.new("L", (w, h), 0)
         mask = keep.load()
         for x, y in pts:
@@ -98,6 +102,7 @@ def main(source, slugs):
         art = art.crop((x0, y0, x1 + 1, y1 + 1))
         scale = SIDE / max(art.size)
         art = art.resize((round(art.width * scale), round(art.height * scale)), Image.NEAREST)
+        art.putalpha(art.getchannel("A").point(lambda a: 255 if a >= SOLID else 0))
         out = Image.new("RGBA", (CANVAS, CANVAS))
         out.paste(art, ((CANVAS - art.width) // 2, (CANVAS - art.height) // 2))
         dest = ROOT / "client/assets/creatures" / slug
