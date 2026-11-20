@@ -16,9 +16,17 @@ from PIL import Image, ImageDraw
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
-ICONS = [(224 + 16 * (i % 2), 320 + 16 * (i // 2), 240 + 16 * (i % 2), 334 + 16 * (i // 2)) for i in range(8)]
+# Os 8 ícones são só o corpo da placa (16x10), sem a tampa: entram por cima do corpo da placa
+# lisa do braço, em (16, 16) do braço.
+ICONS = [(224 + 16 * (i % 2), 320 + 16 * (i // 2)) for i in range(8)]
+ICON_SIZE = (16, 10)
+ICON_AT = (16, 16)
 SIGN_ARM = (192, 320, 224, 352)
-SIGN_BOARD = (205, 332, 224, 350)
+CROSS = 6
+# O + da placa do Refúgio: gravado (o do pacote), vermelho (o da cruz do prédio do Refúgio),
+# branco e verde. Só os pixels claros do + mudam de cor.
+CROSS_BOX = (4, 2, 12, 6)
+CROSS_COLORS = [None, (206, 52, 48, 255), (244, 236, 220, 255), (92, 186, 84, 255)]
 STATUE = (68, 423, 92, 456)
 
 # slug, nome, variantes: cada uma é um retângulo (x0, y0, x1, y1) da folha ou uma função; o
@@ -41,6 +49,8 @@ OBJECTS = [
     ("village_wheat", "Trigo", [((178, 477, 222, 495), "all"), ((161, 465, 176, 512), None), ((244, 498, 251, 510), None)]),
     ("village_garden_bed", "Canteiro de terra", [((178, 497, 222, 511), None), ((224, 481, 240, 495), None), ((224, 497, 240, 511), None)]),
     ("village_flower", "Flor da vila", [((212, 452, 219, 459), None), ((228, 449, 235, 459), None), ((244, 449, 251, 459), None), ((228, 465, 235, 475), None), ((244, 465, 251, 475), None)]),
+    ("village_refuge_sign", "Placa do Refúgio", [(("icon", CROSS, color), None) for color in CROSS_COLORS]),
+    ("village_store_sign", "Placa da Loja", [(SIGN_ARM, None)]),
 ]
 FIRST_ID = 112
 
@@ -85,13 +95,18 @@ def log_pile(sheet):
     return out
 
 
-def shop_sign(sheet, index):
+def shop_sign(sheet, index, paint=None):
     arm = sheet.crop(SIGN_ARM)
-    board = trim(sheet.crop(SIGN_BOARD))
-    icon = trim(sheet.crop(ICONS[index]))
-    left = SIGN_BOARD[0] - SIGN_ARM[0] + (board.width - icon.width) // 2
-    bottom = SIGN_BOARD[1] - SIGN_ARM[1] + board.height
-    arm.alpha_composite(icon, (left, bottom - icon.height))
+    x, y = ICONS[index]
+    icon = sheet.crop((x, y, x + ICON_SIZE[0], y + ICON_SIZE[1]))
+    if paint:
+        px = icon.load()
+        x0, y0, x1, y1 = CROSS_BOX
+        for py in range(y0, y1):
+            for px_x in range(x0, x1):
+                if sum(px[px_x, py][:3]) // 3 // 26 == 4:
+                    px[px_x, py] = paint
+    arm.alpha_composite(icon, ICON_AT)
     return arm
 
 
@@ -101,7 +116,7 @@ def art_of(sheet, source):
     if source == "log_pile":
         return trim(log_pile(sheet))
     if isinstance(source, tuple) and source[0] == "icon":
-        return trim(shop_sign(sheet, source[1]))
+        return trim(shop_sign(sheet, source[1], source[2] if len(source) > 2 else None))
     return trim(sheet.crop(source))
 
 

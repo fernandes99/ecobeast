@@ -20,7 +20,7 @@ Na escolha das abordagens, o dono escolheu as casas montadas por tamanho com 8 c
 1. Todas as casas que os tiles permitem montar, em tamanhos diferentes (pequena, média, grande, comprida, sobrado), cada uma como um tipo de peça solta, com as 8 cores como variantes, espelháveis, com bloqueio no pé, janelas acesas à noite e fumaça na chaminé.
 2. Os objetos do pacote viram peças soltas, agrupados por parecença, cada forma como uma variante.
 3. A cerca de madeira e o muro de pedra do pacote viram tipos de parede, desenhados pela ferramenta Cerca, bonitos em qualquer ângulo.
-4. A arte sai de scripts que recortam e montam os tiles do pacote, sem desenhar pixel novo (fora a troca de cor das variantes).
+4. A arte sai de scripts que recortam e montam os tiles do pacote, sem desenhar pixel novo (fora a troca de cor das variantes e do + da Placa do Refúgio).
 
 ## Anti-objetivos
 
@@ -38,6 +38,7 @@ Do dono, em 2026-11-20:
 | As cercas do pacote entram como tipos de parede | Pedido do dono |
 | Pegar o máximo de objetos do pacote | Pedido do dono |
 | Os 10 formatos da prévia entram, da Casinha à Casa de três frontões (peças 102 a 111) | Escolha do dono pela prévia, em 2026-11-20 |
+| A Placa do Refúgio tem as 4 cores do + da prévia como variantes, e nada de antes muda de nome nem sai | Pedido do dono: "Coloque todas as opções, não exclua nada, apenas adicione" ([04](04-service-signs.md)) |
 
 Escolhas de Claude (corrigíveis; ao mudar uma, atualize aqui e na fase):
 
@@ -80,3 +81,4 @@ Escolhas de Claude (corrigíveis; ao mudar uma, atualize aqui e na fase):
 | 1 | [01-village-houses](01-village-houses.md) | A prévia dos formatos e as 10 casas, em 8 cores, com luzes, fumaça e bloqueio | concluída (falta o dono conferir) |
 | 2 | [02-village-objects](02-village-objects.md) | Os 17 objetos do pacote como peças soltas, com bloqueio e a lanterna acesa | concluída (falta o dono conferir) |
 | 3 | [03-village-fences](03-village-fences.md) | A cerca de madeira e o muro de pedra como paredes 5 e 6 | concluída (falta o dono conferir) |
+| 4 | [04-service-signs](04-service-signs.md) | A Placa do Refúgio (o + em 4 cores) e a Placa da Loja, peças 129 e 130 | concluída (falta o dono conferir) |

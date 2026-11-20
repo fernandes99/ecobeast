@@ -30,7 +30,7 @@ O dono quer o máximo de objetos do tileset Village ([README](README.md#contexto
   | 119 | `village_chair` | Cadeira | 7: de frente, de frente com encosto, de costas, de costas com encosto, de lado (esquerda), de lado (direita), banquinho | não |
   | 120 | `village_signpost` | Placa de direção | 4: as 4 setas do pacote | não |
   | 121 | `village_board` | Placa de madeira | 6: as 4 placas em estaca e as 2 setas pequenas | não |
-  | 122 | `village_shop_sign` | Placa de loja | 10: o braço com a placa lisa, com cada um dos 8 ícones e o braço vazio | não |
+  | 122 | `village_shop_sign` | Placa de loja | 10: o braço com a placa lisa, com cada um dos 8 ícones e o braço vazio (o ícone por cima do corpo da placa, [04](04-service-signs.md) RF-03) | não |
   | 123 | `village_lantern` | Lanterna pendurada | 2: acesa, apagada | não |
   | 124 | `village_ladder` | Escada de mão | 3: curta, média, longa | não |
   | 125 | `village_firewood` | Lenha | 4: tronco em pé, feixe, pilha grande, tronco deitado | a pilha |
