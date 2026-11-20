@@ -83,6 +83,8 @@ A luta nova substitui a de hoje em Explorar zona. A luta atual deixa de ser usad
 | 26 | [26-feather-wind-skills](26-feather-wind-skills.md) | Ícone, efeito e som da Pena Afiada (com projétil), do Vento a Favor, da Rajada de Penas, da Nuvem de Penas, do Vendaval e do Rasante | concluída (falta o dono ver e ouvir no jogo) |
 | 27 | [27-flora-volt-skills](27-flora-volt-skills.md) | Ícone, efeito e som da Bicada de Folha, da Garra de Espinho, da Asa Semeadora, da Faísca de Alga (com projétil), da Corrente Viva e da Maré Elétrica | concluída (falta o dono ver e ouvir no jogo) |
 | 28 | [28-skill-projectiles](28-skill-projectiles.md) | O projétil das Técnicas que lançam algo: Jato de Maré, Folha Navalha, Lufada Cortante, Floco Cortante, Lança de Cristal, Arremesso de Torrão e Rajada de Penas | concluída (falta o dono ver no jogo) |
+| 29 | [29-earth-volt-water-flora-skills](29-earth-volt-water-flora-skills.md) | Ícone, efeito e som do Desabamento, do Abalo Profundo, da Tempestade de Algas, do Esguicho (com projétil), da Poça d'Água e do Laço de Raízes | concluída (falta o dono ver e ouvir no jogo) |
+| 30 | [30-flora-earth-ice-toxin-skills](30-flora-earth-ice-toxin-skills.md) | Ícone, efeito e som do Brotar, do Semear Jardim, da Lama Grudenta, da Areia Movediça, do Chão de Geada e do Espinho Venenoso | concluída (falta o dono ver e ouvir no jogo) |
 
 O desenho compartilhado está no [architecture.md](architecture.md).
 

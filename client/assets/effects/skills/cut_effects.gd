@@ -85,6 +85,18 @@ const EFFECTS := {
 	"faisca_de_alga": ["volt", "7/324"],
 	"corrente_viva": ["volt", "4/195"],
 	"mare_eletrica": ["volt", "13/614"],
+	"desabamento": ["earth", "13/634"],
+	"abalo_profundo": ["earth", "2/70"],
+	"tempestade_de_algas": ["volt", "4/196"],
+	"esguicho": ["water", "11/517"],
+	"poca_d_agua": ["water", "10/466"],
+	"laco_de_raizes": ["flora", "3/134"],
+	"brotar": ["flora", "4/185"],
+	"semear_jardim": ["flora", "12/569"],
+	"lama_grudenta": ["earth", "12/577"],
+	"areia_movedica": ["earth", "6/286"],
+	"chao_de_geada": ["ice", "8/398"],
+	"espinho_venenoso": ["toxin", "8/378"],
 }
 
 const PROJECTILES := {
@@ -98,6 +110,7 @@ const PROJECTILES := {
 	"rajada_de_penas": ["wind", "12/579"],
 	"lanca_de_cristal": ["ice", "12/579"],
 	"arremesso_de_torrao": ["earth", "12/578"],
+	"esguicho": ["water", "12/579"],
 }
 
 
