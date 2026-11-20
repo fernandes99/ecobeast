@@ -97,6 +97,7 @@ O Ecobeast é um jogo mobile (Android/iOS, retrato): o cliente em **Godot 4.7 co
 | [prop-cleanup](prop-cleanup/) | Peças que o dono não quer mais saem do catálogo, das ilhas e da arte: o poste, a placa, o prédio da Loja, as casas da cidade e o Observatório |
 | [status-descriptions](status-descriptions/) | Cada estado da luta ganha a descrição do que faz, com os números das regras, vista no F1 |
 | [item-icons](item-icons/) | O padrão dos ícones dos itens (pixel art de 32×32, mostrada em múltiplos inteiros) os Tônicos e o Bálsamo Puro com a arte de um pacote da craftpix.net e as Esferas em pixel art |
+| [lume-line](lume-line/) | A coruja da noite, a primeira linha de Sombra pura: Lume, Owlume e Noclume (Sombra/Psíquico), que só nascem à Noite, com 4 Técnicas de Sombra especiais |
 | [creature-scale](creature-scale/) | Os Ecobeasts maiores em Explorar: a altura de hoje mais 4 pixels, de 6 a 32, com a pixel art no acabamento do pacote Fantasy Dreamland Reborn |
 
 As próximas iniciativas estão no [roadmap.md](roadmap.md).
