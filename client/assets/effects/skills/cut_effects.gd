@@ -97,6 +97,12 @@ const EFFECTS := {
 	"areia_movedica": ["earth", "6/286"],
 	"chao_de_geada": ["ice", "8/398"],
 	"espinho_venenoso": ["toxin", "8/378"],
+	"poca_toxica": ["toxin", "10/466"],
+	"pena_sombria": ["shadow", "5/222"],
+	"olhar_da_lua": ["shadow", "10/475"],
+	"voo_silencioso": ["shadow", "12/567"],
+	"eclipse_lunar": ["shadow", "2/79"],
+	"bote": ["beast", "11/509"],
 }
 
 const PROJECTILES := {
@@ -111,6 +117,7 @@ const PROJECTILES := {
 	"lanca_de_cristal": ["ice", "12/579"],
 	"arremesso_de_torrao": ["earth", "12/578"],
 	"esguicho": ["water", "12/579"],
+	"pena_sombria": ["shadow", "12/579"],
 }
 
 

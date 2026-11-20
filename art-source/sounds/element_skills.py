@@ -1,4 +1,4 @@
-"""Gera o som das Técnicas da board-battle/18 e /20 a /22 e /25 a /27 e /29 e /30 (board-battle/19 a /22, /25 a /27, /29 e /30), por síntese:
+"""Gera o som das Técnicas da board-battle/18 e /20 a /22 e /25 a /27 e /29 a /31 (board-battle/19 a /22, /25 a /27 e /29 a /31), por síntese:
 ruído em filtros, tons com a altura mudando e saturação leve. Cada som dura mais
 ou menos o efeito da Técnica, porque os dois começam juntos; o impacto fica com o
 som de dano. Tudo sai daqui: sem gravação de terceiros.
@@ -1115,6 +1115,95 @@ def espinho_venenoso(rng):
     return mix, 1.5
 
 
+def poca_toxica(rng):
+    """Poça Tóxica: o veneno grosso derramando e se espalhando no chão, e bolhas pesadas
+    estourando com um chiado ácido."""
+    length = 0.75
+    pour = band(noise(rng, 0.42), [(0.0, 600.0), (0.42, 1100.0)], 0.9)
+    mix = shape(flutter(rng, pour, 18.0, 0.6), [(0.0, 0.0), (0.05, 1.0), (0.3, 0.6), (0.42, 0.0)])
+    mix += silence(length - 0.42)
+    add(mix, decay(low(noise(rng, 0.2), 450.0), 0.18, 0.003), 0.05, 0.8)
+    fizz = shape(band(noise(rng, 0.45), 4200.0, 1.4), [(0.0, 0.0), (0.06, 1.0), (0.45, 0.0)])
+    add(mix, flutter(rng, fizz, 35.0, 0.6), 0.2, 0.35)
+    for _ in range(7):
+        add(mix, bubble(rng.uniform(320.0, 800.0), rng.uniform(0.05, 0.09)), rng.uniform(0.2, 0.66), rng.uniform(0.45, 0.85))
+    return mix, 1.4
+
+
+def pena_sombria(rng):
+    """Pena Sombria: a pena escura cortando o ar num "fiu" mais grave, um zumbido sombrio
+    que vai junto e o tique quando ela crava."""
+    length = 0.5
+    mix = silence(length)
+    dart = band(noise(rng, 0.26), [(0.0, 1800.0), (0.26, 4200.0)], 2.5)
+    add(mix, shape(dart, [(0.0, 0.0), (0.03, 1.0), (0.18, 0.5), (0.26, 0.0)]), 0.0, 1.3)
+    dark = [a + b for a, b in zip(tone(0.3, 140.0, (1.0, 0.4)), tone(0.3, 147.0, (1.0, 0.4)))]
+    add(mix, shape(dark, [(0.0, 0.0), (0.05, 0.6), (0.3, 0.0)]), 0.0, 0.35)
+    add(mix, click(rng, 3200.0, 0.06), 0.26, 0.9)
+    add(mix, decay(band(noise(rng, 0.15), 900.0, 1.2), 0.1, 0.002), 0.26, 0.4)
+    return mix, 1.6
+
+
+def olhar_da_lua(rng):
+    """Olhar da Lua: um brilho frio que se acende em notas de vidro, um tom trêmulo e
+    estranho que prende e um anel que se abre e some."""
+    length = 0.7
+    mix = silence(length)
+    for index, freq in enumerate((1568.0, 2093.0, 2637.0)):
+        add(mix, ping(freq, 0.3, ((1.0, 1.0), (2.76, 0.25))), index * 0.05, 0.3)
+    stare = tone(0.45, [(0.0, 660.0), (0.45, 620.0)], (1.0, 0.3, 0.15), (7.0, 0.02))
+    add(mix, shape(stare, [(0.0, 0.0), (0.06, 0.7), (0.35, 0.6), (0.45, 0.0)]), 0.08, 0.4)
+    ring = band(noise(rng, 0.4), [(0.0, 5000.0), (0.4, 2200.0)], 3.0)
+    add(mix, shape(ring, [(0.0, 0.0), (0.05, 1.0), (0.4, 0.0)]), 0.25, 0.35)
+    add(mix, shape(tone(0.5, 98.0, (1.0, 0.4)), [(0.0, 0.0), (0.1, 0.5), (0.5, 0.0)]), 0.15, 0.35)
+    return mix, 1.4
+
+
+def voo_silencioso(rng):
+    """Voo Silencioso: duas batidas de asa abafadas, quase sem som, e notas escuras e
+    baixas que sobem, a coruja se preparando."""
+    length = 0.7
+    mix = silence(length)
+    for at in (0.0, 0.22):
+        wing = low(noise(rng, 0.2), [(0.0, 300.0), (0.1, 900.0), (0.2, 300.0)])
+        add(mix, shape(wing, [(0.0, 0.0), (0.08, 1.0), (0.2, 0.0)]), at, 0.9)
+    for index, freq in enumerate((392.0, 466.2, 587.3)):
+        add(mix, low(ping(freq, 0.22), 1600.0), 0.3 + index * 0.1, 0.35)
+    add(mix, shape(band(noise(rng, 0.5), 2500.0, 1.0), [(0.0, 0.0), (0.2, 1.0), (0.5, 0.0)]), 0.15, 0.08)
+    return mix, 1.6
+
+
+def eclipse_lunar(rng):
+    """Eclipse Lunar: a luz sendo puxada para dentro, um zumbido grave que cresce e
+    desafina, e a escuridão estourando num baque fundo com um anel que some."""
+    length = 0.8
+    mix = silence(length)
+    pull = band(noise(rng, 0.3), [(0.0, 3000.0), (0.3, 400.0)], 1.5)
+    add(mix, shape(pull, [(0.0, 0.0), (0.25, 1.0), (0.3, 0.0)]), 0.0, 0.7)
+    drone = [a + b for a, b in zip(tone(0.6, [(0.0, 70.0), (0.6, 60.0)], (1.0, 0.5, 0.3)), tone(0.6, [(0.0, 74.0), (0.6, 62.0)], (1.0, 0.5, 0.3)))]
+    add(mix, shape(low(drone, 800.0), [(0.0, 0.0), (0.28, 1.0), (0.6, 0.0)]), 0.05, 0.7)
+    add(mix, thud(110.0, 35.0, 0.3), 0.3, 1.3)
+    add(mix, decay(low(noise(rng, 0.3), 500.0), 0.25, 0.002), 0.3, 0.8)
+    ring = band(noise(rng, 0.4), [(0.0, 2400.0), (0.4, 900.0)], 2.0)
+    add(mix, shape(ring, [(0.0, 0.0), (0.04, 1.0), (0.4, 0.0)]), 0.32, 0.3)
+    return mix, 1.0
+
+
+def bote(rng):
+    """Bote: um chiado curto de cobra, o avanço num sopro rápido e as presas fechando num
+    estalo seco com um baque."""
+    length = 0.45
+    mix = silence(length)
+    hiss = shape(high(noise(rng, 0.16), 4000.0), [(0.0, 0.0), (0.03, 1.0), (0.12, 0.8), (0.16, 0.0)])
+    add(mix, hiss, 0.0, 0.5)
+    lunge = band(noise(rng, 0.1), [(0.0, 800.0), (0.1, 2600.0)], 1.5)
+    add(mix, shape(lunge, [(0.0, 0.0), (0.06, 1.0), (0.1, 0.0)]), 0.12, 1.0)
+    add(mix, click(rng, 3600.0, 0.02, 1.5), 0.21, 1.8)
+    add(mix, click(rng, 5000.0, 0.015, 1.5), 0.225, 1.1)
+    add(mix, thud(180.0, 60.0, 0.14), 0.21, 1.2)
+    return mix, 2.0
+
+
 SOUNDS = {
     "mordida_brasa": mordida_brasa,
     "fumaca_densa": fumaca_densa,
@@ -1186,6 +1275,12 @@ SOUNDS = {
     "areia_movedica": areia_movedica,
     "chao_de_geada": chao_de_geada,
     "espinho_venenoso": espinho_venenoso,
+    "poca_toxica": poca_toxica,
+    "pena_sombria": pena_sombria,
+    "olhar_da_lua": olhar_da_lua,
+    "voo_silencioso": voo_silencioso,
+    "eclipse_lunar": eclipse_lunar,
+    "bote": bote,
 }
 
 
