@@ -36,8 +36,12 @@ Tirado dos `front.png` atuais. Antes de escrever, abra dois ou três deles com a
 - Contorno de pixel escuro, puxado para a cor de cada parte, sem preto puro.
 - Sombreamento em blocos de cor, com poucos tons por material e um dither leve, e textura fina: pelo, rachaduras, escamas.
 - Brilhos, faíscas e pó são pixels sólidos e separados, sem halo nem brilho difuso, que não se recortam do fundo.
-- Cores vivas e saturadas, com aparência simpática. As formas finais podem ser mais imponentes.
+- Cores vivas e saturadas. A aparência segue o temperamento da criatura, e nem toda criatura é simpática: veja "Temperamento".
 - Corpo inteiro, sem cortes.
+
+## Temperamento
+
+Cada linha tem um temperamento próprio, e nem todas são simpáticas ou fofas: há criaturas tímidas, raivosas, desconfiadas, preguiçosas, arrogantes, nervosas e assim por diante. O dono pediu, em 2026-11-20, "mais singularidade de cada um deles, nem todos serão simpaticos". Escolha o temperamento antes de escrever e mostre-o no corpo: no olhar, na boca, na postura e no acabamento das escamas, do pelo ou das penas. Não use "cute", "appealing" nem "friendly" por padrão. O temperamento pode mudar na evolução, por exemplo de um filhote arisco para um adulto frio e calculista.
 
 ## Como montar
 
@@ -52,7 +56,7 @@ Uma linha em pt-BR com o que você completou. Depois, o prompt num bloco de cód
 ```
 One image, [512 × número de formas]×512 pixels, on a flat solid pure green background (#00FF00) that fills the whole image: one single color, no gradient, no texture, no vignette, no scenery, and no green glow or green pixels on the creatures' edges, so the background can be removed with a color key. It shows the [N] forms of one creature's evolution line from left to right, in order. Each form sits centered in its own 512×512 square, fills most of it and does not touch the others.
 
-Style: detailed pixel art creature sprite for a mobile monster-taming game, like a high-resolution game sprite: clearly visible square pixels (each art pixel about 4 to 5 image pixels), crisp hard edges and no anti-aliasing against the background. A 1-pixel dark outline tinted with each area's own color, never pure black. Shading in flat blocks of color with a few tones per material and light dithering, with fine texture ([texturas da linha]). Bright, saturated colors and an appealing look. Glows, sparks and dust are solid separate pixels, with no soft halo or blur. Full body, nothing cropped. No text, no labels, no frame, no ground, no shadow under the creature.
+Style: detailed pixel art creature sprite for a mobile monster-taming game, like a high-resolution game sprite: clearly visible square pixels (each art pixel about 4 to 5 image pixels), crisp hard edges and no anti-aliasing against the background. A 1-pixel dark outline tinted with each area's own color, never pure black. Shading in flat blocks of color with a few tones per material and light dithering, with fine texture ([texturas da linha]). Bright, saturated colors. Its expression and posture show its temperament: [temperamento da linha]. Glows, sparks and dust are solid separate pixels, with no soft halo or blur. Full body, nothing cropped. No text, no labels, no frame, no ground, no shadow under the creature.
 
 All forms share [o fio que liga as formas], so they read as one creature growing up.
 
