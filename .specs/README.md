@@ -89,6 +89,7 @@ O Ecobeast é um jogo mobile (Android/iOS, retrato): o cliente em **Godot 4.7 co
 | [seedlet-line](seedlet-line/) | O inicial de Flora com a arte nova e outros nomes: Seedlet, Grovequill e Arbornix, nos ids do Browt, do Eagrow e do Sowingle |
 | [tidebud-line](tidebud-line/) | O cavalo-marinho de folhas e raios, a primeira linha de Volt: Tidebud, Kelpcoil e Tempestide, com as primeiras Técnicas de Volt e a marca Maré Elétrica |
 | [portal-altar](portal-altar/) | O altar-portal do Veilmoth, a mariposa arcana que teleporta, como peça solta com e sem a mariposa |
+| [field-effects](field-effects/) | Os estados Preso (no tabuleiro), Encharcado e Brotando, a marca que cura e mais seis marcas, com dez Técnicas novas |
 | [biome-zones](biome-zones/) | As zonas dos biomas (Bosque, Arbustal, Clareira e outras), com plantas próprias e, no mapa sorteado, quem nasce em cada uma; nas ilhas, pintadas pela ferramenta Zona do F2 |
 
 As próximas iniciativas estão no [roadmap.md](roadmap.md).

@@ -29,9 +29,11 @@ import {
 } from '../battle/field.js';
 import { noStages } from '../battle/stages.js';
 import {
+  applySproutHeal,
   applyStatusDamage,
   canAct,
   clearVolatile,
+  countVolatiles,
   faintIfDown,
   rollSleepTurns,
 } from '../battle/status.js';
@@ -81,6 +83,7 @@ export const NOT_YOUR_VEZ = 'Não é a vez desse Ecobeast.';
 export const CANNOT_REACH = 'Não dá para chegar lá.';
 export const FLEE_NO_MOVE = 'Fugir não combina com andar.';
 export const DAZED_NO_MOVE = 'Atordoado: não dá para andar nesta vez.';
+export const TRAPPED_NO_MOVE = 'Preso: não dá para andar nesta vez.';
 export const ENTRY_NOT_FREE = 'Esse hexágono não está livre para entrar.';
 const CHOOSE_NEXT = 'Escolha o próximo Ecobeast.';
 const NOBODY_WAITING = 'Ninguém está esperando para entrar.';
@@ -203,6 +206,7 @@ function refusalFor(
     if (input.action.type === 'flee') return FLEE_NO_MOVE;
     if (!sameCell(input.move, from)) {
       if (combatantAt(state, spot).isDazed) return DAZED_NO_MOVE;
+      if (isTrapped(combatantAt(state, spot))) return TRAPPED_NO_MOVE;
       if (!reachable(state, from, MOVE_RANGE).has(hexKey(input.move))) {
         return CANNOT_REACH;
       }
@@ -241,13 +245,13 @@ function actionRefusal(
       return (
         switchRefusal(state, action.team_index) ??
         inFieldRefusal(state, action.team_index) ??
-        (creature.isTrapped ? 'Não dá para trocar agora.' : null)
+        (isTrapped(creature) ? 'Não dá para trocar agora.' : null)
       );
     case 'capture':
       return captureRefusal(state, action, catalog);
     case 'flee': {
-      const trapped = standingOnBoard(state, 'player').some(
-        (other) => combatantAt(state, other).isTrapped,
+      const trapped = standingOnBoard(state, 'player').some((other) =>
+        isTrapped(combatantAt(state, other)),
       );
       return state.canFlee && !trapped ? null : 'Não dá para fugir agora.';
     }
@@ -389,7 +393,8 @@ function playVez(context: BoardContext, spot: Spot, vez: BoardVez): void {
   }
 
   const from = cellOf(state, spot)!;
-  const canWalk = !combatantAt(state, spot).isDazed;
+  const walker = combatantAt(state, spot);
+  const canWalk = !walker.isDazed && !isTrapped(walker);
   if (vez.move && canWalk && !sameCell(vez.move, from)) {
     const path = reachable(state, from, MOVE_RANGE).get(hexKey(vez.move))!;
     state.cells[spot.side][spot.position] = vez.move;
@@ -534,6 +539,10 @@ function tryCapture(
   });
 }
 
+function isTrapped(creature: Combatant): boolean {
+  return (creature.trappedTurns ?? 0) > 0;
+}
+
 /** Antes das marcas, para quem termina a vez no Redemoinho ficar atordoado de novo. */
 function wakeFromDaze(context: BoardContext, actor: Spot): void {
   const creature = combatantAt(context.state, actor);
@@ -547,8 +556,10 @@ function endVez(context: BoardContext, actor: Spot): void {
   state.queue.shift();
   if (standingAt(state, actor)) {
     applyStatusDamage(context, actor);
+    applySproutHeal(context, actor);
     combatantAt(state, actor).isFeared = false;
     wakeFromDaze(context, actor);
+    countVolatiles(context, actor);
   }
   applyMarks(context, actor);
   ageMarks(context);

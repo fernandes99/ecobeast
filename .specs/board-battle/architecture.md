@@ -110,10 +110,11 @@ A tabela `ground_effects` diz o que cada marca faz, depois de cada vez da fila, 
 | Coluna | O que faz |
 | --- | --- |
 | `damage_percent` | Dano de uma porcentagem do HP máximo, no mínimo 1. Evento `ground_damage` |
+| `heal_percent` | Cura de uma porcentagem do HP máximo, no mínimo 1, sem passar do máximo, depois do dano e só em quem ainda está de pé. Evento `ground_heal`; com o HP cheio, nada. Desde a [field-effects/01](../field-effects/01-field-rules.md) |
 | `status_condition_id` | Tenta aplicar o status, com as imunidades e as regras de hoje. Quem já tem esse status ou é imune a ele é pulado, sem evento. Evento `status_applied` |
 | `ground_effect_stats` (tabela filha) | Muda os estágios de quem **acabou de jogar** e terminou a vez na marca, uma linha por atributo, com o limite de ±6. Evento `stat_changed`. Desde a [puffcoo-line/01](../puffcoo-line/01-field-rules.md) |
 
-A marca age em qualquer Ecobeast, dos dois lados, inclusive em quem a criou. Andar por cima não aplica nada. O dano e o status agem em todos que estão na marca depois de cada vez; os atributos, só em quem acabou de jogar. O Atordoado de quem jogou acaba no fim da vez dele, antes de as marcas agirem. A primeira marca é `fire`, "Chão em chamas", com `damage_percent` 6 (_a revisar_, cerca de 1/16, como a queimadura).
+A marca age em qualquer Ecobeast, dos dois lados, inclusive em quem a criou. Andar por cima não aplica nada. O dano e o status agem em todos que estão na marca depois de cada vez; os atributos, só em quem acabou de jogar. O Atordoado de quem jogou acaba no fim da vez dele, antes de as marcas agirem, e o Preso, o Encharcado e o Brotando contam uma vez dele no mesmo ponto, depois da cura do Brotando ([field-effects/01](../field-effects/01-field-rules.md)). A primeira marca é `fire`, "Chão em chamas", com `damage_percent` 6 (_a revisar_, cerca de 1/16, como a queimadura).
 
 ## Entrada
 
@@ -145,6 +146,8 @@ Os eventos de hoje continuam, com `side` e `position`. Os novos e os que mudam:
 | `mark_placed` | `cell`, `ground_effect_id`, `remaining` |
 | `mark_ended` | `cell` |
 | `ground_damage` | `side`, `position`, `amount`, `hp`, `ground_effect_id` |
+| `ground_heal` | `side`, `position`, `amount`, `hp`, `ground_effect_id`: a cura de uma marca ([field-effects/01](../field-effects/01-field-rules.md)) |
+| `status_heal` | `side`, `position`, `status`, `amount`, `hp`: a cura do Brotando no fim da vez ([field-effects/01](../field-effects/01-field-rules.md)) |
 | `multi_hit` | `side`, `position` (do alvo), `hits`: depois dos `damage` de uma Técnica de vários golpes ([puffcoo-line/01](../puffcoo-line/01-field-rules.md)) |
 | `creature_entered` | os de hoje e `cell` |
 | `capture_attempted` | os de hoje, com `target` sendo a posição do selvagem |

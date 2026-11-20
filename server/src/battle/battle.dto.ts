@@ -114,6 +114,24 @@ export class EnemyCreatureDto {
   })
   dazed: boolean;
 
+  @ApiProperty({
+    description: 'Preso: não anda nem troca, por 2 vezes dele.',
+    example: false,
+  })
+  trapped: boolean;
+
+  @ApiProperty({
+    description: 'Encharcado: recebe 1,5× do dano de Volt e 0,5× do de Fogo.',
+    example: false,
+  })
+  soaked: boolean;
+
+  @ApiProperty({
+    description: 'Brotando: recupera 1/16 do HP no fim de cada vez dele.',
+    example: false,
+  })
+  sprouting: boolean;
+
   @ApiProperty(STAGES)
   stages: Record<StageSlug, number>;
 }

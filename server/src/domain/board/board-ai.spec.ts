@@ -185,3 +185,47 @@ describe('o selvagem atordoado e o dano fixo (puffcoo-line/01)', () => {
     });
   });
 });
+
+describe('o selvagem preso e o Jardim (field-effects/01)', () => {
+  const GARDEN = 10;
+  const withGarden = boardCatalog();
+  withGarden.groundEffects.set(GARDEN, {
+    damagePercent: null,
+    healPercent: 6,
+    statusSlug: null,
+    stats: [],
+  });
+  const scratching = { skills: [{ skillId: 1, currentPp: 35 }] };
+
+  it('preso, não anda: espera de onde está', () => {
+    const state = makeBoardState(
+      [fighter(10)],
+      [wild(30, { trappedTurns: 2, ...scratching })],
+      { cells: { enemy: [at(1, 2)] }, queue: [ENEMY] },
+    );
+    const vez = chooseEnemyVez(state, catalog, always(0.5), ENEMY);
+    expect(vez.move).toBeUndefined();
+  });
+
+  it('ferido, anda até o Jardim ao alcance', () => {
+    const state = makeBoardState(
+      [fighter(10)],
+      [wild(30, { currentHp: 60, ...scratching })],
+      { cells: { enemy: [at(1, 1)] }, queue: [ENEMY] },
+      { marks: [{ cell: at(2, 1), groundEffectId: GARDEN, remaining: 6 }] },
+    );
+    const vez = chooseEnemyVez(state, withGarden, always(0.5), ENEMY);
+    expect(vez.move).toEqual(at(2, 1));
+  });
+
+  it('com o HP cheio, não vai ao Jardim', () => {
+    const state = makeBoardState(
+      [fighter(10)],
+      [wild(30, scratching)],
+      { cells: { enemy: [at(1, 1)] }, queue: [ENEMY] },
+      { marks: [{ cell: at(2, 1), groundEffectId: GARDEN, remaining: 6 }] },
+    );
+    const vez = chooseEnemyVez(state, withGarden, always(0.5), ENEMY);
+    expect(vez.move).not.toEqual(at(2, 1));
+  });
+});

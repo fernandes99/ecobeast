@@ -184,3 +184,40 @@ describe('calculateDamage', () => {
     expect(attacker).toEqual(copy);
   });
 });
+
+describe('Encharcado (field-effects/01)', () => {
+  const VOLT = 4;
+  const volt = { elementId: VOLT, elementSlug: 'volt', power: 80 };
+  const fire = { elementId: FIRE, elementSlug: 'fire', power: 80 };
+  const big = {
+    stats: { hp: 200, atk: 100, def: 50, sp_atk: 100, sp_def: 50, spd: 50 },
+    level: 50,
+    elementIds: [WATER],
+  };
+
+  it('o Volt tira 1,5x num encharcado', () => {
+    const dry = damage({ skill: volt, attacker: big, defender: big });
+    const wet = damage({
+      skill: volt,
+      attacker: big,
+      defender: { ...big, soakedTurns: 2 },
+    });
+    expect(Math.abs(wet - dry * 1.5)).toBeLessThan(2);
+  });
+
+  it('o Fogo tira metade num encharcado', () => {
+    const dry = damage({ skill: fire, attacker: big, defender: big });
+    const wet = damage({
+      skill: fire,
+      attacker: big,
+      defender: { ...big, soakedTurns: 2 },
+    });
+    expect(Math.abs(wet - dry * 0.5)).toBeLessThan(1);
+  });
+
+  it('as outras Técnicas não mudam', () => {
+    expect(
+      damage({ attacker: big, defender: { ...big, soakedTurns: 2 } }),
+    ).toBe(damage({ attacker: big, defender: big }));
+  });
+});

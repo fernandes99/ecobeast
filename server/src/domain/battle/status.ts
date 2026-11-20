@@ -16,6 +16,10 @@ const CONFUSED_HIT_CHANCE = 0.33;
 const MAX_SLEEP_TURNS = 3;
 const MIN_CONFUSION_TURNS = 2;
 const MAX_CONFUSION_TURNS = 5;
+const TRAPPED_TURNS = 2;
+const SOAKED_TURNS = 3;
+const SPROUTING_TURNS = 5;
+const SPROUTING_HEAL = 1 / 16;
 
 const END_OF_TURN_LOSS: Record<string, number> = {
   burn: 1 / 16,
@@ -157,7 +161,11 @@ export function hasStatus(creature: Combatant, statusSlug: string): boolean {
     case 'fear':
       return creature.isFeared;
     case 'trapped':
-      return creature.isTrapped;
+      return (creature.trappedTurns ?? 0) > 0;
+    case 'soaked':
+      return (creature.soakedTurns ?? 0) > 0;
+    case 'sprouting':
+      return (creature.sproutingTurns ?? 0) > 0;
     case 'dazed':
       return creature.isDazed;
     default:
@@ -182,7 +190,15 @@ function setStatus(
       creature.isFeared = true;
       return true;
     case 'trapped':
-      creature.isTrapped = true;
+      if ((creature.trappedTurns ?? 0) > 0) return false;
+      creature.trappedTurns = TRAPPED_TURNS;
+      return true;
+    case 'soaked':
+      creature.soakedTurns = SOAKED_TURNS;
+      return true;
+    case 'sprouting':
+      if ((creature.sproutingTurns ?? 0) > 0) return false;
+      creature.sproutingTurns = SPROUTING_TURNS;
       return true;
     case 'dazed':
       if (creature.isDazed) return false;
@@ -199,7 +215,9 @@ function setStatus(
 export function clearVolatile(creature: Combatant): void {
   creature.confusionTurns = 0;
   creature.isFeared = false;
-  creature.isTrapped = false;
+  creature.trappedTurns = 0;
+  creature.soakedTurns = 0;
+  creature.sproutingTurns = 0;
   creature.isDazed = false;
   creature.isProtected = false;
 }
@@ -232,5 +250,45 @@ export function applyStatusDamage(context: TurnContext, spot: Spot): void {
       hp: creature.currentHp,
     });
     faintIfDown(context, spot);
+  }
+}
+
+/** Fim da vez de quem está brotando: cura 1/16 do HP máximo, sem passar dele. */
+export function applySproutHeal(context: TurnContext, spot: Spot): void {
+  const creature = combatantAt(context.state, spot);
+  if ((creature.sproutingTurns ?? 0) <= 0 || creature.currentHp <= 0) return;
+  const amount = Math.min(
+    Math.max(1, Math.floor(creature.stats.hp * SPROUTING_HEAL)),
+    creature.stats.hp - creature.currentHp,
+  );
+  if (amount <= 0) return;
+  creature.currentHp += amount;
+  context.events.push({
+    type: 'status_heal',
+    ...spot,
+    status: 'sprouting',
+    amount,
+    hp: creature.currentHp,
+  });
+}
+
+const COUNTED: readonly [
+  'trappedTurns' | 'soakedTurns' | 'sproutingTurns',
+  string,
+][] = [
+  ['trappedTurns', 'trapped'],
+  ['soakedTurns', 'soaked'],
+  ['sproutingTurns', 'sprouting'],
+];
+
+/** Fim da vez: os estados contados por vez perdem uma, e o que chega a 0 acaba. */
+export function countVolatiles(context: TurnContext, spot: Spot): void {
+  const creature = combatantAt(context.state, spot);
+  for (const [field, status] of COUNTED) {
+    const left = creature[field] ?? 0;
+    creature[field] = Math.max(0, left - 1);
+    if (left === 1) {
+      context.events.push({ type: 'status_ended', ...spot, status });
+    }
   }
 }

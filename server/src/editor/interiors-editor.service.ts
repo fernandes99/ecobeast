@@ -11,10 +11,16 @@ import {
   MAX_SIZE,
   MIN_SIZE,
 } from '../domain/interiors/interior-body.js';
-import type { InteriorBodyDto, InteriorDto } from '../interiors/interiors.dto.js';
+import type {
+  InteriorBodyDto,
+  InteriorDto,
+} from '../interiors/interiors.dto.js';
 import { InteriorsService } from '../interiors/interiors.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
-import type { InteriorListDto, NewInteriorDto } from './interiors-editor.dto.js';
+import type {
+  InteriorListDto,
+  NewInteriorDto,
+} from './interiors-editor.dto.js';
 
 export const EDITOR_INTERIOR_NOT_FOUND = 'Interior não encontrado.';
 export const INTERIOR_IN_USE = 'Uma peça de ilha leva a esse interior.';
@@ -50,7 +56,9 @@ export class InteriorsEditorService {
       throw new BadRequestException('O nome precisa ter de 1 a 40 caracteres.');
     }
     if (!sized(dto.width) || !sized(dto.height)) {
-      throw new BadRequestException('A largura e a altura vão de 4 a 64 quadrados.');
+      throw new BadRequestException(
+        'A largura e a altura vão de 4 a 64 quadrados.',
+      );
     }
     const room = await this.prisma.interior.create({
       data: {
@@ -75,7 +83,10 @@ export class InteriorsEditorService {
       tiles: dto.tiles,
       objects: dto.objects,
       blocks: dto.blocks,
-      npcs: dto.npcs.map((npc) => ({ ...npc, action_type_id: npc.action_type_id ?? null })),
+      npcs: dto.npcs.map((npc) => ({
+        ...npc,
+        action_type_id: npc.action_type_id ?? null,
+      })),
     };
     const [npcs, actions] = await Promise.all([
       this.prisma.npc.findMany({ select: { id: true } }),
@@ -151,7 +162,9 @@ export class InteriorsEditorService {
 
   async remove(id: number): Promise<void> {
     await this.ensure(id);
-    const linked = await this.prisma.islandProp.count({ where: { interiorId: id } });
+    const linked = await this.prisma.islandProp.count({
+      where: { interiorId: id },
+    });
     if (linked > 0) throw new ConflictException(INTERIOR_IN_USE);
     await this.prisma.interior.delete({ where: { id } });
   }
@@ -159,7 +172,10 @@ export class InteriorsEditorService {
   private async ensure(id: number): Promise<void> {
     const found =
       Number.isInteger(id) && id >= 1 && id <= MAX_ID
-        ? await this.prisma.interior.findUnique({ where: { id }, select: { id: true } })
+        ? await this.prisma.interior.findUnique({
+            where: { id },
+            select: { id: true },
+          })
         : null;
     if (!found) throw new NotFoundException(EDITOR_INTERIOR_NOT_FOUND);
   }

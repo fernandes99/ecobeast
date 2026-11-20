@@ -1,4 +1,4 @@
-"""Gera o som das Técnicas da board-battle/18 e /20 a /22 e /25 (board-battle/19 a /22 e /25), por síntese:
+"""Gera o som das Técnicas da board-battle/18 e /20 a /22 e /25 a /27 (board-battle/19 a /22 e /25 a /27), por síntese:
 ruído em filtros, tons com a altura mudando e saturação leve. Cada som dura mais
 ou menos o efeito da Técnica, porque os dois começam juntos; o impacto fica com o
 som de dano. Tudo sai daqui: sem gravação de terceiros.
@@ -783,6 +783,170 @@ def palavra_guardada(rng):
     return mix, 1.2
 
 
+def pena_afiada(rng):
+    """Pena Afiada: um "fiu" curto e agudo da pena cortando o ar e um tique seco quando ela
+    crava."""
+    length = 0.45
+    mix = silence(length)
+    dart = band(noise(rng, 0.25), [(0.0, 3000.0), (0.25, 7000.0)], 3.0)
+    add(mix, shape(dart, [(0.0, 0.0), (0.03, 1.0), (0.18, 0.5), (0.25, 0.0)]), 0.0, 1.3)
+    add(mix, shape(tone(0.2, [(0.0, 1800.0), (0.2, 3200.0)]), [(0.0, 0.0), (0.02, 1.0), (0.2, 0.0)]), 0.0, 0.18)
+    add(mix, click(rng, 4200.0, 0.06), 0.24, 0.9)
+    add(mix, decay(band(noise(rng, 0.15), 1200.0, 1.2), 0.1, 0.002), 0.24, 0.35)
+    return mix, 1.6
+
+
+def vento_a_favor(rng):
+    """Vento a Favor: uma brisa que cresce por trás, com o filtro subindo, e três notas leves
+    que sobem, o empurrão do vento."""
+    length = 0.65
+    breeze = band(noise(rng, length), [(0.0, 700.0), (0.45, 2600.0), (0.65, 3200.0)], 1.6)
+    mix = shape(breeze, [(0.0, 0.0), (0.2, 1.0), (0.45, 0.8), (0.65, 0.0)])
+    add(mix, shape(low(noise(rng, length), 300.0), [(0.0, 0.0), (0.2, 1.0), (0.65, 0.0)]), 0.0, 0.6)
+    for index, freq in enumerate((G5, C6, PENTATONIC[4])):
+        add(mix, ping(freq, 0.2), 0.18 + index * 0.1, 0.24)
+    return mix, 1.8
+
+
+def rajada_de_penas(rng):
+    """Rajada de Penas: quatro "fius" de pena em seguida, cada um um pouco mais agudo, com
+    o farfalhar das penas por baixo."""
+    length = 0.65
+    mix = silence(length)
+    for index in range(4):
+        start = 1800.0 + index * 400.0
+        dart = band(noise(rng, 0.16), [(0.0, start), (0.16, start * 2.2)], 3.0)
+        add(mix, shape(dart, [(0.0, 0.0), (0.02, 1.0), (0.16, 0.0)]), index * 0.12, 1.0)
+        add(mix, click(rng, 3800.0, 0.04), index * 0.12 + 0.12, 0.45)
+    rustle = flutter(rng, band(noise(rng, length), 4500.0, 0.8), 40.0, 0.8)
+    add(mix, shape(rustle, [(0.0, 0.0), (0.05, 1.0), (0.5, 0.6), (0.65, 0.0)]), 0.0, 0.3)
+    return mix, 1.6
+
+
+def nuvem_de_penas(rng):
+    """Nuvem de Penas: um sopro que espalha as penas e um farfalhar macio que treme e vai
+    caindo devagar."""
+    length = 0.75
+    mix = silence(length)
+    puff = band(noise(rng, 0.3), [(0.0, 900.0), (0.3, 2200.0)], 1.2)
+    add(mix, shape(puff, [(0.0, 0.0), (0.05, 1.0), (0.3, 0.0)]), 0.0, 0.9)
+    rustle = flutter(rng, band(noise(rng, 0.7), [(0.0, 5000.0), (0.7, 2500.0)], 1.0), 24.0, 0.9)
+    add(mix, shape(rustle, [(0.0, 0.0), (0.12, 1.0), (0.45, 0.7), (0.7, 0.0)]), 0.05, 0.8)
+    for index, freq in enumerate((PENTATONIC[6], PENTATONIC[4], PENTATONIC[2])):
+        add(mix, ping(freq, 0.14, ((1.0, 1.0),)), 0.25 + index * 0.13, 0.1)
+    return mix, 1.5
+
+
+def vendaval(rng):
+    """Vendaval: uma ventania forte que ronca e cresce, com um uivo de vento que treme e
+    desce, e o rumor grave do redemoinho que fica."""
+    length = 0.8
+    gust = band(noise(rng, length), [(0.0, 600.0), (0.25, 1800.0), (0.8, 900.0)], 1.2)
+    mix = shape(gust, [(0.0, 0.0), (0.12, 1.0), (0.55, 0.9), (0.8, 0.0)])
+    add(mix, shape(low(noise(rng, length), 140.0), [(0.0, 0.0), (0.15, 1.0), (0.8, 0.0)]), 0.0, 1.6)
+    howl = tone(0.65, [(0.0, 900.0), (0.25, 1250.0), (0.65, 700.0)], (1.0, 0.3), (7.0, 0.04))
+    add(mix, shape(howl, [(0.0, 0.0), (0.12, 0.7), (0.5, 0.5), (0.65, 0.0)]), 0.05, 0.16)
+    return mix, 2.4
+
+
+def rasante(rng):
+    """Rasante: o assobio do mergulho, que desce de altura como quem passa rápido, e o
+    tapa pesado das asas abertas no fim."""
+    length = 0.55
+    mix = silence(length)
+    dive = band(noise(rng, 0.35), [(0.0, 4200.0), (0.35, 1200.0)], 2.2)
+    add(mix, shape(dive, [(0.0, 0.0), (0.2, 1.0), (0.35, 0.3)]), 0.0, 1.1)
+    add(mix, shape(tone(0.32, [(0.0, 1600.0), (0.32, 650.0)]), [(0.0, 0.0), (0.18, 0.8), (0.32, 0.0)]), 0.0, 0.16)
+    flap = shape(low(noise(rng, 0.18), 900.0), [(0.0, 0.0), (0.008, 1.0), (0.18, 0.0)])
+    add(mix, flap, 0.33, 1.4)
+    add(mix, thud(160.0, 70.0, 0.2), 0.33, 0.8)
+    return mix, 1.8
+
+
+def bicada_de_folha(rng):
+    """Bicada de Folha: um farfalhar curto das folhas do bico vindo e a bicada seca, de
+    madeira, com um baque leve."""
+    length = 0.4
+    mix = silence(length)
+    rustle = flutter(rng, band(noise(rng, 0.18), 3500.0, 1.0), 45.0, 0.8)
+    add(mix, shape(rustle, [(0.0, 0.0), (0.04, 1.0), (0.18, 0.0)]), 0.0, 0.8)
+    add(mix, click(rng, 1900.0, 0.05, 2.0), 0.16, 1.2)
+    add(mix, ping(820.0, 0.08, ((1.0, 1.0), (2.7, 0.4))), 0.16, 0.35)
+    add(mix, thud(240.0, 110.0, 0.12), 0.16, 0.6)
+    return mix, 1.6
+
+
+def garra_de_espinho(rng):
+    """Garra de Espinho: o ramo de espinhos rangendo, três arranhões rápidos e o estalo dos
+    espinhos cravando."""
+    length = 0.6
+    mix = silence(length)
+    creak = shape(tone(0.25, [(0.0, 180.0), (0.25, 140.0)], (1.0, 0.6, 0.4), (23.0, 0.05)), [(0.0, 0.0), (0.05, 1.0), (0.25, 0.0)])
+    add(mix, band(creak, 600.0, 1.0), 0.0, 0.5)
+    for index in range(3):
+        scratch = band(noise(rng, 0.09), [(0.0, 5200.0), (0.09, 2600.0)], 2.0)
+        add(mix, shape(scratch, [(0.0, 0.0), (0.01, 1.0), (0.09, 0.0)]), 0.14 + index * 0.08, 1.0)
+    add(mix, crackles(rng, 0.25, 60.0, weight=0.7, freq=2800.0), 0.36, 1.0)
+    add(mix, thud(200.0, 90.0, 0.14), 0.36, 0.5)
+    return mix, 1.7
+
+
+def asa_semeadora(rng):
+    """Asa Semeadora: a batida larga da asa, as sementes chovendo em estalinhos e os
+    espinhos brotando do chão num ranger que sobe."""
+    length = 0.8
+    mix = silence(length)
+    wing = band(noise(rng, 0.3), [(0.0, 500.0), (0.15, 1400.0), (0.3, 700.0)], 1.0)
+    add(mix, shape(wing, [(0.0, 0.0), (0.08, 1.0), (0.3, 0.0)]), 0.0, 1.2)
+    add(mix, crackles(rng, 0.35, 45.0, weight=0.6, freq=4200.0), 0.18, 1.0)
+    sprout = shape(tone(0.3, [(0.0, 160.0), (0.3, 330.0)], (1.0, 0.7, 0.5, 0.3), (31.0, 0.04)), [(0.0, 0.0), (0.06, 1.0), (0.3, 0.0)])
+    add(mix, band(sprout, 900.0, 0.9), 0.45, 0.7)
+    add(mix, thud(150.0, 80.0, 0.18), 0.45, 0.5)
+    return mix, 1.6
+
+
+def zap(seconds, freq, wobble):
+    """Zumbido elétrico: um dente de serra áspero com a altura tremendo rápido."""
+    return tone(seconds, freq, (1.0, 0.6, 0.45, 0.35, 0.28, 0.22, 0.18), (wobble, 0.06))
+
+
+def faisca_de_alga(rng):
+    """Faísca de Alga: um estalo elétrico curto que chia pelas folhas e uma faísca aguda no
+    fim."""
+    length = 0.45
+    mix = silence(length)
+    buzz = shape(zap(0.3, [(0.0, 220.0), (0.3, 330.0)], 37.0), [(0.0, 0.0), (0.01, 1.0), (0.3, 0.0)])
+    add(mix, high(buzz, 400.0), 0.0, 0.5)
+    add(mix, crackles(rng, 0.3, 90.0, weight=0.8, freq=5000.0), 0.0, 1.0)
+    add(mix, shape(band(noise(rng, 0.12), 6500.0, 1.5), [(0.0, 0.0), (0.005, 1.0), (0.12, 0.0)]), 0.0, 0.8)
+    add(mix, ping(2600.0, 0.12, ((1.0, 1.0), (2.0, 0.3))), 0.28, 0.25)
+    return mix, 1.8
+
+
+def corrente_viva(rng):
+    """Corrente Viva: a água correndo e uma corrente elétrica que zumbe e viaja, subindo de
+    altura, com estalos pelo caminho."""
+    length = 0.75
+    flow = band(noise(rng, length), [(0.0, 700.0), (0.75, 1600.0)], 1.0)
+    mix = shape(flutter(rng, flow, 18.0, 0.5), [(0.0, 0.0), (0.08, 1.0), (0.6, 0.8), (0.75, 0.0)])
+    buzz = shape(zap(0.65, [(0.0, 150.0), (0.65, 300.0)], 29.0), [(0.0, 0.0), (0.06, 1.0), (0.55, 0.8), (0.65, 0.0)])
+    add(mix, high(buzz, 300.0), 0.05, 0.45)
+    add(mix, crackles(rng, 0.6, 50.0, weight=0.7, freq=4600.0), 0.08, 1.0)
+    return mix, 1.9
+
+
+def mare_eletrica(rng):
+    """Maré Elétrica: uma onda que se espalha baixa e um zumbido elétrico grave que fica na
+    água, com estalos esparsos."""
+    length = 0.8
+    wash = band(noise(rng, length), [(0.0, 400.0), (0.3, 1100.0), (0.8, 600.0)], 0.9)
+    mix = shape(wash, [(0.0, 0.0), (0.15, 1.0), (0.5, 0.6), (0.8, 0.0)])
+    hum = shape(zap(0.7, 110.0, 13.0), [(0.0, 0.0), (0.15, 1.0), (0.55, 0.7), (0.7, 0.0)])
+    add(mix, band(hum, 700.0, 0.8), 0.1, 0.6)
+    add(mix, crackles(rng, 0.65, 22.0, weight=0.6, freq=4000.0), 0.12, 1.0)
+    return mix, 1.8
+
+
 SOUNDS = {
     "mordida_brasa": mordida_brasa,
     "fumaca_densa": fumaca_densa,
@@ -830,6 +994,18 @@ SOUNDS = {
     "inverno_mudo": inverno_mudo,
     "grito_congelado": grito_congelado,
     "palavra_guardada": palavra_guardada,
+    "pena_afiada": pena_afiada,
+    "vento_a_favor": vento_a_favor,
+    "rajada_de_penas": rajada_de_penas,
+    "nuvem_de_penas": nuvem_de_penas,
+    "vendaval": vendaval,
+    "rasante": rasante,
+    "bicada_de_folha": bicada_de_folha,
+    "garra_de_espinho": garra_de_espinho,
+    "asa_semeadora": asa_semeadora,
+    "faisca_de_alga": faisca_de_alga,
+    "corrente_viva": corrente_viva,
+    "mare_eletrica": mare_eletrica,
 }
 
 

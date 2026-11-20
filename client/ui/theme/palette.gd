@@ -100,6 +100,8 @@ const STATUS_COLORS: Dictionary[String, Color] = {
 	"fear": Color("#8C7AE6"),
 	"trapped": Color("#C9A66B"),
 	"dazed": Color("#F2B84B"),
+	"soaked": Color("#4A90D9"),
+	"sprouting": Color("#7FCB6B"),
 	"protect": Color("#5AA9FF"),
 }
 ## Os efeitos que duram no corpo e no chão (board-battle/23).

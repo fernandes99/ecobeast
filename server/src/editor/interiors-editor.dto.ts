@@ -2,7 +2,10 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsInt, IsString } from 'class-validator';
 
 export class NewInteriorDto {
-  @ApiProperty({ description: 'O nome, de 1 a 40 caracteres.', example: 'Loja' })
+  @ApiProperty({
+    description: 'O nome, de 1 a 40 caracteres.',
+    example: 'Loja',
+  })
   @IsString({ message: 'name precisa ser um texto.' })
   name: string;
 

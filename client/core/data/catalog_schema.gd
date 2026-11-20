@@ -142,6 +142,7 @@ const TABLES := {
 			"slug": SLUG,
 			"name": TEXT,
 			"damage_percent": {"type": "int", "nullable": true, "min": 1, "max": 100},
+			"heal_percent": {"type": "int", "nullable": true, "min": 1, "max": 100},
 			"status_condition_id": {"type": "int", "nullable": true, "fk": "status_conditions"},
 			"color_hex": {"type": "string", "pattern": "^#[0-9A-Fa-f]{6}$"},
 		},

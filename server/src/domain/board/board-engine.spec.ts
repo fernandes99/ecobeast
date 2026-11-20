@@ -7,6 +7,7 @@ import {
   ENTRY_NOT_FREE,
   FLEE_NO_MOVE,
   NOT_YOUR_VEZ,
+  TRAPPED_NO_MOVE,
   startBoardBattle,
 } from './board-engine.js';
 import { ALLY_ONLY, OUT_OF_RANGE } from './areas.js';
@@ -575,6 +576,7 @@ describe('item e marca com status', () => {
     const icy = boardCatalog();
     icy.groundEffects.set(ICE, {
       damagePercent: null,
+      healPercent: null,
       statusSlug: 'freeze',
       stats: [],
     });
@@ -754,6 +756,7 @@ describe('Atordoado e as marcas que mudam atributos (puffcoo-line/01)', () => {
   const field = boardCatalog();
   field.groundEffects.set(FEATHERS, {
     damagePercent: null,
+    healPercent: null,
     statusSlug: null,
     stats: [
       { statSlug: 'accuracy', stages: -1 },
@@ -762,6 +765,7 @@ describe('Atordoado e as marcas que mudam atributos (puffcoo-line/01)', () => {
   });
   field.groundEffects.set(WHIRL, {
     damagePercent: null,
+    healPercent: null,
     statusSlug: 'dazed',
     stats: [],
   });
@@ -914,5 +918,312 @@ describe('Atordoado e as marcas que mudam atributos (puffcoo-line/01)', () => {
     const [one, two] = second.state.player.team;
     expect(two!.stages).toMatchObject({ accuracy: -1, evasion: -1 });
     expect(one!.stages).toMatchObject({ accuracy: -1, evasion: -1 });
+  });
+});
+
+describe('Preso, Encharcado e Brotando (field-effects/01)', () => {
+  const WIND = 6;
+  const SOAK = makeSkill({
+    id: 66,
+    power: 0,
+    category: 'support',
+    effects: [makeEffect({ effectSlug: 'apply_status', statusSlug: 'soaked' })],
+  });
+  const ROOT = makeSkill({
+    id: 68,
+    power: 0,
+    category: 'support',
+    effects: [
+      makeEffect({ effectSlug: 'apply_status', statusSlug: 'trapped' }),
+    ],
+  });
+  const field = boardCatalog([SOAK, ROOT]);
+  field.statusImmunities.set('trapped', [WIND]);
+  const wait = { position: 0, action: { type: 'wait' } } as const;
+  const SOAK_SLOT = 5;
+  const ROOT_SLOT = 6;
+  const withSkills = (overrides: Partial<Combatant> = {}) =>
+    fighter(30, {
+      skills: [
+        { skillId: 1, currentPp: 35 },
+        { skillId: 5, currentPp: 20 },
+        { skillId: 9, currentPp: 10 },
+        { skillId: 2, currentPp: 30 },
+        { skillId: SOAK.id, currentPp: 25 },
+        { skillId: ROOT.id, currentPp: 20 },
+      ],
+      ...overrides,
+    });
+  const facing = { cells: { player: [at(1, 4)], enemy: [at(2, 4)] } };
+
+  it('preso não anda por 2 vezes e se solta no fim da segunda', () => {
+    const state = makeBoardState(
+      [fighter(30, { trappedTurns: 2 })],
+      [wild(5, ASLEEP)],
+    );
+    const before = structuredClone(state);
+    expect(
+      applyBoardVez(
+        state,
+        { position: 0, move: at(2, 4), action: { type: 'wait' } },
+        field,
+        always(0.5),
+      ),
+    ).toEqual({ error: TRAPPED_NO_MOVE });
+    expect(state).toEqual(before);
+
+    const first = playVez(state, wait, field);
+    expect(first.state.player.team[0]!.trappedTurns).toBe(1);
+    expect(eventsOf(first.events, 'status_ended')).toEqual([]);
+    const second = playVez(first.state, wait, field);
+    expect(second.state.player.team[0]!.trappedTurns).toBe(0);
+    expect(eventsOf(second.events, 'status_ended')).toContainEqual({
+      type: 'status_ended',
+      side: 'player',
+      position: 0,
+      status: 'trapped',
+    });
+  });
+
+  it('preso que perde a vez dormindo ainda conta a vez', () => {
+    const { state } = playVez(
+      makeBoardState(
+        [fighter(30, { trappedTurns: 2, ...ASLEEP })],
+        [wild(5, ASLEEP)],
+      ),
+      wait,
+      field,
+    );
+    expect(state.player.team[0]!.trappedTurns).toBe(1);
+  });
+
+  it('prende por 2 vezes, menos o Vento', () => {
+    const hit = playVez(
+      makeBoardState([withSkills()], [wild(5, ASLEEP)], facing),
+      {
+        position: 0,
+        action: { type: 'skill', slot: ROOT_SLOT, target: at(2, 4) },
+      },
+      field,
+    );
+    expect(hit.state.enemy.team[0]!.trappedTurns).toBe(2);
+    const { state, events } = playVez(
+      makeBoardState(
+        [withSkills()],
+        [wild(5, { ...ASLEEP, elementIds: [WIND] })],
+        facing,
+      ),
+      {
+        position: 0,
+        action: { type: 'skill', slot: ROOT_SLOT, target: at(2, 4) },
+      },
+      field,
+    );
+    expect(eventsOf(events, 'effect_failed')).toHaveLength(1);
+    expect(state.enemy.team[0]!.trappedTurns).toBe(0);
+  });
+
+  it('molhar de novo renova as 3 vezes do Encharcado', () => {
+    const { state, events } = playVez(
+      makeBoardState(
+        [withSkills()],
+        [wild(5, { ...ASLEEP, soakedTurns: 1 })],
+        facing,
+      ),
+      {
+        position: 0,
+        action: { type: 'skill', slot: SOAK_SLOT, target: at(2, 4) },
+      },
+      field,
+    );
+    expect(eventsOf(events, 'status_applied')).toContainEqual({
+      type: 'status_applied',
+      side: 'enemy',
+      position: 0,
+      status: 'soaked',
+    });
+    expect(state.enemy.team[0]!.soakedTurns).toBe(3);
+  });
+
+  it('o Encharcado acaba sozinho, e quem entra numa troca vem sem os estados', () => {
+    const { state: after, events } = playVez(
+      makeBoardState([fighter(30, { soakedTurns: 1 })], [wild(5, ASLEEP)]),
+      wait,
+      field,
+    );
+    expect(after.player.team[0]!.soakedTurns).toBe(0);
+    expect(eventsOf(events, 'status_ended')).toContainEqual({
+      type: 'status_ended',
+      side: 'player',
+      position: 0,
+      status: 'soaked',
+    });
+    const swapped = playVez(
+      makeBoardState(
+        [fighter(30), fighter(20, { soakedTurns: 3, sproutingTurns: 5 })],
+        [wild(5, ASLEEP)],
+      ),
+      { position: 0, action: { type: 'switch', team_index: 1 } },
+      field,
+    );
+    expect(swapped.state.player.team[1]!.soakedTurns).toBe(0);
+    expect(swapped.state.player.team[1]!.sproutingTurns).toBe(0);
+  });
+
+  it('brotando recupera 1/16 no fim de cada vez, por 5 vezes', () => {
+    let state = makeBoardState(
+      [fighter(30, { currentHp: 100, sproutingTurns: 5 })],
+      [wild(5, ASLEEP)],
+    );
+    for (let vez = 1; vez <= 5; vez++) {
+      const outcome = playVez(state, wait, field);
+      expect(eventsOf(outcome.events, 'status_heal')).toEqual([
+        {
+          type: 'status_heal',
+          side: 'player',
+          position: 0,
+          status: 'sprouting',
+          amount: 12,
+          hp: 100 + 12 * vez,
+        },
+      ]);
+      state = outcome.state;
+    }
+    expect(state.player.team[0]!.sproutingTurns).toBe(0);
+    const after = playVez(state, wait, field);
+    expect(eventsOf(after.events, 'status_heal')).toEqual([]);
+  });
+
+  it('brotando com o HP cheio não cura', () => {
+    const { events } = playVez(
+      makeBoardState([fighter(30, { sproutingTurns: 5 })], [wild(5, ASLEEP)]),
+      wait,
+      field,
+    );
+    expect(eventsOf(events, 'status_heal')).toEqual([]);
+  });
+
+  it('uma luta salva sem os contadores novos joga sem NaN', () => {
+    const old: Partial<Combatant> = fighter(30);
+    delete old.trappedTurns;
+    delete old.soakedTurns;
+    delete old.sproutingTurns;
+    const { state } = playVez(
+      makeBoardState([old as Combatant], [wild(5, ASLEEP)]),
+      { position: 0, move: at(2, 4), action: { type: 'wait' } },
+      field,
+    );
+    const creature = state.player.team[0]!;
+    expect(creature.trappedTurns ?? 0).toBe(0);
+    expect(creature.soakedTurns ?? 0).toBe(0);
+    expect(creature.sproutingTurns ?? 0).toBe(0);
+  });
+});
+
+describe('A marca que cura e a Areia Movediça (field-effects/01)', () => {
+  const GARDEN = 10;
+  const QUICKSAND = 9;
+  const field = boardCatalog();
+  field.groundEffects.set(GARDEN, {
+    damagePercent: null,
+    healPercent: 6,
+    statusSlug: null,
+    stats: [],
+  });
+  field.groundEffects.set(QUICKSAND, {
+    damagePercent: null,
+    healPercent: null,
+    statusSlug: 'trapped',
+    stats: [],
+  });
+  const wait = { position: 0, action: { type: 'wait' } } as const;
+  const both = { cells: { player: [at(1, 4)], enemy: [at(2, 4)] } };
+  const gardens = (cells: ReturnType<typeof at>[]) => ({
+    marks: cells.map((cell) => ({
+      cell,
+      groundEffectId: GARDEN,
+      remaining: 6,
+    })),
+  });
+
+  it('o Jardim cura todos que estão nele, dos dois lados', () => {
+    const { events } = playVez(
+      makeBoardState(
+        [fighter(30, { currentHp: 100 })],
+        [wild(5, { ...ASLEEP, currentHp: 100 })],
+        both,
+        gardens([at(1, 4), at(2, 4)]),
+      ),
+      wait,
+      field,
+    );
+    expect(eventsOf(events, 'ground_heal')).toEqual([
+      {
+        type: 'ground_heal',
+        side: 'player',
+        position: 0,
+        amount: 12,
+        hp: 112,
+        ground_effect_id: GARDEN,
+      },
+      {
+        type: 'ground_heal',
+        side: 'enemy',
+        position: 0,
+        amount: 12,
+        hp: 112,
+        ground_effect_id: GARDEN,
+      },
+    ]);
+  });
+
+  it('com o HP cheio, o Jardim não cura, e não passa do máximo', () => {
+    const full = playVez(
+      makeBoardState(
+        [fighter(30)],
+        [wild(5, ASLEEP)],
+        both,
+        gardens([at(1, 4)]),
+      ),
+      wait,
+      field,
+    );
+    expect(eventsOf(full.events, 'ground_heal')).toEqual([]);
+    const almost = playVez(
+      makeBoardState(
+        [fighter(30, { currentHp: 195 })],
+        [wild(5, ASLEEP)],
+        both,
+        gardens([at(1, 4)]),
+      ),
+      wait,
+      field,
+    );
+    expect(almost.state.player.team[0]!.currentHp).toBe(200);
+  });
+
+  it('quem desmaia no fim da vez não é curado pelo Jardim', () => {
+    const { events } = playVez(
+      makeBoardState(
+        [fighter(30, { currentHp: 1, statusSlug: 'poison' }), fighter(20)],
+        [wild(5, ASLEEP)],
+        both,
+        gardens([at(1, 4)]),
+      ),
+      wait,
+      field,
+    );
+    expect(eventsOf(events, 'fainted')).toHaveLength(1);
+    expect(eventsOf(events, 'ground_heal')).toEqual([]);
+  });
+
+  it('quem termina a vez na Areia Movediça fica preso enquanto ela dura', () => {
+    let state = makeBoardState([fighter(30)], [wild(5, ASLEEP)], both, {
+      marks: [{ cell: at(1, 4), groundEffectId: QUICKSAND, remaining: 6 }],
+    });
+    for (let vez = 0; vez < 3; vez++) {
+      state = playVez(state, wait, field).state;
+      expect(state.player.team[0]!.trappedTurns).toBeGreaterThan(0);
+    }
   });
 });

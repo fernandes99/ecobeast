@@ -95,7 +95,7 @@ temperaments ──> stats (aumentado, diminuído)
 
 **`area_shapes`** — `id`, `slug` (`single`, `line`), `name`: a forma da área de uma Técnica no tabuleiro ([board-battle/01](../board-battle/01-skill-areas.md)). O jogo só aceita as formas que sabe desenhar.
 
-**`ground_effects`** — `id`, `slug`, `name`, `damage_percent` (1–100, anulável: dano em % do HP máximo), `status_condition_id` (FK anulável) e `color_hex`: o que uma marca no chão do tabuleiro faz a quem está nela, depois de cada vez da fila ([board-battle/01](../board-battle/01-skill-areas.md)).
+**`ground_effects`** — `id`, `slug`, `name`, `damage_percent` (1–100, anulável: dano em % do HP máximo), `heal_percent` (1–100, anulável: cura em % do HP máximo, [field-effects/01](../field-effects/01-field-rules.md)), `status_condition_id` (FK anulável) e `color_hex`: o que uma marca no chão do tabuleiro faz a quem está nela, depois de cada vez da fila ([board-battle/01](../board-battle/01-skill-areas.md)).
 
 **`skill_learn_methods`** — `id`, `slug` (`level_up`, `evolution`, `teachable`), `name`.
 

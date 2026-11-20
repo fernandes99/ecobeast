@@ -500,6 +500,8 @@ model GroundEffect {
   name              String
   /// CHECK 1–100, % do HP máximo (migration board_skill_areas)
   damagePercent     Int?   @map("damage_percent")
+  /// CHECK 1–100, % do HP máximo curado (migration field_effects)
+  healPercent       Int?   @map("heal_percent")
   statusConditionId Int?   @map("status_condition_id")
   /// CHECK ^#[0-9A-Fa-f]{6}$ (migration board_skill_areas)
   colorHex          String @map("color_hex")

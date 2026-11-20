@@ -25,13 +25,16 @@ const TAMER_RESULT_TEXTS: Dictionary[String, String] = {
 const EXIT_TEXT := "Voltar"
 const EXIT_TO_HUB_TEXT := "Voltar ao Hub"
 const DAZED_TEXT := "Atordoado: não dá para andar nesta vez."
+const TRAPPED_TEXT := "Preso: não dá para andar nesta vez."
 const BOARD_LINES: Dictionary[String, String] = {
 	"moved": "%s andou.",
 	"waited": "%s esperou.",
 	"ground_damage": "%s se feriu no chão.",
 }
 const HISTORY_ONLY: Array[String] = ["round_started"]
-const HP_EVENTS: Array[String] = ["damage", "recoil", "healed", "confused_hit", "status_damage", "ground_damage"]
+const HP_EVENTS: Array[String] = ["damage", "recoil", "healed", "confused_hit", "status_damage", "ground_damage", "status_heal", "ground_heal"]
+## Os eventos de HP que trazem o valor em `amount`, e não em `damage`.
+const AMOUNT_EVENTS: Array[String] = ["ground_damage", "healed", "status_heal", "ground_heal"]
 const LOSS_EVENTS: Array[String] = ["damage", "recoil", "confused_hit", "status_damage", "ground_damage"]
 const REFERENCE_BOARD_WIDTH := 624.0
 const EVENT_DELAY := 0.35
@@ -550,7 +553,7 @@ func _play_event(event: Dictionary) -> void:
 		_hp[key] = DictFields.get_int(event, "hp")
 		_board.set_hp(key, _hp[key], _max_hp.get(key, 0))
 		_focus(side, key)
-		var amount := DictFields.get_int(event, "amount") if type == "ground_damage" or type == "healed" else DictFields.get_int(event, "damage")
+		var amount := DictFields.get_int(event, "amount") if type in AMOUNT_EVENTS else DictFields.get_int(event, "damage")
 		if type in LOSS_EVENTS:
 			_play_hit_sound(_hit_kind(type, event))
 			await _board.hit(key)
@@ -752,7 +755,7 @@ func _sync_token(key: String, side: String, creature: BattleCreature, cell: Vect
 	_level[key] = creature.level
 	_hp[key] = creature.hp
 	_board.set_hp(key, creature.hp, creature.max_hp)
-	_statuses.sync(key, creature.status, creature.confused, creature.dazed)
+	_statuses.sync(key, creature.status, creature.confused, creature.dazed, creature.trapped, creature.soaked, creature.sprouting)
 	_board.set_statuses(key, _statuses.of(key))
 	var stages: Dictionary = {}
 	for stat: String in creature.stages:
@@ -934,12 +937,13 @@ func _begin_vez() -> void:
 	var blocked := _view.occupied_cells()
 	blocked.erase(_origin)
 	var dazed := _view.player_at(_actor).dazed
+	var trapped := _view.player_at(_actor).trapped
 	_reach = BoardGeometry.reachable(_view.board_cells, blocked, _origin)
-	if dazed:
+	if dazed or trapped:
 		_reach.clear()
 	_fill_skills(_view.player_at(_actor))
 	_light_reach()
-	_show_message(DAZED_TEXT if dazed else "")
+	_show_message(DAZED_TEXT if dazed else TRAPPED_TEXT if trapped else "")
 	_show_controls(true)
 	_set_busy(false)
 

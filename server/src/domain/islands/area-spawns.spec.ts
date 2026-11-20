@@ -163,7 +163,9 @@ describe('rollAreaSpawns', () => {
       ],
       seededRandom(9),
     );
-    const seedlet = spawns.filter(({ speciesId }) => speciesId === SEEDLET).length;
+    const seedlet = spawns.filter(
+      ({ speciesId }) => speciesId === SEEDLET,
+    ).length;
     expect(seedlet).toBeGreaterThan(5);
     expect(seedlet).toBeLessThan(45);
   });
@@ -205,7 +207,10 @@ describe('areasBornIn (day-phase-spawns/01)', () => {
 
   it('a área sem ninguém da parte do dia fica vazia', () => {
     expect(
-      rollAreaSpawns(areasBornIn([area()], new Set([SEEDLET])), seededRandom(4)),
+      rollAreaSpawns(
+        areasBornIn([area()], new Set([SEEDLET])),
+        seededRandom(4),
+      ),
     ).toEqual([]);
   });
 

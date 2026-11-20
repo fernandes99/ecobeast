@@ -56,11 +56,24 @@ func _icon(slug: String, at: Vector2) -> void:
 			for index: int in 3:
 				var spot := at + Vector2.from_angle(-PI / 2.0 + index * TAU / 3.0) * 4.5
 				draw_colored_polygon(_moved(_sparkle(3.6), spot), dark)
+		"soaked":
+			draw_colored_polygon(CreatureAura.flame_points(at + Vector2(0.0, 2.5), 6.0), dark)
+		"sprouting":
+			draw_line(at + Vector2(0.0, 7.0), at + Vector2(0.0, -1.0), dark, LINE)
+			draw_colored_polygon(_moved(_leaf(-1.0), at + Vector2(0.0, -1.0)), dark)
+			draw_colored_polygon(_moved(_leaf(1.0), at + Vector2(0.0, -1.0)), dark)
 		"protect":
 			draw_colored_polygon(_moved(PackedVector2Array([
 				Vector2(0.0, -7.5), Vector2(6.0, -5.0), Vector2(5.0, 2.0),
 				Vector2(0.0, 7.5), Vector2(-5.0, 2.0), Vector2(-6.0, -5.0),
 			]), at), dark)
+
+
+## Uma folha de broto, para um lado (-1) ou para o outro (1), saindo da haste.
+static func _leaf(side: float) -> PackedVector2Array:
+	return PackedVector2Array([
+		Vector2.ZERO, Vector2(side * 3.0, -4.5), Vector2(side * 7.0, -5.0), Vector2(side * 4.5, -1.0),
+	])
 
 
 func _flame() -> PackedVector2Array:

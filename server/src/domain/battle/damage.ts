@@ -72,7 +72,9 @@ export function calculateDamage(input: DamageInput): number {
       : 1;
   const critical = isCritical ? CRITICAL : 1;
   const others =
-    burnMultiplier(attacker, isPhysical) * furyMultiplier(attacker, skill);
+    burnMultiplier(attacker, isPhysical) *
+    furyMultiplier(attacker, skill) *
+    soakedMultiplier(defender, skill);
   const damage = base * stab * type * critical * randomFactor * others;
   return Math.max(1, Math.floor(damage));
 }
@@ -105,6 +107,13 @@ function defenseValue(
 
 function burnMultiplier(attacker: Combatant, isPhysical: boolean): number {
   return isPhysical && attacker.statusSlug === 'burn' ? BURN_PHYSICAL : 1;
+}
+
+const SOAKED: Record<string, number> = { volt: 1.5, fire: 0.5 };
+
+function soakedMultiplier(defender: Combatant, skill: BattleSkill): number {
+  if ((defender.soakedTurns ?? 0) <= 0 || skill.elementSlug === null) return 1;
+  return SOAKED[skill.elementSlug] ?? 1;
 }
 
 function furyMultiplier(attacker: Combatant, skill: BattleSkill): number {

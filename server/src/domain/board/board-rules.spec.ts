@@ -136,7 +136,7 @@ describe('vez recusada', () => {
     ],
     [
       'fugir estando Preso',
-      duel({ isTrapped: true }),
+      duel({ trappedTurns: 2 }),
       act({ type: 'flee' }),
       'Não dá para fugir agora.',
     ],
@@ -166,7 +166,7 @@ describe('vez recusada', () => {
     ],
     [
       'trocar estando Preso',
-      bench({ isTrapped: true }),
+      bench({ trappedTurns: 2 }),
       act({ type: 'switch', team_index: 1 }),
       'Não dá para trocar agora.',
     ],
@@ -520,12 +520,12 @@ describe('fuga e fim', () => {
 
   it('os efeitos temporários somem no fim da luta', () => {
     const { state } = playVez(
-      duel({ isTrapped: true }, { currentHp: 1 }),
+      duel({ trappedTurns: 2 }, { currentHp: 1 }),
       SCRATCH,
       catalog,
     );
     expect(state.result).toBe('victory');
-    expect(state.player.team[0]!.isTrapped).toBe(false);
+    expect(state.player.team[0]!.trappedTurns).toBe(0);
   });
 
   it('todos caídos dão a derrota', () => {

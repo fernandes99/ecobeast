@@ -83,6 +83,22 @@ function applyMark(
     });
     faintIfDown(context, spot);
   }
+  if (effect.healPercent !== null && creature.currentHp > 0) {
+    const amount = Math.min(
+      Math.max(1, Math.floor((creature.stats.hp * effect.healPercent) / 100)),
+      creature.stats.hp - creature.currentHp,
+    );
+    if (amount > 0) {
+      creature.currentHp += amount;
+      events.push({
+        type: 'ground_heal',
+        ...spot,
+        amount,
+        hp: creature.currentHp,
+        ground_effect_id: mark.groundEffectId,
+      });
+    }
+  }
   // Sem tentar de novo quem já tem o status ou é imune: a marca age a cada vez da fila.
   if (
     effect.statusSlug !== null &&

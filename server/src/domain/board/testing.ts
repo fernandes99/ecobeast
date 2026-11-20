@@ -45,6 +45,7 @@ export function boardCatalog(skills: BattleSkill[] = []): BattleCatalog {
   const catalog = makeCatalog({}, [SCRATCH, SPARK, SPIRAL, GROWL, ...skills]);
   catalog.groundEffects.set(FIRE_GROUND, {
     damagePercent: 6,
+    healPercent: null,
     statusSlug: null,
     stats: [],
   });

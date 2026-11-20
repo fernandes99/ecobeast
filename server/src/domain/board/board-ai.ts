@@ -72,10 +72,17 @@ export function chooseEnemyVez(
       ({ skill }) =>
         skill.targetSlug === ALLY_TARGET && hurtAlly(state, spot, from, skill),
     );
-  const destination =
-    reachesNow || me.isDazed
-      ? from
-      : approach(state, from, cellOf(state, target)!, random);
+  const stuck = me.isDazed || (me.trappedTurns ?? 0) > 0;
+  const garden =
+    !stuck && me.currentHp < me.stats.hp * HEAL_BELOW
+      ? gardenNear(state, catalog, from)
+      : null;
+  const destination = stuck
+    ? from
+    : (garden ??
+      (reachesNow
+        ? from
+        : approach(state, from, cellOf(state, target)!, random)));
   const move = destination === from ? {} : { move: destination };
   const action = chooseAction(
     state,
@@ -87,6 +94,27 @@ export function chooseEnemyVez(
     usable,
   );
   return { position, ...move, action };
+}
+
+/** Um hexágono com marca que cura ao alcance de um passo, de onde está ou vizinho. */
+function gardenNear(
+  state: BoardState,
+  catalog: BattleCatalog,
+  from: HexCoord,
+): HexCoord | null {
+  const heals = (cell: HexCoord) => {
+    const mark = markAt(state, cell);
+    return (
+      mark !== undefined &&
+      (catalog.groundEffects.get(mark.groundEffectId)?.healPercent ?? null) !==
+        null
+    );
+  };
+  if (heals(from)) return from;
+  for (const path of reachable(state, from, MOVE_RANGE).values()) {
+    if (heals(path.at(-1)!)) return path.at(-1)!;
+  }
+  return null;
 }
 
 function approach(

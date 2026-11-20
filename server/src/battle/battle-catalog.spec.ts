@@ -146,10 +146,17 @@ describe('toBattleCatalog', () => {
     const { groundEffects } = toBattleCatalog({
       ...NO_ROWS,
       groundEffects: [
-        { id: 1, damagePercent: 6, statusCondition: null, stats: [] },
+        {
+          id: 1,
+          damagePercent: 6,
+          healPercent: null,
+          statusCondition: null,
+          stats: [],
+        },
         {
           id: 2,
           damagePercent: null,
+          healPercent: 6,
           statusCondition: { slug: 'freeze' },
           stats: [{ stages: -1, stat: { slug: 'accuracy' } }],
         },
@@ -157,11 +164,13 @@ describe('toBattleCatalog', () => {
     });
     expect(groundEffects.get(1)).toEqual({
       damagePercent: 6,
+      healPercent: null,
       statusSlug: null,
       stats: [],
     });
     expect(groundEffects.get(2)).toEqual({
       damagePercent: null,
+      healPercent: 6,
       statusSlug: 'freeze',
       stats: [{ statSlug: 'accuracy', stages: -1 }],
     });

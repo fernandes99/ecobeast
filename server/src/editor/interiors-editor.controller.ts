@@ -59,7 +59,10 @@ export class InteriorsEditorController {
   constructor(private readonly interiors: InteriorsEditorService) {}
 
   @Get()
-  @ApiOperation({ summary: 'Listar as salas', description: 'Todas as salas, por id.' })
+  @ApiOperation({
+    summary: 'Listar as salas',
+    description: 'Todas as salas, por id.',
+  })
   @ApiOkResponse({ type: InteriorListDto })
   list(): Promise<InteriorListDto> {
     return this.interiors.list();
@@ -93,7 +96,9 @@ export class InteriorsEditorController {
       'novos dos objetos e dos NPCs. Vale no jogo na próxima entrada, sem publicar.',
   })
   @ApiOkResponse({ type: InteriorDto })
-  @ApiBadRequestResponse({ description: 'A mensagem do primeiro erro da sala.' })
+  @ApiBadRequestResponse({
+    description: 'A mensagem do primeiro erro da sala.',
+  })
   save(
     @Param('id', interiorId) id: number,
     @Body() body: InteriorBodyDto,

@@ -29,7 +29,10 @@ export interface Combatant {
   sleepTurns: number;
   confusionTurns: number;
   isFeared: boolean;
-  isTrapped: boolean;
+  /** Vezes que faltam presa (não anda nem troca), encharcada e brotando (field-effects/01). */
+  trappedTurns: number;
+  soakedTurns: number;
+  sproutingTurns: number;
   /** Não anda na próxima vez do tabuleiro. */
   isDazed: boolean;
   isProtected: boolean;
@@ -84,6 +87,7 @@ export interface BattleGroundEffectStat {
 
 export interface BattleGroundEffect {
   damagePercent: number | null;
+  healPercent: number | null;
   statusSlug: string | null;
   stats: BattleGroundEffectStat[];
 }
@@ -235,6 +239,14 @@ export type BattleEvent =
     }
   | { type: 'status_ended'; side: SideSlug; position: number; status: string }
   | {
+      type: 'status_heal';
+      side: SideSlug;
+      position: number;
+      status: string;
+      amount: number;
+      hp: number;
+    }
+  | {
       type: 'stat_changed';
       side: SideSlug;
       position: number;
@@ -279,6 +291,14 @@ export type BattleEvent =
   | { type: 'mark_ended'; cell: HexCoord }
   | {
       type: 'ground_damage';
+      side: SideSlug;
+      position: number;
+      amount: number;
+      hp: number;
+      ground_effect_id: number;
+    }
+  | {
+      type: 'ground_heal';
       side: SideSlug;
       position: number;
       amount: number;

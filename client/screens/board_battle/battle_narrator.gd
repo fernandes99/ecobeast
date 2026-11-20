@@ -14,6 +14,11 @@ const CAPTURED_TO: Dictionary[String, String] = {
 	"party": "%s entrou na equipe.",
 	"storage": "%s foi para o Santuário.",
 }
+## O fim de um estado que tem fala própria (field-effects/02); os outros usam "não está mais".
+const ENDED_LINES: Dictionary[String, String] = {
+	"soaked": "%s secou.",
+	"trapped": "%s se soltou.",
+}
 const SIMPLE_LINES: Dictionary[String, String] = {
 	"woke_up": "%s acordou.",
 	"thawed": "%s descongelou.",
@@ -73,11 +78,18 @@ func describe(event: Dictionary) -> String:
 		"healed":
 			return "%s recuperou %d de HP." % [who, DictFields.get_int(event, "amount")]
 		"status_applied":
+			if DictFields.get_string(event, "status") == "sprouting":
+				return "%s está Brotando." % who
 			return "%s ficou %s." % [who, _status_name(event)]
 		"status_damage":
 			return "%s perdeu %d de HP: %s." % [who, DictFields.get_int(event, "damage"), _status_name(event)]
 		"status_ended":
-			return "%s não está mais %s." % [who, _status_name(event)]
+			var ended: String = ENDED_LINES.get(DictFields.get_string(event, "status"), "")
+			return ended % who if not ended.is_empty() else "%s não está mais %s." % [who, _status_name(event)]
+		"status_heal":
+			return "%s recuperou %d de HP com o broto." % [who, DictFields.get_int(event, "amount")]
+		"ground_heal":
+			return "%s recuperou %d de HP no Jardim." % [who, DictFields.get_int(event, "amount")]
 		"stat_changed":
 			return _stat_changed(event, who)
 		"flee_failed":

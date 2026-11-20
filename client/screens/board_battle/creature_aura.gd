@@ -18,6 +18,8 @@ const BUBBLES := 5
 const CRYSTALS := 6
 const STARS := 3
 const LINKS := 12
+const DRIPS := 4
+const LEAVES := 4
 
 var effects: Array[String] = []:
 	set(value):
@@ -115,6 +117,10 @@ func _draw() -> void:
 				_draw_chain(self, false)
 			"dazed":
 				_draw_sparkles()
+			"soaked":
+				_draw_drips()
+			"sprouting":
+				_draw_leaves()
 			"protect":
 				_draw_bubble()
 
@@ -227,6 +233,34 @@ func _draw_sparkles() -> void:
 			var radius := size if corner % 2 == 0 else size * 0.35
 			points.append(at + Vector2.from_angle(-PI / 2.0 + corner * PI / 4.0) * radius)
 		_shape(points, color)
+
+
+## O Encharcado (field-effects/02): gotas que pingam do corpo até o chão.
+func _draw_drips() -> void:
+	var color := _color("soaked")
+	for index: int in DRIPS:
+		var p := fposmod(_time * 0.9 + index / float(DRIPS), 1.0)
+		var x := (index / float(DRIPS - 1) - 0.5) * _half_width() * 1.4
+		var at := Vector2(x, _feet() - _height() * (0.75 - p * 0.75))
+		var drop := CreatureAura.flame_points(at, 3.0)
+		var flipped := PackedVector2Array()
+		for point: Vector2 in drop:
+			flipped.append(Vector2(point.x, 2.0 * at.y - point.y))
+		_shape(flipped, Color(color, 1.0 - p * p))
+
+
+## O Brotando (field-effects/02): folhinhas verdes que sobem devagar, balançando.
+func _draw_leaves() -> void:
+	var color := _color("sprouting")
+	for index: int in LEAVES:
+		var p := fposmod(_time * 0.35 + index / float(LEAVES), 1.0)
+		var side := -1.0 if index % 2 == 0 else 1.0
+		var at := Vector2(side * _half_width() * (0.5 + 0.3 * sin(index * 1.7)) + sin(_time * 2.0 + index) * 3.0,
+				_feet() - _height() * (0.05 + p * 0.85))
+		var points := PackedVector2Array()
+		for point: Vector2 in StatusIcons._leaf(side):
+			points.append(at + point.rotated(sin(_time * 2.5 + index) * 0.4))
+		_shape(points, Color(color, 1.0 - p * p))
 
 
 func _draw_sweat() -> void:

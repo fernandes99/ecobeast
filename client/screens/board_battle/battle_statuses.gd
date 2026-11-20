@@ -1,9 +1,11 @@
 class_name BattleStatuses
 extends RefCounted
 
-const ORDER: Array[String] = ["burn", "poison", "paralysis", "sleep", "freeze", "confusion", "fear", "trapped", "dazed", "protect"]
+const ORDER: Array[String] = ["burn", "poison", "paralysis", "sleep", "freeze", "confusion", "fear", "trapped", "dazed", "soaked", "sprouting", "protect"]
 const MAIN: Array[String] = ["burn", "poison", "paralysis", "sleep", "freeze"]
-const VOLATILE: Array[String] = ["confusion", "fear", "trapped", "dazed", "protect"]
+const VOLATILE: Array[String] = ["confusion", "fear", "trapped", "dazed", "soaked", "sprouting", "protect"]
+## Os voláteis que o servidor manda na vista de cada Ecobeast (field-effects/02).
+const SYNCED: Array[String] = ["confusion", "dazed", "trapped", "soaked", "sprouting"]
 
 var _by_key: Dictionary[String, Array] = {}
 var _actor := ""
@@ -94,19 +96,19 @@ func cure(key: String) -> void:
 		_remove(key, slug)
 
 
-## O que o servidor diz no fim da resposta: o principal (vazio sem nenhum) e se está
-## confuso ou atordoado. O medo e o preso, que ele não manda, ficam como os eventos deixaram.
-func sync(key: String, status: String, confused: bool, dazed: bool = false) -> void:
+## O que o servidor diz no fim da resposta: o principal (vazio sem nenhum) e os voláteis
+## que ele manda. O medo e o Protegido, que ele não manda, ficam como os eventos deixaram.
+func sync(key: String, status: String, confused: bool, dazed: bool = false, trapped: bool = false, soaked: bool = false, sprouting: bool = false) -> void:
 	var kept: Array = []
 	for slug: String in _by_key.get(key, []):
-		if not MAIN.has(slug) and slug != "confusion" and slug != "dazed":
+		if not MAIN.has(slug) and not SYNCED.has(slug):
 			kept.append(slug)
 	if not status.is_empty():
 		kept.append(status)
-	if confused:
-		kept.append("confusion")
-	if dazed:
-		kept.append("dazed")
+	var flags: Array[bool] = [confused, dazed, trapped, soaked, sprouting]
+	for index: int in SYNCED.size():
+		if flags[index]:
+			kept.append(SYNCED[index])
 	_by_key[key] = kept
 
 

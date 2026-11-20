@@ -254,14 +254,14 @@ describe('desmaio', () => {
       currentHp: 0,
       statusSlug: 'poison',
       confusionTurns: 3,
-      isTrapped: true,
+      trappedTurns: 2,
     });
     const turn = contextOf(makeState(player, idle()), catalog);
     faintIfDown(turn, PLAYER);
     expect(turn.state.player.team[0]).toMatchObject({
       statusSlug: null,
       confusionTurns: 0,
-      isTrapped: false,
+      trappedTurns: 0,
     });
   });
 });
@@ -335,7 +335,7 @@ describe('applyStatus', () => {
   it('prende', () => {
     const turn = context(idle());
     applyStatus(turn, { side: 'enemy', position: 0 }, 'trapped');
-    expect(turn.state.enemy.team[0]!.isTrapped).toBe(true);
+    expect(turn.state.enemy.team[0]!.trappedTurns).toBe(2);
   });
 
   it('amedronta', () => {

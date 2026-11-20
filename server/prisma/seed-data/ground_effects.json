@@ -1,5 +1,5 @@
 [
-	{ "id": 1, "slug": "fire", "name": "Chão em chamas", "damage_percent": 6, "status_condition_id": null, "color_hex": "#E8622C" },
-	{ "id": 2, "slug": "feathers", "name": "Penas no ar", "damage_percent": null, "status_condition_id": null, "color_hex": "#D9EFE8" },
-	{ "id": 3, "slug": "whirlwind", "name": "Redemoinho", "damage_percent": null, "status_condition_id": 9, "color_hex": "#7CC9B8" }
+	{ "id": 1, "slug": "fire", "name": "Chão em chamas", "damage_percent": 6, "heal_percent": null, "status_condition_id": null, "color_hex": "#E8622C" },
+	{ "id": 2, "slug": "feathers", "name": "Penas no ar", "damage_percent": null, "heal_percent": null, "status_condition_id": null, "color_hex": "#D9EFE8" },
+	{ "id": 3, "slug": "whirlwind", "name": "Redemoinho", "damage_percent": null, "heal_percent": null, "status_condition_id": 9, "color_hex": "#7CC9B8" }
 ]

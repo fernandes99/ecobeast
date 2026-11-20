@@ -73,10 +73,31 @@ const EFFECTS := {
 	"inverno_mudo": ["ice", "13/615"],
 	"grito_congelado": ["mind", "13/633"],
 	"palavra_guardada": ["mind", "14/655"],
+	"pena_afiada": ["wind", "5/222"],
+	"vento_a_favor": ["wind", "6/296"],
+	"rajada_de_penas": ["wind", "6/275"],
+	"nuvem_de_penas": ["wind", "3/125"],
+	"vendaval": ["wind", "10/464"],
+	"rasante": ["wind", "7/316"],
+	"bicada_de_folha": ["flora", "5/231"],
+	"garra_de_espinho": ["flora", "3/126"],
+	"asa_semeadora": ["flora", "11/527"],
+	"faisca_de_alga": ["volt", "7/324"],
+	"corrente_viva": ["volt", "4/195"],
+	"mare_eletrica": ["volt", "13/614"],
 }
 
 const PROJECTILES := {
 	"chama_espiral": ["fire", "12/578"],
+	"pena_afiada": ["wind", "12/579"],
+	"faisca_de_alga": ["volt", "12/579"],
+	"jato_de_mare": ["water", "12/579"],
+	"folha_navalha": ["flora", "12/579"],
+	"lufada_cortante": ["wind", "12/579"],
+	"floco_cortante": ["ice", "12/579"],
+	"rajada_de_penas": ["wind", "12/579"],
+	"lanca_de_cristal": ["ice", "12/579"],
+	"arremesso_de_torrao": ["earth", "12/578"],
 }
 
 

@@ -34,7 +34,9 @@ const FRESH_IN_BATTLE = {
   sleepTurns: 0,
   confusionTurns: 0,
   isFeared: false,
-  isTrapped: false,
+  trappedTurns: 0,
+  soakedTurns: 0,
+  sproutingTurns: 0,
   isDazed: false,
   isProtected: false,
   captured: false,
@@ -137,6 +139,9 @@ function toVisibleCreature(creature: Combatant): EnemyCreatureDto {
     status: creature.statusSlug,
     confused: creature.confusionTurns > 0,
     dazed: creature.isDazed,
+    trapped: (creature.trappedTurns ?? 0) > 0,
+    soaked: (creature.soakedTurns ?? 0) > 0,
+    sprouting: (creature.sproutingTurns ?? 0) > 0,
     stages: creature.stages,
   };
 }

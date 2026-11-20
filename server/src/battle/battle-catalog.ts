@@ -47,6 +47,7 @@ export interface CatalogRows {
   groundEffects: {
     id: number;
     damagePercent: number | null;
+    healPercent: number | null;
     statusCondition: { slug: string } | null;
     stats: { stages: number; stat: { slug: string } }[];
   }[];
@@ -77,6 +78,7 @@ export async function loadBattleCatalog(
         select: {
           id: true,
           damagePercent: true,
+          healPercent: true,
           statusCondition: SLUG,
           stats: { select: { stages: true, stat: SLUG } },
         },
@@ -116,10 +118,11 @@ export function toBattleCatalog(rows: CatalogRows): BattleCatalog {
     ),
     groundEffects: new Map(
       rows.groundEffects.map(
-        ({ id, damagePercent, statusCondition, stats }) => [
+        ({ id, damagePercent, healPercent, statusCondition, stats }) => [
           id,
           {
             damagePercent,
+            healPercent,
             statusSlug: statusCondition?.slug ?? null,
             stats: stats.map(({ stages, stat }) => ({
               statSlug: stat.slug as StageSlug,
