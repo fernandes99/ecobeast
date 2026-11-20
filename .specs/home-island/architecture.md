@@ -42,7 +42,7 @@ O servidor guarda uma exploração por Domador (`ExplorationStore`, [wild-battle
 
 A tela `hub` continua sendo a mesma cena (`res://screens/hub/hub_screen.tscn`), com a equipe, o avatar e a arte de fundo, mas:
 
-- os cartões ficam Santuário, Bestiário e Mochila (sem Explorar zona, Ilhas, Desafiar, Arenas, Loja e Refúgio);
+- os cartões ficam Refúgio, Santuário, Bestiário e Mochila (sem Explorar zona, Ilhas, Desafiar, Arenas e Loja);
 - as abas ficam Equipe, Bestiário e Perfil (a aba Loja sai, e a Home vira o botão Voltar, que volta a Liora);
 - sem ilha casa, o Hub é a primeira tela, sem Voltar, com os cartões de antes, e os de viagem viram um só, "Viagem", que abre a tela Viagem ([03](03-travel-screen.md)).
 

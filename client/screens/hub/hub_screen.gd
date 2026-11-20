@@ -27,9 +27,9 @@ const ACTIONS: Array[Dictionary] = [
 	{"id": &"bag", "title": "Mochila", "subtitle": "Organize seus itens."},
 ]
 ## Com a ilha casa, o Hub é o menu do Domador, aberto por cima dela (home-island/02):
-## as viagens, a Loja e o Refúgio ficam no mapa.
+## as viagens e a Loja ficam no mapa, e o Refúgio fica nos dois.
 const BACK_TAB := "Voltar"
-const MENU_ACTIONS: Array[StringName] = [&"storage", &"codex", &"bag"]
+const MENU_ACTIONS: Array[StringName] = [&"heal", &"storage", &"codex", &"bag"]
 const MENU_TABS: Array[Dictionary] = [
 	{"label": BACK_TAB, "icon": "home"},
 	{"label": "Equipe", "icon": "team"},

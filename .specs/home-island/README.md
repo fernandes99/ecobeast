@@ -12,7 +12,7 @@ Hoje o jogo é um menu: o Hub abre todas as features, e as ilhas são uma delas 
 ## Objetivos
 
 1. O jogador com Domador e inicial abre o app e já está andando em Liora.
-2. Equipe, Mochila, Bestiário, Santuário e Aparência ficam a um toque, pelo menu do Domador, sem sair do mapa.
+2. Equipe, Mochila, Bestiário, Santuário, Refúgio e Aparência ficam a um toque, pelo menu do Domador, sem sair do mapa.
 3. As outras partes do jogo (outras ilhas, zona sorteada, Desafiar, Arenas) são viagens que saem de um ponto da ilha.
 4. Toda viagem termina de volta em Liora.
 5. O dono escolhe no F2 qual ilha é a casa e onde fica a Viagem, sem id escrito no código.
@@ -28,7 +28,7 @@ Hoje o jogo é um menu: o Hub abre todas as features, e as ilhas são uma delas 
 
 - O jogador ficar preso em outra ilha ou na zona sem caminho de volta para casa.
 - Duas explorações vivas ao mesmo tempo, com o servidor guardando uma e o cliente mostrando outra.
-- Liora repetir a Loja e o Refúgio também no menu (eles abrem pelos prédios, como em qualquer ilha).
+- Liora repetir a Loja também no menu (ela abre pelo prédio, como em qualquer ilha).
 
 ## Decisões
 
@@ -38,7 +38,8 @@ Tomadas com o dono do projeto:
 | --- | --- |
 | Liora é a casa: o app abre em Explorar na ilha casa | Combina com a vida no lugar e as visitas à casa do avô |
 | O Hub vira o menu do Domador, aberto por um botão em Explorar, com Equipe, Mochila, Bestiário, Santuário e Aparência | A casa é o mapa, e não uma tela antes do menu |
-| As viagens saem de um lugar da ilha; a Loja e o Refúgio só pelos prédios | O mundo fica dentro do mapa |
+| As viagens saem de um lugar da ilha; a Loja só pelo prédio | O mundo fica dentro do mapa |
+| O Refúgio também fica no menu, além do prédio (2026-11-20: "No menu libera a opção de refugio por lá também") | Curar a equipe sem andar até o prédio |
 
 Tomadas no planejamento (corrigíveis; ao mudar uma, atualize aqui e nas specs afetadas):
 

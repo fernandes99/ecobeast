@@ -25,7 +25,7 @@ Com a casa marcada ([01](01-home-and-travel-data.md)), o jogo passa a começar n
 - **RF-02:** `main.gd` abre, para o jogador com inicial, `Home.go()`, e não mais o Hub. A escolha do inicial (`starter_select_screen.gd`) também termina em `Home.go()`.
 - **RF-03:** Em Explorar na ilha casa, o botão Voltar vira "Menu", com o mesmo lugar e o ícone `person`, e abre o Hub por `Router.push(&"hub")`. O Voltar do Android e o Esc também abrem o menu, e não saem de Liora.
 - **RF-04:** Nas outras ilhas e na zona, o Voltar continua o mesmo até a [03](03-travel-screen.md).
-- **RF-05:** O Hub, aberto em cima de Liora, mostra os cartões Santuário, Bestiário e Mochila e as abas Equipe, Bestiário e Perfil. A aba Home vira o botão "Voltar", que faz `Router.back()` até Liora.
+- **RF-05:** O Hub, aberto em cima de Liora, mostra os cartões Refúgio, Santuário, Bestiário e Mochila (o Refúgio entrou em 2026-11-20, a pedido do dono) e as abas Equipe, Bestiário e Perfil. A aba Home vira o botão "Voltar", que faz `Router.back()` até Liora.
 - **RF-06:** O Voltar do Android e o Esc no Hub voltam a Liora.
 - **RF-07:** Sem ilha casa (`home_island_id == 0`), o jogo abre o Hub como primeira tela, igual ao de antes desta iniciativa (todos os cartões e abas). Na [03](03-travel-screen.md), os cartões de viagem viram um só, "Viagem", que abre a tela Viagem.
 - **RF-08:** O "Apagar Domador" do Perfil continua levando à tela de entrada, como hoje.
@@ -34,7 +34,7 @@ Com a casa marcada ([01](01-home-and-travel-data.md)), o jogo passa a começar n
 
 - [ ] Com uma casa publicada, abrir o app com um Domador que tem inicial cai andando na casa, no ponto de início.
 - [ ] Escolher o inicial numa conta nova termina na casa.
-- [ ] Menu, em Liora, abre o Hub sem os cartões de viagem, da Loja e do Refúgio; Voltar, Esc e o voltar do Android voltam ao mesmo mapa, sem carregar de novo.
+- [ ] Menu, em Liora, abre o Hub sem os cartões de viagem e da Loja, com o do Refúgio; Voltar, Esc e o voltar do Android voltam ao mesmo mapa, sem carregar de novo.
 - [ ] Sem casa, o app abre o Hub de antes, e tudo continua alcançável.
 
 ## Desenho técnico
