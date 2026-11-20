@@ -86,6 +86,7 @@ A luta nova substitui a de hoje em Explorar zona. A luta atual deixa de ser usad
 | 29 | [29-earth-volt-water-flora-skills](29-earth-volt-water-flora-skills.md) | Ícone, efeito e som do Desabamento, do Abalo Profundo, da Tempestade de Algas, do Esguicho (com projétil), da Poça d'Água e do Laço de Raízes | concluída (falta o dono ver e ouvir no jogo) |
 | 30 | [30-flora-earth-ice-toxin-skills](30-flora-earth-ice-toxin-skills.md) | Ícone, efeito e som do Brotar, do Semear Jardim, da Lama Grudenta, da Areia Movediça, do Chão de Geada e do Espinho Venenoso | concluída (falta o dono ver e ouvir no jogo) |
 | 31 | [31-shadow-toxin-instinct-skills](31-shadow-toxin-instinct-skills.md) | Ícone, efeito e som da Poça Tóxica, da Pena Sombria (com projétil), do Olhar da Lua, do Voo Silencioso, do Eclipse Lunar e do Bote | concluída (falta o dono ver e ouvir no jogo) |
+| 32 | [32-toxin-instinct-insect-skills](32-toxin-instinct-insect-skills.md) | Ícone, efeito e som da Presa Venenosa, da Constrição, do Cuspe Ácido (com projétil), do Golpe de Foice, da Emboscada e da Dança da Foice | concluída (falta o dono ver e ouvir no jogo) |
 
 O desenho compartilhado está no [architecture.md](architecture.md).
 

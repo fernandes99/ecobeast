@@ -1,4 +1,4 @@
-"""Gera o som das Técnicas da board-battle/18 e /20 a /22 e /25 a /27 e /29 a /31 (board-battle/19 a /22, /25 a /27 e /29 a /31), por síntese:
+"""Gera o som das Técnicas da board-battle/18 e /20 a /22 e /25 a /27 e /29 a /32 (board-battle/19 a /22, /25 a /27 e /29 a /32), por síntese:
 ruído em filtros, tons com a altura mudando e saturação leve. Cada som dura mais
 ou menos o efeito da Técnica, porque os dois começam juntos; o impacto fica com o
 som de dano. Tudo sai daqui: sem gravação de terceiros.
@@ -1204,6 +1204,96 @@ def bote(rng):
     return mix, 2.0
 
 
+def presa_venenosa(rng):
+    """Presa Venenosa: as presas cravando num estalo duplo com um baque, e o veneno
+    entrando num borbulhar grosso que chia."""
+    length = 0.55
+    mix = silence(length)
+    add(mix, band(noise(rng, 0.05), [(0.0, 2500.0), (0.05, 4500.0)], 2.0), 0.0, 0.6)
+    add(mix, click(rng, 3000.0, 0.02, 1.5), 0.05, 1.7)
+    add(mix, click(rng, 4400.0, 0.015, 1.5), 0.066, 1.1)
+    add(mix, thud(160.0, 55.0, 0.14), 0.05, 1.2)
+    fizz = shape(band(noise(rng, 0.38), 3400.0, 1.2), [(0.0, 0.0), (0.04, 1.0), (0.38, 0.0)])
+    add(mix, flutter(rng, fizz, 38.0, 0.6), 0.12, 0.45)
+    for _ in range(6):
+        add(mix, bubble(rng.uniform(380.0, 900.0), rng.uniform(0.04, 0.08)), rng.uniform(0.14, 0.46), rng.uniform(0.4, 0.8))
+    return mix, 1.7
+
+
+def constricao(rng):
+    """Constrição: o corpo da cobra deslizando em escamas e se enrolando, o aperto num
+    rangido que cresce e o estalo no fim."""
+    length = 0.75
+    mix = silence(length)
+    slide = flutter(rng, band(noise(rng, 0.4), [(0.0, 1600.0), (0.4, 2600.0)], 1.2), 28.0, 0.7)
+    add(mix, shape(slide, [(0.0, 0.0), (0.06, 1.0), (0.32, 0.8), (0.4, 0.0)]), 0.0, 0.8)
+    squeeze = shape(tone(0.35, [(0.0, 90.0), (0.35, 150.0)], (1.0, 0.7, 0.5, 0.35), (17.0, 0.05)), [(0.0, 0.0), (0.1, 0.8), (0.3, 1.0), (0.35, 0.0)])
+    add(mix, band(squeeze, 600.0, 0.9), 0.3, 0.9)
+    add(mix, click(rng, 1400.0, 0.05, 2.0), 0.64, 1.2)
+    add(mix, thud(150.0, 70.0, 0.1), 0.64, 0.6)
+    return mix, 1.7
+
+
+def cuspe_acido(rng):
+    """Cuspe Ácido: um chiado de cobra, o cuspe saindo num sopro molhado e o ácido
+    espirrando e chiando no alvo."""
+    length = 0.6
+    mix = silence(length)
+    add(mix, shape(high(noise(rng, 0.12), 4500.0), [(0.0, 0.0), (0.03, 1.0), (0.12, 0.0)]), 0.0, 0.45)
+    spit = band(noise(rng, 0.12), [(0.0, 900.0), (0.12, 2400.0)], 1.4)
+    add(mix, shape(spit, [(0.0, 0.0), (0.02, 1.0), (0.12, 0.0)]), 0.1, 1.1)
+    add(mix, decay(band(noise(rng, 0.12), 1400.0, 1.0), 0.1, 0.002), 0.24, 0.8)
+    acid = shape(band(noise(rng, 0.34), 4800.0, 1.4), [(0.0, 0.0), (0.03, 1.0), (0.34, 0.0)])
+    add(mix, flutter(rng, acid, 45.0, 0.6), 0.25, 0.55)
+    for _ in range(5):
+        add(mix, bubble(rng.uniform(700.0, 1400.0), rng.uniform(0.03, 0.05)), rng.uniform(0.28, 0.55), rng.uniform(0.35, 0.6))
+    return mix, 1.6
+
+
+def golpe_de_foice(rng):
+    """Golpe de Foice: um "shing" de lâmina, o corte rápido que desce em diagonal e o
+    impacto seco com estilhaços."""
+    length = 0.5
+    mix = silence(length)
+    add(mix, ping(3600.0, 0.12, ((1.0, 1.0), (1.47, 0.6), (2.31, 0.3))), 0.0, 0.35)
+    cut = band(noise(rng, 0.16), [(0.0, 5200.0), (0.16, 1100.0)], 2.5)
+    add(mix, shape(cut, [(0.0, 0.0), (0.03, 1.0), (0.16, 0.0)]), 0.03, 1.4)
+    add(mix, click(rng, 2600.0, 0.03, 1.5), 0.17, 1.2)
+    add(mix, thud(200.0, 80.0, 0.12), 0.17, 0.8)
+    add(mix, crackles(rng, length, 60.0, 0.18, 0.4), 0.0, 0.6)
+    return mix, 1.7
+
+
+def emboscada(rng):
+    """Emboscada: um silêncio tenso com folhas mexendo de leve, o bote rápido num sopro
+    e duas foices fechando com força."""
+    length = 0.6
+    mix = silence(length)
+    rustle = flutter(rng, band(noise(rng, 0.25), 3200.0, 1.0), 30.0, 0.8)
+    add(mix, shape(rustle, [(0.0, 0.0), (0.08, 1.0), (0.25, 0.0)]), 0.0, 0.25)
+    lunge = band(noise(rng, 0.1), [(0.0, 700.0), (0.1, 3200.0)], 1.5)
+    add(mix, shape(lunge, [(0.0, 0.0), (0.07, 1.0), (0.1, 0.0)]), 0.24, 1.1)
+    for at in (0.33, 0.37):
+        slash = band(noise(rng, 0.1), [(0.0, 4200.0), (0.1, 900.0)], 2.5)
+        add(mix, decay(slash, 0.1, 0.002), at, 1.2)
+    add(mix, thud(170.0, 60.0, 0.16), 0.34, 1.2)
+    return mix, 1.8
+
+
+def danca_da_foice(rng):
+    """Dança da Foice: as foices afiando uma na outra em dois raspados metálicos, um
+    tinido que fica e notas que sobem, o Ataque crescendo."""
+    length = 0.75
+    mix = silence(length)
+    for at in (0.0, 0.18):
+        scrape = band(noise(rng, 0.14), [(0.0, 3000.0), (0.14, 6500.0)], 3.0)
+        add(mix, shape(scrape, [(0.0, 0.0), (0.04, 1.0), (0.14, 0.0)]), at, 0.9)
+        add(mix, ping(4200.0, 0.2, ((1.0, 1.0), (1.47, 0.5))), at + 0.12, 0.25)
+    for index, freq in enumerate((784.0, 988.0, 1175.0, 1568.0)):
+        add(mix, ping(freq, 0.18), 0.36 + index * 0.08, 0.28)
+    return mix, 1.6
+
+
 SOUNDS = {
     "mordida_brasa": mordida_brasa,
     "fumaca_densa": fumaca_densa,
@@ -1281,6 +1371,12 @@ SOUNDS = {
     "voo_silencioso": voo_silencioso,
     "eclipse_lunar": eclipse_lunar,
     "bote": bote,
+    "presa_venenosa": presa_venenosa,
+    "constricao": constricao,
+    "cuspe_acido": cuspe_acido,
+    "golpe_de_foice": golpe_de_foice,
+    "emboscada": emboscada,
+    "danca_da_foice": danca_da_foice,
 }
 
 

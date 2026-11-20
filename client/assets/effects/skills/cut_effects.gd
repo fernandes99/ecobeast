@@ -103,6 +103,12 @@ const EFFECTS := {
 	"voo_silencioso": ["shadow", "12/567"],
 	"eclipse_lunar": ["shadow", "2/79"],
 	"bote": ["beast", "11/509"],
+	"presa_venenosa": ["toxin", "2/64"],
+	"constricao": ["beast", "3/134"],
+	"cuspe_acido": ["toxin", "12/577"],
+	"golpe_de_foice": ["bug", "12/589"],
+	"emboscada": ["bug", "13/622"],
+	"danca_da_foice": ["bug", "12/586"],
 }
 
 const PROJECTILES := {
@@ -118,6 +124,7 @@ const PROJECTILES := {
 	"arremesso_de_torrao": ["earth", "12/578"],
 	"esguicho": ["water", "12/579"],
 	"pena_sombria": ["shadow", "12/579"],
+	"cuspe_acido": ["toxin", "12/579"],
 }
 
 
