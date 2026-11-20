@@ -91,6 +91,7 @@ O Ecobeast é um jogo mobile (Android/iOS, retrato): o cliente em **Godot 4.7 co
 | [portal-altar](portal-altar/) | O altar-portal do Veilmoth, a mariposa arcana que teleporta, como peça solta com e sem a mariposa |
 | [field-effects](field-effects/) | Os estados Preso (no tabuleiro), Encharcado e Brotando, a marca que cura e mais seis marcas, com dez Técnicas novas |
 | [biome-zones](biome-zones/) | As zonas dos biomas (Bosque, Arbustal, Clareira e outras), com plantas próprias e, no mapa sorteado, quem nasce em cada uma; nas ilhas, pintadas pela ferramenta Zona do F2 |
+| [village-pack](village-pack/) | As casas, os objetos e as cercas do tileset Village do Fantasy Dreamland Reborn: 10 casas em 8 cores, 17 objetos e 2 paredes |
 
 As próximas iniciativas estão no [roadmap.md](roadmap.md).
 

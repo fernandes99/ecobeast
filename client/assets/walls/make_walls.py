@@ -1,7 +1,8 @@
-"""Recorta as paredes das folhas dos pacotes (fence-art/01, home-pack/02): a cerca de madeira e o
-muro de pedra do Sunnyside World e a cerca de estacas do Main Characters Home.
+"""Recorta as paredes das folhas dos pacotes (fence-art/01, home-pack/02, village-pack/03): a
+cerca de madeira e o muro de pedra do Sunnyside World, a cerca de estacas do Main Characters
+Home e a cerca e o muro da vila do Fantasy Dreamland Reborn.
 
-Uso: python -I make_walls.py <spr_tileset_sunnysideworld_16px.png> <exterior.png> <pasta de saída>
+Uso: python -I make_walls.py <spr_tileset_sunnysideworld_16px.png> <exterior.png> <FDR_Village.png> <pasta de saída>
 
 Cada parede vira uma folha de 3 células de 96x72, com o pé em (48, 43), que o HexWalls lê:
 - 0: o poste (ou o pilar), com o pé no pé da célula;
@@ -25,7 +26,7 @@ def color(hex_code):
     return tuple(int(hex_code[i:i + 2], 16) for i in (0, 2, 4)) + (255,)
 
 
-# Por parede: a folha (0 a do Sunnyside, 1 a do Main Characters Home), o poste (x, y,
+# Por parede: a folha (0 a do Sunnyside, 1 a do Main Characters Home, 2 a da vila), o poste (x, y,
 # largura, altura, coluna e linha do pé), os pixels do poste que saem (x, y na folha), a
 # unidade da travessa (x, y, altura, linha do pé, a coluna do meio do poste e as colunas
 # que são travessa; as outras, por baixo do poste, repetem a coluna lisa) e a travessa
@@ -53,6 +54,21 @@ WALLS = [
         "clear": [(x, y) for x in (177, 183) for y in (22, 23, 24)],
         "rail": (177, 16, 16, 14, 3, (7,), 7),
         "top": (169, 25, 7, 8),
+    },
+    {
+        "slug": "village_fence",
+        "sheet": 2,
+        "post": (117, 161, 6, 16, 3, 15),
+        "rail": (117, 161, 16, 15, 3, range(6, 16), 10),
+        "top": (117, 177, 6, 16),
+    },
+    {
+        "slug": "village_wall",
+        "sheet": 2,
+        "post": (128, 210, 1, 12, 0, 11),
+        "clear": [(128, y) for y in range(210, 222)],
+        "rail": (128, 210, 12, 11, 0, range(0, 16), 0),
+        "top": (117, 226, 6, 8),
     },
 ]
 
@@ -145,11 +161,11 @@ def sheet_for(sheet, wall):
 
 
 def main():
-    if len(sys.argv) != 4:
+    if len(sys.argv) != 5:
         sys.exit(__doc__)
-    sheets = [read_png(sys.argv[1]), read_png(sys.argv[2])]
+    sheets = [read_png(sys.argv[1]), read_png(sys.argv[2]), read_png(sys.argv[3])]
     for wall in WALLS:
-        path = os.path.join(sys.argv[3], wall["slug"] + ".png")
+        path = os.path.join(sys.argv[4], wall["slug"] + ".png")
         write_png(path, sheet_for(sheets[wall["sheet"]], wall))
         print(path)
 

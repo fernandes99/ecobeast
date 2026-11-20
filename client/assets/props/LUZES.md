@@ -16,6 +16,8 @@ Como ele acha cada luz:
 
 O `x` e o `y` são o pixel do centro da luz a partir do pé (o meio da borda de baixo da arte: `x = coluna − largura // 2`, `y = linha − altura`). Na peça espelhada, o jogo usa a coluna `−x − 1 + largura % 2`.
 
-**Fora do script:** o prédio do Refúgio (tipo 22) e a Casinha enxaimel (tipo 100), lidos das imagens do dono, e o Altar-portal (tipo 101) têm as luzes postas à mão nas specs delas ([refuge-art](../../../.specs/refuge-art/), [timber-cottage](../../../.specs/timber-cottage/), [portal-altar](../../../.specs/portal-altar/)): o vidro de uma janela pode ter o cinza da pedra, e a estufa do Refúgio não acende.
+**Casas da vila** (tipos 102 a 111, [village-pack](../../../.specs/village-pack/)): as janelas de vidro e a redonda do frontão; a Casinha da vila não tem janela de vidro, e fica sem luz.
+
+**Fora do script:** o prédio do Refúgio (tipo 22) e a Casinha enxaimel (tipo 100), lidos das imagens do dono, o Altar-portal (tipo 101) e a Lanterna pendurada da vila (tipo 123, só a variante 1, acesa) têm as luzes postas à mão nas specs delas ([refuge-art](../../../.specs/refuge-art/), [timber-cottage](../../../.specs/timber-cottage/), [portal-altar](../../../.specs/portal-altar/), [village-pack](../../../.specs/village-pack/02-village-objects.md)): o vidro de uma janela pode ter o cinza da pedra, a estufa do Refúgio não acende, e as duas lanternas da vila têm a mesma silhueta, então o script daria a luz da acesa à apagada.
 
 **Peça nova:** ponha o tipo em `TYPES` (e em `LAMPS`, se a luz for uma lâmpada amarela), rode o script e compare com o JSON de antes. As linhas novas entram no banco por uma migração, ou à mão pelo painel do Supabase.

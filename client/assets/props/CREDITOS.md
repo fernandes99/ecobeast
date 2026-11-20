@@ -10,4 +10,6 @@ As pastas `big_house`, `small_house` e `small_townhouse` vêm do **Main Characte
 
 A pasta `timber_house` vem do **Free Glassblower's Workshop Top-Down Pixel Art Asset**, também da craftpix.net e pela mesma licença: a casa enxaimel do `Exterior.tmx` (pasta `Tiled_files`), montada pelos tiles dela pelo `make_timber_house.py`, sem pixel novo, com a porta fechada; as variantes 2 a 8 mudam só a cor do telhado, da madeira, da pedra e do reboco. A fumaça da chaminé é a da `big_house` (timber-house/01).
 
+As pastas `village_*` vêm do tileset **Village** (`FDR_Village.png`) do pacote **Fantasy Dreamland Reborn**, da ElvGames, usado pela licença do pacote (o dono confirma a licença, village-pack). As casas são montadas pelos tiles do pacote pelo `make_village_houses.py`, sem pixel novo: o telhado, a parede alta, a porta, as janelas e a chaminé; as cores 1, 2 e 5 são os telhados do pacote, e as outras repintam o telhado vermelho pelo matiz. A fumaça da chaminé é a da `big_house` (village-pack/01). Os objetos são recortados pelo `make_village_objects.py`, sem mudar os pixels; a estátua da fonte grande e os ícones da placa de loja são tiles do pacote colados por cima (village-pack/02).
+
 O resto das pastas tem arte do projeto.

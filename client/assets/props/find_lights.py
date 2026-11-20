@@ -39,6 +39,16 @@ TYPES = [
     (96, "small_house", 8),
     (97, "small_townhouse", 8),
     (98, "timber_house", 8),
+    (102, "village_cottage", 8),
+    (103, "village_house", 8),
+    (104, "village_wing_house", 8),
+    (105, "village_manor", 8),
+    (106, "village_longhouse", 8),
+    (107, "village_townhouse", 8),
+    (108, "village_large_townhouse", 8),
+    (109, "village_long_townhouse", 8),
+    (110, "village_twin_house", 8),
+    (111, "village_row_house", 8),
 ]
 
 # as lâmpadas: (slug, variante) -> [(x0, y0, x1, y1) da faixa onde procurar o amarelo, raio]

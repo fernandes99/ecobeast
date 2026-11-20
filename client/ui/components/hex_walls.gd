@@ -20,12 +20,15 @@ const FLAT_GAP := {"picket_fence": 8.0}
 ## Acima de 60°, a travessa deitada empilha e vira uma faixa: vai a vista de cima.
 const STEEP_SLOPE := 1.73
 ## Por tipo: os postes de um trecho em pé, a largura e as linhas da travessa vista de cima e
-## quanto ela sobe do chão. As estacas já estão no trecho em pé da cerca de estacas: ela só
-## tem os postes das pontas.
+## quanto ela sobe do chão. As estacas já estão no trecho em pé da cerca de estacas, e os
+## postes no da cerca da vila: elas só têm os postes das pontas. O muro da vila sobe até o
+## topo dele, para a quina emendar no trecho deitado.
 const STEEP := {
 	"wood_fence": {"gap": 16.0, "width": 4, "rows": 1, "lift": 0},
 	"stone_fence": {"gap": 24.0, "width": 8, "rows": 8, "lift": 0},
 	"picket_fence": {"gap": INF, "width": 7, "rows": 8, "lift": 8},
+	"village_fence": {"gap": INF, "width": 6, "rows": 16, "lift": 0},
+	"village_wall": {"gap": INF, "width": 6, "rows": 8, "lift": 12},
 }
 
 enum Kind { POST, RAIL, TOP }

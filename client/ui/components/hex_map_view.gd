@@ -93,6 +93,16 @@ const PROP_SMOKE: Dictionary[String, Dictionary] = {
 	"small_townhouse": {"offset": Vector2i(-48, -164), "size": 48, "frames": 6, "fps": 6.0},
 	"timber_house": {"offset": Vector2i(-41, -179), "size": 48, "frames": 6, "fps": 6.0},
 	"refuge_building": {"offset": Vector2i(-57, -156), "size": 48, "frames": 6, "fps": 6.0},
+	"village_cottage": {"offset": Vector2i(-35, -146), "size": 48, "frames": 6, "fps": 6.0},
+	"village_house": {"offset": Vector2i(-19, -146), "size": 48, "frames": 6, "fps": 6.0},
+	"village_wing_house": {"offset": Vector2i(-11, -162), "size": 48, "frames": 6, "fps": 6.0},
+	"village_manor": {"offset": Vector2i(-35, -162), "size": 48, "frames": 6, "fps": 6.0},
+	"village_longhouse": {"offset": Vector2i(-35, -162), "size": 48, "frames": 6, "fps": 6.0},
+	"village_townhouse": {"offset": Vector2i(-35, -182), "size": 48, "frames": 6, "fps": 6.0},
+	"village_large_townhouse": {"offset": Vector2i(-35, -182), "size": 48, "frames": 6, "fps": 6.0},
+	"village_long_townhouse": {"offset": Vector2i(-35, -182), "size": 48, "frames": 6, "fps": 6.0},
+	"village_twin_house": {"offset": Vector2i(11, -162), "size": 48, "frames": 6, "fps": 6.0},
+	"village_row_house": {"offset": Vector2i(59, -162), "size": 48, "frames": 6, "fps": 6.0},
 }
 const NO_PLACE := Vector2i(-2147483648, 0)
 ## O corte de altura do editor: acima dele, o hexágono fica transparente (terrain-height/03).
