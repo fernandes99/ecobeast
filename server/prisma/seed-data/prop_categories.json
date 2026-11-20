@@ -1,0 +1,67 @@
+[
+	{
+		"id": 1,
+		"slug": "houses",
+		"name": "Casas"
+	},
+	{
+		"id": 2,
+		"slug": "buildings",
+		"name": "Prédios"
+	},
+	{
+		"id": 3,
+		"slug": "trees",
+		"name": "Árvores"
+	},
+	{
+		"id": 4,
+		"slug": "plants",
+		"name": "Plantas"
+	},
+	{
+		"id": 5,
+		"slug": "flowers",
+		"name": "Flores"
+	},
+	{
+		"id": 6,
+		"slug": "rocks",
+		"name": "Pedras"
+	},
+	{
+		"id": 7,
+		"slug": "wood",
+		"name": "Troncos e galhos"
+	},
+	{
+		"id": 8,
+		"slug": "beach",
+		"name": "Praia"
+	},
+	{
+		"id": 9,
+		"slug": "lights",
+		"name": "Iluminação"
+	},
+	{
+		"id": 10,
+		"slug": "objects",
+		"name": "Objetos"
+	},
+	{
+		"id": 11,
+		"slug": "signs",
+		"name": "Placas"
+	},
+	{
+		"id": 12,
+		"slug": "water",
+		"name": "Água"
+	},
+	{
+		"id": 13,
+		"slug": "garden",
+		"name": "Jardim e plantação"
+	}
+]

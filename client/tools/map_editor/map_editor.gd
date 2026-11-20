@@ -9,6 +9,8 @@ const SIDE_WIDTH := 430.0
 const ISLANDS_SIZE := Vector2i(460, 360)
 const ICONS := "res://tools/map_editor/icons/%s.svg"
 const ICON_WIDTH := 22
+const NAME_WIDTH := 220.0
+const SHORTCUTS := "Roda: zoom  ·  Botão do meio ou Espaço: arrastar  ·  Tab: visão de cima  ·  Ctrl+Z / Ctrl+Y: desfazer e refazer"
 const NO_SESSION := "Entre no jogo para usar o editor."
 const EDITOR_OFF := "O editor está desligado neste servidor. Ponha o seu id em MAP_EDITOR_USER_IDS no .env do servidor."
 const UNSAVED_QUESTION := "Salvar as mudanças?"
@@ -559,7 +561,7 @@ func _show_blocked(message: String) -> void:
 
 func _on_hovered(coord: Vector2i, tile: HexTile) -> void:
 	if tile == null:
-		_hover_label.text = ""
+		_hover_label.text = SHORTCUTS
 		return
 	var text := "(%d, %d)  ·  %s  ·  Altura %d" % [coord.x, coord.y, _biome_name(tile.biome), tile.height]
 	if not tile.ground.is_empty():
@@ -783,24 +785,20 @@ func _build() -> void:
 	_name_edit = LineEdit.new()
 	_name_edit.placeholder_text = "Nome da ilha"
 	_name_edit.max_length = 40
-	_name_edit.custom_minimum_size.x = 300.0
+	_name_edit.custom_minimum_size.x = NAME_WIDTH
 	_name_edit.editable = false
 	_name_edit.text_changed.connect(_on_name_changed)
 	header.add_child(_name_edit)
-	_status_label = Label.new()
-	_status_label.theme_type_variation = &"SecondaryLabel"
-	header.add_child(_status_label)
-	_message_label = Label.new()
-	_message_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_message_label.clip_text = true
-	header.add_child(_message_label)
+	var spacer := Control.new()
+	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	header.add_child(spacer)
 	_islands_button = header_button("Ilhas", "islands", "As ilhas: abrir, criar e apagar.")
 	_islands_button.pressed.connect(_open_islands)
 	header.add_child(_islands_button)
-	_story_button = header_button("Linha da história", "scene", "Todas as cenas, ligadas pelos Marcos, com os avisos.")
+	_story_button = header_button("", "scene", "Linha da história: todas as cenas, ligadas pelos Marcos, com os avisos.")
 	_story_button.pressed.connect(func() -> void: _story_line.open(_list.island_names()))
 	header.add_child(_story_button)
-	_interiors_button = header_button("Interiores", "object", "As salas dos prédios: o lado de dentro do Refúgio e das casas.")
+	_interiors_button = header_button("", "object", "Interiores: as salas dos prédios, o lado de dentro do Refúgio e das casas.")
 	_interiors_button.pressed.connect(_show_interiors)
 	header.add_child(_interiors_button)
 	_undo_button = header_button("", "undo", "Desfazer (Ctrl+Z)")
@@ -809,14 +807,17 @@ func _build() -> void:
 	_redo_button = header_button("", "redo", "Refazer (Ctrl+Y)")
 	_redo_button.pressed.connect(_redo)
 	header.add_child(_redo_button)
-	_cut_button = header_button("Altura: tudo", "height", "Mostrar e editar só a altura de 0 a %d (H)." % HexMapView.CUT_HEIGHT)
+	_cut_button = header_button("", "height", "")
+	_cut_button.toggle_mode = true
 	_cut_button.pressed.connect(toggle_height_cut)
 	header.add_child(_cut_button)
-	_layers_button = header_button("Camadas", "eye", "Mostrar ou esconder áreas, ações, bloqueio e contorno.")
+	_refresh_cut_button.call_deferred()
+	_layers_button = header_button("", "eye", "Camadas: mostrar ou esconder áreas, ações, bloqueio, contorno e animações.")
 	_layers_button.pressed.connect(_open_layers)
 	header.add_child(_layers_button)
 	_save_button = Button.new()
-	_save_button.text = "Salvar (Ctrl+S)"
+	_save_button.text = "Salvar"
+	_save_button.tooltip_text = "Ctrl+S"
 	_save_button.focus_mode = Control.FOCUS_NONE
 	_save_button.pressed.connect(save)
 	header.add_child(_save_button)
@@ -965,12 +966,27 @@ func _build() -> void:
 	_history.applied.connect(_on_history_applied)
 	add_child(_history)
 
+	var footer := HBoxContainer.new()
+	footer.add_theme_constant_override(&"separation", 16)
+	_editor.add_child(footer)
 	_hover_label = Label.new()
 	_hover_label.theme_type_variation = &"SecondaryLabel"
+	_hover_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_hover_label.size_flags_stretch_ratio = 3.0
 	_hover_label.clip_text = true
 	_hover_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	_hover_label.text = "Botão esquerdo: pintar, pôr uma peça ou arrastar a escolhida. Botão direito: escolher peça ou ação, tirar área ou apagar vegetação. Roda: zoom. Botão do meio, ou espaço e o botão esquerdo: arrastar. Tab: visão de cima. Ctrl+Z e Ctrl+Y: desfazer e refazer."
-	_editor.add_child(_hover_label)
+	_hover_label.text = SHORTCUTS
+	footer.add_child(_hover_label)
+	_message_label = Label.new()
+	_message_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_message_label.size_flags_stretch_ratio = 2.0
+	_message_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_message_label.clip_text = true
+	_message_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	footer.add_child(_message_label)
+	_status_label = Label.new()
+	_status_label.theme_type_variation = &"BoldLabel"
+	footer.add_child(_status_label)
 
 	_unsaved_dialog = ConfirmationDialog.new()
 	_unsaved_dialog.title = TITLE
@@ -1064,7 +1080,9 @@ func toggle_height_cut() -> void:
 
 
 func _refresh_cut_button() -> void:
-	_cut_button.text = "Altura: tudo" if _tools.height_cut < 0 else "Altura: até %d" % HexMapView.CUT_HEIGHT
+	var cut := _tools.height_cut >= 0
+	_cut_button.set_pressed_no_signal(cut)
+	_cut_button.tooltip_text = ("Altura: mostrando até a %d. Clique para ver tudo (H)." if cut else "Altura: mostrando tudo. Clique para ver e editar só até a altura %d (H).") % HexMapView.CUT_HEIGHT
 
 
 func _open_layers() -> void:

@@ -24,17 +24,9 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 
 WINDOW_COLOR = "ffcf70"
 LAMP_COLOR = "ffd890"
-LAMP_RADIUS = 28
-WALL_LAMP_RADIUS = 18
 
 # tipo de peça, slug, quantas variantes
 TYPES = [
-    (18, "lamp_post", 2),
-    (23, "shop_building", 1),
-    (24, "town_house", 9),
-    (25, "town_house_medium", 12),
-    (26, "town_house_large", 10),
-    (27, "observatory", 1),
     (95, "big_house", 8),
     (96, "small_house", 8),
     (97, "small_townhouse", 8),
@@ -52,14 +44,11 @@ TYPES = [
 ]
 
 # as lâmpadas: (slug, variante) -> [(x0, y0, x1, y1) da faixa onde procurar o amarelo, raio]
-LAMPS = {
-    ("lamp_post", 1): [((0, 0, 26, 16), LAMP_RADIUS)],
-    ("lamp_post", 2): [((12, 0, 26, 16), LAMP_RADIUS)],
-    ("observatory", 1): [((28, 50, 42, 64), WALL_LAMP_RADIUS), ((52, 50, 66, 64), WALL_LAMP_RADIUS)],
-}
+# (nenhuma desde que o Poste de luz e o Observatório saíram, prop-cleanup/01)
+LAMPS: dict = {}
 
-# o telhado azul da Loja não é vidro
-SKIP_ABOVE = {"shop_building": 35}
+# as linhas do alto de uma peça que não são vidro: slug -> linha
+SKIP_ABOVE: dict = {}
 
 
 def is_glass(pixel: tuple) -> bool:

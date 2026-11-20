@@ -226,9 +226,19 @@ const TABLES := {
 			"palette_id": {"type": "int", "nullable": true, "fk": "palettes"},
 		},
 	},
+	"prop_categories": {
+		"key": ["id"],
+		"columns": {"id": ID, "slug": SLUG, "name": TEXT},
+	},
 	"prop_types": {
 		"key": ["id"],
-		"columns": {"id": ID, "slug": SLUG, "name": TEXT, "variants": {"type": "int", "min": 1}},
+		"columns": {
+			"id": ID,
+			"slug": SLUG,
+			"name": TEXT,
+			"variants": {"type": "int", "min": 1},
+			"prop_category_id": {"type": "int", "fk": "prop_categories"},
+		},
 	},
 	"prop_type_blocks": {
 		"key": ["id"],

@@ -202,18 +202,36 @@ model GroundType {
   @@schema("ecobeasts")
 }
 
+/// A categoria de um tipo de peça na ferramenta Peças do editor (.specs/editor-ui).
+model PropCategory {
+  id   Int    @id @default(autoincrement())
+  /// CHECK ^[a-z0-9_]+$ (migration prop_categories)
+  slug String @unique
+  /// O que o editor mostra; a ordem é a do id.
+  name String
+
+  propTypes PropType[]
+
+  @@map("prop_categories")
+  @@schema("ecobeasts")
+}
+
 model PropType {
-  id       Int    @id @default(autoincrement())
+  id             Int    @id @default(autoincrement())
   /// CHECK ^[a-z0-9_]+$ (migration free_props)
-  slug     String @unique
-  name     String
+  slug           String @unique
+  name           String
   /// Quantas variantes a arte tem. CHECK >= 1 (migration free_props)
-  variants Int
+  variants       Int
+  /// A categoria no editor; um tipo novo sem ela fica em Objetos (migration prop_categories)
+  propCategoryId Int    @default(10) @map("prop_category_id")
 
-  props  IslandProp[]
-  blocks PropTypeBlock[]
-  lights PropTypeLight[]
+  category PropCategory    @relation(fields: [propCategoryId], references: [id])
+  props    IslandProp[]
+  blocks   PropTypeBlock[]
+  lights   PropTypeLight[]
 
+  @@index([propCategoryId])
   @@map("prop_types")
   @@schema("ecobeasts")
 }

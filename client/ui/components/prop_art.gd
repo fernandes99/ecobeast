@@ -10,6 +10,8 @@ const MIN_ART_RADIUS := 4.0
 const MAX_ART_RADIUS := 15.0
 
 static var _icons: Dictionary[String, Texture2D] = {}
+static var _thumbnails: Dictionary[String, Texture2D] = {}
+static var _sheet: Image = null
 
 
 static func slug_of(prop_type_id: int) -> String:
@@ -31,6 +33,28 @@ static func icon(slug: String, variant: int) -> Texture2D:
 		var path := HexMapView.PROP_PATH % [slug, variant]
 		texture = load(path) as Texture2D if ResourceLoader.exists(path) else null
 	_icons[key] = texture
+	return texture
+
+
+## O ícone recortado pelos pixels: a célula das decorações tem muito vazio em volta
+## (editor-ui/01).
+static func thumbnail(slug: String, variant: int) -> Texture2D:
+	var key := "%s/%d" % [slug, variant]
+	if _thumbnails.has(key):
+		return _thumbnails[key]
+	var texture := icon(slug, variant)
+	var atlas := texture as AtlasTexture
+	if atlas != null:
+		if _sheet == null:
+			_sheet = atlas.atlas.get_image()
+		var region := Rect2i(atlas.region)
+		var used := _sheet.get_region(region).get_used_rect()
+		if used.has_area():
+			var trimmed := AtlasTexture.new()
+			trimmed.atlas = atlas.atlas
+			trimmed.region = Rect2(Vector2(region.position + used.position), Vector2(used.size))
+			texture = trimmed
+	_thumbnails[key] = texture
 	return texture
 
 

@@ -3,600 +3,651 @@
 		"id": 1,
 		"slug": "tree",
 		"name": "Árvore",
-		"variants": 4
+		"variants": 4,
+		"prop_category_id": 3
 	},
 	{
 		"id": 2,
 		"slug": "pine",
 		"name": "Pinheiro",
-		"variants": 4
+		"variants": 4,
+		"prop_category_id": 3
 	},
 	{
 		"id": 3,
 		"slug": "bush",
 		"name": "Arbusto",
-		"variants": 4
+		"variants": 4,
+		"prop_category_id": 4
 	},
 	{
 		"id": 4,
 		"slug": "dark_bush",
 		"name": "Arbusto escuro",
-		"variants": 4
+		"variants": 4,
+		"prop_category_id": 4
 	},
 	{
 		"id": 5,
 		"slug": "tuft",
 		"name": "Tufo de grama",
-		"variants": 4
+		"variants": 4,
+		"prop_category_id": 4
 	},
 	{
 		"id": 6,
 		"slug": "flowers",
 		"name": "Flores",
-		"variants": 4
+		"variants": 4,
+		"prop_category_id": 5
 	},
 	{
 		"id": 7,
 		"slug": "fern",
 		"name": "Samambaia",
-		"variants": 4
+		"variants": 4,
+		"prop_category_id": 4
 	},
 	{
 		"id": 8,
 		"slug": "dry_shrub",
 		"name": "Arbusto seco",
-		"variants": 4
+		"variants": 4,
+		"prop_category_id": 4
 	},
 	{
 		"id": 9,
 		"slug": "dry_tuft",
 		"name": "Tufo seco",
-		"variants": 4
+		"variants": 4,
+		"prop_category_id": 4
 	},
 	{
 		"id": 10,
 		"slug": "moss",
 		"name": "Musgo",
-		"variants": 4
+		"variants": 4,
+		"prop_category_id": 4
 	},
 	{
 		"id": 11,
 		"slug": "pebbles",
 		"name": "Pedrinhas",
-		"variants": 4
+		"variants": 4,
+		"prop_category_id": 6
 	},
 	{
 		"id": 12,
 		"slug": "rock",
 		"name": "Pedra",
-		"variants": 4
+		"variants": 4,
+		"prop_category_id": 6
 	},
 	{
 		"id": 13,
 		"slug": "mossy_rock",
 		"name": "Pedra com musgo",
-		"variants": 4
+		"variants": 4,
+		"prop_category_id": 6
 	},
 	{
 		"id": 14,
 		"slug": "brown_rock",
 		"name": "Pedra marrom",
-		"variants": 4
+		"variants": 4,
+		"prop_category_id": 6
 	},
 	{
 		"id": 15,
 		"slug": "boulder",
 		"name": "Rochedo",
-		"variants": 4
+		"variants": 4,
+		"prop_category_id": 6
 	},
 	{
 		"id": 16,
 		"slug": "rock_pile",
 		"name": "Monte de pedras",
-		"variants": 4
+		"variants": 4,
+		"prop_category_id": 6
 	},
 	{
 		"id": 17,
 		"slug": "spire",
 		"name": "Agulha de pedra",
-		"variants": 4
-	},
-	{
-		"id": 18,
-		"slug": "lamp_post",
-		"name": "Poste de luz",
-		"variants": 2
-	},
-	{
-		"id": 19,
-		"slug": "sign",
-		"name": "Placa",
-		"variants": 2
+		"variants": 4,
+		"prop_category_id": 6
 	},
 	{
 		"id": 20,
 		"slug": "flower_bed",
 		"name": "Canteiro de flores",
-		"variants": 3
+		"variants": 3,
+		"prop_category_id": 13
 	},
 	{
 		"id": 21,
 		"slug": "bench",
 		"name": "Banco",
-		"variants": 2
+		"variants": 2,
+		"prop_category_id": 10
 	},
 	{
 		"id": 22,
 		"slug": "refuge_building",
 		"name": "Prédio do Refúgio",
-		"variants": 8
-	},
-	{
-		"id": 23,
-		"slug": "shop_building",
-		"name": "Prédio da Loja",
-		"variants": 1
-	},
-	{
-		"id": 24,
-		"slug": "town_house",
-		"name": "Casa (cidade)",
-		"variants": 9
-	},
-	{
-		"id": 25,
-		"slug": "town_house_medium",
-		"name": "Casa média (cidade)",
-		"variants": 12
-	},
-	{
-		"id": 26,
-		"slug": "town_house_large",
-		"name": "Casa grande (cidade)",
-		"variants": 10
-	},
-	{
-		"id": 27,
-		"slug": "observatory",
-		"name": "Observatório",
-		"variants": 1
+		"variants": 8,
+		"prop_category_id": 2
 	},
 	{
 		"id": 28,
 		"slug": "leafy_tree",
 		"name": "Árvore frondosa",
-		"variants": 3
+		"variants": 3,
+		"prop_category_id": 3
 	},
 	{
 		"id": 29,
 		"slug": "moss_tree",
 		"name": "Árvore com musgo",
-		"variants": 3
+		"variants": 3,
+		"prop_category_id": 3
 	},
 	{
 		"id": 30,
 		"slug": "fruit_tree",
 		"name": "Árvore frutífera",
-		"variants": 3
+		"variants": 3,
+		"prop_category_id": 3
 	},
 	{
 		"id": 31,
 		"slug": "blossom_tree",
 		"name": "Árvore florida",
-		"variants": 3
+		"variants": 3,
+		"prop_category_id": 3
 	},
 	{
 		"id": 32,
 		"slug": "autumn_tree",
 		"name": "Árvore de outono",
-		"variants": 3
+		"variants": 3,
+		"prop_category_id": 3
 	},
 	{
 		"id": 33,
 		"slug": "dead_tree",
 		"name": "Árvore morta",
-		"variants": 3
+		"variants": 3,
+		"prop_category_id": 3
 	},
 	{
 		"id": 34,
 		"slug": "round_pine",
 		"name": "Pinheiro redondo",
-		"variants": 3
+		"variants": 3,
+		"prop_category_id": 3
 	},
 	{
 		"id": 35,
 		"slug": "snowy_pine",
 		"name": "Pinheiro com neve",
-		"variants": 3
+		"variants": 3,
+		"prop_category_id": 3
 	},
 	{
 		"id": 36,
 		"slug": "snowy_tree",
 		"name": "Árvore com neve",
-		"variants": 3
+		"variants": 3,
+		"prop_category_id": 3
 	},
 	{
 		"id": 37,
 		"slug": "broadleaf_tree",
 		"name": "Árvore de folha larga",
-		"variants": 3
+		"variants": 3,
+		"prop_category_id": 3
 	},
 	{
 		"id": 38,
 		"slug": "palm_tree",
 		"name": "Palmeira",
-		"variants": 3
+		"variants": 3,
+		"prop_category_id": 3
 	},
 	{
 		"id": 39,
 		"slug": "stump_log",
 		"name": "Tocos e troncos",
-		"variants": 7
+		"variants": 7,
+		"prop_category_id": 7
 	},
 	{
 		"id": 40,
 		"slug": "autumn_bush",
 		"name": "Arbusto de outono",
-		"variants": 3
+		"variants": 3,
+		"prop_category_id": 4
 	},
 	{
 		"id": 41,
 		"slug": "dry_twigs",
 		"name": "Galhos secos",
-		"variants": 4
+		"variants": 4,
+		"prop_category_id": 7
 	},
 	{
 		"id": 42,
 		"slug": "blue_flower_bush",
 		"name": "Arbusto de flores azuis",
-		"variants": 3
+		"variants": 3,
+		"prop_category_id": 4
 	},
 	{
 		"id": 43,
 		"slug": "orange_flower_bush",
 		"name": "Arbusto de flores laranja",
-		"variants": 3
+		"variants": 3,
+		"prop_category_id": 4
 	},
 	{
 		"id": 44,
 		"slug": "pink_bud_plant",
 		"name": "Planta de botão rosa",
-		"variants": 3
+		"variants": 3,
+		"prop_category_id": 5
 	},
 	{
 		"id": 45,
 		"slug": "red_bromeliad",
 		"name": "Bromélia vermelha",
-		"variants": 3
+		"variants": 3,
+		"prop_category_id": 5
 	},
 	{
 		"id": 46,
 		"slug": "round_bush",
 		"name": "Arbusto redondo",
-		"variants": 3
+		"variants": 3,
+		"prop_category_id": 4
 	},
 	{
 		"id": 47,
 		"slug": "light_bush",
 		"name": "Arbusto claro",
-		"variants": 3
+		"variants": 3,
+		"prop_category_id": 4
 	},
 	{
 		"id": 48,
 		"slug": "barrel_cactus",
 		"name": "Cacto redondo",
-		"variants": 3
+		"variants": 3,
+		"prop_category_id": 4
 	},
 	{
 		"id": 49,
 		"slug": "arm_cactus",
 		"name": "Cacto de braços",
-		"variants": 3
+		"variants": 3,
+		"prop_category_id": 4
 	},
 	{
 		"id": 50,
 		"slug": "wild_fern",
 		"name": "Samambaia selvagem",
-		"variants": 3
+		"variants": 3,
+		"prop_category_id": 4
 	},
 	{
 		"id": 51,
 		"slug": "star_fern",
 		"name": "Folhagem estrela",
-		"variants": 3
+		"variants": 3,
+		"prop_category_id": 4
 	},
 	{
 		"id": 52,
 		"slug": "snowy_bush",
 		"name": "Arbusto com neve",
-		"variants": 3
+		"variants": 3,
+		"prop_category_id": 4
 	},
 	{
 		"id": 53,
 		"slug": "sand_stone",
 		"name": "Pedra bege",
-		"variants": 5
+		"variants": 5,
+		"prop_category_id": 6
 	},
 	{
 		"id": 54,
 		"slug": "rust_crystal",
 		"name": "Cristal ferrugem",
-		"variants": 5
+		"variants": 5,
+		"prop_category_id": 6
 	},
 	{
 		"id": 55,
 		"slug": "ice_crystal",
 		"name": "Cristal de gelo",
-		"variants": 5
+		"variants": 5,
+		"prop_category_id": 6
 	},
 	{
 		"id": 56,
 		"slug": "moss_stone",
 		"name": "Pedra de musgo",
-		"variants": 5
+		"variants": 5,
+		"prop_category_id": 6
 	},
 	{
 		"id": 57,
 		"slug": "white_stone",
 		"name": "Pedra branca",
-		"variants": 5
+		"variants": 5,
+		"prop_category_id": 6
 	},
 	{
 		"id": 58,
 		"slug": "slab_stone",
 		"name": "Pedra em lascas",
-		"variants": 5
+		"variants": 5,
+		"prop_category_id": 6
 	},
 	{
 		"id": 59,
 		"slug": "clay_stone",
 		"name": "Pedra de barro",
-		"variants": 5
+		"variants": 5,
+		"prop_category_id": 6
 	},
 	{
 		"id": 60,
 		"slug": "lava_stone",
 		"name": "Pedra de lava",
-		"variants": 5
+		"variants": 5,
+		"prop_category_id": 6
 	},
 	{
 		"id": 61,
 		"slug": "cactus",
 		"name": "Cacto",
-		"variants": 4
+		"variants": 4,
+		"prop_category_id": 4
 	},
 	{
 		"id": 62,
 		"slug": "sand_rock",
 		"name": "Pedra de arenito",
-		"variants": 4
+		"variants": 4,
+		"prop_category_id": 6
 	},
 	{
 		"id": 63,
 		"slug": "snow_pine",
 		"name": "Pinheiro nevado",
-		"variants": 4
+		"variants": 4,
+		"prop_category_id": 3
 	},
 	{
 		"id": 64,
 		"slug": "snow_rock",
 		"name": "Pedra com neve",
-		"variants": 4
+		"variants": 4,
+		"prop_category_id": 6
 	},
 	{
 		"id": 65,
 		"slug": "snow_bush",
 		"name": "Arbusto nevado",
-		"variants": 4
+		"variants": 4,
+		"prop_category_id": 4
 	},
 	{
 		"id": 66,
 		"slug": "snow_tuft",
 		"name": "Capim com geada",
-		"variants": 4
+		"variants": 4,
+		"prop_category_id": 4
 	},
 	{
 		"id": 67,
 		"slug": "birch",
 		"name": "Bétula",
-		"variants": 4
+		"variants": 4,
+		"prop_category_id": 3
 	},
 	{
 		"id": 68,
 		"slug": "oak",
 		"name": "Carvalho",
-		"variants": 4
+		"variants": 4,
+		"prop_category_id": 3
 	},
 	{
 		"id": 69,
 		"slug": "fir",
 		"name": "Abeto",
-		"variants": 4
+		"variants": 4,
+		"prop_category_id": 3
 	},
 	{
 		"id": 70,
 		"slug": "fallen_branch",
 		"name": "Galho caído",
-		"variants": 4
+		"variants": 4,
+		"prop_category_id": 7
 	},
 	{
 		"id": 71,
 		"slug": "log",
 		"name": "Tronco caído",
-		"variants": 4
+		"variants": 4,
+		"prop_category_id": 7
 	},
 	{
 		"id": 72,
 		"slug": "stump",
 		"name": "Toco",
-		"variants": 4
+		"variants": 4,
+		"prop_category_id": 7
 	},
 	{
 		"id": 73,
 		"slug": "mushrooms",
 		"name": "Cogumelos",
-		"variants": 4
+		"variants": 4,
+		"prop_category_id": 4
 	},
 	{
 		"id": 74,
 		"slug": "tall_grass",
 		"name": "Mato alto",
-		"variants": 4
+		"variants": 4,
+		"prop_category_id": 4
 	},
 	{
 		"id": 75,
 		"slug": "wildflowers",
 		"name": "Flores do campo",
-		"variants": 4
+		"variants": 4,
+		"prop_category_id": 5
 	},
 	{
 		"id": 76,
 		"slug": "clover",
 		"name": "Trevo",
-		"variants": 4
+		"variants": 4,
+		"prop_category_id": 4
 	},
 	{
 		"id": 77,
 		"slug": "berry_bush",
 		"name": "Arbusto de frutinhas",
-		"variants": 4
+		"variants": 4,
+		"prop_category_id": 4
 	},
 	{
 		"id": 78,
 		"slug": "thistle",
 		"name": "Cardo",
-		"variants": 4
+		"variants": 4,
+		"prop_category_id": 4
 	},
 	{
 		"id": 79,
 		"slug": "dry_branch",
 		"name": "Galho seco",
-		"variants": 4
+		"variants": 4,
+		"prop_category_id": 7
 	},
 	{
 		"id": 80,
 		"slug": "yellow_flowers",
 		"name": "Flores amarelas",
-		"variants": 4
+		"variants": 4,
+		"prop_category_id": 5
 	},
 	{
 		"id": 81,
 		"slug": "slab",
 		"name": "Laje rachada",
-		"variants": 4
+		"variants": 4,
+		"prop_category_id": 6
 	},
 	{
 		"id": 82,
 		"slug": "lichen_rock",
 		"name": "Pedra com líquen",
-		"variants": 4
+		"variants": 4,
+		"prop_category_id": 6
 	},
 	{
 		"id": 83,
 		"slug": "tumbleweed",
 		"name": "Rolo seco",
-		"variants": 4
+		"variants": 4,
+		"prop_category_id": 4
 	},
 	{
 		"id": 84,
 		"slug": "desert_flower",
 		"name": "Flor do deserto",
-		"variants": 4
+		"variants": 4,
+		"prop_category_id": 5
 	},
 	{
 		"id": 85,
 		"slug": "bleached_branch",
 		"name": "Galho branco",
-		"variants": 4
+		"variants": 4,
+		"prop_category_id": 7
 	},
 	{
 		"id": 86,
 		"slug": "dune_grass",
 		"name": "Capim de duna",
-		"variants": 4
+		"variants": 4,
+		"prop_category_id": 4
 	},
 	{
 		"id": 87,
 		"slug": "frozen_branch",
 		"name": "Galho congelado",
-		"variants": 4
+		"variants": 4,
+		"prop_category_id": 7
 	},
 	{
 		"id": 88,
 		"slug": "ice_shards",
 		"name": "Cristais de gelo",
-		"variants": 4
+		"variants": 4,
+		"prop_category_id": 6
 	},
 	{
 		"id": 89,
 		"slug": "winter_berry",
 		"name": "Arbusto de inverno",
-		"variants": 4
+		"variants": 4,
+		"prop_category_id": 4
 	},
 	{
 		"id": 90,
 		"slug": "snow_log",
 		"name": "Tronco com neve",
-		"variants": 4
+		"variants": 4,
+		"prop_category_id": 7
 	},
 	{
 		"id": 91,
 		"slug": "shells",
 		"name": "Conchas",
-		"variants": 4
+		"variants": 4,
+		"prop_category_id": 8
 	},
 	{
 		"id": 92,
 		"slug": "starfish",
 		"name": "Estrela-do-mar",
-		"variants": 4
+		"variants": 4,
+		"prop_category_id": 8
 	},
 	{
 		"id": 93,
 		"slug": "driftwood",
 		"name": "Tronco à deriva",
-		"variants": 4
+		"variants": 4,
+		"prop_category_id": 8
 	},
 	{
 		"id": 94,
 		"slug": "beach_rock",
 		"name": "Pedra de praia",
-		"variants": 4
+		"variants": 4,
+		"prop_category_id": 8
 	},
 	{
 		"id": 95,
 		"slug": "big_house",
 		"name": "Casa grande",
-		"variants": 8
+		"variants": 8,
+		"prop_category_id": 1
 	},
 	{
 		"id": 96,
 		"slug": "small_house",
 		"name": "Casa pequena",
-		"variants": 8
+		"variants": 8,
+		"prop_category_id": 1
 	},
 	{
 		"id": 97,
 		"slug": "small_townhouse",
 		"name": "Sobrado pequeno",
-		"variants": 8
+		"variants": 8,
+		"prop_category_id": 1
 	},
 	{
 		"id": 98,
 		"slug": "timber_house",
 		"name": "Casa enxaimel",
-		"variants": 8
+		"variants": 8,
+		"prop_category_id": 1
 	},
 	{
 		"id": 99,
 		"slug": "stone_cottage",
 		"name": "Casinha de pedra",
-		"variants": 8
+		"variants": 8,
+		"prop_category_id": 1
 	},
 	{
 		"id": 100,
 		"slug": "timber_cottage",
 		"name": "Casinha enxaimel",
-		"variants": 8
+		"variants": 8,
+		"prop_category_id": 1
 	}
 ]

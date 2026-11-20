@@ -3,15 +3,6 @@
 	"props": [
 		{
 			"dq": -3,
-			"dr": 0,
-			"dx": 7,
-			"dy": 25,
-			"mirrored": true,
-			"prop_type_id": 18,
-			"variant": 2
-		},
-		{
-			"dq": -3,
 			"dr": 1,
 			"dx": 29,
 			"dy": 0,

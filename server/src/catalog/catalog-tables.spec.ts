@@ -5,9 +5,9 @@ import { CATALOG_TABLES, SEED_DATA_DIR } from './catalog-tables.js';
 describe('CATALOG_TABLES', () => {
   const names = CATALOG_TABLES.map((table) => table.name);
 
-  it('tem as 50 tabelas, sem repetição', () => {
-    expect(names).toHaveLength(50);
-    expect(new Set(names).size).toBe(50);
+  it('tem as 51 tabelas, sem repetição', () => {
+    expect(names).toHaveLength(51);
+    expect(new Set(names).size).toBe(51);
   });
 
   it('casa com os arquivos .json da pasta de dados do seed', () => {
@@ -54,6 +54,9 @@ describe('CATALOG_TABLES', () => {
       names.indexOf('ground_effect_stats'),
     );
     expect(names.indexOf('voices')).toBeLessThan(names.indexOf('npcs'));
+    expect(names.indexOf('prop_categories')).toBeLessThan(
+      names.indexOf('prop_types'),
+    );
     expect(names.at(-1)).toBe('starter_options');
   });
 

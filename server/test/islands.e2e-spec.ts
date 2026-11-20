@@ -223,7 +223,7 @@ describe('Ilhas do jogador (e2e)', () => {
     ).id;
     house = (
       await prisma.propType.findUniqueOrThrow({
-        where: { slug: 'town_house' },
+        where: { slug: 'big_house' },
       })
     ).id;
     bench = (

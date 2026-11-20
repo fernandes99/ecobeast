@@ -1,8 +1,8 @@
 class_name ObjectPanel
 extends VBoxContainer
 ## O bloco Peças do editor (map-editor/05, free-props/03, free-objects): a prévia grande
-## com as variantes, os tipos de peça e, com uma peça escolhida, a variante, o espelho,
-## o bloqueio, a ação e apagar dela. A barra no mapa (ObjectBar) e as teclas chamam os
+## com as variantes, os tipos de peça por categoria e busca (editor-ui/01) e, com uma
+## peça escolhida, a variante, o espelho, o bloqueio, a ação e apagar dela. A barra no mapa (ObjectBar) e as teclas chamam os
 ## mesmos métodos.
 
 signal edited(step: EditorHistory.Step)
@@ -11,9 +11,16 @@ signal blocks_editing_changed(on: bool)
 ## "Salvar como do tipo" (free-objects/02): as linhas da peça escolhida viram as do tipo.
 signal type_block_save_requested(prop_type_id: int, variant: int, lines: Array[Dictionary])
 
-const PREVIEW_SIZE := Vector2(0.0, 170.0)
-const TYPE_ICON_WIDTH := 40
+const PREVIEW_SIZE := Vector2(0.0, 120.0)
 const CHIP_SIZE := Vector2(34.0, 30.0)
+const GRID_COLUMNS := 4
+const TILE_SIZE := Vector2(0.0, 104.0)
+const THUMB_SIZE := Vector2(64.0, 60.0)
+const MAX_THUMB_SCALE := 4.0
+const TILE_FONT_SIZE := 13
+const FIRST_CATEGORY := 1
+const NO_RESULTS := "Nenhuma peça com esse nome."
+const ACCENTS: Dictionary[String, String] = {"á": "a", "à": "a", "â": "a", "ã": "a", "ä": "a", "é": "e", "ê": "e", "è": "e", "í": "i", "î": "i", "ó": "o", "ô": "o", "õ": "o", "ò": "o", "ú": "u", "û": "u", "ü": "u", "ç": "c"}
 
 var prop_type_id := 0
 var variant := 1
@@ -29,6 +36,11 @@ var drawing_line: Array[Vector2i] = []
 var _draft: IslandDraft = null
 var _prop_types: Array[Dictionary] = []
 var _prop_buttons: Dictionary[int, Button] = {}
+var _category_buttons: Dictionary[int, Button] = {}
+var _category_id := FIRST_CATEGORY
+var _search: LineEdit
+var _grid: GridContainer
+var _no_results: Label
 var _preview: TextureRect
 var _caption: Label
 var _variant_label: Label
@@ -68,15 +80,9 @@ func _init() -> void:
 	_caption.clip_text = true
 	add_child(_caption)
 
-	var variant_row := HBoxContainer.new()
-	variant_row.add_theme_constant_override(&"separation", 6)
-	add_child(variant_row)
-	variant_row.add_child(_icon_button("chevron_left", "Variante anterior (←)", change_variant.bind(-1)))
 	_variant_label = Label.new()
-	_variant_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_variant_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	variant_row.add_child(_variant_label)
-	variant_row.add_child(_icon_button("chevron_right", "Próxima variante (→)", change_variant.bind(1)))
+	_variant_label.theme_type_variation = &"SecondaryLabel"
+	add_child(_variant_label)
 	_chips = HFlowContainer.new()
 	_chips.add_theme_constant_override(&"h_separation", 4)
 	_chips.add_theme_constant_override(&"v_separation", 4)
@@ -171,23 +177,131 @@ func _init() -> void:
 	release.pressed.connect(select_prop.bind(-1))
 	_selected_box.add_child(release)
 
-	var group := ButtonGroup.new()
 	var types_title := Label.new()
 	types_title.text = "Peças"
 	EditorTools.section_title(types_title)
 	add_child(types_title)
+	_search = LineEdit.new()
+	_search.placeholder_text = "Buscar peça"
+	_search.clear_button_enabled = true
+	_search.text_changed.connect(search)
+	add_child(_search)
+	var categories := HFlowContainer.new()
+	categories.add_theme_constant_override(&"h_separation", 4)
+	categories.add_theme_constant_override(&"v_separation", 4)
+	add_child(categories)
+	var category_group := ButtonGroup.new()
+	category_group.allow_unpress = true
+	for row: Dictionary in GameData.get_rows("prop_categories"):
+		var category := int(row.get("id", 0))
+		var chip := EditorTools.tool_button(str(row.get("name", "")), category_group)
+		chip.alignment = HORIZONTAL_ALIGNMENT_CENTER
+		chip.size_flags_horizontal = Control.SIZE_FILL
+		chip.pressed.connect(open_category.bind(category))
+		categories.add_child(chip)
+		_category_buttons[category] = chip
+	_grid = GridContainer.new()
+	_grid.columns = GRID_COLUMNS
+	_grid.add_theme_constant_override(&"h_separation", 4)
+	_grid.add_theme_constant_override(&"v_separation", 4)
+	add_child(_grid)
+	_no_results = Label.new()
+	_no_results.text = NO_RESULTS
+	_no_results.theme_type_variation = &"SecondaryLabel"
+	_no_results.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	add_child(_no_results)
+	var group := ButtonGroup.new()
 	for row: Dictionary in GameData.get_rows("prop_types"):
 		_prop_types.append(row)
 		var id := int(row.get("id", 0))
-		var button := EditorTools.tool_button(str(row.get("name", "")), group)
-		button.add_theme_constant_override(&"icon_max_width", TYPE_ICON_WIDTH)
-		button.icon = PropArt.icon(str(row.get("slug", "")), 1)
-		button.pressed.connect(pick_prop_type.bind(id))
-		add_child(button)
-		_prop_buttons[id] = button
+		var tile := _tile(str(row.get("name", "")), PropArt.thumbnail(str(row.get("slug", "")), 1), group)
+		tile.pressed.connect(pick_prop_type.bind(id))
+		_grid.add_child(tile)
+		_prop_buttons[id] = tile
 	if not _prop_types.is_empty():
 		prop_type_id = int(_prop_types[0].get("id", 0))
+	open_category(FIRST_CATEGORY)
 	refresh()
+
+
+## Mostra as peças de uma categoria e apaga a busca.
+func open_category(id: int) -> void:
+	_category_id = id
+	_search.text = ""
+	_filter()
+
+
+## Mostra as peças de todas as categorias com o texto no nome; vazio volta à categoria.
+func search(text: String) -> void:
+	if _search.text != text:
+		_search.text = text
+	_filter()
+
+
+## O texto em minúsculas e sem acento, para a busca.
+static func fold(text: String) -> String:
+	var folded := text.strip_edges().to_lower()
+	for accent: String in ACCENTS:
+		folded = folded.replace(accent, ACCENTS[accent])
+	return folded
+
+
+func _filter() -> void:
+	var query := fold(_search.text)
+	var shown := 0
+	for row: Dictionary in _prop_types:
+		var id := int(row.get("id", 0))
+		var shows := int(row.get("prop_category_id", 0)) == _category_id
+		if not query.is_empty():
+			shows = fold(str(row.get("name", ""))).contains(query)
+		_prop_buttons[id].visible = shows
+		if shows:
+			shown += 1
+	for category: int in _category_buttons:
+		_category_buttons[category].set_pressed_no_signal(query.is_empty() and category == _category_id)
+	_no_results.visible = shown == 0
+
+
+func _tile(text: String, texture: Texture2D, group: ButtonGroup) -> Button:
+	var tile := EditorTools.tool_button("", group)
+	tile.custom_minimum_size = TILE_SIZE
+	tile.tooltip_text = text
+	var box := VBoxContainer.new()
+	box.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	box.offset_left = 4.0
+	box.offset_right = -4.0
+	box.offset_top = 4.0
+	box.offset_bottom = -4.0
+	box.add_theme_constant_override(&"separation", 2)
+	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	tile.add_child(box)
+	var frame := CenterContainer.new()
+	frame.custom_minimum_size = THUMB_SIZE
+	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	box.add_child(frame)
+	var thumb := TextureRect.new()
+	thumb.texture = texture
+	thumb.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	thumb.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	thumb.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	thumb.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if texture != null:
+		var art := Vector2(texture.get_width(), texture.get_height())
+		var zoom := minf(minf(THUMB_SIZE.x / art.x, THUMB_SIZE.y / art.y), MAX_THUMB_SCALE)
+		thumb.custom_minimum_size = (art * zoom).floor()
+	frame.add_child(thumb)
+	var label := Label.new()
+	label.text = text
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.max_lines_visible = 2
+	label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	label.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	label.add_theme_font_size_override(&"font_size", TILE_FONT_SIZE)
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	box.add_child(label)
+	return tile
 
 
 func set_draft(draft: IslandDraft) -> void:
@@ -223,6 +337,8 @@ func select_prop(index: int) -> void:
 	if not same:
 		active_line = -1
 		cancel_line()
+		if index >= 0:
+			_reveal_type(int(_draft.props[index].get("prop_type_id", 0)))
 	_set_editing_blocks(editing_blocks and same)
 	refresh()
 	selection_changed.emit(selected_prop)
@@ -246,7 +362,7 @@ func refresh() -> void:
 	_preview.flip_h = shown_mirror
 	var chosen := selected_prop >= 0
 	_caption.text = ("Escolhida: %s" if chosen else "Nova: %s") % _type_name(shown_type)
-	_variant_label.text = "Variante %d de %d" % [shown_variant, count]
+	_variant_label.text = "Variante %d de %d  ·  teclas ← →" % [shown_variant, count]
 	_rebuild_chips(count, shown_variant)
 	_mirror_button.set_pressed_no_signal(shown_mirror)
 	_selected_box.visible = chosen
@@ -360,6 +476,12 @@ func pick_prop_type(id: int) -> void:
 	prop_type_id = id
 	variant = 1
 	select_prop(-1)
+
+
+func _reveal_type(id: int) -> void:
+	var category := int(_row(id).get("prop_category_id", 0))
+	if _category_buttons.has(category):
+		open_category(category)
 
 
 func _selected_piece() -> Dictionary:
@@ -580,12 +702,3 @@ func _text_button(text: String, tip: String, action: Callable) -> Button:
 	button.pressed.connect(action)
 	return button
 
-
-func _icon_button(icon_name: String, tip: String, action: Callable) -> Button:
-	var button := Button.new()
-	button.icon = load(MapEditor.ICONS % icon_name) as Texture2D
-	button.add_theme_constant_override(&"icon_max_width", MapEditor.ICON_WIDTH)
-	button.tooltip_text = tip
-	button.focus_mode = Control.FOCUS_NONE
-	button.pressed.connect(action)
-	return button
