@@ -59,6 +59,44 @@ describe('assignZones', () => {
     ).toEqual([]);
   });
 
+  it('divide as águas nas zonas do mar sem mudar as zonas da terra (sea-life/02)', () => {
+    const sea: MapZone[] = [
+      { slug: 'wshallow_rocks', biome: 'wshallow', share: 21, sortOrder: 1 },
+      { slug: 'wshallow_seagrass', biome: 'wshallow', share: 21, sortOrder: 3 },
+      { slug: 'wshallow_trash', biome: 'wshallow', share: 8, sortOrder: 4 },
+      { slug: 'wdeep_rocks', biome: 'wdeep', share: 21, sortOrder: 1 },
+      { slug: 'wdeep_kelp', biome: 'wdeep', share: 21, sortOrder: 3 },
+      { slug: 'wdeep_trash', biome: 'wdeep', share: 8, sortOrder: 4 },
+    ];
+    const zones = [
+      ...SEED_ZONES.map((zone) =>
+        zone.slug === 'wshallow' || zone.slug === 'wdeep'
+          ? { ...zone, share: 50, sortOrder: 2 }
+          : zone,
+      ),
+      ...sea,
+    ];
+    for (const seed of [2, 11, 345]) {
+      const map = generateMap(seed).tiles;
+      const before = assignZones(map, seed, SEED_ZONES);
+      const after = assignZones(map, seed, zones);
+      const water = (tile: MapTile): boolean =>
+        tile.biome === 'wshallow' || tile.biome === 'wdeep';
+      expect(after.filter((tile) => !water(tile))).toEqual(
+        before.filter((tile) => !water(tile)),
+      );
+      for (const biome of ['wshallow', 'wdeep'] as const) {
+        const inBiome = after.filter((tile) => tile.biome === biome);
+        for (const zone of sea.filter((zone) => zone.biome === biome)) {
+          const count = inBiome.filter((tile) => tile.zone === zone.slug).length;
+          expect(
+            Math.abs(count - (zone.share / 100) * inBiome.length),
+          ).toBeLessThanOrEqual(1);
+        }
+      }
+    }
+  });
+
   it('não muda o terreno e dá as mesmas zonas na mesma seed', () => {
     const map = generateMap(77);
     const first = assignZones(map.tiles, 77, SEED_ZONES);

@@ -8,6 +8,9 @@ const PACK_TREES: Array[String] = ["leafy_tree", "moss_tree", "fruit_tree", "blo
 const PACK_BUSHES: Array[String] = ["autumn_bush", "dry_twigs", "blue_flower_bush", "orange_flower_bush", "pink_bud_plant", "red_bromeliad", "round_bush", "light_bush", "barrel_cactus", "arm_cactus", "wild_fern", "star_fern", "snowy_bush"]
 const PACK_STONES: Array[String] = ["sand_stone", "rust_crystal", "ice_crystal", "moss_stone", "white_stone", "slab_stone", "clay_stone", "lava_stone"]
 const PACK_ODD_STONES: Array[String] = ["rust_crystal", "ice_crystal", "lava_stone"]
+## As algas, as pedras e o lixo da água (sea-life/03); o lixo começa desligado.
+const SEA_KINDS: Array[String] = ["seagrass", "kelp", "algae_patch", "sea_rock", "sunken_rock", "sea_stack", "floating_weed", "bottle", "can", "plastic_bag", "fishing_net", "tire", "crate"]
+const SEA_TRASH: Array[String] = ["bottle", "can", "plastic_bag", "fishing_net", "tire", "crate"]
 ## As pedras gigantes da Montanha (giant-rocks/01).
 const GIANT_ROCKS: Array[String] = ["giant_crag", "giant_pinnacles", "giant_slab", "giant_boulders", "giant_ridge", "snowy_crag", "snowy_pinnacles", "snowy_boulders"]
 const GROUPS: Array[Dictionary] = [
@@ -26,6 +29,7 @@ const GROUPS: Array[Dictionary] = [
 	{"name": "Pedras médias (pacote)", "kinds": PACK_STONES, "per_tile": 1.0, "variants": [3, 3], "off": PACK_ODD_STONES},
 	{"name": "Pedras pequenas (pacote)", "kinds": PACK_STONES, "per_tile": 2.0, "variants": [4, 5], "off": PACK_ODD_STONES},
 	{"name": "Pedras gigantes", "kinds": GIANT_ROCKS, "per_tile": 0.25, "off": ["snowy_crag", "snowy_pinnacles", "snowy_boulders"]},
+	{"name": "Mar", "kinds": SEA_KINDS, "per_tile": 1.0, "off": SEA_TRASH},
 ]
 const DENSITIES: Array[float] = [0.5, 1.0, 2.0]
 const DENSITY_NAMES: Array[String] = ["Pouca", "Média", "Muita"]
