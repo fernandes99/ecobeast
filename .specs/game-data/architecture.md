@@ -111,7 +111,7 @@ temperaments ──> stats (aumentado, diminuído)
 | `modify_stat`  | `skill_target_id`, `stat_id`, `stages` (−6 a +6), `chance`  |
 | `heal`         | `percent` (do HP máximo de quem usa)                        |
 | `drain`        | `percent` (do dano causado)                                 |
-| `recoil`       | `percent` (do dano causado)                                 |
+| `recoil`       | `percent` (do dano causado), o "Contragolpe"                |
 | `flinch`       | `chance`                                                    |
 | `multi_turn`   | — (carrega no 1º turno, ataca no 2º)                        |
 | `fixed_damage` | `value` (`null` = dano igual ao nível de quem usa)          |

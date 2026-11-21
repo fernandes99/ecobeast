@@ -86,7 +86,7 @@ Slugs: o nome sem acento, em minúsculas (`sereno`, `impetuoso`, `sabio`, `sobri
 | 8   | `trapped`   | Preso       | true        |
 
 - **RF-11:** `status_condition_immunities.json`, da coluna "Imune" do GDD: Queimado–Fogo, Envenenado–Toxina, Envenenado–Metal, Paralisado–Volt, Congelado–Gelo (5 linhas).
-- **RF-12:** `effect_types.json`, ids de 1 a 11 na ordem da tabela de [architecture.md](architecture.md): `apply_status` "Aplicar status", `modify_stat` "Alterar atributo", `heal` "Curar", `drain` "Drenar", `recoil` "Recuo", `flinch` "Amedrontar", `multi_turn` "Carregar", `fixed_damage` "Dano fixo", `set_weather` "Mudar clima", `protect` "Proteger", `switch` "Trocar".
+- **RF-12:** `effect_types.json`, ids de 1 a 11 na ordem da tabela de [architecture.md](architecture.md): `apply_status` "Aplicar status", `modify_stat` "Alterar atributo", `heal` "Curar", `drain` "Drenar", `recoil` "Contragolpe" (era "Recuo" até 2026-11-20), `flinch` "Amedrontar", `multi_turn` "Carregar", `fixed_damage` "Dano fixo", `set_weather` "Mudar clima", `protect` "Proteger", `switch` "Trocar".
 - **RF-13:** `evolution_triggers.json`: 1 `level` "Nível"; 2 `item` "Item"; 3 `bond` "Vínculo"; 4 `time_of_day` "Horário"; 5 `zone` "Zona"; 6 `trade` "Troca"; 7 `temperament` "Temperamento".
 
 ## Critérios de aceite

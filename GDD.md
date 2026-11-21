@@ -272,7 +272,7 @@ Cada técnica é uma linha do catálogo (`skills`) com dados e uma lista de efei
 | Arranhão | Instinto | Física | 40 | 100 | 35 | — |
 | Faísca Rápida | Fogo | Especial | 40 | 100 | 25 | 10% queimar |
 | Chama Espiral | Fogo | Especial | 90 | 100 | 15 | 10% queimar |
-| Erupção Solar | Fogo | Especial | 120 | 85 | 5 | Recuo 33% |
+| Erupção Solar | Fogo | Especial | 120 | 85 | 5 | Contragolpe 33% |
 | Jato de Maré | Água | Especial | 40 | 100 | 25 | — |
 | Chicote de Raiz | Flora | Física | 45 | 100 | 25 | — |
 | Seiva Vital | Flora | Especial | 60 | 100 | 15 | Drena 50% |

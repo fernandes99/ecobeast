@@ -56,7 +56,7 @@ export class SkillEffectDto {
   @ApiProperty({
     nullable: true,
     type: Number,
-    description: 'Porcentagem (cura, dreno, recuo).',
+    description: 'Porcentagem (cura, dreno, contragolpe).',
     example: null,
   })
   percent: number | null;

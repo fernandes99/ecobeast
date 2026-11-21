@@ -74,7 +74,7 @@ func describe(event: Dictionary) -> String:
 		"damage":
 			return _damage(event, who)
 		"recoil":
-			return "%s sofreu %d de recuo." % [who, DictFields.get_int(event, "damage")]
+			return "%s sofreu %d de contragolpe." % [who, DictFields.get_int(event, "damage")]
 		"healed":
 			return "%s recuperou %d de HP." % [who, DictFields.get_int(event, "amount")]
 		"status_applied":

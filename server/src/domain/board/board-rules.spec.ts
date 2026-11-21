@@ -383,7 +383,7 @@ describe('Traços na luta', () => {
     expect(state.player.team[0]!.stages.spd).toBe(0);
   });
 
-  it('o recuo que derruba os dois dá a vitória, sem o Instinto', () => {
+  it('o contragolpe que derruba os dois dá a vitória, sem o Instinto', () => {
     const { state, events } = playVez(
       duel(
         { ...knowing(BACKFIRE.id), traitSlug: 'instinct', currentHp: 1 },

@@ -63,7 +63,7 @@ Quem entra vem do `BattleView` da resposta, porque o evento não tem o `uid`. O 
 | `no_effect`        | `Não afetou <nome>.`                                                        |
 | `effect_failed`    | `Não funcionou.`                                                            |
 | `damage`           | Prefixos, nesta ordem: `Crítico!` e `Muito eficaz!` (multiplicador acima de 1) ou `Pouco eficaz.` (abaixo de 1). Depois, `<nome> perdeu <n> de HP.` |
-| `recoil`           | `<nome> sofreu <n> de recuo.`                                               |
+| `recoil`           | `<nome> sofreu <n> de contragolpe.`                                               |
 | `healed`           | `<nome> recuperou <n> de HP.`                                               |
 | `status_applied`   | `<nome> ficou <status>.`                                                    |
 | `status_damage`    | `<nome> perdeu <n> de HP: <status>.`                                        |
