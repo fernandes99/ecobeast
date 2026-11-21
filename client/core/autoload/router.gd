@@ -16,6 +16,8 @@ const SCREENS: Dictionary[StringName, String] = {
 	&"interior": "res://screens/interior/interior_screen.tscn",
 	&"login": "res://screens/login/login_screen.tscn",
 	&"placeholder": "res://screens/placeholder/placeholder_screen.tscn",
+	&"profile": "res://screens/profile/profile_screen.tscn",
+	&"settings": "res://screens/settings/settings_screen.tscn",
 	&"shop": "res://screens/shop/shop_screen.tscn",
 	&"starter_select": "res://screens/starter_select/starter_select_screen.tscn",
 	&"storage": "res://screens/storage/storage_screen.tscn",

@@ -1,6 +1,6 @@
 # 02. Ecobeasts, Perfil e Configurações
 
-- **Status:** proposta
+- **Status:** concluída (falta o dono conferir no jogo)
 - **Depende de:** [01-hub](01-hub.md), [team-and-storage](../team-and-storage/), [codex](../codex/) e [tamer-appearance](../tamer-appearance/)
 
 ## Contexto
@@ -32,10 +32,10 @@ O Hub da [fase 1](01-hub.md) abre a Equipe de hoje pelo ícone Ecobeasts, um pla
 **As Configurações**
 
 - **RF-06:** A tela **Configurações**, aberta pela engrenagem do Hub, tem:
-  - o volume da **Música** e o dos **Sons**, de 0 a 100%, cada um num controle deslizante que muda o barramento de áudio na hora. A Música é o barramento `Music`. Hoje só existem `Music` e `Voices`, e os outros sons tocam no `Master`; os Sons controlam as `Voices` e um barramento novo, `Sfx`, para onde vão os sons da luta, dos Ecobeasts e da tela (como montar o `Sfx` fica a cargo de quem implementar);
+  - o volume da **Música** e o dos **Sons**, de 0 a 100%, cada um num controle deslizante que muda o barramento de áudio na hora. A Música é o barramento `Music`. Hoje só existem `Music` e `Voices`, e os outros sons tocam no `Master`; os Sons controlam as `Voices` e um barramento novo, `Sfx`, para onde vão os sons da luta, dos Ecobeasts e da tela (o `Sfx` entrou no `default_bus_layout.tres` a 0 dB, e hoje só os sons da luta tocam nele: os Ecobeasts e a tela ainda não têm som; os volumes são aplicados pelo `AudioSettings`, que multiplica o volume de partida de cada barramento);
   - **Sair da conta**, que faz o que o botão do `ProfileDebugPanel` faz hoje;
   - **Apagar progresso**, só em depuração, com a confirmação de hoje.
-- **RF-07:** Os dois volumes ficam guardados no aparelho (em `user://`) e valem desde a abertura do app.
+- **RF-07:** Os dois volumes ficam guardados no aparelho (em `user://audio.json`) e valem desde a abertura do app.
 - **RF-08:** O placeholder do Perfil com o `ProfileDebugPanel` sai.
 
 ## Fora do escopo
@@ -46,11 +46,11 @@ O Hub da [fase 1](01-hub.md) abre a Equipe de hoje pelo ícone Ecobeasts, um pla
 
 ## Critérios de aceite
 
-- [ ] O ícone Ecobeasts abre a tela Ecobeasts, e os botões dela abrem o Santuário e o Bestiário.
-- [ ] O nome do Hub abre o Perfil, com o Domador, os números e o botão Aparência.
-- [ ] A engrenagem abre as Configurações; os volumes mudam na hora e continuam depois de fechar e abrir o app.
-- [ ] O Sair da conta volta ao login, e o Apagar progresso (em depuração) leva à criação do Domador.
-- [ ] O jogo sem janela abre sem erro de script.
+- [x] O ícone Ecobeasts abre a tela Ecobeasts, e os botões dela abrem o Santuário e o Bestiário.
+- [x] O nome do Hub abre o Perfil, com o Domador, os números e o botão Aparência.
+- [x] A engrenagem abre as Configurações; os volumes mudam na hora e continuam depois de fechar e abrir o app.
+- [x] O Sair da conta volta ao login, e o Apagar progresso (em depuração) leva à criação do Domador.
+- [x] O jogo sem janela abre sem erro de script.
 
 ## Verificação
 
@@ -62,9 +62,9 @@ Depois, no jogo, cada tela pelo Hub.
 
 ## Tarefas
 
-- [ ] A tela Ecobeasts.
-- [ ] O Perfil.
-- [ ] As Configurações e o volume guardado.
-- [ ] Tirar o `ProfileDebugPanel` e o placeholder do Perfil.
-- [ ] Atualizar o `CLAUDE.md`, o `TELAS.md` e o `.specs/README.md`.
-- [ ] A verificação.
+- [x] A tela Ecobeasts.
+- [x] O Perfil.
+- [x] As Configurações e o volume guardado.
+- [x] Tirar o `ProfileDebugPanel` e o placeholder do Perfil.
+- [x] Atualizar o `CLAUDE.md`, o `TELAS.md` e o `.specs/README.md`.
+- [x] A verificação.

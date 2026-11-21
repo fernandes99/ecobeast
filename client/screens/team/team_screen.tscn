@@ -29,13 +29,31 @@ mouse_filter = 2
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"TitleLabel"
-text = "Equipe"
+text = "Ecobeasts"
 
 [node name="List" type="VBoxContainer" parent="SafeArea/Column"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 10
+
+[node name="Links" type="HBoxContainer" parent="SafeArea/Column"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="StorageButton" type="Button" parent="SafeArea/Column/Links"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 72)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Santuário"
+
+[node name="CodexButton" type="Button" parent="SafeArea/Column/Links"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 72)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Bestiário"
 
 [node name="Message" type="Label" parent="SafeArea/Column"]
 unique_name_in_owner = true

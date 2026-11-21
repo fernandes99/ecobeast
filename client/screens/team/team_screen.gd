@@ -1,4 +1,5 @@
 extends Control
+## A tela Ecobeasts (hub-start/02): os 6 da equipe, com o Santuário e o Bestiário.
 
 const RowScene := preload("res://screens/team/team_row.tscn")
 
@@ -15,11 +16,15 @@ var _grab_offset: float = 0.0
 @onready var _list: VBoxContainer = %List
 @onready var _message: Label = %Message
 @onready var _back_button: Button = %BackButton
+@onready var _storage_button: Button = %StorageButton
+@onready var _codex_button: Button = %CodexButton
 @onready var _actions_panel: CreatureActionsPanel = %ActionsPanel
 
 
 func _ready() -> void:
 	_back_button.pressed.connect(Router.back)
+	_storage_button.pressed.connect(_open_link.bind(&"storage"))
+	_codex_button.pressed.connect(_open_link.bind(&"codex"))
 	_actions_panel.move_pressed.connect(_store)
 	_actions_panel.details_pressed.connect(_open_details)
 	for index: int in Player.PARTY_SIZE:
@@ -194,3 +199,8 @@ func _store() -> void:
 		_actions_panel.close()
 	else:
 		_actions_panel.show_error(result.error)
+
+
+func _open_link(screen: StringName) -> void:
+	if _lifted == null and not _busy:
+		Router.push(screen)

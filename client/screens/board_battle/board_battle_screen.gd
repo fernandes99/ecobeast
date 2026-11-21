@@ -199,6 +199,8 @@ func _ready() -> void:
 	if not _skill_test.is_empty():
 		_add_retry_button()
 	_reserve_bottom()
+	_skill_sound.bus = AudioSettings.SFX_BUS
+	_hit_sound.bus = AudioSettings.SFX_BUS
 	add_child(_skill_sound)
 	add_child(_hit_sound)
 	_enemy_card.clear()

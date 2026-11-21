@@ -9,6 +9,7 @@ var _map_editor: MapEditor = null
 
 
 func _ready() -> void:
+	AudioSettings.apply()
 	%Background.texture = _background_gradient()
 	Router.set_host(%ScreenHost)
 	%RetryButton.pressed.connect(_boot)

@@ -2,7 +2,7 @@
 
 O jogo começa sem história: o jogador cria o Domador, escolhe 1 entre 3 iniciais e cai no **Hub**, a tela de onde sai tudo. O Hub mostra a equipe de 6 com um Ecobeast em destaque e um botão grande **Explorar**, que abre um mapa novo gerado pelo servidor. Embaixo ficam a Loja, o Refúgio, os Ecobeasts e a Mochila, e no topo o Domador (que abre o Perfil), o nível, as moedas e as Configurações. Liora e as cenas da história ficam guardadas, sem tocar.
 
-- **Status:** em andamento (fase 1 concluída)
+- **Status:** concluída (falta o dono conferir no jogo)
 - **Depende de:** [hub](../hub/), [home-island](../home-island/), [liora-intro](../liora-intro/), [onboarding](../onboarding/), [tamer-appearance](../tamer-appearance/), [team-and-storage](../team-and-storage/)
 
 ## Contexto
@@ -86,4 +86,4 @@ Escolhas de Claude (_a revisar_; ao mudar uma, atualize aqui e na fase):
 | # | Fase | Entrega | Status |
 | --- | --- | --- | --- |
 | 1 | [01-hub](01-hub.md) | Liora sem a marca de casa, o Hub novo (o topo, o destaque, o Explorar e os 4 ícones) e as voltas ao Hub | concluída |
-| 2 | [02-ecobeasts-profile-settings](02-ecobeasts-profile-settings.md) | A tela Ecobeasts, o Perfil e as Configurações | proposta |
+| 2 | [02-ecobeasts-profile-settings](02-ecobeasts-profile-settings.md) | A tela Ecobeasts, o Perfil e as Configurações | concluída |

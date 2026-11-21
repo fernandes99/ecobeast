@@ -3,7 +3,6 @@ extends Control
 ## O Hub, a primeira tela do jogo (.specs/hub-start/01-hub.md).
 
 const CreatureSlotScene := preload("res://ui/components/creature_slot.tscn")
-const ProfileDebugPanelScene := preload("res://screens/hub/profile_debug_panel.tscn")
 
 const ICON_PATH := "res://ui/icons/%s.svg"
 
@@ -55,7 +54,7 @@ var _featured_uid := ""
 func _ready() -> void:
 	_player_area.gui_input.connect(_on_player_input)
 	_settings_button.icon = load(ICON_PATH % "gear") as Texture2D
-	_settings_button.pressed.connect(Router.push.bind(&"placeholder", {"title": "Configurações"}))
+	_settings_button.pressed.connect(Router.push.bind(&"settings"))
 	if ResourceLoader.exists(SCENE_PATH):
 		_scene_texture = load(SCENE_PATH) as Texture2D
 	_scene_art.texture = _scene_texture if _scene_texture != null else _sky_gradient()
@@ -173,7 +172,7 @@ func _refresh() -> void:
 	_avatar_initial.text = player.name.left(1).to_upper()
 	_name_label.text = player.name
 	_level_label.text = "Nv. %d" % player.level
-	_coins_label.text = _format_thousands(player.coins)
+	_coins_label.text = NumberFormat.thousands(player.coins)
 	for index: int in Player.PARTY_SIZE:
 		var slot := _party_row.get_child(index) as CreatureSlot
 		if index < player.party.size():
@@ -234,14 +233,4 @@ func _explore() -> void:
 func _on_player_input(event: InputEvent) -> void:
 	var button := event as InputEventMouseButton
 	if button != null and button.button_index == MOUSE_BUTTON_LEFT and not button.pressed:
-		Router.push(&"placeholder", {"title": "Perfil", "extra": ProfileDebugPanelScene})
-
-
-static func _format_thousands(value: int) -> String:
-	var digits := str(absi(value))
-	var groups := PackedStringArray()
-	while digits.length() > 3:
-		groups.insert(0, digits.right(3))
-		digits = digits.left(-3)
-	groups.insert(0, digits)
-	return ("-" if value < 0 else "") + ".".join(groups)
+		Router.push(&"profile")

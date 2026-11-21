@@ -64,7 +64,9 @@ res://
     placeholder/                                                                      (foundation/02)
     title/                                                                            (onboarding/01)
     starter_select/            tela, starter_card, confirm_panel                      (onboarding/02)
-    hub/                       tela, profile_debug_panel                              (hub/01)
+    hub/                       tela                                                   (hub/01, hub-start/01)
+    profile/                                                                          (hub-start/02)
+    settings/                                                                         (hub-start/02)
     creature_details/          tela, skill_row, gene_row, nickname_panel              (creature-details/02, 03)
   tools/                       ferramentas só de desenvolvimento, fora das telas do jogo
     board_sprites.gd           gera o board.png de cada Ecobeast                      (board-battle/06)
