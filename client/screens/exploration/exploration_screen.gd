@@ -4,11 +4,9 @@ extends Control
 ## A câmera da cena chegou (story/07).
 signal camera_settled
 
-const PortraitScene := preload("res://ui/components/creature_portrait.tscn")
-
 const LOADING_TEXT := "Gerando mapa..."
 const ISLAND_LOADING_TEXT := "Chegando na ilha..."
-const TELEPORT_BLOCKED_TEXT := "Debug: não dá para ir para esse hexágono."
+const TELEPORT_BLOCKED_TEXT := "Não dá para ir para esse hexágono."
 ## O deslize até o degrau inteiro ao soltar a pinça e na roda (camera-zoom/03). A revisar.
 const ZOOM_SETTLE_SECONDS := 0.15
 ## A voz dos Domadores NPC, que não têm NPC no catálogo (dialogue-voices/02).
@@ -37,21 +35,6 @@ const ROUTE_DOT_SPACING := 16.0
 const MAX_TAP_TRAVEL := 24.0
 ## De quanto em quanto tempo os hexágonos descobertos de uma ilha vão para o servidor.
 const DISCOVERY_SYNC_INTERVAL := 5.0
-const WHOLE_MAP_TEXT := "Debug: ver mapa inteiro"
-const NORMAL_ZOOM_TEXT := "Debug: voltar ao zoom normal"
-const DEBUG_SPECIES_HEIGHT := 112.0
-const DEBUG_PORTRAIT_SIZE := 64
-const DEBUG_NAME_FONT_SIZE := 18
-const DEBUG_DISABLED_ALPHA := 0.35
-const GOD_ON_TEXT := "God: ligado"
-const GOD_OFF_TEXT := "God: desligado"
-const CONTOUR_ON_TEXT := "Contorno: ligado"
-const CONTOUR_OFF_TEXT := "Contorno: desligado"
-const ROUNDED_ON_TEXT := "Pontas: arredondadas"
-const ROUNDED_OFF_TEXT := "Pontas: retas"
-const LIPS_TEXT := "Beirada: %s"
-const SHADOWS_TEXT := "Sombra no pé: %s"
-const TINT_TEXT := "Tom por altura: %s"
 ## Até onde os Ecobeasts existem como nós, em hexágonos, no zoom de partida: passa
 ## da tela com folga, para eles nascerem e saírem sem ninguém ver. A revisar.
 const CREATURE_RADIUS := 16
@@ -59,9 +42,6 @@ const CREATURE_RADIUS := 16
 const TAMER_LIGHT_LIFT := 10.0
 const TAMER_LIGHT_RADIUS := 36.0
 const TAMER_LIGHT_COLOR := Color("ffe8c0")
-const DEBUG_SCENES_TEXT := "Debug: cenas da ilha"
-const DEBUG_NO_SCENES_TEXT := "Esta ilha não tem cenas."
-const DEBUG_BACK_TEXT := "Voltar"
 
 var _island_id: int = 0
 var _map: ExplorationMap = null
@@ -122,7 +102,7 @@ var _followers: Array[NpcSprite] = []
 ## Os hexágonos por onde o Domador passou, do mais recente ao mais antigo.
 var _trail: Array[Vector2i] = []
 var _teleporting := false
-var _debug_scenes := VBoxContainer.new()
+var _debug_panel := ExplorationDebugPanel.new()
 
 @onready var _map_area: Control = %MapArea
 @onready var _map_view: HexMapView = %MapView
@@ -133,22 +113,6 @@ var _debug_scenes := VBoxContainer.new()
 @onready var _bag_button: Button = %BagButton
 @onready var _back_button: Button = %BackButton
 @onready var _debug_button: Button = %DebugButton
-@onready var _debug_menu: Control = %DebugMenu
-@onready var _debug_zoom_button: Button = %DebugZoomButton
-@onready var _debug_forget_button: Button = %DebugForgetButton
-@onready var _debug_species: Control = %DebugSpecies
-@onready var _debug_clear_button: Button = %DebugClearButton
-@onready var _debug_xp_button: Button = %DebugXpButton
-@onready var _debug_main: Control = %DebugMain
-@onready var _debug_spawn: Control = %DebugSpawn
-@onready var _debug_spawn_button: Button = %DebugSpawnButton
-@onready var _debug_spawn_back_button: Button = %DebugSpawnBackButton
-@onready var _debug_god_button: Button = %DebugGodButton
-@onready var _debug_contour_button: Button = %DebugContourButton
-@onready var _debug_rounded_button: Button = %DebugRoundedButton
-@onready var _debug_lips_button: Button = %DebugLipsButton
-@onready var _debug_shadows_button: Button = %DebugShadowsButton
-@onready var _debug_tint_button: Button = %DebugTintButton
 @onready var _greeting: TamerGreetingPanel = %TamerGreeting
 @onready var _island_plate: Control = %IslandPlate
 @onready var _island_name: Label = %IslandName
@@ -184,35 +148,12 @@ func _ready() -> void:
 		_back_button.pressed.connect(_open_menu)
 	else:
 		_back_button.pressed.connect(_leave)
-	_debug_button.pressed.connect(_toggle_debug_menu)
-	_debug_zoom_button.pressed.connect(_toggle_whole_map)
-	_debug_forget_button.pressed.connect(_forget_island)
 	_sync_timer.wait_time = DISCOVERY_SYNC_INTERVAL
 	_sync_timer.timeout.connect(Session.send_island_discoveries)
 	add_child(_sync_timer)
-	_debug_clear_button.pressed.connect(_clear_creatures)
-	_debug_xp_button.pressed.connect(_almost_level_up)
-	%DebugHourButton.pressed.connect(_debug_next_hour)
-	%DebugTimeSlider.value_changed.connect(_debug_set_time)
-	%DebugRealTimeButton.pressed.connect(_debug_real_time)
-	_debug_spawn_button.pressed.connect(_show_debug_part.bind(true))
-	_debug_spawn_back_button.pressed.connect(_show_debug_part.bind(false))
-	_debug_god_button.pressed.connect(_toggle_god)
-	_debug_contour_button.pressed.connect(_toggle_contour)
-	_debug_rounded_button.pressed.connect(_toggle_rounded)
-	_debug_lips_button.pressed.connect(func() -> void: _toggle_height_cues(not HexMapView.height_lips, HexMapView.foot_shadows, HexMapView.height_tint))
-	_debug_shadows_button.pressed.connect(func() -> void: _toggle_height_cues(HexMapView.height_lips, not HexMapView.foot_shadows, HexMapView.height_tint))
-	_debug_tint_button.pressed.connect(func() -> void: _toggle_height_cues(HexMapView.height_lips, HexMapView.foot_shadows, not HexMapView.height_tint))
-	%DebugTest2Button.pressed.connect(_open_board_test.bind(2))
-	%DebugTest3Button.pressed.connect(_open_board_test.bind(3))
-	for team_size: int in [1, 2, 3]:
-		(get_node("%%DebugTamer%dButton" % team_size) as Button).pressed.connect(_debug_tamer.bind(team_size))
+	_build_debug_panel()
 	_greeting.tapped.connect(_on_greeting_tapped)
 	_build_story()
-	_refresh_god_button()
-	_refresh_contour_button()
-	_refresh_rounded_button()
-	_refresh_height_cue_buttons()
 	resized.connect(_fit_view.call_deferred)
 	_top_row.resized.connect(_fit_island_name)
 	_minimap.tapped.connect(_open_island_map)
@@ -239,8 +180,7 @@ func _debug_real_time() -> void:
 
 func _show_debug_time() -> void:
 	var phase := WorldClock.phase()
-	%DebugTimeLabel.text = WorldClock.clock_text()
-	%DebugTimeSlider.set_value_no_signal(snappedf(WorldClock.minute_of_day(), 15.0))
+	_debug_panel.show_time(WorldClock.clock_text(), WorldClock.minute_of_day())
 	_show_message("%s — %s" % [WorldClock.clock_text(), phase.name if phase != null else "sem hora do servidor"], &"SecondaryLabel")
 
 
@@ -306,7 +246,8 @@ func _begin() -> void:
 	_reveal_home_field()
 	Session.queue_island_discoveries(_map.island_id, _discovery.reveal_around(_map, _player_coord))
 	_fog.set_map(_map, _discovery)
-	_debug_forget_button.disabled = _map.island_id <= 0
+	_debug_panel.set_forget_enabled(_map.island_id > 0)
+	_debug_panel.set_scenes(Story.library.for_island(_map.island_id))
 	if _map.island_id > 0:
 		_sync_timer.start()
 	_shown_rise = _map.rise_at(_player_point)
@@ -327,7 +268,7 @@ func _begin() -> void:
 	_bag_button.disabled = false
 	if OS.is_debug_build():
 		_debug_button.show()
-		_fill_debug_species()
+		_debug_panel.fill_species()
 	# O botão de debug muda a altura do painel.
 	_fit_view.call_deferred()
 	Story.begin_entry()
@@ -693,7 +634,7 @@ func _open_island_map() -> void:
 	if _walking:
 		_stop_walk = true
 		_next_point = null
-	_debug_menu.hide()
+	_debug_panel.hide()
 	_island_map.open(_minimap_image, _markers, _discovery, _showing_whole_map, _player_point, _map.island_name)
 
 
@@ -808,7 +749,7 @@ func _run_action(index: int) -> void:
 func _run_action_type(type_id: int) -> void:
 	if ActionScreens.screen_for(type_id) == &"":
 		return
-	_debug_menu.hide()
+	_debug_panel.hide()
 	var text := ActionScreens.open(type_id)
 	if not text.is_empty():
 		_show_message(text, &"SecondaryLabel")
@@ -818,7 +759,7 @@ func _run_action_type(type_id: int) -> void:
 func _open_prop(index: int) -> void:
 	var prop := _map.props[index]
 	if prop.interior_id > 0:
-		_debug_menu.hide()
+		_debug_panel.hide()
 		Router.push(&"interior", {"interior_id": prop.interior_id})
 		return
 	_run_action_type(prop.action_type_id)
@@ -826,7 +767,7 @@ func _open_prop(index: int) -> void:
 
 func _challenge(tamer: MapTamer) -> void:
 	_challenger = tamer
-	_debug_menu.hide()
+	_debug_panel.hide()
 	_message.hide()
 	_set_controls_enabled(false)
 	_greeting.say("%s: %s" % [GameData.get_npc_tamer_name(tamer.name_id), GameData.get_npc_tamer_greeting(tamer.greeting_id)], GameData.voice_by_slug(NPC_TAMER_VOICE))
@@ -961,7 +902,7 @@ func _talk(npc: NpcSprite) -> void:
 	npc.hold(true, _player_art_point())
 	_marker.face_toward(npc.position - _player_art_point())
 	_marker.play_idle()
-	_debug_menu.hide()
+	_debug_panel.hide()
 	_message.hide()
 	_set_controls_enabled(false)
 	_say_line()
@@ -1012,7 +953,7 @@ func _set_controls_enabled(enabled: bool) -> void:
 func _forget_island() -> void:
 	if _map == null or _map.island_id <= 0:
 		return
-	_debug_menu.hide()
+	_debug_panel.hide()
 	var result: Result = await Session.forget_island_discoveries(_map.island_id)
 	if not result.ok:
 		_show_message(result.error, &"DangerLabel")
@@ -1029,10 +970,10 @@ func _forget_island() -> void:
 
 func _toggle_whole_map() -> void:
 	if _walking or _challenger != null:
+		_debug_panel.set_whole_map(_showing_whole_map)
 		return
-	_debug_menu.hide()
+	_debug_panel.hide()
 	_showing_whole_map = not _showing_whole_map
-	_debug_zoom_button.text = NORMAL_ZOOM_TEXT if _showing_whole_map else WHOLE_MAP_TEXT
 	_fog.visible = not _showing_whole_map
 	_rebuild_minimap()
 	_refresh_building_names()
@@ -1040,61 +981,60 @@ func _toggle_whole_map() -> void:
 	_fit_view()
 
 
+func _build_debug_panel() -> void:
+	_debug_panel.hide()
+	var column := _top_row.get_parent()
+	column.add_child(_debug_panel)
+	column.move_child(_debug_panel, _top_row.get_index() + 1)
+	_debug_button.pressed.connect(_toggle_debug_menu)
+	_debug_panel.whole_map_toggled.connect(_toggle_whole_map)
+	_debug_panel.god_toggled.connect(_toggle_god)
+	_debug_panel.forget_pressed.connect(_forget_island)
+	_debug_panel.scene_chosen.connect(_debug_play_scene)
+	_debug_panel.species_chosen.connect(_spawn)
+	_debug_panel.clear_spawns_pressed.connect(_clear_creatures)
+	_debug_panel.board_test_pressed.connect(_open_board_test)
+	_debug_panel.tamer_pressed.connect(_debug_tamer)
+	_debug_panel.almost_level_up_pressed.connect(_almost_level_up)
+	_debug_panel.contour_toggled.connect(_toggle_contour)
+	_debug_panel.rounded_toggled.connect(_toggle_rounded)
+	_debug_panel.height_cues_changed.connect(_toggle_height_cues)
+	_debug_panel.next_hour_pressed.connect(_debug_next_hour)
+	_debug_panel.time_chosen.connect(_debug_set_time)
+	_debug_panel.real_time_pressed.connect(_debug_real_time)
+
+
 func _toggle_debug_menu() -> void:
-	_show_debug_part(false)
-	_debug_menu.visible = not _debug_menu.visible
-	%DebugTimeLabel.text = WorldClock.clock_text()
-	%DebugTimeSlider.set_value_no_signal(snappedf(WorldClock.minute_of_day(), 15.0))
-
-
-func _show_debug_part(spawn: bool) -> void:
-	_debug_spawn.visible = spawn
-	_debug_main.visible = not spawn
-	_debug_scenes.visible = false
+	_debug_panel.visible = not _debug_panel.visible
+	_debug_panel.refresh_toggles()
+	_debug_panel.set_whole_map(_showing_whole_map)
+	_debug_panel.show_time(WorldClock.clock_text(), WorldClock.minute_of_day())
 
 
 func _toggle_god() -> void:
 	Session.debug_god = not Session.debug_god
-	_refresh_god_button()
-
-
-func _refresh_god_button() -> void:
-	_debug_god_button.text = GOD_ON_TEXT if Session.debug_god else GOD_OFF_TEXT
+	_debug_panel.refresh_toggles()
 
 
 func _toggle_contour() -> void:
 	_map_view.set_contour_visible(not HexMapView.contour_visible)
-	_refresh_contour_button()
+	_debug_panel.refresh_toggles()
 
 
 func _toggle_rounded() -> void:
 	_map_view.set_rounded_corners(not HexMapView.rounded_corners)
-	_refresh_rounded_button()
+	_debug_panel.refresh_toggles()
 
 
 func _toggle_height_cues(lips: bool, shadows: bool, tint: bool) -> void:
 	_map_view.set_height_cues(lips, shadows, tint)
-	_refresh_height_cue_buttons()
-
-
-func _refresh_height_cue_buttons() -> void:
-	_debug_lips_button.text = LIPS_TEXT % ("ligada" if HexMapView.height_lips else "desligada")
-	_debug_shadows_button.text = SHADOWS_TEXT % ("ligada" if HexMapView.foot_shadows else "desligada")
-	_debug_tint_button.text = TINT_TEXT % ("ligado" if HexMapView.height_tint else "desligado")
-
-
-func _refresh_rounded_button() -> void:
-	_debug_rounded_button.text = ROUNDED_ON_TEXT if HexMapView.rounded_corners else ROUNDED_OFF_TEXT
-
-
-func _refresh_contour_button() -> void:
-	_debug_contour_button.text = CONTOUR_ON_TEXT if HexMapView.contour_visible else CONTOUR_OFF_TEXT
+	_debug_panel.refresh_toggles()
 
 
 func _open_board_test(slots: int) -> void:
 	if _walking or _challenger != null:
 		return
-	_debug_menu.hide()
+	_debug_panel.hide()
 	_open_battle({"test_slots": slots}, &"wild")
 
 
@@ -1111,39 +1051,6 @@ func _battle_params(params: Dictionary) -> Dictionary:
 		params["zone"] = tile.zone
 		params["height"] = tile.height
 	return params
-
-
-func _fill_debug_species() -> void:
-	for species: CreatureSpecies in GameData.get_all_species():
-		var button := Button.new()
-		button.theme_type_variation = &"OutlineButton"
-		button.custom_minimum_size = Vector2(0.0, DEBUG_SPECIES_HEIGHT)
-		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		button.disabled = not CreatureSprite.has_sheets(species.slug)
-		button.pressed.connect(_spawn.bind(species))
-		button.add_child(_species_card(species, button.disabled))
-		_debug_species.add_child(button)
-
-
-func _species_card(species: CreatureSpecies, disabled: bool) -> Control:
-	var card := VBoxContainer.new()
-	card.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	card.alignment = BoxContainer.ALIGNMENT_CENTER
-	card.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	card.modulate.a = DEBUG_DISABLED_ALPHA if disabled else 1.0
-	var portrait: CreaturePortrait = PortraitScene.instantiate()
-	portrait.portrait_size = DEBUG_PORTRAIT_SIZE
-	portrait.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	card.add_child(portrait)
-	portrait.set_species(species.id)
-	var label := Label.new()
-	label.text = species.name
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	label.clip_text = true
-	label.add_theme_font_size_override(&"font_size", DEBUG_NAME_FONT_SIZE)
-	card.add_child(label)
-	return card
 
 
 func _spawn(species: CreatureSpecies) -> void:
@@ -1164,7 +1071,7 @@ func _spawn(species: CreatureSpecies) -> void:
 func _debug_tamer(team_size: int) -> void:
 	if _walking or _challenger != null:
 		return
-	_debug_menu.hide()
+	_debug_panel.hide()
 	var result: Result = await Session.debug_tamer(_player_coord, team_size)
 	if not result.ok:
 		_show_message(result.error, &"DangerLabel")
@@ -1182,7 +1089,7 @@ func _debug_tamer(team_size: int) -> void:
 
 
 func _clear_creatures() -> void:
-	_debug_clear_button.disabled = true
+	_debug_panel.set_clear_enabled(false)
 	var result: Result = await Session.debug_clear_spawns()
 	if not result.ok:
 		_refresh_debug_clear()
@@ -1199,14 +1106,14 @@ func _clear_creatures() -> void:
 
 
 func _refresh_debug_clear() -> void:
-	_debug_clear_button.disabled = _debug_spawn_ids.is_empty() and _debug_tamer_ids.is_empty()
+	_debug_panel.set_clear_enabled(not (_debug_spawn_ids.is_empty() and _debug_tamer_ids.is_empty()))
 
 
 func _almost_level_up() -> void:
-	_debug_xp_button.disabled = true
+	_debug_panel.set_xp_busy(true)
 	var result: Result = await Session.debug_almost_level_up()
-	_debug_xp_button.disabled = false
-	_debug_menu.hide()
+	_debug_panel.set_xp_busy(false)
+	_debug_panel.hide()
 	if result.ok:
 		_show_message(ALMOST_LEVEL_UP_TEXT, &"SecondaryLabel")
 	else:
@@ -1358,14 +1265,6 @@ func _build_story() -> void:
 	column.move_child(_story_choices, _greeting.get_index())
 	_story.setup(self, _greeting, _story_choices, _story_fade)
 	add_child(_story)
-	var scenes_button := Button.new()
-	scenes_button.text = DEBUG_SCENES_TEXT
-	scenes_button.pressed.connect(_show_debug_scenes)
-	_debug_main.add_child(scenes_button)
-	# No topo: a lista do menu é longa e o fim dela fica embaixo do painel de controles.
-	_debug_main.move_child(scenes_button, 0)
-	_debug_scenes.visible = false
-	_debug_main.get_parent().add_child(_debug_scenes)
 
 
 ## Ao entrar: a cena de teste do editor, ou a de área do hexágono de chegada, ou a `auto`.
@@ -1442,31 +1341,9 @@ func _open_creation() -> void:
 	_play_auto()
 
 
-func _show_debug_scenes() -> void:
-	for child: Node in _debug_scenes.get_children():
-		child.queue_free()
-	var scenes := Story.library.for_island(_map.island_id if _map != null else 0)
-	if scenes.is_empty():
-		var label := Label.new()
-		label.text = DEBUG_NO_SCENES_TEXT
-		_debug_scenes.add_child(label)
-	for scene: StoryScene in scenes:
-		var button := Button.new()
-		button.text = "%s (%s)" % [scene.name, scene.slug]
-		button.pressed.connect(_debug_play_scene.bind(scene))
-		_debug_scenes.add_child(button)
-	var back := Button.new()
-	back.text = DEBUG_BACK_TEXT
-	back.pressed.connect(_show_debug_part.bind(false))
-	_debug_scenes.add_child(back)
-	_debug_main.hide()
-	_debug_spawn.hide()
-	_debug_scenes.show()
-
-
 ## Toca a cena sem gravar nada, com os Marcos que ela exige (story/02, RF-15).
 func _debug_play_scene(scene: StoryScene) -> void:
-	_debug_menu.hide()
+	_debug_panel.hide()
 	if _story_busy() or _walking:
 		return
 	Story.begin_test(scene, scene.requires)
@@ -1480,7 +1357,7 @@ func story_began() -> void:
 		_finish_zoom(_zoom_target)
 	_npc_target = null
 	_prop_target = -1
-	_debug_menu.hide()
+	_debug_panel.hide()
 	_message.hide()
 	_controls_panel.hide()
 	_minimap.hide()

@@ -105,6 +105,7 @@ O Ecobeast é um jogo mobile (Android/iOS, retrato): o cliente em **Godot 4.7 co
 | [bond](bond/) | O Vínculo do Domador com cada Ecobeast, e a evolução por Vínculo |
 | [map-realism](map-realism/) | O mapa sorteado com um clima por mapa, a Neve longe da Planície e do Deserto, um relevo só e sem o Vau |
 | [skill-test](skill-test/) | O Testar técnica do F1: uma luta de verdade com um Ecobeast emprestado, o oponente escolhido e nada gravado |
+| [debug-panels](debug-panels/) | O Debug de Explorar e o F3 da luta organizados em abas |
 | [giant-rocks](giant-rocks/) | As pedras gigantes da Montanha, como peças do F2 e sorteadas nas Montanhas do mapa sorteado, bloqueando pelo pé |
 | [sea-life](sea-life/) | As algas, as pedras e o lixo da Água rasa e da profunda, na Comum e em zonas (Algal, Pedras rasas, Floresta de algas, Rochedo e Lixo), e como peças do F2 |
 | [beach-life](beach-life/) | Os coqueiros na Praia, na Comum e na zona Coqueiral, e como peças do F2 |

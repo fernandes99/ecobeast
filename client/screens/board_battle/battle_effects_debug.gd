@@ -5,20 +5,26 @@ signal status_toggled(key: String, slug: String)
 signal stage_changed(key: String, stat: String, delta: int)
 signal mark_toggled(cell: Vector2i, ground_effect_id: int)
 signal cleared
+signal closed
 
-const TITLE_TEXT := "Depuração dos efeitos (F3)"
+const TITLE_TEXT := "Depuração (F3)"
 const PICK_TEXT := "Toque num hexágono do tabuleiro."
 const NO_CREATURE_TEXT := "Hexágono (%d, %d), sem Ecobeast"
 const TARGET_TEXT := "%s, no hexágono (%d, %d)"
-const CREATURE_TEXT := "Ecobeast"
-const STAGES_TEXT := "Atributos"
-const GROUND_TEXT := "Chão"
 const CLEAR_TEXT := "Limpar tudo"
+const CLOSE_TEXT := "×"
 const PROTECT_TEXT := "Protegido"
 const MIN_STAGE := -6
 const MAX_STAGE := 6
 const FONT_SIZE := 20
+const STATUS_COLUMNS := 3
+const GROUND_COLUMNS := 3
+const BUTTON_HEIGHT := 44.0
+const STAGE_NAME_WIDTH := 96.0
+const STAGE_VALUE_WIDTH := 48.0
 const STAGE_STATS: Array[String] = ["atk", "def", "sp_atk", "sp_def", "spd", "accuracy", "evasion"]
+
+static var _last_tab := 0
 
 var _key := ""
 var _cell: Variant = null
@@ -35,65 +41,108 @@ func _init() -> void:
 	theme_type_variation = &"SectionPanel"
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	var column := VBoxContainer.new()
-	column.add_theme_constant_override(&"separation", 6)
+	column.add_theme_constant_override(&"separation", 8)
 	add_child(column)
-	column.add_child(_label(TITLE_TEXT, &"BoldLabel"))
+	column.add_child(_header())
 	_target_label.text = PICK_TEXT
+	_target_label.theme_type_variation = &"SecondaryLabel"
 	_target_label.add_theme_font_size_override(&"font_size", FONT_SIZE)
 	column.add_child(_target_label)
+	var tabs := DebugTabs.new()
+	tabs.equal_heights = true
+	column.add_child(tabs)
+	_build_statuses(tabs.add_page("Estados"))
+	_build_stages(tabs.add_page("Atributos"))
+	_build_ground(tabs.add_page("Chão"))
+	tabs.show_page(_last_tab)
+	tabs.tab_changed.connect(func(index: int) -> void: _last_tab = index)
+	select(null, "", "")
 
-	column.add_child(_label(CREATURE_TEXT, &"SecondaryLabel"))
-	var statuses := GridContainer.new()
-	statuses.columns = 3
-	column.add_child(statuses)
+
+func _header() -> Control:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override(&"separation", 8)
+	var title := _label(TITLE_TEXT, &"BoldLabel")
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	row.add_child(title)
+	_clear_button.text = CLEAR_TEXT
+	_clear_button.theme_type_variation = &"DangerButton"
+	_clear_button.focus_mode = Control.FOCUS_NONE
+	_clear_button.add_theme_font_size_override(&"font_size", FONT_SIZE)
+	_clear_button.pressed.connect(cleared.emit)
+	row.add_child(_clear_button)
+	var close := _button(CLOSE_TEXT)
+	close.custom_minimum_size.x = BUTTON_HEIGHT
+	close.pressed.connect(closed.emit)
+	row.add_child(close)
+	return row
+
+
+func _build_statuses(page: VBoxContainer) -> void:
+	var grid := _grid(page, STATUS_COLUMNS)
 	for slug: String in BattleStatuses.ORDER:
 		var button := _button(PROTECT_TEXT if slug == "protect" else GameData.get_status_name(slug))
 		button.toggle_mode = true
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		button.clip_text = true
 		button.pressed.connect(func() -> void: status_toggled.emit(_key, slug))
 		_status_buttons[slug] = button
-		statuses.add_child(button)
+		grid.add_child(button)
 
-	column.add_child(_label(STAGES_TEXT, &"SecondaryLabel"))
-	var stages := GridContainer.new()
-	stages.columns = 8
-	column.add_child(stages)
+
+func _build_stages(page: VBoxContainer) -> void:
+	page.add_theme_constant_override(&"separation", 4)
 	for stat: String in STAGE_STATS:
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override(&"separation", 8)
+		page.add_child(row)
 		var name_label := _label(_short_name(stat), &"")
-		name_label.custom_minimum_size.x = 64.0
-		stages.add_child(name_label)
+		name_label.custom_minimum_size.x = STAGE_NAME_WIDTH
+		name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		name_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		row.add_child(name_label)
 		var minus := _button("−")
+		minus.custom_minimum_size.x = BUTTON_HEIGHT * 1.5
 		minus.pressed.connect(func() -> void: stage_changed.emit(_key, stat, -1))
-		stages.add_child(minus)
-		var value := _label("0", &"")
-		value.custom_minimum_size.x = 32.0
+		row.add_child(minus)
+		var value := _label("0", &"BoldLabel")
+		value.custom_minimum_size.x = STAGE_VALUE_WIDTH
 		value.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		stages.add_child(value)
+		value.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		row.add_child(value)
 		var plus := _button("+")
+		plus.custom_minimum_size.x = BUTTON_HEIGHT * 1.5
 		plus.pressed.connect(func() -> void: stage_changed.emit(_key, stat, 1))
-		stages.add_child(plus)
+		row.add_child(plus)
 		_stage_buttons[stat] = [minus, plus]
 		_stage_labels[stat] = value
 
-	column.add_child(_label(GROUND_TEXT, &"SecondaryLabel"))
-	var ground := HBoxContainer.new()
-	column.add_child(ground)
+
+func _build_ground(page: VBoxContainer) -> void:
+	var grid := _grid(page, GROUND_COLUMNS)
 	for row: Dictionary in GameData.get_rows("ground_effects"):
 		var ground_effect_id: int = row["id"]
 		var button := _button(str(row["name"]))
 		button.toggle_mode = true
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		button.clip_text = true
 		button.pressed.connect(func() -> void:
 			if _cell != null:
 				mark_toggled.emit(_cell, ground_effect_id))
 		_mark_buttons[ground_effect_id] = button
 		_mark_colors[ground_effect_id] = GameData.get_ground_effect(ground_effect_id).color
-		ground.add_child(button)
+		grid.add_child(button)
 
-	_clear_button.text = CLEAR_TEXT
-	_clear_button.theme_type_variation = &"DangerButton"
-	_clear_button.pressed.connect(cleared.emit)
-	column.add_child(_clear_button)
-	select(null, "", "")
+
+func _grid(page: VBoxContainer, columns: int) -> GridContainer:
+	var grid := GridContainer.new()
+	grid.columns = columns
+	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	grid.add_theme_constant_override(&"h_separation", 6)
+	grid.add_theme_constant_override(&"v_separation", 6)
+	page.add_child(grid)
+	return grid
 
 
 # O ligado ganha o fundo na cor do efeito: o "apertado" do tema quase não aparece.
@@ -162,5 +211,6 @@ func _button(text: String) -> Button:
 	var button := Button.new()
 	button.text = text
 	button.focus_mode = Control.FOCUS_NONE
+	button.custom_minimum_size.y = BUTTON_HEIGHT
 	button.add_theme_font_size_override(&"font_size", FONT_SIZE)
 	return button

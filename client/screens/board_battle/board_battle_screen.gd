@@ -980,6 +980,7 @@ func _toggle_debug() -> void:
 		_debug.stage_changed.connect(_on_debug_stage)
 		_debug.mark_toggled.connect(_on_debug_mark)
 		_debug.cleared.connect(_on_debug_cleared)
+		_debug.closed.connect(_toggle_debug)
 		add_child(_debug)
 		_debug.hide()
 	_debug.visible = not _debug.visible
