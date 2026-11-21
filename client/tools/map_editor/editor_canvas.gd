@@ -19,6 +19,16 @@ const FIT_MARGIN := 24.0
 const FLAG_HEIGHT := 22.0
 const FLAG_WIDTH := 12.0
 const OUTLINE_WIDTH := 2.0
+const CLIFF_WIDTH := 3.0
+## O vizinho e os cantos da borda que o hexágono divide com ele (HexMapView.HEX_CORNERS).
+const CLIFF_EDGES: Dictionary[Vector2i, Vector2i] = {
+	Vector2i(1, 0): Vector2i(1, 2),
+	Vector2i(0, 1): Vector2i(3, 2),
+	Vector2i(-1, 1): Vector2i(4, 3),
+	Vector2i(-1, 0): Vector2i(4, 5),
+	Vector2i(0, -1): Vector2i(5, 0),
+	Vector2i(1, -1): Vector2i(0, 1),
+}
 ## O traço da parede invisível, em pixels da tela (free-fences/01).
 const WALL_DASH := 6.0
 const CHUNK_COLUMNS := 16
@@ -82,6 +92,8 @@ var _show_blocks := true
 var _block_cells: Dictionary[Vector2i, BlockCell] = {}
 var _block_counts: Dictionary[Vector2i, int] = {}
 var _wall_hexes: Dictionary[Vector2i, bool] = {}
+## As bordas de paredão de cada hexágono mais alto, pelos cantos (terrain-plateaus/01).
+var _cliffs: Dictionary[Vector2i, Array] = {}
 var _blocks_layer: BlocksLayer
 ## A chave das peças de cada hexágono, para achar os que mudaram.
 var _prop_tiles: Dictionary[Vector2i, int] = {}
@@ -193,6 +205,7 @@ func show_draft(draft: IslandDraft, fit: bool = true) -> void:
 func update_tiles(coords: Array[Vector2i]) -> void:
 	for coord: Vector2i in coords:
 		_pending[coord] = true
+	_refresh_cliffs_at(coords)
 	_overlay.queue_redraw()
 
 
@@ -807,7 +820,40 @@ func _refresh_blocks() -> void:
 			blocking[coord].append(index)
 		for coord: Vector2i in blocking:
 			_set_block_cell(coord, blocking[coord])
+	_cliffs.clear()
+	if _draft != null:
+		_refresh_cliffs_at(_draft.tiles.keys())
 	_refresh_wall_blocks()
+
+
+## Refaz as bordas de paredão dos hexágonos e dos vizinhos deles.
+func _refresh_cliffs_at(coords: Array[Vector2i]) -> void:
+	if _draft == null:
+		return
+	var around: Dictionary[Vector2i, bool] = {}
+	for coord: Vector2i in coords:
+		around[coord] = true
+		for direction: Vector2i in CLIFF_EDGES:
+			around[coord + direction] = true
+	for coord: Vector2i in around:
+		var edges := _cliff_edges(coord)
+		if edges.is_empty():
+			_cliffs.erase(coord)
+		else:
+			_cliffs[coord] = edges
+	_blocks_layer.queue_redraw()
+
+
+func _cliff_edges(coord: Vector2i) -> Array:
+	var edges := []
+	var tile: HexTile = _draft.tiles.get(coord)
+	if tile == null or tile.blocks_walking():
+		return edges
+	for direction: Vector2i in CLIFF_EDGES:
+		var other: HexTile = _draft.tiles.get(coord + direction)
+		if other != null and not other.blocks_walking() and tile.height - other.height > ExplorationMap.MAX_CLIMB:
+			edges.append(CLIFF_EDGES[direction])
+	return edges
 
 
 static func _blocks(data: Dictionary, typed: Dictionary[int, bool]) -> bool:
@@ -865,6 +911,12 @@ func draw_blocks(node: Node2D) -> void:
 	for coord: Vector2i in _wall_hexes:
 		if not _block_counts.has(coord):
 			_draw_block_mark(node, coord, near, near_flat, reach, mark)
+	for coord: Vector2i in _cliffs:
+		if not near_flat.has_point(HexMapView.flat_center(coord)):
+			continue
+		var top_left := _screen_origin(coord)
+		for edge: Vector2i in _cliffs[coord]:
+			node.draw_line(top_left + HexMapView.HEX_CORNERS[edge.x] * _zoom, top_left + HexMapView.HEX_CORNERS[edge.y] * _zoom, UiPalette.DANGER, CLIFF_WIDTH)
 	var wide := _flat_screen_area(screen.grow(BLOCK_REACH * _zoom))
 	for coord: Vector2i in _block_cells:
 		if not wide.has_point(HexMapView.flat_center(coord)):

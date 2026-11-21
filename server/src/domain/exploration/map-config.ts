@@ -21,6 +21,11 @@ export interface MapConfig {
   stoneFrom: number;
   hillFrom: number;
   mountainFrom: number;
+  /** Os limites de altitude dos patamares 1, 4 e 7 (terrain-plateaus/02). */
+  terraceLow: number;
+  terraceHigh: number;
+  /** Uma encosta extra a cada tantas bordas de paredão; 0 não abre nenhuma. */
+  rampEvery: number;
   detailChance: number;
   cleanupPasses: number;
 }
@@ -48,6 +53,9 @@ export const DEFAULT_MAP_CONFIG: MapConfig = {
   stoneFrom: 0.72,
   hillFrom: 0.86,
   mountainFrom: 0.96,
+  terraceLow: 0.45,
+  terraceHigh: 0.75,
+  rampEvery: 25,
   detailChance: 0.2,
   cleanupPasses: 3,
 };
@@ -83,6 +91,9 @@ export const MAP_CONFIG_RANGES: Record<keyof MapConfig, ConfigRange> = {
   stoneFrom: fraction,
   hillFrom: fraction,
   mountainFrom: fraction,
+  terraceLow: fraction,
+  terraceHigh: fraction,
+  rampEvery: { min: 0, max: 500, integer: true },
   detailChance: fraction,
   cleanupPasses: { min: 0, max: 10, integer: true },
 };
@@ -100,6 +111,10 @@ export function mapConfigError(
     if (value < range.min || value > range.max) {
       return `${label(field)} precisa ficar entre ${range.min} e ${range.max}.`;
     }
+  }
+  const { terraceLow, terraceHigh } = withDefaults(config);
+  if (terraceLow >= terraceHigh) {
+    return `${label('terraceLow')} precisa ser menor que ${label('terraceHigh')}.`;
   }
   return null;
 }

@@ -16,6 +16,7 @@ import {
   RiverSource,
 } from './map-water.js';
 import { type GeneratedProp, placeGiantRocks } from './map-rocks.js';
+import { levelLinks, openRamps, openSlopes } from './map-slopes.js';
 
 export const BIOMES = [
   'temperate',
@@ -47,8 +48,11 @@ export const TERRAIN_SHAPES = ['flat', 'hill', 'mont'] as const;
 export type TerrainShape = (typeof TERRAIN_SHAPES)[number];
 
 export const MAX_HEIGHT = 10;
-/** O nível da montanha do mapa sorteado, abaixo do máximo das ilhas (terrain-height/02). */
-export const MOUNTAIN_HEIGHT = 4;
+/** Os patamares da terra, do mais baixo ao mais alto (terrain-plateaus/02). A revisar. */
+export const TERRACE_HEIGHTS = [1, 4, 7] as const;
+/** A Montanha fica de 8 (na borda) a 10. */
+export const MOUNTAIN_HEIGHT = 8;
+export const BEACH_HEIGHT = 1;
 
 export interface MapTile extends HexCoord {
   biome: Biome;
@@ -82,6 +86,7 @@ export interface GeneratedMap {
 export interface ShapedTile extends HexCoord {
   biome: ShapedBiome;
   shape: TerrainShape;
+  height: number;
   variant: number;
 }
 
@@ -107,6 +112,7 @@ interface Cell extends HexCoord {
   wet: boolean;
   biome: ShapedBiome;
   shape: TerrainShape;
+  height: number;
   neighbors: Cell[];
 }
 
@@ -158,6 +164,8 @@ const TEMPERATURE_SALT = 0x5eed7e;
 /** O mar, os lagos e os rios vêm de outro sorteio à parte (coast-rivers/01). */
 const WATER_SALT = 0x5ea5a1;
 const ROCKS_SALT = 0x60c4b1;
+/** As encostas vêm de um sorteio à parte (terrain-plateaus/01). */
+const SLOPES_SALT = 0x51095e;
 const MEANDER_SCALE = 6;
 const BRIDGE_TYPE = 'wood_bridge';
 const BRIDGE_WIDTH = 28;
@@ -178,22 +186,16 @@ export function maxVariant(biome: Biome): number {
     : BASIC_VARIANTS * 2;
 }
 
-export function terrainOf(
-  biome: ShapedBiome,
-  shape: TerrainShape,
-): { biome: Biome; height: number } {
-  if (shape === 'mont') return { biome: 'mountain', height: MOUNTAIN_HEIGHT };
-  if (biome === 'stone')
-    return { biome: shape === 'hill' ? 'hill' : 'stone', height: 3 };
-  if (shape === 'hill')
-    return {
-      biome:
-        biome === 'desert' || biome === 'snow' || biome === 'beach'
-          ? biome
-          : 'hill',
-      height: 2,
-    };
-  return { biome, height: isWater(biome) ? 0 : 1 };
+/** O bioma do catálogo pelo bioma e pela forma; a altura vem do relevo (terrain-plateaus/02). */
+export function terrainOf(biome: ShapedBiome, shape: TerrainShape): Biome {
+  if (shape === 'mont') return 'mountain';
+  if (biome === 'stone') return shape === 'hill' ? 'hill' : 'stone';
+  if (shape === 'hill') {
+    return biome === 'desert' || biome === 'snow' || biome === 'beach'
+      ? biome
+      : 'hill';
+  }
+  return biome;
 }
 
 export function generateMap(
@@ -204,10 +206,11 @@ export function generateMap(
   return {
     seed: map.seed,
     start: map.start,
-    tiles: map.tiles.map(({ q, r, biome, shape, variant }) => ({
+    tiles: map.tiles.map(({ q, r, biome, shape, height, variant }) => ({
       q,
       r,
-      ...terrainOf(biome, shape),
+      biome: terrainOf(biome, shape),
+      height,
       variant,
     })),
     bridges: map.bridges,
@@ -289,32 +292,56 @@ export function generateShapedMap(
   separateBiomes(cells);
   const start = startOf(cells);
   const startCell = cells.find(({ q, r }) => q === start.q && r === start.r)!;
+  placeLandHeights(cells, config);
   const { crossings, absorbed } = placeCrossings(
     rivers,
     [...lakes, ...ponds],
     startCell,
-    (a, b) =>
-      a.shape !== 'mont' &&
-      b.shape !== 'mont' &&
-      terrainOf(a.biome, a.shape).height === terrainOf(b.biome, b.shape).height,
-    levelBanks,
+    (a, b) => a.shape !== 'mont' && b.shape !== 'mont' && a.height === b.height,
+    (a, b) => levelBanks(a, b, config),
     config,
   );
   for (const cell of absorbed) {
     cell.biome = 'wshallow';
     cell.shape = 'flat';
   }
+  for (const cell of absorbed) cell.height = 0;
+  const mountains = cells.filter((cell) => cell.shape === 'mont');
   gatherMountains(cells);
+  for (const cell of mountains) {
+    if (cell.shape !== 'mont') cell.height = groundFloor(cell, config);
+  }
+  placeMountainHeights(cells);
+  const links = new Map<Cell, Cell[]>();
+  for (const {
+    bridge: [a, b],
+  } of crossings) {
+    links.set(a, [...(links.get(a) ?? []), b]);
+    links.set(b, [...(links.get(b) ?? []), a]);
+  }
+  // Uma margem pode ser de duas pontes, e o `levelBanks` da segunda a subiu.
+  levelLinks(links);
+  const slopes = seededRandom(seed ^ SLOPES_SALT);
+  const banks = new Set(links.keys());
+  openRamps(
+    cells,
+    config.rampEvery,
+    (cell) => !isWater(cell.biome) && cell.shape !== 'mont' && !banks.has(cell),
+    (cell) => !isWater(cell.biome),
+    slopes,
+  );
+  openSlopes(cells, startCell, links, (cell) => isWater(cell.biome), slopes);
 
   const plain = (body: Cell[]) => body.map(({ q, r }) => ({ q, r }));
   const origin = flatCenter({ q: 0, r: 0 });
-  const tiles = cells.map(({ q, r, biome, shape }) => {
+  const tiles = cells.map(({ q, r, biome, shape, height }) => {
     const variant = rollVariant(shape, random, config);
     return {
       q,
       r,
       biome,
       shape,
+      height,
       variant: variant > maxVariant(biome) ? variant - BASIC_VARIANTS : variant,
     };
   });
@@ -500,6 +527,7 @@ function createCells(
     wet: false,
     biome: 'temperate',
     shape: 'flat',
+    height: 0,
     neighbors: [],
   }));
   const byKey = new Map(cells.map((cell) => [hexKey(cell), cell]));
@@ -747,12 +775,62 @@ function separateBiomes(cells: Cell[]): void {
   }
 }
 
-/** As margens de uma ponte que não cabia: terra plana, e a Pedra vira o bioma da outra margem. */
-function levelBanks(a: Cell, b: Cell): void {
+/**
+ * As margens de uma ponte que não cabia: terra plana na mesma altura, a da margem mais alta
+ * sem a Montanha (terrain-plateaus/02), e a Pedra vira o bioma da outra margem.
+ */
+function levelBanks(a: Cell, b: Cell, config: MapConfig): void {
+  const height = Math.max(groundFloor(a, config), groundFloor(b, config));
+  a.height = height;
+  b.height = height;
   a.shape = 'flat';
   b.shape = 'flat';
   if (a.biome === 'stone' && b.biome !== 'stone') a.biome = b.biome;
   else if (b.biome === 'stone' && a.biome !== 'stone') b.biome = a.biome;
+}
+
+/** O patamar da terra pela altitude do relevo (terrain-plateaus/02 RF-01). */
+function terraceOf(cell: Cell, config: MapConfig): number {
+  const [low, middle, high] = TERRACE_HEIGHTS;
+  if (cell.elevation < config.terraceLow) return low;
+  return cell.elevation < config.terraceHigh ? middle : high;
+}
+
+/**
+ * A altura de um hexágono que deixa de ser Montanha (uma margem de ponte ou uma montanha
+ * solta): o patamar dele. A terra que já não era Montanha fica na altura que tinha.
+ */
+function groundFloor(cell: Cell, config: MapConfig): number {
+  const [, , top] = TERRACE_HEIGHTS;
+  return cell.shape === 'mont' || cell.height > top
+    ? terraceOf(cell, config)
+    : cell.height;
+}
+
+/** A terra: a Montanha de 8 a 10, a Praia no 1 e o resto nos patamares (RF-01 a 03). */
+function placeLandHeights(cells: Cell[], config: MapConfig): void {
+  for (const cell of cells) {
+    // Toda água fica no 0; as cachoeiras ficam para depois (terrain-plateaus/02).
+    if (isWater(cell.biome)) cell.height = 0;
+    if (isWater(cell.biome) || cell.shape === 'mont') continue;
+    cell.height =
+      cell.biome === 'beach' ? BEACH_HEIGHT : terraceOf(cell, config);
+  }
+  placeMountainHeights(cells);
+}
+
+/** A Montanha: 8 encostada em outra coisa, 9 a 2 hexágonos e 10 mais para dentro. */
+function placeMountainHeights(cells: Cell[]): void {
+  const isMountain = (cell: Cell) => cell.shape === 'mont';
+  const around = distances(
+    cells.filter((cell) => !isMountain(cell)),
+    isMountain,
+  );
+  for (const cell of cells) {
+    if (!isMountain(cell)) continue;
+    const reach = around.get(cell) ?? MAX_HEIGHT;
+    cell.height = Math.min(MOUNTAIN_HEIGHT + reach - 1, MAX_HEIGHT);
+  }
 }
 
 /** A forma pelo relevo; a água fica sempre plana, sem ilhotas (coast-rivers). */

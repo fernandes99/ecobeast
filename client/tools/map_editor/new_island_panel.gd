@@ -32,6 +32,9 @@ const PARAM_LABELS: Dictionary[String, String] = {
 	"stone_from": "Altura para pedra",
 	"hill_from": "Altura para colina",
 	"mountain_from": "Altura para montanha",
+	"terrace_low": "Altura para o patamar 4",
+	"terrace_high": "Altura para o patamar 7",
+	"ramp_every": "Bordas de paredão por encosta extra (0 = nenhuma)",
 	"detail_chance": "Chance de detalhe no plano",
 	"cleanup_passes": "Passadas de limpeza",
 }

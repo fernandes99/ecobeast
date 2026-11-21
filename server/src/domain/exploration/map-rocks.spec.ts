@@ -68,6 +68,10 @@ describe('as pedras gigantes no mapa sorteado (giant-rocks/02)', () => {
         map.props.flatMap((prop) => [...rockHexes(prop)]),
       );
       const before = reachable(byKey, links, start, new Set());
+      const flat = new Map(
+        [...byKey].map(([key, tile]) => [key, { ...tile, height: 0 }]),
+      );
+      expect(before.size).toBe(reachable(flat, links, start, new Set()).size);
       const after = reachable(byKey, links, start, blocked);
       expect([...before].filter((key) => !blocked.has(key)).sort()).toEqual(
         [...after].sort(),

@@ -46,6 +46,10 @@ const CENTER_REACH := 8.0
 ## A água bloqueia fora do piso das pontes (bridges/04): o segmento é conferido de
 ## tanto em tanto.
 const WATER_SAMPLE := 2.0
+## Até 2 níveis passa; 3 ou mais é paredão, nos dois sentidos (terrain-plateaus/01).
+const MAX_CLIMB := 2
+## Em cima do piso de uma ponte: fora da grade do chão.
+const NO_HEX := Vector2i(1 << 30, 1 << 30)
 const NO_SEGMENTS: Array = []
 
 
@@ -61,6 +65,13 @@ func has(coord: Vector2i) -> bool:
 
 func tile_at(coord: Vector2i) -> HexTile:
 	return tiles.get(coord)
+
+
+## Se dá para passar a pé de um hexágono ao outro sem subir nem descer um paredão.
+func can_step(from: Vector2i, to: Vector2i) -> bool:
+	var a := tile_at(from)
+	var b := tile_at(to)
+	return a == null or b == null or absi(a.height - b.height) <= MAX_CLIMB
 
 
 func neighbors(coord: Vector2i) -> Array[Vector2i]:
@@ -124,7 +135,7 @@ func path_to_any(from: Vector2i, goals: Dictionary[Vector2i, bool], from_point :
 		index += 1
 		var nexts: Array[Vector2i] = []
 		for next: Vector2i in neighbors(coord):
-			if not is_blocked_hex(next) and not _wall_between(coord, next):
+			if not is_blocked_hex(next) and can_step(coord, next) and not _wall_between(coord, next):
 				nexts.append(next)
 		for link: Array in links.get(coord, []):
 			nexts.append(link[0])
@@ -204,20 +215,34 @@ func approach_goals(target: Vector2i, finish: Vector2) -> Dictionary[Vector2i, b
 	return facing if not facing.is_empty() else all
 
 
-## Se o segmento não cruza parede nem passa pela água fora do piso de uma ponte
-## (bridges/04). Quem já está num ponto bloqueado pode sair dele.
+## Se o segmento não cruza parede, não passa pela água fora do piso de uma ponte
+## (bridges/04) nem por um paredão fora dele (terrain-plateaus/01). Quem já está num
+## ponto bloqueado pode sair dele.
 func is_clear(from: Vector2, to: Vector2) -> bool:
 	if crosses_wall(from, to):
 		return false
 	var leaving := is_blocked(from)
+	var last := _ground_hex(from)
 	var steps := maxi(1, ceili(from.distance_to(to) / WATER_SAMPLE))
 	for step: int in range(1, steps + 1):
-		if is_blocked(from.lerp(to, float(step) / steps)):
+		var point := from.lerp(to, float(step) / steps)
+		if is_blocked(point):
 			if not leaving:
 				return false
 		else:
 			leaving = false
+		var hex := _ground_hex(point)
+		if hex != last and hex != NO_HEX and last != NO_HEX and not can_step(last, hex):
+			return false
+		last = hex
 	return true
+
+
+## O hexágono do chão no ponto, ou NO_HEX em cima do piso de uma ponte.
+func _ground_hex(flat: Vector2) -> Vector2i:
+	if not bridges.is_empty() and deck_of(flat) >= 0:
+		return NO_HEX
+	return HexMapView.grid_coord(flat)
 
 
 ## Um ponto na água, fora do piso das pontes.

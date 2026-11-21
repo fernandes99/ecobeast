@@ -17,6 +17,7 @@ import {
   TERRAIN_SHAPES,
   terrainOf,
 } from './map-generator.js';
+import { climbable } from './map-slopes.js';
 
 const SEEDS = Array.from({ length: 200 }, (_, index) => index * 7919 + 1);
 const MAX_LONELY_LAND = 0.05;
@@ -45,6 +46,9 @@ const CONFIG: MapConfig = {
   stoneFrom: 0.72,
   hillFrom: 0.8,
   mountainFrom: 0.9,
+  terraceLow: 0.45,
+  terraceHigh: 0.75,
+  rampEvery: 25,
   detailChance: 0.2,
   cleanupPasses: 3,
 };
@@ -809,6 +813,79 @@ function reachable(map: ShapedMap): Set<string> {
   return seen;
 }
 
+/** A terra que se alcança da chegada sem passar por paredão, e pelas pontes. */
+function climbReachable(map: ShapedMap): Set<string> {
+  const byKey = indexed(map);
+  const links = new Map<string, string[]>();
+  for (const { points } of map.bridges) {
+    const [a, b] = bridgeEnds(points);
+    links.set(a, [...(links.get(a) ?? []), b]);
+    links.set(b, [...(links.get(b) ?? []), a]);
+  }
+  const seen = new Set([hexKey(map.start)]);
+  const pending = [hexKey(map.start)];
+  while (pending.length > 0) {
+    const key = pending.pop()!;
+    const tile = byKey.get(key)!;
+    const next = [
+      ...neighborsOf(tile, byKey)
+        .filter((other) => climbable(tile, other))
+        .map(hexKey),
+      ...(links.get(key) ?? []),
+    ];
+    for (const other of next) {
+      if (seen.has(other) || blocksWalking(byKey.get(other)!.biome)) continue;
+      seen.add(other);
+      pending.push(other);
+    }
+  }
+  return seen;
+}
+
+/** A terra que se alcança só pela regra da água e fica fora pela regra do paredão. */
+function unreached(map: ShapedMap): ShapedTile[] {
+  const walking = reachable(map);
+  const climbing = climbReachable(map);
+  return map.tiles.filter(
+    (tile) => walking.has(hexKey(tile)) && !climbing.has(hexKey(tile)),
+  );
+}
+
+describe('a regra do paredão no mapa sorteado (terrain-plateaus/01)', () => {
+  it('em 60 seeds, toda a terra se alcança da chegada', () => {
+    for (const seed of SEEDS.slice(0, 60)) {
+      expect(unreached(generateShapedMap(seed, CONFIG))).toEqual([]);
+    }
+  });
+
+  it('num mapa maior, com rios e pontes, também', () => {
+    for (const seed of SEEDS.slice(0, 6)) {
+      const map = generateShapedMap(seed, {
+        ...DEFAULT_MAP_CONFIG,
+        tileCount: 3000,
+      });
+      expect(unreached(map)).toEqual([]);
+    }
+  });
+
+  it('as duas margens de cada ponte ficam na mesma altura', () => {
+    for (const seed of SEEDS.slice(0, 30)) {
+      const map = generateShapedMap(seed, {
+        ...CONFIG,
+        tileCount: 900,
+        riverCount: 4,
+        throughRiverChance: 0.6,
+        crossingSpacing: 8,
+      });
+      const byKey = indexed(map);
+      for (const { points } of map.bridges) {
+        const [a, b] = bridgeEnds(points).map((key) => byKey.get(key)!);
+        expect(a!.height).toBe(b!.height);
+      }
+    }
+  });
+});
+
 describe('os rios que atravessam e as travessias (coast-rivers/03)', () => {
   const CROSSING: MapConfig = {
     ...CONFIG,
@@ -952,29 +1029,29 @@ describe('startOf (bridges/04)', () => {
 
 describe('terrainOf', () => {
   it.each([
-    ['temperate', 'flat', 'temperate', 1],
-    ['boreal', 'flat', 'boreal', 1],
-    ['stone', 'flat', 'stone', 3],
-    ['wshallow', 'flat', 'wshallow', 0],
-    ['wdeep', 'flat', 'wdeep', 0],
-    ['temperate', 'hill', 'hill', 2],
-    ['boreal', 'hill', 'hill', 2],
-    ['stone', 'hill', 'hill', 3],
-    ['wshallow', 'hill', 'hill', 2],
-    ['desert', 'flat', 'desert', 1],
-    ['snow', 'flat', 'snow', 1],
-    ['desert', 'hill', 'desert', 2],
-    ['snow', 'hill', 'snow', 2],
-    ['desert', 'mont', 'mountain', 4],
-    ['snow', 'mont', 'mountain', 4],
-    ['temperate', 'mont', 'mountain', 4],
-    ['stone', 'mont', 'mountain', 4],
-    ['wdeep', 'mont', 'mountain', 4],
-    ['beach', 'flat', 'beach', 1],
-    ['beach', 'hill', 'beach', 2],
-    ['beach', 'mont', 'mountain', 4],
-  ] as const)('%s com %s vira %s na altura %d', (biome, shape, to, height) => {
-    expect(terrainOf(biome, shape)).toEqual({ biome: to, height });
+    ['temperate', 'flat', 'temperate'],
+    ['boreal', 'flat', 'boreal'],
+    ['stone', 'flat', 'stone'],
+    ['wshallow', 'flat', 'wshallow'],
+    ['wdeep', 'flat', 'wdeep'],
+    ['temperate', 'hill', 'hill'],
+    ['boreal', 'hill', 'hill'],
+    ['stone', 'hill', 'hill'],
+    ['wshallow', 'hill', 'hill'],
+    ['desert', 'flat', 'desert'],
+    ['snow', 'flat', 'snow'],
+    ['desert', 'hill', 'desert'],
+    ['snow', 'hill', 'snow'],
+    ['desert', 'mont', 'mountain'],
+    ['snow', 'mont', 'mountain'],
+    ['temperate', 'mont', 'mountain'],
+    ['stone', 'mont', 'mountain'],
+    ['wdeep', 'mont', 'mountain'],
+    ['beach', 'flat', 'beach'],
+    ['beach', 'hill', 'beach'],
+    ['beach', 'mont', 'mountain'],
+  ] as const)('%s com %s vira %s', (biome, shape, to) => {
+    expect(terrainOf(biome, shape)).toBe(to);
   });
 });
 
@@ -1008,10 +1085,11 @@ describe('generateMap', () => {
     expect(map.seed).toBe(shaped.seed);
     expect(map.start).toEqual(shaped.start);
     expect(map.tiles).toEqual(
-      shaped.tiles.map(({ q, r, biome, shape, variant }) => ({
+      shaped.tiles.map(({ q, r, biome, shape, height, variant }) => ({
         q,
         r,
-        ...terrainOf(biome, shape),
+        biome: terrainOf(biome, shape),
+        height,
         variant,
       })),
     );
@@ -1032,24 +1110,6 @@ describe('generateMap', () => {
     expect(invalid).toEqual([]);
   });
 
-  it('cada bioma fica na altura de antes', () => {
-    const heights = new Map<string, Set<number>>();
-    for (const { biome, height } of maps.flatMap(({ tiles }) => tiles)) {
-      heights.set(biome, (heights.get(biome) ?? new Set()).add(height));
-    }
-    const sorted = (biome: string) => [...(heights.get(biome) ?? [])].sort();
-    expect(sorted('mountain')).toEqual([4]);
-    expect(sorted('stone')).toEqual([3]);
-    expect(sorted('hill')).toEqual([2, 3]);
-    expect(sorted('temperate')).toEqual([1]);
-    expect(sorted('boreal')).toEqual([1]);
-    expect(sorted('desert')).toEqual([1, 2]);
-    expect(sorted('snow')).toEqual([1, 2]);
-    expect(sorted('beach')).toEqual([1, 2]);
-    expect(sorted('wshallow')).toEqual([0]);
-    expect(sorted('wdeep')).toEqual([0]);
-  });
-
   it('começa em terra plana', () => {
     for (const map of maps) {
       const start = map.tiles.find(
@@ -1064,5 +1124,108 @@ describe('generateMap', () => {
         'beach',
       ]).toContain(start!.biome);
     }
+  });
+});
+
+describe('os patamares e a água nas alturas (terrain-plateaus/02)', () => {
+  const PLATEAUS: MapConfig = {
+    ...CONFIG,
+    tileCount: 900,
+    lakeCount: 2,
+    lakeMinWidth: 6,
+    lakeMaxWidth: 8,
+    riverCount: 4,
+    springLakeChance: 0.35,
+    throughRiverChance: 0.3,
+    crossingSpacing: 8,
+    riverMinWidth: 2,
+    riverMaxWidth: 3,
+  };
+  let maps: ShapedMap[];
+
+  beforeAll(() => {
+    maps = SEEDS.slice(0, 60).map((seed) => generateShapedMap(seed, PLATEAUS));
+  });
+
+  it('toda água fica no 0: as cachoeiras ficam para depois', () => {
+    for (const map of maps) {
+      for (const tile of map.tiles) {
+        if (isWater(tile.biome)) expect(tile.height).toBe(0);
+      }
+    }
+  });
+
+  it('a Montanha fica de 8 a 10, e nenhuma outra terra passa de 7', () => {
+    for (const map of maps) {
+      for (const tile of map.tiles) {
+        if (isWater(tile.biome)) continue;
+        if (tile.shape === 'mont') {
+          expect(tile.height).toBeGreaterThanOrEqual(8);
+          expect(tile.height).toBeLessThanOrEqual(10);
+        } else {
+          expect(tile.height).toBeGreaterThanOrEqual(1);
+          expect(tile.height).toBeLessThanOrEqual(7);
+        }
+      }
+    }
+  });
+
+  it('toda água fica pelo menos 1 abaixo da terra encostada nela', () => {
+    for (const map of maps) {
+      const byKey = indexed(map);
+      for (const tile of map.tiles) {
+        if (!isWater(tile.biome)) continue;
+        for (const next of neighborsOf(tile, byKey)) {
+          if (!isWater(next.biome)) {
+            expect(tile.height).toBeLessThan(next.height);
+          }
+        }
+      }
+    }
+  });
+
+  it('há patamares, paredões e encostas com degraus de 1 e de 2', () => {
+    const heights = new Set(
+      maps.flatMap(({ tiles }) =>
+        tiles
+          .filter((tile) => !isWater(tile.biome) && tile.shape !== 'mont')
+          .map(({ height }) => height),
+      ),
+    );
+    for (const terrace of [1, 4, 7]) expect(heights.has(terrace)).toBe(true);
+    expect([2, 3, 5, 6].some((height) => heights.has(height))).toBe(true);
+    const cliff = maps.some((map) => {
+      const byKey = indexed(map);
+      return map.tiles.some(
+        (tile) =>
+          !isWater(tile.biome) &&
+          neighborsOf(tile, byKey).some(
+            (next) => !isWater(next.biome) && !climbable(tile, next),
+          ),
+      );
+    });
+    expect(cliff).toBe(true);
+  });
+
+  it('as encostas têm vários degraus juntos: há escadas de 3 degraus de 1 nível', () => {
+    const land = (tile: ShapedTile) =>
+      !isWater(tile.biome) && tile.shape !== 'mont';
+    const stairs = maps.filter((map) => {
+      const byKey = indexed(map);
+      const below = (tile: ShapedTile, drop: number): boolean =>
+        drop === 0 ||
+        neighborsOf(tile, byKey).some(
+          (next) =>
+            land(next) &&
+            next.height === tile.height - 1 &&
+            below(next, drop - 1),
+        );
+      return map.tiles.some((top) => land(top) && below(top, 3));
+    });
+    expect(stairs.length).toBeGreaterThanOrEqual(maps.length / 2);
+  });
+
+  it('toda a terra continua se alcançando da chegada', () => {
+    for (const map of maps) expect(unreached(map)).toEqual([]);
   });
 });

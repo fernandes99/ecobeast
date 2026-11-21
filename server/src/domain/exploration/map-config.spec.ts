@@ -39,6 +39,16 @@ describe('mapConfigError', () => {
     expect(mapConfigError(config)).toBe(message);
   });
 
+  it('recusa o patamar 4 começando depois do 7 (terrain-plateaus/02)', () => {
+    expect(mapConfigError({ terraceLow: 0.8, terraceHigh: 0.7 })).toBe(
+      'terraceLow precisa ser menor que terraceHigh.',
+    );
+    expect(mapConfigError({ terraceLow: 0.8 })).toBe(
+      'terraceLow precisa ser menor que terraceHigh.',
+    );
+    expect(mapConfigError({ terraceLow: 0.3, terraceHigh: 0.6 })).toBeNull();
+  });
+
   it.each([{ tileCount: 150.5 }, { cleanupPasses: 2.5 }])(
     'recusa número quebrado em %o',
     (config) => {

@@ -6,6 +6,7 @@ import {
 } from '../islands/blocked-hexes.js';
 import { flatCenter, gridCoord } from '../islands/hex-pixels.js';
 import { type HexCoord, hexKey, hexNeighbors } from './hex.js';
+import { climbable } from './map-slopes.js';
 
 /** Uma pedra gigante do mapa sorteado, no formato de peça solta (giant-rocks/02). */
 export interface GeneratedProp extends HexCoord {
@@ -20,6 +21,7 @@ export interface GeneratedProp extends HexCoord {
 export interface RockTile extends HexCoord {
   biome: string;
   shape: string;
+  height: number;
 }
 
 interface RockKind {
@@ -116,7 +118,7 @@ function staysConnected(
   reach: ReadonlySet<string>,
 ): boolean {
   const around = (key: string) => [
-    ...hexNeighbors(byKey.get(key)!).map(hexKey),
+    ...steps(byKey, key),
     ...(links.get(key) ?? []),
   ];
   const open = (key: string) =>
@@ -195,7 +197,21 @@ export function bridgeLinks(
   return links;
 }
 
-/** A terra que se alcança da chegada, andando e pelas pontes, fora de `blocked`. */
+/** Os vizinhos de `key` aonde se anda sem passar por paredão (terrain-plateaus/01). */
+function steps(byKey: ReadonlyMap<string, RockTile>, key: string): string[] {
+  const tile = byKey.get(key)!;
+  return hexNeighbors(tile)
+    .map(hexKey)
+    .filter((other) => {
+      const neighbor = byKey.get(other);
+      return neighbor !== undefined && climbable(tile, neighbor);
+    });
+}
+
+/**
+ * A terra que se alcança da chegada, andando sem passar por paredão e pelas pontes,
+ * fora de `blocked`.
+ */
 export function reachable(
   byKey: ReadonlyMap<string, RockTile>,
   links: ReadonlyMap<string, string[]>,
@@ -206,8 +222,7 @@ export function reachable(
   const pending = [startKey];
   while (pending.length > 0) {
     const key = pending.pop()!;
-    const tile = byKey.get(key)!;
-    const next = [...hexNeighbors(tile).map(hexKey), ...(links.get(key) ?? [])];
+    const next = [...steps(byKey, key), ...(links.get(key) ?? [])];
     for (const other of next) {
       const neighbor = byKey.get(other);
       if (!neighbor || seen.has(other) || blocked.has(other)) continue;
