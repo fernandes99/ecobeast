@@ -176,7 +176,7 @@ var _zone := ""
 var _height := DEFAULT_HEIGHT
 var _outside: Array[Vector2i] = []
 var _overlay := Node2D.new()
-var _flames := GroundFlames.new()
+var _ground_effects := GroundEffects.new()
 ## O chão do tabuleiro passa do retângulo dele até a borda da tela, em qualquer zoom.
 const DAY_LIGHT_MARGIN := 4096.0
 
@@ -196,8 +196,8 @@ func _init() -> void:
 	add_child(_ground)
 	_overlay.draw.connect(_draw_overlay)
 	add_child(_overlay)
-	_flames.board = self
-	add_child(_flames)
+	_ground_effects.board = self
+	add_child(_ground_effects)
 	_day_light.margin = DAY_LIGHT_MARGIN
 	add_child(_day_light)
 
@@ -274,7 +274,7 @@ func board_size() -> Vector2:
 
 func set_marks(marks: Dictionary[Vector2i, Color], kinds: Dictionary[Vector2i, String] = {}) -> void:
 	_marks = marks
-	_flames.kinds = kinds
+	_ground_effects.kinds = kinds
 	_redraw()
 
 
