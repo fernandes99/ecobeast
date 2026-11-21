@@ -170,7 +170,7 @@ func _start_test(test: Dictionary, message: Label) -> void:
 	var refusal := ""
 	if Session.player == null:
 		refusal = NO_PLAYER_TEXT
-	elif Router.current_id() == &"board_battle":
+	elif Router.current_id() == &"board_battle" and not _skill_test_open():
 		refusal = BATTLE_OPEN_TEXT
 	message.text = refusal
 	message.visible = not refusal.is_empty()
@@ -180,7 +180,16 @@ func _start_test(test: Dictionary, message: Label) -> void:
 	var center := BattleIntro.get_viewport().get_visible_rect().size / 2.0
 	if not await BattleIntro.cover(center, &"wild"):
 		return
-	Router.push(&"board_battle", {"skill_test": test})
+	# Um teste aberto, terminado ou não, dá lugar ao novo; o servidor descarta o anterior.
+	if _skill_test_open():
+		Router.replace(&"board_battle", {"skill_test": test})
+	else:
+		Router.push(&"board_battle", {"skill_test": test})
+
+
+func _skill_test_open() -> bool:
+	var screen := Router.current_screen()
+	return screen != null and Router.current_id() == &"board_battle" and screen.has_method(&"is_skill_test") and bool(screen.call(&"is_skill_test"))
 
 
 func _edit(id: int) -> void:

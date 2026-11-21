@@ -1498,6 +1498,10 @@ func _leave() -> void:
 		Router.back()
 
 
+func is_skill_test() -> bool:
+	return not _skill_test.is_empty()
+
+
 func _add_retry_button() -> void:
 	_retry_button = Button.new()
 	_retry_button.text = RETRY_TEXT

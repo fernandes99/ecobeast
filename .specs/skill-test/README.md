@@ -48,6 +48,7 @@ Escolhas de Claude (_a revisar_; ao mudar uma, atualize aqui e na fase):
 | O oponente não fica visto no Bestiário | Nada do teste é gravado |
 | No fim, **Testar de novo** abre a mesma luta outra vez | O teste fica rápido de repetir, e um oponente parado acaba caindo |
 | O F1 continua aberto ao lado da luta | O dono pode mudar a Técnica no formulário e testar de novo |
+| Um teste aberto dá lugar ao novo no **Começar**; uma luta de verdade aberta mostra o aviso | Do dono: "quero que termine ela e já inicie outra". Uma luta de verdade não se perde sem querer |
 
 ## Fora do escopo
 

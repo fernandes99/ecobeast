@@ -86,6 +86,10 @@ func current_id() -> StringName:
 	return _stack.back().get_meta(SCREEN_ID_META, &"")
 
 
+func current_screen() -> Control:
+	return null if _stack.is_empty() else _stack.back()
+
+
 func _instantiate(id: StringName, params: Dictionary) -> Control:
 	if _host == null:
 		push_error("Router: set_host() não foi chamado antes de abrir '%s'" % id)
