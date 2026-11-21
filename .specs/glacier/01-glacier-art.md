@@ -73,7 +73,7 @@ Linhas da folha a partir da 66, na ordem da tabela. Esta é a proposta, e a pré
   - insere nela os tipos de peça a partir do 165, na ordem da tabela, com o nome dela e 4 variantes.
 
   Os ids são conferidos no banco antes: a categoria é a 15, e os tipos vão do 165 ao 170.
-- **RF-08:** O pincel Vegetação (`vegetation_panel.gd`) ganha o grupo "Geleira", no fim, com os tipos desta fase (1 por hexágono). O peixe e a placa começam desligados: o peixe é raríssimo, e a placa é da água. As pedras de gelo entram nele na [02](02-ice-rocks.md).
+- **RF-08:** O pincel Vegetação (`vegetation_panel.gd`) ganha o grupo "Geleira", no fim, com os tipos desta fase (1 por hexágono). O peixe e a placa começam desligados: o peixe é raríssimo, e a placa é da água. As pedras de gelo ficam no grupo seguinte, Pedras de gelo ([02](02-ice-rocks.md)).
 
 ## Critérios de aceite
 

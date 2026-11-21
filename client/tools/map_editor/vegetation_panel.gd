@@ -17,6 +17,8 @@ const BEACH_KINDS: Array[String] = ["coconut_palm", "young_palm"]
 const GIANT_ROCKS: Array[String] = ["giant_crag", "giant_pinnacles", "giant_slab", "giant_boulders", "giant_ridge", "snowy_crag", "snowy_pinnacles", "snowy_boulders"]
 ## O gelo da Geleira e a placa do Lago gelado (glacier/01); o peixe e a placa começam desligados.
 const GLACIER_KINDS: Array[String] = ["ice_crack", "ice_bubbles", "ice_chips", "snow_drift", "frozen_fish", "ice_floe"]
+## As pedras grandes de gelo (glacier/02), os mesmos slugs do servidor.
+const ICE_ROCKS: Array[String] = ["ice_block", "ice_spires", "ice_arch", "trapped_rock", "icicle_block", "ice_shelf"]
 const GROUPS: Array[Dictionary] = [
 	{"name": "Árvores", "kinds": ["tree", "pine", "birch", "oak", "fir", "snow_pine"], "per_tile": 1.0, "off": ["snow_pine"]},
 	{"name": "Arbustos", "kinds": ["bush", "dark_bush", "dry_shrub", "fern", "berry_bush", "thistle", "winter_berry", "snow_bush", "tumbleweed", "cactus"], "per_tile": 2.0, "off": ["winter_berry", "snow_bush", "tumbleweed", "cactus"]},
@@ -36,6 +38,7 @@ const GROUPS: Array[Dictionary] = [
 	{"name": "Mar", "kinds": SEA_KINDS, "per_tile": 1.0, "off": SEA_TRASH},
 	{"name": "Praia", "kinds": BEACH_KINDS, "per_tile": 0.5},
 	{"name": "Geleira", "kinds": GLACIER_KINDS, "per_tile": 1.0, "off": ["frozen_fish", "ice_floe"]},
+	{"name": "Pedras de gelo", "kinds": ICE_ROCKS, "per_tile": 0.25},
 ]
 const DENSITIES: Array[float] = [0.5, 1.0, 2.0]
 const DENSITY_NAMES: Array[String] = ["Pouca", "Média", "Muita"]

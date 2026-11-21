@@ -71,8 +71,8 @@ Escolhas de Claude (_a revisar_; ao mudar uma, atualize aqui e na fase):
 | No arremate, a Geleira vem logo antes da Neve em `SURFACE_ORDER` | A neve soprada avança sobre a borda do gelo |
 | O paredão da Geleira é o `cliff.png`, de rocha | O gelo é duro como a pedra, e o `side.png` é de terra |
 | Decorações da Comum: rachaduras, bolhas presas no gelo, lascas soltas, montinhos de neve soprada, os `ice_shards` da Neve e, raríssimo, um peixe preso no gelo | As sugestões de Claude na conversa. O dono não corrigiu, mas também não escolheu |
-| As pedras grandes de gelo, de 6 a 8 desenhos: bloco, pináculos, arco, rocha escura presa no gelo e bloco com sincelos | Como as pedras gigantes da Montanha, que também nasceram de 10 desenhos mostrados ao dono antes |
-| As decorações novas da Geleira e as placas de gelo também viram tipos de peça solta, como na `nature-variety`, na `sea-life` e na `beach-life`. As pedras de gelo entram na categoria Pedras gigantes, e todas ficam num grupo Geleira do pincel Vegetação | O dono pinta as ilhas com o pincel |
+| As pedras grandes de gelo, 6 desenhos: bloco, pináculos, arco, rocha escura presa no gelo, bloco com sincelos e laje. O dono aprovou as 6 | Como as pedras gigantes da Montanha, que também nasceram de 10 desenhos mostrados ao dono antes |
+| As decorações novas da Geleira e as placas de gelo também viram tipos de peça solta, como na `nature-variety`, na `sea-life` e na `beach-life`. As pedras de gelo entram na categoria Pedras, a das pedras gigantes. No pincel Vegetação, as decorações ficam no grupo Geleira, e as pedras no grupo Pedras de gelo, com a densidade das Pedras gigantes | O dono pinta as ilhas com o pincel |
 | Os tipos novos começam no 165, na ordem das fases, conferidos no banco antes da migration | Os ids 154 a 164 ficaram reservados e sem uso na `beach-life`. O `seed-data` está atrasado (para no 100) |
 | A arte das fases 1 e 2 é mostrada ao dono numa prévia, no chão da Geleira, e só entra depois que ele aprovar | Como as pedras gigantes, que entraram depois do "Todas as 10" |
 | "A seed não muda" vale para o terreno fora da mancha: os biomas, a altura, a água, as pontes e as pedras. As zonas da Neve e as variantes podem mudar de lugar | O `assignZones` divide cada bioma por posição, e tirar hexágonos da Neve move o Campo de neve e o Pinheiral nevado. Segurar isso pede calcular as zonas como se a Geleira fosse Neve, um custo sem ganho visível |
@@ -104,6 +104,6 @@ O dono escolheu a B.
 | # | Fase | Entrega | Status |
 | --- | --- | --- | --- |
 | 1 | [01-glacier-art](01-glacier-art.md) | O `make_glacier.py`: o chão, os arremates, o escorrido, as decorações da Comum e as placas de gelo do Lago gelado, aprovados pelo dono numa prévia, e os tipos de peça delas no grupo Geleira | concluída (falta o dono conferir no F2) |
-| 2 | [02-ice-rocks](02-ice-rocks.md) | As pedras grandes de gelo, aprovadas pelo dono numa prévia, como tipos de peça solta com o bloqueio no pé, na categoria Pedras gigantes e no grupo Geleira | proposta |
+| 2 | [02-ice-rocks](02-ice-rocks.md) | As pedras grandes de gelo, aprovadas pelo dono numa prévia, como tipos de peça solta com o bloqueio no pé, na categoria Pedras e no grupo Pedras de gelo | concluída (falta o dono conferir no F2) |
 | 3 | [03-glacier-records](03-glacier-records.md) | A Geleira (12) no catálogo, com a zona Comum (35), as zonas Lago gelado (36 e 37), as taxas do Hushling e do Echofrost, o slug aceito pelas rotas e a amostra no F2 | proposta |
 | 4 | [04-generated-glacier](04-generated-glacier.md) | A mancha no mapa sorteado e na ilha nova pelo F2, com o lago às vezes e as pedras de gelo | proposta |
