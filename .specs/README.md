@@ -110,6 +110,7 @@ O Ecobeast é um jogo mobile (Android/iOS, retrato): o cliente em **Godot 4.7 co
 | [sea-life](sea-life/) | As algas, as pedras e o lixo da Água rasa e da profunda, na Comum e em zonas (Algal, Pedras rasas, Floresta de algas, Rochedo e Lixo), e como peças do F2 |
 | [beach-life](beach-life/) | Os coqueiros na Praia, na Comum e na zona Coqueiral, e como peças do F2 |
 | [sandlurk-line](sandlurk-line/) | O escorpião enterrado, Sandlurk e Dunestrike (Inseto/Toxina), um tanque lento do Deserto e da Praia, com 4 Técnicas de escorpião |
+| [hopling-line](hopling-line/) | A canguru médica, Hopling e Pouchmend (Instinto), o primeiro Ecobeast de suporte, com 4 Técnicas que curam e protegem os aliados |
 
 As próximas iniciativas estão no [roadmap.md](roadmap.md).
 
