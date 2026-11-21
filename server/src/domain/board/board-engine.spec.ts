@@ -1412,3 +1412,56 @@ describe('a Técnica de Triângulo (board-battle/33)', () => {
     ]);
   });
 });
+
+describe('a Técnica de rastro (board-battle/34)', () => {
+  const comet = makeSkill({
+    id: 92,
+    category: 'special',
+    areaShape: 'line',
+    range: 4,
+    groundEffectId: FIRE_GROUND,
+    groundTurns: 4,
+  });
+  const trailCatalog = boardCatalog([comet]);
+
+  it('pinta o caminho só até o primeiro inimigo, o hexágono dele incluído', () => {
+    const user = fighter(30, {
+      skills: [{ skillId: comet.id, currentPp: 10 }],
+    });
+    const state = makeBoardState(
+      [user, fighter(20)],
+      [wild(5, ASLEEP), wild(5, ASLEEP)],
+      {
+        slots: { player: 2, enemy: 2 },
+        cells: {
+          player: [
+            { q: 2, r: 7 },
+            { q: 5, r: 7 },
+          ],
+          enemy: [
+            { q: 2, r: 5 },
+            { q: 2, r: 4 },
+          ],
+        },
+      },
+      { board: makeBoard({ columns: 8, rows: 9 }) },
+    );
+    const { events } = playVez(
+      state,
+      {
+        position: 0,
+        action: { type: 'skill', slot: 1, target: { q: 2, r: 5 } },
+      },
+      trailCatalog,
+    );
+    const hit = eventsOf(events, 'damage').map((e) => `${e.side}${e.position}`);
+    expect(hit).toEqual(['enemy0']);
+    expect(eventsOf(events, 'mark_placed').map((e) => e.cell)).toEqual([
+      { q: 2, r: 6 },
+      { q: 2, r: 5 },
+    ]);
+    expect(eventsOf(events, 'ground_damage')).toContainEqual(
+      expect.objectContaining({ side: 'enemy', position: 0 }),
+    );
+  });
+});

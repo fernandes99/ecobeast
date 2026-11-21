@@ -11,6 +11,8 @@ const PACK_ODD_STONES: Array[String] = ["rust_crystal", "ice_crystal", "lava_sto
 ## As algas, as pedras e o lixo da água (sea-life/03); o lixo começa desligado.
 const SEA_KINDS: Array[String] = ["seagrass", "kelp", "algae_patch", "sea_rock", "sea_stack", "bottle", "can", "plastic_bag", "old_boot", "tire", "jug"]
 const SEA_TRASH: Array[String] = ["bottle", "can", "plastic_bag", "old_boot", "tire", "jug"]
+## Os coqueiros (beach-life/03).
+const BEACH_KINDS: Array[String] = ["coconut_palm", "young_palm"]
 ## As pedras gigantes da Montanha (giant-rocks/01).
 const GIANT_ROCKS: Array[String] = ["giant_crag", "giant_pinnacles", "giant_slab", "giant_boulders", "giant_ridge", "snowy_crag", "snowy_pinnacles", "snowy_boulders"]
 const GROUPS: Array[Dictionary] = [
@@ -30,6 +32,7 @@ const GROUPS: Array[Dictionary] = [
 	{"name": "Pedras pequenas (pacote)", "kinds": PACK_STONES, "per_tile": 2.0, "variants": [4, 5], "off": PACK_ODD_STONES},
 	{"name": "Pedras gigantes", "kinds": GIANT_ROCKS, "per_tile": 0.25, "off": ["snowy_crag", "snowy_pinnacles", "snowy_boulders"]},
 	{"name": "Mar", "kinds": SEA_KINDS, "per_tile": 1.0, "off": SEA_TRASH},
+	{"name": "Praia", "kinds": BEACH_KINDS, "per_tile": 0.5},
 ]
 const DENSITIES: Array[float] = [0.5, 1.0, 2.0]
 const DENSITY_NAMES: Array[String] = ["Pouca", "Média", "Muita"]

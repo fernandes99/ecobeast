@@ -68,6 +68,8 @@ const KIND_ROWS: Dictionary[String, int] = {
 	"old_boot": 61,
 	"tire": 62,
 	"jug": 63,
+	"coconut_palm": 64,
+	"young_palm": 65,
 }
 ## O espaço que cada tipo ocupa no chão, em pixels da arte. Ele também é a
 ## distância mínima do centro do hexágono, onde o jogador fica.
@@ -134,6 +136,8 @@ const KIND_RADIUS: Dictionary[String, float] = {
 	"old_boot": 6.0,
 	"tire": 8.0,
 	"jug": 5.0,
+	"coconut_palm": 12.0,
+	"young_palm": 10.0,
 }
 const WIND_SHADER_PATH := "res://ui/components/plant_wind.gdshader"
 ## O vento em cada tipo: quantos pixels da arte o topo anda e a altura da planta, a
@@ -169,6 +173,8 @@ const KIND_SWAY: Dictionary[String, Vector2] = {
 	"kelp": Vector2(1.0, 8.0),
 	"algae_patch": Vector2(1.0, 4.0),
 	"plastic_bag": Vector2(1.0, 6.0),
+	"coconut_palm": Vector2(2.0, 46.0),
+	"young_palm": Vector2(1.0, 24.0),
 }
 const NO_SWAY := Vector2(0.0, 1.0)
 ## Por superfície: tipo, chance de aparecer no hexágono, mínimo e máximo. Da
@@ -182,7 +188,7 @@ const RECIPES: Dictionary = {
 	"mountain": [["brown_rock", 0.3, 1, 2], ["moss", 0.06, 1, 1], ["slab", 0.1, 1, 1], ["dry_branch", 0.05, 1, 1]],
 	"desert": [["cactus", 0.22, 1, 2], ["sand_rock", 0.14, 1, 1], ["dry_shrub", 0.18, 1, 1], ["pebbles", 0.12, 1, 2], ["dry_tuft", 0.3, 1, 3], ["tumbleweed", 0.12, 1, 1], ["bleached_branch", 0.1, 1, 1], ["desert_flower", 0.12, 1, 2], ["dune_grass", 0.3, 1, 3]],
 	"snow": [["snow_pine", 0.4, 1, 3], ["snow_rock", 0.14, 1, 1], ["snow_bush", 0.24, 1, 2], ["snow_tuft", 0.4, 1, 3], ["snow_log", 0.08, 1, 1], ["winter_berry", 0.14, 1, 1], ["frozen_branch", 0.12, 1, 1], ["ice_shards", 0.1, 1, 1]],
-	"beach": [["driftwood", 0.08, 1, 1], ["beach_rock", 0.1, 1, 1], ["dune_grass", 0.3, 1, 2], ["shells", 0.3, 1, 2], ["starfish", 0.08, 1, 1]],
+	"beach": [["driftwood", 0.08, 1, 1], ["beach_rock", 0.1, 1, 1], ["dune_grass", 0.3, 1, 2], ["shells", 0.3, 1, 2], ["starfish", 0.08, 1, 1], ["young_palm", 0.03, 1, 1]],
 	# As zonas (biome-zones/02); a Comum de cada bioma é a receita dele, acima.
 	"temperate_woods": [["oak", 0.5, 1, 2], ["tree", 0.5, 1, 2], ["birch", 0.4, 1, 2], ["bush", 0.2, 1, 1], ["log", 0.1, 1, 1], ["stump", 0.08, 1, 1], ["fallen_branch", 0.2, 1, 1], ["mushrooms", 0.2, 1, 2], ["tuft", 0.4, 1, 3]],
 	"temperate_shrubland": [["bush", 0.8, 2, 4], ["berry_bush", 0.2, 1, 1], ["pebbles", 0.1, 1, 1], ["flowers", 0.1, 1, 1], ["tall_grass", 0.3, 1, 2], ["tuft", 0.5, 1, 3]],
@@ -197,6 +203,8 @@ const RECIPES: Dictionary = {
 	"desert_cacti": [["cactus", 0.8, 2, 3], ["sand_rock", 0.1, 1, 1], ["desert_flower", 0.3, 1, 2], ["dry_tuft", 0.2, 1, 2]],
 	"snow_field": [["ice_shards", 0.05, 1, 1], ["snow_tuft", 0.15, 1, 1]],
 	"snow_pines": [["snow_pine", 0.9, 2, 4], ["snow_bush", 0.15, 1, 1], ["snow_log", 0.1, 1, 1], ["frozen_branch", 0.15, 1, 1]],
+	# A Praia (beach-life/02).
+	"beach_palms": [["coconut_palm", 0.85, 1, 2], ["young_palm", 0.4, 1, 1], ["dune_grass", 0.3, 1, 1], ["shells", 0.15, 1, 1]],
 	# A água (sea-life/02): a Comum e as zonas; o lixo só é comum nas zonas Lixo.
 	"wshallow": [["sea_rock", 0.015, 1, 1], ["algae_patch", 0.035, 1, 1], ["seagrass", 0.06, 1, 1], ["bottle", 0.002, 1, 1], ["can", 0.002, 1, 1]],
 	"wshallow_rocks": [["sea_rock", 0.12, 1, 1], ["algae_patch", 0.05, 1, 1], ["seagrass", 0.04, 1, 1]],

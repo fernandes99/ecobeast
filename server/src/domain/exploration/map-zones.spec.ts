@@ -101,6 +101,37 @@ describe('assignZones', () => {
     }
   });
 
+  it('separa o Coqueiral da Praia sem mudar o resto (beach-life/02)', () => {
+    const beach: MapZone[] = [
+      { slug: 'beach_palms', biome: 'beach', share: 25, sortOrder: 1 },
+    ];
+    const zones = [
+      ...SEED_ZONES.map((zone) =>
+        zone.slug === 'beach' ? { ...zone, share: 75, sortOrder: 2 } : zone,
+      ),
+      ...beach,
+    ];
+    let checked = 0;
+    for (const seed of [2, 11, 345, 908]) {
+      const map = generateMap(seed).tiles;
+      const before = assignZones(map, seed, SEED_ZONES);
+      const after = assignZones(map, seed, zones);
+      expect(after.filter((tile) => tile.biome !== 'beach')).toEqual(
+        before.filter((tile) => tile.biome !== 'beach'),
+      );
+      const inBiome = after.filter((tile) => tile.biome === 'beach');
+      if (inBiome.length === 0) continue;
+      checked += 1;
+      for (const zone of beach) {
+        const count = inBiome.filter((tile) => tile.zone === zone.slug).length;
+        expect(
+          Math.abs(count - (zone.share / 100) * inBiome.length),
+        ).toBeLessThanOrEqual(1);
+      }
+    }
+    expect(checked).toBeGreaterThan(0);
+  });
+
   it('não muda o terreno e dá as mesmas zonas na mesma seed', () => {
     const map = generateMap(77);
     const first = assignZones(map.tiles, 77, SEED_ZONES);

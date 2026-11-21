@@ -96,6 +96,7 @@ O que vem depois do MVP de estrutura (entrada, escolha do inicial e Hub). Cada l
 | 78  | [`map-realism`](map-realism/) | O mapa sorteado mais realista: um clima por mapa (Temperado, Frio, Quente ou Úmido), o calor numa direção e no alto, a Neve longe da Planície, do Deserto e da Praia, a costa fria de Pedra, um relevo só para as montanhas e os rios, o mapa sem buracos e o bioma Vau fora do jogo, com as travessias só por ponte | coast-rivers, desert-snow | concluída (falta o dono conferir no jogo) |
 | 79  | [`skill-test`](skill-test/) | O botão Testar técnica no F1: uma luta 1×1 de verdade com um Ecobeast emprestado que tem a Técnica, contra a espécie escolhida (que pode ficar parada), com a Técnica voltando na hora, sem gastar PP e sem gravar nada | skill-editor, board-size | concluída (falta o dono conferir no jogo) |
 | 80  | [`giant-rocks`](giant-rocks/) | As pedras gigantes da Montanha: 8 tipos de peça solta (131 a 138, o Rochedo, os Pináculos, a Laje inclinada, os Matacões, a Crista e três com neve) que bloqueiam pelo pé, no F2 e sorteadas nas Montanhas do mapa sorteado, sem fechar passagem | vegetation-packs, map-realism | concluída (falta o dono conferir no jogo e no F2) |
+| 81  | [`beach-life`](beach-life/) | A Praia com o coqueiro e o coqueiro novo (linhas 64 e 65), a zona Coqueiral (31) e os 2 tipos como peças soltas (152 e 153) na categoria Praia e no grupo Praia do pincel | sea-life, biome-zones | concluída (falta o dono conferir no jogo e no F2) |
 
 ## Pós-lançamento (do GDD)
 
