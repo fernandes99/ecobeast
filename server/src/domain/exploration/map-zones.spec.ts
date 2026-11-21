@@ -59,7 +59,7 @@ describe('assignZones', () => {
     ).toEqual([]);
   });
 
-  it('divide as águas nas zonas do mar sem mudar as zonas da terra (sea-life/02)', () => {
+  it('divide as águas nas zonas do mar, menos o lixo, sem mudar as zonas da terra (sea-life/02)', () => {
     const sea: MapZone[] = [
       { slug: 'wshallow_rocks', biome: 'wshallow', share: 21, sortOrder: 1 },
       { slug: 'wshallow_seagrass', biome: 'wshallow', share: 21, sortOrder: 3 },
@@ -87,11 +87,15 @@ describe('assignZones', () => {
       );
       for (const biome of ['wshallow', 'wdeep'] as const) {
         const inBiome = after.filter((tile) => tile.biome === biome);
-        for (const zone of sea.filter((zone) => zone.biome === biome)) {
+        const trash = inBiome.filter((tile) => tile.zone?.endsWith('_trash'));
+        expect(trash.length).toBeLessThanOrEqual(8);
+        for (const zone of sea.filter(
+          (zone) => zone.biome === biome && !zone.slug.endsWith('_trash'),
+        )) {
           const count = inBiome.filter((tile) => tile.zone === zone.slug).length;
           expect(
-            Math.abs(count - (zone.share / 100) * inBiome.length),
-          ).toBeLessThanOrEqual(1);
+            Math.abs(count - (zone.share / 92) * inBiome.length),
+          ).toBeLessThanOrEqual(1 + trash.length);
         }
       }
     }

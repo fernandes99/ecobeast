@@ -25,6 +25,8 @@ As zonas são linhas de `biome_zones`. O mapa sorteado as distribui por bioma em
 | 29 | `wdeep_kelp` | 7 | Floresta de algas | 21 | 3 |
 | 30 | `wdeep_trash` | 7 | Lixo | 8 | 4 |
 
+O Lixo (27 e 30) deixou de ser faixa na [06](06-trash-patches.md): o `share` dele é 0, e ele vira uma mancha pequena.
+
 - **RF-02:** As exceções em `species_biome_zones` (_a revisar_): as espécies 4, 5, 17 e 18 com 150 no Algal e na Floresta de algas; as 4, 5, 6, 17, 18 e 19 com 50 nos dois Lixos; a 6 com 150 no Rochedo. A migration só insere a linha de uma espécie que existe.
 - **RF-03:** As receitas, da maior decoração para a menor (diminuídas na [04](04-trash-and-density.md)):
 

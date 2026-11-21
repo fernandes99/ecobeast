@@ -47,7 +47,7 @@ Escolhas de Claude (_a revisar_):
 | A parte submersa com alfa de 45% a 70%, e a parte acima da água com um anel de espuma clara | Lê como embaixo d'água sobre as duas cores de água, sem mexer no shader do terreno |
 | O que boia e as algas balançam pelo `KIND_SWAY` | O vento das plantas já faz o balanço, sem código novo |
 | As zonas com os slugs `wshallow_*` e `wdeep_*`, ids 25 a 30 | O teste da carga das zonas pede o slug do bioma como prefixo |
-| A parte das zonas: Comum 50, as duas de algas e de pedras 21 cada, e o Lixo 8 | O lixo aparece como uma mancha pequena, e o resto fica variado |
+| A parte das zonas: Comum 50 e as duas de algas e de pedras 21 cada; o Lixo é uma mancha à parte desde a [06](06-trash-patches.md) | O resto fica variado |
 | Os tipos de peça 139 a 151 e a categoria 14 `sea` "Mar" | Os 131 a 138 são da [giant-rocks](../giant-rocks/), feita junto |
 | As ilhas de hoje ganham as decorações da Comum na água | São as decorações naturais do bioma, como as da terra; a Borracha as tira |
 | As linhas da carga inicial (`seed-data`) não mudam | São a foto da carga inicial |
@@ -73,6 +73,7 @@ Escolhas de Claude (_a revisar_):
 | 3 | [03-sea-props](03-sea-props.md) | Os tipos de peça, a categoria Mar e o grupo do pincel | concluída (falta o dono conferir no F2) |
 | 4 | [04-trash-and-density](04-trash-and-density.md) | O lixo reconhecível (garrafa PET, lata, sacola, bota, pneu e galão) e a água com bem menos decoração | concluída (falta o dono conferir no jogo) |
 | 5 | [05-less-water-detail](05-less-water-detail.md) | Metade das decorações de novo, e a alga boiando e a pedra submersa fora do jogo | concluída (falta o dono conferir no jogo) |
+| 6 | [06-trash-patches](06-trash-patches.md) | O lixo numa mancha pequena perto da costa, rara nos lagos e nos rios | concluída (falta o dono conferir no jogo) |
 
 ## Resultado da verificação
 
