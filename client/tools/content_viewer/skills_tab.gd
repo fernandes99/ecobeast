@@ -6,6 +6,7 @@ const LEVEL_UP := "level_up"
 const MINUS := "−"
 const TEST_LEVEL := 50
 const MAX_TEST_LEVEL := 100
+const MAX_TEST_SLOTS := 3
 const FALLBACK_SPECIES := 1
 const NO_PLAYER_TEXT := "Entre na sua conta primeiro."
 const BATTLE_OPEN_TEXT := "Termine a luta aberta primeiro."
@@ -118,6 +119,11 @@ func _test_panel(skill_id: int, box: VBoxContainer) -> Control:
 	level.value = TEST_LEVEL
 	grid.add_child(ContentViewer.text("Nível", 0, UiPalette.TEXT_SECONDARY))
 	grid.add_child(level)
+	var team_size := OptionButton.new()
+	for slots: int in range(1, MAX_TEST_SLOTS + 1):
+		team_size.add_item("%d×%d" % [slots, slots], slots)
+	grid.add_child(ContentViewer.text("Tamanho", 0, UiPalette.TEXT_SECONDARY))
+	grid.add_child(team_size)
 	var idle := CheckBox.new()
 	idle.text = "Oponente parado"
 	idle.button_pressed = true
@@ -134,6 +140,7 @@ func _test_panel(skill_id: int, box: VBoxContainer) -> Control:
 			"enemy_species_id": enemy.get_selected_id(),
 			"level": int(level.value),
 			"enemy_idle": idle.button_pressed,
+			"slots": team_size.get_selected_id(),
 		}
 		_start_test(test, message))
 	panel.add_child(start)

@@ -37,7 +37,7 @@ Escolhas de Claude (_a revisar_; ao mudar uma, atualize aqui e na fase):
 
 | Decisão | Motivo |
 | --- | --- |
-| A luta é 1×1 | Basta para ver a Técnica, e o tabuleiro fica pequeno |
+| A luta é 1×1 por padrão; 2×2 e 3×3 vieram na [03](03-team-sizes.md), a pedido do dono | Basta para ver a Técnica, e o tabuleiro fica pequeno |
 | O dono escolhe também quem usa, começando por quem aprende a Técnica | O Elemento de quem usa muda o dano, e uma Técnica nova pode não ter aprendiz |
 | Um nível só para os dois lados, 50 por padrão | Os atributos ficam de luta de meio de jogo, e o dano dá para comparar |
 | A Técnica testada fica no 1º espaço, com mais duas do learnset de quem usa | As outras ajudam a testar a combinação, e a barra fica como numa luta |
@@ -52,7 +52,7 @@ Escolhas de Claude (_a revisar_; ao mudar uma, atualize aqui e na fase):
 
 ## Fora do escopo
 
-- Lutas de teste 2×2 ou 3×3, ou com a equipe do jogador.
+- Lutas de teste com a equipe do jogador.
 - Escolher as outras duas Técnicas, o Traço, os Genes ou o estado de quem usa.
 - Escolher o bioma ou o tamanho do tabuleiro.
 - O modo deus (`god`) na luta de teste.
@@ -68,3 +68,4 @@ Escolhas de Claude (_a revisar_; ao mudar uma, atualize aqui e na fase):
 | --- | --- | --- | --- |
 | 1 | [01-test-route](01-test-route.md) | Servidor: a rota da luta de teste da Técnica, as três opções do motor e a luta que não grava | concluída |
 | 2 | [02-test-button](02-test-button.md) | Jogo: o botão e o painel no F1, a luta de teste e o **Testar de novo** | concluída (falta o dono conferir no jogo) |
+| 3 | [03-team-sizes](03-team-sizes.md) | Servidor e jogo: o teste em 2×2 e 3×3, com todos do jogador com a Técnica | concluída (falta o dono conferir no jogo) |

@@ -76,7 +76,7 @@ extends RefCounted
 
 
 ## A luta de teste da Técnica do F1 (skill-test/02): `skill_id`, `species_id`,
-## `enemy_species_id`, `level` e `enemy_idle`. Nada dela é gravado.
+## `enemy_species_id`, `level`, `enemy_idle` e `slots`. Nada dela é gravado.
 @abstract func start_board_skill_test(test: Dictionary) -> Result
 
 

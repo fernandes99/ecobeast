@@ -1,5 +1,9 @@
 import { makeCombatant } from '../battle/testing.js';
-import { borrowedCombatant, SKILL_TEST_UID } from './skill-test.js';
+import {
+  borrowedCombatant,
+  borrowedTeam,
+  SKILL_TEST_UID,
+} from './skill-test.js';
 
 describe('Ecobeast emprestado da luta de teste (skill-test/01)', () => {
   const sorted = makeCombatant({
@@ -24,6 +28,18 @@ describe('Ecobeast emprestado da luta de teste (skill-test/01)', () => {
   it('não repete a Técnica testada quando ele já a sorteou', () => {
     const borrowed = borrowedCombatant(sorted, { id: 2, maxPp: 30 });
     expect(borrowed.skills.map(({ skillId }) => skillId)).toEqual([2, 1, 3]);
+  });
+
+  it('o time emprestado tem a Técnica em todos, cada um com o seu uid', () => {
+    const team = borrowedTeam([sorted, sorted, sorted], { id: 9, maxPp: 15 });
+    expect(team.map(({ creatureUid }) => creatureUid)).toEqual([
+      `${SKILL_TEST_UID}-1`,
+      `${SKILL_TEST_UID}-2`,
+      `${SKILL_TEST_UID}-3`,
+    ]);
+    for (const creature of team) {
+      expect(creature.skills[0]).toEqual({ skillId: 9, currentPp: 15 });
+    }
   });
 
   it('não muda o Ecobeast sorteado', () => {

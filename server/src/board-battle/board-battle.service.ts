@@ -31,7 +31,7 @@ import {
   startBoardBattle,
 } from '../domain/board/board-engine.js';
 import { rollBoard } from '../domain/board/board.js';
-import { borrowedCombatant } from '../domain/board/skill-test.js';
+import { borrowedTeam } from '../domain/board/skill-test.js';
 import type { BoardInput, BoardState } from '../domain/board/types.js';
 import type { HexCoord } from '../domain/exploration/hex.js';
 import { rollChallenger, type TamerCreature } from '../domain/tamers/tamers.js';
@@ -90,6 +90,7 @@ export interface SkillTest {
   enemySpeciesId: number;
   level: number;
   enemyIdle: boolean;
+  slots: number;
 }
 
 @Injectable()
@@ -129,9 +130,13 @@ export class BoardBattleService {
       select: { id: true, maxPp: true },
     });
     if (!skill) throw new BadRequestException(INVALID_SKILL_TEST);
-    const [user, enemy] = await Promise.all([
-      this.records.createEnemy(test.speciesId, test.level),
-      this.records.createEnemy(test.enemySpeciesId, test.level),
+    const create = (speciesId: number) =>
+      Array.from({ length: test.slots }, () =>
+        this.records.createEnemy(speciesId, test.level),
+      );
+    const [users, enemies] = await Promise.all([
+      Promise.all(create(test.speciesId)),
+      Promise.all(create(test.enemySpeciesId)),
     ]).catch((error: unknown) => {
       if (error instanceof BadRequestException) {
         throw new BadRequestException(INVALID_SKILL_TEST);
@@ -139,11 +144,15 @@ export class BoardBattleService {
       throw error;
     });
     const team: Team = {
-      creatures: [borrowedCombatant(user.combatant, skill)],
+      creatures: borrowedTeam(
+        users.map(({ combatant }) => combatant),
+        skill,
+      ),
       bag: [],
       coins: 0,
     };
-    return this.begin(userId, team, [enemy], {
+    return this.begin(userId, team, enemies, {
+      slots: test.slots,
       sandbox: true,
       idleEnemies: test.enemyIdle,
     });

@@ -109,6 +109,16 @@ export class StartSkillTestBodyDto {
   @IsOptional()
   @IsBoolean({ message: INVALID_SKILL_TEST })
   enemy_idle?: boolean;
+
+  @ApiPropertyOptional({
+    description: `Vagas de cada lado, de 1 a ${MAX_SLOTS}: todos do jogador são de \`species_id\`, com a Técnica. 1 sem ela.`,
+    example: 2,
+  })
+  @IsOptional()
+  @IsInt({ message: INVALID_SKILL_TEST })
+  @Min(1, { message: INVALID_SKILL_TEST })
+  @Max(MAX_SLOTS, { message: INVALID_SKILL_TEST })
+  slots?: number;
 }
 
 export class BoardActionDto {

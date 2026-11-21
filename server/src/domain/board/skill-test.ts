@@ -25,3 +25,14 @@ export function borrowedCombatant(
     skills: [{ skillId: skill.id, currentPp: skill.maxPp }, ...others],
   };
 }
+
+/** O time do 2×2 e do 3×3 (skill-test/03): todos com a Técnica, cada um com o seu uid. */
+export function borrowedTeam(
+  sorted: Combatant[],
+  skill: TestedSkill,
+): Combatant[] {
+  return sorted.map((creature, index) => ({
+    ...borrowedCombatant(creature, skill),
+    creatureUid: `${SKILL_TEST_UID}-${index + 1}`,
+  }));
+}

@@ -636,6 +636,41 @@ describe('Rotas da luta no tabuleiro (e2e)', () => {
       ).toEqual([]);
     });
 
+    it('com slots 2, começa com 2 de cada lado, os dois do jogador com a Técnica', async () => {
+      const user = await strongUser();
+      const scratch = await prisma.skill.findUniqueOrThrow({
+        where: { slug: 'arranhao' },
+      });
+      const body = (
+        await skillTest(user, {
+          skill_id: scratch.id,
+          species_id: RUVO,
+          enemy_species_id: RUVO,
+          enemy_idle: true,
+          slots: 2,
+        }).expect(201)
+      ).body as BoardBody & {
+        battle: { player: { team: { skills: { skill_id: number }[] }[] } };
+      };
+      expect(body.battle.player.team).toHaveLength(2);
+      for (const creature of body.battle.player.team) {
+        expect(creature.skills[0]!.skill_id).toBe(scratch.id);
+      }
+      expect(body.battle.player.cells.filter((cell) => cell)).toHaveLength(2);
+      expect(body.battle.enemy.cells.filter((cell) => cell)).toHaveLength(2);
+    });
+
+    it('slots 4 dá 400', async () => {
+      const user = await strongUser();
+      const res = await skillTest(user, {
+        skill_id: 1,
+        species_id: RUVO,
+        enemy_species_id: RUVO,
+        slots: 4,
+      }).expect(400);
+      expect(res.body.message).toBe('Técnica, espécie ou nível inválidos.');
+    });
+
     it('uma Técnica que não existe dá 400', async () => {
       const user = await strongUser();
       const res = await skillTest(user, {

@@ -86,9 +86,9 @@ export class BoardBattleController {
   @ApiOperation({
     summary: 'Começar a luta de teste de uma Técnica',
     description:
-      'O Testar técnica do F1: uma luta 1×1 com um Ecobeast emprestado de ' +
-      '`species_id`, com a Técnica `skill_id` no 1º espaço, contra um ' +
-      '`enemy_species_id`, os dois no `level`. Do lado do jogador, as Técnicas ' +
+      'O Testar técnica do F1: uma luta de `slots` vagas (1×1 sem ela) com ' +
+      'Ecobeasts emprestados de `species_id`, cada um com a Técnica `skill_id` ' +
+      'no 1º espaço, contra `enemy_species_id`, todos no `level`. Do lado do jogador, as Técnicas ' +
       'não gastam PP nem esperam o countdown; com `enemy_idle`, o oponente só ' +
       'passa a vez. Sem itens nem moedas, e nada da luta é gravado: nem a ' +
       'equipe, nem o Bestiário. A rota só existe com `ENABLE_TEST_BATTLE` ' +
@@ -109,6 +109,7 @@ export class BoardBattleController {
       enemySpeciesId: body.enemy_species_id,
       level: body.level ?? SKILL_TEST_LEVEL,
       enemyIdle: body.enemy_idle === true,
+      slots: body.slots ?? 1,
     });
   }
 
