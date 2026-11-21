@@ -112,6 +112,7 @@ O Ecobeast é um jogo mobile (Android/iOS, retrato): o cliente em **Godot 4.7 co
 | [sandlurk-line](sandlurk-line/) | O escorpião enterrado, Sandlurk e Dunestrike (Inseto/Toxina), um tanque lento do Deserto e da Praia, com 4 Técnicas de escorpião |
 | [hopling-line](hopling-line/) | A canguru médica, Hopling e Pouchmend (Instinto), o primeiro Ecobeast de suporte, com 4 Técnicas que curam e protegem os aliados |
 | [terrain-plateaus](terrain-plateaus/) | O relevo do mapa sorteado em patamares, com paredões que bloqueiam o Domador em todo mapa, escadarias e a Montanha de 8 a 10 |
+| [glimshell-line](glimshell-line/) | O jabuti de cristal, Glimshell, Lumoshell e Prismback (Luz), o primeiro tanque especial, com 4 Técnicas de Luz que protegem e enfraquecem |
 
 As próximas iniciativas estão no [roadmap.md](roadmap.md).
 
