@@ -44,7 +44,8 @@ const CONFIG: MapConfig = {
   wetLimit: 0.6,
   climate: 0,
   stoneFrom: 0.72,
-  hillFrom: 0.8,
+  hillFraction: 0.1,
+  foothillChance: 0.5,
   mountainFrom: 0.9,
   terraceLow: 0.45,
   terraceHigh: 0.75,
@@ -534,12 +535,13 @@ describe('generateShapedMap', () => {
     );
   });
 
-  it('a Colina fica abaixo de 12% da terra no jogo', () => {
+  it('a Colina fica de 5% a 15% da terra no jogo (rolling-hills/01)', () => {
     for (const seed of SEEDS.slice(0, 5)) {
       const tiles = generateMap(seed).tiles;
       const land = tiles.filter((tile) => !isWater(tile.biome));
       const hills = land.filter((tile) => tile.biome === 'hill');
-      expect(hills.length / land.length).toBeLessThan(0.12);
+      expect(hills.length / land.length).toBeGreaterThan(0.05);
+      expect(hills.length / land.length).toBeLessThan(0.15);
     }
   });
 
@@ -1155,13 +1157,16 @@ describe('os patamares e a água nas alturas (terrain-plateaus/02)', () => {
     }
   });
 
-  it('a Montanha fica de 8 a 10, e nenhuma outra terra passa de 7', () => {
+  it('a Montanha fica de 8 a 10, o morro de 2 a 8, e nenhuma outra terra passa de 7', () => {
     for (const map of maps) {
       for (const tile of map.tiles) {
         if (isWater(tile.biome)) continue;
         if (tile.shape === 'mont') {
           expect(tile.height).toBeGreaterThanOrEqual(8);
           expect(tile.height).toBeLessThanOrEqual(10);
+        } else if (tile.shape === 'hill' && tile.biome !== 'beach') {
+          expect(tile.height).toBeGreaterThanOrEqual(2);
+          expect(tile.height).toBeLessThanOrEqual(8);
         } else {
           expect(tile.height).toBeGreaterThanOrEqual(1);
           expect(tile.height).toBeLessThanOrEqual(7);
@@ -1224,6 +1229,136 @@ describe('os patamares e a água nas alturas (terrain-plateaus/02)', () => {
     });
     expect(stairs.length).toBeGreaterThanOrEqual(maps.length / 2);
   });
+
+  it('toda a terra continua se alcançando da chegada', () => {
+    for (const map of maps) expect(unreached(map)).toEqual([]);
+  });
+});
+
+describe('a Colina e a Montanha separadas (rolling-hills/01)', () => {
+  const RELIEF: MapConfig = { ...CONFIG, tileCount: 1500, noiseScale: 0.08 };
+  const seeds = SEEDS.slice(0, 20);
+  const isHill = (tile: ShapedTile) =>
+    tile.shape === 'hill' && !isWater(tile.biome) && tile.biome !== 'beach';
+  let maps: ShapedMap[];
+
+  beforeAll(() => {
+    maps = seeds.map((seed) => generateShapedMap(seed, RELIEF));
+  });
+
+  function hillPatches(map: ShapedMap): ShapedTile[][] {
+    const byKey = indexed(map);
+    const seen = new Set<string>();
+    const patches: ShapedTile[][] = [];
+    for (const first of map.tiles.filter(isHill)) {
+      if (seen.has(hexKey(first))) continue;
+      seen.add(hexKey(first));
+      const patch = [first];
+      for (let index = 0; index < patch.length; index += 1) {
+        for (const next of neighborsOf(patch[index]!, byKey)) {
+          if (isHill(next) && !seen.has(hexKey(next))) {
+            seen.add(hexKey(next));
+            patch.push(next);
+          }
+        }
+      }
+      patches.push(patch);
+    }
+    return patches;
+  }
+
+  it('há colinas longe de qualquer Montanha', () => {
+    const far = maps.filter((map) => {
+      const mountains = map.tiles.filter(({ shape }) => shape === 'mont');
+      return hillPatches(map).some((patch) =>
+        patch.every((tile) =>
+          mountains.every((mountain) => hexDistance(tile, mountain) >= 4),
+        ),
+      );
+    });
+    expect(far.length).toBeGreaterThanOrEqual(15);
+  });
+
+  it('sem colinas soltas e sem sopé, só a montanha solta vira Colina, e a Montanha encosta no chão', () => {
+    const bare: MapConfig = { ...RELIEF, hillFraction: 0, foothillChance: 0 };
+    const bareMaps = seeds.map((seed) => generateShapedMap(seed, bare));
+    for (const map of bareMaps) {
+      const byKey = indexed(map);
+      for (const tile of map.tiles.filter(isHill)) {
+        expect(neighborsOf(tile, byKey).some(isHill)).toBe(false);
+      }
+    }
+    const onGround = bareMaps.some((map) => {
+      const byKey = indexed(map);
+      return map.tiles.some(
+        (tile) =>
+          tile.shape === 'mont' &&
+          neighborsOf(tile, byKey).some(
+            (next) => next.shape === 'flat' && !isWater(next.biome),
+          ),
+      );
+    });
+    expect(onGround).toBe(true);
+  });
+
+  it('com o sopé garantido, a terra plana encostada na Montanha é Colina', () => {
+    const skirted: MapConfig = { ...RELIEF, foothillChance: 1 };
+    for (const seed of seeds) {
+      const map = generateShapedMap(seed, skirted);
+      const byKey = indexed(map);
+      for (const tile of map.tiles) {
+        if (tile.shape !== 'mont') continue;
+        for (const next of neighborsOf(tile, byKey)) {
+          const exempt =
+            isWater(next.biome) ||
+            next.biome === 'beach' ||
+            neighborsOf(next, byKey).some(({ biome }) => isWater(biome));
+          if (!exempt) expect(next.shape).not.toBe('flat');
+        }
+      }
+    }
+  });
+
+  it('o morro sobe 1 na borda e 2 no miolo, a partir do patamar', () => {
+    const hills = maps.flatMap(({ tiles }) => tiles.filter(isHill));
+    const onMound = hills.filter(({ height }) =>
+      [2, 3, 5, 6, 8].includes(height),
+    );
+    expect(onMound.length / hills.length).toBeGreaterThan(0.9);
+    expect(hills.some(({ height }) => height === 3 || height === 6)).toBe(true);
+  });
+
+  it('a Colina não mexe no mar, no clima nem nos rios de uma seed', () => {
+    for (const seed of seeds.slice(0, 8)) {
+      const less = generateShapedMap(seed, RELIEF);
+      const more = generateShapedMap(seed, { ...RELIEF, hillFraction: 0.2 });
+      expect(seaOf(more)).toEqual(seaOf(less));
+      expect(more.rivers).toEqual(less.rivers);
+      const lessByKey = indexed(less);
+      for (const tile of more.tiles) {
+        const before = lessByKey.get(hexKey(tile))!;
+        if (isWater(tile.biome) || isWater(before.biome)) continue;
+        expect(tile.biome).toBe(before.biome);
+      }
+    }
+  });
+
+  it('a escadaria não abre num paredão que outra escadaria já subiu: toda altura é um número', () => {
+    const map = generateShapedMap(308842, {
+      ...CONFIG,
+      tileCount: 900,
+      lakeCount: 2,
+      lakeMaxWidth: 8,
+      riverCount: 4,
+      springLakeChance: 0.35,
+      crossingSpacing: 8,
+      riverMinWidth: 2,
+      riverMaxWidth: 3,
+    });
+    expect(map.tiles.filter(({ height }) => !Number.isInteger(height))).toEqual(
+      [],
+    );
+  }, 10_000);
 
   it('toda a terra continua se alcançando da chegada', () => {
     for (const map of maps) expect(unreached(map)).toEqual([]);

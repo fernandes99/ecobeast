@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { HexCoord } from './hex.js';
-import { hexKey, hexNeighbors } from './hex.js';
+import { hexDistance, hexKey, hexNeighbors } from './hex.js';
 import {
   climbable,
   climbReach,
@@ -27,6 +27,31 @@ function row(heights: number[], water: number[] = []): TestCell[] {
     water: water.includes(q),
     neighbors: [],
   }));
+  const byKey = new Map(cells.map((cell) => [hexKey(cell), cell]));
+  for (const cell of cells) {
+    cell.neighbors = hexNeighbors(cell).flatMap((coord) => {
+      const next = byKey.get(hexKey(coord));
+      return next ? [next] : [];
+    });
+  }
+  return cells;
+}
+
+/** Um disco de hexágonos de raio `radius` em volta da origem. */
+function disk(radius: number, height: (cell: HexCoord) => number): TestCell[] {
+  const cells: TestCell[] = [];
+  for (let q = -radius; q <= radius; q += 1) {
+    for (let r = -radius; r <= radius; r += 1) {
+      if (hexDistance({ q, r }, { q: 0, r: 0 }) > radius) continue;
+      cells.push({
+        q,
+        r,
+        height: height({ q, r }),
+        water: false,
+        neighbors: [],
+      });
+    }
+  }
   const byKey = new Map(cells.map((cell) => [hexKey(cell), cell]));
   for (const cell of cells) {
     cell.neighbors = hexNeighbors(cell).flatMap((coord) => {
@@ -128,6 +153,19 @@ describe('openSlopes', () => {
     openSlopes(cells, cells[0]!, links, wet, seededRandom(3));
     expect(cells[1]!.height).toBe(cells[3]!.height);
     expect(climbReach(cells[0]!, links, wet).size).toBe(4);
+  });
+
+  it('sobe ao maciço por uma escadaria que desce do lado alcançado, sem levantar a planície (rolling-hills/01)', () => {
+    const cells = disk(6, (cell) =>
+      hexDistance(cell, { q: 0, r: 0 }) <= 1 ? 8 : 1,
+    );
+    const start = cells.find(({ q, r }) => q === 6 && r === 0)!;
+    openSlopes(cells, start, new Map(), wet, seededRandom(4));
+    expect(climbReach(start, new Map(), wet).size).toBe(cells.length);
+    const raised = cells.filter(
+      (cell) => hexDistance(cell, { q: 0, r: 0 }) > 1 && cell.height > 1,
+    );
+    expect(raised.length).toBeLessThanOrEqual(6);
   });
 
   it('a mesma seed dá a mesma encosta', () => {

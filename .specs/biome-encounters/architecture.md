@@ -40,7 +40,7 @@ Uma ilha com forma `hill` na água conta como colina. Em 12 mapas reais, a médi
 | `stone` | 759 | 7,6% |
 | `mountain` | 394 | 3,9% |
 
-A colina é o maior bioma, porque `hillFrom` deixa cerca de 40% da terra como colina ou montanha. Quem mudar `hillFrom` muda o peso dela nas taxas.
+A colina era o maior bioma, porque `hillFrom` deixava cerca de 40% da terra como colina ou montanha. Desde a [rolling-hills](../rolling-hills/README.md), a Colina tem de 6% a 10% da terra, por `hillFraction` e `foothillChance`; quem mudar esses dois muda o peso dela nas taxas.
 
 ## Sorteio do mapa
 

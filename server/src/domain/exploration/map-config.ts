@@ -19,7 +19,10 @@ export interface MapConfig {
   wetLimit: number;
   climate: number;
   stoneFrom: number;
-  hillFrom: number;
+  /** A parte da terra que o ruído das colinas soltas pega (rolling-hills/01). */
+  hillFraction: number;
+  /** A chance de cada cadeia de montanha ganhar a faixa de Colina ao pé. */
+  foothillChance: number;
   mountainFrom: number;
   /** Os limites de altitude dos patamares 1, 4 e 7 (terrain-plateaus/02). */
   terraceLow: number;
@@ -51,7 +54,8 @@ export const DEFAULT_MAP_CONFIG: MapConfig = {
   wetLimit: 0.58,
   climate: 0,
   stoneFrom: 0.72,
-  hillFrom: 0.86,
+  hillFraction: 0.1,
+  foothillChance: 0.5,
   mountainFrom: 0.96,
   terraceLow: 0.45,
   terraceHigh: 0.75,
@@ -89,7 +93,8 @@ export const MAP_CONFIG_RANGES: Record<keyof MapConfig, ConfigRange> = {
   wetLimit: fraction,
   climate: { min: 0, max: 4, integer: true },
   stoneFrom: fraction,
-  hillFrom: fraction,
+  hillFraction: fraction,
+  foothillChance: fraction,
   mountainFrom: fraction,
   terraceLow: fraction,
   terraceHigh: fraction,

@@ -173,7 +173,9 @@ export function openRamps<C extends SlopeCell<C>>(
   const starts: C[] = [];
   for (const [high, low] of edges) {
     if (starts.length >= wanted) break;
-    if (climbable(high, low) || !canRaise(low)) continue;
+    if (climbable(high, low) || low.height > high.height || !canRaise(low)) {
+      continue;
+    }
     if (starts.some((start) => hexDistance(start, high) < RAMP_GAP)) continue;
     stairsFrom(high, low, canRaise, random);
     starts.push(high);

@@ -217,7 +217,7 @@ Uma função pura em `server/src/domain/exploration/`: `generateMap(seed, config
 | umidade acima de `wetLimit`                                  | `boreal`    |
 | resto                                                        | `temperate` |
 
-5. **Forma.** Na terra, crista acima de `mountainFrom` é `mont`, acima de `hillFrom` é `hill`, e o resto é `flat`. Assim a forma não depende do bioma: todo bioma de terra tem plano, colina e montanha, e a montanha de base cinza só existe dentro da região de pedra. Na água, `islandChance` dá `hill` ou `mont`; o resto é `flat`.
+5. **Forma.** Na terra, crista acima de `mountainFrom` é `mont`, acima de `hillFrom` é `hill`, e o resto é `flat`. Hoje a forma é a da [rolling-hills](../rolling-hills/README.md): a Montanha em maciços e a Colina por um ruído próprio, com `hillFraction` no lugar de `hillFrom`. Assim a forma não depende do bioma: todo bioma de terra tem plano, colina e montanha, e a montanha de base cinza só existe dentro da região de pedra. Na água, `islandChance` dá `hill` ou `mont`; o resto é `flat`.
 6. **Limpeza.** `mont` de terra sem vizinho `mont` vira `hill`, até não sobrar nenhum. Depois, por `cleanupPasses` vezes, um bioma de terra sem vizinho igual assume o bioma de terra mais comum entre os vizinhos.
 7. **Variante.** Em `flat`, `detailChance` escolhe entre 4 e 6, e o resto entre 1 e 3. Nas outras formas, entre 1 e 3.
 8. **Início.** A posição de terra plana mais perto de `(0, 0)`.

@@ -35,6 +35,8 @@ describe('mapConfigError', () => {
     [{ coastRoughness: 1.2 }, 'coastRoughness precisa ficar entre 0 e 1.'],
     [{ noiseScale: 0 }, 'noiseScale precisa ficar entre 0.005 e 0.5.'],
     [{ cleanupPasses: 11 }, 'cleanupPasses precisa ficar entre 0 e 10.'],
+    [{ hillFraction: 1.2 }, 'hillFraction precisa ficar entre 0 e 1.'],
+    [{ foothillChance: -0.1 }, 'foothillChance precisa ficar entre 0 e 1.'],
   ])('recusa %o', (config, message) => {
     expect(mapConfigError(config)).toBe(message);
   });

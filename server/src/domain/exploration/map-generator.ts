@@ -108,6 +108,8 @@ interface Cell extends HexCoord {
   temperature: number;
   rock: number;
   ridge: number;
+  /** O ruído das colinas soltas, em percentil sobre a terra (rolling-hills/01). */
+  mound: number;
   sea: boolean;
   wet: boolean;
   biome: ShapedBiome;
@@ -145,6 +147,14 @@ const RELIEF_NOISE = 0.45;
 const RELIEF_RIDGE = 0.35;
 const RELIEF_SEA = 0.2;
 const RELIEF_SEA_REACH = 25;
+const HILL_SCALE = 2.5;
+const MIN_HILL_PATCH = 3;
+const MOUND_TOP = 8;
+const MASSIF_RADIUS = 3;
+const MIN_MASSIF_SHARE = 0.004;
+const MIN_MASSIF = 6;
+const FOOTHILL_MAX_WIDTH = 2;
+const HILLS_SALT = 0x4111a5;
 const CLIMATE_SALT = 0xc11a7e;
 
 const ORIGIN: HexCoord = { q: 0, r: 0 };
@@ -231,6 +241,8 @@ export function generateShapedMap(
   const ridge = createNoise(random);
   const temperature = createNoise(seededRandom(seed ^ TEMPERATURE_SALT));
   const water = seededRandom(seed ^ WATER_SALT);
+  const hills = seededRandom(seed ^ HILLS_SALT);
+  const mound = createNoise(hills);
 
   const climateRandom = seededRandom(seed ^ CLIMATE_SALT);
   const climate = climateOf(climateRandom, config);
@@ -245,7 +257,13 @@ export function generateShapedMap(
   );
   const edges = placeSea(cells, water, config);
   shapeRelief(cells);
-  placeShapes(cells, config);
+  const land = cells.filter((cell) => !cell.sea);
+  percentiles(
+    land.map((cell) => sample(mound, cell, config.noiseScale * HILL_SCALE)),
+  ).forEach((value, index) => {
+    land[index]!.mound = value;
+  });
+  placeShapes(cells, config, hills);
   const beachWidth = createNoise(water);
   const meander = createNoise(water);
   const drain = drainOf(cells, (cell) =>
@@ -306,11 +324,8 @@ export function generateShapedMap(
     cell.shape = 'flat';
   }
   for (const cell of absorbed) cell.height = 0;
-  const mountains = cells.filter((cell) => cell.shape === 'mont');
   gatherMountains(cells);
-  for (const cell of mountains) {
-    if (cell.shape !== 'mont') cell.height = groundFloor(cell, config);
-  }
+  placeMoundHeights(cells, config);
   placeMountainHeights(cells);
   const links = new Map<Cell, Cell[]>();
   for (const {
@@ -523,6 +538,7 @@ function createCells(
     temperature: temperature[index]!,
     rock: rock[index]!,
     ridge: ridge[index]!,
+    mound: 0,
     sea: false,
     wet: false,
     biome: 'temperate',
@@ -816,7 +832,21 @@ function placeLandHeights(cells: Cell[], config: MapConfig): void {
     cell.height =
       cell.biome === 'beach' ? BEACH_HEIGHT : terraceOf(cell, config);
   }
+  placeMoundHeights(cells, config);
   placeMountainHeights(cells);
+}
+
+/** O morro: +1 na borda e +2 no miolo, a partir do patamar, no máximo 8 (rolling-hills/01). */
+function placeMoundHeights(cells: Cell[], config: MapConfig): void {
+  const isMound = (cell: Cell) =>
+    cell.shape === 'hill' && !isWater(cell.biome) && cell.biome !== 'beach';
+  for (const cell of cells) {
+    if (!isMound(cell)) continue;
+    const edge =
+      cell.neighbors.length < 6 ||
+      cell.neighbors.some((next) => !isMound(next));
+    cell.height = Math.min(terraceOf(cell, config) + (edge ? 1 : 2), MOUND_TOP);
+  }
 }
 
 /** A Montanha: 8 encostada em outra coisa, 9 a 2 hexágonos e 10 mais para dentro. */
@@ -833,17 +863,82 @@ function placeMountainHeights(cells: Cell[]): void {
   }
 }
 
-/** A forma pelo relevo; a água fica sempre plana, sem ilhotas (coast-rivers). */
-function placeShapes(cells: Cell[], config: MapConfig): void {
+/**
+ * A Montanha em maciços, no alto do relevo suavizado e sem os pedaços pequenos, as colinas
+ * soltas pelo ruído delas e a faixa de Colina ao pé das cadeias que a sortearem
+ * (rolling-hills/01). A água fica sempre plana (coast-rivers).
+ */
+function placeShapes(cells: Cell[], config: MapConfig, random: Random): void {
+  const isLand = (cell: Cell) => !isWater(cell.biome);
+  const land = cells.filter(isLand);
+  const massif = new Map<Cell, number>();
+  percentiles(land.map((cell) => meanAround(cell, MASSIF_RADIUS))).forEach(
+    (value, index) => massif.set(land[index]!, value),
+  );
   for (const cell of cells) {
-    if (isWater(cell.biome)) {
-      cell.shape = 'flat';
-    } else if (cell.elevation > config.mountainFrom) {
-      cell.shape = 'mont';
-    } else if (cell.elevation > config.hillFrom) {
+    if (!isLand(cell)) cell.shape = 'flat';
+    else if (massif.get(cell)! > config.mountainFrom) cell.shape = 'mont';
+  }
+  const smallest = Math.max(MIN_MASSIF, land.length * MIN_MASSIF_SHARE);
+  for (const range of groupsOf(cells, (cell) => cell.shape === 'mont')) {
+    if (range.length >= smallest) continue;
+    for (const cell of range) cell.shape = 'flat';
+  }
+  for (const cell of land) {
+    if (cell.shape === 'flat' && cell.mound > 1 - config.hillFraction) {
       cell.shape = 'hill';
     }
   }
+  for (const patch of groupsOf(cells, (cell) => cell.shape === 'hill')) {
+    if (patch.length >= MIN_HILL_PATCH) continue;
+    for (const cell of patch) cell.shape = 'flat';
+  }
+  for (const range of groupsOf(cells, (cell) => cell.shape === 'mont')) {
+    if (random() >= config.foothillChance) continue;
+    const width = 1 + Math.floor(random() * FOOTHILL_MAX_WIDTH);
+    const reach = distances(
+      range,
+      (cell) => isLand(cell) && cell.shape !== 'mont',
+    );
+    for (const [cell, distance] of reach) {
+      if (distance > 0 && distance <= width) cell.shape = 'hill';
+    }
+  }
+}
+
+/** A média do relevo da terra a até `radius` hexágonos: junta as montanhas em maciços. */
+function meanAround(center: Cell, radius: number): number {
+  const seen = new Set([center]);
+  let ring = [center];
+  for (let step = 0; step < radius; step += 1) {
+    ring = ring.flatMap((cell) =>
+      cell.neighbors.filter((next) => !seen.has(next) && seen.add(next)),
+    );
+  }
+  let sum = 0;
+  for (const cell of seen) sum += cell.elevation;
+  return sum / seen.size;
+}
+
+/** Os pedaços ligados dos hexágonos que passam em `inside`. */
+function groupsOf(cells: Cell[], inside: (cell: Cell) => boolean): Cell[][] {
+  const seen = new Set<Cell>();
+  const groups: Cell[][] = [];
+  for (const first of cells) {
+    if (!inside(first) || seen.has(first)) continue;
+    seen.add(first);
+    const group = [first];
+    for (let index = 0; index < group.length; index += 1) {
+      for (const next of group[index]!.neighbors) {
+        if (inside(next) && !seen.has(next)) {
+          seen.add(next);
+          group.push(next);
+        }
+      }
+    }
+    groups.push(group);
+  }
+  return groups;
 }
 
 function gatherMountains(cells: Cell[]): void {

@@ -21,7 +21,7 @@ Veja os problemas no [README](README.md#contexto). Esta fase troca a escolha do 
 **Relevo**
 
 - **RF-02:** A altitude de cada hexágono de terra (`elevation`, de 0 a 1 por percentil) mistura o ruído de altitude, as cristas e a distância até o mar. O peso de cada um fica em `map-generator.ts`. O mar é decidido antes.
-- **RF-03:** A Montanha é a terra acima de `mountainFrom`, e a Colina fica entre `hillFrom` e `mountainFrom`. A montanha solta continua virando Colina (`gatherMountains`, de novo depois das pontes, que podem aplainar uma margem). A forma é decidida antes da água, e a água fica sempre plana.
+- **RF-03:** A Montanha é a terra acima de `mountainFrom`, e a Colina fica entre `hillFrom` e `mountainFrom` (a [rolling-hills](../rolling-hills/README.md) trocou isso: a Montanha em maciços pelo relevo suavizado, e a Colina por um ruído próprio). A montanha solta continua virando Colina (`gatherMountains`, de novo depois das pontes, que podem aplainar uma margem). A forma é decidida antes da água, e a água fica sempre plana.
 - **RF-04:** Os rios descem pela mesma altitude (`drainOf`), e a nascente não fica numa Montanha.
 
 **Clima**
