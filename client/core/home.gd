@@ -13,8 +13,8 @@ static func is_home(island_id: int) -> bool:
 	return has_home() and island_id == Session.home_island_id
 
 
-## A primeira tela (liora-intro/03): sem Domador, cria um sem nome; com a casa, ela, onde as
-## cenas cuidam do nome e do inicial; sem casa, a Aparência com o nome e a escolha do inicial.
+## A primeira tela: sem Domador, cria um sem nome; sem casa (hub-start/01), a Aparência com o
+## nome, a escolha do inicial e o Hub; com a casa, ela, onde as cenas cuidam do nome e do inicial.
 static func start() -> Result:
 	if Session.player == null:
 		var created: Result = await Session.create_player("")

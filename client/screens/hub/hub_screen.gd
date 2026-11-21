@@ -1,118 +1,121 @@
 extends Control
 
+## O Hub, a primeira tela do jogo (.specs/hub-start/01-hub.md).
+
 const CreatureSlotScene := preload("res://ui/components/creature_slot.tscn")
-const ActionTileScene := preload("res://ui/components/action_tile.tscn")
 const ProfileDebugPanelScene := preload("res://screens/hub/profile_debug_panel.tscn")
 
-const TAB_HEIGHT := 76
-const CURRENT_TAB := "Home"
 const ICON_PATH := "res://ui/icons/%s.svg"
 
 const SCENE_PATH := "res://assets/backgrounds/hub.png"
 const SCENE_TOP_CROP := 0.22
-const CONTENT_START := 0.30
 const SKY_HEIGHT := 0.45
-const SHADE_ALPHA := 0.55
-const SHADE_FADE := 0.10
+const SHADE_ALPHA := 0.75
+const SHADE_FADE := 140.0
 
-## Cards de ação, nesta ordem. O título é também o rótulo em DESTINATIONS; as
-## cores ficam em UiPalette.ACTION_COLORS. `art` é a ação que empresta a arte a
-## quem ainda não tem a sua.
-const ACTIONS: Array[Dictionary] = [
-	{"id": &"travel", "title": "Viagem", "subtitle": "Visite as ilhas e as zonas do mundo.", "art": &"explore"},
-	{"id": &"shop", "title": "Loja", "subtitle": "Compre itens, Esferas de Vínculo e mais."},
-	{"id": &"heal", "title": "Refúgio", "subtitle": "Cure sua equipe."},
-	{"id": &"storage", "title": "Santuário", "subtitle": "Guarde suas criaturas."},
-	{"id": &"codex", "title": "Bestiário", "subtitle": "Veja todas as espécies."},
-	{"id": &"bag", "title": "Mochila", "subtitle": "Organize seus itens."},
-]
-## Com a ilha casa, o Hub é o menu do Domador, aberto por cima dela (home-island/02):
-## as viagens e a Loja ficam no mapa, e o Refúgio fica nos dois.
-const BACK_TAB := "Voltar"
-const MENU_ACTIONS: Array[StringName] = [&"heal", &"storage", &"codex", &"bag"]
-const MENU_TABS: Array[Dictionary] = [
-	{"label": BACK_TAB, "icon": "home"},
-	{"label": "Equipe", "icon": "team"},
-	{"label": "Bestiário", "icon": "book"},
-	{"label": "Perfil", "icon": "person"},
-]
-const TABS: Array[Dictionary] = [
-	{"label": "Home", "icon": "home"},
-	{"label": "Equipe", "icon": "team"},
-	{"label": "Bestiário", "icon": "book"},
-	{"label": "Loja", "icon": "cart"},
-	{"label": "Perfil", "icon": "person"},
-]
+const BUTTON_RADIUS := 20
+const BUTTON_BORDER := 2
+const BORDER_LIGHTEN := 0.25
+const PRESSED_DARKEN := 0.2
+const SHORTCUT_HEIGHT := 104
+const SHORTCUT_ICON := 40
+const SHORTCUT_FONT := 20
 
-const DESTINATIONS: Dictionary[String, Dictionary] = {
-	"Viagem": {"id": &"travel", "params": {}},
-	"Loja": {"id": &"shop", "params": {}},
-	"Refúgio": {"id": &"heal_station", "params": {}},
-	"Santuário": {"id": &"storage", "params": {}},
-	"Bestiário": {"id": &"codex", "params": {}},
-	"Mochila": {"id": &"bag", "params": {}},
-	"Equipe": {"id": &"team", "params": {}},
-	"Perfil": {"id": &"placeholder", "params": {"title": "Perfil", "extra": ProfileDebugPanelScene}},
-}
+## Os atalhos embaixo do Explorar, nesta ordem; as cores ficam em UiPalette.ACTION_COLORS.
+const SHORTCUTS: Array[Dictionary] = [
+	{"id": &"shop", "title": "Loja", "icon": "shop", "screen": &"shop"},
+	{"id": &"heal", "title": "Refúgio", "icon": "heal", "screen": &"heal_station"},
+	{"id": &"team", "title": "Ecobeasts", "icon": "team", "screen": &"team"},
+	{"id": &"bag", "title": "Mochila", "icon": "bag", "screen": &"bag"},
+]
 
 var _scene_texture: Texture2D = null
+var _featured_uid := ""
 
 @onready var _scene_art: TextureRect = %SceneArt
 @onready var _scene_shade: TextureRect = %SceneShade
-@onready var _scene_spacer: Control = %SceneSpacer
-@onready var _scroll: ScrollContainer = %Scroll
+@onready var _player_area: Control = %Player
 @onready var _avatar_initial: Label = %AvatarInitial
 @onready var _name_label: Label = %NameLabel
 @onready var _level_label: Label = %LevelLabel
 @onready var _xp_bar: ProgressBar = %XpBar
 @onready var _coins_label: Label = %CoinsLabel
+@onready var _settings_button: Button = %SettingsButton
+@onready var _featured: TapPanel = %Featured
+@onready var _featured_portrait: CreaturePortrait = %FeaturedPortrait
+@onready var _featured_plate: PanelContainer = %FeaturedPlate
+@onready var _featured_name: Label = %FeaturedName
+@onready var _featured_level: Label = %FeaturedLevel
+@onready var _featured_hp: HpBar = %FeaturedHp
 @onready var _party_row: HBoxContainer = %PartyRow
-@onready var _actions_grid: GridContainer = %ActionsGrid
-@onready var _tabs: HBoxContainer = %Tabs
+@onready var _explore_button: Button = %ExploreButton
+@onready var _shortcuts: HBoxContainer = %Shortcuts
 
 
 func _ready() -> void:
-	var avatar := _avatar_initial.get_parent() as Control
-	avatar.mouse_filter = Control.MOUSE_FILTER_STOP
-	avatar.gui_input.connect(_on_avatar_input)
+	_player_area.gui_input.connect(_on_player_input)
+	_settings_button.icon = load(ICON_PATH % "gear") as Texture2D
+	_settings_button.pressed.connect(Router.push.bind(&"placeholder", {"title": "Configurações"}))
 	if ResourceLoader.exists(SCENE_PATH):
 		_scene_texture = load(SCENE_PATH) as Texture2D
 	_scene_art.texture = _scene_texture if _scene_texture != null else _sky_gradient()
+	_featured.pressed.connect(_open_featured)
 	for index: int in Player.PARTY_SIZE:
 		var slot: CreatureSlot = CreatureSlotScene.instantiate()
-		slot.pressed.connect(_open_details.bind(index))
+		slot.pressed.connect(_feature.bind(index))
 		_party_row.add_child(slot)
-	var menu := Home.has_home()
-	for action: Dictionary in ACTIONS:
-		if menu and not MENU_ACTIONS.has(action["id"]):
-			continue
-		var tile: ActionTile = ActionTileScene.instantiate()
-		var colors: Array = UiPalette.ACTION_COLORS[action["id"]]
-		tile.setup(action["id"], action["title"], action["subtitle"], colors[0], colors[1], action.get("art", &""))
-		tile.pressed.connect(_open.bind(action["title"]))
-		_actions_grid.add_child(tile)
-	for tab: Dictionary in MENU_TABS if menu else TABS:
-		_tabs.add_child(_make_tab(tab["label"], tab["icon"]))
-	%EditButton.pressed.connect(_open.bind("Equipe"))
+	_explore_button.icon = load(ICON_PATH % "explore") as Texture2D
+	_paint_button(_explore_button, UiPalette.ACTION_COLORS[&"explore"][0])
+	_explore_button.pressed.connect(_explore)
+	for shortcut: Dictionary in SHORTCUTS:
+		_shortcuts.add_child(_make_shortcut(shortcut))
 	# O Domador ainda não sobe de nível (o GDD não define como).
 	_xp_bar.value = 0.0
 	resized.connect(_layout_scene)
+	_party_row.item_rect_changed.connect(_layout_scene)
 	_layout_scene.call_deferred()
 	Session.player_changed.connect(_refresh)
 	_refresh()
 
 
-func _make_tab(label: String, icon: String) -> Button:
+func _make_shortcut(shortcut: Dictionary) -> Button:
 	var button := Button.new()
-	button.text = label
-	button.icon = load(ICON_PATH % icon) as Texture2D
+	button.text = shortcut["title"]
+	button.icon = load(ICON_PATH % shortcut["icon"]) as Texture2D
 	button.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	button.vertical_icon_alignment = VERTICAL_ALIGNMENT_TOP
-	button.theme_type_variation = &"CurrentTabButton" if label == CURRENT_TAB else &"TabButton"
-	button.custom_minimum_size.y = TAB_HEIGHT
+	button.custom_minimum_size.y = SHORTCUT_HEIGHT
 	button.size_flags_horizontal = SIZE_EXPAND_FILL
-	button.pressed.connect(_open.bind(label))
+	button.add_theme_constant_override(&"icon_max_width", SHORTCUT_ICON)
+	button.add_theme_font_size_override(&"font_size", SHORTCUT_FONT)
+	_paint_button(button, UiPalette.ACTION_COLORS[shortcut["id"]][1], UiPalette.ACTION_COLORS[shortcut["id"]][0])
+	button.pressed.connect(Router.push.bind(shortcut["screen"]))
 	return button
+
+
+func _paint_button(button: Button, fill: Color, border: Color = Color.TRANSPARENT) -> void:
+	var edge := border if border.a > 0.0 else fill.lightened(BORDER_LIGHTEN)
+	var normal := _button_style(fill, edge)
+	button.add_theme_stylebox_override(&"normal", normal)
+	button.add_theme_stylebox_override(&"hover", normal)
+	button.add_theme_stylebox_override(&"focus", StyleBoxEmpty.new())
+	var pressed := _button_style(fill.darkened(PRESSED_DARKEN), edge)
+	button.add_theme_stylebox_override(&"pressed", pressed)
+	button.add_theme_stylebox_override(&"hover_pressed", pressed)
+	button.add_theme_stylebox_override(&"disabled", _button_style(UiPalette.SURFACE_RAISED, UiPalette.BORDER))
+	for state: StringName in [&"font_color", &"font_hover_color", &"font_pressed_color", &"font_focus_color", &"font_hover_pressed_color"]:
+		button.add_theme_color_override(state, UiPalette.TEXT)
+	button.add_theme_color_override(&"font_disabled_color", UiPalette.TEXT_MUTED)
+
+
+func _button_style(fill: Color, border: Color) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = fill
+	style.border_color = border
+	style.set_border_width_all(BUTTON_BORDER)
+	style.set_corner_radius_all(BUTTON_RADIUS)
+	style.set_content_margin_all(12)
+	return style
 
 
 func _layout_scene() -> void:
@@ -126,21 +129,23 @@ func _layout_scene() -> void:
 		art_top = -art_height * SCENE_TOP_CROP
 	_scene_art.position = Vector2(0.0, art_top)
 	_scene_art.size = Vector2(size.x, art_height)
-	_scene_shade.texture = _shade_gradient(clampf((art_top + art_height) / height, 0.0, 1.0))
-	var scroll_top := _scroll.get_global_rect().position.y - get_global_rect().position.y
-	_scene_spacer.custom_minimum_size.y = maxf(0.0, height * CONTENT_START - scroll_top)
+	var party_top := _party_row.get_global_rect().position.y - get_global_rect().position.y
+	var art_bottom := clampf((art_top + art_height) / height, 0.0, 1.0)
+	var dim_at := clampf(party_top / height, 0.0, art_bottom)
+	var fade_start := clampf((party_top - SHADE_FADE) / height, 0.0, dim_at)
+	_scene_shade.texture = _shade_gradient(fade_start, dim_at, art_bottom)
 
 
-func _shade_gradient(art_bottom: float) -> GradientTexture2D:
+## O fundo fica limpo atrás do destaque e escurece da fileira para baixo, até o fim da arte.
+func _shade_gradient(fade_start: float, dim_at: float, art_bottom: float) -> GradientTexture2D:
 	var clear := UiPalette.BACKGROUND
 	clear.a = 0.0
 	var dim := UiPalette.BACKGROUND
 	dim.a = SHADE_ALPHA
 	var solid := UiPalette.BACKGROUND.lerp(UiPalette.BACKGROUND_DEEP, art_bottom)
-	var fade_start := maxf(CONTENT_START, art_bottom - SHADE_FADE)
 	var gradient := Gradient.new()
-	gradient.offsets = PackedFloat32Array([0.0, CONTENT_START, fade_start, art_bottom, minf(art_bottom + 0.001, 1.0)])
-	gradient.colors = PackedColorArray([clear, clear, dim, solid, clear if art_bottom < 1.0 else solid])
+	gradient.offsets = PackedFloat32Array([0.0, fade_start, dim_at, art_bottom])
+	gradient.colors = PackedColorArray([clear, clear, dim, solid])
 	return _vertical(gradient)
 
 
@@ -175,30 +180,61 @@ func _refresh() -> void:
 			slot.set_creature(player.party[index])
 		else:
 			slot.set_empty()
+	_explore_button.disabled = player.party.is_empty()
+	_show_featured()
 
 
-func _open(label: String) -> void:
-	if label == BACK_TAB:
-		Router.back()
+func _featured_index() -> int:
+	var party := Session.player.party
+	for index: int in party.size():
+		if party[index].uid == _featured_uid:
+			return index
+	return 0 if not party.is_empty() else -1
+
+
+func _show_featured() -> void:
+	var index := _featured_index()
+	var party := Session.player.party
+	for slot_index: int in Player.PARTY_SIZE:
+		(_party_row.get_child(slot_index) as CreatureSlot).set_selected(slot_index == index)
+	_featured_portrait.visible = index >= 0
+	_featured_plate.visible = index >= 0
+	if index < 0:
+		_featured_uid = ""
 		return
-	if not DESTINATIONS.has(label):
-		return
-	var destination := DESTINATIONS[label]
-	Router.push(destination["id"], destination["params"])
+	var creature := party[index]
+	_featured_uid = creature.uid
+	var species := GameData.get_species(creature.species_id)
+	_featured_portrait.set_species(species.id)
+	_featured_name.text = creature.display_name(species)
+	_featured_level.text = "Nv. %d" % creature.level
+	_featured_hp.set_hp(creature.current_hp, creature.stats.hp)
 
 
-## Tocar no avatar abre a tela Aparência (tamer-appearance/03).
-func _on_avatar_input(event: InputEvent) -> void:
-	var button := event as InputEventMouseButton
-	if button != null and button.button_index == MOUSE_BUTTON_LEFT and not button.pressed:
-		Router.push(&"appearance")
-
-
-func _open_details(index: int) -> void:
+## Só muda quem aparece no Hub; o líder continua o mesmo.
+func _feature(index: int) -> void:
 	var party := Session.player.party
 	if index >= party.size():
 		return
-	Router.push(&"creature_details", {"uid": party[index].uid})
+	_featured_uid = party[index].uid
+	_show_featured()
+
+
+func _open_featured() -> void:
+	var index := _featured_index()
+	if index >= 0:
+		Router.push(&"creature_details", {"uid": Session.player.party[index].uid})
+
+
+func _explore() -> void:
+	if not Session.player.party.is_empty():
+		Router.go_to(&"exploration")
+
+
+func _on_player_input(event: InputEvent) -> void:
+	var button := event as InputEventMouseButton
+	if button != null and button.button_index == MOUSE_BUTTON_LEFT and not button.pressed:
+		Router.push(&"placeholder", {"title": "Perfil", "extra": ProfileDebugPanelScene})
 
 
 static func _format_thousands(value: int) -> String:
