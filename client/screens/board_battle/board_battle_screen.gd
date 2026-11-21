@@ -24,6 +24,7 @@ const TAMER_RESULT_TEXTS: Dictionary[String, String] = {
 }
 const EXIT_TEXT := "Voltar"
 const EXIT_TO_HUB_TEXT := "Voltar ao Hub"
+const RETRY_TEXT := "Testar de novo"
 const DAZED_TEXT := "Atordoado: não dá para andar nesta vez."
 const TRAPPED_TEXT := "Preso: não dá para andar nesta vez."
 const BOARD_LINES: Dictionary[String, String] = {
@@ -62,6 +63,9 @@ const MAX_TAP_TRAVEL := 24.0
 
 var _coord := Vector2i.ZERO
 var _test_slots := 0
+## A luta de teste da Técnica do F1 (skill-test/02): o corpo da rota, ou vazio.
+var _skill_test: Dictionary = {}
+var _retry_button: Button = null
 var _against_tamer: bool = false
 var _challenge: bool = false
 var _tamer_name := ""
@@ -168,6 +172,7 @@ func setup(params: Dictionary) -> void:
 	_challenge = params.get("challenge", false)
 	_coord = params.get("tamer_coord", params.get("coord", Vector2i.ZERO))
 	_test_slots = params.get("test_slots", 0)
+	_skill_test = params.get("skill_test", {})
 	_biome = params.get("biome", BoardView.DEFAULT_BIOME)
 	_zone = params.get("zone", "")
 	_height = params.get("height", BoardView.DEFAULT_HEIGHT)
@@ -184,6 +189,8 @@ func _ready() -> void:
 	_skill_detail.theme_type_variation = BattleTheme.PANEL
 	add_child(_skill_detail)
 	_style_controls()
+	if not _skill_test.is_empty():
+		_add_retry_button()
 	_reserve_bottom()
 	add_child(_skill_sound)
 	add_child(_hit_sound)
@@ -327,7 +334,9 @@ func handle_back() -> bool:
 func _begin() -> void:
 	_show_message(SEARCHING_TEXT)
 	var result: Result
-	if _test_slots > 0:
+	if not _skill_test.is_empty():
+		result = await Session.start_board_skill_test(_skill_test)
+	elif _test_slots > 0:
 		result = await Session.start_board_test_battle(_test_enemies(), _test_slots)
 	elif _against_tamer:
 		result = await Session.start_board_tamer_battle(_coord)
@@ -1458,7 +1467,8 @@ func _play_end_music(result: String) -> void:
 
 
 func _show_exit(text: String, needs_reload: bool) -> void:
-	_needs_reload = needs_reload
+	# A luta de teste não grava nada: não há o que recarregar.
+	_needs_reload = needs_reload and _skill_test.is_empty()
 	_exit_button.text = EXIT_TO_HUB_TEXT if _exits_to_hub() else EXIT_TEXT
 	_board.light([], Color.TRANSPARENT)
 	_result_label.text = text
@@ -1486,6 +1496,24 @@ func _leave() -> void:
 		Home.go()
 	else:
 		Router.back()
+
+
+func _add_retry_button() -> void:
+	_retry_button = Button.new()
+	_retry_button.text = RETRY_TEXT
+	_retry_button.theme_type_variation = BattleTheme.BUTTON
+	_retry_button.custom_minimum_size = _exit_button.custom_minimum_size
+	_retry_button.pressed.connect(_retry)
+	_result_box.add_child(_retry_button)
+	_result_box.move_child(_retry_button, _exit_button.get_index())
+
+
+func _retry() -> void:
+	if _leaving:
+		return
+	_leaving = true
+	Music.play_battle(&"wild")
+	Router.replace(&"board_battle", {"skill_test": _skill_test})
 
 
 func _result_text() -> String:

@@ -20,6 +20,8 @@ export interface StoredBattle {
   catalog: BattleCatalog;
   wilds: WildCreature[];
   tamer?: BattleTamer | null;
+  /** A luta de teste da Técnica (skill-test/01): o fim não grava nada. */
+  sandbox?: boolean;
 }
 
 interface Entry {

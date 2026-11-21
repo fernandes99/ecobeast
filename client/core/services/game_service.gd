@@ -75,6 +75,11 @@ extends RefCounted
 @abstract func start_board_test_battle(enemies: Array[Dictionary], slots: int) -> Result
 
 
+## A luta de teste da Técnica do F1 (skill-test/02): `skill_id`, `species_id`,
+## `enemy_species_id`, `level` e `enemy_idle`. Nada dela é gravado.
+@abstract func start_board_skill_test(test: Dictionary) -> Result
+
+
 @abstract func board_action(body: Dictionary) -> Result
 
 

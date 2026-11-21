@@ -104,6 +104,9 @@ export interface BoardOptions {
   canFlee?: boolean;
   opponent?: Opponent;
   board?: Board;
+  freeSkills?: boolean;
+  idleEnemies?: boolean;
+  noRewards?: boolean;
 }
 
 export function startBoardBattle(
@@ -120,6 +123,9 @@ export function startBoardBattle(
     canFlee = true,
     opponent = 'wild',
     board = makeBoard(),
+    freeSkills = false,
+    idleEnemies = false,
+    noRewards = false,
   }: BoardOptions = {},
 ): BoardOutcome {
   const playerSide = newSide(player, slots.player);
@@ -144,6 +150,9 @@ export function startBoardBattle(
     round: 0,
     queue: [],
     entryCells: [],
+    freeSkills,
+    idleEnemies,
+    noRewards,
   };
   const context: BoardContext = {
     state,
@@ -353,7 +362,13 @@ function advance(context: BoardContext): void {
     combatantAt(state, spot).isProtected = false;
     context.events.push({ type: 'vez_started', ...spot });
     if (head.side === 'player') return;
-    playVez(context, spot, chooseEnemyVez(state, catalog, random, spot));
+    playVez(
+      context,
+      spot,
+      state.idleEnemies
+        ? { position: spot.position, action: { type: 'wait' } }
+        : chooseEnemyVez(state, catalog, random, spot),
+    );
   }
 }
 
@@ -457,7 +472,7 @@ function useSkill(
     return;
   }
 
-  if (learned) {
+  if (learned && !(state.freeSkills && spot.side === 'player')) {
     learned.currentPp -= 1;
     startCooldown(learned, state.round, skill.cooldown);
   }

@@ -147,6 +147,8 @@ export interface BattleState {
   coins: number;
   coinsChange: number;
   partyFree: number;
+  /** A luta de teste da Técnica (skill-test/01): sem XP e sem moedas. */
+  noRewards?: boolean;
 }
 
 export type BattleAction = { position?: number } & (

@@ -4,6 +4,14 @@ extends ListDetail
 const ICON_BOX := Vector2(104, 104)
 const LEVEL_UP := "level_up"
 const MINUS := "−"
+const TEST_LEVEL := 50
+const MAX_TEST_LEVEL := 100
+const FALLBACK_SPECIES := 1
+const NO_PLAYER_TEXT := "Entre na sua conta primeiro."
+const BATTLE_OPEN_TEXT := "Termine a luta aberta primeiro."
+
+## O oponente do último teste, enquanto o jogo está aberto.
+static var _last_enemy_id := FALLBACK_SPECIES
 
 var _return_id := -1
 
@@ -67,11 +75,112 @@ func _header(skill: Dictionary, icon: ContentFiles.Entry, box: VBoxContainer) ->
 	facts.add_child(ContentViewer.text(ContentViewer.row_name("skill_categories", skill.get("skill_category_id")), 0, UiPalette.TEXT_SECONDARY))
 	info.add_child(facts)
 	info.add_child(ContentViewer.paragraph(str(skill.get("description", ""))))
+	var buttons := VBoxContainer.new()
+	buttons.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	header.add_child(buttons)
 	var edit_button := Button.new()
 	edit_button.text = "Editar"
-	edit_button.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	edit_button.pressed.connect(_edit.bind(int(skill["id"])))
-	header.add_child(edit_button)
+	buttons.add_child(edit_button)
+	var test_panel := _test_panel(int(skill["id"]), box)
+	var test_button := Button.new()
+	test_button.text = "Testar técnica"
+	test_button.toggle_mode = true
+	test_button.toggled.connect(func(on: bool) -> void: test_panel.visible = on)
+	buttons.add_child(test_button)
+
+
+## O painel do Testar técnica (skill-test/02): quem usa, o oponente, o nível e o
+## oponente parado, e o Começar, que abre a luta na janela principal.
+func _test_panel(skill_id: int, box: VBoxContainer) -> Control:
+	var panel := ContentViewer.block(box, "Testar técnica")
+	var holder := panel.get_parent() as Control
+	holder.visible = false
+	var grid := GridContainer.new()
+	grid.columns = 2
+	grid.add_theme_constant_override(&"h_separation", 14)
+	grid.add_theme_constant_override(&"v_separation", 6)
+	panel.add_child(grid)
+	var learners := _learner_ids(skill_id)
+	var user := _species_choice(learners)
+	var first_user := learners[0] if not learners.is_empty() else FALLBACK_SPECIES
+	user.select(user.get_item_index(first_user))
+	grid.add_child(ContentViewer.text("Quem usa", 0, UiPalette.TEXT_SECONDARY))
+	grid.add_child(user)
+	var enemy := _species_choice([])
+	var enemy_index := enemy.get_item_index(_last_enemy_id)
+	enemy.select(enemy_index if enemy_index >= 0 else enemy.get_item_index(FALLBACK_SPECIES))
+	grid.add_child(ContentViewer.text("Oponente", 0, UiPalette.TEXT_SECONDARY))
+	grid.add_child(enemy)
+	var level := SpinBox.new()
+	level.min_value = 1
+	level.max_value = MAX_TEST_LEVEL
+	level.value = TEST_LEVEL
+	grid.add_child(ContentViewer.text("Nível", 0, UiPalette.TEXT_SECONDARY))
+	grid.add_child(level)
+	var idle := CheckBox.new()
+	idle.text = "Oponente parado"
+	idle.button_pressed = true
+	panel.add_child(idle)
+	var message := ContentViewer.text("", 0, UiPalette.TEXT_SECONDARY)
+	message.visible = false
+	var start := Button.new()
+	start.text = "Começar"
+	start.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	start.pressed.connect(func() -> void:
+		var test := {
+			"skill_id": skill_id,
+			"species_id": user.get_selected_id(),
+			"enemy_species_id": enemy.get_selected_id(),
+			"level": int(level.value),
+			"enemy_idle": idle.button_pressed,
+		}
+		_start_test(test, message))
+	panel.add_child(start)
+	panel.add_child(message)
+	return holder
+
+
+## Primeiro quem aprende a Técnica, na ordem do id, e depois as outras espécies.
+func _species_choice(first: Array[int]) -> OptionButton:
+	var choice := OptionButton.new()
+	for species_id: int in first:
+		var species := GameData.get_species(species_id)
+		if species != null:
+			choice.add_item("%s (aprende)" % species.name, species.id)
+	if not first.is_empty():
+		choice.add_separator()
+	for species: CreatureSpecies in GameData.get_all_species():
+		if not first.has(species.id):
+			choice.add_item(species.name, species.id)
+	return choice
+
+
+func _learner_ids(skill_id: int) -> Array[int]:
+	var ids: Array[int] = []
+	for row: Dictionary in GameData.get_rows("species_skills"):
+		var species_id := int(row["species_id"])
+		if int(row["skill_id"]) == skill_id and not ids.has(species_id):
+			ids.append(species_id)
+	ids.sort()
+	return ids
+
+
+func _start_test(test: Dictionary, message: Label) -> void:
+	var refusal := ""
+	if Session.player == null:
+		refusal = NO_PLAYER_TEXT
+	elif Router.current_id() == &"board_battle":
+		refusal = BATTLE_OPEN_TEXT
+	message.text = refusal
+	message.visible = not refusal.is_empty()
+	if not refusal.is_empty():
+		return
+	_last_enemy_id = test["enemy_species_id"]
+	var center := BattleIntro.get_viewport().get_visible_rect().size / 2.0
+	if not await BattleIntro.cover(center, &"wild"):
+		return
+	Router.push(&"board_battle", {"skill_test": test})
 
 
 func _edit(id: int) -> void:

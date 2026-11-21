@@ -31,6 +31,7 @@ import {
   startBoardBattle,
 } from '../domain/board/board-engine.js';
 import { rollBoard } from '../domain/board/board.js';
+import { borrowedCombatant } from '../domain/board/skill-test.js';
 import type { BoardInput, BoardState } from '../domain/board/types.js';
 import type { HexCoord } from '../domain/exploration/hex.js';
 import { rollChallenger, type TamerCreature } from '../domain/tamers/tamers.js';
@@ -41,7 +42,10 @@ import {
   partyAverageLevel,
 } from '../exploration/spawn-data.js';
 import { PrismaService } from '../prisma/prisma.service.js';
-import type { BoardBattleResponseDto } from './board-battle.dto.js';
+import {
+  INVALID_SKILL_TEST,
+  type BoardBattleResponseDto,
+} from './board-battle.dto.js';
 import { toBoardBattleDto } from './board-battle.mapper.js';
 
 const NOT_FINISHED: BattleFinish = {
@@ -76,6 +80,16 @@ interface BeginOptions {
   slots?: number;
   opponent?: Opponent;
   tamer?: BattleTamer | null;
+  sandbox?: boolean;
+  idleEnemies?: boolean;
+}
+
+export interface SkillTest {
+  skillId: number;
+  speciesId: number;
+  enemySpeciesId: number;
+  level: number;
+  enemyIdle: boolean;
 }
 
 @Injectable()
@@ -95,12 +109,44 @@ export class BoardBattleService {
     choices: EnemyChoice[],
     slots = 1,
   ): Promise<BoardBattleResponseDto> {
-    if (!this.config.get('ENABLE_TEST_BATTLE', { infer: true })) {
-      throw new NotFoundException('Rota não encontrada.');
-    }
+    this.requireTestBattle();
     const team = await this.records.loadTeam(userId);
     const enemies = await this.records.createEnemies(choices);
     return this.begin(userId, team, enemies, { slots });
+  }
+
+  /**
+   * A luta de teste da Técnica (skill-test/01): um Ecobeast emprestado, fora da
+   * equipe, contra o oponente pedido. Nada dela é gravado.
+   */
+  async startSkillTest(
+    userId: string,
+    test: SkillTest,
+  ): Promise<BoardBattleResponseDto> {
+    this.requireTestBattle();
+    const skill = await this.prisma.skill.findUnique({
+      where: { id: test.skillId },
+      select: { id: true, maxPp: true },
+    });
+    if (!skill) throw new BadRequestException(INVALID_SKILL_TEST);
+    const [user, enemy] = await Promise.all([
+      this.records.createEnemy(test.speciesId, test.level),
+      this.records.createEnemy(test.enemySpeciesId, test.level),
+    ]).catch((error: unknown) => {
+      if (error instanceof BadRequestException) {
+        throw new BadRequestException(INVALID_SKILL_TEST);
+      }
+      throw error;
+    });
+    const team: Team = {
+      creatures: [borrowedCombatant(user.combatant, skill)],
+      bag: [],
+      coins: 0,
+    };
+    return this.begin(userId, team, [enemy], {
+      sandbox: true,
+      idleEnemies: test.enemyIdle,
+    });
   }
 
   async startWild(
@@ -179,10 +225,11 @@ export class BoardBattleService {
 
     if (outcome.state.phase !== 'ended') {
       this.store.set(userId, { ...battle, state: outcome.state });
-      await this.recordSeen(userId, outcome.events);
+      if (!battle.sandbox) await this.recordSeen(userId, outcome.events);
       return toResponse(outcome.state, outcome.events, tamer);
     }
     this.store.delete(userId);
+    if (battle.sandbox) return toResponse(outcome.state, outcome.events, tamer);
     await this.recordSeen(userId, outcome.events);
     const finish = await this.finish(
       userId,
@@ -206,6 +253,12 @@ export class BoardBattleService {
       await this.codex.recordSeen(userId, enemySpeciesEntered(events));
     } catch (error) {
       this.logger.error('Não deu para gravar o visto no Bestiário.', error);
+    }
+  }
+
+  private requireTestBattle(): void {
+    if (!this.config.get('ENABLE_TEST_BATTLE', { infer: true })) {
+      throw new NotFoundException('Rota não encontrada.');
     }
   }
 
@@ -241,6 +294,8 @@ export class BoardBattleService {
       slots = 1,
       opponent = 'wild',
       tamer = null,
+      sandbox = false,
+      idleEnemies = false,
     }: BeginOptions = {},
   ): Promise<BoardBattleResponseDto> {
     const catalog = await loadBattleCatalog(this.prisma);
@@ -257,9 +312,12 @@ export class BoardBattleService {
         godMode,
         coins: team.coins,
         slots: { player: Math.min(slots, standing), enemy: slots },
-        partyFree: PARTY_SIZE - team.creatures.length,
+        partyFree: sandbox ? 0 : PARTY_SIZE - team.creatures.length,
         opponent,
         board: rollBoard(slots, secureRandom),
+        freeSkills: sandbox,
+        idleEnemies,
+        noRewards: sandbox,
       },
     );
     const wilds = enemies.map(({ creature, statIds }) => ({
@@ -270,12 +328,13 @@ export class BoardBattleService {
     // é gravado aqui, e não fica luta nenhuma, nem a anterior.
     if (state.phase === 'ended') {
       this.store.delete(userId);
+      if (sandbox) return toResponse(state, events, tamer);
       await this.recordSeen(userId, events);
       const finish = await this.finish(userId, state, wilds, tamer);
       return toResponse(state, events, tamer, finish);
     }
-    this.store.set(userId, { state, catalog, wilds, tamer });
-    await this.recordSeen(userId, events);
+    this.store.set(userId, { state, catalog, wilds, tamer, sandbox });
+    if (!sandbox) await this.recordSeen(userId, events);
     return toResponse(state, events, tamer);
   }
 }

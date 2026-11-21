@@ -70,6 +70,22 @@ func can_go_back() -> bool:
 	return _stack.size() > 1
 
 
+## Troca a tela do topo por uma nova, sem mostrar a de baixo no meio.
+func replace(id: StringName, params: Dictionary = {}) -> void:
+	var screen := _instantiate(id, params)
+	if screen == null:
+		return
+	if not _stack.is_empty():
+		_stack.pop_back().queue_free()
+	_open(screen)
+
+
+func current_id() -> StringName:
+	if _stack.is_empty():
+		return &""
+	return _stack.back().get_meta(SCREEN_ID_META, &"")
+
+
 func _instantiate(id: StringName, params: Dictionary) -> Control:
 	if _host == null:
 		push_error("Router: set_host() não foi chamado antes de abrir '%s'" % id)

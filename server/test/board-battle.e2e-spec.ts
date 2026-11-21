@@ -103,6 +103,7 @@ describe('Rotas da luta no tabuleiro (e2e)', () => {
     await prisma.creatureInstance.updateMany({ where: { playerId: id }, data });
     return {
       id,
+      token: auth.Authorization.slice('Bearer '.length),
       start: (body: object) =>
         http().post('/v1/me/board-battle').set(auth).send(body),
       wild: (body: object = HERE) =>
@@ -562,6 +563,100 @@ describe('Rotas da luta no tabuleiro (e2e)', () => {
     expect(res.body.message).toBe('Nada por aqui.');
   });
 
+  describe('luta de teste da Técnica (skill-test/01)', () => {
+    const skillTest = (user: User, body: object) =>
+      request(app.getHttpServer())
+        .post('/v1/me/board-battle/skill-test')
+        .set({ Authorization: `Bearer ${user.token}` })
+        .send(body);
+
+    it('põe a Técnica no 1º espaço e, lutando até o fim, não grava nada no jogador', async () => {
+      const user = await userWithStarter({ level: 20, currentHp: 30 });
+      const scratch = await prisma.skill.findUniqueOrThrow({
+        where: { slug: 'arranhao' },
+      });
+      const before = await team(user);
+      const coins = await coinsOf(user);
+      const codex = await prisma.codexEntry.findMany({
+        where: { playerId: user.id },
+      });
+      const res = await skillTest(user, {
+        skill_id: scratch.id,
+        species_id: RUVO,
+        enemy_species_id: RUVO,
+        level: 30,
+        enemy_idle: true,
+      }).expect(201);
+      const first = res.body as BoardBody & {
+        battle: { player: { team: { skills: { skill_id: number }[] }[] } };
+      };
+      expect(first.battle.player.team).toHaveLength(1);
+      expect(first.battle.player.team[0]!.skills[0]).toMatchObject({
+        skill_id: scratch.id,
+        current_pp: scratch.maxPp,
+      });
+
+      const last = await playOut(user, first);
+      expect(last.battle.result).toBe('victory');
+      expect(last.battle.player.team[0]!.skills[0]!.current_pp).toBe(
+        scratch.maxPp,
+      );
+      expect(last.progression).toEqual([]);
+      expect(last.events.map((event) => event.type)).not.toContain(
+        'xp_gained',
+      );
+      expect(await team(user)).toEqual(before);
+      expect(await coinsOf(user)).toBe(coins);
+      expect(
+        await prisma.codexEntry.findMany({ where: { playerId: user.id } }),
+      ).toEqual(codex);
+    });
+
+    it('com o oponente parado, ele só passa a vez', async () => {
+      const user = await strongUser();
+      const scratch = await prisma.skill.findUniqueOrThrow({
+        where: { slug: 'arranhao' },
+      });
+      const first = (
+        await skillTest(user, {
+          skill_id: scratch.id,
+          species_id: RUVO,
+          enemy_species_id: RUVO,
+          enemy_idle: true,
+        }).expect(201)
+      ).body as BoardBody;
+      const body = await act(user, waitVez(first.battle));
+      expect(body.events).toContainEqual(
+        expect.objectContaining({ type: 'waited', side: 'enemy' }),
+      );
+      expect(
+        body.events.filter(
+          (event) => event.type === 'skill_used' && event.side === 'enemy',
+        ),
+      ).toEqual([]);
+    });
+
+    it('uma Técnica que não existe dá 400', async () => {
+      const user = await strongUser();
+      const res = await skillTest(user, {
+        skill_id: 999_999,
+        species_id: RUVO,
+        enemy_species_id: RUVO,
+      }).expect(400);
+      expect(res.body.message).toBe('Técnica, espécie ou nível inválidos.');
+    });
+
+    it('uma espécie que não existe dá 400', async () => {
+      const user = await strongUser();
+      const res = await skillTest(user, {
+        skill_id: 1,
+        species_id: RUVO,
+        enemy_species_id: 999_999,
+      }).expect(400);
+      expect(res.body.message).toBe('Técnica, espécie ou nível inválidos.');
+    });
+  });
+
   it('sem luta no tabuleiro, a vez dá 404', async () => {
     const user = await strongUser();
     const res = await user
@@ -577,6 +672,7 @@ describe('Rotas da luta no tabuleiro (e2e)', () => {
     expect(doc.paths['/v1/me/board-battle']?.post).toBeDefined();
     expect(doc.paths['/v1/me/board-battle/wild']?.post).toBeDefined();
     expect(doc.paths['/v1/me/board-battle/action']?.post).toBeDefined();
+    expect(doc.paths['/v1/me/board-battle/skill-test']?.post).toBeDefined();
   });
 
   it('o /docs não tem mais as rotas da luta antiga', async () => {

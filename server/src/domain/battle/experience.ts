@@ -40,6 +40,7 @@ export function recordEntry(context: TurnContext, spot: Spot): void {
 
 export function awardXp(context: TurnContext, enemy: Combatant): void {
   const { state, catalog, events } = context;
+  if (state.noRewards) return;
   const receivers = [...enemy.foughtBy]
     .sort((a, b) => a - b)
     .filter((index) => {
@@ -69,6 +70,7 @@ export function settleCoins(
   fielders: Combatant[] = fieldCreatures(context.state, 'player'),
 ): void {
   const { state, events, random } = context;
+  if (state.noRewards) return;
   const fielderLevel = averageLevel(fielders);
   const tamer = state.opponent === 'tamer';
   if (result === 'victory') {

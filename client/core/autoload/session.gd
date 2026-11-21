@@ -283,6 +283,11 @@ func start_board_test_battle(enemies: Array[Dictionary], slots: int) -> Result:
 	return await _service.start_board_test_battle(enemies, slots)
 
 
+func start_board_skill_test(test: Dictionary) -> Result:
+	@warning_ignore("redundant_await")
+	return await _service.start_board_skill_test(test)
+
+
 func board_action(body: Dictionary) -> Result:
 	@warning_ignore("redundant_await")
 	return await _service.board_action(body)

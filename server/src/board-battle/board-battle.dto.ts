@@ -4,6 +4,7 @@ import {
   ArrayMaxSize,
   ArrayMinSize,
   IsArray,
+  IsBoolean,
   IsDefined,
   IsIn,
   IsInt,
@@ -27,6 +28,7 @@ import {
 import { MAX_SLOTS } from '../domain/battle/field.js';
 import type { BattleEvent, SideSlug } from '../domain/battle/types.js';
 import type { BoardAction } from '../domain/board/types.js';
+import { MAX_LEVEL } from '../domain/rules/xp-curve.js';
 
 const ACTION_TYPES: BoardAction['type'][] = [
   'skill',
@@ -69,6 +71,44 @@ export class StartBoardBattleBodyDto {
   @Min(1, { message: INVALID_ENEMY })
   @Max(MAX_SLOTS, { message: INVALID_ENEMY })
   slots?: number;
+}
+
+export const INVALID_SKILL_TEST = 'Técnica, espécie ou nível inválidos.';
+export const SKILL_TEST_LEVEL = 50;
+
+export class StartSkillTestBodyDto {
+  @ApiProperty({ description: 'A Técnica testada.', example: 84 })
+  @IsInt({ message: INVALID_SKILL_TEST })
+  skill_id: number;
+
+  @ApiProperty({
+    description: 'A espécie do Ecobeast emprestado, que usa a Técnica.',
+    example: 26,
+  })
+  @IsInt({ message: INVALID_SKILL_TEST })
+  species_id: number;
+
+  @ApiProperty({ description: 'A espécie do oponente.', example: 1 })
+  @IsInt({ message: INVALID_SKILL_TEST })
+  enemy_species_id: number;
+
+  @ApiPropertyOptional({
+    description: `O nível dos dois, de 1 a ${MAX_LEVEL}. ${SKILL_TEST_LEVEL} sem ele.`,
+    example: SKILL_TEST_LEVEL,
+  })
+  @IsOptional()
+  @IsInt({ message: INVALID_SKILL_TEST })
+  @Min(1, { message: INVALID_SKILL_TEST })
+  @Max(MAX_LEVEL, { message: INVALID_SKILL_TEST })
+  level?: number;
+
+  @ApiPropertyOptional({
+    description: 'O oponente só passa a vez. `false` sem ele.',
+    example: true,
+  })
+  @IsOptional()
+  @IsBoolean({ message: INVALID_SKILL_TEST })
+  enemy_idle?: boolean;
 }
 
 export class BoardActionDto {

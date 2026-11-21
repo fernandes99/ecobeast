@@ -20,6 +20,7 @@ const BOARD_BATTLE_PATH := "/v1/me/board-battle"
 const BOARD_WILD_PATH := "/v1/me/board-battle/wild"
 const BOARD_TAMER_PATH := "/v1/me/board-battle/tamer"
 const BOARD_CHALLENGE_PATH := "/v1/me/board-battle/challenge"
+const BOARD_SKILL_TEST_PATH := "/v1/me/board-battle/skill-test"
 const BOARD_ACTION_PATH := "/v1/me/board-battle/action"
 const DEBUG_XP_PATH := "/v1/me/debug/xp"
 const DEBUG_SPAWNS_PATH := "/v1/me/exploration/spawns"
@@ -201,6 +202,10 @@ func start_board_challenge() -> Result:
 func start_board_test_battle(enemies: Array[Dictionary], slots: int) -> Result:
 	var body := {"enemies": enemies, "slots": slots}
 	return _board_result(await Api.request(HTTPClient.METHOD_POST, BOARD_BATTLE_PATH, body, true))
+
+
+func start_board_skill_test(test: Dictionary) -> Result:
+	return _board_result(await Api.request(HTTPClient.METHOD_POST, BOARD_SKILL_TEST_PATH, test, true))
 
 
 func board_action(body: Dictionary) -> Result:

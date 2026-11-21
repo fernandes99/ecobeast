@@ -1227,3 +1227,131 @@ describe('A marca que cura e a Areia Movediça (field-effects/01)', () => {
     }
   });
 });
+
+describe('luta de teste da Técnica (skill-test/01)', () => {
+  const SLOW = makeSkill({ id: 30, cooldown: 2 });
+  const withSlow = boardCatalog([SLOW]);
+  const strike = {
+    position: 0,
+    action: { type: 'skill', slot: 1, target: at(2, 3) } as const,
+  };
+
+  function nextToSleeper(overrides: Partial<BoardState> = {}): BoardState {
+    return makeBoardState(
+      [fighter(30, { skills: [{ skillId: SLOW.id, currentPp: 10 }] })],
+      [wild(5, ASLEEP)],
+      { cells: { player: [at(2, 4)], enemy: [at(2, 3)] } },
+      overrides,
+    );
+  }
+
+  it('com freeSkills, a Técnica do jogador volta na hora e não gasta PP', () => {
+    const first = playVez(
+      nextToSleeper({ freeSkills: true }),
+      strike,
+      withSlow,
+    ).state;
+    const second = playVez(first, strike, withSlow);
+    expect(eventsOf(second.events, 'skill_used')[0]).toMatchObject({
+      side: 'player',
+    });
+    expect(second.state.player.team[0]!.skills[0]!.currentPp).toBe(10);
+  });
+
+  it('sem freeSkills, a mesma Técnica espera o countdown', () => {
+    const first = playVez(nextToSleeper(), strike, withSlow).state;
+    expect(first.player.team[0]!.skills[0]!.currentPp).toBe(9);
+    expect(applyBoardVez(first, strike, withSlow, always(0.5))).toEqual({
+      error: NOT_READY,
+    });
+  });
+
+  it('a abertura guarda as duas opções no estado', () => {
+    const { state } = startBoardBattle(
+      [fighter(30)],
+      [wild(5)],
+      catalog,
+      always(0.5),
+      [],
+      { freeSkills: true, idleEnemies: true },
+    );
+    expect(state.freeSkills).toBe(true);
+    expect(state.idleEnemies).toBe(true);
+  });
+
+  it('com noRewards, derrubar o último selvagem vence sem XP nem moedas', () => {
+    const rewarding = boardCatalog();
+    rewarding.xpYields.set(7, 50);
+    const { state, events } = playVez(
+      makeBoardState(
+        [fighter(30)],
+        [wild(5, { currentHp: 1 })],
+        { cells: { enemy: [at(2, 4)] } },
+        { noRewards: true },
+      ),
+      {
+        position: 0,
+        action: { type: 'skill', slot: SCRATCH_SLOT, target: at(2, 4) },
+      },
+      rewarding,
+    );
+    expect(state.result).toBe('victory');
+    expect(types(events)).not.toContain('xp_gained');
+    expect(types(events)).not.toContain('coins_gained');
+    expect(state.player.team[0]!.xpEarned).toBe(0);
+    expect(state.coinsChange).toBe(0);
+  });
+
+  it('com noRewards, perder não tira moedas', () => {
+    const { state, events } = playVez(
+      makeBoardState(
+        [fighter(5, { currentHp: 1 })],
+        [wild(30)],
+        {
+          cells: { player: [at(2, 4)], enemy: [at(2, 3)] },
+          queue: [
+            { side: 'player', position: 0 },
+            { side: 'enemy', position: 0 },
+          ],
+        },
+        { noRewards: true, coins: 500 },
+      ),
+      { position: 0, action: { type: 'wait' } },
+      catalog,
+    );
+    expect(state.result).toBe('defeat');
+    expect(types(events)).not.toContain('coins_lost');
+    expect(state.coinsChange).toBe(0);
+  });
+
+  it('com idleEnemies, o inimigo passa a vez, e o veneno nele ainda conta', () => {
+    const state = makeBoardState(
+      [fighter(30)],
+      [wild(5, { statusSlug: 'poison' })],
+      {
+        cells: { player: [at(2, 4)], enemy: [at(2, 3)] },
+        queue: [
+          { side: 'player', position: 0 },
+          { side: 'enemy', position: 0 },
+        ],
+      },
+      { idleEnemies: true },
+    );
+    const { events } = playVez(
+      state,
+      { position: 0, action: { type: 'wait' } },
+      catalog,
+    );
+    expect(
+      events.filter(
+        (event) => event.type === 'skill_used' && event.side === 'enemy',
+      ),
+    ).toHaveLength(0);
+    expect(eventsOf(events, 'waited')).toContainEqual(
+      expect.objectContaining({ side: 'enemy' }),
+    );
+    expect(eventsOf(events, 'status_damage')).toContainEqual(
+      expect.objectContaining({ side: 'enemy' }),
+    );
+  });
+});

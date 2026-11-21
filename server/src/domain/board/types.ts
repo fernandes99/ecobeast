@@ -35,6 +35,10 @@ export interface BoardState extends BattleState {
   round: number;
   queue: QueueEntry[];
   entryCells: HexCoord[];
+  /** Luta de teste da Técnica (skill-test/01): o jogador não gasta PP nem espera o countdown. */
+  freeSkills?: boolean;
+  /** Luta de teste da Técnica: os inimigos só passam a vez. */
+  idleEnemies?: boolean;
 }
 
 export interface BoardContext extends TurnContext {

@@ -29,7 +29,10 @@ import { NO_BATTLE } from '../battle/battle.dto.js';
 import {
   BoardBattleResponseDto,
   BoardVezBodyDto,
+  INVALID_SKILL_TEST,
+  SKILL_TEST_LEVEL,
   StartBoardBattleBodyDto,
+  StartSkillTestBodyDto,
 } from './board-battle.dto.js';
 import { toBoardInput } from './board-battle.mapper.js';
 import { BoardBattleService } from './board-battle.service.js';
@@ -77,6 +80,36 @@ export class BoardBattleController {
       })),
       body.slots ?? 1,
     );
+  }
+
+  @Post('skill-test')
+  @ApiOperation({
+    summary: 'Começar a luta de teste de uma Técnica',
+    description:
+      'O Testar técnica do F1: uma luta 1×1 com um Ecobeast emprestado de ' +
+      '`species_id`, com a Técnica `skill_id` no 1º espaço, contra um ' +
+      '`enemy_species_id`, os dois no `level`. Do lado do jogador, as Técnicas ' +
+      'não gastam PP nem esperam o countdown; com `enemy_idle`, o oponente só ' +
+      'passa a vez. Sem itens nem moedas, e nada da luta é gravado: nem a ' +
+      'equipe, nem o Bestiário. A rota só existe com `ENABLE_TEST_BATTLE` ' +
+      'ligada. Uma luta em andamento, de qualquer tipo, é descartada.',
+  })
+  @ApiCreatedResponse({ type: BoardBattleResponseDto })
+  @ApiBadRequestResponse({
+    description: `Técnica, espécie ou nível inválidos: "${INVALID_SKILL_TEST}"`,
+  })
+  @ApiNotFoundResponse({ description: '`ENABLE_TEST_BATTLE` desligada.' })
+  startSkillTest(
+    @CurrentUser() userId: string,
+    @Body() body: StartSkillTestBodyDto,
+  ): Promise<BoardBattleResponseDto> {
+    return this.battles.startSkillTest(userId, {
+      skillId: body.skill_id,
+      speciesId: body.species_id,
+      enemySpeciesId: body.enemy_species_id,
+      level: body.level ?? SKILL_TEST_LEVEL,
+      enemyIdle: body.enemy_idle === true,
+    });
   }
 
   @Post('wild')

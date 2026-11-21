@@ -104,6 +104,7 @@ O Ecobeast é um jogo mobile (Android/iOS, retrato): o cliente em **Godot 4.7 co
 | [prayling-line](prayling-line/) | O louva-a-deus, a primeira linha de Inseto: Prayling e Mantorn, que evolui no Solantis (Inseto/Luz) de dia ou no Umbrantis (Inseto/Sombra) à noite, com a evolução por horário no servidor e as primeiras Técnicas de Inseto e de Luz |
 | [bond](bond/) | O Vínculo do Domador com cada Ecobeast, e a evolução por Vínculo |
 | [map-realism](map-realism/) | O mapa sorteado com um clima por mapa, a Neve longe da Planície e do Deserto, um relevo só e sem o Vau |
+| [skill-test](skill-test/) | O Testar técnica do F1: uma luta de verdade com um Ecobeast emprestado, o oponente escolhido e nada gravado |
 | [giant-rocks](giant-rocks/) | As pedras gigantes da Montanha, como peças do F2 e sorteadas nas Montanhas do mapa sorteado, bloqueando pelo pé |
 | [sea-life](sea-life/) | As algas, as pedras e o lixo da Água rasa e da profunda, na Comum e em zonas (Algal, Pedras rasas, Floresta de algas, Rochedo e Lixo), e como peças do F2 |
 
