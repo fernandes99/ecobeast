@@ -1,6 +1,6 @@
 # 01. O altar-portal
 
-- **Status:** concluída (falta o dono conferir)
+- **Status:** concluída (falta o dono conferir); a arte foi refeita e animada na [fase 2](02-altar-art.md)
 - **Depende de:** [free-props](../free-props/) (as peças soltas) e [day-night](../day-night/03-night-lights.md) (as luzes)
 
 ## Contexto

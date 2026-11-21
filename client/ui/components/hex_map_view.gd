@@ -101,6 +101,12 @@ const PROP_SMOKE: Dictionary[String, Dictionary] = {
 	"village_twin_house": {"offset": Vector2i(11, -162), "size": 48, "frames": 6, "fps": 6.0},
 	"village_row_house": {"offset": Vector2i(59, -162), "size": 48, "frames": 6, "fps": 6.0},
 }
+## As peças animadas (portal-altar/02): no mapa, a arte da variante vira os quadros lado a
+## lado em `<variante>_frames.png`, trocados no shader como os da fumaça.
+const FRAMES_PATH := "res://assets/props/%s/%d_frames.png"
+const PROP_FRAMES: Dictionary[String, Dictionary] = {
+	"portal_altar": {"frames": 16, "fps": 10.0},
+}
 const NO_PLACE := Vector2i(-2147483648, 0)
 ## O corte de altura do editor: acima dele, o hexágono fica transparente (terrain-height/03).
 const CUT_HEIGHT := 4
@@ -1401,6 +1407,10 @@ func _add_file_props(row: HexRowView, path: String, placed: Array) -> void:
 		return
 	placed.sort_custom(func(a: Array, b: Array) -> bool: return (a[0] as Vector2i).y < (b[0] as Vector2i).y)
 	var size := Vector2(texture.get_width(), texture.get_height())
+	var animation: Dictionary = PROP_FRAMES.get(path.get_base_dir().get_file(), {})
+	if not animation.is_empty():
+		_add_frame_props(row, path, size, animation, placed)
+		return
 	var sway: float = PROP_SWAY.get(path.get_base_dir().get_file(), 0.0)
 	var pad := ceilf(sway)
 	var points := PackedVector2Array()
@@ -1420,6 +1430,26 @@ func _add_file_props(row: HexRowView, path: String, placed: Array) -> void:
 	var slug := path.get_base_dir().get_file()
 	if PROP_SMOKE.has(slug):
 		_add_smoke(row, slug, int(size.x), placed)
+
+
+## Cada peça animada começa num ponto do ciclo, pelo ponto do pé (o `hash` do shader).
+func _add_frame_props(row: HexRowView, path: String, size: Vector2, animation: Dictionary, placed: Array) -> void:
+	var variant := int(path.get_file().get_basename())
+	var sheet := _texture(FRAMES_PATH % [path.get_base_dir().get_file(), variant])
+	var points := PackedVector2Array()
+	var texture_points := PackedVector2Array()
+	var wind := PackedFloat32Array()
+	var frames := PackedFloat32Array()
+	for entry: Array in placed:
+		var base: Vector2i = entry[0]
+		var top_left := Vector2(base) - Vector2(floorf(size.x / 2.0), size.y)
+		points.append_array(_quad(top_left, top_left + Vector2(size.x, 0.0), Vector2(0.0, size.y)))
+		var left := size.x if entry[1] else 0.0
+		texture_points.append_array(_quad(Vector2(left, 0.0), Vector2(size.x - left, 0.0), Vector2(0.0, size.y)))
+		for _vertex: int in 6:
+			wind.append_array(PackedFloat32Array([base.x, base.y, HexDecorations.NO_SWAY.x, HexDecorations.NO_SWAY.y]))
+			frames.append_array(PackedFloat32Array([2.0, float(animation["frames"]), float(animation["fps"]), 0.0]))
+	_add_texture_mesh(row, sheet, points, texture_points, PackedColorArray(), wind, frames)
 
 
 ## Os quadros da fumaça trocam no shader, cada casa num ponto do ciclo. A casa marcada

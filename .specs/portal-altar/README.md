@@ -33,7 +33,7 @@ Escolhas de Claude (corrigíveis; ao mudar uma, atualize aqui e na fase):
 | Decisão | Motivo |
 | --- | --- |
 | O tipo de peça 101 (`portal_altar`, "Altar-portal"), com 2 variantes | O 100 é o último tipo |
-| O altar é de pedra cinza, com um arco sobre dois pilares, a pedra-chave de cristal, um anel arcano gravado na base e um pedestal com bacia no meio | Foi o conceito que o dono aprovou |
+| O altar é de pedra (a da Casa grande desde a [fase 2](02-altar-art.md)), com um arco sobre dois pilares, a pedra-chave de cristal, um anel arcano gravado na base e um pedestal com bacia no meio | Foi o conceito que o dono aprovou |
 | A mariposa está desenhada na arte da variante 1, parada | O Veilmoth ainda não existe como espécie nem tem folhas de Explorar; quando tiver, ele pode virar um NPC em cima do altar vazio |
 | Uma paleta nova, Arcano, no [guia de estilo](../town-art/style-guide.md#detalhes) | O guia pede uma paleta para cada material novo |
 
@@ -41,10 +41,10 @@ Escolhas de Claude (corrigíveis; ao mudar uma, atualize aqui e na fase):
 
 - A espécie Veilmoth e Gatemoth, a arte de frente e as folhas do mapa.
 - A regra do teleporte: o altar liga só as ilhas que já têm a mariposa.
-- A animação da mariposa e do portal.
 
 ## Fases
 
 | # | Fase | Entrega | Status |
 | --- | --- | --- | --- |
 | 1 | [01-portal-altar](01-portal-altar.md) | O tipo de peça 101, com a arte, o bloqueio e as luzes | concluída (falta o dono conferir) |
+| 2 | [02-altar-art](02-altar-art.md) | A arte refeita na pedra da Casa grande e a animação de 16 quadros | concluída (falta o dono conferir no jogo) |

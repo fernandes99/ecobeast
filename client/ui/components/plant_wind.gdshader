@@ -20,7 +20,8 @@ uniform float map_time = 0.0;
 // porque a textura dela corre ao contrário. w: a altura da planta.
 varying flat vec4 plant;
 // A árvore dos pacotes (vegetation-wind/02): x é 1 e y a linha da base da copa na arte.
-// A fumaça da chaminé (home-pack/01): x é 2, y os quadros lado a lado e z os por segundo.
+// A fumaça da chaminé (home-pack/01) e as peças animadas (portal-altar/02): x é 2, y os
+// quadros lado a lado e z os por segundo.
 varying flat vec4 canopy;
 varying float map_y;
 
