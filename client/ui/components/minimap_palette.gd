@@ -13,6 +13,7 @@ const BIOMES: Dictionary[String, Color] = {
 	"desert": Color("#d9b35e"),
 	"snow": Color("#eef3f6"),
 	"beach": Color("#e3cf8f"),
+	"glacier": Color("#9fd4ee"),
 }
 const TRAIL := Color("#a8814f")
 const FLOOR := Color("#b9a58a")

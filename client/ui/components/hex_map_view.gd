@@ -38,7 +38,7 @@ const MAX_ZOOM := 4
 const STORY_MAX_ZOOM := 10
 const DEFAULT_ZOOM := 2
 const SURFACE_PATH := "res://assets/terrain/surfaces/%s.png"
-const CLIFF_BIOMES: Array[String] = ["stone", "mountain"]
+const CLIFF_BIOMES: Array[String] = ["stone", "mountain", "glacier"]
 ## A lateral da água é cachoeira, e o pé dela tem espuma no vizinho de baixo
 ## (water-motion). Os códigos são os do shader do terreno, no CUSTOM0.w.
 const WATERFALL_TEXTURE := "waterfall"

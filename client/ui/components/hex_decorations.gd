@@ -70,6 +70,12 @@ const KIND_ROWS: Dictionary[String, int] = {
 	"jug": 63,
 	"coconut_palm": 64,
 	"young_palm": 65,
+	"ice_crack": 66,
+	"ice_bubbles": 67,
+	"ice_chips": 68,
+	"snow_drift": 69,
+	"frozen_fish": 70,
+	"ice_floe": 71,
 }
 ## O espaço que cada tipo ocupa no chão, em pixels da arte. Ele também é a
 ## distância mínima do centro do hexágono, onde o jogador fica.
@@ -138,6 +144,12 @@ const KIND_RADIUS: Dictionary[String, float] = {
 	"jug": 5.0,
 	"coconut_palm": 12.0,
 	"young_palm": 10.0,
+	"ice_crack": 9.0,
+	"ice_bubbles": 6.0,
+	"ice_chips": 6.0,
+	"snow_drift": 8.0,
+	"frozen_fish": 7.0,
+	"ice_floe": 9.0,
 }
 const WIND_SHADER_PATH := "res://ui/components/plant_wind.gdshader"
 ## O vento em cada tipo: quantos pixels da arte o topo anda e a altura da planta, a
@@ -216,6 +228,10 @@ const RECIPES: Dictionary = {
 	"wdeep_trash": [["jug", 0.2, 1, 1], ["tire", 0.15, 1, 1], ["old_boot", 0.25, 1, 1], ["plastic_bag", 0.35, 1, 1], ["bottle", 0.5, 1, 2], ["can", 0.4, 1, 1]],
 	"wshallow_lake": [["sea_rock", 0.01, 1, 1], ["seagrass", 0.25, 1, 2]],
 	"wdeep_lake": [],
+	# A Geleira e o lago dela (glacier/01).
+	"glacier": [["ice_crack", 0.45, 1, 2], ["ice_bubbles", 0.3, 1, 1], ["ice_chips", 0.28, 1, 2], ["snow_drift", 0.3, 1, 1], ["ice_shards", 0.12, 1, 1], ["frozen_fish", 0.03, 1, 1]],
+	"wshallow_ice_lake": [["ice_floe", 0.35, 1, 2]],
+	"wdeep_ice_lake": [["ice_floe", 0.15, 1, 1]],
 }
 const PLACE_TRIES := 8
 static var _warned_zones: Dictionary = {}
