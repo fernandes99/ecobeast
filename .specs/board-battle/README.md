@@ -90,6 +90,8 @@ A luta nova substitui a de hoje em Explorar zona. A luta atual deixa de ser usad
 | 33 | [33-triangle-area](33-triangle-area.md) | A área Triângulo, de 3 hexágonos (o tocado e os 2 vizinhos do lado de lá), com o 1º toque mostrando a área e o 2º usando, e a Chama Espiral com ela | concluída (falta o dono conferir no jogo) |
 | 34 | [34-trail-skills](34-trail-skills.md) | As Técnicas de rastro, linha reta sem atravessar que pinta o chão até o primeiro inimigo: Cometa de Brasa, Jato Gotejante, Faísca Rastejante, Semente Saltitante, Cometa de Pólen, Bola de Lama, Estaca de Gelo, Dardo Gotejante e Pena Riscante | concluída (falta o dono conferir no jogo) |
 | 35 | [35-ground-mark-effects](35-ground-mark-effects.md) | O desenho animado de todas as marcas no chão: penas caindo, redemoinho, espinhos, faíscas, bolhas de lama e de veneno, cristais de gelo, areia puxando, flores e anéis de chuva | concluída (falta o dono conferir no jogo) |
+| 36 | [36-light-trail-skills-art](36-light-trail-skills-art.md) | Ícone, efeito e som do Raio de Sol, da Lâmina Solar, do Cometa de Brasa, do Jato Gotejante, da Faísca Rastejante e da Semente Saltitante, com o projétil das 5 que lançam algo | concluída (falta o dono ver e ouvir no jogo) |
+| 37 | [37-trail-pincer-skills-art](37-trail-pincer-skills-art.md) | Ícone, efeito e som do Cometa de Pólen, da Bola de Lama, da Estaca de Gelo, do Dardo Gotejante, da Pena Riscante e da Pinça Firme, com o projétil das 5 de rastro | concluída (falta o dono ver e ouvir no jogo) |
 
 O desenho compartilhado está no [architecture.md](architecture.md).
 

@@ -109,6 +109,18 @@ const EFFECTS := {
 	"golpe_de_foice": ["bug", "12/589"],
 	"emboscada": ["bug", "13/622"],
 	"danca_da_foice": ["bug", "12/586"],
+	"raio_de_sol": ["light", "14/652"],
+	"lamina_solar": ["light", "5/242"],
+	"cometa_de_brasa": ["fire", "9/448"],
+	"jato_gotejante": ["water", "7/336"],
+	"faisca_rastejante": ["volt", "11/506"],
+	"semente_saltitante": ["flora", "13/615"],
+	"cometa_de_polen": ["flora", "4/186"],
+	"bola_de_lama": ["earth", "11/519"],
+	"estaca_de_gelo": ["ice", "2/63"],
+	"dardo_gotejante": ["toxin", "9/428"],
+	"pena_riscante": ["wind", "1/24"],
+	"pinca_firme": ["bug", "2/64"],
 }
 
 const PROJECTILES := {
@@ -125,6 +137,16 @@ const PROJECTILES := {
 	"esguicho": ["water", "12/579"],
 	"pena_sombria": ["shadow", "12/579"],
 	"cuspe_acido": ["toxin", "12/579"],
+	"raio_de_sol": ["light", "12/579"],
+	"cometa_de_brasa": ["fire", "12/578"],
+	"jato_gotejante": ["water", "12/579"],
+	"faisca_rastejante": ["volt", "12/579"],
+	"semente_saltitante": ["flora", "12/578"],
+	"cometa_de_polen": ["flora", "12/578"],
+	"bola_de_lama": ["earth", "12/578"],
+	"estaca_de_gelo": ["ice", "12/579"],
+	"dardo_gotejante": ["toxin", "12/579"],
+	"pena_riscante": ["wind", "12/579"],
 }
 
 

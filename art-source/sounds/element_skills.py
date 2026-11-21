@@ -1,4 +1,4 @@
-"""Gera o som das Técnicas da board-battle/18 e /20 a /22 e /25 a /27 e /29 a /32 (board-battle/19 a /22, /25 a /27 e /29 a /32), por síntese:
+"""Gera o som das Técnicas da board-battle/18 e /20 a /22 e /25 a /27 e /29 a /32, /36 e /37 (board-battle/19 a /22, /25 a /27, /29 a /32, /36 e /37), por síntese:
 ruído em filtros, tons com a altura mudando e saturação leve. Cada som dura mais
 ou menos o efeito da Técnica, porque os dois começam juntos; o impacto fica com o
 som de dano. Tudo sai daqui: sem gravação de terceiros.
@@ -1294,6 +1294,211 @@ def danca_da_foice(rng):
     return mix, 1.6
 
 
+def raio_de_sol(rng):
+    """Raio de Sol: a luz juntando nas asas num tom que sobe e brilha, o raio saindo num
+    zumbido claro e um cintilar que ofusca no fim."""
+    length = 0.75
+    mix = silence(length)
+    for detune in (1.0, 1.5, 2.003):
+        charge = tone(0.32, [(0.0, 330.0 * detune), (0.32, 660.0 * detune)], (1.0, 0.3), (9.0, 0.006))
+        add(mix, shape(charge, [(0.0, 0.0), (0.25, 0.8), (0.32, 0.0)]), 0.0, 0.3)
+    add(mix, shape(high(noise(rng, 0.3), 6000.0), [(0.0, 0.0), (0.28, 0.6), (0.3, 0.0)]), 0.0, 0.3)
+    beam = tone(0.3, [(0.0, 880.0), (0.3, 820.0)], (1.0, 0.5, 0.35, 0.2), (31.0, 0.01))
+    add(mix, shape(beam, [(0.0, 0.0), (0.01, 1.0), (0.22, 0.7), (0.3, 0.0)]), 0.3, 0.5)
+    rush = band(noise(rng, 0.25), [(0.0, 2500.0), (0.25, 5500.0)], 1.2)
+    add(mix, shape(rush, [(0.0, 0.0), (0.02, 1.0), (0.25, 0.0)]), 0.3, 0.6)
+    for index, freq in enumerate((2093.0, 2637.0, 3136.0, 2637.0, 3520.0)):
+        add(mix, ping(freq, 0.16, ((1.0, 1.0), (2.0, 0.2))), 0.5 + index * 0.04, 0.22)
+    return mix, 1.5
+
+
+def lamina_solar(rng):
+    """Lâmina Solar: a foice acendendo num tom quente, o "shing" do corte que desce e um
+    clarão que tilinta e ofusca."""
+    length = 0.6
+    mix = silence(length)
+    glow = tone(0.18, [(0.0, 523.0), (0.18, 1046.0)], (1.0, 0.4, 0.2))
+    add(mix, shape(glow, [(0.0, 0.0), (0.15, 1.0), (0.18, 0.0)]), 0.0, 0.3)
+    add(mix, ping(3600.0, 0.14, ((1.0, 1.0), (1.47, 0.6), (2.31, 0.3))), 0.12, 0.35)
+    cut = band(noise(rng, 0.16), [(0.0, 5600.0), (0.16, 1200.0)], 2.5)
+    add(mix, shape(cut, [(0.0, 0.0), (0.03, 1.0), (0.16, 0.0)]), 0.15, 1.4)
+    add(mix, click(rng, 2600.0, 0.03, 1.5), 0.29, 1.1)
+    add(mix, thud(200.0, 80.0, 0.12), 0.29, 0.8)
+    for index, freq in enumerate((1568.0, 2093.0, 2637.0)):
+        add(mix, ping(freq, 0.22), 0.31 + index * 0.03, 0.25)
+    add(mix, shape(high(noise(rng, 0.25), 7000.0), [(0.0, 0.0), (0.02, 0.8), (0.25, 0.0)]), 0.31, 0.35)
+    return mix, 1.7
+
+
+def cometa_de_brasa(rng):
+    """Cometa de Brasa: o cometa rugindo e chegando cada vez mais forte, a explosão num baque
+    com estalos e o chão em chamas crepitando depois."""
+    length = 0.85
+    mix = silence(length)
+    roar = band(noise(rng, 0.4), [(0.0, 400.0), (0.4, 1500.0)], 0.9)
+    roar = [a + b for a, b in zip(roar, low(noise(rng, 0.4), 700.0))]
+    add(mix, flutter(rng, shape(roar, [(0.0, 0.0), (0.32, 1.0), (0.4, 0.6)]), 22.0, 0.5), 0.0, 0.9)
+    add(mix, crackles(rng, 0.4, 40.0, weight=0.6), 0.0, 1.0)
+    add(mix, thud(140.0, 40.0, 0.3), 0.38, 1.6)
+    add(mix, decay(low(noise(rng, 0.35), 900.0), 0.3, 0.002), 0.38, 1.1)
+    add(mix, decay(band(noise(rng, 0.2), 2400.0, 0.9), 0.15, 0.001), 0.38, 0.7)
+    burn = shape(band(noise(rng, 0.45), 800.0, 0.8), [(0.0, 0.0), (0.06, 1.0), (0.45, 0.0)])
+    add(mix, flutter(rng, burn, 25.0, 0.6), 0.4, 0.5)
+    add(mix, crackles(rng, length, 70.0, 0.42, 0.82), 0.0, 0.9)
+    return mix, 1.9
+
+
+def jato_gotejante(rng):
+    """Jato Gotejante: um jato de água que chia e sai pingando, gotas caindo pelo caminho e
+    o respingo no alvo."""
+    length = 0.65
+    mix = silence(length)
+    jet = band(noise(rng, 0.32), [(0.0, 1800.0), (0.32, 3200.0)], 1.3)
+    add(mix, flutter(rng, shape(jet, [(0.0, 0.0), (0.02, 1.0), (0.26, 0.8), (0.32, 0.0)]), 35.0, 0.45), 0.0, 1.0)
+    for index in range(6):
+        add(mix, bubble(rng.uniform(900.0, 1500.0), rng.uniform(0.035, 0.05)), 0.05 + index * 0.06, 0.55)
+    add(mix, decay(band(noise(rng, 0.18), 1500.0, 0.8), 0.15, 0.003), 0.34, 1.0)
+    for _ in range(5):
+        add(mix, bubble(rng.uniform(1700.0, 2800.0), 0.03), rng.uniform(0.38, 0.58), 0.3)
+    return mix, 1.3
+
+
+def faisca_rastejante(rng):
+    """Faísca Rastejante: uma faísca que corre rente ao chão num zumbido que treme e chega
+    perto, estalando pelo caminho, e o choque no fim."""
+    length = 0.7
+    mix = silence(length)
+    buzz = shape(zap(0.5, [(0.0, 120.0), (0.5, 240.0)], 23.0), [(0.0, 0.0), (0.04, 0.6), (0.45, 1.0), (0.5, 0.0)])
+    add(mix, high(buzz, 300.0), 0.0, 0.5)
+    hiss = band(noise(rng, 0.5), [(0.0, 3000.0), (0.5, 6000.0)], 1.4)
+    add(mix, flutter(rng, shape(hiss, [(0.0, 0.0), (0.05, 0.5), (0.5, 1.0)]), 45.0, 0.6), 0.0, 0.5)
+    add(mix, crackles(rng, 0.5, 70.0, weight=0.8, freq=4800.0), 0.0, 1.0)
+    add(mix, click(rng, 5200.0, 0.03, 1.2), 0.5, 1.5)
+    add(mix, thud(160.0, 60.0, 0.12), 0.5, 0.8)
+    add(mix, shape(band(noise(rng, 0.18), 6500.0, 1.5), [(0.0, 0.0), (0.005, 1.0), (0.18, 0.0)]), 0.5, 0.8)
+    add(mix, ping(2600.0, 0.14, ((1.0, 1.0), (2.0, 0.3))), 0.54, 0.22)
+    return mix, 1.8
+
+
+def semente_saltitante(rng):
+    """Semente Saltitante: a semente saindo num "plop", três quiques que descem de altura e
+    os espinhos brotando do chão num raspado seco."""
+    length = 0.65
+    mix = silence(length)
+    add(mix, band(noise(rng, 0.05), [(0.0, 900.0), (0.05, 2200.0)], 1.5), 0.0, 0.6)
+    add(mix, bubble(420.0, 0.06), 0.0, 0.8)
+    for index, (at, freq) in enumerate(((0.1, 700.0), (0.2, 600.0), (0.28, 520.0))):
+        boing = decay(tone(0.08, [(0.0, freq * 1.4), (0.08, freq)], (1.0, 0.3)), 0.08, 0.002)
+        add(mix, boing, at, 0.7 - index * 0.12)
+        add(mix, click(rng, 1600.0, 0.015, 1.5), at, 0.8)
+    for index in range(3):
+        sprout = band(noise(rng, 0.1), [(0.0, 1500.0), (0.1, 4500.0)], 2.0)
+        add(mix, shape(sprout, [(0.0, 0.0), (0.06, 1.0), (0.1, 0.0)]), 0.36 + index * 0.06, 0.8)
+        add(mix, click(rng, 3000.0, 0.02, 1.5), 0.44 + index * 0.06, 0.7)
+    add(mix, thud(150.0, 70.0, 0.1), 0.36, 0.6)
+    return mix, 1.7
+
+
+def cometa_de_polen(rng):
+    """Cometa de Pólen: um sopro macio que passa cintilando, o pólen se abrindo num "puf"
+    e notas suaves que sobem, o jardim nascendo."""
+    length = 0.8
+    mix = silence(length)
+    breeze = band(noise(rng, 0.35), [(0.0, 900.0), (0.35, 2400.0)], 0.9)
+    add(mix, flutter(rng, shape(breeze, [(0.0, 0.0), (0.25, 1.0), (0.35, 0.0)]), 20.0, 0.4), 0.0, 0.8)
+    add(mix, shape(high(noise(rng, 0.35), 7000.0), [(0.0, 0.0), (0.3, 0.5), (0.35, 0.0)]), 0.0, 0.35)
+    puff = low(noise(rng, 0.2), [(0.0, 2000.0), (0.2, 500.0)], 0.8)
+    add(mix, decay(puff, 0.18, 0.004), 0.33, 1.0)
+    add(mix, thud(150.0, 90.0, 0.12), 0.33, 0.5)
+    for index, freq in enumerate((784.0, 988.0, 1175.0, 1318.5, 1568.0)):
+        add(mix, ping(freq, 0.22, ((1.0, 1.0), (2.0, 0.15))), 0.4 + index * 0.07, 0.22)
+    return mix, 1.4
+
+
+def bola_de_lama(rng):
+    """Bola de Lama: a bola saindo num sopro grosso, o "splosh" pesado no alvo e a lama
+    respingando e borbulhando no chão."""
+    length = 0.65
+    mix = silence(length)
+    throw = band(noise(rng, 0.2), [(0.0, 500.0), (0.2, 1300.0)], 1.2)
+    add(mix, shape(throw, [(0.0, 0.0), (0.05, 1.0), (0.2, 0.0)]), 0.0, 0.8)
+    add(mix, thud(120.0, 45.0, 0.22), 0.2, 1.5)
+    splat = low(noise(rng, 0.2), [(0.0, 1800.0), (0.2, 400.0)], 0.9)
+    add(mix, decay(splat, 0.15, 0.002), 0.2, 1.2)
+    for _ in range(6):
+        add(mix, decay(band(noise(rng, 0.05), rng.uniform(500.0, 1100.0), 1.5), 0.04, 0.002), rng.uniform(0.26, 0.45), rng.uniform(0.4, 0.8))
+    for _ in range(5):
+        add(mix, bubble(rng.uniform(180.0, 380.0), rng.uniform(0.05, 0.08)), rng.uniform(0.35, 0.58), rng.uniform(0.5, 0.9))
+    return mix, 1.8
+
+
+def estaca_de_gelo(rng):
+    """Estaca de Gelo: o gelo estalando ao se formar, a estaca cortando o ar num assobio
+    frio e o impacto que estilhaça em cristais."""
+    length = 0.65
+    mix = silence(length)
+    for _ in range(5):
+        add(mix, click(rng, rng.uniform(3500.0, 6000.0), 0.012, 2.0), rng.uniform(0.0, 0.12), rng.uniform(0.5, 1.0))
+    whistle = band(noise(rng, 0.2), [(0.0, 2400.0), (0.2, 5200.0)], 4.0)
+    add(mix, shape(whistle, [(0.0, 0.0), (0.12, 1.0), (0.2, 0.0)]), 0.12, 1.1)
+    add(mix, thud(220.0, 90.0, 0.1), 0.32, 1.0)
+    add(mix, click(rng, 4200.0, 0.03, 1.2), 0.32, 1.5)
+    for _ in range(7):
+        add(mix, ping(rng.uniform(2600.0, 5200.0), rng.uniform(0.08, 0.16), ((1.0, 1.0), (2.76, 0.4))), rng.uniform(0.33, 0.5), rng.uniform(0.12, 0.25))
+    return mix, 1.7
+
+
+def dardo_gotejante(rng):
+    """Dardo Gotejante: o dardo saindo num silvo fino, o espeto no alvo e o veneno
+    pingando e chiando no chão."""
+    length = 0.6
+    mix = silence(length)
+    hiss = band(noise(rng, 0.14), [(0.0, 3000.0), (0.14, 6000.0)], 2.5)
+    add(mix, shape(hiss, [(0.0, 0.0), (0.1, 1.0), (0.14, 0.0)]), 0.0, 1.0)
+    add(mix, click(rng, 3400.0, 0.02, 1.8), 0.15, 1.6)
+    add(mix, thud(200.0, 90.0, 0.08), 0.15, 0.7)
+    for index in range(5):
+        add(mix, bubble(rng.uniform(600.0, 1000.0), rng.uniform(0.035, 0.06)), 0.2 + index * 0.07, 0.6)
+    fizz = shape(band(noise(rng, 0.35), 4200.0, 1.3), [(0.0, 0.0), (0.05, 1.0), (0.35, 0.0)])
+    add(mix, flutter(rng, fizz, 40.0, 0.6), 0.22, 0.4)
+    return mix, 1.6
+
+
+def pena_riscante(rng):
+    """Pena Riscante: a pena riscando o ar num risco agudo que passa de um lado ao outro,
+    um corte leve no alvo e penas soltas flutuando num sopro."""
+    length = 0.6
+    mix = silence(length)
+    streak = band(noise(rng, 0.22), [(0.0, 2000.0), (0.12, 6500.0), (0.22, 3000.0)], 3.0)
+    add(mix, shape(streak, [(0.0, 0.0), (0.12, 1.0), (0.22, 0.0)]), 0.0, 1.2)
+    add(mix, decay(band(noise(rng, 0.1), [(0.0, 5000.0), (0.1, 1500.0)], 2.0), 0.08, 0.002), 0.2, 1.0)
+    add(mix, click(rng, 2800.0, 0.02, 1.5), 0.2, 0.8)
+    drift = band(noise(rng, 0.35), 1800.0, 0.8)
+    add(mix, flutter(rng, shape(drift, [(0.0, 0.0), (0.1, 1.0), (0.35, 0.0)]), 12.0, 0.6), 0.24, 0.45)
+    for _ in range(4):
+        add(mix, decay(band(noise(rng, 0.04), rng.uniform(2500.0, 4000.0), 2.0), 0.03, 0.004), rng.uniform(0.28, 0.55), 0.3)
+    return mix, 1.5
+
+
+def pinca_firme(rng):
+    """Pinça Firme: as pinças abrindo num estalo de carapaça, fechando com força num baque
+    duplo e o aperto que range sem soltar."""
+    length = 0.7
+    mix = silence(length)
+    add(mix, click(rng, 2200.0, 0.03, 2.0), 0.0, 0.8)
+    add(mix, click(rng, 1800.0, 0.03, 2.0), 0.05, 0.6)
+    lunge = band(noise(rng, 0.1), [(0.0, 700.0), (0.1, 2200.0)], 1.5)
+    add(mix, shape(lunge, [(0.0, 0.0), (0.07, 1.0), (0.1, 0.0)]), 0.1, 0.8)
+    for at in (0.2, 0.225):
+        add(mix, click(rng, 3000.0, 0.025, 1.4), at, 1.6)
+        add(mix, thud(170.0, 60.0, 0.14), at, 1.0)
+    squeeze = shape(tone(0.4, [(0.0, 110.0), (0.4, 95.0)], (1.0, 0.7, 0.5, 0.35), (21.0, 0.06)), [(0.0, 0.0), (0.08, 1.0), (0.32, 0.8), (0.4, 0.0)])
+    add(mix, band(squeeze, 700.0, 1.0), 0.28, 0.8)
+    for _ in range(4):
+        add(mix, click(rng, rng.uniform(1200.0, 2000.0), 0.02, 2.0), rng.uniform(0.3, 0.62), 0.4)
+    return mix, 1.7
+
+
 SOUNDS = {
     "mordida_brasa": mordida_brasa,
     "fumaca_densa": fumaca_densa,
@@ -1377,6 +1582,18 @@ SOUNDS = {
     "golpe_de_foice": golpe_de_foice,
     "emboscada": emboscada,
     "danca_da_foice": danca_da_foice,
+    "raio_de_sol": raio_de_sol,
+    "lamina_solar": lamina_solar,
+    "cometa_de_brasa": cometa_de_brasa,
+    "jato_gotejante": jato_gotejante,
+    "faisca_rastejante": faisca_rastejante,
+    "semente_saltitante": semente_saltitante,
+    "cometa_de_polen": cometa_de_polen,
+    "bola_de_lama": bola_de_lama,
+    "estaca_de_gelo": estaca_de_gelo,
+    "dardo_gotejante": dardo_gotejante,
+    "pena_riscante": pena_riscante,
+    "pinca_firme": pinca_firme,
 }
 
 
