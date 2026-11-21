@@ -72,6 +72,11 @@ export interface GeneratedMap {
   bridges: GeneratedBridge[];
   /** As pedras gigantes das Montanhas (giant-rocks/02). */
   props: GeneratedProp[];
+  /**
+   * A água doce, cada lago e cada rio um pedaço, só para as zonas (sea-life/07);
+   * não vai para a resposta.
+   */
+  inland: HexCoord[][];
 }
 
 export interface ShapedTile extends HexCoord {
@@ -207,6 +212,7 @@ export function generateMap(
     })),
     bridges: map.bridges,
     props: map.props,
+    inland: [...map.lakes, ...map.rivers.map(({ cells }) => cells)],
   };
 }
 

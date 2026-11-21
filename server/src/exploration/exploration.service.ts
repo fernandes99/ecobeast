@@ -128,9 +128,16 @@ export class ExplorationService {
       speciesBornAt(this.prisma, minute),
       loadZones(this.prisma),
     ]);
+    const { inland, ...shown } = generated;
     const map = {
-      ...generated,
-      tiles: assignZones(generated.tiles, generated.seed, zones),
+      ...shown,
+      tiles: assignZones(
+        generated.tiles,
+        generated.seed,
+        zones,
+        undefined,
+        inland,
+      ),
     };
     const rocks = new Set(
       generated.props.flatMap((prop) => [...rockHexes(prop)]),

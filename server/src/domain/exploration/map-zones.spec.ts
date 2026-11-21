@@ -88,7 +88,7 @@ describe('assignZones', () => {
       for (const biome of ['wshallow', 'wdeep'] as const) {
         const inBiome = after.filter((tile) => tile.biome === biome);
         const trash = inBiome.filter((tile) => tile.zone?.endsWith('_trash'));
-        expect(trash.length).toBeLessThanOrEqual(8);
+        expect(trash.length).toBeLessThanOrEqual(10);
         for (const zone of sea.filter(
           (zone) => zone.biome === biome && !zone.slug.endsWith('_trash'),
         )) {

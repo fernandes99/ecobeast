@@ -113,7 +113,7 @@ export class MapGeneratorController {
     const zones = await loadZones(this.prisma);
     return {
       start: map.start,
-      tiles: assignZones(map.tiles, body.seed, zones, config),
+      tiles: assignZones(map.tiles, body.seed, zones, config, map.inland),
       bridges: map.bridges,
       props: map.props.map(toPropDto),
     };

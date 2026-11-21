@@ -201,11 +201,13 @@ const RECIPES: Dictionary = {
 	"wshallow": [["sea_rock", 0.015, 1, 1], ["algae_patch", 0.035, 1, 1], ["seagrass", 0.06, 1, 1], ["bottle", 0.002, 1, 1], ["can", 0.002, 1, 1]],
 	"wshallow_rocks": [["sea_rock", 0.12, 1, 1], ["algae_patch", 0.05, 1, 1], ["seagrass", 0.04, 1, 1]],
 	"wshallow_seagrass": [["kelp", 0.03, 1, 1], ["algae_patch", 0.1, 1, 1], ["seagrass", 0.22, 1, 2]],
-	"wshallow_trash": [["tire", 0.03, 1, 1], ["jug", 0.03, 1, 1], ["old_boot", 0.04, 1, 1], ["plastic_bag", 0.07, 1, 1], ["bottle", 0.1, 1, 1], ["can", 0.09, 1, 1], ["seagrass", 0.04, 1, 1]],
+	"wshallow_trash": [["tire", 0.1, 1, 1], ["jug", 0.12, 1, 1], ["old_boot", 0.15, 1, 1], ["plastic_bag", 0.25, 1, 1], ["bottle", 0.35, 1, 1], ["can", 0.3, 1, 1]],
 	"wdeep": [["sea_stack", 0.005, 1, 1], ["kelp", 0.02, 1, 1], ["bottle", 0.0015, 1, 1]],
 	"wdeep_rocks": [["sea_stack", 0.09, 1, 1], ["sea_rock", 0.1, 1, 1]],
 	"wdeep_kelp": [["kelp", 0.2, 1, 1]],
-	"wdeep_trash": [["jug", 0.03, 1, 1], ["tire", 0.025, 1, 1], ["old_boot", 0.05, 1, 1], ["plastic_bag", 0.06, 1, 1], ["bottle", 0.1, 1, 1], ["can", 0.075, 1, 1]],
+	"wdeep_trash": [["jug", 0.2, 1, 1], ["tire", 0.15, 1, 1], ["old_boot", 0.25, 1, 1], ["plastic_bag", 0.35, 1, 1], ["bottle", 0.5, 1, 2], ["can", 0.4, 1, 1]],
+	"wshallow_lake": [["sea_rock", 0.01, 1, 1]],
+	"wdeep_lake": [],
 }
 const PLACE_TRIES := 8
 static var _warned_zones: Dictionary = {}

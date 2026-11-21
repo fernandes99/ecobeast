@@ -1,5 +1,5 @@
 import { DEFAULT_MAP_CONFIG, type MapConfig } from './map-config.js';
-import { hexKey, hexNeighbors } from './hex.js';
+import { hexKey, hexNeighbors, type HexCoord } from './hex.js';
 import { isWater, type Biome, type MapTile } from './map-generator.js';
 import { createNoise } from './noise.js';
 import { seededRandom } from './seeded-random.js';
@@ -17,37 +17,49 @@ const ZONE_SALT = 0x20ae5;
 const ZONE_SCALE = 2;
 const ROW_HEIGHT = Math.sqrt(3) / 2;
 
+/** A água doce (os lagos e os rios) fica toda na zona Lago, sem algas (sea-life/07). */
+const LAKE_ZONES: Partial<Record<Biome, string>> = {
+  wshallow: 'wshallow_lake',
+  wdeep: 'wdeep_lake',
+};
 /**
- * As zonas de lixo não são faixas: são uma mancha pequena e junta no mar, com a parte
- * rasa e a funda lado a lado, e, bem raramente, uma menor num lago ou num rio
- * (sea-life/06). A revisar.
+ * As zonas de lixo não são faixas: são uma mancha no mar, quase toda na Água
+ * profunda e encostada na rasa, e, bem raramente, uma pequena num lago ou num rio
+ * (sea-life/06 e 07). A revisar.
  */
 const PATCH_ZONES: Partial<Record<Biome, string>> = {
   wshallow: 'wshallow_trash',
   wdeep: 'wdeep_trash',
 };
 const PATCH_SALT = 0x7a54;
-/** A água ligada à borda com mais hexágonos é o mar, se tiver pelo menos tantos. */
-const SEA_MIN_TILES = 40;
-const SEA_PATCH_CHANCE = 0.75;
-const SEA_PATCH_TILES = 8;
-const LAKE_PATCH_CHANCE = 0.04;
+const SEA_PATCH_TILES = 10;
+/** A chance de o próximo hexágono da mancha do mar ser de Água profunda, quando há. */
+const SEA_PATCH_DEEP = 0.8;
+/** A chance, por mapa, de uma mancha pequena num lago ou num rio. */
+const LAKE_PATCH_CHANCE = 0.08;
 const LAKE_PATCH_TILES = 3;
 
 /**
  * Põe `zone` nos hexágonos fora da Comum: os de cada bioma, ordenados por um
  * ruído próprio, viram faixas na ordem das zonas, do tamanho do `share` de cada uma.
+ * A água de `inland` (os lagos e os rios do gerador) fica no Lago, e o lixo vem em
+ * manchas.
  */
 export function assignZones(
   tiles: readonly MapTile[],
   seed: number,
   zones: readonly MapZone[],
   config: MapConfig = DEFAULT_MAP_CONFIG,
+  inland: readonly (readonly HexCoord[])[] = [],
 ): MapTile[] {
   const noise = createNoise(seededRandom(seed ^ ZONE_SALT));
   const scale = config.noiseScale * ZONE_SCALE;
   const value = ({ q, r }: MapTile): number =>
     noise((q + r / 2) * scale, r * ROW_HEIGHT * scale);
+  const known = new Set(zones.map(({ slug }) => slug));
+  const freshKeys = new Set(inland.flat().map(hexKey));
+  const isLake = (tile: MapTile): boolean =>
+    isWater(tile.biome) && freshKeys.has(hexKey(tile));
   const zoneOf = new Map<MapTile, string>();
   for (const biome of new Set(tiles.map((tile) => tile.biome))) {
     const bands = zones
@@ -55,7 +67,8 @@ export function assignZones(
         (zone) =>
           zone.biome === biome &&
           zone.share > 0 &&
-          zone.slug !== PATCH_ZONES[zone.biome],
+          zone.slug !== PATCH_ZONES[zone.biome] &&
+          zone.slug !== LAKE_ZONES[zone.biome],
       )
       .sort(
         (a, b) => a.sortOrder - b.sortOrder || a.slug.localeCompare(b.slug),
@@ -63,7 +76,7 @@ export function assignZones(
     const total = bands.reduce((sum, { share }) => sum + share, 0);
     if (total === 0) continue;
     const ranked = tiles
-      .filter((tile) => tile.biome === biome)
+      .filter((tile) => tile.biome === biome && !isLake(tile))
       .map((tile) => ({ tile, value: value(tile) }))
       .sort(
         (a, b) =>
@@ -80,7 +93,11 @@ export function assignZones(
       start = end;
     }
   }
-  placePatches(tiles, seed, zones, zoneOf);
+  for (const tile of tiles.filter(isLake)) {
+    const slug = LAKE_ZONES[tile.biome];
+    if (slug !== undefined && known.has(slug)) zoneOf.set(tile, slug);
+  }
+  placePatches(tiles, seed, known, isLake, inland, zoneOf);
   return tiles.map((tile) => {
     const zone = zoneOf.get(tile);
     return zone === undefined ? { ...tile } : { ...tile, zone };
@@ -90,10 +107,11 @@ export function assignZones(
 function placePatches(
   tiles: readonly MapTile[],
   seed: number,
-  zones: readonly MapZone[],
+  known: ReadonlySet<string>,
+  isLake: (tile: MapTile) => boolean,
+  inland: readonly (readonly HexCoord[])[],
   zoneOf: Map<MapTile, string>,
 ): void {
-  const known = new Set(zones.map(({ slug }) => slug));
   const patchOf = (tile: MapTile): string | undefined => {
     const slug = PATCH_ZONES[tile.biome];
     return slug !== undefined && known.has(slug) ? slug : undefined;
@@ -104,56 +122,68 @@ function placePatches(
   const wetNeighbors = (tile: MapTile): MapTile[] =>
     hexNeighbors(tile)
       .map((coord) => byKey.get(hexKey(coord)))
-      .filter((other): other is MapTile => other !== undefined && isWater(other.biome));
-  const onEdge = (tile: MapTile): boolean =>
-    hexNeighbors(tile).some((coord) => !byKey.has(hexKey(coord)));
-  const seen = new Set<MapTile>();
-  const bodies: MapTile[][] = [];
-  for (const tile of tiles) {
-    if (!isWater(tile.biome) || seen.has(tile)) continue;
-    const body = [tile];
-    seen.add(tile);
-    for (let index = 0; index < body.length; index++) {
-      for (const other of wetNeighbors(body[index])) {
-        if (!seen.has(other)) {
-          seen.add(other);
-          body.push(other);
-        }
-      }
-    }
-    bodies.push(body);
-  }
-  const sea = bodies
-    .filter((body) => body.length >= SEA_MIN_TILES && body.some(onEdge))
-    .sort((a, b) => b.length - a.length)[0];
-  for (const body of bodies) {
-    const isSea = body === sea;
-    const chance = isSea ? SEA_PATCH_CHANCE : LAKE_PATCH_CHANCE;
-    if (random() >= chance) continue;
-    const coast = isSea
-      ? body.filter(
-          (tile) =>
-            tile.biome === 'wdeep' &&
-            wetNeighbors(tile).some((other) => other.biome === 'wshallow'),
-        )
-      : body;
-    const centers = coast.length > 0 ? coast : body;
-    const center = centers[Math.floor(random() * centers.length)];
-    const size = isSea ? SEA_PATCH_TILES : LAKE_PATCH_TILES;
+      .filter(
+        (other): other is MapTile =>
+          other !== undefined && isWater(other.biome),
+      );
+  const pick = <T>(list: readonly T[]): T =>
+    list[Math.floor(random() * list.length)];
+  const grow = (
+    center: MapTile,
+    size: number,
+    within: (tile: MapTile) => boolean,
+    deep: number,
+  ): MapTile[] => {
     const patch = [center];
     const taken = new Set([center]);
     while (patch.length < size) {
       const frontier = patch
         .flatMap(wetNeighbors)
-        .filter((other) => !taken.has(other));
+        .filter((other) => within(other) && !taken.has(other));
       if (frontier.length === 0) break;
-      const next = frontier[Math.floor(random() * frontier.length)];
+      const deepOnes = frontier.filter((other) => other.biome === 'wdeep');
+      const next =
+        deepOnes.length > 0 && random() < deep
+          ? pick(deepOnes)
+          : pick(frontier);
       taken.add(next);
       patch.push(next);
     }
+    return patch;
+  };
+  const mark = (patch: readonly MapTile[]): void => {
     for (const tile of patch) {
       const slug = patchOf(tile);
       if (slug !== undefined) zoneOf.set(tile, slug);
     }
+  };
+
+  const sea = tiles.filter((tile) => isWater(tile.biome) && !isLake(tile));
+  const coast = sea.filter(
+    (tile) =>
+      tile.biome === 'wdeep' &&
+      wetNeighbors(tile).some(
+        (other) => other.biome === 'wshallow' && !isLake(other),
+      ),
+  );
+  const seaDeep = sea.filter((tile) => tile.biome === 'wdeep');
+  const centers = coast.length > 0 ? coast : seaDeep.length > 0 ? seaDeep : sea;
+  if (centers.length > 0) {
+    const inSea = (tile: MapTile): boolean => !isLake(tile);
+    mark(grow(pick(centers), SEA_PATCH_TILES, inSea, SEA_PATCH_DEEP));
   }
+
+  const bodies = inland
+    .map((body) =>
+      body
+        .map((coord) => byKey.get(hexKey(coord)))
+        .filter(
+          (tile): tile is MapTile => tile !== undefined && isWater(tile.biome),
+        ),
+    )
+    .filter((water) => water.length > 0);
+  if (bodies.length === 0 || random() >= LAKE_PATCH_CHANCE) return;
+  const water = pick(bodies);
+  const inBody = new Set(water);
+  mark(grow(pick(water), LAKE_PATCH_TILES, (tile) => inBody.has(tile), 0));
 }

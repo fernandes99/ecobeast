@@ -9,6 +9,8 @@ Em 2026-11-20, o dono pediu: "as zonas de lixo devem ficar próximas uma da outr
 
 Até aqui, o Lixo da Água rasa e o da Água profunda eram faixas do ruído das zonas, como as outras zonas, com 8% de cada água. Por isso apareciam em vários pedaços espalhados, também nos lagos e nos rios.
 
+Os números e o jeito de achar o mar mudaram na [07](07-lakes-and-trash.md): o mar é o que não é lago nem rio, e a mancha sai em todo mapa com mar.
+
 ## Escopo
 
 - O `assignZones` (`server/src/domain/exploration/map-zones.ts`) tira as duas zonas de lixo das faixas e as põe em manchas, com um sorteio próprio (`PATCH_SALT`), sem mudar as outras zonas nem o terreno.

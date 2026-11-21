@@ -74,6 +74,7 @@ Escolhas de Claude (_a revisar_):
 | 4 | [04-trash-and-density](04-trash-and-density.md) | O lixo reconhecível (garrafa PET, lata, sacola, bota, pneu e galão) e a água com bem menos decoração | concluída (falta o dono conferir no jogo) |
 | 5 | [05-less-water-detail](05-less-water-detail.md) | Metade das decorações de novo, e a alga boiando e a pedra submersa fora do jogo | concluída (falta o dono conferir no jogo) |
 | 6 | [06-trash-patches](06-trash-patches.md) | O lixo numa mancha pequena perto da costa, rara nos lagos e nos rios | concluída (falta o dono conferir no jogo) |
+| 7 | [07-lakes-and-trash](07-lakes-and-trash.md) | Os lagos e os rios na zona Lago, sem algas, e o lixo em todo mar, quase todo fundo e com mais peças | concluída (falta o dono conferir no jogo) |
 
 ## Resultado da verificação
 
