@@ -110,7 +110,7 @@ describe('GET /v1/catalog (e2e)', () => {
       pierces: false,
     });
     expect(skill('chama_espiral')).toMatchObject({
-      area_shape_id: shape('single'),
+      area_shape_id: shape('triangle'),
       ground_effect_id: fire['id'],
       ground_turns: 6,
     });

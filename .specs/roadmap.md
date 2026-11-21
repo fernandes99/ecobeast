@@ -97,6 +97,7 @@ O que vem depois do MVP de estrutura (entrada, escolha do inicial e Hub). Cada l
 | 79  | [`skill-test`](skill-test/) | O botão Testar técnica no F1: uma luta 1×1 de verdade com um Ecobeast emprestado que tem a Técnica, contra a espécie escolhida (que pode ficar parada), com a Técnica voltando na hora, sem gastar PP e sem gravar nada | skill-editor, board-size | concluída (falta o dono conferir no jogo) |
 | 80  | [`giant-rocks`](giant-rocks/) | As pedras gigantes da Montanha: 8 tipos de peça solta (131 a 138, o Rochedo, os Pináculos, a Laje inclinada, os Matacões, a Crista e três com neve) que bloqueiam pelo pé, no F2 e sorteadas nas Montanhas do mapa sorteado, sem fechar passagem | vegetation-packs, map-realism | concluída (falta o dono conferir no jogo e no F2) |
 | 81  | [`beach-life`](beach-life/) | A Praia com o coqueiro e o coqueiro novo (linhas 64 e 65), a zona Coqueiral (31) e os 2 tipos como peças soltas (152 e 153) na categoria Praia e no grupo Praia do pincel | sea-life, biome-zones | concluída (falta o dono conferir no jogo e no F2) |
+| 82  | [`sandlurk-line`](sandlurk-line/) | O escorpião enterrado: o Sandlurk e o Dunestrike (Inseto/Toxina), ids 29 e 30, incomuns, que evolui no nível 30, de Manhã e de Tarde no Deserto e na Praia, com os `front.png` da imagem do dono, as folhas do mapa e 4 Técnicas de escorpião (Pinça Firme, Ferroada Paralisante, Enterrar e Bote da Duna, ids 98 a 101) | snekit-line, prayling-line, biome-zones, creature-scale | concluída (falta o dono conferir no jogo) |
 
 ## Pós-lançamento (do GDD)
 

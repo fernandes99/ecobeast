@@ -36,12 +36,12 @@ Tirado dos `front.png` atuais. Antes de escrever, abra dois ou três deles com a
 - Contorno de pixel escuro, puxado para a cor de cada parte, sem preto puro.
 - Sombreamento em blocos de cor, com poucos tons por material e um dither leve, e textura fina: pelo, rachaduras, escamas.
 - Brilhos, faíscas e pó são pixels sólidos e separados, sem halo nem brilho difuso, que não se recortam do fundo.
-- Cores vivas e saturadas. A aparência segue o temperamento da criatura, e nem toda criatura é simpática: veja "Temperamento".
+- Cores vivas e saturadas. A aparência segue o temperamento da criatura: veja "Temperamento".
 - Corpo inteiro, sem cortes.
 
 ## Temperamento
 
-Cada linha tem um temperamento próprio, e nem todas são simpáticas ou fofas: há criaturas tímidas, raivosas, desconfiadas, preguiçosas, arrogantes, nervosas e assim por diante. O dono pediu, em 2026-11-20, "mais singularidade de cada um deles, nem todos serão simpaticos". Escolha o temperamento antes de escrever e mostre-o no corpo: no olhar, na boca, na postura e no acabamento das escamas, do pelo ou das penas. Não use "cute", "appealing" nem "friendly" por padrão. O temperamento pode mudar na evolução, por exemplo de um filhote arisco para um adulto frio e calculista.
+Cada linha tem um temperamento próprio: fofo, alegre, tímido, raivoso, desconfiado, preguiçoso, arrogante, nervoso e assim por diante. O dono pediu, em 2026-11-20, "mais singularidade de cada um deles, nem todos serão simpaticos", e, em 2026-11-21, que a regra não vire o contrário: "pode ser fofo também mas não precisa todos assim". Escolha o temperamento que combina com a criatura, sem fugir do fofo nem forçá-lo, e mostre-o no corpo: no olhar, na boca, na postura e no acabamento das escamas, do pelo ou das penas. Use "cute" só quando o temperamento for esse. O temperamento pode mudar na evolução, por exemplo de um filhote arisco para um adulto frio e calculista.
 
 ## Como montar
 
