@@ -1,8 +1,9 @@
-"""Desenha os 13 tipos de decoração da água (.specs/sea-life/01-sea-art.md).
+"""Desenha os tipos de decoração da água (.specs/sea-life/01-sea-art.md).
 
 Uso: python -I make_sea.py   (precisa do Pillow; roda de dentro de assets/terrain)
 
-Cada tipo é uma linha de decorations/decorations.png (51 a 63), com 4 variantes, no traço
+Cada tipo é uma linha de decorations/decorations.png (51 a 63; a 55 e a 57, da pedra submersa
+e da alga boiando que saíram, ficam vazias), com 4 variantes, no traço
 do make_nature.py. O que fica embaixo d'água é meio transparente, para a água aparecer, e o
 que fura a superfície ganha a espuma. Rodar de novo regrava só essas linhas.
 """
@@ -34,7 +35,6 @@ ALGAE = [(14, 58, 44), (26, 86, 56), (44, 116, 66), (80, 150, 82)]
 KELP = [(16, 30, 20), (34, 58, 34), (52, 84, 44), (76, 112, 56), (108, 140, 72)]
 KELP_FLOAT = [(40, 52, 22), (96, 112, 46), (140, 150, 70)]
 BLADDER = [(120, 92, 30), (206, 172, 72), (240, 214, 120)]
-SARGASSUM = [(66, 46, 12), (122, 90, 26), (170, 134, 46), (210, 180, 80), (238, 214, 130)]
 
 
 class SeaCell(nature.Cell):
@@ -198,20 +198,6 @@ def sea_rock(cell, variant):
     return None
 
 
-def sunken_rock(cell, variant):
-    rng = cell.rng
-    circles = [(BX + rng.uniform(-6, 6), BY - 2 + rng.uniform(-1.5, 1.0), rng.uniform(4.5, 6.5)) for _ in range(rng.randint(3, 4))]
-    circles = [(x, y, r) for x, y, r in circles]
-    owner = nature.blob(cell, circles, SEA_ROCK, bias=-0.05)
-    for (x, y), color in list(cell.pixels.items()):
-        squashed = BY - 2 + round((y - (BY - 2)) * 0.75)
-        del cell.pixels[(x, y)]
-        cell.pixels.setdefault((x, squashed), under(color, 130 if color != SEA_ROCK[0] else 150, 0.5))
-    for _ in range(rng.randint(2, 3)):
-        x, y = rng.choice(sorted(cell.pixels))
-        cell.put(x, y, (200, 236, 250, 110))
-    return None
-
 def sea_stack(cell, variant):
     rng = cell.rng
     width = rng.randint(14, 18)
@@ -236,20 +222,6 @@ def sea_stack(cell, variant):
     sink(cell, waterline, 160)
     foam_ring(cell, BX, waterline + 1, width / 2 + 1.5, 2.4, 0.1)
     ripple(cell, BX, waterline + 1, width / 2 + 4, 3.8)
-    return None
-
-def floating_weed(cell, variant):
-    rng = cell.rng
-    circles = [(BX + rng.uniform(-8, 8), BY - 2 + rng.uniform(-2, 2), rng.uniform(1.4, 2.4)) for _ in range(rng.randint(8, 12))]
-    owner = nature.blob(cell, circles, SARGASSUM, bias=0.05)
-    for _ in range(rng.randint(5, 8)):
-        x, y = rng.choice(sorted(owner))
-        if cell.pixels.get((x, y)) != SARGASSUM[0]:
-            cell.put(x, y, SARGASSUM[4])
-    for (x, y) in sorted(owner):
-        if (x, y + 1) not in owner:
-            cell.put(x, y + 1, under(SARGASSUM[1], 120, 0.4))
-    ripple(cell, BX, BY - 1, 11, 3.5)
     return None
 
 def stamp(cell, art, palette, left, bottom):
@@ -420,7 +392,7 @@ def jug(cell, variant):
 
 
 KINDS = [
-    seagrass, kelp, algae_patch, sea_rock, sunken_rock, sea_stack, floating_weed,
+    seagrass, kelp, algae_patch, sea_rock, None, sea_stack, None,
     bottle, can, plastic_bag, old_boot, tire, jug,
 ]
 
@@ -429,6 +401,8 @@ def rows():
     height = nature.CELL[1]
     image = Image.new("RGBA", (nature.CELL[0] * 4, height * len(KINDS)), (0, 0, 0, 0))
     for row, kind in enumerate(KINDS):
+        if kind is None:
+            continue
         for variant in range(4):
             cell = SeaCell(random.Random(f"{kind.__name__}:{variant}"))
             kind(cell, variant)

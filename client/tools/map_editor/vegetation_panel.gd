@@ -9,7 +9,7 @@ const PACK_BUSHES: Array[String] = ["autumn_bush", "dry_twigs", "blue_flower_bus
 const PACK_STONES: Array[String] = ["sand_stone", "rust_crystal", "ice_crystal", "moss_stone", "white_stone", "slab_stone", "clay_stone", "lava_stone"]
 const PACK_ODD_STONES: Array[String] = ["rust_crystal", "ice_crystal", "lava_stone"]
 ## As algas, as pedras e o lixo da água (sea-life/03); o lixo começa desligado.
-const SEA_KINDS: Array[String] = ["seagrass", "kelp", "algae_patch", "sea_rock", "sunken_rock", "sea_stack", "floating_weed", "bottle", "can", "plastic_bag", "old_boot", "tire", "jug"]
+const SEA_KINDS: Array[String] = ["seagrass", "kelp", "algae_patch", "sea_rock", "sea_stack", "bottle", "can", "plastic_bag", "old_boot", "tire", "jug"]
 const SEA_TRASH: Array[String] = ["bottle", "can", "plastic_bag", "old_boot", "tire", "jug"]
 ## As pedras gigantes da Montanha (giant-rocks/01).
 const GIANT_ROCKS: Array[String] = ["giant_crag", "giant_pinnacles", "giant_slab", "giant_boulders", "giant_ridge", "snowy_crag", "snowy_pinnacles", "snowy_boulders"]

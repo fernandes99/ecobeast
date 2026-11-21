@@ -20,9 +20,9 @@ As decorações moram na folha `client/assets/terrain/decorations/decorations.pn
 | 52 | `kelp` | Alga longa | Fitas compridas de alga parda subindo do fundo, com boias na superfície |
 | 53 | `algae_patch` | Tapete de algas | Uma mancha baixa de alga no fundo, só submersa |
 | 54 | `sea_rock` | Pedra no mar | Pedra molhada que fura a superfície, com o anel de espuma no pé |
-| 55 | `sunken_rock` | Pedra submersa | Pedra escura e transparente, embaixo d'água |
+| 55 | `sunken_rock` | Pedra submersa | Saiu do jogo na [05](05-less-water-detail.md); a linha fica vazia |
 | 56 | `sea_stack` | Rochedo no mar | Pedra alta, com cracas e espuma no pé |
-| 57 | `floating_weed` | Alga boiando | Um bolo de alga dourada boiando |
+| 57 | `floating_weed` | Alga boiando | Saiu do jogo na [05](05-less-water-detail.md); a linha fica vazia |
 | 58 | `bottle` | Garrafa PET | Refeita na [04](04-trash-and-density.md) |
 | 59 | `can` | Lata de refrigerante | Refeita na [04](04-trash-and-density.md) |
 | 60 | `plastic_bag` | Sacola plástica | Refeita na [04](04-trash-and-density.md) |

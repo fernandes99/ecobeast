@@ -26,7 +26,7 @@ Em 2026-11-20, depois das fases 01 a 03, o dono pediu: "ficou com muito detalhes
 
 ## Requisitos
 
-- **RF-01:** As receitas (_a revisar_):
+- **RF-01:** As receitas (diminuídas de novo na [05](05-less-water-detail.md)):
 
 | Receita | Tipos (chance, mínimo–máximo) |
 | --- | --- |

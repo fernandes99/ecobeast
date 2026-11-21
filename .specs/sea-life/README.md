@@ -72,6 +72,7 @@ Escolhas de Claude (_a revisar_):
 | 2 | [02-sea-zones](02-sea-zones.md) | As receitas, as zonas e quem nasce nelas | concluída (falta o dono conferir no jogo) |
 | 3 | [03-sea-props](03-sea-props.md) | Os tipos de peça, a categoria Mar e o grupo do pincel | concluída (falta o dono conferir no F2) |
 | 4 | [04-trash-and-density](04-trash-and-density.md) | O lixo reconhecível (garrafa PET, lata, sacola, bota, pneu e galão) e a água com bem menos decoração | concluída (falta o dono conferir no jogo) |
+| 5 | [05-less-water-detail](05-less-water-detail.md) | Metade das decorações de novo, e a alga boiando e a pedra submersa fora do jogo | concluída (falta o dono conferir no jogo) |
 
 ## Resultado da verificação
 
