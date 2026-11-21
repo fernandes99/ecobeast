@@ -121,6 +121,12 @@ const EFFECTS := {
 	"dardo_gotejante": ["toxin", "9/428"],
 	"pena_riscante": ["wind", "1/24"],
 	"pinca_firme": ["bug", "2/64"],
+	"ferroada_paralisante": ["toxin", "10/485"],
+	"enterrar": ["bug", "9/429"],
+	"bote_da_duna": ["bug", "2/72"],
+	"erva_da_bolsa": ["beast", "4/194"],
+	"atadura_firme": ["beast", "1/16"],
+	"cochilo": ["beast", "1/25"],
 }
 
 const PROJECTILES := {

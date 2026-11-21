@@ -1,4 +1,4 @@
-"""Gera o som das Técnicas da board-battle/18 e /20 a /22 e /25 a /27 e /29 a /32, /36 e /37 (board-battle/19 a /22, /25 a /27, /29 a /32, /36 e /37), por síntese:
+"""Gera o som das Técnicas da board-battle/18 e /20 a /22 e /25 a /27 e /29 a /32 e /36 a /38 (board-battle/19 a /22, /25 a /27, /29 a /32 e /36 a /38), por síntese:
 ruído em filtros, tons com a altura mudando e saturação leve. Cada som dura mais
 ou menos o efeito da Técnica, porque os dois começam juntos; o impacto fica com o
 som de dano. Tudo sai daqui: sem gravação de terceiros.
@@ -1499,6 +1499,109 @@ def pinca_firme(rng):
     return mix, 1.7
 
 
+def ferroada_paralisante(rng):
+    """Ferroada Paralisante: a cauda esticando num rangido de carapaça, o ferrão cravando num
+    estalo seco e o veneno estalando como choque, o alvo travando."""
+    length = 0.65
+    mix = silence(length)
+    creak = shape(tone(0.16, [(0.0, 180.0), (0.16, 260.0)], (1.0, 0.6, 0.4), (25.0, 0.05)), [(0.0, 0.0), (0.04, 0.8), (0.16, 0.0)])
+    add(mix, band(creak, 900.0, 1.2), 0.0, 0.6)
+    whip = band(noise(rng, 0.1), [(0.0, 1500.0), (0.1, 4500.0)], 2.0)
+    add(mix, shape(whip, [(0.0, 0.0), (0.08, 1.0), (0.1, 0.0)]), 0.12, 1.0)
+    add(mix, click(rng, 4200.0, 0.02, 1.8), 0.22, 1.8)
+    add(mix, thud(190.0, 70.0, 0.1), 0.22, 0.9)
+    buzz = shape(zap(0.3, [(0.0, 260.0), (0.3, 180.0)], 41.0), [(0.0, 0.0), (0.01, 1.0), (0.3, 0.0)])
+    add(mix, high(buzz, 500.0), 0.24, 0.45)
+    add(mix, crackles(rng, 0.32, 80.0, weight=0.8, freq=5200.0), 0.24, 1.0)
+    for _ in range(3):
+        add(mix, bubble(rng.uniform(500.0, 800.0), 0.05), rng.uniform(0.3, 0.55), 0.4)
+    return mix, 1.8
+
+
+def enterrar(rng):
+    """Enterrar: a areia escorrendo e chiando enquanto ele afunda, a carapaça assentando
+    num baque surdo e um tom grave que fica, a Defesa subindo."""
+    length = 0.8
+    mix = silence(length)
+    sand = band(noise(rng, 0.5), [(0.0, 3500.0), (0.5, 1500.0)], 0.9)
+    add(mix, flutter(rng, shape(sand, [(0.0, 0.0), (0.08, 1.0), (0.4, 0.7), (0.5, 0.0)]), 50.0, 0.7), 0.0, 0.8)
+    for _ in range(10):
+        add(mix, click(rng, rng.uniform(2000.0, 4000.0), 0.008, 1.0), rng.uniform(0.02, 0.45), rng.uniform(0.2, 0.5))
+    add(mix, thud(110.0, 45.0, 0.25), 0.42, 1.3)
+    add(mix, decay(low(noise(rng, 0.2), 600.0), 0.15, 0.003), 0.42, 0.7)
+    hum = tone(0.38, [(0.0, 196.0), (0.38, 220.0)], (1.0, 0.5, 0.25))
+    add(mix, shape(hum, [(0.0, 0.0), (0.06, 0.8), (0.3, 0.6), (0.38, 0.0)]), 0.42, 0.35)
+    return mix, 1.6
+
+
+def bote_da_duna(rng):
+    """Bote da Duna: um silêncio com areia mexendo de leve, a explosão de areia quando ele
+    salta e as pinças acertando com força num ponto só."""
+    length = 0.7
+    mix = silence(length)
+    rustle = flutter(rng, band(noise(rng, 0.25), 2500.0, 1.0), 35.0, 0.8)
+    add(mix, shape(rustle, [(0.0, 0.0), (0.1, 1.0), (0.25, 0.0)]), 0.0, 0.25)
+    burst = band(noise(rng, 0.22), [(0.0, 600.0), (0.22, 3500.0)], 0.9)
+    add(mix, shape(burst, [(0.0, 0.0), (0.03, 1.0), (0.22, 0.0)]), 0.24, 1.1)
+    add(mix, thud(130.0, 50.0, 0.15), 0.24, 0.9)
+    for _ in range(8):
+        add(mix, click(rng, rng.uniform(2500.0, 4500.0), 0.008, 1.0), rng.uniform(0.26, 0.5), rng.uniform(0.2, 0.5))
+    add(mix, click(rng, 3000.0, 0.03, 1.4), 0.4, 2.0)
+    add(mix, thud(200.0, 60.0, 0.18), 0.4, 1.5)
+    add(mix, ping(2400.0, 0.12, ((1.0, 1.0), (1.47, 0.5))), 0.4, 0.2)
+    return mix, 1.9
+
+
+def erva_da_bolsa(rng):
+    """Erva da Bolsa: a bolsa abrindo num farfalhar de tecido, um resmungo baixo e as folhas
+    girando com notas suaves que sobem, a cura chegando."""
+    length = 0.85
+    mix = silence(length)
+    cloth = flutter(rng, band(noise(rng, 0.18), 1800.0, 0.9), 40.0, 0.7)
+    add(mix, shape(cloth, [(0.0, 0.0), (0.04, 1.0), (0.18, 0.0)]), 0.0, 0.7)
+    grumble = growl_voice(rng, 0.22, [(0.0, 150.0), (0.11, 130.0), (0.22, 115.0)])
+    add(mix, shape(low(grumble, 900.0), [(0.0, 0.0), (0.04, 0.6), (0.18, 0.5), (0.22, 0.0)]), 0.12, 0.45)
+    leaves = flutter(rng, band(noise(rng, 0.4), 3200.0, 1.2), 25.0, 0.6)
+    add(mix, shape(leaves, [(0.0, 0.0), (0.1, 0.8), (0.4, 0.0)]), 0.32, 0.35)
+    for index, freq in enumerate((659.3, 784.0, 988.0, 1318.5)):
+        add(mix, ping(freq, 0.25, ((1.0, 1.0), (2.0, 0.15))), 0.36 + index * 0.09, 0.25)
+    return mix, 1.4
+
+
+def atadura_firme(rng):
+    """Atadura Firme: o pano desenrolando em voltas rápidas, o puxão que aperta num nó e
+    um tom firme que fica, a Defesa subindo."""
+    length = 0.75
+    mix = silence(length)
+    for index in range(4):
+        wrap = band(noise(rng, 0.09), [(0.0, 1400.0), (0.09, 2600.0)], 1.3)
+        add(mix, shape(wrap, [(0.0, 0.0), (0.05, 1.0), (0.09, 0.0)]), index * 0.08, 0.7)
+    tug = band(noise(rng, 0.08), [(0.0, 900.0), (0.08, 400.0)], 1.5)
+    add(mix, decay(tug, 0.07, 0.002), 0.35, 1.2)
+    add(mix, click(rng, 1600.0, 0.03, 1.5), 0.36, 1.1)
+    add(mix, thud(160.0, 90.0, 0.1), 0.36, 0.6)
+    for freq in (392.0, 587.3):
+        firm = tone(0.35, freq, (1.0, 0.4, 0.2))
+        add(mix, shape(firm, [(0.0, 0.0), (0.03, 0.8), (0.25, 0.6), (0.35, 0.0)]), 0.4, 0.2)
+    return mix, 1.5
+
+
+def cochilo(rng):
+    """Cochilo: um bocejo que desce, a respiração lenta de quem dorme e notas de caixinha
+    de música que caem, o HP voltando."""
+    length = 0.95
+    mix = silence(length)
+    yawn = tone(0.3, [(0.0, 330.0), (0.1, 360.0), (0.3, 200.0)], (1.0, 0.5, 0.3, 0.15))
+    add(mix, band(shape(yawn, [(0.0, 0.0), (0.06, 0.8), (0.24, 0.6), (0.3, 0.0)]), 700.0, 0.8), 0.0, 0.7)
+    add(mix, shape(band(noise(rng, 0.3), 1200.0, 0.7), [(0.0, 0.0), (0.06, 0.4), (0.3, 0.0)]), 0.0, 0.4)
+    for at in (0.32, 0.6):
+        breath = band(noise(rng, 0.25), [(0.0, 500.0), (0.12, 900.0), (0.25, 500.0)], 0.8)
+        add(mix, shape(breath, [(0.0, 0.0), (0.12, 1.0), (0.25, 0.0)]), at, 0.45)
+    for index, freq in enumerate((1568.0, 1318.5, 1175.0, 988.0)):
+        add(mix, ping(freq, 0.3, ((1.0, 1.0), (3.0, 0.1))), 0.35 + index * 0.13, 0.25)
+    return mix, 1.3
+
+
 SOUNDS = {
     "mordida_brasa": mordida_brasa,
     "fumaca_densa": fumaca_densa,
@@ -1594,6 +1697,12 @@ SOUNDS = {
     "dardo_gotejante": dardo_gotejante,
     "pena_riscante": pena_riscante,
     "pinca_firme": pinca_firme,
+    "ferroada_paralisante": ferroada_paralisante,
+    "enterrar": enterrar,
+    "bote_da_duna": bote_da_duna,
+    "erva_da_bolsa": erva_da_bolsa,
+    "atadura_firme": atadura_firme,
+    "cochilo": cochilo,
 }
 
 
