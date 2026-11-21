@@ -23,12 +23,12 @@ As decorações moram na folha `client/assets/terrain/decorations/decorations.pn
 | 55 | `sunken_rock` | Pedra submersa | Pedra escura e transparente, embaixo d'água |
 | 56 | `sea_stack` | Rochedo no mar | Pedra alta, com cracas e espuma no pé |
 | 57 | `floating_weed` | Alga boiando | Um bolo de alga dourada boiando |
-| 58 | `bottle` | Garrafa | Garrafa de vidro deitada, boiando |
-| 59 | `can` | Lata | Lata amassada boiando |
-| 60 | `plastic_bag` | Saco plástico | Saco claro e meio transparente |
-| 61 | `fishing_net` | Rede de pesca | Pedaço de rede embolada, com uma boia |
-| 62 | `tire` | Pneu | Pneu meio afundado |
-| 63 | `crate` | Caixote boiando | Caixote de madeira meio afundado |
+| 58 | `bottle` | Garrafa PET | Refeita na [04](04-trash-and-density.md) |
+| 59 | `can` | Lata de refrigerante | Refeita na [04](04-trash-and-density.md) |
+| 60 | `plastic_bag` | Sacola plástica | Refeita na [04](04-trash-and-density.md) |
+| 61 | `old_boot` | Bota velha | Era a Rede de pesca; refeita na [04](04-trash-and-density.md) |
+| 62 | `tire` | Pneu | Refeito na [04](04-trash-and-density.md) |
+| 63 | `jug` | Galão | Era o Caixote boiando; refeito na [04](04-trash-and-density.md) |
 
 ## Requisitos
 

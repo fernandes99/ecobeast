@@ -17,7 +17,7 @@ Claude propôs o desenho, e o dono aprovou: "Aprovado, pode seguir".
 
 ## Objetivos
 
-1. 13 tipos novos de decoração da água, desenhados por código, com a parte de baixo d'água meio transparente.
+1. 13 tipos novos de decoração da água (o lixo refeito na [04](04-trash-and-density.md)), desenhados por código, com a parte de baixo d'água meio transparente.
 2. A Comum da Água rasa e a da Água profunda com algas e pedras; o lixo, raríssimo nelas.
 3. 6 zonas novas: Algal, Pedras rasas e Lixo na Água rasa; Floresta de algas, Rochedo e Lixo na Água profunda. Elas valem no mapa sorteado e se pintam nas ilhas pela ferramenta Zona do F2.
 4. Os Ecobeasts da água nascendo mais nas algas e menos no lixo.
@@ -71,6 +71,7 @@ Escolhas de Claude (_a revisar_):
 | 1 | [01-sea-art](01-sea-art.md) | A arte dos 13 tipos e a prévia | concluída (falta o dono aprovar a prévia) |
 | 2 | [02-sea-zones](02-sea-zones.md) | As receitas, as zonas e quem nasce nelas | concluída (falta o dono conferir no jogo) |
 | 3 | [03-sea-props](03-sea-props.md) | Os tipos de peça, a categoria Mar e o grupo do pincel | concluída (falta o dono conferir no F2) |
+| 4 | [04-trash-and-density](04-trash-and-density.md) | O lixo reconhecível (garrafa PET, lata, sacola, bota, pneu e galão) e a água com bem menos decoração | concluída (falta o dono conferir no jogo) |
 
 ## Resultado da verificação
 

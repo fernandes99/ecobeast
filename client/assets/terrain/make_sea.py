@@ -35,16 +35,6 @@ KELP = [(16, 30, 20), (34, 58, 34), (52, 84, 44), (76, 112, 56), (108, 140, 72)]
 KELP_FLOAT = [(40, 52, 22), (96, 112, 46), (140, 150, 70)]
 BLADDER = [(120, 92, 30), (206, 172, 72), (240, 214, 120)]
 SARGASSUM = [(66, 46, 12), (122, 90, 26), (170, 134, 46), (210, 180, 80), (238, 214, 130)]
-GLASS = [(24, 60, 44), (58, 124, 86), (110, 180, 132), (176, 226, 190), (236, 252, 240)]
-CORK = [(92, 60, 30), (150, 106, 60)]
-CAN_RED = [(56, 18, 18), (150, 36, 36), (204, 72, 64), (236, 128, 112)]
-CAN_BLUE = [(18, 30, 58), (40, 72, 140), (74, 116, 190), (130, 170, 226)]
-METAL = [(120, 124, 130), (190, 194, 200), (238, 240, 244)]
-BAG = [(150, 164, 172, 170), (206, 216, 222, 160), (238, 244, 246, 180), (255, 255, 255, 210)]
-ROPE = [(40, 64, 66), (82, 122, 118), (132, 170, 156)]
-NET_FLOAT = [(98, 26, 18), (214, 78, 40), (250, 150, 90), (255, 214, 170)]
-TIRE = [(12, 12, 14), (30, 30, 34), (50, 50, 56), (76, 76, 84)]
-CRATE = [(50, 34, 18), (98, 68, 38), (140, 102, 60), (180, 142, 90), (212, 180, 124)]
 
 
 class SeaCell(nature.Cell):
@@ -125,8 +115,8 @@ def ellipse(cell, cx, cy, rx, ry, color_at):
 
 def seagrass(cell, variant):
     rng = cell.rng
-    for _ in range(rng.randint(9, 13)):
-        x0 = BX + rng.randint(-9, 9)
+    for _ in range(rng.randint(5, 8)):
+        x0 = BX + rng.randint(-7, 7)
         y0 = BY + rng.randint(-2, 2)
         h = rng.randint(6, 12)
         bend = rng.uniform(-4, 4)
@@ -262,162 +252,176 @@ def floating_weed(cell, variant):
     ripple(cell, BX, BY - 1, 11, 3.5)
     return None
 
+def stamp(cell, art, palette, left, bottom):
+    """Desenha um desenho em texto (uma letra por pixel, '.' vazio) com o pé em `bottom`."""
+    widths = {len(line) for line in art}
+    assert len(widths) == 1, art
+    top = bottom - len(art) + 1
+    for row, line in enumerate(art):
+        for column, letter in enumerate(line):
+            if letter != '.':
+                cell.put(left + column, top + row, palette[letter])
+    return top
+
+
+def float_in_water(cell, art, palette, sunk, flip=False, lift=0):
+    """Põe o lixo boiando: as `sunk` linhas de baixo ficam embaixo d'água, com espuma e anel."""
+    if flip:
+        art = [line[::-1] for line in art]
+    width = len(art[0])
+    bottom = BY + sunk - 3 - lift
+    stamp(cell, art, palette, BX - width // 2, bottom)
+    waterline = bottom - sunk
+    sink(cell, waterline, 170, 30)
+    foam_ring(cell, BX, waterline + 1, width / 2 + 1, 1.6, 0.3, front_only=True)
+    ripple(cell, BX, waterline + 1, width / 2 + 4, 2.8)
+
+
+PET_BOTTLE = [
+    "..oooooooooo....",
+    ".ohhhrrrrhhhooo.",
+    "owwwwsssswwwwwbo",
+    "occccrrrrccccwbo",
+    ".occcrrrrcccooo.",
+    "..oooooooooo....",
+]
+PET_LABELS = [(206, 46, 46), (40, 150, 70), (40, 96, 200), (236, 150, 30)]
+PET_CAPS = [(30, 90, 200), (220, 40, 40), (250, 250, 250), (40, 150, 70)]
+
+
 def bottle(cell, variant):
-    rng = cell.rng
-    direction = 1 if variant % 2 == 0 else -1
-    length = rng.randint(7, 9)
-    x0 = BX - direction * (length // 2)
-    y = BY - 2
-    glass = GLASS if variant < 2 else [(52, 40, 22), (110, 80, 36), (164, 120, 56), (210, 170, 100), (246, 226, 180)]
-    for step in range(length):
-        x = x0 + direction * step
-        neck = step >= length - 3
-        rows = (0,) if neck else (-1, 0, 1)
-        for dy in rows:
-            if dy == -1:
-                color = glass[3]
-            elif dy == 0:
-                color = glass[2] if not neck else glass[1]
-            else:
-                color = glass[1]
-            cell.put(x, y + dy, color)
-        if not neck:
-            cell.put(x, y - 2, glass[0])
-            cell.put(x, y + 2, under(glass[0], 140, 0.3))
-    cell.put(x0 + direction * 1, y - 1, glass[4])
-    cell.put(x0 + direction * 2, y - 1, glass[4])
-    tip = x0 + direction * length
-    cell.put(tip, y, CORK[1])
-    cell.put(tip, y - 1, CORK[0])
-    cell.put(x0 - direction, y, glass[0])
-    cell.put(x0 - direction, y - 1, glass[0])
-    sink(cell, y, 150)
-    foam_ring(cell, BX, y + 1, length / 2 + 1.5, 1.6, 0.35, front_only=True)
-    ripple(cell, BX, y + 1, length / 2 + 4, 2.8)
+    palette = {
+        'o': (40, 72, 92), 'h': (240, 252, 255), 'w': (194, 230, 242), 'c': (142, 198, 218),
+        'r': PET_LABELS[variant], 's': (250, 250, 250), 'b': PET_CAPS[variant],
+    }
+    float_in_water(cell, PET_BOTTLE, palette, 2, flip=variant % 2 == 1)
     return None
+
+
+SODA_CAN = [
+    ".oooooooooo.",
+    "ollrrrrrrrmo",
+    "oLlssrrrrrmo",
+    "ollrrsssrrmo",
+    "ollrrrrrssmo",
+    ".oooooooooo.",
+]
+CAN_BODIES = [((196, 30, 36), (250, 250, 250)), ((34, 80, 170), (240, 210, 60)), ((30, 130, 60), (250, 250, 250)), ((40, 40, 44), (220, 40, 40))]
 
 
 def can(cell, variant):
-    rng = cell.rng
-    body = CAN_RED if variant % 2 == 0 else CAN_BLUE
-    y = BY - 2
-    x0 = BX - 3
-    for step in range(6):
-        x = x0 + step
-        end = step in (0, 5)
-        dent = step == 3 and variant >= 2
-        cell.put(x, y - 1 + (1 if dent else 0), METAL[1] if end else body[3])
-        cell.put(x, y, METAL[0] if end else body[2])
-        cell.put(x, y + 1, METAL[0] if end else body[1])
-        cell.put(x, y - 2 + (1 if dent else 0), body[0] if not end else METAL[0])
-    cell.put(x0 + 2, y, METAL[2])
-    cell.put(x0 - 1, y, body[0])
-    cell.put(x0 + 6, y, body[0])
-    sink(cell, y, 160)
-    foam_ring(cell, BX, y + 1, 4.5, 1.4, 0.35, front_only=True)
-    ripple(cell, BX, y + 1, 7, 2.6)
+    body, stripe = CAN_BODIES[variant]
+    palette = {
+        'o': (30, 30, 36), 'l': (214, 218, 224), 'L': (120, 124, 132), 'm': (150, 154, 160),
+        'r': body, 's': stripe,
+    }
+    float_in_water(cell, SODA_CAN, palette, 2, flip=variant >= 2)
     return None
+
+
+SHOPPING_BAG = [
+    ".ooo....ooo.",
+    ".o.o....o.o.",
+    ".o.o....o.o.",
+    "owwwoooowwwo",
+    "owhwwwwwwwwo",
+    "owwwwfwwwwwo",
+    "owwfwwLLwhwo",
+    "owwwwwLLfwwo",
+    "oggggggggggo",
+    ".oooooooooo.",
+]
+BAG_TONES = [
+    ((150, 160, 168), (246, 248, 250), (210, 216, 222), (222, 228, 232), (220, 50, 50)),
+    ((60, 100, 150), (150, 196, 236), (110, 160, 210), (124, 172, 220), (250, 250, 250)),
+    ((150, 130, 40), (250, 228, 110), (220, 196, 80), (232, 206, 90), (200, 40, 40)),
+    ((150, 160, 168), (246, 248, 250), (210, 216, 222), (222, 228, 232), (40, 120, 200)),
+]
 
 
 def plastic_bag(cell, variant):
-    rng = cell.rng
-    cx, cy = BX + rng.randint(-1, 1), BY - 3
-    rx, ry = rng.uniform(5.5, 7.0), rng.uniform(3.0, 3.8)
-
-    def color_at(x, y, edge):
-        if edge:
-            return BAG[0]
-        wrinkle = (x + y * 2) % 5 == 0
-        return BAG[3] if y < cy - 1 and not wrinkle else (BAG[1] if wrinkle else BAG[2])
-
-    shape = ellipse(cell, cx, cy, rx, ry, color_at)
-    top = min(y for _, y in shape)
-    for hx in (round(cx - rx / 2), round(cx + rx / 2) - 1):
-        cell.put(hx, top - 1, BAG[0])
-        cell.put(hx + 1, top - 2, BAG[0])
-        cell.put(hx + 2, top - 1, BAG[0])
-    for (x, y) in sorted(shape):
-        if y > cy + 1:
-            cell.put(x, y, BAG[1][:3] + (110,))
+    outline, body, fold, shade, logo = BAG_TONES[variant]
+    palette = {'o': outline, 'w': body, 'h': (255, 255, 255), 'f': fold, 'g': shade, 'L': logo}
+    float_in_water(cell, SHOPPING_BAG, palette, 3, flip=variant % 2 == 1)
     return None
 
 
-def fishing_net(cell, variant):
-    rng = cell.rng
-    w, h = rng.randint(13, 16), rng.randint(6, 8)
-    left, top = BX - w // 2, BY - 2 - h // 2
-    mesh = set()
-    for x in range(left, left + w):
-        for y in range(top, top + h):
-            u, v = x - left, y - top
-            inside = ((u - w / 2) / (w / 2)) ** 2 + ((v - h / 2) / (h / 2)) ** 2 <= 1.0 + rng.uniform(-0.25, 0.1)
-            if inside and ((u + v) % 3 == 0 or (u - v) % 3 == 0):
-                mesh.add((x, y))
-    for x, y in sorted(mesh):
-        color = ROPE[2] if (x + y) % 2 else ROPE[1]
-        cell.put(x, y, color if y <= BY - 2 else under(color, 150, 0.3))
-    for x, y in sorted(mesh):
-        if (x, y + 1) not in mesh and rng.random() < 0.3:
-            cell.put(x, y + 1, ROPE[0])
-    fx, fy = left + (2 if variant % 2 == 0 else w - 4), top
-    for dx, dy, tone in ((0, 0, 2), (1, 0, 1), (0, 1, 1), (1, 1, 1), (-1, 0, 0), (2, 0, 0), (0, -1, 0), (1, -1, 0), (0, 2, 0), (1, 2, 0)):
-        cell.put(fx + dx, fy + dy, NET_FLOAT[tone + (1 if tone else 0)] if tone else NET_FLOAT[0])
-    cell.put(fx, fy, NET_FLOAT[3])
-    ripple(cell, BX, BY - 1, w / 2 + 3, h / 2 + 1)
+OLD_BOOT = [
+    "oooooo.....",
+    "odddddo....",
+    "olkkkko....",
+    "olkxkko....",
+    "olkkxko....",
+    "olkxkkoooo.",
+    "olkkkklkkko",
+    "olkkkkkkkko",
+    "ossssssssso",
+    ".ooooooooo.",
+]
+BOOT_TONES = [
+    ((40, 24, 14), (150, 100, 60), (110, 70, 40), (222, 204, 156)),
+    ((20, 20, 22), (92, 92, 98), (60, 60, 66), (200, 200, 200)),
+    ((20, 44, 24), (96, 150, 84), (62, 112, 58), (62, 112, 58)),
+    ((48, 28, 12), (178, 120, 64), (136, 88, 46), (240, 224, 180)),
+]
+
+
+def old_boot(cell, variant):
+    outline, light, leather, lace = BOOT_TONES[variant]
+    palette = {'o': outline, 'd': (22, 14, 8), 'l': light, 'k': leather, 'x': lace, 's': (52, 46, 42)}
+    float_in_water(cell, OLD_BOOT, palette, 4, flip=variant % 2 == 1)
     return None
+
+
+OLD_TIRE = [
+    "....oooooooo....",
+    "..oohhThhThhoo..",
+    ".otTtoooooottTo.",
+    "ottTo......oTtto",
+    "otTto......ottTo",
+    ".ottToooooootto.",
+    "..oottTttTttoo..",
+    "....oooooooo....",
+]
 
 
 def tire(cell, variant):
-    rng = cell.rng
-    cx, cy = BX, BY - 3
-    rx, ry = rng.uniform(6.5, 7.5), rng.uniform(3.4, 4.0)
-    hole_rx, hole_ry = rx * 0.45, ry * 0.42
-
-    def color_at(x, y, edge):
-        if ((x + 0.5 - cx) / hole_rx) ** 2 + ((y + 0.5 - cy - 0.6) / hole_ry) ** 2 <= 1.0:
-            return None
-        if edge:
-            return TIRE[0]
-        if y < cy - 1:
-            return TIRE[3] if (x + y) % 3 == 0 else TIRE[2]
-        return TIRE[1] if (x % 2 == 0) else TIRE[2]
-
-    ellipse(cell, cx, cy, rx, ry, color_at)
-    sink(cell, cy, 160)
-    foam_ring(cell, cx, cy + 1, rx + 1, ry * 0.6, 0.3, front_only=True)
-    ripple(cell, cx, cy + 1, rx + 3, ry + 0.6)
+    palette = {'o': (10, 10, 12), 't': (40, 40, 46), 'T': (72, 72, 80), 'h': (96, 96, 104)}
+    float_in_water(cell, OLD_TIRE, palette, 2, flip=variant % 2 == 1)
     return None
 
 
-def crate(cell, variant):
-    rng = cell.rng
-    w = rng.randint(10, 12)
-    front_h = rng.randint(5, 6)
-    top_h = 4
-    left = BX - w // 2
-    base = BY - 1
-    for x in range(left, left + w):
-        for y in range(base - front_h, base + 1):
-            edge = x in (left, left + w - 1) or y in (base - front_h, base)
-            plank = (y - (base - front_h)) % 3 == 0
-            cell.put(x, y, CRATE[0] if edge else (CRATE[1] if plank else CRATE[2]))
-        for k in range(top_h):
-            y = base - front_h - 1 - k
-            xs = x + (top_h - k) // 2
-            edge = k == top_h - 1 or x in (left, left + w - 1)
-            cell.put(xs, y, CRATE[0] if edge else (CRATE[4] if (x - left) % 4 == 1 else CRATE[3]))
-    for y in range(base - front_h + 1, base):
-        cell.put(left + w // 2, y, CRATE[1])
-    waterline = base - front_h // 2
-    sink(cell, waterline, 160)
-    foam_ring(cell, BX, waterline + 1, w / 2 + 1.5, 1.8, 0.25, front_only=True)
-    ripple(cell, BX, waterline + 1, w / 2 + 4, 3)
+PLASTIC_JUG = [
+    "..oooo....",
+    "..obbo....",
+    ".owwwwoooo",
+    "owhwwwwo.o",
+    "owhwwwwo.o",
+    "owwwwwwooo",
+    "owwwwwwwwo",
+    "owwllllwwo",
+    "owwllllwwo",
+    "occcccccco",
+    ".oooooooo.",
+]
+JUG_TONES = [
+    ((236, 232, 214), (200, 194, 172), (220, 60, 40), (60, 120, 200)),
+    ((246, 248, 250), (206, 212, 218), (40, 96, 200), (40, 150, 70)),
+    ((150, 196, 236), (110, 160, 210), (250, 250, 250), (250, 250, 250)),
+    ((240, 200, 80), (204, 164, 56), (40, 40, 44), (200, 40, 40)),
+]
+
+
+def jug(cell, variant):
+    body, shade, cap, label = JUG_TONES[variant]
+    palette = {'o': (90, 92, 96), 'w': body, 'h': (255, 255, 255), 'c': shade, 'b': cap, 'l': label}
+    float_in_water(cell, PLASTIC_JUG, palette, 4, flip=variant % 2 == 1)
     return None
 
 
 KINDS = [
     seagrass, kelp, algae_patch, sea_rock, sunken_rock, sea_stack, floating_weed,
-    bottle, can, plastic_bag, fishing_net, tire, crate,
+    bottle, can, plastic_bag, old_boot, tire, jug,
 ]
 
 

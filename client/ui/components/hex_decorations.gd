@@ -67,9 +67,9 @@ const KIND_ROWS: Dictionary[String, int] = {
 	"bottle": 58,
 	"can": 59,
 	"plastic_bag": 60,
-	"fishing_net": 61,
+	"old_boot": 61,
 	"tire": 62,
-	"crate": 63,
+	"jug": 63,
 }
 ## O espaço que cada tipo ocupa no chão, em pixels da arte. Ele também é a
 ## distância mínima do centro do hexágono, onde o jogador fica.
@@ -132,12 +132,12 @@ const KIND_RADIUS: Dictionary[String, float] = {
 	"sunken_rock": 8.0,
 	"sea_stack": 11.0,
 	"floating_weed": 8.0,
-	"bottle": 5.0,
-	"can": 4.0,
-	"plastic_bag": 6.0,
-	"fishing_net": 8.0,
-	"tire": 7.0,
-	"crate": 7.0,
+	"bottle": 8.0,
+	"can": 6.0,
+	"plastic_bag": 7.0,
+	"old_boot": 6.0,
+	"tire": 8.0,
+	"jug": 5.0,
 }
 const WIND_SHADER_PATH := "res://ui/components/plant_wind.gdshader"
 ## O vento em cada tipo: quantos pixels da arte o topo anda e a altura da planta, a
@@ -174,7 +174,6 @@ const KIND_SWAY: Dictionary[String, Vector2] = {
 	"algae_patch": Vector2(1.0, 4.0),
 	"floating_weed": Vector2(1.0, 4.0),
 	"plastic_bag": Vector2(1.0, 6.0),
-	"fishing_net": Vector2(1.0, 5.0),
 }
 const NO_SWAY := Vector2(0.0, 1.0)
 ## Por superfície: tipo, chance de aparecer no hexágono, mínimo e máximo. Da
@@ -204,14 +203,14 @@ const RECIPES: Dictionary = {
 	"snow_field": [["ice_shards", 0.05, 1, 1], ["snow_tuft", 0.15, 1, 1]],
 	"snow_pines": [["snow_pine", 0.9, 2, 4], ["snow_bush", 0.15, 1, 1], ["snow_log", 0.1, 1, 1], ["frozen_branch", 0.15, 1, 1]],
 	# A água (sea-life/02): a Comum e as zonas; o lixo só é comum nas zonas Lixo.
-	"wshallow": [["sea_rock", 0.06, 1, 1], ["sunken_rock", 0.12, 1, 1], ["algae_patch", 0.2, 1, 1], ["seagrass", 0.35, 1, 3], ["floating_weed", 0.04, 1, 1], ["bottle", 0.01, 1, 1], ["can", 0.01, 1, 1]],
-	"wshallow_rocks": [["sea_rock", 0.6, 1, 2], ["sunken_rock", 0.5, 1, 2], ["algae_patch", 0.3, 1, 1], ["seagrass", 0.2, 1, 2]],
-	"wshallow_seagrass": [["kelp", 0.2, 1, 1], ["algae_patch", 0.5, 1, 2], ["seagrass", 0.9, 3, 5], ["floating_weed", 0.15, 1, 1]],
-	"wshallow_trash": [["tire", 0.15, 1, 1], ["crate", 0.12, 1, 1], ["fishing_net", 0.25, 1, 1], ["plastic_bag", 0.4, 1, 2], ["bottle", 0.5, 1, 2], ["can", 0.5, 1, 2], ["seagrass", 0.2, 1, 2]],
-	"wdeep": [["sea_stack", 0.02, 1, 1], ["kelp", 0.12, 1, 2], ["sunken_rock", 0.06, 1, 1], ["floating_weed", 0.06, 1, 1], ["bottle", 0.008, 1, 1]],
-	"wdeep_rocks": [["sea_stack", 0.4, 1, 1], ["sea_rock", 0.5, 1, 2], ["sunken_rock", 0.3, 1, 1]],
-	"wdeep_kelp": [["kelp", 0.9, 2, 4], ["sunken_rock", 0.1, 1, 1], ["floating_weed", 0.3, 1, 2]],
-	"wdeep_trash": [["crate", 0.15, 1, 1], ["tire", 0.1, 1, 1], ["fishing_net", 0.3, 1, 1], ["plastic_bag", 0.3, 1, 1], ["bottle", 0.5, 1, 2], ["can", 0.4, 1, 2], ["floating_weed", 0.2, 1, 1]],
+	"wshallow": [["sea_rock", 0.03, 1, 1], ["sunken_rock", 0.05, 1, 1], ["algae_patch", 0.07, 1, 1], ["seagrass", 0.12, 1, 2], ["floating_weed", 0.015, 1, 1], ["bottle", 0.004, 1, 1], ["can", 0.004, 1, 1]],
+	"wshallow_rocks": [["sea_rock", 0.25, 1, 1], ["sunken_rock", 0.2, 1, 1], ["algae_patch", 0.1, 1, 1], ["seagrass", 0.08, 1, 1]],
+	"wshallow_seagrass": [["kelp", 0.06, 1, 1], ["algae_patch", 0.2, 1, 1], ["seagrass", 0.45, 1, 3], ["floating_weed", 0.05, 1, 1]],
+	"wshallow_trash": [["tire", 0.06, 1, 1], ["jug", 0.06, 1, 1], ["old_boot", 0.08, 1, 1], ["plastic_bag", 0.15, 1, 1], ["bottle", 0.2, 1, 1], ["can", 0.18, 1, 1], ["seagrass", 0.08, 1, 1]],
+	"wdeep": [["sea_stack", 0.01, 1, 1], ["kelp", 0.04, 1, 1], ["sunken_rock", 0.02, 1, 1], ["floating_weed", 0.02, 1, 1], ["bottle", 0.003, 1, 1]],
+	"wdeep_rocks": [["sea_stack", 0.18, 1, 1], ["sea_rock", 0.2, 1, 1], ["sunken_rock", 0.12, 1, 1]],
+	"wdeep_kelp": [["kelp", 0.4, 1, 2], ["sunken_rock", 0.04, 1, 1], ["floating_weed", 0.1, 1, 1]],
+	"wdeep_trash": [["jug", 0.06, 1, 1], ["tire", 0.05, 1, 1], ["old_boot", 0.1, 1, 1], ["plastic_bag", 0.12, 1, 1], ["bottle", 0.2, 1, 1], ["can", 0.15, 1, 1], ["floating_weed", 0.06, 1, 1]],
 }
 const PLACE_TRIES := 8
 static var _warned_zones: Dictionary = {}
