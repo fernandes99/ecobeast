@@ -283,6 +283,13 @@ export type BattleEvent =
   | { type: 'round_started'; round: number; queue: Spot[] }
   | { type: 'vez_started'; side: SideSlug; position: number }
   | { type: 'moved'; side: SideSlug; position: number; path: HexCoord[] }
+  | {
+      type: 'teleported';
+      side: SideSlug;
+      position: number;
+      from: HexCoord;
+      to: HexCoord;
+    }
   | { type: 'waited'; side: SideSlug; position: number }
   | {
       type: 'mark_placed';

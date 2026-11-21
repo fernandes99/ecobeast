@@ -52,11 +52,18 @@ import type {
 } from '../battle/types.js';
 import { CANNOT_USE, NO_ITEM } from '../items/use-item.js';
 import { type HexCoord, hexKey } from '../exploration/hex.js';
-import { ALLY_TARGET, areaOf, NO_ENEMY_THERE } from './areas.js';
+import {
+  ALLY_TARGET,
+  ANY_TARGET,
+  areaOf,
+  isTeleport,
+  NO_ENEMY_THERE,
+} from './areas.js';
 import { chooseEnemyVez } from './board-ai.js';
 import {
   cellOf,
   entryCellsFor,
+  hasCell,
   isFree,
   makeBoard,
   MOVE_RANGE,
@@ -86,6 +93,9 @@ export const FLEE_NO_MOVE = 'Fugir não combina com andar.';
 export const DAZED_NO_MOVE = 'Atordoado: não dá para andar nesta vez.';
 export const TRAPPED_NO_MOVE = 'Preso: não dá para andar nesta vez.';
 export const ENTRY_NOT_FREE = 'Esse hexágono não está livre para entrar.';
+export const CHOOSE_DESTINATION = 'Escolha para onde.';
+export const DESTINATION_NOT_FREE = 'Esse hexágono não está livre.';
+export const NO_DESTINATION = 'Essa Técnica não escolhe destino.';
 const CHOOSE_NEXT = 'Escolha o próximo Ecobeast.';
 const NOBODY_WAITING = 'Ninguém está esperando para entrar.';
 
@@ -247,7 +257,10 @@ function actionRefusal(
       const learned = creature.skills[action.slot - 1]!;
       if (!isReady(learned, state.round)) return NOT_READY;
       const skill = catalog.skills.get(learned.skillId)!;
-      return areaRefusal(state, spot, from, skill, action.target);
+      return (
+        areaRefusal(state, spot, from, skill, action.target) ??
+        destinationRefusal(state, spot, from, skill, action)
+      );
     }
     case 'emergency':
       return hasPp(creature)
@@ -294,7 +307,39 @@ function defaultAim(
   state: BoardState,
   skill: BattleSkill,
 ): HexCoord | undefined {
-  return skill.targetSlug === ALLY_TARGET ? undefined : onlyEnemyCell(state);
+  return skill.targetSlug === ALLY_TARGET || skill.targetSlug === ANY_TARGET
+    ? undefined
+    : onlyEnemyCell(state);
+}
+
+function destinationRefusal(
+  state: BoardState,
+  spot: Spot,
+  from: HexCoord,
+  skill: BattleSkill,
+  action: Extract<BoardAction, { type: 'skill' }>,
+): string | null {
+  if (!isTeleport(skill)) return action.destination ? NO_DESTINATION : null;
+  if (!action.destination) return CHOOSE_DESTINATION;
+  return sameCell(action.destination, action.target!) ||
+    !freeAfterMove(state, spot, from, action.destination)
+    ? DESTINATION_NOT_FREE
+    : null;
+}
+
+/** Livre depois do passo desta vez: o hexágono de onde o autor saiu conta como livre. */
+function freeAfterMove(
+  state: BoardState,
+  spot: Spot,
+  from: HexCoord,
+  cell: HexCoord,
+): boolean {
+  if (!hasCell(state, cell) || sameCell(cell, from)) return false;
+  const occupant = spotAt(state, cell);
+  return (
+    occupant === null ||
+    (occupant.side === spot.side && occupant.position === spot.position)
+  );
 }
 
 function onlyEnemyCell(state: BoardState): HexCoord | undefined {
@@ -465,8 +510,16 @@ function useSkill(
     ? catalog.skills.get(learned.skillId)!
     : EMERGENCY_SKILL;
   const aim = action.target ?? defaultAim(state, skill);
-  const area = areaOf(state, spot, cellOf(state, spot)!, skill, aim);
-  if ('error' in area) {
+  const here = cellOf(state, spot)!;
+  const area = areaOf(state, spot, here, skill, aim);
+  const destination =
+    action.type === 'skill' && isTeleport(skill) ? action.destination : null;
+  const lost =
+    destination !== null &&
+    (!destination ||
+      sameCell(destination, aim!) ||
+      !freeAfterMove(state, spot, here, destination));
+  if ('error' in area || lost) {
     // Só a IA chega aqui, e só se o tabuleiro mudou: ela espera.
     events.push({ type: 'waited', ...spot });
     return;
@@ -480,8 +533,12 @@ function useSkill(
     type: 'skill_used',
     ...spot,
     skill_id: learned ? skill.id : null,
-    cells: area.cells,
+    cells: destination ? [...area.cells, destination] : area.cells,
   });
+  if (destination) {
+    teleport(context, spot, area.foes[0]!, destination);
+    return;
+  }
   let defeated = false;
   if (skill.targetSlug === 'self') {
     resolveSkill(context, spot, skill, null);
@@ -500,6 +557,23 @@ function useSkill(
   }
   faintIfDown(context, spot);
   if (defeated && author.currentHp > 0) applyDefeatTrait(context, spot);
+}
+
+/** O Protegido do outro lado fica onde está; de resto, o alvo muda de hexágono e nada mais. */
+function teleport(
+  context: BoardContext,
+  spot: Spot,
+  mover: Spot,
+  to: HexCoord,
+): void {
+  const { state, events } = context;
+  if (mover.side !== spot.side && combatantAt(state, mover).isProtected) {
+    events.push({ type: 'blocked', ...mover });
+    return;
+  }
+  const from = cellOf(state, mover)!;
+  state.cells[mover.side][mover.position] = to;
+  events.push({ type: 'teleported', ...mover, from, to });
 }
 
 function useItem(

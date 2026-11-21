@@ -353,12 +353,18 @@ func _check_skills() -> void:
 				_row_error("skills", lines[i], "técnica para o time precisa de power = 0")
 			if _slug_of("area_shapes", rows[i]["area_shape_id"]) != "single":
 				_row_error("skills", lines[i], "técnica para o time precisa da área single")
+		if _slug_of("skill_targets", rows[i]["skill_target_id"]) == "any":
+			if rows[i]["power"] != 0:
+				_row_error("skills", lines[i], "técnica para qualquer Ecobeast precisa de power = 0")
+			if _slug_of("area_shapes", rows[i]["area_shape_id"]) != "single":
+				_row_error("skills", lines[i], "técnica para qualquer Ecobeast precisa da área single")
 
 
 func _check_skill_effects() -> void:
 	var rows: Array[Dictionary] = _rows["skill_effects"]
 	var lines: Array[int] = _lines["skill_effects"]
 	var seen_order: Dictionary = {}
+	var teleporters: Dictionary = {}
 	for i: int in rows.size():
 		var row := rows[i]
 		var order_key := "%d,%d" % [row["skill_id"], row["sort_order"]]
@@ -374,6 +380,8 @@ func _check_skill_effects() -> void:
 		var effect_slug := _slug_of("effect_types", row["effect_type_id"])
 		if effect_slug.is_empty():
 			continue
+		if effect_slug == "teleport":
+			teleporters[row["skill_id"]] = true
 		if not CatalogSchema.EFFECT_PARAMS.has(effect_slug):
 			_row_error("skill_effects", lines[i], "tipo de efeito '%s' sem regra em CatalogSchema.EFFECT_PARAMS" % effect_slug)
 			continue
@@ -385,6 +393,13 @@ func _check_skill_effects() -> void:
 				_row_error("skill_effects", lines[i], "efeito '%s' precisa de '%s'" % [effect_slug, column])
 			elif not required and not optional and row[column] != null:
 				_row_error("skill_effects", lines[i], "efeito '%s' não usa '%s' (deve ser null)" % [effect_slug, column])
+
+	# O efeito Teleportar e o alvo "any" só andam juntos (veilmoth-line/03).
+	var skills: Array[Dictionary] = _rows["skills"]
+	for i: int in skills.size():
+		var anyone := _slug_of("skill_targets", skills[i]["skill_target_id"]) == "any"
+		if anyone != teleporters.has(skills[i]["id"]):
+			_row_error("skills", _lines["skills"][i], "o alvo 'any' e o efeito 'teleport' precisam vir juntos")
 
 
 func _check_evolutions() -> void:

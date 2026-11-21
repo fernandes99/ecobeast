@@ -154,6 +154,7 @@ Os eventos de hoje continuam, com `side` e `position`. Os novos e os que mudam:
 | `multi_hit` | `side`, `position` (do alvo), `hits`: depois dos `damage` de uma Técnica de vários golpes ([puffcoo-line/01](../puffcoo-line/01-field-rules.md)) |
 | `creature_entered` | os de hoje e `cell` |
 | `capture_attempted` | os de hoje, com `target` sendo a posição do selvagem |
+| `teleported` | `side`, `position` (de quem foi levado), `from`, `to`: depois do `skill_used` do Teleporte, que manda em `cells` o alvo e o destino ([veilmoth-line/03](../veilmoth-line/03-teleport.md)) |
 
 ## API
 

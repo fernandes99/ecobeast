@@ -13,6 +13,14 @@ export const NO_ENEMY_THERE = 'Não há inimigo nesse hexágono.';
 export const STRAIGHT_LINE = 'A linha só anda em linha reta.';
 export const ALLY_ONLY = 'Não há Ecobeast do seu time nesse hexágono.';
 export const ALLY_TARGET = 'ally';
+export const ANY_TARGET = 'any';
+export const NOBODY_THERE = 'Não há Ecobeast nesse hexágono.';
+export const TELEPORT_EFFECT = 'teleport';
+
+/** O Teleporte (veilmoth-line/03) leva quem está no alvo para um destino livre. */
+export function isTeleport(skill: BattleSkill): boolean {
+  return skill.effects.some((effect) => effect.effectSlug === TELEPORT_EFFECT);
+}
 
 export interface SkillArea {
   cells: HexCoord[];
@@ -28,6 +36,8 @@ export function areaOf(
 ): SkillArea | { error: string } {
   if (skill.targetSlug === 'self') return { cells: [], foes: [] };
   if (!target || !hasCell(state, target)) return { error: OUT_OF_RANGE };
+  if (skill.targetSlug === ANY_TARGET)
+    return anyArea(state, spot, from, target);
   const distance = hexDistance(from, target);
   if (skill.targetSlug === ALLY_TARGET) {
     return allyArea(state, spot, from, skill, target, distance);
@@ -60,6 +70,24 @@ function allyArea(
     occupant.position !== spot.position &&
     standingAt(state, occupant);
   return isAlly ? { cells: [target], foes: [occupant] } : { error: ALLY_ONLY };
+}
+
+/** Qualquer Ecobeast de pé, de qualquer lado e a qualquer distância; o autor conta em `from`. */
+function anyArea(
+  state: BoardState,
+  spot: Spot,
+  from: HexCoord,
+  target: HexCoord,
+): SkillArea | { error: string } {
+  if (sameCell(from, target)) return { cells: [target], foes: [spot] };
+  const occupant = spotAt(state, target);
+  const isAuthor =
+    occupant !== null &&
+    occupant.side === spot.side &&
+    occupant.position === spot.position;
+  return occupant && !isAuthor && standingAt(state, occupant)
+    ? { cells: [target], foes: [occupant] }
+    : { error: NOBODY_THERE };
 }
 
 function foeAt(state: BoardState, spot: Spot, cell: HexCoord): Spot | null {

@@ -46,7 +46,7 @@ export interface BoardContext extends TurnContext {
 }
 
 export type BoardAction =
-  | { type: 'skill'; slot: number; target?: HexCoord }
+  | { type: 'skill'; slot: number; target?: HexCoord; destination?: HexCoord }
   | { type: 'emergency'; target?: HexCoord }
   | { type: 'item'; item_id: number; team_index: number }
   | { type: 'switch'; team_index: number }

@@ -113,6 +113,7 @@ O Ecobeast é um jogo mobile (Android/iOS, retrato): o cliente em **Godot 4.7 co
 | [hopling-line](hopling-line/) | A canguru médica, Hopling e Pouchmend (Instinto), o primeiro Ecobeast de suporte, com 4 Técnicas que curam e protegem os aliados |
 | [terrain-plateaus](terrain-plateaus/) | O relevo do mapa sorteado em patamares, com paredões que bloqueiam o Domador em todo mapa, escadarias e a Montanha de 8 a 10 |
 | [glimshell-line](glimshell-line/) | O jabuti de cristal, Glimshell, Lumoshell e Prismback (Luz), o primeiro tanque especial, com 4 Técnicas de Luz que protegem e enfraquecem |
+| [veilmoth-line](veilmoth-line/) | A mariposa gêmea, Veilmoth e Gatemoth (Arcano), Épica e só da Noite, com as primeiras Técnicas de Arcano e o Teleporte, que leva qualquer Ecobeast do campo a um hexágono vazio |
 
 As próximas iniciativas estão no [roadmap.md](roadmap.md).
 

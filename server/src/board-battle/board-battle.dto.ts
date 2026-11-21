@@ -172,6 +172,18 @@ export class BoardActionDto {
   @ValidateNested({ message: INVALID_ACTION })
   @Type(() => HexCoordDto)
   target?: HexCoordDto;
+
+  @ApiPropertyOptional({
+    description:
+      'Só em `skill` com o Teleporte: o hexágono livre para onde vai o ' +
+      'Ecobeast do `target`.',
+    type: () => HexCoordDto,
+  })
+  @ValidateIf((body: BoardActionDto) => body.destination !== undefined)
+  @IsDefined({ message: INVALID_ACTION })
+  @ValidateNested({ message: INVALID_ACTION })
+  @Type(() => HexCoordDto)
+  destination?: HexCoordDto;
 }
 
 export class BoardEntryDto {

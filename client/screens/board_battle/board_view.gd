@@ -69,6 +69,12 @@ const HIT_BLINK_SECONDS := 0.07
 const HIT_BLINK_ALPHA := 0.25
 const SHAKES := 4
 const VANISH_SECONDS := 0.3
+## O pó do Teleporte (veilmoth-line/03), nas cores do Arcano.
+const TELEPORT_DUST: Array[Color] = [Color("a99bff"), Color("7fe8ff"), Color("d4ccff")]
+const DUST_COUNT := 12
+const DUST_SIZE := 4.0
+const DUST_RISE := 40.0
+const DUST_SPREAD := 24.0
 const COIN_PATH := "res://ui/icons/coin.svg"
 const COIN_SIZE := 40.0
 const COIN_RISE := 70.0
@@ -577,6 +583,39 @@ func vanish(key: String, coin: bool) -> void:
 	remove(key)
 	if coin:
 		_pop_coin(middle)
+
+
+## Some no hexágono de origem e aparece no destino, com o pó subindo nos dois.
+func teleport(key: String, cell: Vector2i) -> void:
+	if not _tokens.has(key):
+		return
+	var token: Token = _tokens[key]
+	_puff(_body_middle(token))
+	await _fade_token(token, 0.0)
+	snap(key, cell)
+	_puff(_body_middle(token))
+	await _fade_token(token, 1.0)
+
+
+func _fade_token(token: Token, alpha: float) -> void:
+	create_tween().tween_property(token, ^"modulate:a", alpha, VANISH_SECONDS)
+	create_tween().tween_property(token.hud, ^"modulate:a", alpha, VANISH_SECONDS)
+	await get_tree().create_timer(VANISH_SECONDS).timeout
+
+
+func _puff(at: Vector2) -> void:
+	for index: int in DUST_COUNT:
+		var dust := ColorRect.new()
+		dust.color = TELEPORT_DUST[index % TELEPORT_DUST.size()]
+		dust.size = Vector2.ONE * DUST_SIZE
+		dust.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var start := at + Vector2(randf_range(-DUST_SPREAD, DUST_SPREAD), randf_range(-DUST_SPREAD, DUST_SPREAD) * 0.6).round()
+		dust.position = start
+		add_child(dust)
+		var rise := create_tween().set_parallel()
+		rise.tween_property(dust, ^"position:y", start.y - DUST_RISE, VANISH_SECONDS * 2.0)
+		rise.tween_property(dust, ^"modulate:a", 0.0, VANISH_SECONDS * 2.0)
+		rise.finished.connect(dust.queue_free)
 
 
 func _pop_coin(at: Vector2) -> void:

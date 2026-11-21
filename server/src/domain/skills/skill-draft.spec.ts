@@ -108,6 +108,61 @@ describe('skillDraftError', () => {
     ).toBe('Uma Técnica para o time atinge um Ecobeast só: a área é Um alvo.');
   });
 
+  describe('o Teleporte (veilmoth-line/03)', () => {
+    const withTeleport = () =>
+      tables({
+        skillTargetIds: new Set([1, 2, 4, 5]),
+        targetSlugs: new Map([
+          [1, 'enemy'],
+          [2, 'self'],
+          [4, 'ally'],
+          [5, 'any'],
+        ]),
+        effectTypes: new Map([
+          [3, { slug: 'heal', name: 'Curar' }],
+          [13, { slug: 'teleport', name: 'Teleportar' }],
+        ]),
+      });
+    const teleport = { effect_type_id: 13, chance: 100, skill_target_id: 5 };
+    const anyone = { skill_target_id: 5, power: 0, effects: [teleport] };
+
+    it('aceita o efeito Teleportar com o alvo Qualquer Ecobeast', () => {
+      expect(skillDraftError(draft(anyone), withTeleport(), false)).toBeNull();
+    });
+
+    it('não deixa um sem o outro', () => {
+      expect(
+        skillDraftError(
+          draft({ power: 0, skill_target_id: 1, effects: [teleport] }),
+          withTeleport(),
+          false,
+        ),
+      ).toBe(
+        'O efeito Teleportar só vai numa Técnica com o alvo Qualquer Ecobeast.',
+      );
+      expect(
+        skillDraftError(
+          draft({ ...anyone, effects: [] }),
+          withTeleport(),
+          false,
+        ),
+      ).toBe('O alvo Qualquer Ecobeast só serve para o efeito Teleportar.');
+    });
+
+    it('pede poder 0 e a área Um alvo', () => {
+      expect(
+        skillDraftError(draft({ ...anyone, power: 40 }), withTeleport(), false),
+      ).toBe('O Teleporte não causa dano: o poder fica 0.');
+      expect(
+        skillDraftError(
+          draft({ ...anyone, area_shape_id: 2 }),
+          withTeleport(),
+          false,
+        ),
+      ).toBe('O Teleporte leva um Ecobeast só: a área é Um alvo.');
+    });
+  });
+
   it('recusa mais golpes no mínimo que no máximo', () => {
     expect(
       skillDraftError(draft({ min_hits: 3, max_hits: 2 }), tables(), false),

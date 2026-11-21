@@ -62,7 +62,14 @@ function toBoardAction(action: BoardActionDto): BoardAction {
   const target = action.target && { q: action.target.q, r: action.target.r };
   switch (action.type) {
     case 'skill':
-      return { type: 'skill', slot: action.slot!, ...(target && { target }) };
+      return {
+        type: 'skill',
+        slot: action.slot!,
+        ...(target && { target }),
+        ...(action.destination && {
+          destination: { q: action.destination.q, r: action.destination.r },
+        }),
+      };
     case 'emergency':
       return { type: 'emergency', ...(target && { target }) };
     case 'item':

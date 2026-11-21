@@ -29,6 +29,7 @@ const EFFECT_PARAMS := {
 	"set_weather": {"required": ["weather_id", "min_turns"], "optional": []},
 	"protect": {"required": [], "optional": []},
 	"switch": {"required": [], "optional": []},
+	"teleport": {"required": [], "optional": ["skill_target_id"]},
 }
 
 ## As formas de área que o jogo sabe desenhar (board-battle/01). Uma forma nova

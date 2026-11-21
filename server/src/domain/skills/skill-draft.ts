@@ -10,6 +10,8 @@ export const MAX_LEARN_LEVEL = 100;
 export const EVOLUTION_LEVEL = 0;
 export const STARTING_LEVEL = 1;
 export const ALLY_TARGET = 'ally';
+export const ANY_TARGET = 'any';
+export const TELEPORT_EFFECT = 'teleport';
 export const SINGLE_AREA = 'single';
 
 export const EFFECT_COLUMNS = [
@@ -41,6 +43,7 @@ export const EFFECT_PARAMS: Record<
   fixed_damage: { required: [], optional: ['value'] },
   protect: { required: [], optional: [] },
   switch: { required: [], optional: [] },
+  teleport: { required: [], optional: ['skill_target_id'] },
 };
 
 /** O jogo exige weather_id, e o banco o obriga nulo. */
@@ -123,6 +126,7 @@ export function skillDraftError(
   return (
     fieldsError(draft, tables, creating) ??
     effectsError(draft.effects, tables) ??
+    teleportError(draft, tables) ??
     learnersError(draft.learners, tables)
   );
 }
@@ -151,6 +155,14 @@ function fieldsError(
     }
     if (tables.areaSlugs.get(draft.area_shape_id) !== SINGLE_AREA) {
       return 'Uma Técnica para o time atinge um Ecobeast só: a área é Um alvo.';
+    }
+  }
+  if (tables.targetSlugs.get(draft.skill_target_id) === ANY_TARGET) {
+    if (draft.power !== 0) {
+      return 'O Teleporte não causa dano: o poder fica 0.';
+    }
+    if (tables.areaSlugs.get(draft.area_shape_id) !== SINGLE_AREA) {
+      return 'O Teleporte leva um Ecobeast só: a área é Um alvo.';
     }
   }
   if (draft.min_hits > draft.max_hits) {
@@ -202,6 +214,25 @@ function effectsError(
         return `${label} tem ${what} ${id}, que não existe.`;
       }
     }
+  }
+  return null;
+}
+
+/** O efeito Teleportar e o alvo Qualquer Ecobeast só andam juntos (veilmoth-line/03). */
+function teleportError(
+  draft: SkillDraft,
+  tables: SkillDraftTables,
+): string | null {
+  const teleports = draft.effects.some(
+    (effect) =>
+      tables.effectTypes.get(effect.effect_type_id)?.slug === TELEPORT_EFFECT,
+  );
+  const anyone = tables.targetSlugs.get(draft.skill_target_id) === ANY_TARGET;
+  if (teleports && !anyone) {
+    return 'O efeito Teleportar só vai numa Técnica com o alvo Qualquer Ecobeast.';
+  }
+  if (anyone && !teleports) {
+    return 'O alvo Qualquer Ecobeast só serve para o efeito Teleportar.';
   }
   return null;
 }

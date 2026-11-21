@@ -45,6 +45,8 @@ const CHARS_PER_SECOND := 60.0
 const EMERGENCY_RANGE := 1
 const SELF_TARGET := "self"
 const ALLY_TARGET := "ally"
+const ANY_TARGET := "any"
+const NO_MOVER := Vector2i(-9999, -9999)
 const MIN_STAGE := -6
 const MAX_STAGE := 6
 const DEBUG_MARGIN := 16.0
@@ -115,6 +117,9 @@ var _sphere_item := -1
 var _targets: Array[Vector2i] = []
 ## O triângulo aceso pelo 1º toque, que o 2º toque confirma (board-battle/33).
 var _preview: Array[Vector2i] = []
+## O Teleporte (veilmoth-line/03): o 1º toque escolhe quem vai, o 2º o hexágono livre.
+var _mover := NO_MOVER
+var _free: Array[Vector2i] = []
 ## Fugir depois de andar pede um segundo toque, que desfaz o passo.
 var _flee_armed: bool = false
 
@@ -650,6 +655,8 @@ func _play_event(event: Dictionary) -> void:
 				await _play_skill_effect(key)
 			if _protects() and _statuses.protect(key):
 				_show_statuses([key])
+		"teleported":
+			await _board.teleport(key, BoardBattleView.cell_of(DictFields.get_dict(event, "to")))
 		"fainted":
 			_board.fade(key)
 			_set_stages(key, {})
@@ -839,6 +846,8 @@ func _line_for(type: String, side: String, key: String, event: Dictionary) -> St
 			return "Você recebeu %d moedas por derrotar %s." % [DictFields.get_int(event, "amount"), species.name]
 		"coins_lost":
 			return "Você perdeu %d moedas." % DictFields.get_int(event, "amount")
+		"teleported":
+			return ("%s se teleportou." if key == _attacker_key else "%s foi teleportado.") % who
 		"vez_started", "mark_ended", "creature_left":
 			return ""
 	if side == "player" or side == "enemy":
@@ -1137,6 +1146,9 @@ func _on_cell_tapped(cell: Vector2i) -> void:
 			_send({"type": "capture", "item_id": _sphere_item, "target": {"q": cell.x, "r": cell.y}})
 			return
 		_cancel_skill()
+	if _skill_slot > 0 and _aims_anyone():
+		_pick_teleport(cell)
+		return
 	if _skill_slot != 0:
 		if _preview.has(cell):
 			cell = _preview[-1]
@@ -1198,12 +1210,52 @@ func _choose_skill(slot: int) -> void:
 			_send({"type": "skill", "slot": slot})
 			return
 		_skill_slot = slot
-		if target_slug == ALLY_TARGET:
+		if target_slug == ANY_TARGET:
+			_targets = _ally_cells()
+			_targets.append_array(foes)
+		elif target_slug == ALLY_TARGET:
 			_targets = BoardGeometry.ally_targets(skill, _ally_cells(), _here())
 		else:
 			_targets = BoardGeometry.targets(skill, _view.board_cells, foes, _here())
 	_mark_skill()
 	_board.light(_targets, UiPalette.BOARD_TARGET)
+
+
+func _aims_anyone() -> bool:
+	var skill := GameData.get_skill(_view.player_at(_actor).skills[_skill_slot - 1].skill_id)
+	return GameData.get_row("skill_targets", skill.skill_target_id).get("slug", "") == ANY_TARGET
+
+
+## Tocar de novo em quem vai, ou fora dos acesos, volta à escolha de quem vai.
+func _pick_teleport(cell: Vector2i) -> void:
+	if _mover != NO_MOVER:
+		if _free.has(cell):
+			_send({"type": "skill", "slot": _skill_slot, "target": {"q": _mover.x, "r": _mover.y}, "destination": {"q": cell.x, "r": cell.y}})
+			return
+		_mover = NO_MOVER
+		_board.light(_targets, UiPalette.BOARD_TARGET)
+		return
+	if not _targets.has(cell):
+		_cancel_skill()
+		return
+	_mover = cell
+	_free = _free_cells()
+	_board.light([cell], UiPalette.BOARD_TARGET)
+	_board.add_light(_free, UiPalette.BOARD_AREA)
+
+
+## O autor conta onde está agora, e o hexágono de onde saiu fica livre.
+func _free_cells() -> Array[Vector2i]:
+	var taken: Dictionary[Vector2i, bool] = {}
+	for cell: Vector2i in _ally_cells():
+		taken[cell] = true
+	for cell: Vector2i in _view.enemy_cells.values():
+		taken[cell] = true
+	var free: Array[Vector2i] = []
+	for cell: Vector2i in _view.board_cells:
+		if not taken.has(cell):
+			free.append(cell)
+	return free
 
 
 func _aims_triangle() -> bool:
@@ -1235,6 +1287,8 @@ func _cancel_skill() -> void:
 		_show_message("")
 	_skill_slot = 0
 	_preview.clear()
+	_mover = NO_MOVER
+	_free.clear()
 	_sphere_item = -1
 	_targets.clear()
 	_mark_skill()

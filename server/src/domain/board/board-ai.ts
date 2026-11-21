@@ -13,14 +13,22 @@ import type {
   Spot,
 } from '../battle/types.js';
 import { type HexCoord, hexDistance } from '../exploration/hex.js';
-import { ALLY_TARGET, areaOf } from './areas.js';
-import { cellOf, MOVE_RANGE, reachable, standingOnBoard } from './board.js';
+import { ALLY_TARGET, areaOf, isTeleport } from './areas.js';
+import {
+  cellOf,
+  isFree,
+  MOVE_RANGE,
+  reachable,
+  standingOnBoard,
+} from './board.js';
 import { isReady } from './cooldown.js';
 import { markAt } from './marks.js';
 import type { BoardAction, BoardState, BoardVez } from './types.js';
 
 /** A IA só cura quem está com esta fração do HP ou menos (a revisar). */
 export const HEAL_BELOW = 0.5;
+/** A IA foge pelo Teleporte de quem chega a esta distância (veilmoth-line/03, a revisar). */
+export const ESCAPE_DISTANCE = 2;
 
 interface Attack {
   target: HexCoord;
@@ -60,6 +68,8 @@ export function chooseEnemyVez(
       ? [{ slot: index + 1, skill }]
       : [];
   });
+  const escape = teleportEscape(state, spot, from, usable);
+  if (escape) return { position, action: escape };
   const damaging = usable.filter(
     ({ skill }) => dealsDamage(skill) && skill.targetSlug !== 'self',
   );
@@ -94,6 +104,36 @@ export function chooseEnemyVez(
     usable,
   );
   return { position, ...move, action };
+}
+
+/**
+ * Com metade do HP ou menos e um inimigo perto, ela se teleporta para o hexágono livre mais
+ * longe dos Ecobeasts do jogador; no empate, o primeiro na ordem do tabuleiro.
+ */
+function teleportEscape(
+  state: BoardState,
+  spot: Spot,
+  from: HexCoord,
+  usable: { slot: number; skill: BattleSkill }[],
+): BoardAction | null {
+  const me = combatantAt(state, spot);
+  const option = usable.find(({ skill }) => isTeleport(skill));
+  if (!option || me.currentHp > me.stats.hp * HEAL_BELOW) return null;
+  const foes = standingOnBoard(state, 'player').map((foe) =>
+    cellOf(state, foe)!,
+  );
+  const gap = (cell: HexCoord) =>
+    Math.min(...foes.map((foe) => hexDistance(cell, foe)));
+  if (gap(from) > ESCAPE_DISTANCE) return null;
+  let best: HexCoord | null = null;
+  for (const cell of state.board.cells) {
+    if (isFree(state, cell) && gap(cell) > (best ? gap(best) : gap(from))) {
+      best = cell;
+    }
+  }
+  return best
+    ? { type: 'skill', slot: option.slot, target: from, destination: best }
+    : null;
 }
 
 /** Um hexágono com marca que cura ao alcance de um passo, de onde está ou vizinho. */
@@ -209,6 +249,7 @@ function chooseAction(
   }
   const options: (SkillOption & { target?: HexCoord })[] = [];
   for (const { slot, skill } of usable) {
+    if (isTeleport(skill)) continue;
     if (skill.targetSlug === ALLY_TARGET) {
       const ally = hurtAlly(state, spot, cell, skill);
       if (ally) {
