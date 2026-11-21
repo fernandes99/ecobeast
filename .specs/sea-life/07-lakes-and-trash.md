@@ -19,7 +19,7 @@ Até aqui, o servidor não sabia o que era lago: a [06](06-trash-patches.md) ach
 ## Requisitos
 
 - **RF-01:** Todo hexágono de água de `inland` fica no Lago do seu bioma, menos o da mancha de lixo da água doce.
-- **RF-02:** As receitas do Lago, sem algas: `wshallow_lake` com sea_rock 0.01 1–1; `wdeep_lake` vazia.
+- **RF-02:** As receitas do Lago, sem as algas do mar: `wshallow_lake` com sea_rock 0.01 1–1 e o capim-marinho, que parece grama no raso, seagrass 0.25 1–2 (pedido do dono: "essa sim, que mais parece uma grama no raso, pode aparecer mais vezes nos lagos e rios"); `wdeep_lake` vazia.
 - **RF-03:** A mancha do mar nasce em todo mapa com mar, com 10 hexágonos, a partir de uma Água profunda vizinha da Água rasa do mar; cada passo vai para um vizinho de Água profunda com 80% de chance, quando há.
 - **RF-04:** A mancha da água doce nasce com 8% de chance por mapa, num lago ou num rio sorteado, com 3 hexágonos.
 - **RF-05:** As receitas do Lixo, sem algas (_a revisar_): `wshallow_trash` com tire 0.1, jug 0.12, old_boot 0.15, plastic_bag 0.25, bottle 0.35 e can 0.3 (1–1 cada); `wdeep_trash` com jug 0.2, tire 0.15, old_boot 0.25, plastic_bag 0.35, bottle 0.5 (1–2) e can 0.4.

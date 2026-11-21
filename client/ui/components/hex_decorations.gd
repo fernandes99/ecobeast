@@ -206,7 +206,7 @@ const RECIPES: Dictionary = {
 	"wdeep_rocks": [["sea_stack", 0.09, 1, 1], ["sea_rock", 0.1, 1, 1]],
 	"wdeep_kelp": [["kelp", 0.2, 1, 1]],
 	"wdeep_trash": [["jug", 0.2, 1, 1], ["tire", 0.15, 1, 1], ["old_boot", 0.25, 1, 1], ["plastic_bag", 0.35, 1, 1], ["bottle", 0.5, 1, 2], ["can", 0.4, 1, 1]],
-	"wshallow_lake": [["sea_rock", 0.01, 1, 1]],
+	"wshallow_lake": [["sea_rock", 0.01, 1, 1], ["seagrass", 0.25, 1, 2]],
 	"wdeep_lake": [],
 }
 const PLACE_TRIES := 8
