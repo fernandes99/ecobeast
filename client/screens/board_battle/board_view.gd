@@ -280,6 +280,11 @@ func set_marks(marks: Dictionary[Vector2i, Color], kinds: Dictionary[Vector2i, S
 
 func light(cells: Array[Vector2i], color: Color) -> void:
 	_lit.clear()
+	add_light(cells, color)
+
+
+## Acende por cima do que já está aceso, como o triângulo sobre os vértices (board-battle/33).
+func add_light(cells: Array[Vector2i], color: Color) -> void:
 	for cell: Vector2i in cells:
 		_lit[cell] = color
 	_redraw()

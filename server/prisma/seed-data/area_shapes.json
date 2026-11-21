@@ -1,4 +1,5 @@
 [
 	{ "id": 1, "slug": "single", "name": "Um alvo" },
-	{ "id": 2, "slug": "line", "name": "Linha reta" }
+	{ "id": 2, "slug": "line", "name": "Linha reta" },
+	{ "id": 3, "slug": "triangle", "name": "Triângulo" }
 ]

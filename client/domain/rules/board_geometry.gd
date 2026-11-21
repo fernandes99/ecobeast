@@ -6,6 +6,11 @@ const DIRECTIONS: Array[Vector2i] = [
 	Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1),
 	Vector2i(0, -1), Vector2i(1, -1), Vector2i(-1, 1),
 ]
+## As 6 direções no sentido horário da tela, como no servidor (board-battle/33).
+const CLOCKWISE: Array[Vector2i] = [
+	Vector2i(1, 0), Vector2i(0, 1), Vector2i(-1, 1),
+	Vector2i(-1, 0), Vector2i(0, -1), Vector2i(1, -1),
+]
 
 
 static func distance(a: Vector2i, b: Vector2i) -> int:
@@ -52,7 +57,12 @@ static func targets(skill: Skill, cells: Array[Vector2i], foes: Array[Vector2i],
 		var reach := distance(from, cell)
 		if reach == 0 or reach > skill.area_range:
 			continue
-		if skill.has_ground_effect() or foes.has(cell):
+		if skill.has_ground_effect():
+			result.append(cell)
+		elif skill.area_shape == "triangle":
+			if _foes_in(triangle(cells, foes, from, cell), foes) > 0:
+				result.append(cell)
+		elif foes.has(cell):
 			result.append(cell)
 	return result
 
@@ -66,6 +76,8 @@ static func ally_targets(skill: Skill, allies: Array[Vector2i], from: Vector2i) 
 
 
 static func area(skill: Skill, cells: Array[Vector2i], foes: Array[Vector2i], from: Vector2i, target: Vector2i) -> Array[Vector2i]:
+	if skill.area_shape == "triangle":
+		return triangle(cells, foes, from, target)
 	if skill.area_shape != "line":
 		return [target]
 	var steps := distance(from, target)
@@ -82,3 +94,46 @@ static func area(skill: Skill, cells: Array[Vector2i], foes: Array[Vector2i], fr
 				break
 		return covered
 	return []
+
+
+## O vértice e os 2 vizinhos mais longe de quem usa, com o vértice por último. Numa
+## reta, fica o lado com mais inimigos, depois o com mais hexágonos, depois o horário.
+static func triangle(cells: Array[Vector2i], foes: Array[Vector2i], from: Vector2i, vertex: Vector2i) -> Array[Vector2i]:
+	var best: Array[Vector2i] = []
+	var best_foes := -1
+	for pair: Array[Vector2i] in _triangle_pairs(from, vertex):
+		var covered: Array[Vector2i] = []
+		for cell: Vector2i in pair + [vertex]:
+			if cells.has(cell):
+				covered.append(cell)
+		var count := _foes_in(covered, foes)
+		if count > best_foes or (count == best_foes and covered.size() > best.size()):
+			best = covered
+			best_foes = count
+	return best
+
+
+static func _triangle_pairs(from: Vector2i, vertex: Vector2i) -> Array[Array]:
+	var steps := distance(from, vertex)
+	var axis := -1
+	for index: int in CLOCKWISE.size():
+		if from + CLOCKWISE[index] * steps == vertex:
+			axis = index
+	if axis == -1:
+		var far: Array[Vector2i] = []
+		for direction: Vector2i in CLOCKWISE:
+			if distance(from, vertex + direction) == steps + 1:
+				far.append(vertex + direction)
+		return [far]
+	var ahead := vertex + CLOCKWISE[axis]
+	var clockwise: Array[Vector2i] = [ahead, vertex + CLOCKWISE[(axis + 1) % CLOCKWISE.size()]]
+	var counter: Array[Vector2i] = [ahead, vertex + CLOCKWISE[(axis + CLOCKWISE.size() - 1) % CLOCKWISE.size()]]
+	return [clockwise, counter]
+
+
+static func _foes_in(covered: Array[Vector2i], foes: Array[Vector2i]) -> int:
+	var count := 0
+	for cell: Vector2i in covered:
+		if foes.has(cell):
+			count += 1
+	return count

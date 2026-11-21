@@ -78,7 +78,7 @@ export interface BattleSkill {
   groundTurns: number | null;
 }
 
-export type AreaShape = 'single' | 'line';
+export type AreaShape = 'single' | 'line' | 'triangle';
 
 export interface BattleGroundEffectStat {
   statSlug: StageSlug;

@@ -159,8 +159,12 @@ describe('carga inicial das Técnicas no tabuleiro (board-battle/01)', () => {
   });
   const skill = (slug: string) => skills.find((row) => row.slug === slug)!;
 
-  it('tem as formas single e line, e o chão em chamas', () => {
-    expect(shapes.map(({ slug }) => slug)).toEqual(['single', 'line']);
+  it('tem as formas single, line e triangle (board-battle/33), e o chão em chamas', () => {
+    expect(shapes.map(({ slug }) => slug)).toEqual([
+      'single',
+      'line',
+      'triangle',
+    ]);
     expect(FIRE).toMatchObject({
       damage_percent: 6,
       status_condition_id: null,
@@ -191,9 +195,9 @@ describe('carga inicial das Técnicas no tabuleiro (board-battle/01)', () => {
     });
   });
 
-  it('Chama Espiral acerta a até 3 e deixa o chão em chamas por 6 vezes', () => {
+  it('Chama Espiral acerta um triângulo a até 3 e deixa o chão em chamas por 6 vezes', () => {
     expect(board(skill('chama_espiral'))).toEqual({
-      area_shape_id: shapeId('single'),
+      area_shape_id: shapeId('triangle'),
       range: 3,
       pierces: false,
       ground_effect_id: FIRE.id,

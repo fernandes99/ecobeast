@@ -86,7 +86,7 @@ Cada Técnica tem, no catálogo ([01](01-skill-areas.md)):
 
 | Campo | O que é |
 | --- | --- |
-| `area_shape` | `single`: um hexágono a até `range` de distância. `line`: uma linha reta, numa das 6 direções, com `range` hexágonos |
+| `area_shape` | `single`: um hexágono a até `range` de distância. `line`: uma linha reta, numa das 6 direções, com `range` hexágonos. `triangle`: o hexágono a até `range` e os 2 vizinhos dele mais longe de quem usa ([33](33-triangle-area.md)) |
 | `range` | De 1 a 6. Com `single` e 1, é o corpo a corpo |
 | `pierces` | Só na `line`: atravessa os inimigos em vez de parar no primeiro |
 | `ground_effect_id` e `ground_turns` | A marca que fica no chão e por quantas vezes da fila. Os dois nulos: sem marca |
@@ -98,6 +98,7 @@ Uma Técnica em si mesmo (`skill_target` `self`) ignora a forma e não pede alvo
 - **`single` sem marca:** o alvo precisa ter um inimigo a até `range`.
 - **`single` com marca:** o alvo pode ser qualquer hexágono a até `range`, até vazio, porque a marca fica mesmo sem ninguém.
 - **`line`:** o alvo precisa estar numa das 6 linhas retas que saem de quem usa, a até `range`, e escolhe a direção. A linha anda `range` hexágonos ou até a borda. Aliados não param a linha nem são atingidos. Sem `pierces`, ela para no primeiro inimigo; com, atinge todos os inimigos no caminho. Uma linha que não atinge ninguém gasta o PP e a vez.
+- **`triangle`:** o alvo é um hexágono a até `range`, o vértice, e a área junta os 2 vizinhos dele mais longe de quem usa. Numa das 6 retas há dois triângulos: fica o com mais inimigos, depois o com mais hexágonos no tabuleiro, depois o que gira no sentido horário. Cada inimigo no triângulo recebe a Técnica inteira, os aliados não, e a marca no chão vai para os 3 hexágonos. Sem marca, o triângulo precisa de um inimigo. No jogo, o 1º toque acende o triângulo e o 2º usa ([33](33-triangle-area.md)).
 
 **Atingidos:** cada inimigo atingido sofre a Técnica inteira, com o próprio sorteio de precisão, de crítico e de efeito, na ordem do caminho. O evento `skill_used` leva `cells`, os hexágonos da área, para o jogo desenhar.
 

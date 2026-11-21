@@ -113,6 +113,8 @@ var _reach: Dictionary[Vector2i, Array] = {}
 var _skill_slot := 0
 var _sphere_item := -1
 var _targets: Array[Vector2i] = []
+## O triângulo aceso pelo 1º toque, que o 2º toque confirma (board-battle/33).
+var _preview: Array[Vector2i] = []
 ## Fugir depois de andar pede um segundo toque, que desfaz o passo.
 var _flee_armed: bool = false
 
@@ -1135,7 +1137,13 @@ func _on_cell_tapped(cell: Vector2i) -> void:
 			return
 		_cancel_skill()
 	if _skill_slot != 0:
+		if _preview.has(cell):
+			cell = _preview[-1]
+		elif _targets.has(cell) and _aims_triangle():
+			_show_triangle(cell)
+			return
 		if _targets.has(cell):
+			_preview.clear()
 			var action := {"type": "emergency"} if _skill_slot == -1 else {"type": "skill", "slot": _skill_slot}
 			action["target"] = {"q": cell.x, "r": cell.y}
 			_send(action)
@@ -1168,6 +1176,7 @@ func _choose_skill(slot: int) -> void:
 	if _busy or _walking:
 		return
 	_disarm_flee()
+	_preview.clear()
 	if _skill_slot == slot:
 		_cancel_skill()
 		return
@@ -1196,6 +1205,21 @@ func _choose_skill(slot: int) -> void:
 	_board.light(_targets, UiPalette.BOARD_TARGET)
 
 
+func _aims_triangle() -> bool:
+	if _skill_slot <= 0:
+		return false
+	return GameData.get_skill(_view.player_at(_actor).skills[_skill_slot - 1].skill_id).area_shape == "triangle"
+
+
+func _show_triangle(vertex: Vector2i) -> void:
+	var skill := GameData.get_skill(_view.player_at(_actor).skills[_skill_slot - 1].skill_id)
+	var foes: Array[Vector2i] = []
+	foes.append_array(_view.enemy_cells.values())
+	_preview = BoardGeometry.area(skill, _view.board_cells, foes, _here(), vertex)
+	_board.light(_targets, UiPalette.BOARD_TARGET)
+	_board.add_light(_preview, UiPalette.BOARD_AREA)
+
+
 ## O autor conta onde está agora, depois de andar nesta vez.
 func _ally_cells() -> Array[Vector2i]:
 	var cells: Array[Vector2i] = [_here()]
@@ -1209,6 +1233,7 @@ func _cancel_skill() -> void:
 	if _sphere_item >= 0:
 		_show_message("")
 	_skill_slot = 0
+	_preview.clear()
 	_sphere_item = -1
 	_targets.clear()
 	_mark_skill()

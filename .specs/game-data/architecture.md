@@ -93,7 +93,7 @@ temperaments ──> stats (aumentado, diminuído)
 
 **`skill_targets`** — `id`, `slug` (`enemy`, `self`, `all`, `ally`), `name`. O `ally` ("Meu time") é um Ecobeast do próprio lado ao alcance, o autor incluído ([skill-editor/03](../skill-editor/03-team-target.md)).
 
-**`area_shapes`** — `id`, `slug` (`single`, `line`), `name`: a forma da área de uma Técnica no tabuleiro ([board-battle/01](../board-battle/01-skill-areas.md)). O jogo só aceita as formas que sabe desenhar.
+**`area_shapes`** — `id`, `slug` (`single`, `line`, `triangle`), `name`: a forma da área de uma Técnica no tabuleiro ([board-battle/01](../board-battle/01-skill-areas.md) e [33](../board-battle/33-triangle-area.md)). O jogo só aceita as formas que sabe desenhar.
 
 **`ground_effects`** — `id`, `slug`, `name`, `damage_percent` (1–100, anulável: dano em % do HP máximo), `heal_percent` (1–100, anulável: cura em % do HP máximo, [field-effects/01](../field-effects/01-field-rules.md)), `status_condition_id` (FK anulável) e `color_hex`: o que uma marca no chão do tabuleiro faz a quem está nela, depois de cada vez da fila ([board-battle/01](../board-battle/01-skill-areas.md)).
 

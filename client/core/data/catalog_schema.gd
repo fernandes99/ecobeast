@@ -33,7 +33,7 @@ const EFFECT_PARAMS := {
 
 ## As formas de área que o jogo sabe desenhar (board-battle/01). Uma forma nova
 ## no banco precisa de código no jogo antes.
-const AREA_SHAPES: Array[String] = ["single", "line"]
+const AREA_SHAPES: Array[String] = ["single", "line", "triangle"]
 ## O que uma ação faz e os tipos de chão que o jogo sabe desenhar (island-villages/01).
 const ACTION_KINDS: Array[String] = ["open_screen"]
 const GROUND_KINDS: Array[String] = ["trail", "floor"]

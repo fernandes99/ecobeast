@@ -87,6 +87,7 @@ A luta nova substitui a de hoje em Explorar zona. A luta atual deixa de ser usad
 | 30 | [30-flora-earth-ice-toxin-skills](30-flora-earth-ice-toxin-skills.md) | Ícone, efeito e som do Brotar, do Semear Jardim, da Lama Grudenta, da Areia Movediça, do Chão de Geada e do Espinho Venenoso | concluída (falta o dono ver e ouvir no jogo) |
 | 31 | [31-shadow-toxin-instinct-skills](31-shadow-toxin-instinct-skills.md) | Ícone, efeito e som da Poça Tóxica, da Pena Sombria (com projétil), do Olhar da Lua, do Voo Silencioso, do Eclipse Lunar e do Bote | concluída (falta o dono ver e ouvir no jogo) |
 | 32 | [32-toxin-instinct-insect-skills](32-toxin-instinct-insect-skills.md) | Ícone, efeito e som da Presa Venenosa, da Constrição, do Cuspe Ácido (com projétil), do Golpe de Foice, da Emboscada e da Dança da Foice | concluída (falta o dono ver e ouvir no jogo) |
+| 33 | [33-triangle-area](33-triangle-area.md) | A área Triângulo, de 3 hexágonos (o tocado e os 2 vizinhos do lado de lá), com o 1º toque mostrando a área e o 2º usando, e a Chama Espiral com ela | concluída (falta o dono conferir no jogo) |
 
 O desenho compartilhado está no [architecture.md](architecture.md).
 

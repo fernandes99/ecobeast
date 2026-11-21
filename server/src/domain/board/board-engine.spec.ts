@@ -11,6 +11,7 @@ import {
   startBoardBattle,
 } from './board-engine.js';
 import { ALLY_ONLY, OUT_OF_RANGE } from './areas.js';
+import { makeBoard } from './board.js';
 import { NOT_READY } from './cooldown.js';
 import {
   at,
@@ -1353,5 +1354,61 @@ describe('luta de teste da Técnica (skill-test/01)', () => {
     expect(eventsOf(events, 'status_damage')).toContainEqual(
       expect.objectContaining({ side: 'enemy' }),
     );
+  });
+});
+
+describe('a Técnica de Triângulo (board-battle/33)', () => {
+  const triangle = makeSkill({
+    id: 91,
+    category: 'special',
+    areaShape: 'triangle',
+    range: 3,
+    groundEffectId: FIRE_GROUND,
+    groundTurns: 6,
+  });
+  const triangleCatalog = boardCatalog([triangle]);
+
+  it('atinge os dois inimigos do triângulo, não o aliado, e põe fogo nos 3 hexágonos', () => {
+    const user = fighter(30, {
+      skills: [{ skillId: triangle.id, currentPp: 10 }],
+    });
+    const state = makeBoardState(
+      [user, fighter(20)],
+      [wild(5, ASLEEP), wild(5, ASLEEP)],
+      {
+        slots: { player: 2, enemy: 2 },
+        cells: {
+          player: [
+            { q: 2, r: 6 },
+            { q: 3, r: 3 },
+          ],
+          enemy: [
+            { q: 2, r: 4 },
+            { q: 2, r: 3 },
+          ],
+        },
+      },
+      { board: makeBoard({ columns: 8, rows: 8 }) },
+    );
+    const { events } = playVez(
+      state,
+      {
+        position: 0,
+        action: { type: 'skill', slot: 1, target: { q: 2, r: 4 } },
+      },
+      triangleCatalog,
+    );
+    expect(eventsOf(events, 'skill_used')[0]!.cells).toEqual([
+      { q: 2, r: 3 },
+      { q: 3, r: 3 },
+      { q: 2, r: 4 },
+    ]);
+    const hit = eventsOf(events, 'damage').map((e) => `${e.side}${e.position}`);
+    expect(hit).toEqual(['enemy0', 'enemy1']);
+    expect(eventsOf(events, 'mark_placed').map((e) => e.cell)).toEqual([
+      { q: 2, r: 3 },
+      { q: 3, r: 3 },
+      { q: 2, r: 4 },
+    ]);
   });
 });

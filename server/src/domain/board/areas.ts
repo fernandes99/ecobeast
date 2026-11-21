@@ -33,9 +33,13 @@ export function areaOf(
     return allyArea(state, spot, from, skill, target, distance);
   }
   if (distance === 0 || distance > skill.range) return { error: OUT_OF_RANGE };
-  return skill.areaShape === 'line'
-    ? lineArea(state, spot, from, skill, target)
-    : singleArea(state, spot, skill, target);
+  if (skill.areaShape === 'line') {
+    return lineArea(state, spot, from, skill, target);
+  }
+  if (skill.areaShape === 'triangle') {
+    return triangleArea(state, spot, from, skill, target);
+  }
+  return singleArea(state, spot, skill, target);
 }
 
 /** O autor conta em `from`, para onde andou nesta vez, e não onde estava. */
@@ -106,4 +110,72 @@ function lineArea(
     if (!skill.pierces) break;
   }
   return { cells, foes };
+}
+
+/** As 6 direções no sentido horário da tela, com o y para baixo (board-battle/33). */
+const CLOCKWISE: readonly HexCoord[] = [
+  { q: 1, r: 0 },
+  { q: 0, r: 1 },
+  { q: -1, r: 1 },
+  { q: -1, r: 0 },
+  { q: 0, r: -1 },
+  { q: 1, r: -1 },
+];
+
+const plus = (a: HexCoord, b: HexCoord): HexCoord => ({
+  q: a.q + b.q,
+  r: a.r + b.r,
+});
+
+/** Os 2 vizinhos do vértice que fecham o triângulo, longe de quem usa. */
+export function trianglePairs(from: HexCoord, vertex: HexCoord): HexCoord[][] {
+  const steps = hexDistance(from, vertex);
+  const axis = CLOCKWISE.findIndex((dir) =>
+    sameCell(plus(from, { q: dir.q * steps, r: dir.r * steps }), vertex),
+  );
+  if (axis === -1) {
+    const far = CLOCKWISE.map((dir) => plus(vertex, dir)).filter(
+      (cell) => hexDistance(from, cell) === steps + 1,
+    );
+    return [far];
+  }
+  const ahead = plus(vertex, CLOCKWISE[axis]!);
+  const turned = (offset: number) =>
+    plus(
+      vertex,
+      CLOCKWISE[(axis + offset + CLOCKWISE.length) % CLOCKWISE.length]!,
+    );
+  return [
+    [ahead, turned(1)],
+    [ahead, turned(-1)],
+  ];
+}
+
+function triangleArea(
+  state: BoardState,
+  spot: Spot,
+  from: HexCoord,
+  skill: BattleSkill,
+  vertex: HexCoord,
+): SkillArea | { error: string } {
+  const options = trianglePairs(from, vertex).map((pair) => {
+    const cells = [...pair, vertex].filter((cell) => hasCell(state, cell));
+    const foes = [vertex, ...pair]
+      .filter((cell) => hasCell(state, cell))
+      .map((cell) => foeAt(state, spot, cell))
+      .filter((foe): foe is Spot => foe !== null);
+    return { cells, foes };
+  });
+  // No empate, fica o primeiro: o que gira no sentido horário.
+  const best = options.reduce((chosen, option) =>
+    option.foes.length > chosen.foes.length ||
+    (option.foes.length === chosen.foes.length &&
+      option.cells.length > chosen.cells.length)
+      ? option
+      : chosen,
+  );
+  if (best.foes.length === 0 && skill.groundEffectId === null) {
+    return { error: NO_ENEMY_THERE };
+  }
+  return best;
 }
