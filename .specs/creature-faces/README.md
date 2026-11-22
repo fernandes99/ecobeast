@@ -2,7 +2,7 @@
 
 Cada Ecobeast ganha um **rosto**: o recorte do rosto do `front.png`, centrado, para os lugares pequenos, onde o corpo inteiro encolhido fica ilegível. O rosto aparece num círculo com o fundo na cor do Elemento e, em volta, o **anel de HP**, que esvazia conforme o Ecobeast perde vida.
 
-- **Status:** em andamento (fases 1 e 2 concluídas)
+- **Status:** concluída (falta o dono conferir no jogo)
 - **Depende de:** [creature-fronts](../creature-fronts/), [hub-start](../hub-start/) e [board-battle](../board-battle/)
 
 ## Contexto
@@ -57,4 +57,4 @@ Escolhas de Claude (_a revisar_; ao mudar uma, atualize aqui e na fase):
 | --- | --- | --- | --- |
 | 1 | [01-face-art](01-face-art.md) | O script dos rostos, o quadrado de cada espécie e os `face.png` | concluída |
 | 2 | [02-face-component](02-face-component.md) | O componente `CreatureFace`, com o fundo, o anel de HP e os estados, nas bolinhas da Home e no cartão da luta | concluída |
-| 3 | [03-face-everywhere](03-face-everywhere.md) | O rosto nas outras listas e grades pequenas | proposta |
+| 3 | [03-face-everywhere](03-face-everywhere.md) | O rosto nas outras listas e grades pequenas | concluída |

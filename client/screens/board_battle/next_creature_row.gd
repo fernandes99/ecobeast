@@ -5,7 +5,7 @@ var _creature: BattleCreature = null
 var _display_name: String = ""
 var _is_in_field: bool = false
 
-@onready var _portrait: CreaturePortrait = %Portrait
+@onready var _portrait: CreatureFace = %Portrait
 @onready var _name_label: Label = %NameLabel
 @onready var _level_label: Label = %LevelLabel
 @onready var _hp_bar: HpBar = %HpBar
@@ -28,6 +28,7 @@ func _refresh() -> void:
 		return
 	disabled = _creature.hp == 0 or _is_in_field
 	_portrait.set_species(_creature.species_id)
+	_portrait.set_hp(_creature.hp, _creature.max_hp)
 	_name_label.text = _display_name
 	_level_label.text = "Nv. %d" % _creature.level
 	_hp_bar.set_hp(_creature.hp, _creature.max_hp)

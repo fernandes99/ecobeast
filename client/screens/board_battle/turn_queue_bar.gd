@@ -1,7 +1,6 @@
 class_name TurnQueueBar
 extends HBoxContainer
 
-const PortraitScene := preload("res://ui/components/creature_portrait.tscn")
 const PORTRAIT_SIZE := 48
 const CURRENT_SIZE := 64
 const BORDER_WIDTH := 3
@@ -29,9 +28,8 @@ func _chip(entry: Dictionary, is_current: bool) -> Control:
 	chip.add_theme_stylebox_override(&"panel", style)
 	chip.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	chip.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var portrait: CreaturePortrait = PortraitScene.instantiate()
-	portrait.portrait_size = CURRENT_SIZE if is_current else PORTRAIT_SIZE
-	portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	chip.add_child(portrait)
-	portrait.set_species(DictFields.get_int(entry, "species_id"))
+	var face := CreatureFace.new()
+	face.face_size = CURRENT_SIZE if is_current else PORTRAIT_SIZE
+	chip.add_child(face)
+	face.set_species(DictFields.get_int(entry, "species_id"))
 	return chip

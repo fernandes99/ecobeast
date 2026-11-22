@@ -25,7 +25,7 @@ var _vacant_style: StyleBoxFlat
 
 @onready var _filled_row: HBoxContainer = %FilledRow
 @onready var _vacant_label: Label = %VacantLabel
-@onready var _portrait: CreaturePortrait = %Portrait
+@onready var _portrait: CreatureFace = %Portrait
 @onready var _name_label: Label = %NameLabel
 @onready var _level_label: Label = %LevelLabel
 @onready var _leader_chip: PanelContainer = %LeaderChip
@@ -114,7 +114,7 @@ func _refresh() -> void:
 	if creature == null:
 		return
 	var species := GameData.get_species(creature.species_id)
-	_portrait.set_species(species.id)
+	_portrait.set_creature(creature)
 	_name_label.text = creature.display_name(species)
 	_level_label.text = "Nv. %d" % creature.level
 	_hp_bar.set_hp(creature.current_hp, creature.stats.hp)

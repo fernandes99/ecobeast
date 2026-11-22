@@ -10,7 +10,7 @@ var status: Codex.Status = Codex.Status.UNKNOWN
 
 @onready var _number_label: Label = %NumberLabel
 @onready var _caught_mark: TextureRect = %CaughtMark
-@onready var _portrait: CreaturePortrait = %Portrait
+@onready var _portrait: CreatureFace = %Portrait
 @onready var _unknown_label: Label = %UnknownLabel
 @onready var _name_label: Label = %NameLabel
 

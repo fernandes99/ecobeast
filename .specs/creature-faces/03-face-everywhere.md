@@ -1,6 +1,6 @@
 # 03. O rosto nas outras telas
 
-- **Status:** proposta
+- **Status:** concluída (falta o dono conferir no jogo)
 - **Depende de:** [02-face-component](02-face-component.md)
 
 ## Contexto
@@ -31,10 +31,10 @@ As decisões estão no [README](README.md). Esta fase troca o corpo inteiro enco
 
 ## Critérios de aceite
 
-- [ ] Cada tela do RF-01 mostra o rosto com o anel de HP certo.
-- [ ] O Bestiário mostra o rosto, a sombra e o "???" como antes.
-- [ ] As telas do RF-04 continuam com o corpo inteiro.
-- [ ] O jogo sem janela abre sem erro de script.
+- [x] Cada tela do RF-01 mostra o rosto com o anel de HP certo (o Santuário não foi visto: a conta de teste não tinha Ecobeast guardado).
+- [x] O Bestiário mostra o rosto, a sombra e o "???" como antes.
+- [x] As telas do RF-04 continuam com o corpo inteiro.
+- [x] O jogo sem janela abre sem erro de script.
 
 ## Verificação
 
@@ -46,8 +46,8 @@ Depois, no jogo, cada tela do RF-01 e do RF-02.
 
 ## Tarefas
 
-- [ ] A luta: a fila de vez e a troca.
-- [ ] As listas: Ecobeasts, Refúgio e Mochila.
-- [ ] As grades: Santuário e Bestiário.
-- [ ] Atualizar o `CLAUDE.md` do cliente e o `TELAS.md`.
-- [ ] A verificação.
+- [x] A luta: a fila de vez e a troca.
+- [x] As listas: Ecobeasts, Refúgio e Mochila.
+- [x] As grades: Santuário e Bestiário.
+- [x] Atualizar o `CLAUDE.md` do cliente e o `TELAS.md`.
+- [x] A verificação.
