@@ -47,6 +47,8 @@ export function placeWild(
     tamers: new Map(tamers.map((tamer) => [tamer.id, tamer])),
     position: HERE,
     positionAt: Date.now(),
+    biomeIds: new Set(),
+    hexesCreditedAt: Date.now(),
   });
   return store;
 }

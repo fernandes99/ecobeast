@@ -112,6 +112,10 @@ func get_day_phases() -> Array[DayPhase]:
 	return catalog.get_day_phases()
 
 
+func counter_id(slug: String) -> int:
+	return catalog.get_counter_id(slug)
+
+
 func get_growth_rate(id: int) -> GrowthRate:
 	return catalog.get_growth_rate(id)
 

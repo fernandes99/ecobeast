@@ -4,15 +4,12 @@ import { CountersModule } from '../counters/counters.module.js';
 import { IslandsModule } from '../islands/islands.module.js';
 import { ExplorationController } from './exploration.controller.js';
 import { ExplorationService } from './exploration.service.js';
-import { ExplorationStore } from './exploration.store.js';
+import { ExplorationStoreModule } from './exploration-store.module.js';
 
 @Module({
-  imports: [AuthModule, IslandsModule, CountersModule],
+  imports: [AuthModule, IslandsModule, CountersModule, ExplorationStoreModule],
   controllers: [ExplorationController],
-  providers: [
-    ExplorationService,
-    { provide: ExplorationStore, useFactory: () => new ExplorationStore() },
-  ],
-  exports: [ExplorationStore],
+  providers: [ExplorationService],
+  exports: [ExplorationStoreModule],
 })
 export class ExplorationModule {}

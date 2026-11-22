@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { ValidateBy } from 'class-validator';
 
 export class PlayerCounterDto {
   @ApiProperty({
@@ -56,4 +57,47 @@ export class CountersResponseDto {
     example: 10,
   })
   walkable_biomes: number;
+}
+
+export const MAX_PING_BIOMES = 32;
+export const INVALID_PING =
+  'hexes deve ser uma lista de até 32 biomas, cada um com biome e count inteiro de 0 para cima.';
+
+export class PingHexesDto {
+  @ApiProperty({ description: 'O slug do bioma.', example: 'temperate' })
+  biome: string;
+
+  @ApiProperty({
+    description: 'Hexágonos andados nele desde o último sinal.',
+    example: 12,
+  })
+  count: number;
+}
+
+export class CountersPingDto {
+  @ApiProperty({
+    type: [PingHexesDto],
+    description: `Até ${MAX_PING_BIOMES} biomas; pode vir vazia.`,
+  })
+  // Uma conferência só, para o erro sair com uma mensagem só.
+  @ValidateBy(
+    {
+      name: 'isPingHexes',
+      validator: {
+        validate: (value: unknown) =>
+          Array.isArray(value) &&
+          value.length <= MAX_PING_BIOMES &&
+          value.every(
+            (item: unknown) =>
+              typeof item === 'object' &&
+              item !== null &&
+              typeof (item as PingHexesDto).biome === 'string' &&
+              Number.isInteger((item as PingHexesDto).count) &&
+              (item as PingHexesDto).count >= 0,
+          ),
+      },
+    },
+    { message: INVALID_PING },
+  )
+  hexes: PingHexesDto[];
 }

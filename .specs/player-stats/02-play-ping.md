@@ -1,6 +1,6 @@
 # 02. O sinal de cada minuto
 
-- **Status:** aprovada
+- **Status:** concluída
 - **Depende de:** [01-counters-server](01-counters-server.md)
 
 ## Contexto
@@ -26,17 +26,17 @@ As horas jogadas, os dias e a distância não passam por nenhuma rota de hoje. O
 - **RF-04:** Os hexágonos só contam com uma exploração aberta. Um bioma que não está nos `biomeIds` dela é ignorado.
 - **RF-05:** O total aceito é no máximo `floor((agora - hexesCreditedAt) / MIN_STEP_MS)`. Acima disso, cada bioma é cortado na mesma proporção (`floor(count × teto / total)`). `biome_hexes` sobe por bioma, e `hexes_walked`, pela soma aceita. O `hexesCreditedAt` vira agora, e começa no horário de abertura da exploração.
 - **RF-06:** No jogo, cada troca do `_player_coord` durante o andar de Explorar soma 1 no bioma do hexágono novo.
-- **RF-07:** O `Session` manda o sinal a cada 60 s enquanto há um Domador carregado e o app está na frente, e um sinal na hora ao ir para o fundo e ao sair de Explorar. Ao voltar da frente, o relógio recomeça sem mandar sinal.
+- **RF-07:** O `Session` manda o sinal a cada 60 s enquanto há um Domador carregado e o app está na frente, e um sinal na hora ao carregar o Domador, ao ir para o fundo, ao voltar para a frente, ao esconder Explorar (antes da luta) e ao sair dela. O sinal da volta recomeça a contagem: sem ele, o primeiro minuto depois da volta passaria dos 90 s e seria perdido.
 - **RF-08:** Um sinal que falha devolve os hexágonos à fila do próximo, sem aviso, como as descobertas da névoa.
 
 ## Critérios de aceite
 
-- [ ] Com o jogo aberto 3 minutos, `play_seconds` fica entre 150 e 190.
-- [ ] Com o app 5 minutos no fundo, `play_seconds` não sobe por esse tempo.
-- [ ] Andar 20 hexágonos em Explorar sobe `hexes_walked` em 20, e os biomas pisados aparecem em `biome_hexes`.
-- [ ] Um sinal com 500 hexágonos 1 minuto depois de abrir a exploração aceita no máximo `floor(60000 / MIN_STEP_MS)`.
-- [ ] Um sinal com um bioma que não está no mapa não conta nada para ele.
-- [ ] Jogar em dois dias seguidos deixa `play_days` 2 e `play_streak` 2; pular um dia volta o `play_streak` a 1.
+- [x] Com o jogo aberto 3 minutos, `play_seconds` fica entre 150 e 190.
+- [x] Com o app 5 minutos no fundo, `play_seconds` não sobe por esse tempo.
+- [x] Andar 20 hexágonos em Explorar sobe `hexes_walked` em 20, e os biomas pisados aparecem em `biome_hexes`.
+- [x] Um sinal com 500 hexágonos 1 minuto depois de abrir a exploração aceita no máximo `floor(60000 / MIN_STEP_MS)`.
+- [x] Um sinal com um bioma que não está no mapa não conta nada para ele.
+- [x] Jogar em dois dias seguidos deixa `play_days` 2 e `play_streak` 2; pular um dia volta o `play_streak` a 1.
 
 ## Desenho técnico
 
@@ -50,8 +50,9 @@ As horas jogadas, os dias e a distância não passam por nenhuma rota de hoje. O
 
 **Servidor:**
 
-- `server/src/exploration/exploration.store.ts`: o `StoredExploration` ganha `biomeIds: Set<number>` e `hexesCreditedAt: number`, preenchidos no `ExplorationService.start` e no `startIsland` com os biomas dos hexágonos do mapa (os slugs trocados pelo id do catálogo de biomas).
-- `server/src/exploration/exploration.service.ts`: `creditHexes(userId: string, hexes: { biomeId: number; count: number }[], now: number): { biomeId: number; count: number }[]`, que filtra pelos `biomeIds`, aplica o `cappedHexes` com o `MIN_STEP_MS` de hoje, grava o `hexesCreditedAt` e devolve o aceito (vazio sem exploração).
+- `server/src/exploration/exploration.store.ts`: o `StoredExploration` ganha `biomeIds: Set<number>` e `hexesCreditedAt: number`, preenchidos no `ExplorationService.start` e no `startIsland` com os biomas dos hexágonos do mapa (os slugs trocados pelo id do catálogo de biomas, `biomeIdsOf`). O próprio `ExplorationStore` ganha `creditHexes(userId, hexes): BiomeHexes[]`, que filtra pelos `biomeIds`, aplica o `cappedHexes` com o `MIN_STEP_MS`, grava o `hexesCreditedAt` e devolve o aceito (vazio sem exploração). Ele fica no guarda, e não no `ExplorationService`, porque o `ExplorationModule` já depende do `CountersModule` (o `maps_explored`).
+- `server/src/exploration/exploration-store.module.ts`: o `ExplorationStore` num módulo só dele, importado pelo `ExplorationModule` (que o reexporta para a luta) e pelo `CountersModule`, sem ciclo entre os dois.
+- `MIN_STEP_MS` (300) sai do `battle-records.service.ts` e passa a ser exportado de `server/src/domain/exploration/hex.ts`.
 - `server/src/counters/counters.service.ts`: `ping(userId, body)`, numa transação: troca os slugs pelo id do bioma (um slug desconhecido sai), lê `last_ping_at` e `last_play_day`, chama as funções do domínio e o `creditHexes`, grava as duas colunas, os `increments` e o `play_streak` (este por `upsert` com `set`). A gravação das duas colunas é um `updateMany` com `last_ping_at` igual ao lido: se outro sinal chegou ao mesmo tempo e ganhou, este não soma tempo nem dia, e só os hexágonos contam.
 - `server/src/counters/counters.controller.ts`: `@Post('ping')` com `@HttpCode(204)` e o DTO `CountersPingDto` (`class-validator`, como os outros DTOs).
 
@@ -69,13 +70,13 @@ As horas jogadas, os dias e a distância não passam por nenhuma rota de hoje. O
 
 ## Tarefas
 
-- [ ] **Domínio, primeiro os testes.** `server/src/domain/counters/ping.spec.ts`:
+- [x] **Domínio, primeiro os testes.** `server/src/domain/counters/ping.spec.ts`:
   - `playSecondsFor(null, agora)` → 0; 60 s depois → 60; 91 s depois → 0;
   - `playDayOf(new Date('2026-11-22T02:30:00Z'))` → `'2026-11-21'` (ainda dia 21 em Brasília);
   - `nextStreak(null, '2026-11-21', 0)` → `{ newDay: true, streak: 1 }`; `nextStreak('2026-11-20', '2026-11-21', 3)` → `{ true, 4 }`; `nextStreak('2026-11-19', '2026-11-21', 3)` → `{ true, 1 }`; `nextStreak('2026-11-21', '2026-11-21', 4)` → `{ false, 4 }`;
   - `cappedHexes([{1, 30}, {2, 10}], 20)` → `[{1, 15}, {2, 5}]`; abaixo do teto, sai igual.
   Rode, veja falhar, escreva `ping.ts`, rode até passar.
-- [ ] **A exploração.** Os campos novos do `StoredExploration` e o `creditHexes`, com casos no `exploration.store.spec.ts` ou num spec do serviço: sem exploração devolve vazio, e um bioma fora dos `biomeIds` sai.
-- [ ] **A rota.** Casos e2e no `test/counters.e2e-spec.ts`: o primeiro sinal conta o dia e nada de tempo; dois sinais com o relógio controlado (o `now` injetado no serviço, como o `ExplorationStore` faz) somam o tempo; o teto e o bioma de fora; sem exploração os hexágonos não contam; corpo com 33 itens → 400. Escreva o DTO, o `ping` e a rota até passar.
-- [ ] **O jogo.** O serviço, o `Session` e a tela de Explorar; rode o jogo sem janela e faça a conferência manual.
-- [ ] Rode a suíte inteira, marque as tarefas e mude o status desta fase e da tabela do [README](README.md) para `concluída`.
+- [x] **A exploração.** Os campos novos do `StoredExploration` e o `creditHexes`, com casos no `exploration.store.spec.ts` ou num spec do serviço: sem exploração devolve vazio, e um bioma fora dos `biomeIds` sai.
+- [x] **A rota.** Casos e2e no `test/counters.e2e-spec.ts`: o primeiro sinal conta o dia e nada de tempo; dois sinais com o relógio controlado (o teste regrava `last_ping_at` e `last_play_day` no banco e o `hexesCreditedAt` no guarda) somam o tempo; o teto e o bioma de fora; sem exploração os hexágonos não contam; corpo com 33 itens → 400. Escreva o DTO, o `ping` e a rota até passar.
+- [x] **O jogo.** O serviço, o `Session` e a tela de Explorar; rode o jogo sem janela e faça a conferência manual.
+- [x] Rode a suíte inteira, marque as tarefas e mude o status desta fase e da tabela do [README](README.md) para `concluída`.

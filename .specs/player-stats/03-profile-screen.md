@@ -1,6 +1,6 @@
 # 03. O Perfil com os números
 
-- **Status:** aprovada
+- **Status:** concluída (falta o dono conferir no jogo e no celular)
 - **Depende de:** [01-counters-server](01-counters-server.md) e [02-play-ping](02-play-ping.md)
 
 ## Contexto
@@ -18,7 +18,7 @@ O Perfil de hoje (`res://screens/profile/profile_screen.gd` e `.tscn`, [hub-star
 
 ## Requisitos
 
-- **RF-01:** O topo do Perfil mostra o Domador desenhado (o `TamerSprite` de hoje, menor, ao lado do texto), o nome, o selo do nível e "Domador desde DD/MM/AAAA", pelo `created_at`.
+- **RF-01:** O topo do Perfil mostra o Domador desenhado (o `TamerSprite` de hoje, menor, ao lado do texto), o nome, "Nível N" e "Domador desde DD/MM/AAAA", pelo `created_at`.
 - **RF-02:** Embaixo, 3 destaques lado a lado, cada um com o número grande e o nome: **Vitórias** (`wins_wild` + `wins_tamer`), **Capturas** (`captures`) e **Jogadas** (as horas de `play_seconds`).
 - **RF-03:** Embaixo, as abas **Luta**, **Captura**, **Mapa**, **Ecobeasts** e **Geral**, com a Luta aberta. Cada aba é uma lista de linhas "nome … valor", com as linhas do [architecture.md](architecture.md#o-perfil):
   - **Luta:** Vitórias contra selvagens, Vitórias contra Domadores, Derrotas e Taxa de vitória;
@@ -45,7 +45,7 @@ O Perfil de hoje (`res://screens/profile/profile_screen.gd` e `.tscn`, [hub-star
 - `res://domain/models/counter.gd` (`class_name Counter`): `id`, `slug`, `name`, `subject` e `from_row`; o `catalog.gd` lê a tabela `counters` e o `GameData` ganha `counter_id(slug: String) -> int`.
 - `res://domain/models/player_counters.gd` (`class_name PlayerCounters`): `from_dict(d)`, `value(counter_id: int, subject_id := 0) -> int`, `by_subject(counter_id: int) -> Dictionary[int, int]`, `created_at: String`, `walkable_biomes: int`, `partner_species_id: int` (0 sem parceiro) e `partner_battles: int`.
 - `res://core/services/game_service.gd` e `api_game_service.gd`: `load_counters() -> Result` com `PlayerCounters` em `data`; `res://core/autoload/session.gd`: `load_counters() -> Result`.
-- `res://screens/profile/profile_screen.tscn` e `.gd`: o topo numa `HBoxContainer` (o `PreviewArea` menor, `PREVIEW_SCALE` 5, e a coluna do nome), os destaques numa `HBoxContainer` de 3 `SectionPanel`, e as abas pelo `DebugTabs` (`res://ui/components/debug_tabs.gd`) com `equal_heights = true`, dentro de um `ScrollContainer` que ocupa o espaço que sobra; as linhas usam `SecondaryLabel` e `BoldLabel`, como a grade de hoje (`_add_stat`). O `DebugTabs` serve aqui sem mudança: o nome é só histórico.
+- `res://screens/profile/profile_screen.tscn` e `.gd`: o topo numa `HBoxContainer` (o `PreviewArea` menor, `PREVIEW_SCALE` 5, e a coluna do nome), os destaques numa `HBoxContainer` de 3 `SectionPanel`, e as abas pelo `DebugTabs` (`res://ui/components/debug_tabs.gd`), que ocupa o espaço que sobra, com um `ScrollContainer` em cada página (o `equal_heights` não serve: as linhas chegam depois do `_ready`); as linhas usam `SecondaryLabel` e `BoldLabel`, como a grade de hoje (`_add_stat`). O `DebugTabs` serve aqui sem mudança: o nome é só histórico.
 - As espécies vistas e capturadas continuam vindo do `Session.load_codex()`.
 
 ## Verificação
@@ -55,6 +55,6 @@ O Perfil de hoje (`res://screens/profile/profile_screen.gd` e `.tscn`, [hub-star
 
 ## Tarefas
 
-- [ ] O `Counter`, o `PlayerCounters`, a leitura no `catalog.gd` e no `GameData` e o `load_counters` no serviço e no `Session`; rode o jogo sem janela.
-- [ ] A cena e o script do Perfil, pela RF-01 à RF-08.
-- [ ] A conferência manual, as tarefas marcadas e o status desta fase, da tabela do [README](README.md), da iniciativa no [índice](../README.md) e no [roadmap](../roadmap.md) para `concluída`; o parágrafo do Perfil no `client/CLAUDE.md` e a iniciativa no escopo do `CLAUDE.md` da raiz.
+- [x] O `Counter`, o `PlayerCounters`, a leitura no `catalog.gd` e no `GameData` e o `load_counters` no serviço e no `Session`; rode o jogo sem janela.
+- [x] A cena e o script do Perfil, pela RF-01 à RF-08.
+- [x] A conferência manual (sem janela: a tela compila, e os cálculos de data e tempo e o `PlayerCounters` conferem numa cena temporária; o layout no jogo e no celular fica para o dono), as tarefas marcadas e o status desta fase, da tabela do [README](README.md), da iniciativa no [índice](../README.md) e no [roadmap](../roadmap.md) para `concluída`; o parágrafo do Perfil no `client/CLAUDE.md` e a iniciativa no escopo do `CLAUDE.md` da raiz.

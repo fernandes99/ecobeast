@@ -92,6 +92,14 @@ extends RefCounted
 @abstract func load_codex() -> Result
 
 
+## Os contadores do Perfil; `data` é um `PlayerCounters` (player-stats/03).
+@abstract func load_counters() -> Result
+
+
+## O sinal de cada minuto, com os hexágonos andados por bioma (player-stats/02).
+@abstract func send_counters_ping(hexes: Dictionary[String, int]) -> Result
+
+
 @abstract func debug_clear_codex() -> Result
 
 

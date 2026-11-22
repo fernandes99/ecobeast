@@ -224,6 +224,7 @@ func _exit_tree() -> void:
 		Story.end_test()
 	Music.fade_out()
 	Session.send_island_discoveries()
+	Session.send_counters_ping()
 
 
 func _begin() -> void:
@@ -441,6 +442,7 @@ func _walk(route: PackedVector2Array) -> void:
 		if coord != _player_coord and _map.has(coord):
 			origin = _player_coord
 			_player_coord = coord
+			Session.count_hex(_map.tile_at(coord).biome)
 			_map_view.set_current(coord)
 			_discover()
 			_refresh_wild_sprites()
@@ -581,6 +583,7 @@ func _on_visibility_changed() -> void:
 	_pinch.cancel()
 	if not visible:
 		Session.send_island_discoveries()
+		Session.send_counters_ping()
 	if visible and _map != null:
 		Music.play_explore(EXPLORE_MUSIC_FADE_IN)
 		var fought := Session.take_fought_spawn()

@@ -1,3 +1,6 @@
+/** O menor tempo de um passo de hexágono do Domador; o servidor confere o andar por ele. */
+export const MIN_STEP_MS = 300;
+
 export interface HexCoord {
   q: number;
   r: number;

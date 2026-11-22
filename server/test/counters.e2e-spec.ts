@@ -3,6 +3,8 @@ import { randomUUID } from 'node:crypto';
 import request from 'supertest';
 import type { App } from 'supertest/types.js';
 import { BattleStore } from '../src/battle/battle.store.js';
+import { MIN_STEP_MS } from '../src/domain/exploration/hex.js';
+import { ExplorationStore } from '../src/exploration/exploration.store.js';
 import { COUNTER_IDS } from '../src/domain/counters/counters.js';
 import {
   blocksWalking,
@@ -98,6 +100,8 @@ describe('Contadores do Domador (e2e)', () => {
         http().post('/v1/me/shop/buy').set(auth).send({ item_id: itemId }),
       heal: () => http().post('/v1/me/heal').set(auth),
       explore: () => http().post('/v1/me/exploration').set(auth),
+      ping: (hexes: { biome: string; count: number }[] = []) =>
+        http().post('/v1/me/counters/ping').set(auth).send({ hexes }),
     };
     return user;
   }
@@ -253,5 +257,111 @@ describe('Contadores do Domador (e2e)', () => {
     expect(value(body, COUNTER_IDS.coins_spent)).toBe(item.price * 2);
     expect(value(body, COUNTER_IDS.heals)).toBe(1);
     expect(value(body, COUNTER_IDS.maps_explored)).toBe(1);
+  });
+
+  describe('o sinal de cada minuto (player-stats/02)', () => {
+    async function lastPingAgo(user: User, seconds: number): Promise<void> {
+      await prisma.player.update({
+        where: { id: user.id },
+        data: { lastPingAt: new Date(Date.now() - seconds * 1000) },
+      });
+    }
+
+    it('o primeiro sinal conta o dia e nada de tempo', async () => {
+      const user = await newUser();
+      await user.ping().expect(204);
+
+      const body = await counters(user);
+      expect(value(body, COUNTER_IDS.play_days)).toBe(1);
+      expect(value(body, COUNTER_IDS.play_streak)).toBe(1);
+      expect(value(body, COUNTER_IDS.play_seconds)).toBe(0);
+    });
+
+    it('o sinal seguinte soma o tempo, e um sinal depois de parado não soma', async () => {
+      const user = await newUser();
+      await user.ping().expect(204);
+      await lastPingAgo(user, 60);
+      await user.ping().expect(204);
+      await lastPingAgo(user, 300);
+      await user.ping().expect(204);
+
+      const body = await counters(user);
+      expect(value(body, COUNTER_IDS.play_seconds)).toBeGreaterThanOrEqual(60);
+      expect(value(body, COUNTER_IDS.play_seconds)).toBeLessThanOrEqual(62);
+      expect(value(body, COUNTER_IDS.play_days)).toBe(1);
+    });
+
+    it('jogar no dia seguinte soma a sequência; pular um dia volta a 1', async () => {
+      const user = await newUser();
+      const day = 24 * 60 * 60 * 1000;
+      const today = new Date(Date.now() - 3 * 60 * 60 * 1000);
+      const dateOnly = (ms: number) =>
+        new Date(new Date(ms).toISOString().slice(0, 10) + 'T00:00:00Z');
+      await user.ping().expect(204);
+      await prisma.player.update({
+        where: { id: user.id },
+        data: { lastPlayDay: dateOnly(today.getTime() - day) },
+      });
+      await user.ping().expect(204);
+      expect(value(await counters(user), COUNTER_IDS.play_streak)).toBe(2);
+
+      await prisma.player.update({
+        where: { id: user.id },
+        data: { lastPlayDay: dateOnly(today.getTime() - 2 * day) },
+      });
+      await user.ping().expect(204);
+      const body = await counters(user);
+      expect(value(body, COUNTER_IDS.play_streak)).toBe(1);
+      expect(value(body, COUNTER_IDS.play_days)).toBe(3);
+    });
+
+    it('conta os hexágonos por bioma do mapa, com o teto pelo tempo', async () => {
+      const user = await newUser();
+      await user.explore().expect(201);
+      const exploration = app.get(ExplorationStore).get(user.id)!;
+      const biomes = await prisma.biome.findMany({
+        where: { id: { in: [...exploration.biomeIds] } },
+      });
+      const [first] = biomes;
+      const outside = await prisma.biome.findFirstOrThrow({
+        where: { id: { notIn: [...exploration.biomeIds] } },
+      });
+      exploration.hexesCreditedAt = Date.now() - 20 * MIN_STEP_MS;
+      await user
+        .ping([
+          { biome: first!.slug, count: 500 },
+          { biome: outside.slug, count: 7 },
+        ])
+        .expect(204);
+
+      const body = await counters(user);
+      const walked = value(body, COUNTER_IDS.hexes_walked);
+      expect(walked).toBeGreaterThanOrEqual(20);
+      expect(walked).toBeLessThanOrEqual(22);
+      expect(value(body, COUNTER_IDS.biome_hexes, first!.id)).toBe(walked);
+      expect(value(body, COUNTER_IDS.biome_hexes, outside.id)).toBe(0);
+    });
+
+    it('sem exploração aberta, os hexágonos não contam', async () => {
+      const user = await newUser();
+      await user.ping([{ biome: 'temperate', count: 5 }]).expect(204);
+
+      expect(value(await counters(user), COUNTER_IDS.hexes_walked)).toBe(0);
+    });
+
+    it('recusa mais de 32 biomas e conta negativa', async () => {
+      const user = await newUser();
+      const many = Array.from({ length: 33 }, () => ({
+        biome: 'temperate',
+        count: 1,
+      }));
+      await user.ping(many).expect(400);
+      await user.ping([{ biome: 'temperate', count: -1 }]).expect(400);
+    });
+
+    it('sem Domador, responde 404', async () => {
+      const user = await newUser({ starter: false });
+      await user.ping().expect(404);
+    });
   });
 });

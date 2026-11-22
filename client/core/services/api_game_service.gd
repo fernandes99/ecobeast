@@ -29,6 +29,8 @@ const POSITION_PATH := "/v1/me/exploration/position"
 const NOT_EDITOR_TELEPORT := "Debug: o teleporte é só para quem está em MAP_EDITOR_USER_IDS."
 const ROUTE_NOT_FOUND := "Rota não encontrada."
 const CODEX_PATH := "/v1/me/codex"
+const COUNTERS_PATH := "/v1/me/counters"
+const COUNTERS_PING_PATH := "/v1/me/counters/ping"
 const ISLANDS_PATH := "/v1/me/islands"
 const DISCOVERIES_PATH := "/v1/me/islands/%d/discoveries"
 const EVOLUTION_PATH := "/v1/me/creatures/%s/evolution"
@@ -258,6 +260,25 @@ func load_codex() -> Result:
 	if not response.data is Dictionary:
 		return Result.failure(ApiResponse.SERVER_ERROR)
 	return Result.success(Codex.from_dict(response.data))
+
+
+func load_counters() -> Result:
+	var response: ApiResponse = await Api.request(HTTPClient.METHOD_GET, COUNTERS_PATH, null, true)
+	if not response.ok:
+		return Result.failure(response.error)
+	if not response.data is Dictionary:
+		return Result.failure(ApiResponse.SERVER_ERROR)
+	return Result.success(PlayerCounters.from_dict(response.data))
+
+
+func send_counters_ping(hexes: Dictionary[String, int]) -> Result:
+	var list: Array[Dictionary] = []
+	for biome: String in hexes:
+		list.append({"biome": biome, "count": hexes[biome]})
+	var response: ApiResponse = await Api.request(HTTPClient.METHOD_POST, COUNTERS_PING_PATH, {"hexes": list}, true)
+	if not response.ok:
+		return Result.failure(response.error)
+	return Result.success(null)
 
 
 func debug_clear_codex() -> Result:

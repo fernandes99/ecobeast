@@ -17,7 +17,11 @@ import type {
   BattleState,
   Combatant,
 } from '../domain/battle/types.js';
-import { type HexCoord, hexDistance } from '../domain/exploration/hex.js';
+import {
+  type HexCoord,
+  hexDistance,
+  MIN_STEP_MS,
+} from '../domain/exploration/hex.js';
 import type { MapSpawn } from '../domain/exploration/spawns.js';
 import type { MapTamer } from '../domain/tamers/tamers.js';
 import {
@@ -66,7 +70,6 @@ import type { WildCreature } from './battle.store.js';
 
 const NO_PLAYER = 'Crie seu Domador primeiro.';
 const NO_HEALTHY_CREATURE = 'Cure sua equipe no Refúgio.';
-const MIN_STEP_MS = 300;
 
 export interface Team {
   creatures: Combatant[];

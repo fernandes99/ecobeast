@@ -1,3 +1,4 @@
+import { MIN_STEP_MS } from '../domain/exploration/hex.js';
 import { ExplorationStore, StoredExploration } from './exploration.store.js';
 
 const TWO_HOURS = 2 * 60 * 60 * 1000;
@@ -8,6 +9,8 @@ function exploration(q = 0): StoredExploration {
     tamers: new Map(),
     position: { q, r: 0 },
     positionAt: 0,
+    biomeIds: new Set([1, 2]),
+    hexesCreditedAt: 0,
   };
 }
 
@@ -76,5 +79,36 @@ describe('ExplorationStore', () => {
     store.delete('ana');
     expect(store.get('ana')).toBeUndefined();
     expect(store.get('bia')?.position.q).toBe(2);
+  });
+
+  describe('creditHexes (player-stats/02)', () => {
+    it('sem exploração, não aceita nada', () => {
+      expect(store.creditHexes('ana', [{ biomeId: 1, count: 3 }])).toEqual([]);
+    });
+
+    it('aceita os hexágonos dos biomas do mapa, até o teto pelo tempo', () => {
+      store.set('ana', exploration());
+      now = 10 * MIN_STEP_MS;
+
+      expect(
+        store.creditHexes('ana', [
+          { biomeId: 1, count: 30 },
+          { biomeId: 2, count: 10 },
+          { biomeId: 9, count: 5 },
+        ]),
+      ).toEqual([
+        { biomeId: 1, count: 7 },
+        { biomeId: 2, count: 2 },
+      ]);
+    });
+
+    it('o teto recomeça a contar de cada crédito', () => {
+      store.set('ana', exploration());
+      now = 10 * MIN_STEP_MS;
+      store.creditHexes('ana', [{ biomeId: 1, count: 4 }]);
+
+      expect(store.creditHexes('ana', [{ biomeId: 1, count: 4 }])).toEqual([]);
+      expect(store.get('ana')?.hexesCreditedAt).toBe(now);
+    });
   });
 });

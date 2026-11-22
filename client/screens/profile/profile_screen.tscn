@@ -31,52 +31,67 @@ theme_type_variation = &"TitleLabel"
 text = "Perfil"
 horizontal_alignment = 1
 
-[node name="PreviewPanel" type="PanelContainer" parent="SafeArea/Column"]
+[node name="Header" type="HBoxContainer" parent="SafeArea/Column"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="PreviewPanel" type="PanelContainer" parent="SafeArea/Column/Header"]
 layout_mode = 2
 theme_type_variation = &"SectionPanel"
 
-[node name="PreviewArea" type="Control" parent="SafeArea/Column/PreviewPanel"]
+[node name="PreviewArea" type="Control" parent="SafeArea/Column/Header/PreviewPanel"]
 unique_name_in_owner = true
 clip_contents = true
-custom_minimum_size = Vector2(0, 300)
+custom_minimum_size = Vector2(170, 200)
 layout_mode = 2
 mouse_filter = 2
 
-[node name="Preview" type="AnimatedSprite2D" parent="SafeArea/Column/PreviewPanel/PreviewArea"]
+[node name="Preview" type="AnimatedSprite2D" parent="SafeArea/Column/Header/PreviewPanel/PreviewArea"]
 unique_name_in_owner = true
 script = ExtResource("3_tamer")
 
-[node name="NameLabel" type="Label" parent="SafeArea/Column"]
+[node name="Identity" type="VBoxContainer" parent="SafeArea/Column/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/separation = 8
+
+[node name="NameLabel" type="Label" parent="SafeArea/Column/Header/Identity"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"TitleLabel"
 theme_override_font_sizes/font_size = 36
-horizontal_alignment = 1
 text_overrun_behavior = 3
 
-[node name="StatsPanel" type="PanelContainer" parent="SafeArea/Column"]
-layout_mode = 2
-theme_type_variation = &"SectionPanel"
-
-[node name="Stats" type="GridContainer" parent="SafeArea/Column/StatsPanel"]
+[node name="LevelLabel" type="Label" parent="SafeArea/Column/Header/Identity"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_constants/h_separation = 16
-theme_override_constants/v_separation = 12
-columns = 2
+theme_type_variation = &"BoldLabel"
+theme_override_font_sizes/font_size = 26
 
-[node name="Message" type="Label" parent="SafeArea/Column"]
+[node name="SinceLabel" type="Label" parent="SafeArea/Column/Header/Identity"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"SecondaryLabel"
+theme_override_font_sizes/font_size = 22
+
+[node name="Highlights" type="HBoxContainer" parent="SafeArea/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Body" type="VBoxContainer" parent="SafeArea/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Message" type="Label" parent="SafeArea/Column/Body"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 theme_type_variation = &"DangerLabel"
 horizontal_alignment = 1
 autowrap_mode = 3
-
-[node name="Spacer" type="Control" parent="SafeArea/Column"]
-layout_mode = 2
-size_flags_vertical = 3
-mouse_filter = 2
 
 [node name="AppearanceButton" type="Button" parent="SafeArea/Column"]
 unique_name_in_owner = true

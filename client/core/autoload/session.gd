@@ -11,6 +11,7 @@ signal player_changed
 signal logged_in
 
 const DISCOVERY_BATCH := 1000
+const PING_INTERVAL := 60.0
 
 var player: Player = null
 ## A ilha casa, onde o jogo abre; 0 sem casa (home-island/02).
@@ -26,6 +27,32 @@ var debug_god := false
 ## (fog-of-war/03). Moram aqui porque a tela de exploração some antes do envio.
 var _pending_discoveries: Dictionary[int, Array] = {}
 var _sending_discoveries := false
+## Os hexágonos andados em Explorar por bioma, até o próximo sinal de cada minuto (player-stats/02).
+var _pending_hexes: Dictionary[String, int] = {}
+var _sending_ping := false
+var _ping_timer := Timer.new()
+var _app_active := true
+
+
+func _ready() -> void:
+	_ping_timer.wait_time = PING_INTERVAL
+	_ping_timer.timeout.connect(send_counters_ping)
+	add_child(_ping_timer)
+
+
+## Ir para o fundo manda o que falta; voltar manda na hora, para o servidor recomeçar a contar dali.
+func _notification(what: int) -> void:
+	match what:
+		NOTIFICATION_APPLICATION_PAUSED, NOTIFICATION_APPLICATION_FOCUS_OUT:
+			_app_active = false
+			if not _ping_timer.is_stopped():
+				_ping_timer.stop()
+				send_counters_ping()
+		NOTIFICATION_APPLICATION_RESUMED, NOTIFICATION_APPLICATION_FOCUS_IN:
+			_app_active = true
+			if player != null and _ping_timer.is_stopped():
+				_ping_timer.start()
+				send_counters_ping()
 
 
 func has_auth_session() -> bool:
@@ -146,6 +173,11 @@ func load_codex() -> Result:
 	return await _service.load_codex()
 
 
+func load_counters() -> Result:
+	@warning_ignore("redundant_await")
+	return await _service.load_counters()
+
+
 func debug_clear_codex() -> Result:
 	@warning_ignore("redundant_await")
 	return await _service.debug_clear_codex()
@@ -243,6 +275,25 @@ func send_island_discoveries() -> void:
 			queue_island_discoveries(island_id, batch)
 			break
 	_sending_discoveries = false
+
+
+func count_hex(biome: String, amount: int = 1) -> void:
+	_pending_hexes[biome] = _pending_hexes.get(biome, 0) + amount
+
+
+## O que falha volta para a fila do próximo sinal, sem aviso.
+func send_counters_ping() -> void:
+	if _sending_ping or player == null:
+		return
+	_sending_ping = true
+	var hexes := _pending_hexes
+	_pending_hexes = {}
+	@warning_ignore("redundant_await")
+	var result: Result = await _service.send_counters_ping(hexes)
+	if not result.ok:
+		for biome: String in hexes:
+			count_hex(biome, hexes[biome])
+	_sending_ping = false
 
 
 func take_fought_spawn() -> int:
@@ -348,4 +399,9 @@ func _set_player(value: Player) -> void:
 	player = value
 	if value == null:
 		storage = []
+		_ping_timer.stop()
+		_pending_hexes = {}
+	elif _app_active and _ping_timer.is_stopped():
+		_ping_timer.start()
+		send_counters_ping.call_deferred()
 	player_changed.emit()

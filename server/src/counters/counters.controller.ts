@@ -1,6 +1,15 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
 import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
+import {
+  ApiBadRequestResponse,
   ApiBearerAuth,
+  ApiNoContentResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
@@ -10,7 +19,11 @@ import {
 } from '@nestjs/swagger';
 import { AuthGuard } from '../auth/auth.guard.js';
 import { CurrentUser } from '../auth/current-user.decorator.js';
-import { CountersResponseDto } from './counters.dto.js';
+import {
+  CountersPingDto,
+  CountersResponseDto,
+  INVALID_PING,
+} from './counters.dto.js';
 import { CountersService, NO_PLAYER } from './counters.service.js';
 
 @ApiTags('Contadores')
@@ -52,5 +65,29 @@ export class CountersController {
       created_at: view.createdAt.toISOString(),
       walkable_biomes: view.walkableBiomes,
     };
+  }
+
+  @Post('ping')
+  @HttpCode(204)
+  @ApiOperation({
+    summary: 'Sinal de cada minuto',
+    description:
+      'O jogo manda a cada minuto com o app na frente, ao ir para o fundo e ao ' +
+      'sair de Explorar. Soma o tempo desde o sinal anterior (nada se passou de ' +
+      '90 s), conta o dia de jogo e os dias seguidos na hora de Brasília e os ' +
+      'hexágonos andados por bioma. Os hexágonos só contam com uma exploração ' +
+      'aberta, dos biomas do mapa dela, e no máximo um por passo mínimo do ' +
+      'Domador desde o último crédito.',
+  })
+  @ApiNoContentResponse({ description: 'Sinal contado.' })
+  @ApiBadRequestResponse({
+    description: `\`hexes\` inválida: "${INVALID_PING}"`,
+  })
+  @ApiNotFoundResponse({ description: `Sem Domador: "${NO_PLAYER}"` })
+  async ping(
+    @CurrentUser() userId: string,
+    @Body() body: CountersPingDto,
+  ): Promise<void> {
+    await this.counters.ping(userId, body.hexes);
   }
 }

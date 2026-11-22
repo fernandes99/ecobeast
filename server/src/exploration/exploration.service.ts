@@ -166,6 +166,8 @@ export class ExplorationService {
       tamers: new Map(tamers.map((tamer) => [tamer.id, tamer])),
       position: map.start,
       positionAt: Date.now(),
+      biomeIds: await this.biomeIdsOf(map.tiles),
+      hexesCreditedAt: Date.now(),
     });
     await this.countExplore(userId);
     return {
@@ -182,6 +184,15 @@ export class ExplorationService {
       },
       discovered: [],
     };
+  }
+
+  private async biomeIdsOf(tiles: { biome: string }[]): Promise<Set<number>> {
+    const slugs = [...new Set(tiles.map(({ biome }) => biome))];
+    const rows = await this.prisma.biome.findMany({
+      where: { slug: { in: slugs } },
+      select: { id: true },
+    });
+    return new Set(rows.map(({ id }) => id));
   }
 
   private async countExplore(userId: string): Promise<void> {
@@ -212,6 +223,8 @@ export class ExplorationService {
       tamers: new Map(),
       position: draft.start,
       positionAt: Date.now(),
+      biomeIds: await this.biomeIdsOf(draft.tiles),
+      hexesCreditedAt: Date.now(),
     });
     await this.countExplore(userId);
     return {
