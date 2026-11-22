@@ -51,6 +51,14 @@ extends RefCounted
 @abstract func list_islands() -> Result
 
 
+## As ilhas do Arquipélago Auralis, em ordem (auralis/03).
+@abstract func load_archipelago() -> Result
+
+
+## Só com as rotas de teste ligadas no servidor.
+@abstract func unlock_island(island_id: int) -> Result
+
+
 ## Grava hexágonos descobertos numa ilha (fog-of-war/03).
 @abstract func add_island_discoveries(island_id: int, coords: Array[Vector2i]) -> Result
 

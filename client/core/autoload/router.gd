@@ -6,11 +6,13 @@ const SCREEN_ID_META := &"screen_id"
 
 const SCREENS: Dictionary[StringName, String] = {
 	&"appearance": "res://screens/appearance/appearance_screen.tscn",
+	&"archipelago": "res://screens/archipelago/archipelago_screen.tscn",
 	&"bag": "res://screens/bag/bag_screen.tscn",
 	&"board_battle": "res://screens/board_battle/board_battle_screen.tscn",
 	&"codex": "res://screens/codex/codex_screen.tscn",
 	&"creature_details": "res://screens/creature_details/creature_details_screen.tscn",
 	&"exploration": "res://screens/exploration/exploration_screen.tscn",
+	&"explore_menu": "res://screens/explore_menu/explore_menu_screen.tscn",
 	&"heal_station": "res://screens/heal_station/heal_station_screen.tscn",
 	&"hub": "res://screens/hub/hub_screen.tscn",
 	&"interior": "res://screens/interior/interior_screen.tscn",

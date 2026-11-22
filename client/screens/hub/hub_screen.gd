@@ -523,7 +523,7 @@ func _open_featured() -> void:
 
 func _explore() -> void:
 	if not Session.player.party.is_empty():
-		Router.go_to(&"exploration")
+		Router.push(&"explore_menu")
 
 
 func _on_player_input(event: InputEvent) -> void:

@@ -148,14 +148,16 @@ Antes de gerar, o servidor junta os biomas e as espécies das ilhas abertas do j
 
 ## Fases
 
-Cada fase é jogável sozinha. A partir da fase 3, as condições que ainda não existem não contam, e uma ilha abre com o que já existe.
+Cada fase é jogável sozinha. Uma ilha só abre a próxima quando tem pelo menos uma condição e cumpre todas. Sem condição configurada, a próxima só abre pela rota de depuração da 01.
+
+A fase 2 está adiada. Em 2026-11-22, o dono pediu: "vamos pular a parte do Explorar Randomico, ainda quero manter do jeito que está para eu testar o algoritmo procedural, até eu decidir que não vai ter novos biomas ou zonas." Até lá, o mapa aleatório sorteia todos os biomas e Ecobeasts, como hoje. As listas de `island_unlock_biomes` e `island_unlock_species` continuam no banco, sem ninguém ler, e as outras fases não dependem da 2.
 
 | # | Fase | Entrega | Status |
 | --- | --- | --- | --- |
 | 1 | [01-unlock-config](01-unlock-config.md) | A ordem das ilhas, o que cada uma destrava, as ilhas abertas do jogador (Liora para todos) e a entrada numa ilha trancada recusada | concluída |
-| 2 | 02-random-filter | O mapa aleatório com os biomas travados trocados e só os Ecobeasts destravados, os "só do randômico" incluídos | rascunho |
-| 3 | 03-archipelago-screen | A escolha do Explorar, a tela do Arquipélago e o aviso da ilha nova | rascunho |
-| 4 | 04-island-tamers | O catálogo `tamers`, o Domador posto no F2 com a equipe fixa e a primeira vitória contando | rascunho |
+| 2 | 02-random-filter | O mapa aleatório com os biomas travados trocados e só os Ecobeasts destravados, os "só do randômico" incluídos | adiada |
+| 3 | [03-archipelago-screen](03-archipelago-screen.md) | A escolha do Explorar e a tela do Arquipélago | concluída (falta o dono conferir no jogo) |
+| 4 | 04-island-tamers | O catálogo `tamers`, o Domador posto no F2 com a equipe fixa, a primeira vitória contando, a ilha seguinte abrindo e o aviso da ilha nova | rascunho |
 | 5 | 05-arenas | As Arenas de cada ilha, com a sala, os Domadores de treino, o Mestre e o emblema, uma abrindo a seguinte | rascunho |
 | 6 | 06-island-quests | As missões escritas pelo dono, os contadores novos, o sinal no NPC, a entrega e a recompensa | rascunho |
 | 7 | 07-extra-quests | Os modelos de missão e o quadro de missões extras do Arquipélago | rascunho |

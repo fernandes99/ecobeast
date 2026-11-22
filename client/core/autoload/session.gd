@@ -219,6 +219,16 @@ func list_islands() -> Result:
 	return await _service.list_islands()
 
 
+func load_archipelago() -> Result:
+	@warning_ignore("redundant_await")
+	return await _service.load_archipelago()
+
+
+func unlock_island(island_id: int) -> Result:
+	@warning_ignore("redundant_await")
+	return await _service.unlock_island(island_id)
+
+
 func load_interior(id: int) -> Result:
 	@warning_ignore("redundant_await")
 	return await _service.load_interior(id)
