@@ -65,7 +65,7 @@ As telas são montadas no código, sem `.tscn`, como o `BoardCreatureCard`. São
 
 `ListDetail` (`HSplitContainer`) tem, à esquerda, uma lista de linhas clicáveis com até 30% da largura e, à direita, um `ScrollContainer` com o detalhe. Cada aba diz:
 
-- as linhas: o texto, uma cor opcional (a do Elemento) e um texto à direita, como "4/6", que fica verde quando tudo está pronto, amarelo quando falta parte e vermelho quando falta tudo;
+- as linhas: o texto, uma cor opcional (a do Elemento), um controle opcional antes do texto (o rosto) e outro embaixo dele (os Elementos), e um texto à direita, como "4/6", que fica verde quando tudo está pronto, amarelo quando falta parte e vermelho quando falta tudo;
 - como montar o detalhe de um `id`.
 
 O detalhe é feito de *blocos*: painéis com um título pequeno em maiúsculas ("EVOLUÇÃO", "TÉCNICAS POR NÍVEL") e o conteúdo. Os detalhes são montados de novo a cada escolha, e não guardados.

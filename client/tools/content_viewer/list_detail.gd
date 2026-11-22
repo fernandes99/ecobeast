@@ -15,6 +15,9 @@ class Row:
 	var icon: Texture2D = null
 	var tail := ""
 	var tail_color := UiPalette.TEXT_SECONDARY
+	var lead: Control = null
+	var below: Control = null
+	var height := ROW_HEIGHT
 
 	func _init(row_id: int, row_text: String) -> void:
 		id = row_id
@@ -24,6 +27,7 @@ class Row:
 var viewer: ContentViewer
 var selected_id := -1
 var _list: VBoxContainer
+var _list_scroll: ScrollContainer
 var _list_header: VBoxContainer
 var _detail: VBoxContainer
 var _detail_scroll: ScrollContainer
@@ -39,14 +43,14 @@ func _init(content_viewer: ContentViewer) -> void:
 	_list_header = VBoxContainer.new()
 	_list_header.visible = false
 	left.add_child(_list_header)
-	var list_scroll := ScrollContainer.new()
-	list_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	list_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_list_scroll = ScrollContainer.new()
+	_list_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_list_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	_list = VBoxContainer.new()
 	_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_list.add_theme_constant_override(&"separation", 0)
-	list_scroll.add_child(_list)
-	left.add_child(list_scroll)
+	_list_scroll.add_child(_list)
+	left.add_child(_list_scroll)
 	add_child(left)
 
 	_detail_scroll = ScrollContainer.new()
@@ -88,6 +92,35 @@ func select(id: int) -> void:
 	_clear_detail()
 	_build_detail(id, _detail)
 	_detail_scroll.scroll_vertical = 0
+	# Logo depois de set_rows a linha ainda não tem posição: rola no próximo quadro.
+	_scroll_to.call_deferred(id)
+
+
+func _scroll_to(id: int) -> void:
+	if _buttons.has(id) and is_instance_valid(_buttons[id]):
+		_list_scroll.ensure_control_visible(_buttons[id])
+
+
+func _input(event: InputEvent) -> void:
+	var key := event as InputEventKey
+	if key == null or not key.pressed or (key.keycode != KEY_UP and key.keycode != KEY_DOWN):
+		return
+	if not is_visible_in_tree() or not _buttons.has(selected_id) or _typing():
+		return
+	var ids: Array[int] = []
+	for button: Node in _list.get_children():
+		var row_id: Variant = _buttons.find_key(button)
+		if row_id != null and (button as Control).visible:
+			ids.append(row_id)
+	var next := ids.find(selected_id) + (1 if key.keycode == KEY_DOWN else -1)
+	get_viewport().set_input_as_handled()
+	if next >= 0 and next < ids.size():
+		select(ids[next])
+
+
+func _typing() -> bool:
+	var focus := get_viewport().gui_get_focus_owner()
+	return focus is LineEdit or focus is TextEdit
 
 
 func add_list_header(control: Control) -> void:
@@ -118,7 +151,7 @@ func _row_button(row: Row) -> Button:
 	var button := Button.new()
 	button.toggle_mode = true
 	button.button_group = _group
-	button.custom_minimum_size.y = ROW_HEIGHT
+	button.custom_minimum_size.y = row.height
 	button.focus_mode = Control.FOCUS_NONE
 	var clear := StyleBoxEmpty.new()
 	var hover := StyleBoxFlat.new()
@@ -156,11 +189,31 @@ func _row_button(row: Row) -> Button:
 		dot.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		line.add_child(dot)
+	if row.lead != null:
+		row.lead.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		line.add_child(row.lead)
 	var label := ContentViewer.text(row.text)
 	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	line.add_child(label)
+	if row.below != null:
+		var stack := VBoxContainer.new()
+		stack.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		stack.alignment = BoxContainer.ALIGNMENT_CENTER
+		stack.add_theme_constant_override(&"separation", 1)
+		stack.add_child(label)
+		stack.add_child(row.below)
+		line.add_child(stack)
+	else:
+		line.add_child(label)
 	if not row.tail.is_empty():
 		line.add_child(ContentViewer.text(row.tail, 0, row.tail_color))
 	button.add_child(line)
+	_pass_clicks(line)
 	return button
+
+
+func _pass_clicks(node: Node) -> void:
+	if node is Control:
+		(node as Control).mouse_filter = Control.MOUSE_FILTER_IGNORE
+	for child: Node in node.get_children():
+		_pass_clicks(child)

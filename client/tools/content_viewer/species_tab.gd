@@ -7,6 +7,9 @@ const BAR_WIDTH := 260.0
 const BAR_HEIGHT := 10.0
 const LEVEL_UP := "level_up"
 const NO_LEVEL := 999
+const ROW_HEIGHT_WITH_FACE := 46
+const FACE_SIZE := 36
+const FLAG_FONT_SIZE := 11
 
 
 func _init(content_viewer: ContentViewer) -> void:
@@ -18,8 +21,36 @@ func _init(content_viewer: ContentViewer) -> void:
 		var row := ListDetail.Row.new(species.id, "#%d %s" % [species.id, species.name])
 		row.tail = "%d/%d" % [done, files.size()]
 		row.tail_color = ContentViewer.status_color(done, files.size())
+		row.height = ROW_HEIGHT_WITH_FACE
+		var face := CreatureFace.new()
+		face.face_size = FACE_SIZE
+		face.set_species(species.id)
+		row.lead = face
+		row.below = _element_flags(species)
 		rows.append(row)
 	set_rows(rows)
+
+
+static func _element_flags(species: CreatureSpecies) -> HBoxContainer:
+	var flags := HBoxContainer.new()
+	flags.add_theme_constant_override(&"separation", 4)
+	for element_id: int in species.element_ids:
+		var element := GameData.get_element(element_id)
+		if element == null:
+			continue
+		var style := StyleBoxFlat.new()
+		style.bg_color = element.color
+		style.set_corner_radius_all(3)
+		style.content_margin_left = 5
+		style.content_margin_right = 5
+		var flag := PanelContainer.new()
+		flag.add_theme_stylebox_override(&"panel", style)
+		var is_light := element.color.get_luminance() > ElementBadge.LIGHT_LUMINANCE
+		var label := ContentViewer.text(element.name, FLAG_FONT_SIZE, UiPalette.BACKGROUND if is_light else UiPalette.TEXT)
+		label.theme_type_variation = &"BoldLabel"
+		flag.add_child(label)
+		flags.add_child(flag)
+	return flags
 
 
 func tab_title() -> String:
