@@ -2,7 +2,7 @@
 
 O jogo troca a história por uma progressão de ilhas: o **Arquipélago Auralis**. O Explorar do Hub passa a ter duas opções, o mapa aleatório de hoje e o Arquipélago, onde as ilhas abrem uma de cada vez. Para abrir a próxima, o jogador vence os Domadores da ilha, ganha as Arenas dela e cumpre as missões dos NPCs. Cada ilha aberta destrava biomas e Ecobeasts, e o mapa aleatório só sorteia o que o jogador já destravou.
 
-- **Status:** rascunho
+- **Status:** em andamento
 - **Depende de:** [hub-start](../hub-start/), [islands](../islands/), [island-npcs](../island-npcs/), [interiors](../interiors/), [npc-tamers](../npc-tamers/), [player-stats](../player-stats/), [fog-of-war](../fog-of-war/)
 
 ## Contexto
@@ -152,7 +152,7 @@ Cada fase é jogável sozinha. A partir da fase 3, as condições que ainda não
 
 | # | Fase | Entrega | Status |
 | --- | --- | --- | --- |
-| 1 | 01-unlock-config | A ordem das ilhas, o que cada uma destrava, as ilhas abertas do jogador (Liora para todos) e a entrada numa ilha trancada recusada | rascunho |
+| 1 | [01-unlock-config](01-unlock-config.md) | A ordem das ilhas, o que cada uma destrava, as ilhas abertas do jogador (Liora para todos) e a entrada numa ilha trancada recusada | concluída |
 | 2 | 02-random-filter | O mapa aleatório com os biomas travados trocados e só os Ecobeasts destravados, os "só do randômico" incluídos | rascunho |
 | 3 | 03-archipelago-screen | A escolha do Explorar, a tela do Arquipélago e o aviso da ilha nova | rascunho |
 | 4 | 04-island-tamers | O catálogo `tamers`, o Domador posto no F2 com a equipe fixa e a primeira vitória contando | rascunho |

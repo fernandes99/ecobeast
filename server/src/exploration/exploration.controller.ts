@@ -34,6 +34,7 @@ import {
   INVALID_TAMER,
   StartExplorationBodyDto,
 } from './exploration.dto.js';
+import { ISLAND_LOCKED } from '../islands/archipelago.service.js';
 import { ISLAND_NOT_FOUND } from '../islands/islands.service.js';
 import {
   ExplorationService,
@@ -80,6 +81,9 @@ export class ExplorationController {
   })
   @ApiNotFoundResponse({
     description: `A ilha não existe ou nunca foi publicada: "${ISLAND_NOT_FOUND}"`,
+  })
+  @ApiForbiddenResponse({
+    description: `Ilha do Arquipélago que o Domador ainda não abriu: "${ISLAND_LOCKED}"`,
   })
   @ApiConflictResponse({
     description:

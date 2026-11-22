@@ -22,6 +22,7 @@ import {
 } from '@nestjs/swagger';
 import { AuthGuard } from '../auth/auth.guard.js';
 import { CurrentUser } from '../auth/current-user.decorator.js';
+import { ArchipelagoService } from './archipelago.service.js';
 import { DiscoveriesService } from './discoveries.service.js';
 import {
   DiscoveriesAddedDto,
@@ -51,6 +52,7 @@ export class IslandsController {
   constructor(
     private readonly islands: IslandsService,
     private readonly discoveries: DiscoveriesService,
+    private readonly archipelago: ArchipelagoService,
   ) {}
 
   @Get()
@@ -58,12 +60,19 @@ export class IslandsController {
     summary: 'Listar as ilhas',
     description:
       'As ilhas publicadas pelo editor, em ordem de id, com o nome da versão ' +
-      'publicada. Todas aparecem para todo jogador, mesmo sem Domador. Para ' +
-      'entrar numa, `POST /v1/me/exploration` com `{island_id}`.',
+      'publicada, menos as do Arquipélago que o Domador ainda não abriu ' +
+      '(`GET /v1/me/archipelago`). Para entrar numa, `POST /v1/me/exploration` ' +
+      'com `{island_id}`.',
   })
   @ApiOkResponse({ type: PlayerIslandsResponseDto })
-  async list(): Promise<PlayerIslandsResponseDto> {
-    return { islands: await this.islands.listPublished() };
+  async list(
+    @CurrentUser() userId: string,
+  ): Promise<PlayerIslandsResponseDto> {
+    const [islands, locked] = await Promise.all([
+      this.islands.listPublished(),
+      this.archipelago.lockedIds(userId),
+    ]);
+    return { islands: islands.filter(({ id }) => !locked.has(id)) };
   }
 
   @Post(':id/discoveries')

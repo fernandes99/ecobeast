@@ -20,7 +20,8 @@ export class PlayerIslandDto {
 export class PlayerIslandsResponseDto {
   @ApiProperty({
     type: [PlayerIslandDto],
-    description: 'As ilhas publicadas, em ordem de id.',
+    description:
+      'As ilhas publicadas, em ordem de id, sem as trancadas do Arquipélago.',
   })
   islands: PlayerIslandDto[];
 }

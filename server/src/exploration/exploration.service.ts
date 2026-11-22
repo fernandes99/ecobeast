@@ -55,6 +55,7 @@ import {
   toTrailDto,
   toWallDto,
 } from './exploration.dto.js';
+import { ArchipelagoService } from '../islands/archipelago.service.js';
 import { DiscoveriesService } from '../islands/discoveries.service.js';
 import { ExplorationStore } from './exploration.store.js';
 import {
@@ -92,6 +93,7 @@ export class ExplorationService {
     private readonly islands: IslandsService,
     private readonly discoveries: DiscoveriesService,
     private readonly counters: CountersService,
+    private readonly archipelago: ArchipelagoService,
   ) {}
 
   async start(
@@ -208,6 +210,7 @@ export class ExplorationService {
   ): Promise<ExplorationResponseDto> {
     const island = await this.islands.readPublished(islandId);
     if (!island) throw new NotFoundException(ISLAND_NOT_FOUND);
+    await this.archipelago.assertOpen(userId, islandId);
     const { draft } = island;
     const [typeBlocks, born, discovered] = await Promise.all([
       this.islands.readTypeBlocks(),

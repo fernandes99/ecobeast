@@ -116,6 +116,7 @@ model Biome {
   species     SpeciesBiome[]
   islandTiles IslandTile[]
   zones       BiomeZone[]
+  unlockedBy  IslandUnlockBiome[]
 
   @@map("biomes")
   @@schema("ecobeasts")
@@ -624,20 +625,21 @@ model Species {
   weightKg             Float  @map("weight_kg")
   evolvesFromSpeciesId Int?   @map("evolves_from_species_id")
 
-  growthRate     GrowthRate          @relation(fields: [growthRateId], references: [id], onDelete: Restrict)
-  rarity         Rarity              @relation(fields: [rarityId], references: [id], onDelete: Restrict)
-  evolvesFrom    Species?            @relation("SpeciesEvolvesFrom", fields: [evolvesFromSpeciesId], references: [id], onDelete: Restrict)
-  evolvesTo      Species[]           @relation("SpeciesEvolvesFrom")
+  growthRate     GrowthRate            @relation(fields: [growthRateId], references: [id], onDelete: Restrict)
+  rarity         Rarity                @relation(fields: [rarityId], references: [id], onDelete: Restrict)
+  evolvesFrom    Species?              @relation("SpeciesEvolvesFrom", fields: [evolvesFromSpeciesId], references: [id], onDelete: Restrict)
+  evolvesTo      Species[]             @relation("SpeciesEvolvesFrom")
   elements       SpeciesElement[]
   stats          SpeciesStat[]
   traits         SpeciesTrait[]
   skills         SpeciesSkill[]
-  evolutionsFrom Evolution[]         @relation("EvolutionFrom")
-  evolutionsTo   Evolution[]         @relation("EvolutionTo")
+  evolutionsFrom Evolution[]           @relation("EvolutionFrom")
+  evolutionsTo   Evolution[]           @relation("EvolutionTo")
   starterOption  StarterOption?
   creatures      CreatureInstance[]
   biomes         SpeciesBiome[]
   biomeZones     SpeciesBiomeZone[]
+  unlockedBy     IslandUnlockSpecies[]
   dayPhases      SpeciesDayPhase[]
   codexEntries   CodexEntry[]
   islandAreas    IslandAreaSpecies[]
@@ -1015,6 +1017,7 @@ model Player {
   discoveries     IslandDiscovery[]
   storyMarks      PlayerStoryMark[]
   counters        PlayerCounter[]
+  islands         PlayerIsland[]
 
   @@index([bodyTypeId])
   @@index([skinPaletteId])
@@ -1195,16 +1198,66 @@ model CodexEntry {
 }
 
 model Island {
-  id          Int       @id @default(autoincrement())
-  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
-  publishedAt DateTime? @map("published_at") @db.Timestamptz(3)
+  id               Int       @id @default(autoincrement())
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  publishedAt      DateTime? @map("published_at") @db.Timestamptz(3)
   /// A casa do jogador. Só uma: índice único parcial islands_one_home (migration home_island)
-  isHome      Boolean   @default(false) @map("is_home")
+  isHome           Boolean   @default(false) @map("is_home")
+  /// A posição no Arquipélago Auralis; nulo fica fora dele. CHECK > 0 (migration archipelago)
+  archipelagoOrder Int?      @unique @map("archipelago_order")
 
-  maps        IslandMap[]
-  discoveries IslandDiscovery[]
+  maps          IslandMap[]
+  discoveries   IslandDiscovery[]
+  unlockBiomes  IslandUnlockBiome[]
+  unlockSpecies IslandUnlockSpecies[]
+  players       PlayerIsland[]
 
   @@map("islands")
+  @@schema("ecobeasts")
+}
+
+/// Os biomas que a ilha destrava no mapa aleatório (auralis/01).
+model IslandUnlockBiome {
+  islandId Int @map("island_id")
+  biomeId  Int @map("biome_id")
+
+  island Island @relation(fields: [islandId], references: [id], onDelete: Cascade)
+  biome  Biome  @relation(fields: [biomeId], references: [id], onDelete: Restrict)
+
+  @@id([islandId, biomeId])
+  @@index([biomeId])
+  @@map("island_unlock_biomes")
+  @@schema("ecobeasts")
+}
+
+/// Os Ecobeasts que a ilha destrava no mapa aleatório (auralis/01).
+model IslandUnlockSpecies {
+  islandId   Int     @map("island_id")
+  speciesId  Int     @map("species_id")
+  /// Nasce só no mapa aleatório, a partir desta ilha aberta.
+  randomOnly Boolean @default(false) @map("random_only")
+
+  island  Island  @relation(fields: [islandId], references: [id], onDelete: Cascade)
+  species Species @relation(fields: [speciesId], references: [id], onDelete: Restrict)
+
+  @@id([islandId, speciesId])
+  @@index([speciesId])
+  @@map("island_unlock_species")
+  @@schema("ecobeasts")
+}
+
+/// As ilhas do Arquipélago que o Domador abriu; a de menor ordem é aberta sem linha (auralis/01).
+model PlayerIsland {
+  playerId   String   @map("player_id") @db.Uuid
+  islandId   Int      @map("island_id")
+  unlockedAt DateTime @default(now()) @map("unlocked_at") @db.Timestamptz(3)
+
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  island Island @relation(fields: [islandId], references: [id], onDelete: Cascade)
+
+  @@id([playerId, islandId])
+  @@index([islandId])
+  @@map("player_islands")
   @@schema("ecobeasts")
 }
 
