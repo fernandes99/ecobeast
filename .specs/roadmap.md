@@ -102,6 +102,8 @@ O que vem depois do MVP de estrutura (entrada, escolha do inicial e Hub). Cada l
 | 84  | [`glimshell-line`](glimshell-line/) | O jabuti de cristal, o primeiro tanque especial e a primeira linha de Luz pura: o Glimshell, o Lumoshell e o Prismback (Luz), ids 33 a 35, incomuns e de crescimento Lento, que evoluem nos níveis 18 e 36, de Manhã e de Tarde na Pedra e na Praia, com os `front.png` da imagem do dono, as folhas do mapa e 4 Técnicas de Luz (Lampejo, Casco Prismático, Halo Protetor e Raio Prismático, ids 106 a 109) | hopling-line, skill-editor (o alvo "Meu time") | concluída (falta o dono conferir no jogo) |
 | 86  | [`rolling-hills`](rolling-hills/) | A Colina e a Montanha sorteadas separadas no mapa sorteado: a Colina em manchas de morro que sobem +1 na borda e +2 no miolo (no máximo 8), longe ou perto de montanha, e a Montanha em 1 a 4 maciços por mapa, pelo relevo suavizado, com 50% de chance de cada maciço ganhar uma faixa de Colina ao pé (`hillFraction` e `foothillChance` no lugar de `hillFrom`) | terrain-plateaus, map-realism | concluída (falta o dono conferir no jogo) |
 | 87  | [`auralis`](auralis/) | O Arquipélago Auralis no lugar da história: o Explorar com o mapa aleatório e o Arquipélago, as ilhas abrindo uma de cada vez pelos Domadores, pelas Arenas e pelas missões de cada uma, e o mapa aleatório sorteando só os biomas e os Ecobeasts das ilhas abertas | hub-start, islands, interiors, npc-tamers, player-stats | rascunho |
+| 88  | [`tamer-level`](tamer-level/) | O XP e o nível do Domador, de 1 a 99: um pouco do XP da luta e principalmente os marcos (espécie nova, Domadores e, com a auralis, missões, Arenas e ilhas), com a curva, as recompensas de cada nível e o valor de cada fonte no catálogo | progression, codex, npc-tamers, player-stats, hub-start | aprovada |
+| 89  | `skill-tree` | A árvore de melhorias do Domador, com os pontos saindo do nível (velocidade, limite de inventário, montaria, fôlego na água) | tamer-level | planejada |
 
 ## Pós-lançamento (do GDD)
 
@@ -131,7 +133,7 @@ Evoluções por item, vínculo, horário, zona e troca; criação (breeding) e h
 - **Preço do Refúgio:** a cura é de graça por enquanto, e o dono quer cobrar moedas depois. Falta definir o valor e o que acontece com quem não tem moedas, para não prender o jogador depois de uma derrota.
 - **Renda de moedas:** o selvagem paga pouco ao ser derrotado e tira um pouco ao vencer ([progression/05](progression/05-wild-coins.md)), e os Domadores NPC pagam três vezes mais ([npc-tamers](npc-tamers/architecture.md#luta-contra-domador)). Faltam os outros cenários de ganho.
 - **Nomes dos próximos itens:** os itens do GDD que ainda não entraram no catálogo passam pela mesma revisão de nomes da [inventory-shop](inventory-shop/) antes de serem criados.
-- **Nível do Domador:** o Hub mostra o nível, mas o GDD não diz como ele sobe. No MVP fica fixo em 1.
+- **Nível do Domador:** decidido na [`tamer-level`](tamer-level/): o XP das lutas e dos marcos, de 1 a 99.
 - **Curva Erratic:** citada no GDD sem fórmula. Fora do catálogo até ser definida.
 - **Estilo de arte:** as telas usam placeholders (forma na cor do elemento) até existir arte das 3 linhas iniciais.
 - **Tradução:** textos em pt-BR direto nas cenas e scripts (decisão do MVP). Se o jogo for traduzido, os textos migram para o sistema de tradução do Godot e o catálogo ganha tabelas de nomes por idioma.

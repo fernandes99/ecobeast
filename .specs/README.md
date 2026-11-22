@@ -122,6 +122,7 @@ O Ecobeast é um jogo mobile (Android/iOS, retrato): o cliente em **Godot 4.7 co
 | [player-stats](player-stats/) | Os números do Domador no Perfil (vitórias, capturas, distância, biomas pisados, horas jogadas e outros), contados pelo servidor num catálogo de contadores que serve depois às conquistas e ao ranking |
 | [start-island](start-island/) | A chegada do mapa sorteado no maior pedaço de terra, nunca num pedacinho que o mar isola |
 | [auralis](auralis/) | O Arquipélago Auralis: as ilhas abrindo uma de cada vez pelos Domadores, pelas Arenas e pelas missões, e o mapa aleatório só com o que foi destravado |
+| [tamer-level](tamer-level/) | O XP e o nível do Domador, de 1 a 99, pelas lutas e pelos marcos, com a recompensa de cada nível |
 
 As próximas iniciativas estão no [roadmap.md](roadmap.md).
 
