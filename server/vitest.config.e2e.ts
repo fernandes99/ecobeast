@@ -1,5 +1,4 @@
 import { defineConfig } from 'vitest/config';
-import tsconfigPaths from 'vite-tsconfig-paths';
 
 const CATALOG_WRITERS = [
   'test/skills-editor.e2e-spec.ts',
@@ -24,7 +23,7 @@ const CATALOG_WRITERS = [
 ];
 
 export default defineConfig({
-  plugins: [tsconfigPaths()],
+  resolve: { tsconfigPaths: true },
   test: {
     globals: true,
     root: './',

@@ -762,19 +762,19 @@ describe('carga inicial do dia e da noite (day-night/01 e 03)', () => {
     }[]
   >('prop_type_lights.json');
 
-  it('todo Ecobeast nasce nas 4 partes do dia (day-phase-spawns/01)', () => {
+  it('todo Ecobeast nasce em alguma parte do dia (day-phase-spawns/01 e browt-line/01)', () => {
     const species = read<{ id: number }[]>('species.json');
     const born = read<{ species_id: number; day_phase_id: number }[]>(
       'species_day_phases.json',
     );
-    expect(born).toHaveLength(species.length * phases.length);
+    const phaseIds = new Set(phases.map(({ id }) => id));
+    const keys = born.map((row) => `${row.species_id}|${row.day_phase_id}`);
+    expect(new Set(keys).size).toBe(keys.length);
+    for (const { day_phase_id } of born) {
+      expect(phaseIds.has(day_phase_id)).toBe(true);
+    }
     for (const { id } of species) {
-      expect(
-        born
-          .filter(({ species_id }) => species_id === id)
-          .map(({ day_phase_id }) => day_phase_id)
-          .sort(),
-      ).toEqual(phases.map((phase) => phase.id).sort());
+      expect(born.some(({ species_id }) => species_id === id)).toBe(true);
     }
   });
 
