@@ -121,6 +121,7 @@ O Ecobeast é um jogo mobile (Android/iOS, retrato): o cliente em **Godot 4.7 co
 | [volcano](volcano/) | O Vulcão, um bioma épico e raro: um cone íngreme com escadarias, a borda de picos de basalto e a cratera com lava rasa e funda, num mapa comum ou como uma ilha vulcânica no meio do oceano |
 | [player-stats](player-stats/) | Os números do Domador no Perfil (vitórias, capturas, distância, biomas pisados, horas jogadas e outros), contados pelo servidor num catálogo de contadores que serve depois às conquistas e ao ranking |
 | [start-island](start-island/) | A chegada do mapa sorteado no maior pedaço de terra, nunca num pedacinho que o mar isola |
+| [auralis](auralis/) | O Arquipélago Auralis: as ilhas abrindo uma de cada vez pelos Domadores, pelas Arenas e pelas missões, e o mapa aleatório só com o que foi destravado |
 
 As próximas iniciativas estão no [roadmap.md](roadmap.md).
 
