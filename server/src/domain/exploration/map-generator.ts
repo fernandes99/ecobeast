@@ -361,7 +361,8 @@ export function generateShapedMap(
     config,
   );
   separateBiomes(cells);
-  const start = startOf(cells);
+  // Só o mar separa: o rio e o lago, o `placeCrossings` cruza depois, a partir da chegada.
+  const start = startOf(cells, (cell) => !cell.sea);
   const startCell = cells.find(({ q, r }) => q === start.q && r === start.r)!;
   placeLandHeights(cells, config);
   const { crossings, absorbed } = placeCrossings(
@@ -1183,18 +1184,52 @@ function countBiomes(cells: Cell[]): Map<ShapedBiome, number> {
   return counts;
 }
 
-/** O hexágono de chegada: terra plana, senão terra, e só sem terra nenhuma a água. */
-export function startOf(
-  cells: readonly Pick<ShapedTile, 'q' | 'r' | 'biome' | 'shape'>[],
+/**
+ * O hexágono de chegada: terra plana, senão terra, e só sem terra nenhuma a água, no
+ * maior pedaço ligado por `joins` (start-island/01), e dentro dele o mais perto da origem.
+ */
+export function startOf<
+  C extends Pick<ShapedTile, 'q' | 'r' | 'biome' | 'shape'>,
+>(
+  cells: readonly C[],
+  joins: (cell: C) => boolean = ({ biome }) => !isWater(biome),
 ): HexCoord {
   const land = cells.filter(({ biome }) => !isWater(biome));
   const flatLand = land.filter(({ shape }) => shape === 'flat');
   const options =
     flatLand.length > 0 ? flatLand : land.length > 0 ? land : cells;
-  const nearest = options.reduce((best, cell) =>
-    hexDistance(cell, ORIGIN) < hexDistance(best, ORIGIN) ? cell : best,
-  );
+  const size = pieceSizes(cells, joins);
+  const biggest = Math.max(...options.map((cell) => size.get(cell) ?? 0));
+  const nearest = options
+    .filter((cell) => (size.get(cell) ?? 0) === biggest)
+    .reduce((best, cell) =>
+      hexDistance(cell, ORIGIN) < hexDistance(best, ORIGIN) ? cell : best,
+    );
   return { q: nearest.q, r: nearest.r };
+}
+
+/** O tamanho do pedaço de cada hexágono que `joins` aceita, pelos vizinhos que ela aceita. */
+function pieceSizes<C extends HexCoord>(
+  cells: readonly C[],
+  joins: (cell: C) => boolean,
+): Map<C, number> {
+  const byKey = new Map(cells.map((cell) => [hexKey(cell), cell]));
+  const size = new Map<C, number>();
+  for (const first of cells) {
+    if (size.has(first) || !joins(first)) continue;
+    const piece = [first];
+    const seen = new Set([first]);
+    for (let index = 0; index < piece.length; index += 1) {
+      for (const coord of hexNeighbors(piece[index]!)) {
+        const neighbor = byKey.get(hexKey(coord));
+        if (!neighbor || seen.has(neighbor) || !joins(neighbor)) continue;
+        seen.add(neighbor);
+        piece.push(neighbor);
+      }
+    }
+    for (const cell of piece) size.set(cell, piece.length);
+  }
+  return size;
 }
 
 /** No plano, as variantes de 4 a 6 são as de mais detalhe (`O_flat`). */

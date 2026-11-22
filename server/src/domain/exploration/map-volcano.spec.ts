@@ -286,7 +286,8 @@ describe('placeVolcano (volcano/04)', () => {
         104740: 'de3a95e7d6794e81',
         209469: 'e83c5634323f11ab',
         314198: 'efa306902e2a149e',
-        418927: '80fef44e3d306a7e',
+        // A start-island/01 levou a chegada para o pedaço maior, do outro lado do mar.
+        418927: '4273bba486e0f68d',
       };
       for (const [seed, hash] of Object.entries(before)) {
         const map = generateMap(Number(seed), {

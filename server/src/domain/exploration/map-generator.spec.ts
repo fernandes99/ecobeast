@@ -1046,6 +1046,24 @@ describe('startOf (bridges/04)', () => {
     ).toEqual({ q: 2, r: 0 });
   });
 
+  it('foge do pedaço de terra isolado, mesmo mais perto da origem', () => {
+    expect(
+      startOf([
+        { q: 0, r: 0, biome: 'beach', shape: 'flat' },
+        { q: 1, r: 0, biome: 'wshallow', shape: 'flat' },
+        { q: 2, r: 0, biome: 'temperate', shape: 'flat' },
+        { q: 3, r: 0, biome: 'temperate', shape: 'flat' },
+        { q: 4, r: 0, biome: 'temperate', shape: 'flat' },
+      ]),
+    ).toEqual({ q: 2, r: 0 });
+  });
+
+  it('a chegada da seed 23.762 no clima Temperado alcança a maior parte da terra (start-island)', () => {
+    const map = generateShapedMap(23762, { ...DEFAULT_MAP_CONFIG, climate: 1 });
+    const land = map.tiles.filter((tile) => !blocksWalking(tile.biome));
+    expect(reachable(map).size).toBeGreaterThan(land.length / 2);
+  });
+
   it('só sem terra nenhuma cai na água mais perto', () => {
     expect(
       startOf([
