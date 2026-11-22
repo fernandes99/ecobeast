@@ -52,3 +52,4 @@ Escolhas de Claude (corrigíveis; ao mudar uma, atualize aqui e na fase):
 | # | Fase | Entrega | Status |
 | --- | --- | --- | --- |
 | 1 | [01-seedlet-line](01-seedlet-line.md) | Nomes, slugs, descrições, os `front.png` e as folhas do mapa | concluída (falta o dono conferir no jogo) |
+| 2 | [02-root-whip](02-root-whip.md) | O Seedlet aprende o Chicote de Raiz no lugar da Bicada de Folha | concluída (falta o dono conferir no jogo) |
