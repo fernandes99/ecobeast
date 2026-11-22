@@ -127,6 +127,12 @@ const EFFECTS := {
 	"erva_da_bolsa": ["beast", "4/194"],
 	"atadura_firme": ["beast", "1/16"],
 	"cochilo": ["beast", "1/25"],
+	"ninho_de_ervas": ["beast", "4/184"],
+	"lampejo": ["light", "5/230"],
+	"casco_prismatico": ["light", "13/623"],
+	"halo_protetor": ["light", "9/439"],
+	"raio_prismatico": ["light", "6/293"],
+	"po_arcano": ["arcane", "7/336"],
 }
 
 const PROJECTILES := {
@@ -153,6 +159,9 @@ const PROJECTILES := {
 	"estaca_de_gelo": ["ice", "12/579"],
 	"dardo_gotejante": ["toxin", "12/579"],
 	"pena_riscante": ["wind", "12/579"],
+	"lampejo": ["light", "12/579"],
+	"raio_prismatico": ["light", "12/579"],
+	"po_arcano": ["arcane", "12/579"],
 }
 
 

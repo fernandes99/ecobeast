@@ -1,4 +1,4 @@
-"""Gera o som das Técnicas da board-battle/18 e /20 a /22 e /25 a /27 e /29 a /32 e /36 a /38 (board-battle/19 a /22, /25 a /27, /29 a /32 e /36 a /38), por síntese:
+"""Gera o som das Técnicas da board-battle/18 e /20 a /22 e /25 a /27 e /29 a /32 e /36 a /39 (board-battle/19 a /22, /25 a /27, /29 a /32 e /36 a /39), por síntese:
 ruído em filtros, tons com a altura mudando e saturação leve. Cada som dura mais
 ou menos o efeito da Técnica, porque os dois começam juntos; o impacto fica com o
 som de dano. Tudo sai daqui: sem gravação de terceiros.
@@ -1602,6 +1602,110 @@ def cochilo(rng):
     return mix, 1.3
 
 
+def ninho_de_ervas(rng):
+    """Ninho de Ervas: um punhado de ervas jogado em volta, as folhas assentando no chão
+    em farfalhos curtos e os brotos abrindo em notas que sobem, a cura ficando ali."""
+    length = 0.9
+    mix = silence(length)
+    toss = band(noise(rng, 0.14), [(0.0, 1400.0), (0.14, 3000.0)], 1.0)
+    add(mix, shape(toss, [(0.0, 0.0), (0.05, 1.0), (0.14, 0.0)]), 0.0, 0.7)
+    for index in range(5):
+        rustle = flutter(rng, band(noise(rng, 0.1), rng.uniform(2400.0, 3800.0), 1.3), 45.0, 0.6)
+        add(mix, shape(rustle, [(0.0, 0.0), (0.02, 1.0), (0.1, 0.0)]), 0.12 + index * 0.07, 0.5)
+        add(mix, thud(240.0, 140.0, 0.06), 0.13 + index * 0.07, 0.25)
+    for index, freq in enumerate((523.3, 659.3, 784.0, 1046.5, 1318.5)):
+        add(mix, bubble(freq, 0.09), 0.48 + index * 0.06, 0.25)
+        add(mix, ping(freq * 2.0, 0.22, ((1.0, 1.0), (2.0, 0.1))), 0.5 + index * 0.06, 0.15)
+    return mix, 1.4
+
+
+def lampejo(rng):
+    """Lampejo: a pedra do casco acende num tom curto, o brilho sai num zumbido rápido
+    e estala num clarão que tilinta."""
+    length = 0.45
+    mix = silence(length)
+    spark = tone(0.08, [(0.0, 1046.5), (0.08, 2093.0)], (1.0, 0.3))
+    add(mix, shape(spark, [(0.0, 0.0), (0.06, 1.0), (0.08, 0.0)]), 0.0, 0.35)
+    zip_ = band(noise(rng, 0.12), [(0.0, 3000.0), (0.12, 6500.0)], 1.5)
+    add(mix, shape(zip_, [(0.0, 0.0), (0.02, 1.0), (0.12, 0.0)]), 0.07, 0.7)
+    add(mix, click(rng, 5200.0, 0.02, 1.5), 0.19, 1.0)
+    for index, freq in enumerate((2637.0, 3520.0, 3136.0)):
+        add(mix, ping(freq, 0.2, ((1.0, 1.0), (2.0, 0.2))), 0.19 + index * 0.03, 0.3)
+    add(mix, shape(high(noise(rng, 0.2), 7000.0), [(0.0, 0.0), (0.01, 0.8), (0.2, 0.0)]), 0.19, 0.3)
+    return mix, 1.6
+
+
+def casco_prismatico(rng):
+    """Casco Prismático: o corpo se recolhendo num baque surdo, o casco acendendo em
+    acordes de cristal que sobem e um brilho que vibra e fica, a Defesa Especial subindo."""
+    length = 0.95
+    mix = silence(length)
+    add(mix, shape(band(noise(rng, 0.12), 900.0, 0.8), [(0.0, 0.0), (0.03, 1.0), (0.12, 0.0)]), 0.0, 0.5)
+    add(mix, thud(130.0, 70.0, 0.16), 0.08, 1.2)
+    for index, freq in enumerate((784.0, 1046.5, 1318.5, 1568.0, 2093.0)):
+        add(mix, ping(freq, 0.4, ((1.0, 1.0), (2.76, 0.35), (5.4, 0.12))), 0.2 + index * 0.06, 0.3)
+    for detune in (1.0, 1.004, 1.5):
+        hum = tone(0.55, 523.3 * detune, (1.0, 0.3), (6.0, 0.004))
+        add(mix, shape(hum, [(0.0, 0.0), (0.12, 0.7), (0.4, 0.5), (0.55, 0.0)]), 0.38, 0.17)
+    add(mix, shape(high(noise(rng, 0.5), 8000.0), [(0.0, 0.0), (0.1, 0.4), (0.5, 0.0)]), 0.35, 0.3)
+    return mix, 1.5
+
+
+def halo_protetor(rng):
+    """Halo Protetor: um sopro de luz que sobe, o halo se fechando em volta do aliado num
+    acorde claro que gira (o vibrato) e um sino suave que fica."""
+    length = 0.9
+    mix = silence(length)
+    rise = band(noise(rng, 0.3), [(0.0, 1200.0), (0.3, 5000.0)], 1.2)
+    add(mix, shape(rise, [(0.0, 0.0), (0.25, 0.9), (0.3, 0.0)]), 0.0, 0.5)
+    for freq in (659.3, 830.6, 987.8):
+        chord = tone(0.55, freq, (1.0, 0.25, 0.1), (5.0, 0.008))
+        add(mix, shape(chord, [(0.0, 0.0), (0.08, 0.8), (0.4, 0.6), (0.55, 0.0)]), 0.25, 0.2)
+    add(mix, ping(1975.5, 0.55, ((1.0, 1.0), (2.0, 0.25), (3.0, 0.08))), 0.28, 0.35)
+    add(mix, ping(2637.0, 0.4), 0.36, 0.2)
+    return mix, 1.4
+
+
+def raio_prismatico(rng):
+    """Raio Prismático: a luz juntando no casco num tom que sobe em três vozes, o raio de
+    arco-íris saindo num zumbido largo que ondula de altura e o clarão estourando com
+    notas que descem como cores."""
+    length = 0.95
+    mix = silence(length)
+    for detune in (1.0, 1.26, 1.5):
+        charge = tone(0.35, [(0.0, 262.0 * detune), (0.35, 784.0 * detune)], (1.0, 0.35), (11.0, 0.008))
+        add(mix, shape(charge, [(0.0, 0.0), (0.3, 0.8), (0.35, 0.0)]), 0.0, 0.25)
+    add(mix, shape(high(noise(rng, 0.33), 5500.0), [(0.0, 0.0), (0.3, 0.6), (0.33, 0.0)]), 0.0, 0.3)
+    for detune in (1.0, 1.25, 1.5, 2.0):
+        beam = tone(0.35, [(0.0, 660.0 * detune), (0.12, 740.0 * detune), (0.24, 620.0 * detune), (0.35, 700.0 * detune)], (1.0, 0.4, 0.2), (27.0, 0.012))
+        add(mix, shape(beam, [(0.0, 0.0), (0.01, 1.0), (0.28, 0.6), (0.35, 0.0)]), 0.34, 0.18)
+    rush = band(noise(rng, 0.3), [(0.0, 2200.0), (0.3, 6000.0)], 1.0)
+    add(mix, shape(rush, [(0.0, 0.0), (0.02, 1.0), (0.3, 0.0)]), 0.34, 0.6)
+    add(mix, thud(220.0, 70.0, 0.16), 0.66, 1.0)
+    add(mix, click(rng, 3000.0, 0.03, 1.2), 0.66, 1.0)
+    for index, freq in enumerate((3520.0, 3136.0, 2637.0, 2349.3, 2093.0, 1760.0)):
+        add(mix, ping(freq, 0.18, ((1.0, 1.0), (2.0, 0.2))), 0.67 + index * 0.035, 0.22)
+    return mix, 1.7
+
+
+def po_arcano(rng):
+    """Pó Arcano: as asas batendo em dois sopros macios, o pó saindo num chiado fino e
+    brilhante e um cintilar estranho, de notas fora da escala, que se espalha."""
+    length = 0.8
+    mix = silence(length)
+    for at in (0.0, 0.11):
+        flap = low(noise(rng, 0.1), [(0.0, 300.0), (0.05, 1100.0), (0.1, 300.0)], 0.9)
+        add(mix, shape(flap, [(0.0, 0.0), (0.04, 1.0), (0.1, 0.0)]), at, 0.8)
+    hiss = flutter(rng, band(noise(rng, 0.45), [(0.0, 4000.0), (0.45, 7000.0)], 1.0), 60.0, 0.7)
+    add(mix, shape(hiss, [(0.0, 0.0), (0.06, 1.0), (0.45, 0.0)]), 0.2, 0.55)
+    for index in range(9):
+        freq = 1046.5 * 2.0 ** (rng.uniform(0.0, 2.0)) * 1.03
+        add(mix, ping(freq, 0.16, ((1.0, 1.0), (2.41, 0.3))), 0.24 + index * 0.05 + rng.uniform(0.0, 0.03), 0.22)
+    whirr = tone(0.4, [(0.0, 440.0), (0.4, 466.0)], (1.0, 0.5), (7.0, 0.03))
+    add(mix, shape(whirr, [(0.0, 0.0), (0.1, 0.4), (0.4, 0.0)]), 0.25, 0.15)
+    return mix, 1.4
+
+
 SOUNDS = {
     "mordida_brasa": mordida_brasa,
     "fumaca_densa": fumaca_densa,
@@ -1703,6 +1807,12 @@ SOUNDS = {
     "erva_da_bolsa": erva_da_bolsa,
     "atadura_firme": atadura_firme,
     "cochilo": cochilo,
+    "ninho_de_ervas": ninho_de_ervas,
+    "lampejo": lampejo,
+    "casco_prismatico": casco_prismatico,
+    "halo_protetor": halo_protetor,
+    "raio_prismatico": raio_prismatico,
+    "po_arcano": po_arcano,
 }
 
 
