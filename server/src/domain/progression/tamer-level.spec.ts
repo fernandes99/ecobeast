@@ -12,6 +12,7 @@ const SOURCES = new Map([
   ['island_tamer_win', 150],
   ['island_tamer_rematch', 15],
   ['island_unlocked', 1000],
+  ['arena', 500],
 ]);
 
 function row(level: number, xpTotal: number, rewardCoins = 0): TamerLevelRow {
@@ -78,6 +79,15 @@ describe('tamerXpFromBattle', () => {
         SOURCES,
       ),
     ).toBe(23);
+  });
+
+  it('a primeira vitória contra o Mestre paga a Arena', () => {
+    expect(
+      tamerXpFromBattle(
+        { ...base, opponentIsTamer: true, islandTamer: 'arena' },
+        SOURCES,
+      ),
+    ).toBe(508);
   });
 
   it('a ilha aberta soma o island_unlocked', () => {

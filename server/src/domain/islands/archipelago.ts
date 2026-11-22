@@ -61,3 +61,43 @@ export function tamersComplete(
   const won = countingIds.filter((id) => wonIds.has(id)).length;
   return won >= Math.min(required ?? countingIds.length, countingIds.length);
 }
+
+export interface IslandArena {
+  id: number;
+  position: number;
+}
+
+/** A Arena abre quando as da ilha de posição menor foram ganhas (auralis/05). */
+export function arenaOpen(
+  arenas: readonly IslandArena[],
+  wonIds: ReadonlySet<number>,
+  arenaId: number,
+): boolean {
+  const arena = arenas.find(({ id }) => id === arenaId);
+  if (!arena) return false;
+  return arenas
+    .filter(({ position }) => position < arena.position)
+    .every(({ id }) => wonIds.has(id));
+}
+
+export interface IslandConditions {
+  countingTamerIds: readonly number[];
+  wonTamerIds: ReadonlySet<number>;
+  requiredTamerWins: number | null;
+  arenaIds: readonly number[];
+  wonArenaIds: ReadonlySet<number>;
+}
+
+/** A ilha completa: pelo menos uma condição, e todas cumpridas. */
+export function islandComplete(conditions: IslandConditions): boolean {
+  const { countingTamerIds, arenaIds } = conditions;
+  if (countingTamerIds.length === 0 && arenaIds.length === 0) return false;
+  const tamers =
+    countingTamerIds.length === 0 ||
+    tamersComplete(
+      countingTamerIds,
+      conditions.wonTamerIds,
+      conditions.requiredTamerWins,
+    );
+  return tamers && arenaIds.every((id) => conditions.wonArenaIds.has(id));
+}

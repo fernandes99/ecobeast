@@ -8,6 +8,7 @@ const SEARCHING_TEXT := "Procurando um Ecobeast..."
 const GONE_TEXT := "Essa luta não existe mais."
 const TAMER_XP_TEXT := "+%d XP de Domador"
 const ISLAND_UNLOCKED_TEXT := "Ilha nova aberta: %s!"
+const ARENA_WON_TEXT := "Emblema conquistado: %s!"
 const PICK_ENTRY_TEXT := "Toque no hexágono verde onde ele entra."
 const CANNOT_ENTER_TEXT := "Esse Ecobeast não pode entrar."
 const PICK_SPHERE_TEXT := "Toque no Ecobeast selvagem."
@@ -623,6 +624,10 @@ func _show_turn(turn: BoardTurn) -> void:
 			await _celebrate(turn.progression)
 			await _celebrate_tamer(turn.tamer_progress)
 			var text := _result_text()
+			if not turn.arena_won_name.is_empty():
+				text += "
+" + ARENA_WON_TEXT % turn.arena_won_name
+				Session.open_arena_room(turn.arena_next_interior_id)
 			if not turn.island_unlocked_name.is_empty():
 				text += "
 " + ISLAND_UNLOCKED_TEXT % turn.island_unlocked_name

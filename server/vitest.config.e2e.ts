@@ -13,6 +13,8 @@ const CATALOG_WRITERS = [
   'test/interiors.e2e-spec.ts',
   // Cria e apaga um NPC e os Domadores das ilhas de teste.
   'test/island-tamers.e2e-spec.ts',
+  // Cria e apaga NPCs, salas e as Arenas das ilhas de teste.
+  'test/arenas.e2e-spec.ts',
 ];
 
 export default defineConfig({

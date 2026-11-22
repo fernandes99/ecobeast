@@ -365,6 +365,22 @@ export class IslandUnlockedDto {
   name: string;
 }
 
+export class ArenaWonDto {
+  @ApiProperty({ example: 3 })
+  id: number;
+
+  @ApiProperty({ example: 'Arena das Brumas' })
+  name: string;
+
+  @ApiProperty({
+    type: Number,
+    nullable: true,
+    description: 'A sala da Arena seguinte da ilha, que esta vitória abriu.',
+    example: 42,
+  })
+  next_interior_id: number | null;
+}
+
 export class StartIslandTamerBodyDto {
   @ApiProperty({
     description:
@@ -492,4 +508,13 @@ export class BoardBattleResponseDto {
     nullable: true,
   })
   island_unlocked: IslandUnlockedDto | null;
+
+  @ApiProperty({
+    description:
+      'No fim da primeira vitória contra o Mestre de uma Arena, a Arena ganha ' +
+      '(o emblema, auralis/05). Nulo nas outras respostas.',
+    type: () => ArenaWonDto,
+    nullable: true,
+  })
+  arena_won: ArenaWonDto | null;
 }

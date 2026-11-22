@@ -431,6 +431,24 @@ export class ExplorationResponseDto {
       'versão publicada (fog-of-war). No mapa sorteado, sempre vazia.',
   })
   discovered: HexCoordDto[];
+
+  @ApiProperty({
+    type: [Number],
+    description:
+      'Numa ilha, as salas (`interiors`) das Arenas que o Domador ainda não ' +
+      'pode abrir (auralis/05). No mapa sorteado, sempre vazia.',
+    example: [],
+  })
+  locked_interior_ids: number[];
+
+  @ApiProperty({
+    type: [Number],
+    description:
+      'Numa ilha, os NPCs do catálogo que são Domadores dela, fora e dentro das ' +
+      'salas (auralis/05). No mapa sorteado, sempre vazia.',
+    example: [],
+  })
+  tamer_npc_ids: number[];
 }
 
 export class DebugSpawnBodyDto {

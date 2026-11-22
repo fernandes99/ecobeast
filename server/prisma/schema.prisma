@@ -1021,6 +1021,7 @@ model Player {
   counters        PlayerCounter[]
   islands         PlayerIsland[]
   tamerWins       PlayerTamerWin[]
+  arenas          PlayerArena[]
 
   @@index([bodyTypeId])
   @@index([skinPaletteId])
@@ -1217,6 +1218,7 @@ model Island {
   unlockSpecies IslandUnlockSpecies[]
   players       PlayerIsland[]
   tamers        Tamer[]
+  arenas        Arena[]
 
   @@map("islands")
   @@schema("ecobeasts")
@@ -1660,6 +1662,7 @@ model Interior {
   objects InteriorObject[]
   blocks  InteriorBlock[]
   npcs    InteriorNpc[]
+  arenas  Arena[]
   props   IslandProp[]
 
   @@map("interiors")
@@ -1763,6 +1766,7 @@ model Tamer {
   island    Island           @relation(fields: [islandId], references: [id], onDelete: Cascade)
   creatures TamerCreature[]
   wins      PlayerTamerWin[]
+  bossOf    Arena?
 
   @@index([islandId])
   @@map("tamers")
@@ -1801,5 +1805,42 @@ model PlayerTamerWin {
   @@id([playerId, tamerId])
   @@index([tamerId])
   @@map("player_tamer_wins")
+  @@schema("ecobeasts")
+}
+
+/// Uma Arena de uma ilha do Arquipélago: a sala, o Mestre e a ordem na ilha (auralis/05).
+model Arena {
+  id          Int    @id @default(autoincrement())
+  islandId    Int    @map("island_id")
+  /// A ordem na ilha; cada uma abre depois das de antes. CHECK > 0 (migration arenas)
+  position    Int
+  /// CHECK 1–40 caracteres (migration arenas)
+  name        String
+  interiorId  Int    @map("interior_id")
+  bossTamerId Int    @unique @map("boss_tamer_id")
+
+  island    Island        @relation(fields: [islandId], references: [id], onDelete: Cascade)
+  interior  Interior      @relation(fields: [interiorId], references: [id], onDelete: Restrict)
+  bossTamer Tamer         @relation(fields: [bossTamerId], references: [id], onDelete: Cascade)
+  players   PlayerArena[]
+
+  @@unique([islandId, position])
+  @@index([interiorId])
+  @@map("arenas")
+  @@schema("ecobeasts")
+}
+
+/// Os emblemas: as Arenas que o Domador ganhou.
+model PlayerArena {
+  playerId String   @map("player_id") @db.Uuid
+  arenaId  Int      @map("arena_id")
+  wonAt    DateTime @default(now()) @map("won_at") @db.Timestamptz(3)
+
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  arena  Arena  @relation(fields: [arenaId], references: [id], onDelete: Cascade)
+
+  @@id([playerId, arenaId])
+  @@index([arenaId])
+  @@map("player_arenas")
   @@schema("ecobeasts")
 }

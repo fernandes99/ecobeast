@@ -12,6 +12,9 @@ var registered_species_ids: Array[int] = []
 var tamer_progress: TamerProgress = null
 ## A ilha que a vitória contra o Domador da ilha abriu (auralis/04); vazio sem.
 var island_unlocked_name: String = ""
+## A Arena cujo Mestre foi vencido pela primeira vez (auralis/05): o nome e a sala da seguinte (0 sem).
+var arena_won_name: String = ""
+var arena_next_interior_id: int = 0
 
 
 static func from_dict(d: Dictionary) -> BoardTurn:
@@ -35,4 +38,7 @@ static func from_dict(d: Dictionary) -> BoardTurn:
 	if tamer is Dictionary:
 		turn.tamer_progress = TamerProgress.from_dict(tamer)
 	turn.island_unlocked_name = DictFields.get_string(DictFields.get_dict(d, "island_unlocked"), "name")
+	var arena := DictFields.get_dict(d, "arena_won")
+	turn.arena_won_name = DictFields.get_string(arena, "name")
+	turn.arena_next_interior_id = DictFields.get_int(arena, "next_interior_id")
 	return turn

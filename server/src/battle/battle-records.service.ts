@@ -12,6 +12,7 @@ import { TamerLevelService } from '../tamer-level/tamer-level.service.js';
 import {
   IslandTamersService,
   type UnlockedIsland,
+  type WonArena,
 } from '../islands/island-tamers.service.js';
 import {
   battleCounters,
@@ -100,6 +101,8 @@ export interface BattleFinish {
   tamerProgress: TamerProgressDto | null;
   /** A ilha que a vitória contra o Domador da ilha abriu (auralis/04). */
   islandUnlocked: UnlockedIsland | null;
+  /** A Arena cujo Mestre a vitória venceu pela primeira vez (auralis/05). */
+  arenaWon: WonArena | null;
 }
 
 type IslandTamerRef = NonNullable<BattleTamer['islandTamer']>;
@@ -282,8 +285,13 @@ export class BattleRecordsService {
     islandTamer: IslandTamerRef | null = null,
   ): Promise<BattleFinish> {
     const { progressed, leveled } = await this.progressTeam(userId, state);
-    const { capturedTo, registeredSpeciesIds, tamerProgress, islandUnlocked } =
-      await this.saveTeam(userId, state, wilds, progressed, islandTamer);
+    const {
+      capturedTo,
+      registeredSpeciesIds,
+      tamerProgress,
+      islandUnlocked,
+      arenaWon,
+    } = await this.saveTeam(userId, state, wilds, progressed, islandTamer);
     if (state.result === 'victory') {
       const plans = new Map(
         progressed.flatMap(({ uid, plan }) => (plan ? [[uid, plan]] : [])),
@@ -296,6 +304,7 @@ export class BattleRecordsService {
       registeredSpeciesIds,
       tamerProgress,
       islandUnlocked,
+      arenaWon,
     };
   }
 
@@ -373,6 +382,7 @@ export class BattleRecordsService {
     registeredSpeciesIds: number[];
     tamerProgress: TamerProgressDto | null;
     islandUnlocked: UnlockedIsland | null;
+    arenaWon: WonArena | null;
   }> {
     const progressByUid = new Map(
       progressed.map(({ uid, progress }) => [uid, progress]),
@@ -494,6 +504,7 @@ export class BattleRecordsService {
         : [],
       tamerProgress: tamer.progress,
       islandUnlocked: island?.unlocked ?? null,
+      arenaWon: island?.arena ?? null,
     };
   }
 
@@ -502,7 +513,7 @@ export class BattleRecordsService {
     userId: string,
     state: BattleState,
     caughtSpecies: number[],
-    island: { kind: 'first' | 'rematch'; unlocked: unknown } | null,
+    island: { kind: 'first' | 'rematch' | 'arena'; unlocked: unknown } | null,
   ) {
     if (state.godMode || state.noRewards) return { writes: [], progress: null };
     const known = await this.prisma.codexEntry.findMany({

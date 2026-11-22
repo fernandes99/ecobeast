@@ -131,7 +131,17 @@ func start_exploration(island_id: int = 0) -> Result:
 		return Result.failure(ApiResponse.SERVER_ERROR)
 	var exploration := ExplorationMap.from_dict(map)
 	exploration.discovered = _coords(DictFields.get_array(response.data, "discovered"))
+	exploration.locked_interior_ids = _ints(DictFields.get_array(response.data, "locked_interior_ids"))
+	exploration.tamer_npc_ids = _ints(DictFields.get_array(response.data, "tamer_npc_ids"))
 	return Result.success(exploration)
+
+
+static func _ints(items: Array) -> Array[int]:
+	var ints: Array[int] = []
+	for item: Variant in items:
+		if item is int or item is float:
+			ints.append(int(item))
+	return ints
 
 
 func add_island_discoveries(island_id: int, coords: Array[Vector2i]) -> Result:

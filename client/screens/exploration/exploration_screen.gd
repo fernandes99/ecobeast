@@ -20,6 +20,7 @@ const CREATOR_CENTER := 0.24
 const HOME_KNOWN_RADIUS := 30
 const NOTHING_HERE_TEXT := "Nada por aqui."
 const NO_PATH_TEXT := "Não dá para chegar lá."
+const ARENA_LOCKED_TEXT := "Essa Arena ainda está trancada."
 ## Encostado numa peça: a até isto das linhas dela, em pixels da arte (free-objects/03).
 const TOUCH_REACH := 8.0
 const HIT_ALPHA := 0.5
@@ -786,8 +787,11 @@ func _open_prop(index: int) -> void:
 func _finish_prop(index: int) -> void:
 	var prop := _map.props[index]
 	if prop.interior_id > 0:
+		if _map.locked_interior_ids.has(prop.interior_id) and not Session.opened_arena_rooms.has(prop.interior_id):
+			_show_message(ARENA_LOCKED_TEXT, &"SecondaryLabel")
+			return
 		_debug_panel.hide()
-		Router.push(&"interior", {"interior_id": prop.interior_id})
+		Router.push(&"interior", {"interior_id": prop.interior_id, "tamer_npc_ids": _map.tamer_npc_ids})
 		return
 	_run_action_type(prop.action_type_id)
 

@@ -75,6 +75,7 @@ Do dono, em 2026-11-22:
 | Os Domadores que contam são os que ele põe na ilha, com a equipe fixa, e cada um conta uma vez | Ele confirmou a proposta: "Bate sim" |
 | A Arena é um prédio com sala, com Domadores de treino e o Mestre de Arena; vencer o Mestre dá o emblema, e a Arena seguinte da ilha só abre depois | Ele confirmou a proposta: "Bate sim" |
 | A Liga fica de fora | "Vamos pensar na liga só mais tarde" |
+| A luta contra um Domador da ilha começa ao tocar no NPC, e perder volta ao Hub, na Arena também | "Tocar no NPC e Volta o Hub" e, para a Arena, "Sim, volta ao Hub" |
 | Uma iniciativa só, com as fases em ordem | Ele escolheu o caminho 1: "pode" |
 
 Escolhas de Claude (_a revisar_; ao mudar uma, atualize aqui e na fase):
@@ -158,7 +159,7 @@ A fase 2 está adiada. Em 2026-11-22, o dono pediu: "vamos pular a parte do Expl
 | 2 | 02-random-filter | O mapa aleatório com os biomas travados trocados e só os Ecobeasts destravados, os "só do randômico" incluídos | adiada |
 | 3 | [03-archipelago-screen](03-archipelago-screen.md) | A escolha do Explorar e a tela do Arquipélago | concluída (falta o dono conferir no jogo) |
 | 4 | [04-island-tamers](04-island-tamers.md) | O catálogo `tamers` (um NPC do catálogo como Domador, com a equipe fixa), a luta ao tocar no NPC, a primeira vitória contando, a ilha seguinte abrindo e o aviso da ilha nova | concluída (falta o dono conferir no jogo) |
-| 5 | 05-arenas | As Arenas de cada ilha, com a sala, os Domadores de treino, o Mestre e o emblema, uma abrindo a seguinte | rascunho |
+| 5 | [05-arenas](05-arenas.md) | As Arenas de cada ilha, com a sala, os Domadores de treino, o Mestre e o emblema, uma abrindo a seguinte | concluída (falta o dono conferir no jogo) |
 | 6 | 06-island-quests | As missões escritas pelo dono, os contadores novos, o sinal no NPC, a entrega e a recompensa | rascunho |
 | 7 | 07-extra-quests | Os modelos de missão e o quadro de missões extras do Arquipélago | rascunho |
 | 8 | 08-ground-items | O item no chão da ilha para pegar e as missões "Encontre X item" | rascunho |
@@ -170,5 +171,4 @@ As specs das fases são escritas quando cada uma for planejada.
 - **O nível dos selvagens no mapa aleatório:** hoje não depende da ilha da vez. Uma ilha mais adiante pode pedir selvagens mais fortes no aleatório também.
 - **Os itens destravados por ilha:** o dono citou "novos itens". Falta dizer se é a Loja que vende mais, se é a recompensa das missões, ou as duas.
 - **A Liga:** se vale a pena e o que ela pede.
-- **A derrota dentro de uma Arena:** volta ao Hub, como a do Domador da ilha, ou para a porta da Arena? Em 2026-11-22, o dono decidiu que a luta contra o Domador da ilha começa ao tocar no NPC e que a derrota volta ao Hub ("Tocar no NPC e Volta o Hub"); falta confirmar se a Arena segue a mesma regra. Decide a fase 5.
 - **"Vire a noite":** o tempo jogado durante a Noite somado em vários dias (o `play_seconds_by_day_phase` das escolhas acima), ou jogar uma Noite inteira sem sair? Sugestão de Claude: o tempo somado, mais simples e mais justo no celular. Decide o contador novo da fase 6.

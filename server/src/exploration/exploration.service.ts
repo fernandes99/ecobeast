@@ -187,6 +187,8 @@ export class ExplorationService {
         npcs: [],
       },
       discovered: [],
+      locked_interior_ids: [],
+      tamer_npc_ids: [],
     };
   }
 
@@ -214,12 +216,14 @@ export class ExplorationService {
     if (!island) throw new NotFoundException(ISLAND_NOT_FOUND);
     await this.archipelago.assertOpen(userId, islandId);
     const { draft } = island;
-    const [typeBlocks, born, discovered, tamerNpcIds] = await Promise.all([
-      this.islands.readTypeBlocks(),
-      speciesBornAt(this.prisma, minute),
-      this.discoveries.listDiscovered(userId, island.id, draft.tiles),
-      this.islandTamers.npcIds(island.id),
-    ]);
+    const [typeBlocks, born, discovered, tamerNpcIds, lockedInteriorIds] =
+      await Promise.all([
+        this.islands.readTypeBlocks(),
+        speciesBornAt(this.prisma, minute),
+        this.discoveries.listDiscovered(userId, island.id, draft.tiles),
+        this.islandTamers.npcIds(island.id),
+        this.islandTamers.lockedInteriorIds(userId, island.id),
+      ]);
     const spawns = rollAreaSpawns(
       areasBornIn(spawnAreas(draft, typeBlocks), born),
       secureRandom,
@@ -271,6 +275,8 @@ export class ExplorationService {
         })),
       },
       discovered,
+      locked_interior_ids: lockedInteriorIds,
+      tamer_npc_ids: [...tamerNpcIds],
     };
   }
 

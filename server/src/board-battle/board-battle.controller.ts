@@ -36,7 +36,10 @@ import {
   StartIslandTamerBodyDto,
   StartSkillTestBodyDto,
 } from './board-battle.dto.js';
-import { NO_ISLAND_TAMER } from '../islands/island-tamers.service.js';
+import {
+  ARENA_LOCKED,
+  NO_ISLAND_TAMER,
+} from '../islands/island-tamers.service.js';
 import { toBoardInput } from './board-battle.mapper.js';
 import { BoardBattleService } from './board-battle.service.js';
 
@@ -196,7 +199,8 @@ export class BoardBattleController {
   @ApiConflictResponse({
     description:
       `${NO_TEAM_RESPONSES} Sem exploração numa ilha, ou o NPC não é um ` +
-      `Domador dela na versão publicada, ou sem equipe: "${NO_ISLAND_TAMER}"`,
+      `Domador dela na versão publicada, ou sem equipe: "${NO_ISLAND_TAMER}" ` +
+      `O NPC está na sala de uma Arena trancada: "${ARENA_LOCKED}"`,
   })
   startIslandTamer(
     @CurrentUser() userId: string,

@@ -58,6 +58,7 @@ const NOT_FINISHED: BattleFinish = {
   registeredSpeciesIds: [],
   tamerProgress: null,
   islandUnlocked: null,
+  arenaWon: null,
 };
 
 function toResponse(
@@ -70,6 +71,7 @@ function toResponse(
     registeredSpeciesIds,
     tamerProgress,
     islandUnlocked,
+    arenaWon,
   }: BattleFinish = NOT_FINISHED,
 ): BoardBattleResponseDto {
   return {
@@ -82,6 +84,11 @@ function toResponse(
     registered_species_ids: registeredSpeciesIds,
     tamer_progress: tamerProgress,
     island_unlocked: islandUnlocked,
+    arena_won: arenaWon && {
+      id: arenaWon.id,
+      name: arenaWon.name,
+      next_interior_id: arenaWon.nextInteriorId,
+    },
   };
 }
 
@@ -213,7 +220,9 @@ export class BoardBattleService {
     const team = await this.records.loadTeam(userId);
     const islandId = this.records.currentIslandId(userId);
     const tamer =
-      islandId === null ? null : await this.islandTamers.find(islandId, npcId);
+      islandId === null
+        ? null
+        : await this.islandTamers.find(userId, islandId, npcId);
     if (!tamer) throw new ConflictException(NO_ISLAND_TAMER);
     const enemies = await this.tamerTeam(tamer.team);
     return this.begin(userId, team, enemies, {

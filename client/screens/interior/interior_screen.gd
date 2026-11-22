@@ -9,6 +9,8 @@ const MAX_TAP_TRAVEL := 24.0
 
 var _interior: Interior = null
 var _interior_id := 0
+## Os NPCs Domadores da ilha, que lutam depois da última fala (auralis/05).
+var _tamer_npc_ids: Array[int] = []
 var _view := InteriorView.new()
 var _route: InteriorRoute = null
 var _tamer: TamerSprite = null
@@ -39,6 +41,10 @@ func setup(params: Dictionary) -> void:
 	if params.get("interior") is Interior:
 		_interior = params["interior"]
 	_interior_id = int(params.get("interior_id", 0))
+	var tamers: Variant = params.get("tamer_npc_ids", [])
+	if tamers is Array:
+		for id: Variant in tamers:
+			_tamer_npc_ids.append(int(id))
 
 
 func _ready() -> void:
@@ -154,7 +160,9 @@ func _process(delta: float) -> void:
 
 func _add_npcs(interior: Interior) -> void:
 	for npc: InteriorNpc in interior.npcs:
-		var sprite := NpcSprite.make(npc.to_map_npc())
+		var map_npc := npc.to_map_npc()
+		map_npc.tamer = _tamer_npc_ids.has(npc.npc_id)
+		var sprite := NpcSprite.make(map_npc)
 		if sprite == null:
 			continue
 		sprite.position = InteriorTiles.cell_center(npc.cell)
@@ -191,7 +199,7 @@ func _talk(sprite: NpcSprite) -> void:
 	var lines := sprite.npc.lines()
 	if lines.is_empty():
 		sprite.hold(false)
-		_run_action(sprite.npc.action_type_id)
+		_after_talk(sprite.npc)
 		return
 	_talking = sprite
 	_talk_lines = lines
@@ -216,7 +224,16 @@ func _on_greeting_tapped() -> void:
 	_talking = null
 	_greeting.close()
 	sprite.hold(false)
-	_run_action(sprite.npc.action_type_id)
+	_after_talk(sprite.npc)
+
+
+## O Domador da ilha luta no lugar da ação; perder volta ao Hub (auralis/05).
+func _after_talk(npc: MapNpc) -> void:
+	if not npc.tamer:
+		_run_action(npc.action_type_id)
+		return
+	if await BattleIntro.cover(_tamer.get_global_transform_with_canvas().origin, &"tamer"):
+		Router.push(&"board_battle", {"island_tamer": npc.npc_id})
 
 
 func _run_action(type_id: int) -> void:

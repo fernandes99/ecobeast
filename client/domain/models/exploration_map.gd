@@ -18,6 +18,9 @@ var tamers: Dictionary[int, MapTamer] = {}
 var island_id: int = 0
 ## Numa ilha, os hexágonos que o Domador já tinha descoberto (fog-of-war/03).
 var discovered: Array[Vector2i] = []
+## Numa ilha, as salas das Arenas trancadas e os NPCs Domadores, de fora e de dentro das salas (auralis/05).
+var locked_interior_ids: Array[int] = []
+var tamer_npc_ids: Array[int] = []
 var island_name: String = ""
 var actions: Array[MapAction] = []
 var props: Array[MapProp] = []

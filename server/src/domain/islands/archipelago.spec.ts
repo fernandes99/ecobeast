@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
+  arenaOpen,
   archipelagoStates,
+  islandComplete,
   isLocked,
   nextIslandAfter,
   tamersComplete,
@@ -93,5 +95,84 @@ describe('tamersComplete', () => {
 
   it('vitórias contra Domadores que não contam não somam', () => {
     expect(tamersComplete([1], new Set([7, 8]), 1)).toBe(false);
+  });
+});
+
+describe('arenaOpen', () => {
+  const arenas = [
+    { id: 7, position: 2 },
+    { id: 5, position: 1 },
+    { id: 9, position: 3 },
+  ];
+
+  it('a primeira está sempre aberta', () => {
+    expect(arenaOpen(arenas, new Set(), 5)).toBe(true);
+  });
+
+  it('as seguintes pedem todas as de antes', () => {
+    expect(arenaOpen(arenas, new Set(), 7)).toBe(false);
+    expect(arenaOpen(arenas, new Set([5]), 7)).toBe(true);
+    expect(arenaOpen(arenas, new Set([5]), 9)).toBe(false);
+    expect(arenaOpen(arenas, new Set([5, 7]), 9)).toBe(true);
+  });
+
+  it('uma Arena que não é da ilha não abre', () => {
+    expect(arenaOpen(arenas, new Set([5, 7, 9]), 99)).toBe(false);
+  });
+});
+
+describe('islandComplete', () => {
+  const none = {
+    countingTamerIds: [],
+    wonTamerIds: new Set<number>(),
+    requiredTamerWins: null,
+    arenaIds: [],
+    wonArenaIds: new Set<number>(),
+  };
+
+  it('sem condição, nunca completa', () => {
+    expect(islandComplete(none)).toBe(false);
+  });
+
+  it('só com Arenas, pede todas ganhas', () => {
+    expect(islandComplete({ ...none, arenaIds: [1, 2] })).toBe(false);
+    expect(
+      islandComplete({ ...none, arenaIds: [1, 2], wonArenaIds: new Set([1]) }),
+    ).toBe(false);
+    expect(
+      islandComplete({
+        ...none,
+        arenaIds: [1, 2],
+        wonArenaIds: new Set([1, 2]),
+      }),
+    ).toBe(true);
+  });
+
+  it('com Domadores e Arena, pede os dois', () => {
+    const both = {
+      ...none,
+      countingTamerIds: [3],
+      arenaIds: [1],
+    };
+    expect(islandComplete({ ...both, wonTamerIds: new Set([3]) })).toBe(false);
+    expect(islandComplete({ ...both, wonArenaIds: new Set([1]) })).toBe(false);
+    expect(
+      islandComplete({
+        ...both,
+        wonTamerIds: new Set([3]),
+        wonArenaIds: new Set([1]),
+      }),
+    ).toBe(true);
+  });
+
+  it('só com Domadores, segue a regra deles', () => {
+    expect(
+      islandComplete({
+        ...none,
+        countingTamerIds: [3, 4],
+        wonTamerIds: new Set([4]),
+        requiredTamerWins: 1,
+      }),
+    ).toBe(true);
   });
 });

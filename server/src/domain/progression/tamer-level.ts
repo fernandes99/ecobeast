@@ -13,8 +13,8 @@ export interface TamerBattleInput {
   victory: boolean;
   opponentIsTamer: boolean;
   newSpeciesCount: number;
-  /** O Domador da ilha (auralis/04): a primeira vitória ou uma revanche, no lugar do `tamer_win`. */
-  islandTamer?: 'first' | 'rematch';
+  /** O Domador da ilha (auralis/04): a primeira vitória, a do Mestre de Arena (05) ou uma revanche, no lugar do `tamer_win`. */
+  islandTamer?: 'first' | 'rematch' | 'arena';
   islandUnlocked?: boolean;
 }
 
@@ -33,6 +33,7 @@ export function tamerXpFromBattle(
   if (input.victory) {
     xp += Math.floor((input.rawEnemyXp * source('battle_xp_percent')) / 100);
     if (input.islandTamer === 'first') xp += source('island_tamer_win');
+    else if (input.islandTamer === 'arena') xp += source('arena');
     else if (input.islandTamer === 'rematch') {
       xp += source('island_tamer_rematch');
     } else if (input.opponentIsTamer) xp += source('tamer_win');

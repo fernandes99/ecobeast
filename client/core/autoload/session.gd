@@ -16,6 +16,8 @@ const PING_INTERVAL := 60.0
 var player: Player = null
 ## A ilha casa, onde o jogo abre; 0 sem casa (home-island/02).
 var home_island_id: int = 0
+## As salas de Arena abertas desde o começo da exploração (auralis/05).
+var opened_arena_rooms: Array[int] = []
 var storage: Array[CreatureInstance] = []
 
 var _service: GameService = ApiGameService.new()
@@ -210,8 +212,15 @@ func reset_progress() -> Result:
 
 
 func start_exploration(island_id: int = 0) -> Result:
+	opened_arena_rooms.clear()
 	@warning_ignore("redundant_await")
 	return await _service.start_exploration(island_id)
+
+
+## A sala da Arena seguinte, aberta por uma vitória sem sair da ilha (auralis/05).
+func open_arena_room(interior_id: int) -> void:
+	if interior_id > 0 and not opened_arena_rooms.has(interior_id):
+		opened_arena_rooms.append(interior_id)
 
 
 func list_islands() -> Result:
