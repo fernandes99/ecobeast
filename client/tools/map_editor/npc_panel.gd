@@ -8,8 +8,9 @@ signal selection_changed(index: int)
 ## A aparência de um NPC pessoa foi salva, e o catálogo veio de novo (liora-intro/02).
 signal looks_changed
 signal message(text: String, error: bool)
+## Abrir a missão (0 é a nova) do NPC na ferramenta Missões (auralis/07).
+signal quests_requested(npc_id: int, quest_id: int)
 
-const ICON_SCALE := 3
 const DIALOGUE_HEIGHT := 140.0
 const NO_ACTION := 0
 const DIALOGUE_STEP := "Diálogo do NPC"
@@ -22,7 +23,18 @@ var selected := -1
 var marking := false
 
 var _draft: IslandDraft = null
-var _npc_buttons: Dictionary[int, Button] = {}
+var _quests: QuestPanel = null
+var _rows: Dictionary[int, NpcListRow] = {}
+var _search: LineEdit
+var _here_header: Label
+var _here_list: VBoxContainer
+var _other_header: Label
+var _other_list: VBoxContainer
+var _arranged := ""
+var _quest_box: VBoxContainer
+var _quest_list: VBoxContainer
+var _new_quest: Button
+var _quest_key := ""
 var _selected_box: VBoxContainer
 var _selected_label: Label
 var _walk_button: Button
@@ -33,28 +45,19 @@ var _action_option: OptionButton
 var _appearance_button: Button
 var _voice_option: OptionButton
 var _preview: TamerGreetingPanel
-var _list: VBoxContainer
 var _group := ButtonGroup.new()
 
 
 func _init() -> void:
 	add_theme_constant_override(&"separation", 8)
-	var hint := Label.new()
-	hint.text = "NPC novo:"
-	hint.add_theme_color_override(&"font_color", UiPalette.TEXT_SECONDARY)
-	add_child(hint)
-	_list = VBoxContainer.new()
-	_list.add_theme_constant_override(&"separation", 6)
-	add_child(_list)
-	_build_list()
-
 	_selected_box = VBoxContainer.new()
 	_selected_box.add_theme_constant_override(&"separation", 6)
 	add_child(_selected_box)
-	_selected_box.add_child(HSeparator.new())
 	_selected_label = Label.new()
 	_selected_label.theme_type_variation = &"BoldLabel"
+	_selected_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_selected_box.add_child(_selected_label)
+	_build_quest_box()
 
 	var mode_row := HBoxContainer.new()
 	mode_row.add_theme_constant_override(&"separation", 6)
@@ -115,7 +118,50 @@ func _init() -> void:
 	delete.focus_mode = Control.FOCUS_NONE
 	delete.pressed.connect(delete_selected)
 	_selected_box.add_child(delete)
+	_selected_box.add_child(HSeparator.new())
+
+	_search = LineEdit.new()
+	_search.placeholder_text = "Buscar NPC pelo nome ou descrição"
+	_search.clear_button_enabled = true
+	_search.text_changed.connect(func(_text: String) -> void: refresh())
+	add_child(_search)
+	add_child(_hint("Escolha um NPC e clique no mapa para pô-lo."))
+	_here_header = _header()
+	add_child(_here_header)
+	_here_list = _list_box()
+	add_child(_here_list)
+	_other_header = _header()
+	add_child(_other_header)
+	_other_list = _list_box()
+	add_child(_other_list)
+	_build_list()
+	visibility_changed.connect(_load_quests)
 	refresh()
+
+
+## Liga a lista de missões da ilha, que mora na ferramenta Missões.
+func set_quests(panel: QuestPanel) -> void:
+	_quests = panel
+	panel.quests_changed.connect(refresh)
+
+
+## As missões do NPC escolhido, com o atalho para a ferramenta Missões.
+func _build_quest_box() -> void:
+	_quest_box = VBoxContainer.new()
+	_quest_box.add_theme_constant_override(&"separation", 4)
+	_selected_box.add_child(_quest_box)
+	var title := Label.new()
+	title.text = "Missões que ele dá"
+	title.add_theme_color_override(&"font_color", UiPalette.TEXT_SECONDARY)
+	_quest_box.add_child(title)
+	_quest_list = VBoxContainer.new()
+	_quest_list.add_theme_constant_override(&"separation", 4)
+	_quest_box.add_child(_quest_list)
+	_new_quest = Button.new()
+	_new_quest.text = "+ Nova missão"
+	_new_quest.focus_mode = Control.FOCUS_NONE
+	_new_quest.pressed.connect(func() -> void: quests_requested.emit(_selected_npc_id(), 0))
+	_quest_box.add_child(_new_quest)
 
 
 ## A voz do NPC do catálogo e o Ouvir, com a fala numa caixa pequena (dialogue-voices/03).
@@ -154,27 +200,29 @@ func _build_voice_row() -> void:
 
 
 func _build_list() -> void:
-	for child: Node in _list.get_children():
-		child.queue_free()
-	_npc_buttons.clear()
-	for row: Dictionary in GameData.get_rows("npcs"):
-		var id := int(row.get("id", 0))
-		var button := EditorTools.tool_button("%s\n%s" % [row.get("name", ""), row.get("description", "")], _group)
-		button.icon = _icon(id)
-		button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		button.disabled = button.icon == null
-		if button.disabled:
-			button.tooltip_text = "Sem as folhas assets/creatures/%s/explore/idle.png e walk.png." % NpcSprite.slug_of(id)
-		button.pressed.connect(_pick_npc.bind(id))
-		_list.add_child(button)
-		_npc_buttons[id] = button
-		if npc_id == 0 and not button.disabled:
+	for row: NpcListRow in _rows.values():
+		row.button.queue_free()
+	_rows.clear()
+	_arranged = ""
+	for npc: Dictionary in GameData.get_rows("npcs"):
+		var id := int(npc.get("id", 0))
+		var row := NpcListRow.new(id, _group)
+		row.button.pressed.connect(_pick_npc.bind(id))
+		_other_list.add_child(row.button)
+		_rows[id] = row
+		if npc_id == 0 and not row.button.disabled:
 			npc_id = id
 
 
 func set_draft(draft: IslandDraft) -> void:
 	_draft = draft
 	select(-1)
+	_load_quests()
+
+
+func _load_quests() -> void:
+	if _quests != null and is_visible_in_tree():
+		_quests.ensure_loaded()
 
 
 func select(index: int) -> void:
@@ -184,13 +232,14 @@ func select(index: int) -> void:
 		marking = false
 		_preview.close()
 	selected = index
+	if index >= 0:
+		npc_id = int(_draft.npcs[index].get("npc_id", 0))
 	refresh()
 	selection_changed.emit(selected)
 
 
 func refresh() -> void:
-	for id: int in _npc_buttons:
-		_npc_buttons[id].set_pressed_no_signal(id == npc_id)
+	_refresh_list()
 	if _draft == null or selected < 0 or selected >= _draft.npcs.size():
 		selected = -1
 		marking = false
@@ -215,6 +264,114 @@ func refresh() -> void:
 	var action: Variant = npc.get("action_type_id")
 	var action_id := int(action) if action != null else NO_ACTION
 	_action_option.select(maxi(0, _action_option.get_item_index(action_id)))
+	_refresh_quests(int(npc.get("npc_id", 0)))
+
+
+## Os selos de cada linha e os dois grupos: os NPCs desta ilha em cima, os outros embaixo.
+func _refresh_list() -> void:
+	var placed := _placed_counts()
+	var loaded := _quests != null and _quests.is_loaded()
+	var query := _search.text.strip_edges()
+	var here: Array[int] = []
+	for id: int in _rows:
+		var row := _rows[id]
+		row.button.set_pressed_no_signal(id == npc_id)
+		row.set_counts(placed.get(id, 0), _quests.quests_of(id).size() if loaded else -1)
+		row.button.visible = row.matches(query)
+		if placed.has(id):
+			here.append(id)
+	var key := str(here)
+	if key != _arranged:
+		_arranged = key
+		for id: int in _rows:
+			var button := _rows[id].button
+			var target := _here_list if placed.has(id) else _other_list
+			if button.get_parent() != target:
+				button.reparent(target)
+			target.move_child(button, -1)
+	var shown_here := _visible_count(_here_list)
+	var shown_other := _visible_count(_other_list)
+	_here_header.text = "Nesta ilha (%d)" % shown_here
+	_here_header.visible = shown_here > 0
+	_other_header.text = "Outros NPCs (%d)" % shown_other
+	_other_header.visible = shown_other > 0
+
+
+func _refresh_quests(id: int) -> void:
+	var lines: Array[Dictionary] = []
+	var note := ""
+	if _quests != null:
+		if _draft == null or _draft.id <= 0:
+			note = "Salve a ilha para dar missões a este NPC."
+		elif not _quests.is_loaded():
+			note = "Carregando as missões…"
+		else:
+			lines = _quests.quests_of(id)
+			if lines.is_empty():
+				note = "Nenhuma missão. Ele só conversa."
+	var key := "%d|%s|%s" % [id, note, str(lines)]
+	if key == _quest_key:
+		return
+	_quest_key = key
+	_quest_box.visible = _quests != null
+	for child: Node in _quest_list.get_children():
+		child.queue_free()
+	if not note.is_empty():
+		_quest_list.add_child(_hint(note))
+	for quest: Dictionary in lines:
+		var quest_id := int(quest.get("id", 0))
+		var open := EditorTools.tool_button("%d. %s" % [int(quest.get("position", 0)), quest.get("display_title", "")], null)
+		open.toggle_mode = false
+		open.clip_text = true
+		open.tooltip_text = QuestPanel.summary(quest) + "\nClique para editar na ferramenta Missões."
+		open.pressed.connect(func() -> void: quests_requested.emit(id, quest_id))
+		_quest_list.add_child(open)
+	_new_quest.visible = _quests != null and _quests.is_loaded()
+
+
+func _placed_counts() -> Dictionary[int, int]:
+	var counts: Dictionary[int, int] = {}
+	if _draft != null:
+		for npc: Dictionary in _draft.npcs:
+			var id := int(npc.get("npc_id", 0))
+			counts[id] = counts.get(id, 0) + 1
+	return counts
+
+
+func _first_index_of(id: int) -> int:
+	if _draft != null:
+		for index: int in _draft.npcs.size():
+			if int(_draft.npcs[index].get("npc_id", 0)) == id:
+				return index
+	return -1
+
+
+static func _visible_count(box: Container) -> int:
+	var count := 0
+	for child: Node in box.get_children():
+		if child is Control and (child as Control).visible:
+			count += 1
+	return count
+
+
+static func _header() -> Label:
+	var label := Label.new()
+	label.theme_type_variation = &"BoldLabel"
+	return label
+
+
+static func _list_box() -> VBoxContainer:
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override(&"separation", 6)
+	return box
+
+
+static func _hint(text: String) -> Label:
+	var label := Label.new()
+	label.text = text
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.add_theme_color_override(&"font_color", UiPalette.TEXT_SECONDARY)
+	return label
 
 
 ## Põe o NPC escolhido na lista no hexágono, como Passeia, e o escolhe.
@@ -259,9 +416,13 @@ func delete_selected() -> void:
 	edited.emit(step, false)
 
 
+## Escolhe o NPC para pôr; se ele já está na ilha, escolhe também o primeiro dele no mapa.
 func _pick_npc(id: int) -> void:
 	npc_id = id
-	refresh()
+	if selected >= 0 and _selected_npc_id() == id:
+		refresh()
+		return
+	select(_first_index_of(id))
 
 
 func _set_still(on: bool) -> void:
@@ -357,22 +518,6 @@ func _open_appearance() -> void:
 	window.close_requested.connect(window.queue_free)
 	add_child(window)
 	window.popup_centered()
-
-
-## O primeiro quadro parado, só a parte desenhada, ampliado em pixels inteiros; a pessoa
-## usa o ícone de pessoa.
-static func _icon(id: int) -> Texture2D:
-	var frame := NpcSprite.icon_frame(id)
-	if frame == null:
-		return null
-	if TamerAppearance.for_npc(id) != null:
-		return frame
-	var image := frame.get_image()
-	var used := image.get_used_rect()
-	if used.has_area():
-		image = image.get_region(used)
-	image.resize(image.get_width() * ICON_SCALE, image.get_height() * ICON_SCALE, Image.INTERPOLATE_NEAREST)
-	return ImageTexture.create_from_image(image)
 
 
 func _step(label: String) -> EditorHistory.Step:

@@ -344,6 +344,8 @@ func _init() -> void:
 	_quest_section = quests_box.get_parent()
 	quest_panel = QuestPanel.new()
 	quests_box.add_child(quest_panel)
+	npc_panel.set_quests(quest_panel)
+	npc_panel.quests_requested.connect(_open_quest)
 
 	var scenes_box := _section("Cenas")
 	_scene_section = scenes_box.get_parent()
@@ -463,9 +465,15 @@ func set_draft(draft: IslandDraft) -> void:
 	_fence = null
 	bridge_panel.set_draft(draft)
 	_bridge_start = Vector2.INF
-	npc_panel.set_draft(draft)
 	quest_panel.set_draft(draft)
+	npc_panel.set_draft(draft)
 	scene_panel.set_draft(draft)
+
+
+## O atalho do painel NPC: abre a missão dele na ferramenta Missões.
+func _open_quest(npc_id: int, quest_id: int) -> void:
+	set_tool(Tool.QUESTS)
+	quest_panel.open_for(npc_id, quest_id)
 
 
 func refresh_panels() -> void:

@@ -7,6 +7,8 @@ extends VBoxContainer
 ## Os hexágonos marcados no mapa mudaram.
 signal changed
 signal message(text: String, error: bool)
+## A lista de missões da ilha mudou (o painel NPC mostra as de cada um).
+signal quests_changed
 
 const SAVE_FIRST_TEXT := "Salve a ilha para criar missões."
 const LOADING_TEXT := "Carregando as missões…"
@@ -35,6 +37,7 @@ var _quests: Array[Dictionary] = []
 var _editing := -1
 var _tiles: Array[Vector2i] = []
 var _busy := false
+var _busy_loading := false
 
 var _notice: Label
 var _body: VBoxContainer
@@ -167,6 +170,7 @@ func set_draft(draft: IslandDraft) -> void:
 	_quests = []
 	_close()
 	_load_if_needed()
+	quests_changed.emit()
 
 
 ## Os hexágonos do lugar no formulário, para o mapa marcar.
@@ -203,8 +207,33 @@ func cancel_pick() -> void:
 		toggle_pick()
 
 
-func _load_if_needed() -> void:
-	if not is_visible_in_tree() or _draft == null or _draft.id <= 0 or _draft.id == _island_id or _busy:
+## Carrega as missões da ilha salva mesmo com a ferramenta escondida (o painel NPC as mostra).
+func ensure_loaded() -> void:
+	_load_if_needed(true)
+
+
+func is_loaded() -> bool:
+	return _draft != null and _draft.id > 0 and _draft.id == _island_id and not _busy_loading
+
+
+func quests_of(npc_id: int) -> Array[Dictionary]:
+	var found: Array[Dictionary] = []
+	for quest: Dictionary in _quests:
+		if int(quest.get("npc_id", 0)) == npc_id:
+			found.append(quest)
+	return found
+
+
+## Abre a missão (0 é a nova, já com o NPC que dá) vinda do painel NPC.
+func open_for(npc_id: int, quest_id: int) -> void:
+	if quest_id > 0:
+		_open(quest_id)
+	else:
+		_open(0, npc_id)
+
+
+func _load_if_needed(force := false) -> void:
+	if (not force and not is_visible_in_tree()) or _draft == null or _draft.id <= 0 or _draft.id == _island_id or _busy:
 		_render()
 		return
 	_island_id = _draft.id
@@ -212,12 +241,17 @@ func _load_if_needed() -> void:
 	_body.visible = false
 	_notice.visible = true
 	var island_id := _island_id
+	_busy_loading = true
 	var response := await _send(func() -> ApiResponse: return await EditorApi.list_quests(island_id))
+	_busy_loading = false
+	if island_id != _island_id:
+		return
 	if response != null:
 		_apply(response.data)
 	elif _draft != null:
 		_island_id = 0
 	_render()
+	quests_changed.emit()
 
 
 func _apply(data: Variant) -> void:
@@ -237,6 +271,7 @@ func _apply(data: Variant) -> void:
 		_type.clear()
 		for row: Dictionary in _types:
 			_type.add_item(str(row.get("name", "")), int(row.get("id", 0)))
+	quests_changed.emit()
 
 
 func _render() -> void:
@@ -271,7 +306,7 @@ func _quest_row(quest: Dictionary) -> HBoxContainer:
 	open.toggle_mode = false
 	open.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	open.clip_text = true
-	open.tooltip_text = _summary(quest)
+	open.tooltip_text = summary(quest)
 	open.pressed.connect(_open.bind(id))
 	if id == _editing:
 		open.theme_type_variation = &"OutlineButton"
@@ -281,7 +316,7 @@ func _quest_row(quest: Dictionary) -> HBoxContainer:
 	return row
 
 
-func _summary(quest: Dictionary) -> String:
+static func summary(quest: Dictionary) -> String:
 	var parts: Array[String] = []
 	var coins := int(quest.get("coins", 0))
 	if coins > 0:
@@ -294,14 +329,14 @@ func _summary(quest: Dictionary) -> String:
 	return "Recompensa: só o XP" if parts.is_empty() else ", ".join(parts)
 
 
-## Abre o formulário: 0 é a missão nova, para o primeiro NPC posto na ilha.
-func _open(id: int) -> void:
+## Abre o formulário: 0 é a missão nova, para o `giver` ou o primeiro NPC posto na ilha.
+func _open(id: int, giver := 0) -> void:
 	var quest := _find(id)
 	_editing = id if not quest.is_empty() else 0
 	_delete.text = "Apagar"
 	_delete.visible = _editing > 0
 	_form_title.text = "Nova missão" if _editing == 0 else "Missão %d" % _editing
-	_fill_givers(int(quest.get("npc_id", _first_placed())))
+	_fill_givers(int(quest.get("npc_id", giver if giver > 0 else _first_placed())))
 	_type.select(maxi(0, _type.get_item_index(int(quest.get("quest_type_id", 1)))))
 	var amount: Variant = quest.get("amount")
 	_amount.set_value(int(amount) if amount != null else 1)
