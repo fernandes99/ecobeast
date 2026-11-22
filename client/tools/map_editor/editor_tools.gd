@@ -42,7 +42,7 @@ const GROUPS: Array[Dictionary] = [
 const TAB_ICON_WIDTH := 18
 const NO_AREA_MESSAGE := "Crie ou escolha uma área no painel antes de pintar."
 const NO_ZONE_MESSAGE := "Escolha uma zona no painel antes de pintar."
-const BIOMES: Array[String] = ["temperate", "boreal", "stone", "hill", "mountain", "desert", "snow", "glacier", "beach", "wshallow", "wdeep"]
+const BIOMES: Array[String] = ["temperate", "boreal", "stone", "hill", "mountain", "desert", "snow", "glacier", "volcano", "beach", "wshallow", "wdeep", "lshallow", "ldeep"]
 const BIOME_SWATCH_HEIGHT := 1
 const TOOL_BUTTON_SIZE := Vector2(76.0, 58.0)
 const TOOL_ICON_WIDTH := 26
@@ -65,6 +65,9 @@ const BIOME_NAMES: Dictionary[String, String] = {
 	"beach": "Praia",
 	"wshallow": "Água rasa",
 	"wdeep": "Água profunda",
+	"volcano": "Vulcão",
+	"lshallow": "Lava rasa",
+	"ldeep": "Lava funda",
 }
 const FULL_MESSAGE := "A ilha chegou a 20.000 hexágonos."
 ## O traço ganha um ponto a cada `PATH_SPACING` pixels da arte; um arraste menor que

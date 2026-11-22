@@ -32,7 +32,7 @@ O mapa sorteado de hoje tem o mar num lado só (`placeSea`, crescido a partir da
 
   A ilha não tem Montanha, Colina, Pedra, Neve, Deserto nem Geleira fora do vulcão.
 - **RF-05:** A encosta de um cone grande tem mais patamares (os paredões continuam com 3 ou mais níveis cada), e os patamares ficam mais largos, cada um um anel andável. Como a altura vai só até 10, o construtor decide quantos patamares cabem e a largura de cada um. O cone continua com a borda em 9 e 10 e o piso da cratera no 6.
-- **RF-06:** São 3 ou 4 escadarias, espalhadas em volta do cone, com as regras da [04](04-land-volcano.md). Os picos de basalto seguem a mesma regra.
+- **RF-06:** São 3 ou 4 escadarias, espalhadas em volta do cone, com as regras da [04](04-land-volcano.md). Os picos de basalto e as rachaduras de lava seguem a mesma regra.
 - **RF-07:** A chegada fica no cinto de floresta ou na praia. Toda a terra e o anel do piso da cratera se alcançam da chegada.
 - **RF-08:** Os Ecobeasts nascem por bioma como em todo mapa: os da Planície, do Boreal e da Praia no pé, a linha do Ruvo no Vulcão e os da água no oceano. Os Domadores NPC também nascem como sempre, fora da lava e dos picos.
 
@@ -42,7 +42,7 @@ O mapa sorteado de hoje tem o mar num lado só (`placeSea`, crescido a partir da
   - Em 1.000 seeds, de 1% a 3,5% saem como ilha vulcânica.
   - A terra é uma ilha só, cercada de água, sem lago, rio nem ponte.
   - A ordem de fora para dentro é água, Praia, floresta e Vulcão, e o Vulcão ocupa de 40% a 60% da terra.
-  - O cone tem a borda em 9 e 10, o piso no 6 e a lava só dentro da cratera.
+  - O cone tem a borda em 9 e 10, o piso no 6 e a lava no 5, só dentro da cratera.
   - Tirando os hexágonos das escadarias, a borda não se alcança do pé. Com elas, o anel do piso se alcança da chegada.
 - [ ] Com o `volcanoIslandChance` em 0, o hash do mapa de 5 seeds é igual ao de antes, tirado do `map-generator.ts` do commit da [04](04-land-volcano.md).
 - [ ] Uma prévia de 3 ilhas vulcânicas, como imagem vista de cima, mostrada ao dono antes de fechar a fase. O jeito de gerar a imagem é escolha do construtor.

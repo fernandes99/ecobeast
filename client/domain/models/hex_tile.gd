@@ -2,6 +2,7 @@ class_name HexTile
 extends RefCounted
 
 const WATER_BIOMES: Array[String] = ["wshallow", "wdeep"]
+const LAVA_BIOMES: Array[String] = ["lshallow", "ldeep"]
 const MAX_HEIGHT := 10
 
 var coord: Vector2i
@@ -19,8 +20,12 @@ func is_water() -> bool:
 	return WATER_BIOMES.has(biome)
 
 
+func is_lava() -> bool:
+	return LAVA_BIOMES.has(biome)
+
+
 func blocks_walking() -> bool:
-	return is_water()
+	return is_water() or is_lava()
 
 
 static func from_dict(d: Dictionary) -> HexTile:

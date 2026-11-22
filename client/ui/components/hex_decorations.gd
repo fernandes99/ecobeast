@@ -76,6 +76,13 @@ const KIND_ROWS: Dictionary[String, int] = {
 	"snow_drift": 69,
 	"frozen_fish": 70,
 	"ice_floe": 71,
+	"basalt_pebbles": 72,
+	"lava_crack": 73,
+	"fumarole": 74,
+	"burnt_tree": 75,
+	"ash_patch": 76,
+	"obsidian": 77,
+	"lava_crust": 78,
 }
 ## O espaço que cada tipo ocupa no chão, em pixels da arte. Ele também é a
 ## distância mínima do centro do hexágono, onde o jogador fica.
@@ -150,6 +157,13 @@ const KIND_RADIUS: Dictionary[String, float] = {
 	"snow_drift": 8.0,
 	"frozen_fish": 7.0,
 	"ice_floe": 9.0,
+	"basalt_pebbles": 7.0,
+	"lava_crack": 18.0,
+	"fumarole": 7.0,
+	"burnt_tree": 9.0,
+	"ash_patch": 8.0,
+	"obsidian": 6.0,
+	"lava_crust": 9.0,
 }
 const WIND_SHADER_PATH := "res://ui/components/plant_wind.gdshader"
 ## O vento em cada tipo: quantos pixels da arte o topo anda e a altura da planta, a
@@ -232,6 +246,9 @@ const RECIPES: Dictionary = {
 	"glacier": [["ice_crack", 0.45, 1, 2], ["ice_bubbles", 0.3, 1, 1], ["ice_chips", 0.28, 1, 2], ["snow_drift", 0.3, 1, 1], ["ice_shards", 0.12, 1, 1], ["frozen_fish", 0.03, 1, 1]],
 	"wshallow_ice_lake": [["ice_floe", 0.35, 1, 2]],
 	"wdeep_ice_lake": [["ice_floe", 0.15, 1, 1]],
+	# O Vulcão e a lava (volcano/01). A rachadura de lava bloqueia, então é só peça.
+	"volcano": [["basalt_pebbles", 0.4, 1, 2], ["fumarole", 0.1, 1, 1], ["ash_patch", 0.3, 1, 1], ["burnt_tree", 0.06, 1, 1], ["obsidian", 0.06, 1, 1]],
+	"lshallow": [["lava_crust", 0.35, 1, 2]],
 }
 const PLACE_TRIES := 8
 static var _warned_zones: Dictionary = {}

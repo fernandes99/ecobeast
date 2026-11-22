@@ -357,6 +357,14 @@ describe('publishError', () => {
     );
   });
 
+  it.each(['lshallow', 'ldeep'] as const)('recusa a chegada em %s', (biome) => {
+    const draft = island();
+    draft.tiles[0]!.biome = biome;
+    expect(publishError(draft, known)).toBe(
+      'A chegada não pode ficar na lava.',
+    );
+  });
+
   it('recusa a chegada numa ação', () => {
     const draft = island();
     draft.actions[0]!.tiles = [{ q: 0, r: 0 }];
@@ -860,7 +868,9 @@ describe('os NPCs da ilha (island-npcs/01)', () => {
     const draft: IslandDraft = { ...island(), npcs: [{ ...npc(), tiles: [] }] };
     expect(draftError(draft, known)).toBeNull();
     draft.npcs = [{ ...npc(), q: 0, r: 1, tiles: [] }];
-    expect(draftError(draft, known)).toBe('O NPC não pode ficar na água.');
+    expect(draftError(draft, known)).toBe(
+      'O NPC não pode ficar na água nem na lava.',
+    );
     draft.npcs = [
       {
         ...npc(),
@@ -870,7 +880,9 @@ describe('os NPCs da ilha (island-npcs/01)', () => {
         ],
       },
     ];
-    expect(draftError(draft, known)).toBe('O NPC não pode ficar na água.');
+    expect(draftError(draft, known)).toBe(
+      'O NPC não pode ficar na água nem na lava.',
+    );
   });
 
   it('conta o diálogo em caracteres, não em unidades de UTF-16', () => {

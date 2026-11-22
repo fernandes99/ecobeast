@@ -11,7 +11,7 @@ const HIT_SOUND_PATH := "res://assets/sounds/hits/%s.wav"
 const HIT_SOUNDS: Dictionary[String, String] = {"normal": "normal", "super": "super efetivo", "weak": "pouco efetivo"}
 const TAMER_CREDITS_PATH := "res://assets/tamer/CREDITOS.md"
 const TAMER_EXTRA_SHEETS: Dictionary[String, String] = {"_back": "atrás do corpo", "_short": "sob chapéu"}
-const COMMON_SURFACES: Array[String] = ["cliff", "side", "waterfall", "contour", "highlight"]
+const COMMON_SURFACES: Array[String] = ["cliff", "side", "volcano_cliff", "waterfall", "contour", "highlight"]
 const DECORATION_NAMES: Dictionary[String, String] = {
 	"tree": "árvore",
 	"pine": "pinheiro",

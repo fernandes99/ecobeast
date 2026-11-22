@@ -8,6 +8,14 @@ import { flatCenter, gridCoord } from '../islands/hex-pixels.js';
 import { type HexCoord, hexKey, hexNeighbors } from './hex.js';
 import { climbable } from './map-slopes.js';
 
+/** A água e a lava (volcano/03), sem importar o gerador, que importa este arquivo. */
+const WALL_BIOMES: ReadonlySet<string> = new Set([
+  'wshallow',
+  'wdeep',
+  'lshallow',
+  'ldeep',
+]);
+
 /** Uma pedra gigante do mapa sorteado, no formato de peça solta (giant-rocks/02). */
 export interface GeneratedProp extends HexCoord {
   propTypeId: number;
@@ -306,7 +314,7 @@ export function reachable(
     for (const other of next) {
       const neighbor = byKey.get(other);
       if (!neighbor || seen.has(other) || blocked.has(other)) continue;
-      if (neighbor.biome === 'wshallow' || neighbor.biome === 'wdeep') continue;
+      if (WALL_BIOMES.has(neighbor.biome)) continue;
       seen.add(other);
       pending.push(other);
     }

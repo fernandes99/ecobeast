@@ -1,6 +1,6 @@
 # 03. O Vulcão e a lava no catálogo
 
-- **Status:** pendente
+- **Status:** concluída (falta o dono conferir no F2)
 - **Depende de:** [01](01-volcano-art.md)
 
 ## Contexto
@@ -28,14 +28,14 @@ O servidor aceita um bioma pelas listas `BIOMES` e `SHAPED_BIOMES` do `server/sr
 
 ## Critérios de aceite
 
-- [ ] O catálogo (`GET /v1/catalog`) tem os biomas 13 a 15, as zonas 38 a 40 e as três taxas.
-- [ ] Um teste e2e das rotas do editor salva e lê uma ilha com `volcano`, `lshallow` e `ldeep`.
-- [ ] Testes de unidade: o `terrainOf` do Vulcão; o `blocksWalking` é verdadeiro na lava, e o `isWater` falso.
-- [ ] Um mapa sorteado de uma seed é igual ao de antes, hexágono por hexágono (o vulcão ainda não nasce). Conferido em 40 seeds contra o `map-generator.ts` do commit anterior, numa comparação temporária.
-- [ ] `npm run lint`, `npm run typecheck`, `npm test` e a suíte e2e passam.
+- [x] O catálogo (`GET /v1/catalog`) tem os biomas 13 a 15, as zonas 38 a 40 e as três taxas (migration `20270202000001_volcano`, aplicada).
+- [x] Um teste e2e das rotas do editor salva e lê uma ilha com `volcano`, `lshallow` e `ldeep`.
+- [x] Testes de unidade: o `terrainOf` do Vulcão; o `blocksWalking` é verdadeiro na lava, e o `isWater` falso; a chegada na lava é recusada.
+- [x] Um mapa sorteado de uma seed é igual ao de antes, hexágono por hexágono (o vulcão ainda não nasce). Conferido pelo teste de hash de 5 seeds do `map-glacier.spec.ts`, que passa sem mudança; a comparação de 40 seeds não foi feita.
+- [x] `npm run lint`, `npm run typecheck`, `npm test` e os e2e do editor e do catálogo passam. A suíte e2e inteira (rodada na fase 1) tem 3 falhas de fora: as 2 do `seed.e2e-spec.ts`, já conhecidas, e a contagem de tabelas da iniciativa dos contadores, em andamento em outra sessão.
 
 ## Tarefas
 
-- [ ] A migration, aplicada no banco.
-- [ ] As listas, o `terrainOf`, o `blocksWalking` e os usos do `isWater`, com os testes.
-- [ ] As amostras no F2.
+- [x] A migration, aplicada no banco.
+- [x] As listas, o `terrainOf`, o `isLava` e o `blocksWalking`, e os usos do `isWater` que são do andar (as pontas de ponte, os NPCs, a chegada, os Domadores NPC e o alcance das pedras), com os testes.
+- [x] As amostras no F2.

@@ -6,8 +6,10 @@ Cada pedra é uma forma de blocos com facetas, contorno escuro e a luz de cima �
 gravada em <slug>/<variante>.png com o pé no meio da borda de baixo. No fim, imprime a
 linha de bloqueio de cada variante, a mesma da migration e do gerador do servidor.
 As pedras de gelo da Geleira (.specs/glacier/02-ice-rocks.md) usam o material gelo: facetas
-lisas, sem grão, com as emendas claras e o brilho de 1 px nas arestas. Com --preview, grava
-só a prévia ampliada, sem mexer nos PNGs do jogo.
+lisas, sem grão, com as emendas claras e o brilho de 1 px nas arestas. Os picos de basalto do
+Vulcão (.specs/volcano/02-basalt-spires.md) usam o material basalto, com cinza no alto e o
+veio de lava. Com --preview, grava só a prévia ampliada (com --basalt, a dos picos), sem
+mexer nos PNGs do jogo.
 """
 
 import math
@@ -31,6 +33,11 @@ DRY = [(98, 96, 58), (132, 128, 74), (168, 160, 98), (200, 190, 126)]
 LICHEN = [(196, 168, 74), (168, 184, 96), (222, 204, 124)]
 # O contorno azul-escuro e 7 tons de azul e branco.
 ICE = [(30, 54, 96), (58, 100, 150), (82, 132, 184), (110, 166, 212), (146, 198, 234), (184, 224, 246), (218, 242, 252), (248, 253, 255)]
+# O basalto do Vulcão (.specs/volcano/02-basalt-spires.md): o contorno quase preto e 7 tons de
+# cinza-chumbo, a cinza clara no alto e a lava dos veios (a mesma do make_volcano.py).
+BASALT = [(10, 8, 10), (38, 34, 37), (58, 52, 54), (78, 71, 71), (100, 92, 90), (124, 115, 110), (150, 140, 132), (178, 168, 158)]
+ASH = [(84, 80, 80), (120, 116, 114), (148, 144, 142), (170, 166, 164)]
+LAVA = [(186, 54, 12), (240, 110, 10), (253, 184, 12), (255, 226, 14)]
 
 
 def shade(nx, ny, levels, x, y, bias=0.0):
@@ -147,7 +154,7 @@ class Rock:
     def inside(self):
         return [s for s in sorted(self.owner) if self.pixels[s] not in (self.palette[0], self.palette[1])]
 
-    def snow(self, reach=0.28):
+    def snow(self, reach=0.28, cover=SNOW):
         for (x, y) in self.inside():
             limit = reach + 0.08 * math.sin(x * 0.9) + self.rng.uniform(-0.04, 0.04)
             if self.top_of[(x, y)] < limit:
@@ -156,10 +163,10 @@ class Rock:
                 level = 3 if t >= 4 else 2 if t >= 2 else 1
                 if self.top_of[(x, y)] > limit - 0.05:
                     level = max(1, level - 1)
-                self.pixels[(x, y)] = SNOW[level]
+                self.pixels[(x, y)] = cover[level]
         for (x, y), i in self.owner.items():
             if self.pixels[(x, y)] == self.palette[0] and self.top_of.get((x, y), 1) < reach * 0.8:
-                self.pixels[(x, y)] = SNOW[0]
+                self.pixels[(x, y)] = cover[0]
 
     def moss(self, count):
         tops = [s for s in self.inside() if self.top_of[s] < 0.45 and self.palette[1:].index(self.pixels[s]) >= 3]
@@ -510,6 +517,113 @@ def ice_shelf(seed):
     return r.image()
 
 
+def spike(r, left, right, top, foot, lean=0.0, broken=False):
+    """Um espeto de basalto: largo no pé, fino e torto até a ponta, às vezes quebrada."""
+    mid = (left + right) / 2 + lean
+    tip = [(mid - 2, top + 3), (mid + 1, top)] if broken else [(mid, top)]
+    r.chunk([(left, foot), (left + 2 + lean * 0.3, top + (foot - top) * 0.55), (mid - 3 + lean * 0.2, top + (foot - top) * 0.25)] + tip + [(mid + 3, top + (foot - top) * 0.3), (right - 2 + lean * 0.3, top + (foot - top) * 0.5), (right, foot)], depth=0.3, stretch=(1.0, 0.1), facets=5)
+
+
+def basalt_finish(r, ash=0.0):
+    if ash:
+        r.snow(ash, ASH)
+    r.pebbles(2)
+
+
+def basalt_spire(seed):
+    """Pico de basalto: um espeto alto e fino, torto, com a ponta quebrada."""
+    r = Rock((90, 150), BASALT, seed)
+    rng = r.rng
+    spike(r, 28, 60, 8 + rng.randint(0, 6), 138, lean=rng.uniform(-6, 6), broken=True)
+    r.chunk([(18, 142), (22, 120), (32, 112), (40, 142)], depth=0.5)
+    r.chunk([(50, 144), (54, 124), (66, 118), (72, 144)], depth=0.5)
+    r.render()
+    basalt_finish(r)
+    return r.image()
+
+
+def basalt_twin(seed):
+    """Picos gêmeos: dois espetos de alturas diferentes saindo da mesma base."""
+    r = Rock((100, 140), BASALT, seed)
+    rng = r.rng
+    spike(r, 24, 50, 12 + rng.randint(0, 6), 128, lean=-4)
+    spike(r, 48, 74, 44 + rng.randint(0, 6), 130, lean=5, broken=True)
+    r.chunk([(20, 134), (26, 118), (50, 112), (78, 120), (82, 134)], depth=0.55, stretch=(1.0, 0.5))
+    r.render()
+    basalt_finish(r)
+    return r.image()
+
+
+def basalt_crown(seed):
+    """Coroa de picos: um grupo de espetos baixos em roda."""
+    r = Rock((120, 100), BASALT, seed)
+    rng = r.rng
+    for left, right, top, foot in [(48, 66, 14, 78), (28, 44, 30, 82), (70, 86, 26, 82), (14, 30, 46, 88), (84, 100, 44, 88), (40, 58, 44, 90), (62, 80, 48, 92)]:
+        spike(r, left, right, top + rng.randint(-4, 4), foot, lean=rng.uniform(-3, 3), broken=rng.random() < 0.4)
+    r.render()
+    basalt_finish(r)
+    return r.image()
+
+
+def basalt_columns(seed):
+    """Colunas de basalto: colunas de seis lados, de alturas diferentes, lado a lado."""
+    r = Rock((110, 110), BASALT, seed)
+    rng = r.rng
+    x = 14
+    while x < 88:
+        w = rng.randint(9, 13)
+        top = rng.randint(20, 62)
+        foot = 96 + rng.randint(-3, 3) - (abs(x + w / 2 - 55) // 8)
+        r.chunk([(x, foot), (x, top + 3), (x + w * 0.3, top), (x + w * 0.7, top), (x + w, top + 3), (x + w, foot)], depth=0.12, stretch=(1.0, 0.05), facets=2, rough=False)
+        x += w - 1
+    r.render()
+    basalt_finish(r, ash=0.06)
+    return r.image()
+
+
+def lava_vein_spire(seed):
+    """Pico com veio de lava: um espeto largo com uma fresta laranja acesa descendo por ele."""
+    r = Rock((100, 140), BASALT, seed)
+    rng = r.rng
+    spike(r, 24, 76, 10 + rng.randint(0, 6), 130, lean=rng.uniform(-3, 3))
+    r.chunk([(16, 134), (20, 116), (34, 110), (40, 134)], depth=0.5)
+    r.render()
+    inside = set(r.inside())
+    xs = sorted(x for x, _ in inside)
+    x = (xs[0] + xs[-1]) // 2 + rng.randint(-3, 3)
+    top = min(y for xx, y in inside if xx == x) + 18
+    for y in range(top, top + 80):
+        x += rng.choice([-1, 0, 0, 0, 1])
+        if (x, y) not in inside or (x + 1, y) not in inside:
+            continue
+        r.pixels[(x, y)] = LAVA[2] if (y - top) % 9 else LAVA[3]
+        r.pixels[(x + 1, y)] = LAVA[1]
+        if (x - 1, y) in inside:
+            r.pixels[(x - 1, y)] = LAVA[0]
+    basalt_finish(r)
+    return r.image()
+
+
+def ash_boulder(seed):
+    """Rochedo de cinza: uma rocha grande e arredondada, coberta de cinza no alto."""
+    r = Rock((110, 100), BASALT, seed)
+    rng = r.rng
+    for cx, cy, rx, ry in [(52, 60, 32, 26), (80, 78, 18, 14), (30, 84, 14, 10)]:
+        r.chunk([(cx + math.cos(a) * rx * rng.uniform(0.9, 1.05), cy + math.sin(a) * ry * rng.uniform(0.9, 1.05)) for a in [i * math.tau / 10 for i in range(10)]], depth=0.7, stretch=(1.0, 0.8))
+    r.render()
+    basalt_finish(r, ash=0.32)
+    return r.image()
+
+
+BASALT_TYPES = [
+    ("basalt_spire", "Pico de basalto", [lambda: basalt_spire(61)]),
+    ("basalt_twin", "Picos gêmeos", [lambda: basalt_twin(67)]),
+    ("basalt_crown", "Coroa de picos", [lambda: basalt_crown(71)]),
+    ("basalt_columns", "Colunas de basalto", [lambda: basalt_columns(73)]),
+    ("lava_vein_spire", "Pico com veio de lava", [lambda: lava_vein_spire(79)]),
+    ("ash_boulder", "Rochedo de cinza", [lambda: ash_boulder(83)]),
+]
+
 ICE_TYPES = [
     ("ice_block", "Bloco de gelo", [lambda: ice_block(31), lambda: ice_block(37, snow=True)]),
     ("ice_spires", "Pináculos de gelo", [lambda: ice_spires(41)]),
@@ -538,11 +652,12 @@ def preview(file):
         font = ImageFont.truetype("segoeui.ttf", 20)
     except OSError:
         font = ImageFont.load_default()
-    floor = Image.open(os.path.join(HERE, "..", "terrain", "surfaces", "glacier.png")).convert("RGBA")
+    basalt = "--basalt" in sys.argv
+    floor = Image.open(os.path.join(HERE, "..", "terrain", "surfaces", "volcano.png" if basalt else "glacier.png")).convert("RGBA")
     tamer = Image.open(os.path.join(HERE, "..", "tamer", "bodies", "male", "idle.png")).convert("RGBA").crop((0, 0, 32, 32))
-    rocks = [(name, number, len(variants), draw()) for _slug, name, variants in ICE_TYPES for number, draw in enumerate(variants, start=1)]
-    rocks.append(("Rochedo com neve (para comparar)", 1, 1, crag(19, GRANITE, snow=True)))
-    scale, cell_w, cell_h, columns = 3, 150, 140, 4
+    rocks = [(name, number, len(variants), draw()) for _slug, name, variants in (BASALT_TYPES if basalt else ICE_TYPES) for number, draw in enumerate(variants, start=1)]
+    rocks.append(("Rochedo (para comparar)", 1, 1, crag(3)) if basalt else ("Rochedo com neve (para comparar)", 1, 1, crag(19, GRANITE, snow=True)))
+    scale, cell_w, cell_h, columns = 3, 150, 170 if basalt else 140, 4
     rows = math.ceil(len(rocks) / columns)
     sheet = Image.new("RGBA", (cell_w * columns * scale, cell_h * rows * scale), (24, 30, 40, 255))
     text = ImageDraw.Draw(sheet)
@@ -566,7 +681,7 @@ def preview(file):
 
 
 def main():
-    for slug, _name, variants in ICE_TYPES:
+    for slug, _name, variants in BASALT_TYPES + ICE_TYPES:
         os.makedirs(os.path.join(HERE, slug), exist_ok=True)
         for number, draw in enumerate(variants, start=1):
             img, block = draw()

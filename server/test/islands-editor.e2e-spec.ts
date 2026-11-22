@@ -560,6 +560,23 @@ describe('Editor de ilhas (e2e)', () => {
       });
     });
 
+    it('salva e lê de volta o Vulcão e a lava (volcano/03)', async () => {
+      const body = draft();
+      const tile = (q: number, r: number) =>
+        body.tiles.find((one) => one.q === q && one.r === r)!;
+      Object.assign(tile(-1, 0), { biome: 'volcano', height: 6 });
+      Object.assign(tile(0, -1), { biome: 'lshallow', height: 5 });
+      Object.assign(tile(1, -1), { biome: 'ldeep', height: 5 });
+      const id = await create(body);
+      const read = (await call('get', `/islands/${id}`).expect(200))
+        .body as Draft;
+      const at = (q: number, r: number) =>
+        read.tiles.find((one) => one.q === q && one.r === r)!;
+      expect(at(-1, 0)).toMatchObject({ biome: 'volcano', height: 6 });
+      expect(at(0, -1)).toMatchObject({ biome: 'lshallow', height: 5 });
+      expect(at(1, -1)).toMatchObject({ biome: 'ldeep', height: 5 });
+    });
+
     it.each([
       ['hill_scree', 'tem a zona hill_scree, que não é do bioma temperate.'],
       ['zz_nenhuma', 'tem uma zona que não existe.'],

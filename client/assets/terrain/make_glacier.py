@@ -650,7 +650,6 @@ def main():
     art.put_rows(Image.open(file).convert("RGBA"), drip_rows(), art.DRIP_CELL_HEIGHT * 2, DRIP_ROW).save(file)
     file = art.path("decorations", "decorations.png")
     sheet = Image.open(file).convert("RGBA")
-    sheet = sheet.crop((0, 0, sheet.width, min(sheet.height, FIRST_ROW * nature.CELL[1])))
     art.put_rows(sheet, decoration_rows(), nature.CELL[1], FIRST_ROW).save(file)
 
 

@@ -142,7 +142,6 @@ def preview(file):
 def main():
     file = art.path("decorations", "decorations.png")
     sheet = Image.open(file).convert("RGBA")
-    sheet = sheet.crop((0, 0, sheet.width, min(sheet.height, FIRST_ROW * nature.CELL[1])))
     art.put_rows(sheet, rows(), nature.CELL[1], FIRST_ROW).save(file)
 
 

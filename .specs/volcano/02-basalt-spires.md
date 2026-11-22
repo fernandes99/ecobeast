@@ -1,6 +1,6 @@
 # 02. Os picos de basalto
 
-- **Status:** pendente
+- **Status:** concluída (falta o dono aprovar a arte e conferir no F2)
 - **Depende de:** [01](01-volcano-art.md) (o chão da prévia, a categoria e o grupo do pincel) e [glacier/02](../glacier/02-ice-rocks.md) (o caminho das pedras de gelo)
 
 ## Contexto
@@ -20,7 +20,7 @@ Na imagem do dono, o que faz o vulcão é a borda de espetos altos e pontudos de
 
 ## Os picos
 
-A proposta. A prévia pode tirar ou trocar picos, e o dono escolhe quais entram.
+Os 6 entraram como tipos 184 a 189, com 1 variante cada. O dono pediu para fazer tudo e revisar no fim ("faz tudo depois me avisa para eu revisar"), então a prévia (`make_giant_rocks.py --preview <arquivo> --basalt`) vai para a revisão dele, e um pico que ele tirar sai numa migration depois.
 
 | Slug | Nome | Como é |
 | --- | --- | --- |
@@ -49,12 +49,12 @@ A proposta. A prévia pode tirar ou trocar picos, e o dono escolhe quais entram.
 
 ## Critérios de aceite
 
-- [ ] A prévia aprovada pelo dono.
+- [ ] A prévia aprovada pelo dono (na revisão final da iniciativa).
 - [ ] No F2, cada pico aparece na ferramenta Peças e bloqueia o Domador pelo pé. Fica para o dono conferir.
-- [ ] `godot --headless --path client --quit-after 60` sem erro de script.
-- [ ] `npm run lint`, `npm run typecheck` e `npm test` passam.
+- [x] `godot --headless --path client --quit-after 60` sem erro de script.
+- [x] `npm run lint`, `npm run typecheck` e `npm test` passam.
 
 ## Tarefas
 
-- [ ] O material basalto no `make_giant_rocks.py` e a prévia.
-- [ ] Depois da aprovação: os PNGs com os `.import`, a migration aplicada no banco e o pincel.
+- [x] O material basalto no `make_giant_rocks.py` (com a paleta clareada para a silhueta aparecer no chão escuro) e a prévia.
+- [x] Os PNGs com os `.import`, a migration (`20270202000002_basalt_spires`, com a luz do veio de lava) aplicada no banco e o pincel.

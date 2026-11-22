@@ -3,6 +3,8 @@ import { type HexCoord, hexKey } from '../exploration/hex.js';
 import {
   BIOMES,
   type Biome,
+  blocksWalking,
+  isLava,
   isWater,
   MAX_HEIGHT,
   maxVariant,
@@ -416,7 +418,7 @@ function bridgesError(
           }),
         ),
       );
-      if (biome === undefined || isWater(biome)) {
+      if (biome === undefined || blocksWalking(biome)) {
         return 'A ponta da ponte precisa ficar em terra.';
       }
     }
@@ -434,7 +436,7 @@ function npcsError(
   known: KnownIds,
 ): string | null {
   const water = (coord: HexCoord): boolean =>
-    isWater(biomes.get(hexKey(coord))!);
+    blocksWalking(biomes.get(hexKey(coord))!);
   if (npcs.length > MAX_NPCS) return 'A ilha pode ter até 200 NPCs.';
   for (const [index, npc] of npcs.entries()) {
     const number = index + 1;
@@ -444,14 +446,14 @@ function npcsError(
     if (!biomes.has(hexKey(npc))) {
       return `O NPC ${number} fica em ${at(npc)}, que não é da ilha.`;
     }
-    if (water(npc)) return 'O NPC não pode ficar na água.';
+    if (water(npc)) return 'O NPC não pode ficar na água nem na lava.';
     const walk = new Set([hexKey(npc)]);
     for (const coord of npc.tiles) {
       const key = hexKey(coord);
       if (!biomes.has(key)) {
         return `O NPC ${number} passeia por ${at(coord)}, que não é da ilha.`;
       }
-      if (water(coord)) return 'O NPC não pode ficar na água.';
+      if (water(coord)) return 'O NPC não pode ficar na água nem na lava.';
       if (walk.has(key)) {
         return `O NPC ${number} repete o hexágono ${at(coord)} no passeio.`;
       }
@@ -583,6 +585,7 @@ export function publishError(
   const startKey = hexKey(draft.start);
   const start = draft.tiles.find((tile) => hexKey(tile) === startKey)!;
   if (isWater(start.biome)) return 'A chegada não pode ficar na água.';
+  if (isLava(start.biome)) return 'A chegada não pode ficar na lava.';
   const inAction = draft.actions.some((action) =>
     action.tiles.some((coord) => hexKey(coord) === startKey),
   );

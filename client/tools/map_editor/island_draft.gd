@@ -417,10 +417,10 @@ func clip_bridges() -> int:
 	return removed
 
 
-## Se uma ponta de ponte pode ficar no ponto: num hexágono da ilha que não é água.
+## Se uma ponta de ponte pode ficar no ponto: num hexágono da ilha onde se anda.
 func bridge_end_ok(flat: Vector2) -> bool:
 	var tile: HexTile = tiles.get(HexMapView.grid_coord(flat))
-	return tile != null and not tile.is_water()
+	return tile != null and not tile.blocks_walking()
 
 
 ## A parede de cima a até `reach` do ponto do chão plano, ou -1.

@@ -34,7 +34,7 @@ A terra fica nos patamares 1, 4 e 7, e a Montanha de 8 a 10. O Domador sobe ou d
   - **Sem lugar no raio sorteado:** o sorteio tenta raios menores, até o `volcanoMinRadius`. Se nenhum couber, o mapa fica sem vulcão e retorna `null`. O cone nunca passa por cima de água, ponte ou Montanha.
   - **A raridade:** o que vale é a parte dos mapas com vulcão, perto de 1 em 15 (de 5% a 8% dos mapas sem o clima Frio), e não a chance do sorteio. Se faltar lugar com frequência, o construtor sobe o padrão do `volcanoChance` até a parte medida cair nessa faixa e anota aqui o valor final.
 - **RF-03:** O perfil do cone, pela distância `d` ao centro, com a borda de cada faixa ondulada por um ruído do sorteio próprio, para o cone não sair um hexágono perfeito:
-  - **A cratera** (`d` até perto de 40% de `R`): piso na altura 6. No meio, a Lava funda; em volta dela, um anel de Lava rasa; e entre a lava e o paredão de dentro, um anel de chão de Vulcão de 1 a 2 hexágonos de largura, andável e todo ligado.
+  - **A cratera** (`d` até perto de 40% de `R`): piso na altura 6. No meio, a Lava funda; em volta dela, um anel de Lava rasa, as duas na altura 5, um nível abaixo do piso, como a água ([01](01-volcano-art.md)); e entre a lava e o paredão de dentro, um anel de chão de Vulcão de 1 a 2 hexágonos de largura, andável e todo ligado.
   - **A borda** (logo depois da cratera, de 1 a 2 hexágonos de largura): altura 10. Um hexágono da borda só fica no 9 se não encostar na encosta de fora, para a borda não se subir sem escadaria.
   - **A encosta de fora** (até `R`): desce em patamares de 7 e 4 (no chão de 4, só o 7), com paredões de 3 níveis entre eles.
   - **O pé:** o último anel do cone fica 3 níveis acima do chão de fora (o 4 sobre o chão de 1, o 7 sobre o chão de 4) e encosta nele com o paredão, menos nas escadarias. O anel de `R` a `R + 2` fica como estava: ele só garante a folga em volta do cone.
@@ -52,6 +52,7 @@ A terra fica nos patamares 1, 4 e 7, e a Montanha de 8 a 10. O Domador sobe ou d
   - não põe pico numa escadaria, no anel do piso nem na lava.
 
   As pedras da Montanha não caem no Vulcão.
+- **RF-05b:** As rachaduras de lava (`lava_crack`, a peça que bloqueia, da [01](01-volcano-art.md)), pelo mesmo `placeRocks`, com um sorteio próprio: poucas, nos patamares da encosta de fora e no anel do piso (perto de 1 a cada 15 hexágonos, a revisar), fora das escadarias, sem fechar o caminho de nenhuma terra nem pedaço do anel do piso.
 - **RF-06:** Toda terra que se alcançava da chegada continua alcançável, e o anel do piso da cratera se alcança da chegada. A chegada não cai no cone.
 - **RF-07:** Fora do disco do vulcão, os biomas, as alturas, a água, as pontes e as pedras são os do mesmo mapa sem o vulcão. A Geleira não sai num mapa com vulcão, porque o vulcão não sai no Frio.
 - **RF-08:** As zonas: o cone fica na zona Comum do Vulcão, e a lava nas zonas Comum dela. O `assignZones` não espalha outras zonas por cima.
@@ -61,10 +62,11 @@ A terra fica nos patamares 1, 4 e 7, e a Montanha de 8 a 10. O Domador sobe ou d
 - [ ] Testes de unidade (`map-volcano.spec.ts`, em mapas do tamanho do jogo ou menores, como o construtor achar melhor):
   - Em 400 seeds sem o clima Frio e com o `volcanoIslandChance` em 0, de 5% a 8% saem com vulcão.
   - Com o clima `cold` fixado, nenhum mapa tem vulcão.
-  - O cone tem o raio sorteado, a borda nas alturas 9 e 10, o piso no 6 e a lava só dentro da cratera, com a funda no meio e a rasa em volta.
+  - O cone tem o raio sorteado, a borda nas alturas 9 e 10, o piso no 6, a lava no 5 e só dentro da cratera, com a funda no meio e a rasa em volta.
   - Tirando os hexágonos das escadarias, a borda não se alcança do chão de fora, e o piso não se alcança da borda. Com elas, o anel do piso se alcança da chegada.
   - Nenhum pedaço do anel do piso fica sem saída.
   - Os picos só caem na borda e na encosta, fora das escadarias.
+  - As rachaduras não fecham o caminho de nenhum pedaço do piso nem da encosta.
 - [ ] Toda terra que se alcançava da chegada no mesmo mapa sem o vulcão continua alcançável, fora as pedras e os picos.
 - [ ] Com o `volcanoChance` em 0, o hash do mapa de 5 seeds é igual ao de antes, tirado do `map-generator.ts` do commit da [03](03-volcano-records.md).
 - [ ] Fora do disco, os biomas, as alturas, as pontes e as pedras são os do mesmo mapa sem o vulcão.

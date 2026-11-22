@@ -1,6 +1,6 @@
 import type { Random } from '../battle/types.js';
 import { type HexCoord, hexDistance } from '../exploration/hex.js';
-import type { Biome, MapTile } from '../exploration/map-generator.js';
+import { blocksWalking, type MapTile } from '../exploration/map-generator.js';
 import {
   DEFAULT_SPAWN_CONFIG,
   type SpawnConfig,
@@ -19,7 +19,6 @@ import {
   type TamerSize,
 } from './tamer-config.js';
 
-const WATER: ReadonlySet<Biome> = new Set(['wshallow', 'wdeep']);
 const SIZES: readonly TamerSize[] = [1, 2, 3];
 
 export interface TamerTexts {
@@ -141,7 +140,7 @@ export function rollMapTamers(
   };
   const open = tiles.filter(
     (tile) =>
-      !WATER.has(tile.biome) &&
+      !blocksWalking(tile.biome) &&
       hexDistance(tile, start) > config.minStartDistance &&
       poolOf(tile.biome).length > 0,
   );

@@ -48,6 +48,8 @@ var _map: ExplorationMap = null
 var _prop_lights: Array[MapLight] = []
 var _swarms := PackedVector2Array()
 var _swarm_coords: Array[Vector2i] = []
+var _lava_glows := PackedVector2Array()
+var _lava_glow_coords: Array[Vector2i] = []
 var _discovery := MapDiscovery.new()
 var _sync_timer := Timer.new()
 ## Os nomes das construções: o texto, o ponto na arte e o hexágono do meio.
@@ -241,6 +243,9 @@ func _begin() -> void:
 	_prop_lights = _map_view.prop_lights(_map.props)
 	_swarms = _map_view.firefly_swarms()
 	_swarm_coords = _map_view.firefly_swarm_tiles()
+	_lava_glows = _map_view.lava_glows()
+	_lava_glow_coords = _map_view.lava_glow_tiles()
+	_day_light.set_lava_map(_map)
 	_discovery = MapDiscovery.new()
 	_discovery.add(_map.discovered)
 	_reveal_home_field()
@@ -1223,6 +1228,14 @@ func _refresh_lights() -> void:
 			swarms.append(swarm)
 	swarms.sort_custom(func(a: Vector2, b: Vector2) -> bool: return a.distance_squared_to(player) < b.distance_squared_to(player))
 	_day_light.set_swarms(PackedVector2Array(swarms.slice(0, DayLightLayer.MAX_SWARMS)))
+	var glows: Array[Vector2] = []
+	var glow_view := view.grow(DayLightLayer.LAVA_REACH)
+	for index: int in _lava_glows.size():
+		var glow := _lava_glows[index]
+		if _is_visible_hex(_lava_glow_coords[index]) and glow_view.has_point(glow):
+			glows.append(glow)
+	glows.sort_custom(func(a: Vector2, b: Vector2) -> bool: return a.distance_squared_to(player) < b.distance_squared_to(player))
+	_day_light.set_lava_glows(PackedVector2Array(glows.slice(0, DayLightLayer.MAX_LAVA_GLOWS)))
 
 
 ## Parte do centro já arredondado: em uma tela de tamanho ímpar, ele cai no meio de

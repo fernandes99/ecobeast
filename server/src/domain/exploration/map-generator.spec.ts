@@ -6,6 +6,7 @@ import {
   blocksWalking,
   generateMap,
   generateShapedMap,
+  isLava,
   isWater,
   MAX_HEIGHT,
   maxVariant,
@@ -24,7 +25,7 @@ const MAX_LONELY_LAND = 0.05;
 /** A grama é a base da região; nenhum bioma deve ir além disto. */
 const MAX_BIOME_SHARE = 0.6;
 /** A Geleira é rara de propósito; o map-glacier.spec.ts confere que ela aparece nos mapas frios. */
-const RARE_BIOMES: readonly ShapedBiome[] = ['glacier'];
+const RARE_BIOMES: readonly ShapedBiome[] = ['glacier', 'volcano'];
 const CONFIG: MapConfig = {
   tileCount: 300,
   edgeRoughness: 7,
@@ -149,13 +150,14 @@ describe('generateShapedMap', () => {
     maps = SEEDS.map((seed) => generateShapedMap(seed, CONFIG));
   });
 
-  it('só existem as nove regiões', () => {
+  it('só existem as dez regiões', () => {
     expect([...SHAPED_BIOMES].sort()).toEqual(
       [
         'beach',
         'boreal',
         'desert',
         'glacier',
+        'volcano',
         'snow',
         'stone',
         'temperate',
@@ -1068,8 +1070,27 @@ describe('terrainOf', () => {
     ['glacier', 'flat', 'glacier'],
     ['glacier', 'hill', 'glacier'],
     ['glacier', 'mont', 'mountain'],
+    ['volcano', 'flat', 'volcano'],
+    ['volcano', 'hill', 'volcano'],
+    ['volcano', 'mont', 'volcano'],
   ] as const)('%s com %s vira %s', (biome, shape, to) => {
     expect(terrainOf(biome, shape)).toBe(to);
+  });
+});
+
+describe('a lava (volcano/03)', () => {
+  it.each(['lshallow', 'ldeep'] as const)(
+    '%s bloqueia o andar, mas não é água',
+    (biome) => {
+      expect(blocksWalking(biome)).toBe(true);
+      expect(isWater(biome)).toBe(false);
+      expect(isLava(biome)).toBe(true);
+    },
+  );
+
+  it('o Vulcão não bloqueia nem é lava', () => {
+    expect(blocksWalking('volcano')).toBe(false);
+    expect(isLava('volcano')).toBe(false);
   });
 });
 
@@ -1080,13 +1101,16 @@ describe('generateMap', () => {
     maps = SEEDS.slice(0, 40).map((seed) => generateMap(seed, CONFIG));
   });
 
-  it('são os 11 biomas do catálogo', () => {
+  it('são os 14 biomas do catálogo', () => {
     expect([...BIOMES].sort()).toEqual(
       [
         'beach',
         'boreal',
         'desert',
         'glacier',
+        'volcano',
+        'lshallow',
+        'ldeep',
         'snow',
         'hill',
         'mountain',

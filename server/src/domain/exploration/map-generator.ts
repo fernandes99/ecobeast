@@ -35,6 +35,9 @@ export const BIOMES = [
   'snow',
   'beach',
   'glacier',
+  'volcano',
+  'lshallow',
+  'ldeep',
 ] as const;
 export type Biome = (typeof BIOMES)[number];
 
@@ -48,6 +51,7 @@ export const SHAPED_BIOMES = [
   'snow',
   'beach',
   'glacier',
+  'volcano',
 ] as const;
 export type ShapedBiome = (typeof SHAPED_BIOMES)[number];
 
@@ -200,8 +204,13 @@ export function isWater(biome: Biome): boolean {
   return biome === 'wshallow' || biome === 'wdeep';
 }
 
+/** A lava bloqueia o andar como a água, mas não é água (volcano/03). */
+export function isLava(biome: Biome): boolean {
+  return biome === 'lshallow' || biome === 'ldeep';
+}
+
 export function blocksWalking(biome: Biome): boolean {
-  return biome === 'wshallow' || biome === 'wdeep';
+  return isWater(biome) || isLava(biome);
 }
 
 export function maxVariant(biome: Biome): number {
@@ -212,6 +221,7 @@ export function maxVariant(biome: Biome): number {
 
 /** O bioma do catálogo pelo bioma e pela forma; a altura vem do relevo (terrain-plateaus/02). */
 export function terrainOf(biome: ShapedBiome, shape: TerrainShape): Biome {
+  if (biome === 'volcano') return 'volcano';
   if (shape === 'mont') return 'mountain';
   if (biome === 'stone') return shape === 'hill' ? 'hill' : 'stone';
   if (shape === 'hill') {

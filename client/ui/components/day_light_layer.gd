@@ -9,6 +9,10 @@ const MAX_LIGHTS := 32
 const MAX_SWARMS := 32
 ## Até onde vão os pontinhos e a luz de um enxame, em pixels da arte (o SWARM_RADIUS do shader).
 const SWARM_REACH := 16.0
+## As bordas de lava acesas por vez, fora do limite das luzes (volcano/01), e o alcance da luz
+## delas (o LAVA_RADIUS do shader).
+const MAX_LAVA_GLOWS := 48
+const LAVA_REACH := 40.0
 
 ## [hora, ambiente, saturação], em ordem de hora; depois das 24h volta ao primeiro. A revisar.
 const KEYFRAMES: Array[Array] = [
@@ -101,6 +105,37 @@ func set_swarms(points: PackedVector2Array) -> void:
 	padded.resize(MAX_SWARMS)
 	_material.set_shader_parameter(&"swarms", padded)
 	_material.set_shader_parameter(&"swarm_count", count)
+
+
+## Onde está a lava do mapa, um pixel por hexágono (R: lava; G: altura + 1), para o
+## shader não escurecer a lava. Sem lava, o shader nem procura.
+func set_lava_map(map: ExplorationMap) -> void:
+	var low := Vector2i.MAX
+	var high := Vector2i.MIN
+	var has_lava := false
+	for tile: HexTile in map.tiles.values():
+		low = low.min(tile.coord)
+		high = high.max(tile.coord)
+		has_lava = has_lava or tile.is_lava()
+	_material.set_shader_parameter(&"lava_on", has_lava)
+	if not has_lava:
+		return
+	var data_size := high - low + Vector2i.ONE
+	var image := Image.create_empty(data_size.x, data_size.y, false, Image.FORMAT_RG8)
+	for tile: HexTile in map.tiles.values():
+		image.set_pixelv(tile.coord - low, Color(1.0 if tile.is_lava() else 0.0, (tile.height + 1) / 255.0, 0.0))
+	_material.set_shader_parameter(&"lava_data", ImageTexture.create_from_image(image))
+	_material.set_shader_parameter(&"data_origin", Vector2(low))
+	_material.set_shader_parameter(&"data_size", Vector2(data_size))
+
+
+## As bordas de lava acesas, em pixels da arte; as que passam ficam de fora.
+func set_lava_glows(points: PackedVector2Array) -> void:
+	var count := mini(points.size(), MAX_LAVA_GLOWS)
+	var padded := points.slice(0, count)
+	padded.resize(MAX_LAVA_GLOWS)
+	_material.set_shader_parameter(&"lava_glows", padded)
+	_material.set_shader_parameter(&"lava_glow_count", count)
 
 
 ## [ambiente, saturação] na hora, misturando em linha reta os dois pontos em volta.

@@ -1,6 +1,6 @@
 shader_type canvas_item;
-// A luz da hora por cima do mapa (.specs/day-night/architecture.md#o-filtro-da-luz) e os
-// vagalumes (.specs/fireflies/01-fireflies.md).
+// A luz da hora por cima do mapa (.specs/day-night/architecture.md#o-filtro-da-luz), os
+// vagalumes (.specs/fireflies/01-fireflies.md) e a lava acesa (.specs/volcano/01-volcano-art.md).
 
 const int MAX_LIGHTS = 32;
 const int MAX_SWARMS = 32;
@@ -13,6 +13,20 @@ const float SWARM_SPREAD = 16.0;
 const float SWARM_WANDER = 4.0;
 const vec3 SWARM_LIGHT = vec3(0.847, 1.0, 0.541);
 const vec3 FIREFLY = vec3(0.957, 1.0, 0.612);
+// A lava não escurece: o pixel na chave de cor dentro de um hexágono de lava, achado
+// como no fog.gdshader. As bordas do lago soltam a luz laranja.
+const int MAX_LAVA_GLOWS = 48;
+const float HOT_MIN_RED = 0.33;
+const float HOT_MAX_BLUE = 0.06;
+const vec3 LAVA_LIGHT = vec3(1.0, 0.55, 0.2);
+const float LAVA_RADIUS = 40.0;
+const float LAVA_EMISSION = 0.35;
+const int MAX_LEVEL = 10;
+const float LEVEL_STEP = 8.0;
+const float STEP_X = 64.0;
+const float STEP_Y = 42.0;
+const float ROW_SHIFT = 32.0;
+const float SLOPE = 16.0;
 
 uniform sampler2D screen_texture : hint_screen_texture, filter_nearest;
 uniform vec3 ambient = vec3(1.0);
@@ -27,9 +41,51 @@ uniform vec4 lights[MAX_LIGHTS];
 uniform vec4 light_colors[MAX_LIGHTS];
 uniform int swarm_count = 0;
 uniform vec2 swarms[MAX_SWARMS];
+// R: 1 na lava; G: altura + 1, ou 0 sem hexágono.
+uniform bool lava_on = false;
+uniform sampler2D lava_data : filter_nearest;
+uniform vec2 data_origin = vec2(0.0);
+uniform vec2 data_size = vec2(1.0);
+uniform int lava_glow_count = 0;
+uniform vec2 lava_glows[MAX_LAVA_GLOWS];
 
 float hash(vec2 p) {
 	return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+}
+
+vec2 grid_coord(vec2 point) {
+	float r = floor(point.y / STEP_Y);
+	float inside_row = point.y - r * STEP_Y;
+	float x = point.x - ROW_SHIFT * r;
+	float q = floor(x / STEP_X);
+	float inside_cell = x - q * STEP_X;
+	if (inside_cell < ROW_SHIFT) {
+		if (inside_row < SLOPE - inside_cell / 2.0) {
+			return vec2(q, r - 1.0);
+		}
+	} else if (inside_row < (inside_cell - ROW_SHIFT) / 2.0) {
+		return vec2(q + 1.0, r - 1.0);
+	}
+	return vec2(q, r);
+}
+
+vec2 hex_at(vec2 coord) {
+	vec2 cell = coord - data_origin;
+	if (cell.x < 0.0 || cell.y < 0.0 || cell.x >= data_size.x || cell.y >= data_size.y) {
+		return vec2(0.0);
+	}
+	return texture(lava_data, (cell + 0.5) / data_size).rg;
+}
+
+// Se o topo visível no ponto é de um hexágono de lava: o primeiro topo, de cima para baixo.
+bool on_lava(vec2 point) {
+	for (int level = MAX_LEVEL; level >= 0; level--) {
+		vec2 hex = hex_at(grid_coord(point + vec2(0.0, float(level) * LEVEL_STEP)));
+		if (abs(hex.g * 255.0 - float(level + 1)) < 0.5) {
+			return hex.r > 0.5;
+		}
+	}
+	return false;
 }
 
 float stepped(float t) {
@@ -39,14 +95,25 @@ float stepped(float t) {
 
 void fragment() {
 	vec3 color = texture(screen_texture, SCREEN_UV).rgb;
+	vec3 original = color;
 	float gray = dot(color, vec3(0.299, 0.587, 0.114));
 	color = mix(vec3(gray), color, saturation);
 	vec3 light = ambient;
 	vec3 glow = vec3(0.0);
 	float firefly = 0.0;
+	bool lava = false;
 	if (light_strength > 0.0) {
 		// FRAGCOORD é da janela; com o stretch canvas_items, o ponto vem do UV.
 		vec2 art_pixel = floor((UV * rect_size - art_origin) / art_scale) + 0.5;
+		lava = lava_on && original.r >= HOT_MIN_RED && original.b <= HOT_MAX_BLUE && on_lava(art_pixel);
+		for (int i = 0; i < lava_glow_count; i++) {
+			float t = 1.0 - distance(art_pixel, lava_glows[i]) / LAVA_RADIUS;
+			if (t > 0.0) {
+				vec3 lit = LAVA_LIGHT * stepped(t) * light_strength;
+				light += lit;
+				glow += lit * LAVA_EMISSION;
+			}
+		}
 		for (int i = 0; i < light_count; i++) {
 			vec4 source = lights[i];
 			float t = 1.0 - distance(art_pixel, source.xy) / source.z;
@@ -80,5 +147,8 @@ void fragment() {
 		}
 	}
 	vec3 result = color * min(light, vec3(1.0)) + glow;
+	if (lava) {
+		result = original;
+	}
 	COLOR = vec4(mix(result, FIREFLY, firefly * light_strength), 1.0);
 }

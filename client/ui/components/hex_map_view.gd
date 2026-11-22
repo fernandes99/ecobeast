@@ -39,6 +39,8 @@ const STORY_MAX_ZOOM := 10
 const DEFAULT_ZOOM := 2
 const SURFACE_PATH := "res://assets/terrain/surfaces/%s.png"
 const CLIFF_BIOMES: Array[String] = ["stone", "mountain", "glacier"]
+## O paredão de colunas de basalto do Vulcão, também na lateral da lava (volcano/01).
+const VOLCANO_CLIFF := "volcano_cliff"
 ## A lateral da água é cachoeira, e o pé dela tem espuma no vizinho de baixo
 ## (water-motion). Os códigos são os do shader do terreno, no CUSTOM0.w.
 const WATERFALL_TEXTURE := "waterfall"
@@ -46,6 +48,8 @@ const WATER_CODE := 4.0
 const FALL_CODE := 5.0
 const FOAM_CODE := 6.0
 const SHORE_CODE := 7.0
+## A lava corre como a água, num código próprio (volcano/01).
+const LAVA_CODE := 10.0
 const FOAM_WIDTH := 6.0
 ## A leitura da altura (terrain-height/05): a beirada clara no alto dos lados sem
 ## paredão, a sombra no pé do paredão e o tom mais escuro em cada nível de baixo.
@@ -449,6 +453,31 @@ func firefly_swarms() -> PackedVector2Array:
 	return swarms
 
 
+## Os centros dos hexágonos de lava na borda do lago (com um vizinho que não é lava), em
+## pixels da arte, já erguidos pela altura: a luz da lava à noite (volcano/01).
+func lava_glows() -> PackedVector2Array:
+	var glows := PackedVector2Array()
+	for coord: Vector2i in lava_glow_tiles():
+		glows.append(flat_center(coord) - _rise(_map.tile_at(coord).height))
+	return glows
+
+
+## Os hexágonos de `lava_glows`, na mesma ordem.
+func lava_glow_tiles() -> Array[Vector2i]:
+	var coords: Array[Vector2i] = []
+	if _map == null:
+		return coords
+	for tile: HexTile in _map.tiles.values():
+		if not tile.is_lava():
+			continue
+		for step: Vector2i in HexTransitions.NEIGHBORS:
+			var neighbor := _map.tile_at(tile.coord + step)
+			if neighbor != null and not neighbor.is_lava():
+				coords.append(tile.coord)
+				break
+	return coords
+
+
 ## Os hexágonos dos enxames de `firefly_swarms`, na mesma ordem.
 func firefly_swarm_tiles() -> Array[Vector2i]:
 	var coords: Array[Vector2i] = []
@@ -686,6 +715,8 @@ func snapped_to_pixels(value: Vector2) -> Vector2:
 static func face_texture(biome: String) -> String:
 	if HexTile.WATER_BIOMES.has(biome):
 		return WATERFALL_TEXTURE
+	if biome == "volcano" or HexTile.LAVA_BIOMES.has(biome):
+		return VOLCANO_CLIFF
 	return "cliff" if CLIFF_BIOMES.has(biome) else "side"
 
 
@@ -837,6 +868,9 @@ func _add_surface(row: HexRowView, texture_name: String, tiles: Array) -> void:
 	if HexTile.WATER_BIOMES.has(texture_name):
 		var deep := 1.0 if texture_name == "wdeep" else 0.0
 		custom = _repeated(PackedFloat32Array([0.0, 0.0, deep, WATER_CODE]), points.size())
+	elif HexTile.LAVA_BIOMES.has(texture_name):
+		var deep := 1.0 if texture_name == "ldeep" else 0.0
+		custom = _repeated(PackedFloat32Array([0.0, 0.0, deep, LAVA_CODE]), points.size())
 	_add_mesh(row, SURFACE_PATH % texture_name, points, ground, colors, custom)
 
 
@@ -1019,7 +1053,7 @@ func _add_transitions(row: HexRowView, tiles: Array) -> void:
 func _add_grounds(row: HexRowView, tiles: Array) -> void:
 	var batches: Dictionary[Vector2i, HexGrounds.Batch] = {}
 	for tile: HexTile in tiles:
-		if tile.is_water() or not ground_mask.covers(tile.coord):
+		if tile.is_water() or tile.is_lava() or not ground_mask.covers(tile.coord):
 			continue
 		var page := GroundMask.page_of(flat_center(tile.coord))
 		var texture := ground_mask.texture_of(page)
@@ -1560,7 +1594,7 @@ func _write_decoration(points: PackedVector2Array, texture_points: PackedVector2
 
 ## O tom de um hexágono de terra pela altura: cada nível abaixo do TINT_TOP, um pouco mais escuro.
 func _tint(tile: HexTile) -> Color:
-	if not height_tint or tile.is_water():
+	if not height_tint or tile.is_water() or tile.is_lava():
 		return Color.WHITE
 	var value := 1.0 - TINT_STEP * maxi(TINT_TOP - tile.height, 0)
 	return Color(value, value, value)
@@ -1589,7 +1623,7 @@ func _outline(tile: HexTile) -> Array[HexRounding.Segment]:
 func _add_lips(row: HexRowView, tiles: Array) -> void:
 	var by_biome: Dictionary[String, Array] = {}
 	for tile: HexTile in tiles:
-		if tile.is_water():
+		if tile.is_water() or tile.is_lava():
 			continue
 		var flat := _tile_origin(tile.coord)
 		var raised := flat - _rise(tile.height)

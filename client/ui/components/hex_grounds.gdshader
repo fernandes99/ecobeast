@@ -44,6 +44,15 @@ const float FALL_FOAM = 4.0;
 const float FALL_FADE = 8.0;
 const float FOAM_WIDTH = 6.0;
 const vec4 FOAM = vec4(0.93, 0.98, 1.0, 1.0);
+// A lava (volcano/01): o código 10 corre como a água, mais devagar, com a funda no z e
+// um pulso que só clareia (a chave de cor da noite não pode perder a lava). As voltas
+// também fecham em 3.600 s.
+const vec2 LAVA_DRIFT = vec2(7.0, 4.0) * 512.0 / 3600.0;
+const vec2 DEEP_LAVA_DRIFT = vec2(4.0, 2.0) * 512.0 / 3600.0;
+const float LAVA_WAVE_LENGTH = 24.0;
+const float LAVA_WAVE_SPEED = 0.25;
+const float LAVA_PULSE = 0.08;
+const float LAVA_PULSE_SPEED = 0.2;
 // A espuma da praia (código 7): mais fraca, e uma onda que corre pela costa a
 // apaga e acende pixel a pixel. 0,25 volta por segundo fecha no map_time de 3.600 s.
 const float SHORE_ALPHA = 0.55;
@@ -130,6 +139,13 @@ void fragment() {
 		vec2 drift = floor(t * (ground.z > 0.5 ? DEEP_DRIFT : SHALLOW_DRIFT));
 		float wave = round(sin(6.2831853 * (texel.y / WAVE_LENGTH + t * WAVE_SPEED)));
 		color = water_texel(TEXTURE, texel - drift - vec2(wave, 0.0), TEXTURE_PIXEL_SIZE) * shade;
+	} else if (code == 10) {
+		float t = floor(map_time * WATER_STEPS) / WATER_STEPS;
+		vec2 drift = floor(t * (ground.z > 0.5 ? DEEP_LAVA_DRIFT : LAVA_DRIFT));
+		float wave = round(sin(6.2831853 * (texel.y / LAVA_WAVE_LENGTH + t * LAVA_WAVE_SPEED)));
+		float pulse = 1.0 + LAVA_PULSE * (0.5 + 0.5 * sin(6.2831853 * t * LAVA_PULSE_SPEED));
+		color = water_texel(TEXTURE, texel - drift - vec2(wave, 0.0), TEXTURE_PIXEL_SIZE) * shade;
+		color.rgb = min(color.rgb * pulse, vec3(1.0));
 	} else if (code == 5) {
 		float frame = floor(map_time * FALL_STEPS);
 		float height = ground.x;
