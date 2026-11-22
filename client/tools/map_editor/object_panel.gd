@@ -19,6 +19,8 @@ const THUMB_SIZE := Vector2(64.0, 60.0)
 const MAX_THUMB_SCALE := 4.0
 const TILE_FONT_SIZE := 13
 const FIRST_CATEGORY := 1
+const DIALOGUE_HEIGHT := 110.0
+const DIALOGUE_COMMIT_DELAY := 0.5
 const NO_RESULTS := "Nenhuma peça com esse nome."
 const ACCENTS: Dictionary[String, String] = {"á": "a", "à": "a", "â": "a", "ã": "a", "ä": "a", "é": "e", "ê": "e", "è": "e", "í": "i", "î": "i", "ó": "o", "ô": "o", "õ": "o", "ò": "o", "ú": "u", "û": "u", "ü": "u", "ç": "c"}
 
@@ -57,6 +59,11 @@ var _action_select: OptionButton
 var _action_ids: Array[int] = []
 var _interior_select: OptionButton
 var _interior_ids: Array[int] = []
+var _dialogue_box: TextEdit
+var _dialogue_timer: Timer
+## A troca da fala ainda fora do desfazer, que entra meio segundo depois da última letra.
+var _dialogue_step: EditorHistory.Step = null
+var _syncing_dialogue := false
 
 
 func _init() -> void:
@@ -148,6 +155,25 @@ func _init() -> void:
 	_interior_select.item_selected.connect(_on_interior_selected)
 	interior_row.add_child(_interior_select)
 	set_interiors([])
+	var dialogue_title := Label.new()
+	dialogue_title.text = "Fala (opcional) · cada parágrafo é uma fala"
+	dialogue_title.theme_type_variation = &"SecondaryLabel"
+	_selected_box.add_child(dialogue_title)
+	_dialogue_box = TextEdit.new()
+	_dialogue_box.custom_minimum_size.y = DIALOGUE_HEIGHT
+	_dialogue_box.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY
+	_dialogue_box.placeholder_text = "Para o norte: a vila.
+
+Para o sul: a praia."
+	_dialogue_box.tooltip_text = "Tocar na peça mostra as falas; depois, abre a sala ou roda a ação, se tiver."
+	_dialogue_box.text_changed.connect(_on_dialogue_changed)
+	_dialogue_box.focus_exited.connect(_commit_dialogue)
+	_selected_box.add_child(_dialogue_box)
+	_dialogue_timer = Timer.new()
+	_dialogue_timer.one_shot = true
+	_dialogue_timer.wait_time = DIALOGUE_COMMIT_DELAY
+	_dialogue_timer.timeout.connect(_commit_dialogue)
+	add_child(_dialogue_timer)
 	_block_box = VBoxContainer.new()
 	_block_box.add_theme_constant_override(&"separation", 6)
 	_selected_box.add_child(_block_box)
@@ -305,6 +331,9 @@ func _tile(text: String, texture: Texture2D, group: ButtonGroup) -> Button:
 
 
 func set_draft(draft: IslandDraft) -> void:
+	if _draft != null:
+		_commit_dialogue()
+	_dialogue_step = null
 	_draft = draft
 	select_prop(-1)
 
@@ -330,6 +359,7 @@ func active_line_closed() -> bool:
 
 
 func select_prop(index: int) -> void:
+	_commit_dialogue()
 	if _draft == null or index >= _draft.props.size():
 		index = -1
 	var same := index >= 0 and index == selected_prop
@@ -370,6 +400,11 @@ func refresh() -> void:
 	if chosen:
 		_action_select.select(maxi(0, _action_ids.find(int(_draft.props[selected_prop].get("action_type_id", 0)))))
 		_interior_select.select(maxi(0, _interior_ids.find(int(_draft.props[selected_prop].get("interior_id", 0)))))
+		var text := str(_draft.props[selected_prop].get("dialogue", ""))
+		if _dialogue_box.text != text:
+			_syncing_dialogue = true
+			_dialogue_box.text = text
+			_syncing_dialogue = false
 	_blocks_button.set_pressed_no_signal(editing_blocks)
 	_block_box.visible = editing_blocks and chosen
 	if _block_box.visible:
@@ -691,6 +726,32 @@ func _on_interior_selected(item: int) -> void:
 	else:
 		piece.erase("interior_id")
 	_finish(step)
+
+
+func _on_dialogue_changed() -> void:
+	if _syncing_dialogue or _draft == null or selected_prop < 0:
+		return
+	var piece: Dictionary = _draft.props[selected_prop]
+	if str(piece.get("dialogue", "")) == _dialogue_box.text:
+		return
+	if _dialogue_step == null:
+		_dialogue_step = _step("Trocar a fala da peça")
+	if _dialogue_box.text.strip_edges().is_empty():
+		piece.erase("dialogue")
+	else:
+		piece["dialogue"] = _dialogue_box.text
+	_dialogue_timer.start()
+
+
+## Copiar as peças a cada letra travaria o editor numa ilha cheia (editor-performance).
+func _commit_dialogue() -> void:
+	_dialogue_timer.stop()
+	if _dialogue_step == null:
+		return
+	var step := _dialogue_step
+	_dialogue_step = null
+	step.props_after = _draft.props.duplicate(true)
+	edited.emit(step)
 
 
 func _text_button(text: String, tip: String, action: Callable) -> Button:

@@ -20,11 +20,15 @@ func walk_tiles() -> Array[Vector2i]:
 	return all
 
 
-## Cada parágrafo do diálogo, separado por linha em branco, é uma fala.
 func lines() -> Array[String]:
+	return MapNpc.paragraphs(dialogue)
+
+
+## Cada parágrafo do texto, separado por linha em branco, é uma fala.
+static func paragraphs(text: String) -> Array[String]:
 	var result: Array[String] = []
 	var current := PackedStringArray()
-	for line: String in dialogue.replace("\r", "").split("\n"):
+	for line: String in text.replace("\r", "").split("\n"):
 		if line.strip_edges().is_empty():
 			if not current.is_empty():
 				result.append(" ".join(current))

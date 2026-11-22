@@ -29,6 +29,7 @@ interface DraftProp {
   block?: { closed: boolean; points: number[] }[];
   action_type_id?: number;
   no_smoke?: boolean;
+  dialogue?: string;
   q: number;
   r: number;
   dx: number;
@@ -806,6 +807,30 @@ describe('Editor de ilhas (e2e)', () => {
       const { no_smoke: _off, ...withSmoke } = body.props[2]!;
       expect([...read.props!].sort(byX)).toEqual(
         [body.props[0]!, body.props[1]!, withSmoke].sort(byX),
+      );
+    });
+
+    it('salva e lê de volta a fala da peça, e a sem texto volta sem o campo (prop-dialogue/01)', async () => {
+      const body = draft();
+      body.props = [
+        { ...(await prop()), dialogue: 'Refúgio ao norte.\n\nLoja ao leste.' },
+        { ...(await prop()), dx: 5, dialogue: '' },
+      ];
+      const id = await create(body);
+      const read = (await call('get', `/islands/${id}`).expect(200))
+        .body as Draft;
+      const byX = (a: DraftProp, b: DraftProp) => a.dx - b.dx;
+      const { dialogue: _empty, ...silent } = body.props[1]!;
+      expect([...read.props!].sort(byX)).toEqual(
+        [body.props[0]!, silent].sort(byX),
+      );
+
+      body.props = [{ ...(await prop()), dialogue: 'a'.repeat(2001) }];
+      const bad = await call('put', `/islands/${id}/draft`)
+        .send(body)
+        .expect(400);
+      expect(bad.body.message).toBe(
+        'A fala da peça 1 passa de 2.000 caracteres.',
       );
     });
 

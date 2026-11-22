@@ -175,6 +175,7 @@ export class IslandsService {
           actionTypeId,
           noSmoke,
           interiorId,
+          dialogue,
         }) => ({
           propTypeId,
           q,
@@ -191,6 +192,7 @@ export class IslandsService {
           ...(actionTypeId === null ? {} : { actionTypeId }),
           ...(noSmoke ? { noSmoke: true as const } : {}),
           ...(interiorId === null ? {} : { interiorId }),
+          ...(dialogue === '' ? {} : { dialogue }),
         }),
       ),
       trails: trails.map(({ groundType, width, points }) => ({

@@ -160,6 +160,8 @@ static func _copy_extras(from: Dictionary, to: Dictionary) -> void:
 		to["no_smoke"] = true
 	if int(from.get("interior_id", 0)) > 0:
 		to["interior_id"] = int(from["interior_id"])
+	if not str(from.get("dialogue", "")).is_empty():
+		to["dialogue"] = str(from["dialogue"])
 
 
 static func list(dir := DIR) -> Array[Dictionary]:

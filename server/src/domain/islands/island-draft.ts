@@ -76,6 +76,8 @@ export interface DraftProp extends HexCoord {
   noSmoke?: true;
   /** A sala que a peça abre (interiors/01); só existe quando há. */
   interiorId?: number;
+  /** A fala ao tocar na peça (prop-dialogue/01); só existe quando há texto. */
+  dialogue?: string;
 }
 
 /**
@@ -293,6 +295,14 @@ function propsError(
       !known.interiorIds.has(prop.interiorId)
     ) {
       return 'Esse interior não existe.';
+    }
+  }
+  for (const [index, prop] of props.entries()) {
+    if (
+      prop.dialogue !== undefined &&
+      [...prop.dialogue].length > MAX_DIALOGUE_LENGTH
+    ) {
+      return `A fala da peça ${index + 1} passa de 2.000 caracteres.`;
     }
   }
   if (
@@ -659,6 +669,7 @@ export function canonicalDraft(draft: IslandDraft): string {
           block,
           actionTypeId,
           interiorId,
+          dialogue,
         }) => ({
           propTypeId,
           q,
@@ -671,6 +682,7 @@ export function canonicalDraft(draft: IslandDraft): string {
           ...(block === undefined ? {} : { block: canonicalBlock(block) }),
           ...(actionTypeId === undefined ? {} : { actionTypeId }),
           ...(interiorId === undefined ? {} : { interiorId }),
+          ...(dialogue ? { dialogue } : {}),
         }),
       ),
     // Só com traços: uma ilha sem traços tem o hash de antes.

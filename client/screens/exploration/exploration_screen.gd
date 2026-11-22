@@ -73,6 +73,8 @@ var _npc_target: NpcSprite = null
 var _prop_target := -1
 var _prop_images: Dictionary[String, Image] = {}
 var _talking: NpcSprite = null
+## A peça que está falando (prop-dialogue/01), ou -1.
+var _talking_prop := -1
 var _talk_lines: Array[String] = []
 var _talk_index := 0
 var _debug_spawn_ids: Array[int] = []
@@ -190,7 +192,7 @@ func handle_back() -> bool:
 	if _island_map.visible:
 		_island_map.close_panel()
 		return true
-	if _loading or _challenger != null or _talking != null or _story_busy():
+	if _loading or _challenger != null or _in_talk() or _story_busy():
 		return true
 	if _at_home():
 		_open_menu()
@@ -297,7 +299,7 @@ func _input(event: InputEvent) -> void:
 
 ## O mapa acima do painel de botões, quando o toque nele valeria; senão, nenhuma.
 func _zoom_area() -> Rect2:
-	if _map == null or _showing_whole_map or _challenger != null or _talking != null or _island_map.visible or _story_busy():
+	if _map == null or _showing_whole_map or _challenger != null or _in_talk() or _island_map.visible or _story_busy():
 		return Rect2()
 	var top := _map_area.get_global_rect().position
 	return Rect2(top, Vector2(_map_area.size.x, _controls_panel.get_global_rect().position.y - top.y))
@@ -361,7 +363,7 @@ func _on_map_input(event: InputEvent) -> void:
 
 
 func _tap(point: Vector2) -> void:
-	if _map == null or _showing_whole_map or _challenger != null or _talking != null or _island_map.visible or _story_busy():
+	if _map == null or _showing_whole_map or _challenger != null or _in_talk() or _island_map.visible or _story_busy():
 		return
 	var art_point := (point - _map_view.position) / _map_view.pixel_scale()
 	if _walking:
@@ -637,7 +639,7 @@ func _fit_island_name() -> void:
 
 
 func _open_island_map() -> void:
-	if _map == null or _challenger != null or _talking != null:
+	if _map == null or _challenger != null or _in_talk():
 		return
 	if _walking:
 		_stop_walk = true
@@ -648,7 +650,7 @@ func _open_island_map() -> void:
 
 ## O teleporte de depuração do mapa grande (minimap/03).
 func _teleport(coord: Vector2i) -> void:
-	if _map == null or _teleporting or _story_busy() or _talking != null or _challenger != null:
+	if _map == null or _teleporting or _story_busy() or _in_talk() or _challenger != null:
 		return
 	if not _map.has(coord) or _map.is_blocked_hex(coord) or _map.is_walled_hex(coord):
 		_island_map.close_panel()
@@ -763,8 +765,25 @@ func _run_action_type(type_id: int) -> void:
 		_show_message(text, &"SecondaryLabel")
 
 
-## A peça com sala abre o interior (interiors/02); a outra roda a ação dela.
+## A peça com fala fala antes (prop-dialogue/01); depois, a com sala abre o interior
+## (interiors/02), e a outra roda a ação dela.
 func _open_prop(index: int) -> void:
+	var lines := _map.props[index].talk_lines()
+	if not lines.is_empty():
+		_talking_prop = index
+		_talk_lines = lines
+		_talk_index = 0
+		_marker.face_toward(_map.props[index].foot() - _player_point)
+		_marker.play_idle()
+		_debug_panel.hide()
+		_message.hide()
+		_set_controls_enabled(false)
+		_say_line()
+		return
+	_finish_prop(index)
+
+
+func _finish_prop(index: int) -> void:
 	var prop := _map.props[index]
 	if prop.interior_id > 0:
 		_debug_panel.hide()
@@ -820,14 +839,14 @@ func _go_to_npc(npc: NpcSprite) -> void:
 	_walk(WalkRoute.points(_map, _player_point, hexes, HexMapView.flat_center(path[path.size() - 1])))
 
 
-## A peça da frente com ação cuja arte tem um pixel desenhado em `art_point`, ou -1.
+## A peça da frente com fala, sala ou ação cuja arte tem um pixel desenhado em `art_point`, ou -1.
 ## As outras, mesmo com bloqueio, deixam o toque passar para o chão: tocar na copa de
 ## uma árvore anda até o ponto tocado, atrás dela (prop-depth-blocks/04).
 func _prop_hit(art_point: Vector2) -> int:
 	var best := -1
 	for index: int in _map.props.size():
 		var prop := _map.props[index]
-		if (prop.action_type_id <= 0 and prop.interior_id <= 0) or not _discovery.is_discovered(prop.coord):
+		if not prop.is_touchable() or not _discovery.is_discovered(prop.coord):
 			continue
 		if best >= 0 and prop.foot().y < _map.props[best].foot().y:
 			continue
@@ -917,17 +936,27 @@ func _talk(npc: NpcSprite) -> void:
 
 
 func _say_line() -> void:
+	if _talking_prop >= 0:
+		_greeting.say(_talk_lines[_talk_index], GameData.voice_by_slug(StoryPlayer.NARRATION_VOICE))
+		return
 	var npc_name := str(GameData.get_npc(_talking.npc.npc_id).get("name", ""))
 	_greeting.say("%s: %s" % [npc_name, _talk_lines[_talk_index]], GameData.npc_voice(_talking.npc.npc_id))
 
 
 func _on_greeting_tapped() -> void:
-	if _talking == null:
+	if not _in_talk():
 		_fight_challenger()
 		return
 	_talk_index += 1
 	if _talk_index < _talk_lines.size():
 		_say_line()
+		return
+	if _talking_prop >= 0:
+		var prop := _talking_prop
+		_talking_prop = -1
+		_greeting.close()
+		_set_controls_enabled(true)
+		_finish_prop(prop)
 		return
 	var npc := _talking
 	_talking = null
@@ -935,6 +964,10 @@ func _on_greeting_tapped() -> void:
 	_set_controls_enabled(true)
 	npc.hold(false)
 	_run_action_type(npc.npc.action_type_id)
+
+
+func _in_talk() -> bool:
+	return _talking != null or _talking_prop >= 0
 
 
 func _fight_challenger() -> void:

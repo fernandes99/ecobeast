@@ -1339,6 +1339,8 @@ model IslandProp {
   noSmoke      Boolean @default(false) @map("no_smoke")
   /// A sala que a peça abre, no lugar da tela da ação (interiors/01).
   interiorId   Int?    @map("interior_id")
+  /// Vazio é sem fala; cada parágrafo é uma fala (prop-dialogue/01). CHECK até 2.000 caracteres (migration prop_dialogue)
+  dialogue     String  @default("")
 
   islandMap  IslandMap         @relation(fields: [islandMapId], references: [id], onDelete: Cascade)
   propType   PropType          @relation(fields: [propTypeId], references: [id], onDelete: Restrict)

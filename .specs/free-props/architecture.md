@@ -62,6 +62,7 @@ Os 17 primeiros são as plantas e pedras do terreno (`HexDecorations.KIND_ROWS`,
 | `variant` | int | de 1 a `prop_types.variants` |
 | `mirrored` | bool | espelhada |
 | `no_smoke` | bool | padrão `false`; a casa fica sem a fumaça da chaminé ([chimney-smoke/01](../chimney-smoke/01-smoke-toggle.md)) |
+| `dialogue` | text | padrão `''`, até 2.000 caracteres; a fala ao tocar na peça, um parágrafo por fala ([prop-dialogue/01](../prop-dialogue/01-prop-dialogue.md)) |
 
 O ponto do pé é `flat_center(q, r) + (dx, dy)`, e ele precisa cair no próprio hexágono `(q, r)`: o servidor confere com a mesma conta do jogo (`HexMapView.grid_coord`), copiada em `server/src/domain/islands/hex-pixels.ts`. Assim o hexágono do pé nunca é ambíguo, e a altura dele é a da peça.
 

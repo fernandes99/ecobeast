@@ -205,6 +205,15 @@ export class DraftPropDto extends EditorHexDto {
   @IsOptional()
   @IsInt(integer('interior_id'))
   interior_id?: number | null;
+
+  @ApiPropertyOptional({
+    description:
+      'A fala ao tocar na peça, até 2.000 caracteres; cada parágrafo é uma fala, e depois da última vem a sala ou a ação. Vazio ou sem o campo, a peça não fala.',
+    example: 'Refúgio ao norte.\n\nLoja ao leste.',
+  })
+  @IsOptional()
+  @IsString(text('dialogue'))
+  dialogue?: string | null;
 }
 
 export class DraftTrailDto {

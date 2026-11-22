@@ -21,6 +21,8 @@ var action_type_id: int = 0
 var no_smoke := false
 ## A sala que tocar na peça abre (interiors/01), ou 0.
 var interior_id: int = 0
+## A fala ao tocar na peça (prop-dialogue/01); cada parágrafo é uma fala.
+var dialogue := ""
 ## As linhas ajustadas, como o servidor manda: `{"closed": bool, "points": [x0, y0, …]}`.
 var block: Array[Dictionary] = []
 
@@ -35,10 +37,20 @@ static func from_dict(d: Dictionary) -> MapProp:
 	prop.action_type_id = DictFields.get_int(d, "action_type_id")
 	prop.no_smoke = DictFields.get_bool(d, "no_smoke")
 	prop.interior_id = maxi(0, DictFields.get_int(d, "interior_id"))
+	prop.dialogue = DictFields.get_string(d, "dialogue")
 	if d.get("block") is Array:
 		prop.custom_block = true
 		prop.block = MapProp.lines_from(d["block"])
 	return prop if prop.prop_type_id > 0 else null
+
+
+func talk_lines() -> Array[String]:
+	return MapNpc.paragraphs(dialogue)
+
+
+## Se tocar na peça faz alguma coisa: falar, abrir a sala ou rodar a ação.
+func is_touchable() -> bool:
+	return action_type_id > 0 or interior_id > 0 or not dialogue.strip_edges().is_empty()
 
 
 static func lines_from(values: Array) -> Array[Dictionary]:

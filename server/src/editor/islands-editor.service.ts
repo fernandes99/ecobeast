@@ -106,6 +106,7 @@ export function toDraft(dto: IslandDraftDto): IslandDraft {
       ...(prop.interior_id === undefined || prop.interior_id === null
         ? {}
         : { interiorId: prop.interior_id }),
+      ...(prop.dialogue ? { dialogue: prop.dialogue } : {}),
     })),
     trails: (dto.trails ?? []).map(({ ground, width, points }) => ({
       ground,
@@ -468,6 +469,7 @@ export class IslandsEditorService {
           actionTypeId,
           noSmoke,
           interiorId,
+          dialogue,
         }) => ({
           islandMapId: map.id,
           propTypeId,
@@ -480,6 +482,7 @@ export class IslandsEditorService {
           actionTypeId: actionTypeId ?? null,
           noSmoke: noSmoke === true,
           interiorId: interiorId ?? null,
+          dialogue: dialogue ?? '',
         }),
       );
     for (let first = 0; first < props.length; first += TILE_CHUNK) {
@@ -504,6 +507,7 @@ export class IslandsEditorService {
             actionTypeId,
             noSmoke,
             interiorId,
+            dialogue,
           }) => ({
             islandMapId: map.id,
             propTypeId,
@@ -517,6 +521,7 @@ export class IslandsEditorService {
             actionTypeId: actionTypeId ?? null,
             noSmoke: noSmoke === true,
             interiorId: interiorId ?? null,
+            dialogue: dialogue ?? '',
           }),
         ),
         select: { id: true },

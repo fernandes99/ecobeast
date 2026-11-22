@@ -242,6 +242,13 @@ export class MapPropDto extends HexCoordDto {
     example: 1,
   })
   interior_id?: number;
+
+  @ApiPropertyOptional({
+    description:
+      'A fala ao tocar na peça, só quando há: cada parágrafo é uma fala, e depois da última vem a sala ou a ação.',
+    example: 'Refúgio ao norte.',
+  })
+  dialogue?: string;
 }
 
 export class MapNpcDto extends HexCoordDto {
@@ -564,6 +571,7 @@ export function toPropDto(prop: DraftProp): MapPropDto {
       : { action_type_id: prop.actionTypeId }),
     ...(prop.noSmoke ? { no_smoke: true as const } : {}),
     ...(prop.interiorId === undefined ? {} : { interior_id: prop.interiorId }),
+    ...(prop.dialogue ? { dialogue: prop.dialogue } : {}),
   };
 }
 

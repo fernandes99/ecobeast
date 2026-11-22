@@ -1106,3 +1106,24 @@ describe('a ação das peças (free-objects/03)', () => {
     expect(draftHash(draft)).toBe(plain);
   });
 });
+
+describe('a fala das peças (prop-dialogue/01)', () => {
+  it('aceita até 2.000 caracteres e recusa mais', () => {
+    const draft = island();
+    draft.props[0]!.dialogue = '🪧'.repeat(2000);
+    expect(draftError(draft, known)).toBeNull();
+    draft.props[0]!.dialogue += 'a';
+    expect(draftError(draft, known)).toBe(
+      'A fala da peça 1 passa de 2.000 caracteres.',
+    );
+  });
+
+  it('leva a fala no hash só quando a peça tem texto', () => {
+    const draft = island();
+    const plain = draftHash(draft);
+    draft.props[0]!.dialogue = 'Refúgio ao norte.';
+    expect(draftHash(draft)).not.toBe(plain);
+    draft.props[0]!.dialogue = '';
+    expect(draftHash(draft)).toBe(plain);
+  });
+});
