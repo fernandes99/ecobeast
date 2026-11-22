@@ -123,6 +123,7 @@ O Ecobeast é um jogo mobile (Android/iOS, retrato): o cliente em **Godot 4.7 co
 | [start-island](start-island/) | A chegada do mapa sorteado no maior pedaço de terra, nunca num pedacinho que o mar isola |
 | [auralis](auralis/) | O Arquipélago Auralis: as ilhas abrindo uma de cada vez pelos Domadores, pelas Arenas e pelas missões, e o mapa aleatório só com o que foi destravado |
 | [tamer-level](tamer-level/) | O XP e o nível do Domador, de 1 a 99, pelas lutas e pelos marcos, com a recompensa de cada nível |
+| [skill-tree](skill-tree/) | A árvore de habilidades do Domador, com os pontos do nível: a Domador, que libera as Esferas, e os ramos Vínculo, Caminho e Comércio |
 | [snelt-line](snelt-line/) | O caracol-fornalha, Snelt, Smeltrudge e Magmollusk (Metal, com o Fogo na final), o primeiro canhão especial lento, com as primeiras Técnicas Especiais de Metal |
 | [fuzzap-line](fuzzap-line/) | O lêmingue de estática, Fuzzap e Blizzvolt (Volt, com o Gelo na final), o primeiro de controle, com as primeiras Técnicas Físicas de Volt, que paralisam |
 | [prop-dialogue](prop-dialogue/) | A fala da peça solta: a caixa Fala no F2 e a conversa ao tocar na peça em Explorar |
