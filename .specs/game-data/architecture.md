@@ -119,6 +119,8 @@ temperaments ──> stats (aumentado, diminuído)
 | `protect`      | —                                                           |
 | `switch`       | —                                                           |
 
+**`counters`** — `id`, `slug`, `name`, `subject` (`none`, `element`, `day_phase` ou `biome`: o que o `subject_id` de `player_counters` quer dizer). Os números do Domador no Perfil ([player-stats](../player-stats/architecture.md)).
+
 **`evolution_triggers`** — `id`, `slug` (`level`, `item`, `bond`, `time_of_day`, `zone`, `trade`, `temperament`), `name`. No MVP só `level` é usado em `evolutions`.
 
 ### Conteúdo (preenchidas em [03-starter-content](03-starter-content.md))
@@ -312,8 +314,9 @@ Entram com as iniciativas do [roadmap](../roadmap.md); não têm arquivo no MVP.
 
 O cliente nunca lê essas tabelas: recebe o jogador pronto, no formato do contrato descrito em [onboarding/architecture.md](../onboarding/architecture.md). Elas ficam registradas aqui para o banco do backend nascer junto com o catálogo.
 
-- `players` (`id` uuid, `name`, `level`, `coins`, `created_at`).
-- `creature_instances` (`uid` uuid, `player_id`, `species_id`, `nickname?`, `level`, `current_xp`, `current_hp`, `temperament_id`, `trait_id`, `gender`, `is_prismatic`, `bond`, `held_item_id?`, `status_condition_id?`, `location` `party`/`storage`, `party_slot?`, `original_player_id`, `caught_at`, `caught_zone_id?`).
+- `players` (`id` uuid, `name`, `level`, `coins`, `created_at`, `last_ping_at?`, `last_play_day?`).
+- `creature_instances` (`uid` uuid, `player_id`, `species_id`, `nickname?`, `level`, `current_xp`, `current_hp`, `temperament_id`, `trait_id`, `gender`, `is_prismatic`, `bond`, `held_item_id?`, `status_condition_id?`, `location` `party`/`storage`, `party_slot?`, `original_player_id`, `caught_at`, `caught_zone_id?`, `battles`).
+- `player_counters` (`player_id`, `counter_id`, `subject_id`, `value`): os contadores do Domador ([player-stats](../player-stats/architecture.md)).
 - `creature_instance_stats` (`creature_uid`, `stat_id`, `genes` 0–31, `training_points` 0–252).
 - `creature_instance_skills` (`creature_uid`, `slot` 1–3, `skill_id`, `current_pp`).
 - `inventory_items` (`player_id`, `item_id`, `quantity`).

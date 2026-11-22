@@ -2,7 +2,7 @@
 
 O Perfil passa a mostrar os números do Domador: vitórias e derrotas, capturas, distância andada, biomas pisados, horas jogadas e outros. O objetivo é dar mais vontade de jogar. O servidor conta cada número no momento em que o evento acontece. Os contadores ficam guardados de um jeito que serve, depois, para as conquistas e para um ranking.
 
-- **Status:** aprovada
+- **Status:** em andamento
 - **Depende de:** [hub-start](../hub-start/) (a tela Perfil), [board-battle](../board-battle/), [inventory-shop](../inventory-shop/), [heal-station](../heal-station/), [wild-battle](../wild-battle/) e [day-night](../day-night/)
 
 ## Contexto
@@ -79,7 +79,7 @@ Escolhas de Claude (_a revisar_; ao mudar uma, atualize aqui e na fase):
 
 | # | Fase | Entrega | Status |
 | --- | --- | --- | --- |
-| 1 | [01-counters-server](01-counters-server.md) | O catálogo `counters`, as linhas `player_counters`, os contadores da luta, da Loja, do Refúgio e de Explorar e a rota `GET /v1/me/counters` | aprovada |
+| 1 | [01-counters-server](01-counters-server.md) | O catálogo `counters`, as linhas `player_counters`, os contadores da luta, da Loja, do Refúgio e de Explorar e a rota `GET /v1/me/counters` | concluída |
 | 2 | [02-play-ping](02-play-ping.md) | O sinal de cada minuto (`POST /v1/me/counters/ping`), com as horas, os dias, os dias seguidos e os hexágonos por bioma, e o lado do jogo que conta e manda | aprovada |
 | 3 | [03-profile-screen](03-profile-screen.md) | O Perfil do esboço A, com os destaques e as 5 abas | aprovada |
 

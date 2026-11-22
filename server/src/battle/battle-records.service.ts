@@ -5,6 +5,12 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { CodexService } from '../codex/codex.service.js';
+import { CountersService } from '../counters/counters.service.js';
+import {
+  battleCounters,
+  foughtCreatureIndices,
+} from '../domain/counters/battle-counters.js';
+import { dayPhaseAt, minuteOfDay } from '../domain/world-clock/world-clock.js';
 import { secureRandom } from '../common/secure-random.js';
 import type {
   BattleBagItem,
@@ -34,6 +40,7 @@ import {
   newCreatureData,
 } from '../player/creature-params.js';
 import { CREATURE_INCLUDE, creatureStats } from '../player/player.mapper.js';
+import type { Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import {
   type LeveledCreature,
@@ -140,6 +147,7 @@ export class BattleRecordsService {
     private readonly explorations: ExplorationStore,
     private readonly progression: ProgressionService,
     private readonly codex: CodexService,
+    private readonly counters: CountersService,
   ) {}
 
   async loadTeam(userId: string): Promise<Team> {
@@ -366,6 +374,8 @@ export class BattleRecordsService {
         ? this.codex.caughtWrite(userId, caughtSpecies)
         : null;
 
+    const counterWrites = await this.counterWrites(userId, state);
+
     const results = await this.prisma.$transaction([
       ...state.player.team.flatMap((creature) => {
         const uid = creature.creatureUid!;
@@ -436,6 +446,8 @@ export class BattleRecordsService {
           },
         });
       }),
+      ...counterWrites,
+      // O Bestiário fica por último: o resultado dele é o `results.at(-1)`.
       ...(codexWrite ? [codexWrite] : []),
     ]);
     return {
@@ -447,6 +459,41 @@ export class BattleRecordsService {
           )
         : [],
     };
+  }
+
+  /** Os contadores do Perfil (player-stats/01); o modo deus não conta. */
+  private async counterWrites(
+    userId: string,
+    state: BattleState,
+  ): Promise<Prisma.PrismaPromise<unknown>[]> {
+    if (state.godMode || state.noRewards) return [];
+    const [phases, spheres] = await Promise.all([
+      this.prisma.dayPhase.findMany({
+        select: { id: true, slug: true, startMinute: true },
+      }),
+      this.prisma.item.findMany({
+        where: { captureBonus: { not: null } },
+        select: { id: true },
+      }),
+    ]);
+    const increments = battleCounters(state, {
+      dayPhaseId: dayPhaseAt(minuteOfDay(Date.now()), phases).id,
+      sphereItemIds: new Set(spheres.map(({ id }) => id)),
+    });
+    const fought = foughtCreatureIndices(state).flatMap(
+      (index) => state.player.team[index]?.creatureUid ?? [],
+    );
+    return [
+      ...this.counters.increments(userId, increments),
+      ...(fought.length > 0
+        ? [
+            this.prisma.creatureInstance.updateMany({
+              where: { playerId: userId, uid: { in: fought } },
+              data: { battles: { increment: 1 } },
+            }),
+          ]
+        : []),
+    ];
   }
 
   private async capturePlaces(

@@ -12,6 +12,8 @@ import { Env } from '../config/env.js';
 import { createCreature } from '../domain/rules/creature-factory.js';
 import { MAX_LEVEL, totalXpForLevel } from '../domain/rules/xp-curve.js';
 import { Prisma } from '../generated/prisma/client.js';
+import { CountersService } from '../counters/counters.service.js';
+import { counterTotal } from '../domain/counters/counters.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { checkedAppearance } from './appearance-check.js';
 import { loadCreatureBlueprint, newCreatureData } from './creature-params.js';
@@ -69,6 +71,7 @@ export class PlayerService {
     private readonly battles: BattleStore,
     private readonly codex: CodexService,
     private readonly config: ConfigService<Env, true>,
+    private readonly counters: CountersService,
   ) {}
 
   async get(userId: string): Promise<PlayerDto | null> {
@@ -231,8 +234,8 @@ export class PlayerService {
     }
 
     this.battles.delete(userId);
-    await this.prisma.$transaction(
-      player.creatures.flatMap((creature) => [
+    await this.prisma.$transaction([
+      ...player.creatures.flatMap((creature) => [
         this.prisma.creatureInstance.updateMany({
           where: { uid: creature.uid },
           data: {
@@ -247,7 +250,8 @@ export class PlayerService {
           }),
         ),
       ]),
-    );
+      ...this.counters.increments(userId, [counterTotal('heals', 1)]),
+    ]);
     return (await this.get(userId))!;
   }
 

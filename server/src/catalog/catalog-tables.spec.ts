@@ -5,9 +5,9 @@ import { CATALOG_TABLES, SEED_DATA_DIR } from './catalog-tables.js';
 describe('CATALOG_TABLES', () => {
   const names = CATALOG_TABLES.map((table) => table.name);
 
-  it('tem as 51 tabelas, sem repetição', () => {
-    expect(names).toHaveLength(51);
-    expect(new Set(names).size).toBe(51);
+  it('tem as 52 tabelas, sem repetição', () => {
+    expect(names).toHaveLength(52);
+    expect(new Set(names).size).toBe(52);
   });
 
   it('casa com os arquivos .json da pasta de dados do seed', () => {

@@ -1,6 +1,6 @@
 # 01. Os contadores no servidor
 
-- **Status:** aprovada
+- **Status:** concluída
 - **Depende de:** o [README](README.md) e o [architecture.md](architecture.md) desta iniciativa
 
 ## Contexto
@@ -31,17 +31,17 @@ O pedido e as decisões estão no [README](README.md), e as tabelas, os 18 conta
 - **RF-09:** Uma compra na Loja sobe `coins_spent` pelo preço pago.
 - **RF-10:** Uma cura no Refúgio que dá certo (`POST /v1/me/heal`) sobe `heals` em 1.
 - **RF-11:** Abrir uma exploração (no mapa sorteado ou numa ilha) sobe `maps_explored` em 1.
-- **RF-12:** `GET /v1/me/counters` devolve `counters` (as linhas do jogador, com `counter_id`, `subject_id` e `value`), `partner` (o Ecobeast do jogador com mais `battles`, nulo enquanto nenhum lutou, com `creature_uid`, `species_id` e `battles`), `created_at` (do Domador) e `walkable_biomes` (os biomas do catálogo que não são água). Sem Domador, responde 404 como as outras rotas de `/v1/me`.
+- **RF-12:** `GET /v1/me/counters` devolve `counters` (as linhas do jogador, com `counter_id`, `subject_id` e `value`), `partner` (o Ecobeast do jogador com mais `battles`, nulo enquanto nenhum lutou, com `creature_uid`, `species_id` e `battles`), `created_at` (do Domador) e `walkable_biomes` (os biomas do catálogo onde o Domador anda, pelo `blocksWalking` do gerador: sem a água e, desde a `volcano`, sem a lava). Sem Domador, responde 404 como as outras rotas de `/v1/me`.
 - **RF-13:** Apagar o progresso apaga as linhas do jogador junto (FK em cascata).
 
 ## Critérios de aceite
 
-- [ ] O jogo abre com o servidor no ar e o `CatalogValidator` aceita a tabela `counters`.
-- [ ] Vencer um selvagem, depois perder, mostra `wins_wild` 1 e `defeats` 1 no `GET /v1/me/counters`.
-- [ ] Capturar um Ecobeast de dois Elementos com uma Esfera sobe `captures` 1, `captures_first_sphere` 1, `spheres_used` 1, uma linha de `captures_by_element` em cada Elemento e uma de `captures_by_day_phase`.
-- [ ] Uma luta de teste da Técnica não muda nenhum contador.
-- [ ] Comprar um item de 50 moedas sobe `coins_spent` em 50; curar sobe `heals` em 1; abrir Explorar sobe `maps_explored` em 1.
-- [ ] O `partner` é o Ecobeast que mais lutou.
+- [x] O jogo abre com o servidor no ar e o `CatalogValidator` aceita a tabela `counters`.
+- [x] Vencer um selvagem, depois perder, mostra `wins_wild` 1 e `defeats` 1 no `GET /v1/me/counters`.
+- [x] Capturar um Ecobeast de dois Elementos com uma Esfera sobe `captures` 1, `captures_first_sphere` 1, `spheres_used` 1, uma linha de `captures_by_element` em cada Elemento e uma de `captures_by_day_phase`.
+- [x] Uma luta de teste da Técnica não muda nenhum contador.
+- [x] Comprar um item de 50 moedas sobe `coins_spent` em 50; curar sobe `heals` em 1; abrir Explorar sobe `maps_explored` em 1.
+- [x] O `partner` é o Ecobeast que mais lutou.
 
 ## Desenho técnico
 
@@ -57,7 +57,7 @@ O pedido e as decisões estão no [README](README.md), e as tabelas, os 18 conta
 **Domínio** (`server/src/domain/counters/`, sem Nest nem Prisma):
 
 - `counters.ts`: `COUNTER_IDS`, o mapa de slug para id dos 18, e o tipo `CounterIncrement = { counterId: number; subjectId: number; amount: number }`.
-- `battle-counters.ts`: `battleCounters(state: BattleState, input: { capturedElementIds: number[][]; dayPhaseId: number; sphereItemIds: Set<number> }): CounterIncrement[]`, que segue a RF-02 à RF-05 e junta os incrementos iguais; e `foughtCreatureIndices(state: BattleState): number[]`, a RF-06.
+- `battle-counters.ts`: `battleCounters(state: BattleState, input: { dayPhaseId: number; sphereItemIds: Set<number> }): CounterIncrement[]` (o Elemento de cada capturado vem do próprio `Combatant`, `elementIds` e `captured`), que segue a RF-02 à RF-05 e junta os incrementos iguais; e `foughtCreatureIndices(state: BattleState): number[]`, a RF-06.
 
 **Serviço** (`server/src/counters/`):
 
@@ -67,7 +67,7 @@ O pedido e as decisões estão no [README](README.md), e as tabelas, os 18 conta
 
 **Onde sobe:**
 
-- `BattleRecordsService.saveTeam` (`server/src/battle/battle-records.service.ts`): o `battleCounters` e os `battles` de `foughtCreatureIndices` entram no array do `$transaction`. O `finish` recebe se a luta é `sandbox` (hoje o `StoredBattle` sabe) e pula os contadores. A parte do dia vem do `dayPhaseAt(minuteOfDay(Date.now()), phases)`, como o `ProgressionService` já faz.
+- `BattleRecordsService.saveTeam` (`server/src/battle/battle-records.service.ts`): o `battleCounters` e os `battles` de `foughtCreatureIndices` entram no array do `$transaction`. A luta `sandbox` já não chega ao `finish` (o `BoardBattleService.act` volta antes), e o `saveTeam` pula os contadores com `godMode` ou `noRewards`. A parte do dia vem do `dayPhaseAt(minuteOfDay(Date.now()), phases)`, como o `ProgressionService` já faz.
 - `InventoryService.buy`: o incremento de `coins_spent` pelo `tx`.
 - `PlayerService.heal` e `ExplorationService.start` e `startIsland`: o incremento depois da escrita que já fazem.
 
@@ -80,7 +80,7 @@ O pedido e as decisões estão no [README](README.md), e as tabelas, os 18 conta
 
 ## Tarefas
 
-- [ ] **Domínio, primeiro os testes.** `server/src/domain/counters/battle-counters.spec.ts`, com o `BattleState` de `server/src/domain/battle/testing.ts`:
+- [x] **Domínio, primeiro os testes.** `server/src/domain/counters/battle-counters.spec.ts`, com o `BattleState` de `server/src/domain/battle/testing.ts`:
   - vitória contra `wild` → `[{counterId: 1, subjectId: 0, amount: 1}]` mais `xp_gained` e `coins_earned` quando há XP e moedas;
   - vitória contra `tamer` → `wins_tamer`; `defeat` → `defeats`; `fled` → nem vitória nem derrota;
   - `captured` com um capturado Água/Volt e uma Esfera gasta → `captures` 1, `captures_first_sphere` 1, `spheres_used` 1, `captures_by_element` 1 em cada Elemento e `captures_by_day_phase` 1 no `dayPhaseId`;
@@ -88,8 +88,12 @@ O pedido e as decisões estão no [README](README.md), e as tabelas, os 18 conta
   - `coinsChange` negativo → sem `coins_earned`;
   - `foughtCreatureIndices` devolve a união sem repetir, com dois inimigos enfrentados pelo mesmo Ecobeast.
   Rode, veja falhar, escreva `counters.ts` e `battle-counters.ts`, rode até passar.
-- [ ] **Banco.** A migration, o `schema.prisma`, o `counters.json`, o `CATALOG_TABLES` (52) e o `catalog_schema.gd`; `npx prisma migrate deploy` e `npx prisma generate`; o espelho em `.specs/game-data/architecture.md`. Rode o `catalog-tables.spec.ts` e os e2e `catalog`, `bundle`, `database` e `seed`: o `database` ganha os casos `expectRejected` do CHECK do `subject` e do `value` negativo.
-- [ ] **Leitura.** `test/counters.e2e-spec.ts` com `GET /v1/me/counters` de um Domador novo (lista vazia, `partner` nulo, `walkable_biomes` igual ao número de biomas que não são água) e sem Domador (404). Escreva o serviço, o controller e o módulo até passar.
-- [ ] **Luta.** No mesmo e2e, pelo `test/support/wild.ts` e `board-play.ts`: vencer, perder e capturar mudam os contadores e o `partner` como nos critérios; a luta `skill-test` não muda nada. Ligue o `saveTeam`.
-- [ ] **Loja, Refúgio e Explorar.** Casos no mesmo e2e para `coins_spent`, `heals` e `maps_explored`; ligue os três serviços.
-- [ ] Rode a suíte inteira, abra o jogo sem janela, marque as tarefas e mude o status desta fase e da tabela do [README](README.md) para `concluída`.
+- [x] **Banco.** A migration, o `schema.prisma`, o `counters.json`, o `CATALOG_TABLES` (52) e o `catalog_schema.gd`; `npx prisma migrate deploy` e `npx prisma generate`; o espelho em `.specs/game-data/architecture.md`. Rode o `catalog-tables.spec.ts` e os e2e `catalog`, `bundle`, `database` e `seed`: o `database` ganha os casos `expectRejected` do CHECK do `subject` e do `value` negativo.
+- [x] **Leitura.** `test/counters.e2e-spec.ts` com `GET /v1/me/counters` de um Domador novo (lista vazia, `partner` nulo, `walkable_biomes` igual ao número de biomas que não são água) e sem Domador (404). Escreva o serviço, o controller e o módulo até passar.
+- [x] **Luta.** No mesmo e2e, pelo `test/support/wild.ts` e `board-play.ts`: vencer, perder e capturar mudam os contadores e o `partner` como nos critérios; a luta `skill-test` não muda nada. Ligue o `saveTeam`.
+- [x] **Loja, Refúgio e Explorar.** Casos no mesmo e2e para `coins_spent`, `heals` e `maps_explored`; ligue os três serviços.
+- [x] Rode a suíte inteira, abra o jogo sem janela, marque as tarefas e mude o status desta fase e da tabela do [README](README.md) para `concluída`.
+
+## Notas da implementação
+
+- Os 2 casos do `test/seed.e2e-spec.ts` que conferem `species_day_phases` e `species_skills` contra o `seed-data` falham desde antes desta fase: o dono editou essas tabelas no painel. A suíte e2e passou no resto.

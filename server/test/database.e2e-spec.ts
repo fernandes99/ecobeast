@@ -38,10 +38,10 @@ describe('restrições do banco (e2e)', () => {
     expect(rows.map((row) => row.table_name)).toEqual([]);
   });
 
-  it('as 81 tabelas e o histórico de migrations ficam no schema ecobeasts', async () => {
+  it('as 83 tabelas e o histórico de migrations ficam no schema ecobeasts', async () => {
     const rows = await prisma.$queryRaw<{ n: number }[]>`
       SELECT count(*)::int AS n FROM information_schema.tables WHERE table_schema = 'ecobeasts'`;
-    expect(rows[0].n).toBe(81);
+    expect(rows[0].n).toBe(83);
   });
 
   it('recusa uma marca que muda um atributo em 0 estágio (puffcoo-line)', async () => {
@@ -62,6 +62,25 @@ describe('restrições do banco (e2e)', () => {
         VALUES ('Teste', 8, 6, 8, 5, now())`;
     });
     expectRejected(result, 'interiors_door_check');
+  });
+
+  it('recusa um contador com recorte desconhecido (player-stats)', async () => {
+    const result = await attempt(prisma, async (tx) => {
+      await tx.counter.create({
+        data: { slug: 'zz_teste', name: 'Teste', subject: 'species' },
+      });
+    });
+    expectRejected(result, 'counters_subject_check');
+  });
+
+  it('recusa um contador do Domador negativo (player-stats)', async () => {
+    const result = await attempt(prisma, async (tx) => {
+      const player = await tx.player.create({ data: { name: 'Teste' } });
+      await tx.playerCounter.create({
+        data: { playerId: player.id, counterId: 1, value: -1 },
+      });
+    });
+    expectRejected(result, 'player_counters_value_check');
   });
 
   it('recusa uma parte do dia que começa depois do minuto 1439 (day-night)', async () => {

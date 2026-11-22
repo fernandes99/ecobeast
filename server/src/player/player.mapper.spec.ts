@@ -26,6 +26,7 @@ function creature(overrides: Partial<CreatureRow> = {}): CreatureRow {
     originalPlayerId: 'p1',
     caughtAt: CAUGHT_AT,
     caughtZoneId: null,
+    battles: 0,
     stats: SLUGS.map((slug, index) => ({
       creatureUid: 'c1',
       statId: index + 1,
@@ -61,6 +62,8 @@ function player(creatures: CreatureRow[] = []): PlayerRow {
     createdAt: new Date('2026-10-30T12:00:00.000Z'),
     bodyTypeId: 1,
     skinPaletteId: 1,
+    lastPingAt: null,
+    lastPlayDay: null,
     creatures,
     inventory: [],
     appearanceParts: [{ appearancePartId: 1, paletteId: null }],

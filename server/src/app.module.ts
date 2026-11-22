@@ -8,6 +8,7 @@ import { BoardBattleModule } from './board-battle/board-battle.module.js';
 import { BundleModule } from './catalog/bundle/bundle.module.js';
 import { CatalogModule } from './catalog/catalog.module.js';
 import { CodexModule } from './codex/codex.module.js';
+import { CountersModule } from './counters/counters.module.js';
 import { Env, validateEnv } from './config/env.js';
 import { EditorModule } from './editor/editor.module.js';
 import { ExplorationModule } from './exploration/exploration.module.js';
@@ -46,6 +47,7 @@ import { WorldClockModule } from './world-clock/world-clock.module.js';
     TeamModule,
     ProgressionModule,
     CodexModule,
+    CountersModule,
     EditorModule,
     IslandsModule,
     InteriorsModule,

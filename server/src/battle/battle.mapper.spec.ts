@@ -34,6 +34,7 @@ function creature(
     originalPlayerId: 'p1',
     caughtAt: new Date('2026-10-30T12:01:02.003Z'),
     caughtZoneId: null,
+    battles: 0,
     stats: SLUGS.map((slug, index) => ({
       creatureUid: 'c1',
       statId: index + 1,
@@ -98,6 +99,8 @@ describe('toCombatant', () => {
       createdAt: new Date(),
       bodyTypeId: 1,
       skinPaletteId: 1,
+      lastPingAt: null,
+      lastPlayDay: null,
       creatures: [row],
       inventory: [],
       appearanceParts: [],

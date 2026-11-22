@@ -1,12 +1,13 @@
 import { Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module.js';
+import { CountersModule } from '../counters/counters.module.js';
 import { IslandsModule } from '../islands/islands.module.js';
 import { ExplorationController } from './exploration.controller.js';
 import { ExplorationService } from './exploration.service.js';
 import { ExplorationStore } from './exploration.store.js';
 
 @Module({
-  imports: [AuthModule, IslandsModule],
+  imports: [AuthModule, IslandsModule, CountersModule],
   controllers: [ExplorationController],
   providers: [
     ExplorationService,

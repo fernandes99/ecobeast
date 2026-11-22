@@ -157,6 +157,22 @@ model DayPhase {
   @@schema("ecobeasts")
 }
 
+/// Os números do Domador no Perfil (player-stats/01).
+model Counter {
+  id      Int    @id @default(autoincrement())
+  /// CHECK ^[a-z0-9_]+$ (migration counters)
+  slug    String @unique
+  name    String
+  /// O que o subject_id das linhas do jogador quer dizer.
+  /// CHECK none, element, day_phase ou biome (migration counters)
+  subject String
+
+  players PlayerCounter[]
+
+  @@map("counters")
+  @@schema("ecobeasts")
+}
+
 model NpcTamerName {
   id   Int    @id @default(autoincrement())
   /// CHECK 1–20 caracteres (migration npc_tamer_texts)
@@ -496,9 +512,9 @@ model SkillLearnMethod {
 }
 
 model StatusCondition {
-  id         Int     @id @default(autoincrement())
+  id          Int     @id @default(autoincrement())
   /// CHECK ^[a-z0-9_]+$ (migration init)
-  slug       String  @unique
+  slug        String  @unique
   name        String
   isVolatile  Boolean @map("is_volatile")
   description String
@@ -939,15 +955,19 @@ enum CreatureLocation {
 }
 
 model Player {
-  id            String   @id @default(uuid()) @db.Uuid
+  id            String    @id @default(uuid()) @db.Uuid
   name          String
   /// CHECK 1–100 (migration init)
-  level         Int      @default(1)
+  level         Int       @default(1)
   /// CHECK ≥ 0 (migration init)
-  coins         Int      @default(0)
-  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
-  bodyTypeId    Int      @default(1) @map("body_type_id")
-  skinPaletteId Int      @default(1) @map("skin_palette_id")
+  coins         Int       @default(0)
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  bodyTypeId    Int       @default(1) @map("body_type_id")
+  skinPaletteId Int       @default(1) @map("skin_palette_id")
+  /// O último sinal de cada minuto (player-stats/02).
+  lastPingAt    DateTime? @map("last_ping_at") @db.Timestamptz(3)
+  /// O último dia de jogo, na hora de Brasília (player-stats/02).
+  lastPlayDay   DateTime? @map("last_play_day") @db.Date
 
   bodyType        BodyType               @relation(fields: [bodyTypeId], references: [id], onDelete: Restrict)
   skinPalette     Palette                @relation(fields: [skinPaletteId], references: [id], onDelete: Restrict)
@@ -957,6 +977,7 @@ model Player {
   appearanceParts PlayerAppearancePart[]
   discoveries     IslandDiscovery[]
   storyMarks      PlayerStoryMark[]
+  counters        PlayerCounter[]
 
   @@index([bodyTypeId])
   @@index([skinPaletteId])
@@ -1005,6 +1026,23 @@ model PlayerAppearancePart {
   @@schema("ecobeasts")
 }
 
+/// Um contador de um Domador; subject_id é 0 sem recorte (player-stats/01).
+model PlayerCounter {
+  playerId  String @map("player_id") @db.Uuid
+  counterId Int    @map("counter_id")
+  subjectId Int    @default(0) @map("subject_id")
+  /// CHECK ≥ 0 (migration counters)
+  value     Int    @default(0)
+
+  player  Player  @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  counter Counter @relation(fields: [counterId], references: [id], onDelete: Restrict)
+
+  @@id([playerId, counterId, subjectId])
+  @@index([counterId, subjectId, value(sort: Desc)], map: "player_counters_ranking_idx")
+  @@map("player_counters")
+  @@schema("ecobeasts")
+}
+
 model CreatureInstance {
   uid               String           @id @default(uuid()) @db.Uuid
   playerId          String           @map("player_id") @db.Uuid
@@ -1034,6 +1072,8 @@ model CreatureInstance {
   caughtAt          DateTime         @map("caught_at") @db.Timestamptz(3)
   /// FK futura: zones. CHECK IS NULL até a tabela existir (migration init)
   caughtZoneId      Int?             @map("caught_zone_id")
+  /// As lutas em que ele lutou (player-stats/01). CHECK ≥ 0 (migration counters)
+  battles           Int              @default(0)
 
   player          Player                  @relation(fields: [playerId], references: [id], onDelete: Cascade)
   species         Species                 @relation(fields: [speciesId], references: [id], onDelete: Restrict)

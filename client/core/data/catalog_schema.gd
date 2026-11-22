@@ -38,6 +38,7 @@ const AREA_SHAPES: Array[String] = ["single", "line", "triangle"]
 ## O que uma ação faz e os tipos de chão que o jogo sabe desenhar (island-villages/01).
 const ACTION_KINDS: Array[String] = ["open_screen"]
 const GROUND_KINDS: Array[String] = ["trail", "floor"]
+const COUNTER_SUBJECTS: Array[String] = ["none", "element", "day_phase", "biome"]
 
 const TABLES := {
 	"elements": {
@@ -100,6 +101,10 @@ const TABLES := {
 	"day_phases": {
 		"key": ["id"],
 		"columns": {"id": ID, "slug": SLUG, "name": TEXT, "start_minute": {"type": "int", "unique": true, "min": 0, "max": 1439}},
+	},
+	"counters": {
+		"key": ["id"],
+		"columns": {"id": ID, "slug": SLUG, "name": TEXT, "subject": {"type": "string", "values": COUNTER_SUBJECTS}},
 	},
 	"temperaments": {
 		"key": ["id"],

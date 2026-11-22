@@ -37,6 +37,8 @@ import {
   ISLAND_NOT_FOUND,
   IslandsService,
 } from '../islands/islands.service.js';
+import { CountersService } from '../counters/counters.service.js';
+import { counterTotal } from '../domain/counters/counters.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import {
   DebugClearResponseDto,
@@ -89,6 +91,7 @@ export class ExplorationService {
     private readonly config: ConfigService<Env, true>,
     private readonly islands: IslandsService,
     private readonly discoveries: DiscoveriesService,
+    private readonly counters: CountersService,
   ) {}
 
   async start(
@@ -164,6 +167,7 @@ export class ExplorationService {
       position: map.start,
       positionAt: Date.now(),
     });
+    await this.countExplore(userId);
     return {
       map: {
         ...map,
@@ -178,6 +182,12 @@ export class ExplorationService {
       },
       discovered: [],
     };
+  }
+
+  private async countExplore(userId: string): Promise<void> {
+    await Promise.all(
+      this.counters.increments(userId, [counterTotal('maps_explored', 1)]),
+    );
   }
 
   private async startIsland(
@@ -203,6 +213,7 @@ export class ExplorationService {
       position: draft.start,
       positionAt: Date.now(),
     });
+    await this.countExplore(userId);
     return {
       map: {
         // A seed escolhe as decorações e os escorridos no desenho; o editor

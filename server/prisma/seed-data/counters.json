@@ -1,0 +1,20 @@
+[
+	{ "id": 1, "slug": "wins_wild", "name": "Vitórias contra selvagens", "subject": "none" },
+	{ "id": 2, "slug": "wins_tamer", "name": "Vitórias contra Domadores", "subject": "none" },
+	{ "id": 3, "slug": "defeats", "name": "Derrotas", "subject": "none" },
+	{ "id": 4, "slug": "captures", "name": "Capturas", "subject": "none" },
+	{ "id": 5, "slug": "spheres_used", "name": "Esferas usadas", "subject": "none" },
+	{ "id": 6, "slug": "captures_first_sphere", "name": "Na primeira Esfera", "subject": "none" },
+	{ "id": 7, "slug": "captures_by_element", "name": "Capturas por Elemento", "subject": "element" },
+	{ "id": 8, "slug": "captures_by_day_phase", "name": "Capturas por parte do dia", "subject": "day_phase" },
+	{ "id": 9, "slug": "hexes_walked", "name": "Hexágonos andados", "subject": "none" },
+	{ "id": 10, "slug": "biome_hexes", "name": "Hexágonos por bioma", "subject": "biome" },
+	{ "id": 11, "slug": "maps_explored", "name": "Mapas explorados", "subject": "none" },
+	{ "id": 12, "slug": "xp_gained", "name": "XP ganho", "subject": "none" },
+	{ "id": 13, "slug": "coins_earned", "name": "Moedas ganhas", "subject": "none" },
+	{ "id": 14, "slug": "coins_spent", "name": "Moedas gastas", "subject": "none" },
+	{ "id": 15, "slug": "heals", "name": "Curas no Refúgio", "subject": "none" },
+	{ "id": 16, "slug": "play_seconds", "name": "Tempo jogado", "subject": "none" },
+	{ "id": 17, "slug": "play_days", "name": "Dias jogados", "subject": "none" },
+	{ "id": 18, "slug": "play_streak", "name": "Dias seguidos", "subject": "none" }
+]

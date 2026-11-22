@@ -10,6 +10,8 @@ import { Prisma } from '../generated/prisma/client.js';
 import { PlayerDto } from '../player/player.dto.js';
 import { creatureStats, PLAYER_INCLUDE } from '../player/player.mapper.js';
 import { CREATURE_NOT_FOUND, PlayerService } from '../player/player.service.js';
+import { CountersService } from '../counters/counters.service.js';
+import { counterTotal } from '../domain/counters/counters.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { INVALID_ITEM } from './inventory.dto.js';
 
@@ -23,6 +25,7 @@ export class InventoryService {
     private readonly prisma: PrismaService,
     private readonly players: PlayerService,
     private readonly battles: BattleStore,
+    private readonly counters: CountersService,
   ) {}
 
   async buy(userId: string, itemId: number): Promise<PlayerDto> {
@@ -40,6 +43,13 @@ export class InventoryService {
         create: { playerId: userId, itemId, quantity: 1 },
         update: { quantity: { increment: 1 } },
       });
+      await Promise.all(
+        this.counters.increments(
+          userId,
+          [counterTotal('coins_spent', price)],
+          tx,
+        ),
+      );
     });
     return (await this.players.get(userId))!;
   }
