@@ -125,10 +125,11 @@ As formas finais em 2026-11-22, pelos atributos e pelas Técnicas do banco. Quan
 | Prismback | Guardião Muralha | Suporte Protetor (Halo Protetor) | especial, lento |
 | Pouchmend | Suporte Curandeiro | Suporte Protetor (Atadura Firme) | médio |
 | Toxbloom | Guardião Muralha ([nectoad-line](../nectoad-line/README.md#papel)) | Controlador Arquiteto (Poça Tóxica, Abraço da Flor) | físico, lento |
+| Galafly | Suporte Inspirador ([budflit-line](../budflit-line/README.md#papel)) | — | rápido |
 | Blizzvolt | Controlador Perturbador (pelos atributos, seria Lutador misto) | — | misto, médio |
 | Bloomarch | Controlador Arquiteto ([bumbit-line](../bumbit-line/README.md#papel); pelos atributos, seria Lutador misto) | Controlador Perturbador (Zumbido) e Enfraquecedor (Nuvem de Pólen) | especial, médio |
 
-Contagem, com o Toxbloom e o Bloomarch: Atacante 11 de 19 (58%), Lutador 3, Guardião 2, Suporte 1, Controlador 2. Nenhuma Muralha mista, nenhum Inspirador, Enfraquecedor ou Atirador como papel principal.
+Contagem, com o Toxbloom, a Galafly e o Bloomarch: Atacante 11 de 20 (55%), Lutador 3, Guardião 2, Suporte 2, Controlador 2. Nenhuma Muralha mista, nenhum Enfraquecedor ou Atirador como papel principal.
 
 ## Decisões
 

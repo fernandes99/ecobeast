@@ -194,5 +194,19 @@
 		"name": "Pedrisco",
 		"kind": "trail",
 		"hardness": 2
+	},
+	{
+		"id": 29,
+		"slug": "light_dirt_trail",
+		"name": "Trilha de terra clara",
+		"kind": "trail",
+		"hardness": 1
+	},
+	{
+		"id": 30,
+		"slug": "dark_dirt_trail",
+		"name": "Trilha de terra escura",
+		"kind": "trail",
+		"hardness": 1
 	}
 ]

@@ -130,6 +130,7 @@ O Ecobeast é um jogo mobile (Android/iOS, retrato): o cliente em **Godot 4.7 co
 | [creature-roles](creature-roles/) | Os papéis dos Ecobeasts na luta (Guardião, Suporte, Controlador, Atacante e Lutador) e os subpapéis, que toda linha nova segue |
 | [ground-variety](ground-variety/) | Vinte tipos novos de chão e de caminho para o editor de ilhas, do deck de madeira às pedras soltas sobre o bioma |
 | [nectoad-line](nectoad-line/) | O sapo do néctar, Nectoad e Toxbloom (Toxina, com a Flora na final), o primeiro Guardião Muralha física, do Campo florido |
+| [budflit-line](budflit-line/) | A borboleta torcedora, Budflit, Cheerwing e Galafly (Inseto, com o Psíquico a partir da Cheerwing), o primeiro Suporte Inspirador, do Campo florido |
 | [bumbit-line](bumbit-line/) | A abelha operária, Bumbit, Buzzwork e Bloomarch (Inseto, com a Flora na final), o primeiro Controlador Arquiteto, do Campo florido, com a marca Melado |
 | [arena-buildings](arena-buildings/) | Os prédios da Arena com os tiles do Fantasy Dreamland Reborn: a fortaleza do Castle e o coliseu do Dungeon, aberto ou fechado, com os braseiros animados |
 

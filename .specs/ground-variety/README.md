@@ -69,3 +69,4 @@ Escolhas de Claude (corrigíveis; ao mudar uma, atualize aqui e na fase):
 | --- | --- | --- | --- |
 | 1 | [01-ground-types](01-ground-types.md) | Catálogo e arte: os 12 tipos e as texturas, nas ferramentas Chão e Caminho | concluída (falta o dono conferir no F2) |
 | 2 | [02-stone-trails](02-stone-trails.md) | Catálogo e arte: 8 trilhas de pedra (ids 21 a 28), 5 fechadas e 3 de pedras soltas sobre o bioma | concluída (falta o dono conferir no F2) |
+| 3 | [03-dirt-tones](03-dirt-tones.md) | Catálogo e arte: a Trilha de terra clara e a escura, no tom da Lama (ids 29 e 30) | concluída (falta o dono conferir no F2) |

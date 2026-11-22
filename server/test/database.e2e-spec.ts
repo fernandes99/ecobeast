@@ -812,7 +812,7 @@ describe('restrições do banco (e2e)', () => {
       expectRejected(ground, 'ground_types_hardness_check');
     });
 
-    it('tem os 28 tipos de chão, cada um com a dureza (free-trails/01 e ground-variety/01 e 02)', async () => {
+    it('tem os 30 tipos de chão, cada um com a dureza (free-trails/01 e ground-variety/01 a 03)', async () => {
       const grounds = await prisma.groundType.findMany({
         orderBy: { id: 'asc' },
       });
@@ -845,6 +845,8 @@ describe('restrições do banco (e2e)', () => {
         'river_stones',
         'loose_slabs',
         'pebble_scatter',
+        'light_dirt_trail',
+        'dark_dirt_trail',
       ]);
       for (const { hardness } of grounds) {
         expect(hardness).toBeGreaterThanOrEqual(1);

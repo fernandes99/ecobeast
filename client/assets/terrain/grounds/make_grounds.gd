@@ -12,6 +12,13 @@ const BAYER: Array[float] = [0.0, 8.0, 2.0, 10.0, 12.0, 4.0, 14.0, 6.0, 3.0, 11.
 const DIRT_TRAIL: Array[Color] = [
 	Color8(104, 74, 48), Color8(132, 98, 64), Color8(152, 116, 76), Color8(170, 134, 90), Color8(190, 156, 108),
 ]
+const LIGHT_DIRT_TRAIL: Array[Color] = [
+	Color8(142, 110, 76), Color8(172, 138, 98), Color8(192, 158, 112), Color8(208, 176, 128), Color8(226, 198, 152),
+]
+## Quase o tom da lama (MUD), sem as poças.
+const DARK_DIRT_TRAIL: Array[Color] = [
+	Color8(56, 40, 28), Color8(78, 58, 40), Color8(92, 70, 48), Color8(108, 84, 58), Color8(130, 104, 74),
+]
 const DIRT_FLOOR: Array[Color] = [
 	Color8(122, 92, 62), Color8(152, 120, 82), Color8(170, 138, 96), Color8(186, 154, 110), Color8(204, 174, 128),
 ]
@@ -138,6 +145,8 @@ func _init() -> void:
 	_save("river_stones", _cobbles(191, 30, RIVER_STONES, Color.TRANSPARENT, 0.55, 1.0, 0.75))
 	_save("loose_slabs", _cobbles(193, 22, [SLABS], Color.TRANSPARENT, 0.85, 1.15, 0.9, true))
 	_save("pebble_scatter", _cobbles(197, 52, RIVER_STONES, Color.TRANSPARENT, 0.45, 0.8, 0.75))
+	_save("light_dirt_trail", _dirt(199, LIGHT_DIRT_TRAIL, 0.006, 420, 300))
+	_save("dark_dirt_trail", _dirt(211, DARK_DIRT_TRAIL, 0.006, 420, 300))
 	quit()
 
 
