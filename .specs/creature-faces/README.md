@@ -34,6 +34,7 @@ Do dono, em 2026-11-21:
 | --- | --- |
 | Um rosto centrado para cada Ecobeast, com um fundo na cor dele, nos lugares pequenos | O pedido dele |
 | O HP como a borda do círculo do rosto | "tem o hp dele em borda da imagem, consegue deixar nessa pegada ai também?" |
+| O rosto menos aproximado e o anel de HP fino, indo do verde ao laranja e ao vermelho conforme a vida cai | Depois da fase 2: "Queria que ficasse com menos zoom na cara, ta muito exagerado em alguns" e "a barra de vida tem que ser mais sutil [...] A ideia é ela ir ficando laranja e vermelha conforme a vida abaixa" |
 
 Escolhas de Claude (_a revisar_; ao mudar uma, atualize aqui e na fase):
 
@@ -42,7 +43,7 @@ Escolhas de Claude (_a revisar_; ao mudar uma, atualize aqui e na fase):
 | O rosto é recortado do `front.png` por um script, pelo quadrado do rosto de cada espécie, e não desenhado | Sai igual ao Ecobeast, no mesmo pixel art e contorno, e uma linha nova ganha o rosto na hora; se o front mudar, basta rodar de novo |
 | O script acha um quadrado inicial sozinho, pela parte de cima da figura, e os tortos são corrigidos olhando uma folha com todos os rostos | Na prática, o cálculo errou a maioria (pegou orelhas, cristais e asas), e os 37 quadrados de hoje foram marcados à mão; para uma espécie nova, ele ainda serve de ponto de partida |
 | O `face.png` sai com o fundo transparente, e o jogo pinta o fundo | O fundo muda com o Elemento (as duas cores de quem tem dois), com a sombra do Bestiário e com o desmaiado, sem refazer a imagem |
-| O anel de HP usa as 3 cores do `HpBar` e esvazia no sentido horário a partir do topo, sobre um trilho escuro | O jogador já lê essas cores na barra; o topo é onde o olho começa |
+| O anel de HP esvazia no sentido horário a partir do topo, sobre um trilho escuro | O topo é onde o olho começa |
 | O anel de selecionado fica por fora do anel de HP, fino e branco | O anel de HP passa a ocupar o lugar do anel na cor do Elemento das bolinhas de hoje |
 
 ## Fora do escopo

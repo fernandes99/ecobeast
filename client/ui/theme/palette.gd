@@ -104,6 +104,8 @@ const BOARD_ENEMY := BATTLE_LEVEL_ENEMY
 
 const HP_MID := WARNING
 const HP_LOW := DANGER
+## O laranja do meio do degradê do anel de HP do rosto (creature-faces/02).
+const HP_ORANGE := Color("#F28C38")
 const XP_LINE := Color("#7FD8FF")
 
 const STAT_UP := HP_HIGH

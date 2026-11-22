@@ -22,8 +22,8 @@ As decisões estão no [README](README.md). Esta fase cria o componente que dese
   - o `face.png` recortado no círculo, com o filtro suave (o rosto de 128 aparece menor, e o filtro mais próximo serrilharia);
   - o anel de HP;
   - o anel de selecionado, quando ligado.
-- **RF-02:** O anel de HP tem a espessura de 1/10 do tamanho, com o trilho escuro (`UiPalette.TRACK`) inteiro e, por cima, o arco do HP, que começa no topo e esvazia no sentido horário, na cor da faixa do `HpBar` (`HP_HIGH`, `HP_MID` ou `HP_LOW`, com os mesmos limites de 50% e 20%). A troca de HP anima o arco em 0,3 s.
-- **RF-03:** O anel de selecionado é branco, com 1/20 do tamanho, por fora do anel de HP.
+- **RF-02:** O anel de HP é fino, com a espessura de 1/20 do tamanho, com o trilho escuro (`UiPalette.TRACK`) inteiro e, por cima, o arco do HP, que começa no topo e esvazia no sentido horário. A cor vai em degradê do verde (`HP_HIGH`, com a vida cheia) ao laranja (`HP_ORANGE`, na metade) e ao vermelho (`HP_LOW`, de 15% para baixo). A troca de HP anima o arco e a cor em 0,3 s.
+- **RF-03:** O anel de selecionado é branco, com 1/25 do tamanho, por fora do anel de HP.
 - **RF-04:** Os estados:
   - **desmaiado** (HP 0): o rosto e o fundo ficam acinzentados, e o anel fica só o trilho;
   - **sem HP** (`show_hp` desligado, para quem não tem HP, como uma espécie do Bestiário): o anel some, e o rosto ocupa o lugar dele;

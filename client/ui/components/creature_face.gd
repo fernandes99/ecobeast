@@ -9,8 +9,11 @@ const FACE_PATH := "res://assets/creatures/%s/face.png"
 const SilhouetteShader := preload("res://ui/components/silhouette.gdshader")
 
 const FILL_DARKEN := 0.45
-const HP_WIDTH := 0.1
-const SELECTED_WIDTH := 0.05
+const HP_WIDTH := 0.05
+const SELECTED_WIDTH := 0.04
+## O anel de HP vai do verde ao laranja e ao vermelho conforme a vida cai: a cor de cada
+## parte da vida, lida em degradê entre elas.
+const HP_STOPS: Array[float] = [0.15, 0.5, 1.0]
 const HP_SECONDS := 0.3
 const ARC_POINTS := 64
 const FAINTED_TINT := Color(0.42, 0.42, 0.42)
@@ -207,9 +210,12 @@ func _draw_rings() -> void:
 
 
 func _hp_color() -> Color:
-	var ratio := _ratio()
-	if ratio > HpBar.MID_RATIO:
-		return UiPalette.HP_HIGH
-	if ratio > HpBar.LOW_RATIO:
-		return UiPalette.HP_MID
-	return UiPalette.HP_LOW
+	var colors: Array[Color] = [UiPalette.HP_LOW, UiPalette.HP_ORANGE, UiPalette.HP_HIGH]
+	var ratio := _shown_ratio
+	if ratio <= HP_STOPS[0]:
+		return colors[0]
+	for index: int in range(1, HP_STOPS.size()):
+		if ratio <= HP_STOPS[index]:
+			var weight := (ratio - HP_STOPS[index - 1]) / (HP_STOPS[index] - HP_STOPS[index - 1])
+			return colors[index - 1].lerp(colors[index], weight)
+	return colors[-1]
