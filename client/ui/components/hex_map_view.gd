@@ -110,6 +110,8 @@ const PROP_SMOKE: Dictionary[String, Dictionary] = {
 const FRAMES_PATH := "res://assets/props/%s/%d_frames.png"
 const PROP_FRAMES: Dictionary[String, Dictionary] = {
 	"portal_altar": {"frames": 16, "fps": 10.0},
+	"arena_fortress": {"frames": 8, "fps": 10.0},
+	"arena_coliseum": {"frames": 8, "fps": 10.0},
 }
 const NO_PLACE := Vector2i(-2147483648, 0)
 ## O corte de altura do editor: acima dele, o hexágono fica transparente (terrain-height/03).
