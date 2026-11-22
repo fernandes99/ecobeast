@@ -20,7 +20,10 @@ import {
   type GeneratedProp,
   placeGiantRocks,
   placeIceRocks,
+  placeVolcanoRocks,
 } from './map-rocks.js';
+import { carveVolcanoStairs, placeVolcano } from './map-volcano.js';
+import { shapeVolcanicIsland } from './map-volcanic-island.js';
 import { levelLinks, openRamps, openSlopes } from './map-slopes.js';
 
 export const BIOMES = [
@@ -52,6 +55,8 @@ export const SHAPED_BIOMES = [
   'beach',
   'glacier',
   'volcano',
+  'lshallow',
+  'ldeep',
 ] as const;
 export type ShapedBiome = (typeof SHAPED_BIOMES)[number];
 
@@ -115,6 +120,8 @@ export interface ShapedMap {
   rivers: { path: HexCoord[]; cells: HexCoord[]; source: RiverSource }[];
   /** O lago da Geleira, fora de `lakes` (glacier/04). */
   iceLake: HexCoord[];
+  /** Os degraus das escadarias do vulcão, só para quem confere o mapa (volcano/04). */
+  volcanoStairs: HexCoord[];
 }
 
 interface Cell extends HexCoord {
@@ -194,6 +201,13 @@ const SLOPES_SALT = 0x51095e;
 const GLACIER_SALT = 0x91ac1e;
 const ICE_ROCKS_SALT = 0x1ce60c;
 const GLACIER_SLOPES_SALT = 0x91a5e5;
+/** O vulcão vem de sorteios à parte, para o mapa sem ele não mudar (volcano/04). */
+const VOLCANO_SALT = 0x701ca0;
+const VOLCANO_SLOPES_SALT = 0x7015e5;
+const VOLCANO_ROCKS_SALT = 0x70c4b1;
+const VOLCANIC_ISLAND_SALT = 0x751a4d;
+/** O `climate` fixado em Frio (o segundo de `CLIMATES`) desliga a ilha vulcânica. */
+const COLD_CLIMATE = 2;
 const MEANDER_SCALE = 6;
 const BRIDGE_TYPE = 'wood_bridge';
 const BRIDGE_WIDTH = 28;
@@ -221,7 +235,7 @@ export function maxVariant(biome: Biome): number {
 
 /** O bioma do catálogo pelo bioma e pela forma; a altura vem do relevo (terrain-plateaus/02). */
 export function terrainOf(biome: ShapedBiome, shape: TerrainShape): Biome {
-  if (biome === 'volcano') return 'volcano';
+  if (biome === 'volcano' || isLava(biome)) return biome;
   if (shape === 'mont') return 'mountain';
   if (biome === 'stone') return shape === 'hill' ? 'hill' : 'stone';
   if (shape === 'hill') {
@@ -277,12 +291,21 @@ export function generateShapedMap(
   const heatAngle = climateRandom() * Math.PI * 2;
   const heat = createNoise(climateRandom);
 
-  const coords = growRegion(edge, config);
+  const islandRandom = seededRandom(seed ^ VOLCANIC_ISLAND_SALT);
+  const island = rollsVolcanicIsland(islandRandom, config);
+  // Na ilha vulcânica tudo em volta é mar: o contorno sem recorte deixa o meio longe da beira.
+  const coords = growRegion(
+    edge,
+    island ? { ...config, edgeRoughness: 0 } : config,
+  );
   const cells = createCells(
     coords,
     { elevation, moisture, temperature, rock, ridge },
     config,
   );
+  if (island) {
+    return volcanicIslandMap(seed, cells, islandRandom, random, config);
+  }
   const edges = placeSea(cells, water, config);
   shapeRelief(cells);
   const land = cells.filter((cell) => !cell.sea);
@@ -374,6 +397,28 @@ export function generateShapedMap(
     slopes,
   );
   openSlopes(cells, startCell, links, (cell) => isWater(cell.biome), slopes);
+  // O vulcão também vem depois da garantia de alcance; a terra em volta dele passa
+  // de novo por ela, sem entrar no cone, que tem as escadarias dele.
+  const volcanoRandom = seededRandom(seed ^ VOLCANO_SALT);
+  const volcano = placeVolcano(
+    cells,
+    climate.slug,
+    startCell,
+    volcanoRandom,
+    config,
+    (cell) => banks.has(cell),
+  );
+  if (volcano) {
+    const cone = new Set<Cell>(volcano.cone);
+    openSlopes(
+      cells,
+      startCell,
+      links,
+      (cell) => blocksWalking(cell.biome) || cone.has(cell),
+      seededRandom(seed ^ VOLCANO_SLOPES_SALT),
+    );
+    carveVolcanoStairs(cells, volcano, volcanoRandom);
+  }
   // A Geleira vem depois da garantia de alcance, para as encostas de fora dela não
   // mudarem; o lago dela passa de novo pela garantia, com um sorteio próprio.
   const glacier = placeGlacier(
@@ -443,7 +488,24 @@ export function generateShapedMap(
             rocks,
           ),
         ]
-      : rocks,
+      : volcano
+        ? [
+            ...rocks,
+            ...placeVolcanoRocks(
+              tiles,
+              start,
+              bridges,
+              seededRandom(seed ^ VOLCANO_ROCKS_SALT),
+              rocks,
+              {
+                rim: keysOf(volcano.rim),
+                slope: keysOf(volcano.slope),
+                floor: keysOf(volcano.floor),
+                stairs: keysOf(volcano.stairs),
+              },
+            ),
+          ]
+        : rocks,
     lakes: [...lakes, ...ponds].map(({ cells: body }) => plain(body)),
     rivers: rivers.map(({ path, cells: body, source }) => ({
       path: plain(path),
@@ -451,7 +513,81 @@ export function generateShapedMap(
       source,
     })),
     iceLake: glacier ? plain(glacier.lake) : [],
+    volcanoStairs: volcano ? plain(volcano.stairs) : [],
   };
+}
+
+/**
+ * Se o mapa é a ilha vulcânica: o primeiro número do sorteio próprio dela, e nunca com o
+ * clima fixado em Frio (volcano/05).
+ */
+function rollsVolcanicIsland(random: Random, config: MapConfig): boolean {
+  return (
+    random() < config.volcanoIslandChance && config.climate !== COLD_CLIMATE
+  );
+}
+
+/** A ilha vulcânica de uma seed, sem gerar o mapa: para medir a raridade. */
+export function isVolcanicIsland(seed: number, config: MapConfig): boolean {
+  return rollsVolcanicIsland(seededRandom(seed ^ VOLCANIC_ISLAND_SALT), config);
+}
+
+/**
+ * O mapa da ilha vulcânica (volcano/05): a ilha e o cone saem do `shapeVolcanicIsland`,
+ * e as variantes e as peças, como num mapa comum. A ilha tem o clima Úmido.
+ */
+function volcanicIslandMap(
+  seed: number,
+  cells: Cell[],
+  islandRandom: Random,
+  random: Random,
+  config: MapConfig,
+): ShapedMap {
+  const { start: startCell, volcano } = shapeVolcanicIsland(
+    cells,
+    islandRandom,
+    config,
+  );
+  const start = { q: startCell.q, r: startCell.r };
+  const tiles = cells.map(({ q, r, biome, shape, height }) => {
+    const variant = rollVariant(shape, random, config);
+    return {
+      q,
+      r,
+      biome,
+      shape,
+      height,
+      variant: variant > maxVariant(biome) ? variant - BASIC_VARIANTS : variant,
+    };
+  });
+  const props = placeVolcanoRocks(
+    tiles,
+    start,
+    [],
+    seededRandom(seed ^ VOLCANO_ROCKS_SALT),
+    [],
+    {
+      rim: keysOf(volcano.rim),
+      slope: keysOf(volcano.slope),
+      floor: keysOf(volcano.floor),
+      stairs: keysOf(volcano.stairs),
+    },
+  );
+  return {
+    seed,
+    start,
+    tiles,
+    bridges: [],
+    props,
+    lakes: [],
+    rivers: [],
+    iceLake: [],
+    volcanoStairs: volcano.stairs.map(({ q, r }) => ({ q, r })),
+  };
+}
+
+function keysOf(cells: readonly HexCoord[]): Set<string> {
+  return new Set(cells.map(hexKey));
 }
 
 function sample(noise: Noise2D, { q, r }: HexCoord, scale: number): number {

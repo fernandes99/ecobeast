@@ -1031,6 +1031,40 @@ describe('Editor de ilhas (e2e)', () => {
       );
     });
 
+    it('gera o vulcão com a lava, os picos e as rachaduras (volcano/04)', async () => {
+      const body = (
+        await call('post', '/map-generator')
+          .send({
+            seed: 5,
+            config: { tile_count: 10000, climate: 1, volcano_chance: 1 },
+          })
+          .expect(200)
+      ).body as Generated & { props: { prop_type_id: number }[] };
+      const biomes = new Set(body.tiles.map(({ biome }) => biome));
+      expect(biomes.has('volcano')).toBe(true);
+      expect(biomes.has('lshallow')).toBe(true);
+      const types = new Set(body.props.map(({ prop_type_id }) => prop_type_id));
+      expect([184, 185, 186, 187, 188, 189].some((id) => types.has(id))).toBe(
+        true,
+      );
+    });
+
+    it('gera a ilha vulcânica, cercada de água (volcano/05)', async () => {
+      const body = (
+        await call('post', '/map-generator')
+          .send({
+            seed: 3,
+            config: { tile_count: 10000, volcano_island_chance: 1 },
+          })
+          .expect(200)
+      ).body as Generated & { bridges: unknown[] };
+      const biomes = new Set(body.tiles.map(({ biome }) => biome));
+      expect(biomes.has('volcano')).toBe(true);
+      expect(biomes.has('beach')).toBe(true);
+      expect(biomes.has('mountain')).toBe(false);
+      expect(body.bridges).toEqual([]);
+    });
+
     it('recusa a Geleira mínima maior que a máxima (400)', async () => {
       const response = await call('post', '/map-generator')
         .send({ seed: 1, config: { glacier_min: 80, glacier_max: 40 } })

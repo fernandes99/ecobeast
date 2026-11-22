@@ -42,6 +42,10 @@ const PARAM_LABELS: Dictionary[String, String] = {
 	"glacier_min": "Tamanho mínimo da Geleira",
 	"glacier_max": "Tamanho máximo da Geleira",
 	"glacier_lake_chance": "Chance de lago na Geleira",
+	"volcano_chance": "Chance de vulcão num mapa que não é frio",
+	"volcano_min_radius": "Raio mínimo do vulcão",
+	"volcano_max_radius": "Raio máximo do vulcão",
+	"volcano_island_chance": "Chance de o mapa ser a ilha vulcânica",
 }
 
 var _name_edit: LineEdit

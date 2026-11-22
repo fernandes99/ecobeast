@@ -25,7 +25,12 @@ const MAX_LONELY_LAND = 0.05;
 /** A grama é a base da região; nenhum bioma deve ir além disto. */
 const MAX_BIOME_SHARE = 0.6;
 /** A Geleira é rara de propósito; o map-glacier.spec.ts confere que ela aparece nos mapas frios. */
-const RARE_BIOMES: readonly ShapedBiome[] = ['glacier', 'volcano'];
+const RARE_BIOMES: readonly ShapedBiome[] = [
+  'glacier',
+  'volcano',
+  'lshallow',
+  'ldeep',
+];
 const CONFIG: MapConfig = {
   tileCount: 300,
   edgeRoughness: 7,
@@ -59,6 +64,11 @@ const CONFIG: MapConfig = {
   glacierMin: 20,
   glacierMax: 60,
   glacierLakeChance: 0.5,
+  // O vulcão fica no map-volcano.spec.ts: aqui ele mudaria as contas de biomas.
+  volcanoChance: 0,
+  volcanoMinRadius: 10,
+  volcanoMaxRadius: 14,
+  volcanoIslandChance: 0,
 };
 
 function indexed(map: ShapedMap): Map<string, ShapedTile> {
@@ -150,7 +160,7 @@ describe('generateShapedMap', () => {
     maps = SEEDS.map((seed) => generateShapedMap(seed, CONFIG));
   });
 
-  it('só existem as dez regiões', () => {
+  it('só existem as doze regiões', () => {
     expect([...SHAPED_BIOMES].sort()).toEqual(
       [
         'beach',
@@ -158,6 +168,8 @@ describe('generateShapedMap', () => {
         'desert',
         'glacier',
         'volcano',
+        'lshallow',
+        'ldeep',
         'snow',
         'stone',
         'temperate',

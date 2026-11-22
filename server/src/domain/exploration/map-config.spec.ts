@@ -41,6 +41,13 @@ describe('mapConfigError', () => {
     [{ glacierMin: 4 }, 'glacierMin precisa ficar entre 5 e 100.'],
     [{ glacierMax: 201 }, 'glacierMax precisa ficar entre 5 e 200.'],
     [{ glacierLakeChance: -1 }, 'glacierLakeChance precisa ficar entre 0 e 1.'],
+    [{ volcanoChance: 1.1 }, 'volcanoChance precisa ficar entre 0 e 1.'],
+    [{ volcanoMinRadius: 5 }, 'volcanoMinRadius precisa ficar entre 6 e 30.'],
+    [{ volcanoMaxRadius: 31 }, 'volcanoMaxRadius precisa ficar entre 6 e 30.'],
+    [
+      { volcanoIslandChance: 2 },
+      'volcanoIslandChance precisa ficar entre 0 e 1.',
+    ],
   ])('recusa %o', (config, message) => {
     expect(mapConfigError(config)).toBe(message);
   });
@@ -60,6 +67,15 @@ describe('mapConfigError', () => {
       'glacierMin não pode passar de glacierMax.',
     );
     expect(mapConfigError({ glacierMin: 30, glacierMax: 30 })).toBeNull();
+  });
+
+  it('recusa o raio mínimo do vulcão maior que o máximo (volcano/04)', () => {
+    expect(mapConfigError({ volcanoMinRadius: 13 })).toBe(
+      'volcanoMinRadius não pode passar de volcanoMaxRadius.',
+    );
+    expect(
+      mapConfigError({ volcanoMinRadius: 9, volcanoMaxRadius: 9 }),
+    ).toBeNull();
   });
 
   it.each([{ tileCount: 150.5 }, { cleanupPasses: 2.5 }])(

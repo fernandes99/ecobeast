@@ -1,6 +1,6 @@
 # 04. O vulcão em terra
 
-- **Status:** pendente
+- **Status:** concluída (falta o dono conferir no jogo)
 - **Depende de:** [02](02-basalt-spires.md), [03](03-volcano-records.md), [glacier/04](../glacier/04-generated-glacier.md) (o caminho do sorteio próprio depois do `openSlopes`) e [terrain-plateaus](../terrain-plateaus/) (os paredões e as escadarias)
 
 ## Contexto
@@ -16,6 +16,16 @@ A Geleira entra depois do `openSlopes`, com um sorteio próprio (`GLACIER_SALT`)
 
 A terra fica nos patamares 1, 4 e 7, e a Montanha de 8 a 10. O Domador sobe ou desce no máximo 2 níveis por passo (`MAX_CLIMB`).
 
+## Na implementação
+
+O primeiro desenho (o cone de raio 10 a 14 só em chão plano dos patamares 1 e 4) não cabia em nenhum mapa: os rios e os lagos picotam a terra, e o maior disco sem água, colina nem patamar 7 tinha raio de 7 a 10. Por isso, em 2026-11-22:
+
+- o cone passa por cima de colinas e patamares, e só não cobre água, ponte, a chegada, a Montanha e o terreno de 8 para cima;
+- o raio padrão vai de 7 a 12;
+- a terra encostada no cone desce até o chão do pé (o 1 ou o 4), para o paredão do pé ter 3 níveis;
+- a distância ao centro é em linha reta, e não pela grade, para o cone sair redondo, e não hexagonal;
+- a cratera ocupa metade do raio, e a borda tem 2 hexágonos, para a encosta não virar uma mesa larga no 7.
+
 ## Requisitos
 
 - **RF-01:** Os parâmetros novos em `MAP_CONFIG_RANGES` e no gerador da ilha nova do F2 (`new_island_panel.gd`):
@@ -23,62 +33,54 @@ A terra fica nos patamares 1, 4 e 7, e a Montanha de 8 a 10. O Domador sobe ou d
   | Parâmetro | Padrão | Faixa |
   | --- | --- | --- |
   | `volcanoChance` | 0,07 | 0 a 1 |
-  | `volcanoMinRadius` | 10 | 6 a 30 |
-  | `volcanoMaxRadius` | 14 | 6 a 30 |
+  | `volcanoMinRadius` | 7 | 6 a 30 |
+  | `volcanoMaxRadius` | 12 | 6 a 30 |
 
   O `volcanoMinRadius` não passa do `volcanoMaxRadius`. Com o `volcanoChance` em 0, o mapa de uma seed é igual ao de antes, hexágono por hexágono. Com ele em 1, todo mapa que não seja Frio e tenha lugar ganha o vulcão, para o dono testar no F2.
-- **RF-02:** `placeVolcano(cells, climate, start, random, config): Volcano | null`, num arquivo próprio (`map-volcano.ts`):
+- **RF-02:** `placeVolcano(cells, climate, start, random, config, isBlocked)`, em `map-volcano.ts`:
   - **Quando roda:** depois do `openSlopes` e antes da Geleira, com um sorteio próprio a partir da seed (`VOLCANO_SALT`). Só os climas que não são `cold` entram.
   - **O sorteio:** decide se sai o vulcão, o raio (de `volcanoMinRadius` a `volcanoMaxRadius`) e o lugar.
-  - **O lugar:** o centro de um disco de raio `R + 2` todo de terra nos patamares 1 e 4, sem água, ponte, Montanha, Colina, terra no patamar 7 nem a chegada. Entre os lugares possíveis, o sorteio prefere os mais longe da borda do mapa. O jeito de achar e sortear os lugares é escolha do construtor.
-  - **Sem lugar no raio sorteado:** o sorteio tenta raios menores, até o `volcanoMinRadius`. Se nenhum couber, o mapa fica sem vulcão e retorna `null`. O cone nunca passa por cima de água, ponte ou Montanha.
-  - **A raridade:** o que vale é a parte dos mapas com vulcão, perto de 1 em 15 (de 5% a 8% dos mapas sem o clima Frio), e não a chance do sorteio. Se faltar lugar com frequência, o construtor sobe o padrão do `volcanoChance` até a parte medida cair nessa faixa e anota aqui o valor final.
-- **RF-03:** O perfil do cone, pela distância `d` ao centro, com a borda de cada faixa ondulada por um ruído do sorteio próprio, para o cone não sair um hexágono perfeito:
-  - **A cratera** (`d` até perto de 40% de `R`): piso na altura 6. No meio, a Lava funda; em volta dela, um anel de Lava rasa, as duas na altura 5, um nível abaixo do piso, como a água ([01](01-volcano-art.md)); e entre a lava e o paredão de dentro, um anel de chão de Vulcão de 1 a 2 hexágonos de largura, andável e todo ligado.
-  - **A borda** (logo depois da cratera, de 1 a 2 hexágonos de largura): altura 10. Um hexágono da borda só fica no 9 se não encostar na encosta de fora, para a borda não se subir sem escadaria.
-  - **A encosta de fora** (até `R`): desce em patamares de 7 e 4 (no chão de 4, só o 7), com paredões de 3 níveis entre eles.
-  - **O pé:** o último anel do cone fica 3 níveis acima do chão de fora (o 4 sobre o chão de 1, o 7 sobre o chão de 4) e encosta nele com o paredão, menos nas escadarias. O anel de `R` a `R + 2` fica como estava: ele só garante a folga em volta do cone.
+  - **O lugar:** o centro de um disco de raio `R + 2` sem água, lava, ponte (`isBlocked`, as margens das pontes), Montanha, terreno de 8 para cima nem a chegada (`clearance`). Entre os lugares possíveis, o sorteio pega um dos 25% mais longe da borda do mapa.
+  - **Sem lugar no raio sorteado:** o sorteio tenta raios menores, até o `volcanoMinRadius`. Se nenhum couber, o mapa fica sem vulcão.
+  - **A raridade:** medida em 200 mapas do tamanho do jogo com o padrão 0,07: 7 vulcões, perto de 6% dos mapas que não são frios (3,5% de todos), com 290 hexágonos de cone em média; o vulcão forçado (`volcanoChance` 1) não achou lugar em 4 dos 118 mapas sem Neve. O padrão fica em 0,07.
+- **RF-03:** O perfil do cone (`buildCone`), pela distância em linha reta ao centro, menos uma onda do sorteio próprio (8 pontos, até 1 hexágono, a mesma em todas as faixas, e sumindo perto do centro):
+  - **A lava** (até a cratera menos 1,5): a Lava funda no meio, sempre com um anel de Lava rasa em volta, as duas na altura 5;
+  - **o piso** (até metade do raio): altura 6, o anel de chão em volta da lava;
+  - **a borda** (2 hexágonos depois da cratera): altura 10;
+  - **a encosta de fora** (até `R`): os patamares de 3 em 3 níveis acima do pé, até o 7 (o 7 e o 4 no pé de 1, só o 7 no pé de 4), em faixas da mesma largura;
+  - **o pé:** a terra encostada no cone desce até o chão do pé, o 1 se a metade dela está no 2 ou abaixo, senão o 4.
 
-  Todo hexágono do cone é `volcano`, menos a lava. Às vezes saem braços de Lava rasa do lago até o pé do paredão de dentro, como as rachaduras da imagem do dono, sem quebrar o anel do piso em pedaços sem saída.
-- **RF-04:** As escadarias. São 2 ou 3 por vulcão, espalhadas em volta do cone, com pelo menos 90° entre elas. Cada uma:
-  - começa no chão de fora;
-  - sobe a encosta até a borda em degraus de 1 e 2 níveis, com 1 hexágono de largura (2 onde precisar para a reta do passo);
-  - desce por dentro até o anel do piso da cratera, também em degraus.
-
-  Fora das escadarias, a encosta de fora e o paredão de dentro não se sobem a pé.
-- **RF-05:** Os picos de basalto, `placeBasaltSpires`, ao lado do `placeGiantRocks` e com as mesmas regras (o `placeRocks`):
-  - usa os tipos da [02](02-basalt-spires.md) e um sorteio próprio;
-  - põe muitos picos na borda (perto de 1 a cada 3 hexágonos, a revisar) e poucos na encosta de fora (perto de 1 a cada 12, a revisar);
-  - não põe pico numa escadaria, no anel do piso nem na lava.
-
-  As pedras da Montanha não caem no Vulcão.
-- **RF-05b:** As rachaduras de lava (`lava_crack`, a peça que bloqueia, da [01](01-volcano-art.md)), pelo mesmo `placeRocks`, com um sorteio próprio: poucas, nos patamares da encosta de fora e no anel do piso (perto de 1 a cada 15 hexágonos, a revisar), fora das escadarias, sem fechar o caminho de nenhuma terra nem pedaço do anel do piso.
-- **RF-06:** Toda terra que se alcançava da chegada continua alcançável, e o anel do piso da cratera se alcança da chegada. A chegada não cai no cone.
-- **RF-07:** Fora do disco do vulcão, os biomas, as alturas, a água, as pontes e as pedras são os do mesmo mapa sem o vulcão. A Geleira não sai num mapa com vulcão, porque o vulcão não sai no Frio.
-- **RF-08:** As zonas: o cone fica na zona Comum do Vulcão, e a lava nas zonas Comum dela. O `assignZones` não espalha outras zonas por cima.
+  Todo hexágono do cone é `volcano`, menos a lava. Os braços de lava e a borda no 9 ficaram de fora.
+- **RF-04:** As escadarias (`carveVolcanoStairs`). São 2 ou 3, espalhadas em volta do cone (o ângulo de cada uma sai no `buildCone`). Cada uma segue a reta que sai do centro, do primeiro hexágono do piso até o primeiro de fora do cone: enquanto dois vizinhos da reta passarem de 2 níveis, o do cone muda para 1 ou 2 do outro (o mais alto desce, ou o degrau sobe quando o mais alto é o chão de fora). Ela é cavada depois da garantia de alcance da terra em volta, para o pé estar na altura final.
+- **RF-05:** Os picos de basalto e as rachaduras de lava (`placeVolcanoRocks`, em `map-rocks.ts`, pelo `placeRocks` das pedras gigantes e com um sorteio próprio, `VOLCANO_ROCKS_SALT`):
+  - os picos na borda (chance 0,33 por hexágono) e na encosta de fora (0,08);
+  - as rachaduras nos patamares e no piso (1 a cada 30);
+  - nunca numa escadaria nem fechando o caminho de ninguém.
+- **RF-06:** Toda terra que se alcançava da chegada continua alcançável: depois do cone, a garantia de alcance (`openSlopes`) roda de novo, com um sorteio próprio (`VOLCANO_SLOPES_SALT`), sem entrar no cone. O piso da cratera se alcança da terra em volta pelas escadarias.
+- **RF-07:** Fora do cone e da terra encostada nele, os biomas, a água, as pontes e a chegada são os do mesmo mapa sem o vulcão. A altura também, menos onde a garantia de alcance precisou subir um caminho (1 hexágono em 8 mapas medidos).
+- **RF-08:** As zonas: o cone fica na zona Comum do Vulcão, e a lava na Comum dela.
 
 ## Critérios de aceite
 
-- [ ] Testes de unidade (`map-volcano.spec.ts`, em mapas do tamanho do jogo ou menores, como o construtor achar melhor):
-  - Em 400 seeds sem o clima Frio e com o `volcanoIslandChance` em 0, de 5% a 8% saem com vulcão.
-  - Com o clima `cold` fixado, nenhum mapa tem vulcão.
-  - O cone tem o raio sorteado, a borda nas alturas 9 e 10, o piso no 6, a lava no 5 e só dentro da cratera, com a funda no meio e a rasa em volta.
-  - Tirando os hexágonos das escadarias, a borda não se alcança do chão de fora, e o piso não se alcança da borda. Com elas, o anel do piso se alcança da chegada.
-  - Nenhum pedaço do anel do piso fica sem saída.
-  - Os picos só caem na borda e na encosta, fora das escadarias.
-  - As rachaduras não fecham o caminho de nenhum pedaço do piso nem da encosta.
-- [ ] Toda terra que se alcançava da chegada no mesmo mapa sem o vulcão continua alcançável, fora as pedras e os picos.
-- [ ] Com o `volcanoChance` em 0, o hash do mapa de 5 seeds é igual ao de antes, tirado do `map-generator.ts` do commit da [03](03-volcano-records.md).
-- [ ] Fora do disco, os biomas, as alturas, as pontes e as pedras são os do mesmo mapa sem o vulcão.
-- [ ] Nos testes do `map-generator.spec.ts`, o Vulcão e a lava continuam em `RARE_BIOMES`. Os testes das pedras (`map-rocks.spec.ts`) e da Geleira geram os mapas com o `volcanoChance` em 0.
-- [ ] Medido em 200 mapas do tamanho do jogo: quantos têm vulcão, o raio médio e quantos sorteios não acharam lugar. Os números entram nesta fase.
-- [ ] Um e2e gera pelo F2 um mapa com o vulcão, a lava e os picos.
+- [x] Testes de unidade (`map-volcano.spec.ts`, em 6 mapas do tamanho do jogo, com o vulcão forçado):
+  - pelo menos 80% ganham o vulcão; com o clima `cold`, nenhum;
+  - a borda no 10, o piso no 6, a lava no 5, só encostando em lava ou no piso, e a funda só encostando em lava;
+  - o piso se alcança da terra em volta; tirando as escadarias, nenhum hexágono da borda se alcança de fora;
+  - toda terra que se alcançava continua alcançável;
+  - fora do cone e da terra encostada nele, os biomas, a chegada e as pontes são os do mapa sem o vulcão;
+  - os picos e as rachaduras ficam no cone, fora das escadarias, os picos fora do piso e as rachaduras fora da borda;
+  - com o `volcanoChance` em 0, o hash de 5 seeds é o do commit da [03](03-volcano-records.md) (conferido em 20 seeds contra uma cópia do código daquele commit).
+- [x] A frequência medida em 200 mapas do tamanho do jogo (RF-02). Ela fica fora dos testes de unidade, porque 200 mapas levam perto de 2 minutos.
+- [x] Nos testes do `map-generator.spec.ts`, o Vulcão e a lava estão em `RARE_BIOMES`, e a configuração deles desliga o vulcão.
+- [x] Um e2e gera pelo F2 um mapa com o vulcão, a lava e os picos.
 - [ ] O dono confere no jogo um vulcão de mapa sorteado, pelo `volcanoChance` em 1 no F2.
-- [ ] `npm run lint`, `npm run typecheck`, `npm test` e a suíte e2e passam.
+- [x] `npm run lint`, `npm run typecheck` e `npm test` passam.
+
+Os testes de alcance partem da terra em volta do cone, e não da chegada: há mapas (como o da seed 23.762 no clima Temperado) em que a chegada cai numa faixa de Praia presa entre a água e a beira do mapa, com alcance de 1 hexágono, com ou sem vulcão. É um defeito do gerador de antes desta iniciativa.
 
 ## Tarefas
 
-- [ ] Os parâmetros e os testes da faixa.
-- [ ] O `placeVolcano`: o lugar, o perfil, a lava e as escadarias, com os testes.
-- [ ] Os picos de basalto (`placeBasaltSpires`).
-- [ ] Os parâmetros no gerador do F2, com o e2e.
+- [x] Os parâmetros e os testes da faixa.
+- [x] O `placeVolcano`, o `buildCone` e o `carveVolcanoStairs`, com os testes.
+- [x] Os picos de basalto e as rachaduras (`placeVolcanoRocks`).
+- [x] Os parâmetros no gerador do F2, com o e2e.

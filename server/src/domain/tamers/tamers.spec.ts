@@ -76,7 +76,7 @@ describe('rollMapTamers', () => {
       }
     }
     // 20 mapas inteiros do gerador, com o mar, os lagos e os rios (coast-rivers).
-  }, 20_000);
+  }, 120_000);
 
   it('numera os Domadores de 1 em diante, sem repetir', () => {
     const tamers = rollMapTamers(

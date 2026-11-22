@@ -103,6 +103,130 @@ export const ICE_ROCK_TYPES = ICE_ROCKS.map(({ propTypeId }) => propTypeId);
 /** A chance de um hexágono de Geleira ganhar uma pedra de gelo; ela é plana e se anda nela. A revisar. */
 export const ICE_ROCK_CHANCE = 0.15;
 
+/** Os picos de basalto (volcano/02), com as linhas da migration basalt_spires. */
+export const BASALT_SPIRES: RockKind[] = [
+  {
+    propTypeId: 184,
+    variants: [1],
+    points: [-22, -14, -11, -5, 11, -5, 22, -14, 11, -23, -11, -23],
+  },
+  {
+    propTypeId: 185,
+    variants: [1],
+    points: [-25, -16, -13, -6, 12, -6, 25, -16, 12, -26, -13, -26],
+  },
+  {
+    propTypeId: 186,
+    variants: [1],
+    points: [-34, -24, -17, -10, 17, -10, 34, -24, 17, -38, -17, -38],
+  },
+  {
+    propTypeId: 187,
+    variants: [1],
+    points: [-33, -22, -17, -9, 16, -9, 33, -22, 16, -35, -17, -35],
+  },
+  {
+    propTypeId: 188,
+    variants: [1],
+    points: [-24, -16, -12, -6, 12, -6, 24, -16, 12, -26, -12, -26],
+  },
+  {
+    propTypeId: 189,
+    variants: [1],
+    points: [-32, -22, -16, -9, 16, -9, 32, -22, 16, -35, -16, -35],
+  },
+];
+/** As rachaduras de lava (volcano/01), uma linha por variante, as da migration volcano_props. */
+export const LAVA_CRACKS: RockKind[] = [
+  {
+    propTypeId: 178,
+    variants: [1],
+    points: [
+      -22, -11, -17, -14, -12, -17, -7, -19, -2, -20, 3, -22, 8, -24, 13, -25,
+      18, -27, 21, -26, 21, -21, 18, -19, 13, -16, 8, -13, 3, -11, -2, -8, -7,
+      -8, -12, -6, -17, -5, -22, -7,
+    ],
+  },
+  {
+    propTypeId: 178,
+    variants: [2],
+    points: [
+      -20, -11, -15, -13, -10, -15, -5, -17, 0, -18, 5, -20, 10, -22, 15, -23,
+      19, -22, 19, -18, 15, -14, 10, -10, 5, -5, 0, -5, -5, -7, -10, -6, -15,
+      -6, -20, -7,
+    ],
+  },
+  {
+    propTypeId: 178,
+    variants: [3],
+    points: [
+      -17, -11, -12, -14, -7, -14, -2, -14, 3, -13, 8, -13, 13, -11, 16, -9, 16,
+      -4, 13, -2, 8, -1, 3, 0, -2, 0, -7, -2, -12, -3, -17, -6,
+    ],
+  },
+  {
+    propTypeId: 178,
+    variants: [4],
+    points: [
+      -23, -10, -18, -11, -13, -10, -8, -10, -3, -10, 2, -13, 7, -14, 12, -16,
+      17, -15, 22, -14, 22, -10, 17, -8, 12, -7, 7, -4, 2, -2, -3, -1, -8, 0,
+      -13, -1, -18, -3, -23, -6,
+    ],
+  },
+];
+export const BASALT_SPIRE_TYPES = BASALT_SPIRES.map(
+  ({ propTypeId }) => propTypeId,
+);
+export const LAVA_CRACK_TYPE = 178;
+/** A chance de um pico por hexágono da borda e da encosta, e a de uma rachadura. A revisar. */
+export const RIM_SPIRE_CHANCE = 0.33;
+export const SLOPE_SPIRE_CHANCE = 0.04;
+export const LAVA_CRACK_CHANCE = 1 / 30;
+
+export interface VolcanoKeys {
+  rim: ReadonlySet<string>;
+  slope: ReadonlySet<string>;
+  floor: ReadonlySet<string>;
+  stairs: ReadonlySet<string>;
+}
+
+/**
+ * Os picos de basalto na borda e na encosta do vulcão e as rachaduras de lava nos
+ * patamares e no piso (volcano/04), pelas regras das pedras gigantes: nunca numa
+ * escadaria nem fechando o caminho de ninguém.
+ */
+export function placeVolcanoRocks(
+  tiles: readonly RockTile[],
+  start: HexCoord,
+  bridges: readonly { points: readonly number[] }[],
+  random: Random,
+  taken: readonly GeneratedProp[],
+  volcano: VolcanoKeys,
+): GeneratedProp[] {
+  const off = (tile: RockTile) => !volcano.stairs.has(hexKey(tile));
+  const rim = placeRocks(tiles, start, bridges, random, {
+    allowed: (tile) => off(tile) && volcano.rim.has(hexKey(tile)),
+    kindsOf: () => BASALT_SPIRES,
+    chance: RIM_SPIRE_CHANCE,
+    taken,
+  });
+  const slope = placeRocks(tiles, start, bridges, random, {
+    allowed: (tile) => off(tile) && volcano.slope.has(hexKey(tile)),
+    kindsOf: () => BASALT_SPIRES,
+    chance: SLOPE_SPIRE_CHANCE,
+    taken: [...taken, ...rim],
+  });
+  const cracks = placeRocks(tiles, start, bridges, random, {
+    allowed: (tile) =>
+      off(tile) &&
+      (volcano.slope.has(hexKey(tile)) || volcano.floor.has(hexKey(tile))),
+    kindsOf: () => LAVA_CRACKS,
+    chance: LAVA_CRACK_CHANCE,
+    taken: [...taken, ...rim, ...slope],
+  });
+  return [...rim, ...slope, ...cracks];
+}
+
 /** Os hexágonos que as linhas de uma pedra fecham. */
 export function rockHexes(prop: GeneratedProp): Set<string> {
   const keys = new Set<string>();

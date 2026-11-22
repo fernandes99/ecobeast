@@ -38,6 +38,13 @@ export interface MapConfig {
   glacierMax: number;
   /** A chance de a Geleira ter um lago no meio. */
   glacierLakeChance: number;
+  /** A chance de um mapa que não é frio ganhar o vulcão em terra (volcano/04). */
+  volcanoChance: number;
+  /** O raio do cone, em hexágonos. */
+  volcanoMinRadius: number;
+  volcanoMaxRadius: number;
+  /** A chance de o mapa inteiro ser a ilha vulcânica (volcano/05). */
+  volcanoIslandChance: number;
 }
 
 export const DEFAULT_MAP_CONFIG: MapConfig = {
@@ -73,6 +80,10 @@ export const DEFAULT_MAP_CONFIG: MapConfig = {
   glacierMin: 20,
   glacierMax: 60,
   glacierLakeChance: 0.5,
+  volcanoChance: 0.07,
+  volcanoMinRadius: 7,
+  volcanoMaxRadius: 12,
+  volcanoIslandChance: 0.02,
 };
 
 export interface ConfigRange {
@@ -116,6 +127,10 @@ export const MAP_CONFIG_RANGES: Record<keyof MapConfig, ConfigRange> = {
   glacierMin: { min: 5, max: 100, integer: true },
   glacierMax: { min: 5, max: 200, integer: true },
   glacierLakeChance: fraction,
+  volcanoChance: fraction,
+  volcanoMinRadius: { min: 6, max: 30, integer: true },
+  volcanoMaxRadius: { min: 6, max: 30, integer: true },
+  volcanoIslandChance: fraction,
 };
 
 export function mapConfigError(
@@ -132,13 +147,22 @@ export function mapConfigError(
       return `${label(field)} precisa ficar entre ${range.min} e ${range.max}.`;
     }
   }
-  const { terraceLow, terraceHigh, glacierMin, glacierMax } =
-    withDefaults(config);
+  const {
+    terraceLow,
+    terraceHigh,
+    glacierMin,
+    glacierMax,
+    volcanoMinRadius,
+    volcanoMaxRadius,
+  } = withDefaults(config);
   if (terraceLow >= terraceHigh) {
     return `${label('terraceLow')} precisa ser menor que ${label('terraceHigh')}.`;
   }
   if (glacierMin > glacierMax) {
     return `${label('glacierMin')} não pode passar de ${label('glacierMax')}.`;
+  }
+  if (volcanoMinRadius > volcanoMaxRadius) {
+    return `${label('volcanoMinRadius')} não pode passar de ${label('volcanoMaxRadius')}.`;
   }
   return null;
 }

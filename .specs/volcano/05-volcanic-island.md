@@ -1,58 +1,56 @@
 # 05. A ilha vulcânica
 
-- **Status:** pendente
+- **Status:** concluída (falta o dono aprovar a prévia e conferir no jogo)
 - **Depende de:** [04](04-land-volcano.md) (o perfil do cone, as escadarias e os picos)
 
 ## Contexto
 
 O mapa sorteado de hoje tem o mar num lado só (`placeSea`, crescido a partir da borda), com a Praia na costa, lagos, rios e as montanhas pelo relevo. A ilha vulcânica é um mapa de outro tipo: o oceano em volta de tudo e o vulcão como o centro da terra, com só um pouco de floresta e praia no pé. Ela é a forma mais rara e a mais diferente, a do "nossa, que diferente!" do dono.
 
+## Na implementação
+
+Com o contorno recortado do mapa sorteado (`edgeRoughness` 200), o meio do mapa fica perto da beira, e a ilha cabia com só 9% a 32% de terra. Por isso, em 2026-11-22, o mapa da ilha vulcânica usa o contorno sem recorte (`edgeRoughness` 0, um hexágono), com o mesmo número de hexágonos. Os mapas comuns não mudam, porque o sorteio da ilha é próprio.
+
 ## Requisitos
 
-- **RF-01:** Os parâmetros novos em `MAP_CONFIG_RANGES` e no gerador da ilha nova do F2:
-
-  | Parâmetro | Padrão | Faixa |
-  | --- | --- | --- |
-  | `volcanoIslandChance` | 0,02 | 0 a 1 |
-
-  Com ele em 0, o mapa de uma seed é igual ao de antes, hexágono por hexágono. Com ele em 1, todo mapa é uma ilha vulcânica, para o dono testar no F2.
-- **RF-02:** O sorteio da ilha:
-  - vem de um sorteio próprio a partir da seed (`VOLCANIC_ISLAND_SALT`), que roda sempre, independente do sorteio do vulcão em terra (`VOLCANO_SALT`), que também roda sempre;
-  - quando os dois saem, a ilha vence, e o `placeVolcano` da [04](04-land-volcano.md) não roda. Assim, com o `volcanoIslandChance` em 0, os mapas da [04](04-land-volcano.md) não mudam;
-  - a ilha vulcânica sempre tem o clima Úmido, menos com o `climate` fixado em `cold` pelo parâmetro: aí ela não sai, porque o vulcão nunca sai no Frio. Com outro `climate` fixado, ela sai Úmida mesmo assim.
-- **RF-03:** A forma do mapa:
-  - o contorno do mapa (`growRegion`) é o mesmo;
-  - a terra é uma ilha só, mais ou menos redonda, no meio do mapa, com a costa irregular. Ela ocupa de 45% a 60% do mapa;
-  - o resto é oceano, com a Água rasa junto da costa e a funda depois, como o mar de hoje (`shallowWidth`);
-  - não há lagos, rios nem pontes, e a ilha não tem ilhotas em volta.
+- **RF-01:** O parâmetro `volcanoIslandChance`, padrão 0,02, faixa de 0 a 1, em `MAP_CONFIG_RANGES` e no gerador da ilha nova do F2. Com ele em 0, o mapa de uma seed é igual ao de antes; com ele em 1, todo mapa é uma ilha vulcânica.
+- **RF-02:** O sorteio da ilha (`rollsVolcanicIsland`, e `isVolcanicIsland(seed, config)` para medir sem gerar o mapa):
+  - vem de um sorteio próprio a partir da seed (`VOLCANIC_ISLAND_SALT`), antes do contorno do mapa;
+  - roda sempre, independente do vulcão em terra; quando a ilha sai, o `placeVolcano` não roda;
+  - não sai com o `climate` fixado em Frio. Com outro `climate`, a ilha sai do mesmo jeito: o cinto é de Planície e Boreal, como no clima Úmido.
+- **RF-03:** A forma (`shapeVolcanicIsland`, em `map-volcanic-island.ts`):
+  - o centro é o hexágono mais longe da beira do mapa;
+  - a terra é uma ilha só, mais ou menos redonda (a costa entorta até 10% do raio, em 10 pontos), com o raio buscado até a terra dar a parte sorteada, de 45% a 60% do mapa, sem chegar perto da beira (fica pelo menos a água rasa e mais 2 hexágonos de mar);
+  - o resto é oceano, com a Água rasa até `shallowWidth` da terra e a funda depois;
+  - não há lagos, rios, pontes, ilhotas, Montanha nem Colina.
 - **RF-04:** A terra, de fora para dentro:
   - **a Praia** na costa, de `beachMinWidth` a `beachMaxWidth` hexágonos, na altura 1;
-  - **o cinto de floresta**: Planície e Boreal (pelo ruído de umidade do clima), nos patamares 1 e 4, com as decorações e as zonas de sempre. Ele tem pelo menos 3 hexágonos de largura em toda volta;
-  - **o vulcão**: o cone da [04](04-land-volcano.md), centrado na ilha, ocupando de 40% a 60% da terra. O raio sai do tamanho da terra, e a cratera e o lago de lava crescem junto.
-
-  A ilha não tem Montanha, Colina, Pedra, Neve, Deserto nem Geleira fora do vulcão.
-- **RF-05:** A encosta de um cone grande tem mais patamares (os paredões continuam com 3 ou mais níveis cada), e os patamares ficam mais largos, cada um um anel andável. Como a altura vai só até 10, o construtor decide quantos patamares cabem e a largura de cada um. O cone continua com a borda em 9 e 10 e o piso da cratera no 6.
-- **RF-06:** São 3 ou 4 escadarias, espalhadas em volta do cone, com as regras da [04](04-land-volcano.md). Os picos de basalto e as rachaduras de lava seguem a mesma regra.
-- **RF-07:** A chegada fica no cinto de floresta ou na praia. Toda a terra e o anel do piso da cratera se alcançam da chegada.
-- **RF-08:** Os Ecobeasts nascem por bioma como em todo mapa: os da Planície, do Boreal e da Praia no pé, a linha do Ruvo no Vulcão e os da água no oceano. Os Domadores NPC também nascem como sempre, fora da lava e dos picos.
+  - **o cinto de floresta:** Boreal na parte mais úmida (umidade acima de 0,45) e Planície no resto, na altura 1, com pelo menos 3 hexágonos entre a Praia e o cone;
+  - **o vulcão:** o cone da [04](04-land-volcano.md) (`buildCone`), no centro, com 40% a 60% da área da terra, limitado pela costa mais perto.
+- **RF-05:** O cone da ilha tem a cratera em 35% do raio (no lugar de 50%), para o lago de lava não tomar a cratera inteira. O pé dele fica no 1, então a encosta tem os patamares 4 e 7, cada um um anel largo e andável.
+- **RF-06:** São 3 ou 4 escadarias, com as regras da [04](04-land-volcano.md). Os picos de basalto e as rachaduras de lava também; a chance de pico na encosta caiu para 0,04 nas duas formas, porque a encosta grande da ilha ficava coberta de picos.
+- **RF-07:** A chegada fica no meio do cinto de floresta, num ângulo sorteado. Toda a terra de fora do cone se alcança dela, e o piso da cratera também, pelas escadarias.
+- **RF-08:** Os Ecobeasts e os Domadores NPC nascem por bioma, como em todo mapa.
 
 ## Critérios de aceite
 
-- [ ] Testes de unidade (`map-volcanic-island.spec.ts`):
-  - Em 1.000 seeds, de 1% a 3,5% saem como ilha vulcânica.
-  - A terra é uma ilha só, cercada de água, sem lago, rio nem ponte.
-  - A ordem de fora para dentro é água, Praia, floresta e Vulcão, e o Vulcão ocupa de 40% a 60% da terra.
-  - O cone tem a borda em 9 e 10, o piso no 6 e a lava no 5, só dentro da cratera.
-  - Tirando os hexágonos das escadarias, a borda não se alcança do pé. Com elas, o anel do piso se alcança da chegada.
-- [ ] Com o `volcanoIslandChance` em 0, o hash do mapa de 5 seeds é igual ao de antes, tirado do `map-generator.ts` do commit da [04](04-land-volcano.md).
-- [ ] Uma prévia de 3 ilhas vulcânicas, como imagem vista de cima, mostrada ao dono antes de fechar a fase. O jeito de gerar a imagem é escolha do construtor.
-- [ ] Um e2e gera pelo F2 uma ilha vulcânica.
-- [ ] O dono confere no jogo uma ilha vulcânica, pelo `volcanoIslandChance` em 1 no F2.
-- [ ] `npm run lint`, `npm run typecheck`, `npm test` e a suíte e2e passam.
+- [x] Testes de unidade (`map-volcanic-island.spec.ts`, em 4 mapas do tamanho do jogo com a ilha forçada):
+  - em 4.000 seeds, de 1% a 3,5% saem como ilha vulcânica (pelo `isVolcanicIsland`), e nenhuma com o `climate` em Frio;
+  - a terra é um pedaço só, e a água também; a beira do mapa é toda água; sem lago, rio nem ponte;
+  - só há água, Praia, Planície, Boreal, Vulcão e lava, tudo plano;
+  - toda terra na costa é Praia, e o cone fica a mais de 3 hexágonos da Praia;
+  - a terra é de 45% a 62% do mapa, e o cone, de 35% a 62% da terra;
+  - o cone tem a borda no 10, o piso no 6 e a lava no 5;
+  - a chegada fica no cinto, toda a terra de fora do cone e o piso se alcançam dela, há pelo menos 3 escadarias, e sem elas a borda não se alcança.
+- [x] Com o `volcanoIslandChance` em 0 (e o `volcanoChance` em 0), o hash do mapa de 5 seeds é o do commit da [03](03-volcano-records.md) (no `map-volcano.spec.ts`).
+- [ ] A prévia das 3 ilhas vistas de cima (seeds 140, 185 e 197, com os parâmetros padrão) e de um vulcão em terra (seed 61) aprovada pelo dono.
+- [x] Um e2e gera pelo F2 uma ilha vulcânica.
+- [ ] O dono confere no jogo uma ilha vulcânica, pela seed 140 no F2 ou pelo `volcanoIslandChance` em 1.
+- [x] `npm run lint`, `npm run typecheck` e `npm test` passam.
 
 ## Tarefas
 
-- [ ] O parâmetro e o sorteio da ilha.
-- [ ] A forma da ilha: o oceano, a praia e o cinto de floresta.
-- [ ] O cone grande, com os patamares largos, as escadarias e os picos.
-- [ ] A prévia para o dono, os parâmetros no F2 e o e2e.
+- [x] O parâmetro e o sorteio da ilha.
+- [x] A forma da ilha: o oceano, a praia e o cinto de floresta.
+- [x] O cone grande, com a cratera menor, as escadarias e os picos.
+- [x] A prévia para o dono, o parâmetro no F2 e o e2e.
