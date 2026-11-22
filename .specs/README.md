@@ -124,6 +124,7 @@ O Ecobeast é um jogo mobile (Android/iOS, retrato): o cliente em **Godot 4.7 co
 | [auralis](auralis/) | O Arquipélago Auralis: as ilhas abrindo uma de cada vez pelos Domadores, pelas Arenas e pelas missões, e o mapa aleatório só com o que foi destravado |
 | [tamer-level](tamer-level/) | O XP e o nível do Domador, de 1 a 99, pelas lutas e pelos marcos, com a recompensa de cada nível |
 | [snelt-line](snelt-line/) | O caracol-fornalha, Snelt, Smeltrudge e Magmollusk (Metal, com o Fogo na final), o primeiro canhão especial lento, com as primeiras Técnicas Especiais de Metal |
+| [fuzzap-line](fuzzap-line/) | O lêmingue de estática, Fuzzap e Blizzvolt (Volt, com o Gelo na final), o primeiro de controle, com as primeiras Técnicas Físicas de Volt, que paralisam |
 
 As próximas iniciativas estão no [roadmap.md](roadmap.md).
 
