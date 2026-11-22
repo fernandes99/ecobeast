@@ -9,7 +9,13 @@
     "introducao_pulada"
   ],
   "trigger": {
-    "type": "auto"
+    "type": "area",
+    "tiles": [
+      {
+        "q": -43,
+        "r": 34
+      }
+    ]
   },
   "actors": [],
   "steps": [
