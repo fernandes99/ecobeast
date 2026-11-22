@@ -1,11 +1,10 @@
 class_name BoardCreatureCard
 extends PanelContainer
 
-const PortraitScene := preload("res://ui/components/creature_portrait.tscn")
 const HpBarScene := preload("res://ui/components/hp_bar.tscn")
 const ElementBadgeScene := preload("res://ui/components/element_badge.tscn")
 
-const PORTRAIT_SIZE := 84
+const PORTRAIT_SIZE := 104
 const NAME_FONT_SIZE := 26
 const SMALL_FONT_SIZE := 18
 const BAR_HEIGHT := 14
@@ -15,7 +14,7 @@ const BUMP_TIME := 0.12
 
 @export var is_enemy: bool = false
 
-var _portrait: CreaturePortrait = null
+var _face := CreatureFace.new()
 var _name_label := Label.new()
 var _level_label := Label.new()
 var _elements := HBoxContainer.new()
@@ -32,10 +31,9 @@ func _ready() -> void:
 	row.add_theme_constant_override(&"separation", 12)
 	add_child(row)
 
-	_portrait = PortraitScene.instantiate()
-	_portrait.portrait_size = PORTRAIT_SIZE
-	_portrait.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	row.add_child(_portrait)
+	_face.face_size = PORTRAIT_SIZE
+	_face.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(_face)
 
 	var info := VBoxContainer.new()
 	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -94,7 +92,7 @@ func _ready() -> void:
 
 func set_creature(species_id: int, display_name: String, level: int, hp: int, max_hp: int) -> void:
 	var species := GameData.get_species(species_id)
-	_portrait.set_species(species_id)
+	_face.set_species(species_id)
 	_name_label.text = display_name
 	_level_label.text = "Nv. %d" % level
 	for child: Node in _elements.get_children():
@@ -114,6 +112,7 @@ func clear() -> void:
 
 func set_hp(hp: int, max_hp: int) -> void:
 	_hp_bar.set_hp(hp, max_hp)
+	_face.set_hp(hp, max_hp)
 	_hp_label.text = "%d / %d" % [hp, max_hp]
 
 

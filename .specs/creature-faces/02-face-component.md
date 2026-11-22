@@ -1,6 +1,6 @@
 # 02. O componente do rosto e o anel de HP
 
-- **Status:** proposta
+- **Status:** concluída (falta o dono conferir no jogo)
 - **Depende de:** [01-face-art](01-face-art.md)
 
 ## Contexto
@@ -19,7 +19,7 @@ As decisões estão no [README](README.md). Esta fase cria o componente que dese
 
 - **RF-01:** O `CreatureFace` é um `Control` quadrado, do tamanho pedido (`face_size`), que desenha de dentro para fora:
   - o fundo redondo na cor do primeiro Elemento, escurecida; com dois Elementos, a metade de cima na cor do primeiro e a de baixo na do segundo, separadas na diagonal;
-  - o `face.png` recortado no círculo, com o filtro mais próximo;
+  - o `face.png` recortado no círculo, com o filtro suave (o rosto de 128 aparece menor, e o filtro mais próximo serrilharia);
   - o anel de HP;
   - o anel de selecionado, quando ligado.
 - **RF-02:** O anel de HP tem a espessura de 1/10 do tamanho, com o trilho escuro (`UiPalette.TRACK`) inteiro e, por cima, o arco do HP, que começa no topo e esvazia no sentido horário, na cor da faixa do `HpBar` (`HP_HIGH`, `HP_MID` ou `HP_LOW`, com os mesmos limites de 50% e 20%). A troca de HP anima o arco em 0,3 s.
@@ -27,14 +27,14 @@ As decisões estão no [README](README.md). Esta fase cria o componente que dese
 - **RF-04:** Os estados:
   - **desmaiado** (HP 0): o rosto e o fundo ficam acinzentados, e o anel fica só o trilho;
   - **sem HP** (`show_hp` desligado, para quem não tem HP, como uma espécie do Bestiário): o anel some, e o rosto ocupa o lugar dele;
-  - **sombra** (`silhouette`, a espécie só vista no Bestiário): o rosto fica na cor de sombra do `CreaturePortrait`, e o fundo, cinza;
+  - **sombra** (`silhouette`, a espécie só vista no Bestiário): o `front.png` inteiro, na cor de sombra do `CreaturePortrait`, sobre o fundo cinza, porque o rosto recortado é quase todo opaco e viraria um disco;
   - **sem `face.png`**: o `front.png` inteiro, encolhido no círculo, como hoje.
 - **RF-05:** A API: `set_creature(instance)` (a espécie e o HP de um Ecobeast do jogador), `set_species(id)` (só a espécie, sem HP), `set_hp(atual, máximo)`, `set_selected(bool)` e `set_silhouette(bool)`, todas aceitas antes de entrar na árvore, como manda o `CLAUDE.md` do cliente.
 
 **Onde entra**
 
 - **RF-06:** A `PartyBubble` da Home desenha um `CreatureFace` com o HP do Ecobeast. O anel na cor do Elemento sai, e o branco de selecionado passa a ser o do componente.
-- **RF-07:** O `BoardCreatureCard` da luta troca o `CreaturePortrait` por um `CreatureFace` do mesmo tamanho, com o anel de HP acompanhando a barra de HP que já existe no cartão. A barra continua, porque mostra os números.
+- **RF-07:** O `BoardCreatureCard` da luta troca o `CreaturePortrait` por um `CreatureFace` de 104 px (o retrato tinha 84; o anel come parte do círculo, e o cartão continua da mesma altura), com o anel de HP acompanhando a barra de HP que já existe no cartão. A barra continua, porque mostra os números.
 
 ## Fora do escopo
 
@@ -42,11 +42,11 @@ As decisões estão no [README](README.md). Esta fase cria o componente que dese
 
 ## Critérios de aceite
 
-- [ ] Na Home, cada bolinha mostra o rosto grande, com o anel de HP; o Ecobeast em destaque tem o anel branco por fora.
-- [ ] Um Ecobeast com metade do HP tem o anel pela metade, em amarelo; um desmaiado aparece cinza e sem arco.
+- [x] Na Home, cada bolinha mostra o rosto grande, com o anel de HP; o Ecobeast em destaque tem o anel branco por fora.
+- [x] Um Ecobeast com metade do HP tem o anel pela metade, em amarelo; um desmaiado aparece cinza e sem arco.
 - [ ] Na luta, o cartão mostra o rosto, e o anel esvazia quando ele leva dano.
 - [ ] Um Ecobeast sem `face.png` continua aparecendo pelo corpo inteiro.
-- [ ] O jogo sem janela abre sem erro de script.
+- [x] O jogo sem janela abre sem erro de script.
 
 ## Verificação
 
@@ -58,8 +58,8 @@ Depois, no jogo, a Home com a equipe e uma luta.
 
 ## Tarefas
 
-- [ ] O `CreatureFace`, com o fundo, o anel de HP e os estados.
-- [ ] As bolinhas da Home.
-- [ ] O cartão da luta.
-- [ ] Atualizar o `CLAUDE.md` do cliente.
-- [ ] A verificação.
+- [x] O `CreatureFace`, com o fundo, o anel de HP e os estados.
+- [x] As bolinhas da Home.
+- [x] O cartão da luta.
+- [x] Atualizar o `CLAUDE.md` do cliente.
+- [x] A verificação.
