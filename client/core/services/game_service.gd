@@ -84,8 +84,12 @@ extends RefCounted
 @abstract func start_board_island_tamer(npc_id: int, god: bool = false) -> Result
 
 
-## A conversa da missão depois da última fala do NPC (auralis/06); `data` é um `QuestTalk`.
+## A conversa da missão ao tocar no NPC (auralis/06 e 10); `data` é um `QuestTalk`.
 @abstract func talk_quest(npc_id: int) -> Result
+
+
+## Aceita a missão oferecida (auralis/10); `data` é um `QuestTalk` com `lines` e os lugares.
+@abstract func accept_quest(quest_id: int) -> Result
 
 
 ## O Domador pisou num item no chão (auralis/09); `data` é a fala ("Você encontrou ...").

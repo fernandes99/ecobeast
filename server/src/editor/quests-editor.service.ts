@@ -7,6 +7,14 @@ import {
   checkQuestDraft,
   type QuestInput,
 } from '../domain/quests/quest-input.js';
+import {
+  dialoguesFromRows,
+  dialogueWrites,
+  parseDialogues,
+  parseOfferScene,
+  type DialogueStepWrite,
+  type QuestDialogues,
+} from '../domain/quests/quest-dialogue.js';
 import { QUEST_TYPES, questTitle } from '../domain/quests/quests.js';
 import type { Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
@@ -27,6 +35,7 @@ export const ITEM_MISSING = 'Esse item não existe.';
 export const TILE_OUTSIDE = 'Um hexágono do lugar está fora da ilha.';
 
 const DRAFT = 'draft';
+const TRANSACTION = { maxWait: 10_000, timeout: 60_000 };
 const PUBLISHED = 'published';
 
 const QUEST_INCLUDE = {
@@ -37,7 +46,32 @@ const QUEST_INCLUDE = {
   species: { select: { name: true } },
   targetNpc: { select: { name: true } },
   targetItem: { select: { name: true } },
+  dialogue: { include: { options: true } },
 } satisfies Prisma.QuestInclude;
+
+/** A missão conferida, com as conversas e a cena do início. */
+interface CheckedQuest {
+  quest: QuestInput;
+  dialogues: QuestDialogues;
+  offerScene: string | null;
+}
+
+/** Os passos como escrita aninhada do Prisma: as opções levam as respostas. */
+function stepCreates(
+  questId: number,
+  writes: DialogueStepWrite[],
+): Prisma.QuestDialogueStepCreateWithoutOptionInput[] {
+  return writes.map(({ options, ...step }) => ({
+    ...step,
+    quest: { connect: { id: questId } },
+    options: {
+      create: options.map(({ steps, ...option }) => ({
+        ...option,
+        steps: { create: stepCreates(questId, steps) },
+      })),
+    },
+  }));
+}
 
 /** As missões das ilhas pelo F2 (auralis/07): salvas na hora, fora do rascunho. */
 @Injectable()
@@ -95,6 +129,11 @@ export class QuestsEditorService {
           targetNpc: quest.targetNpc?.name ?? null,
           targetItem: quest.targetItem?.name ?? null,
         }),
+        dialogues: dialoguesFromRows(
+          quest.dialogue,
+          quest.dialogue.flatMap(({ options }) => options),
+        ),
+        offer_scene: quest.offerScene,
       })),
     };
   }
@@ -104,17 +143,21 @@ export class QuestsEditorService {
     body: QuestEditorBodyDto,
   ): Promise<QuestsEditorResponseDto> {
     await this.requireIsland(islandId);
-    const quest = await this.checked(islandId, body);
+    const checked = await this.checked(islandId, body);
     const position = await this.nextPosition(islandId, body.npc_id);
-    await this.prisma.quest.create({
-      data: {
-        ...this.columns(quest),
-        islandId,
-        npcId: body.npc_id,
-        position,
-        tiles: { create: quest.tiles },
-      },
-    });
+    await this.prisma.$transaction(async (tx) => {
+      const { id } = await tx.quest.create({
+        data: {
+          ...this.columns(checked),
+          islandId,
+          npcId: body.npc_id,
+          position,
+          tiles: { create: checked.quest.tiles },
+        },
+        select: { id: true },
+      });
+      await this.writeDialogues(tx, id, checked.dialogues);
+    }, TRANSACTION);
     return this.list(islandId);
   }
 
@@ -123,23 +166,25 @@ export class QuestsEditorService {
     body: QuestEditorBodyDto,
   ): Promise<QuestsEditorResponseDto> {
     const current = await this.findQuest(id);
-    const quest = await this.checked(current.islandId, body);
+    const checked = await this.checked(current.islandId, body);
     const position =
       body.npc_id === current.npcId
         ? current.position
         : await this.nextPosition(current.islandId, body.npc_id);
-    await this.prisma.$transaction([
-      this.prisma.questTile.deleteMany({ where: { questId: id } }),
-      this.prisma.quest.update({
+    await this.prisma.$transaction(async (tx) => {
+      await tx.questTile.deleteMany({ where: { questId: id } });
+      await tx.questDialogueStep.deleteMany({ where: { questId: id } });
+      await tx.quest.update({
         where: { id },
         data: {
-          ...this.columns(quest),
+          ...this.columns(checked),
           npcId: body.npc_id,
           position,
-          tiles: { create: quest.tiles },
+          tiles: { create: checked.quest.tiles },
         },
-      }),
-    ]);
+      });
+      await this.writeDialogues(tx, id, checked.dialogues);
+    }, TRANSACTION);
     return this.list(current.islandId);
   }
 
@@ -199,8 +244,19 @@ export class QuestsEditorService {
     return this.list(islandId);
   }
 
-  private columns(quest: QuestInput) {
+  private async writeDialogues(
+    tx: Prisma.TransactionClient,
+    questId: number,
+    dialogues: QuestDialogues,
+  ): Promise<void> {
+    for (const data of stepCreates(questId, dialogueWrites(dialogues))) {
+      await tx.questDialogueStep.create({ data, select: { id: true } });
+    }
+  }
+
+  private columns({ quest, offerScene }: CheckedQuest) {
     return {
+      offerScene,
       questTypeId: quest.questTypeId,
       amount: quest.amount,
       speciesId: quest.speciesId,
@@ -219,7 +275,11 @@ export class QuestsEditorService {
   private async checked(
     islandId: number,
     body: QuestEditorBodyDto,
-  ): Promise<QuestInput> {
+  ): Promise<CheckedQuest> {
+    const dialogues = parseDialogues(body.dialogues);
+    if ('error' in dialogues) throw new BadRequestException(dialogues.error);
+    const scene = parseOfferScene(body.offer_scene);
+    if ('error' in scene) throw new BadRequestException(scene.error);
     const result = checkQuestDraft({
       questTypeId: body.quest_type_id,
       amount: body.amount ?? null,
@@ -297,7 +357,7 @@ export class QuestsEditorService {
     }
     if (tiles !== quest.tiles.length)
       throw new BadRequestException(TILE_OUTSIDE);
-    return quest;
+    return { quest, dialogues: dialogues.dialogues, offerScene: scene.scene };
   }
 
   private async nextPosition(islandId: number, npcId: number): Promise<number> {

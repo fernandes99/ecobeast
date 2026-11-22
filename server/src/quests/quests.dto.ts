@@ -1,10 +1,61 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsInt } from 'class-validator';
 import { TamerProgressDto } from '../tamer-level/tamer-level.dto.js';
-import type { QuestPlace } from './quests.service.js';
+import type { DialogueStep } from '../domain/quests/quest-dialogue.js';
+import type { QuestOffer, QuestPlace, TalkStage } from './quests.service.js';
 
 export const INVALID_TALK = 'Informe o NPC da conversa.';
 export const INVALID_REACH = 'Informe o hexágono do Domador.';
+export const INVALID_ACCEPT = 'Informe a missão.';
+
+const DIALOGUE_DESCRIPTION =
+  'Os passos da conversa escrita: falas (`{type: "say", speaker: "npc" | "tamer" | "narration", text}`) ' +
+  'e escolhas (`{type: "choice", options: [{text, outcome: "accept" | "decline" | null, steps}]}`).';
+
+export class QuestAcceptBodyDto {
+  @ApiProperty({ description: 'A missão oferecida (`quests`).', example: 3 })
+  @IsInt({ message: INVALID_ACCEPT })
+  quest_id: number;
+}
+
+export class QuestOfferDto {
+  @ApiProperty({ example: 4 })
+  quest_id: number;
+
+  @ApiProperty({
+    description: DIALOGUE_DESCRIPTION,
+    type: 'array',
+    items: { type: 'object', additionalProperties: true },
+  })
+  dialogue: DialogueStep[];
+
+  @ApiProperty({
+    description: 'A cena da história no lugar da conversa de início.',
+    type: String,
+    nullable: true,
+  })
+  offer_scene: string | null;
+}
+
+export function toQuestOfferDto(offer: QuestOffer): QuestOfferDto {
+  return {
+    quest_id: offer.questId,
+    dialogue: offer.dialogue,
+    offer_scene: offer.offerScene,
+  };
+}
+
+export class QuestAcceptResponseDto {
+  @ApiProperty({
+    description: 'A fala da missão aceita; vazia se ela já estava aceita.',
+    type: [String],
+    example: ['Nova missão: Capture 3 Ecobeasts.'],
+  })
+  lines: string[];
+
+  @ApiProperty({ type: () => [QuestPlaceDto] })
+  quest_places: QuestPlaceDto[];
+}
 
 export class QuestTalkBodyDto {
   @ApiProperty({
@@ -80,13 +131,42 @@ export class QuestIslandDto {
 export class QuestTalkResponseDto {
   @ApiProperty({
     description:
-      'As falas da missão, para a caixa de fala, depois da fala do NPC. ' +
-      'Vazias quando ele não tem o que dizer.',
+      'Em que ponto está a primeira missão não entregue do NPC: sem missão ' +
+      '(`none`), para oferecer (`offer`, ainda não aceita), em andamento ' +
+      '(`ongoing`) ou entregue agora (`done`).',
+    enum: ['none', 'offer', 'ongoing', 'done'],
+  })
+  stage: TalkStage;
+
+  @ApiProperty({ type: 'integer', nullable: true, example: 3 })
+  quest_id: number | null;
+
+  @ApiProperty({
+    description: `A conversa do momento; vazia sem conversa escrita. ${DIALOGUE_DESCRIPTION}`,
+    type: 'array',
+    items: { type: 'object', additionalProperties: true },
+  })
+  dialogue: DialogueStep[];
+
+  @ApiProperty({
+    description: 'No `offer`, a cena no lugar da conversa de início.',
+    type: String,
+    nullable: true,
+  })
+  offer_scene: string | null;
+
+  @ApiProperty({
+    description: 'No `done`, a próxima missão da fila, para oferecer.',
+    type: () => QuestOfferDto,
+    nullable: true,
+  })
+  next: QuestOfferDto | null;
+
+  @ApiProperty({
+    description:
+      'As falas automáticas, depois da conversa: o progresso ou a entrega.',
     type: [String],
-    example: [
-      'Missão cumprida: Capture 3 Ecobeasts!',
-      'Nova missão: Vá até o Farol.',
-    ],
+    example: ['Missão cumprida: Capture 3 Ecobeasts!'],
   })
   lines: string[];
 

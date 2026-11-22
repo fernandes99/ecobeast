@@ -261,4 +261,101 @@ describe('O editor de missões (e2e)', () => {
     await post({ quest_type_id: 9, target_npc_id: notTamer }).expect(201);
     await call('get', '/islands/2000000000/quests').expect(404);
   }, 60_000);
+
+  it('grava, relê e troca as conversas e a cena do início (auralis/10)', async () => {
+    const id = await island('Editor de missões C');
+    const giver = await npc('Bia');
+    const dialogues = {
+      offer: [
+        { type: 'say', speaker: 'npc', text: 'Pode me ajudar?' },
+        {
+          type: 'choice',
+          options: [
+            { text: 'Claro', outcome: 'accept', steps: [] },
+            {
+              text: 'Agora não',
+              outcome: 'decline',
+              steps: [{ type: 'say', speaker: 'npc', text: 'Tudo bem.' }],
+            },
+          ],
+        },
+      ],
+      ongoing: [
+        { type: 'say', speaker: 'npc', text: 'Encontrou o que eu precisava?' },
+        {
+          type: 'choice',
+          options: [
+            {
+              text: 'Sim',
+              outcome: null,
+              steps: [
+                { type: 'say', speaker: 'npc', text: 'Não é isso.' },
+                { type: 'say', speaker: 'tamer', text: 'Hum.' },
+              ],
+            },
+            { text: 'Ainda não', outcome: null, steps: [] },
+          ],
+        },
+      ],
+      done: [{ type: 'say', speaker: 'narration', text: 'Ele sorri.' }],
+    };
+    const created = (
+      await call('post', `/islands/${id}/quests`)
+        .send({ npc_id: giver, quest_type_id: 1, amount: 2, dialogues })
+        .expect(201)
+    ).body as {
+      quests: (QuestRow & { dialogues: unknown; offer_scene: string | null })[];
+    };
+    expect(created.quests[0].dialogues).toEqual(dialogues);
+    expect(created.quests[0].offer_scene).toBeNull();
+
+    const questId = created.quests[0].id;
+    const saved = (
+      await call('put', `/quests/${questId}`)
+        .send({
+          npc_id: giver,
+          quest_type_id: 1,
+          amount: 2,
+          offer_scene: 'bia_pede_ajuda',
+          dialogues: { ongoing: dialogues.ongoing.slice(0, 1) },
+        })
+        .expect(200)
+    ).body as { quests: { dialogues: unknown; offer_scene: string | null }[] };
+    expect(saved.quests[0].dialogues).toEqual({
+      offer: [],
+      ongoing: dialogues.ongoing.slice(0, 1),
+      done: [],
+    });
+    expect(saved.quests[0].offer_scene).toBe('bia_pede_ajuda');
+    expect(await prisma.questDialogueStep.count({ where: { questId } })).toBe(
+      1,
+    );
+
+    const messageOf = async (body: object) =>
+      (
+        (
+          await call('put', `/quests/${questId}`)
+            .send({ npc_id: giver, quest_type_id: 1, amount: 2, ...body })
+            .expect(400)
+        ).body as { message: string }
+      ).message;
+    expect(
+      await messageOf({
+        dialogues: {
+          done: [
+            {
+              type: 'choice',
+              options: [
+                { text: 'a', outcome: 'accept', steps: [] },
+                { text: 'b', steps: [] },
+              ],
+            },
+          ],
+        },
+      }),
+    ).toBe('Só a conversa de início aceita ou recusa a missão.');
+    expect(await messageOf({ offer_scene: 'Cena Ruim' })).toBe(
+      'A cena do início é inválida.',
+    );
+  }, 60_000);
 });

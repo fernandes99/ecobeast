@@ -1897,16 +1897,19 @@ model Quest {
   countsForUnlock Boolean @default(true) @map("counts_for_unlock")
   /// O item do "Encontre X item" (auralis/09).
   targetItemId    Int?    @map("target_item_id")
+  /// A cena da história no lugar da conversa de início (auralis/10). CHECK ^[a-z0-9_]{1,64}$ (migration quest_dialogues)
+  offerScene      String? @map("offer_scene")
 
-  island     Island        @relation(fields: [islandId], references: [id], onDelete: Cascade)
-  npc        Npc           @relation("QuestGiver", fields: [npcId], references: [id], onDelete: Restrict)
-  questType  QuestType     @relation(fields: [questTypeId], references: [id], onDelete: Restrict)
-  species    Species?      @relation(fields: [speciesId], references: [id], onDelete: Restrict)
-  targetNpc  Npc?          @relation("QuestTarget", fields: [targetNpcId], references: [id], onDelete: Restrict)
-  item       Item?         @relation("QuestRewardItem", fields: [itemId], references: [id], onDelete: Restrict)
-  targetItem Item?         @relation("QuestTargetItem", fields: [targetItemId], references: [id], onDelete: Restrict)
+  island     Island              @relation(fields: [islandId], references: [id], onDelete: Cascade)
+  npc        Npc                 @relation("QuestGiver", fields: [npcId], references: [id], onDelete: Restrict)
+  questType  QuestType           @relation(fields: [questTypeId], references: [id], onDelete: Restrict)
+  species    Species?            @relation(fields: [speciesId], references: [id], onDelete: Restrict)
+  targetNpc  Npc?                @relation("QuestTarget", fields: [targetNpcId], references: [id], onDelete: Restrict)
+  item       Item?               @relation("QuestRewardItem", fields: [itemId], references: [id], onDelete: Restrict)
+  targetItem Item?               @relation("QuestTargetItem", fields: [targetItemId], references: [id], onDelete: Restrict)
   tiles      QuestTile[]
   players    PlayerQuest[]
+  dialogue   QuestDialogueStep[]
 
   @@unique([islandId, npcId, position])
   @@index([npcId])
@@ -1920,6 +1923,53 @@ model Quest {
 }
 
 /// Os hexágonos do lugar de uma missão "Vá até" (auralis/06).
+/// Um passo de uma conversa da missão (auralis/10): uma fala ou uma escolha.
+model QuestDialogueStep {
+  id       Int     @id @default(autoincrement())
+  questId  Int     @map("quest_id")
+  /// 1 início, 2 durante, 3 fim. CHECK 1–3 (migration quest_dialogues)
+  stage    Int     @db.SmallInt
+  /// A opção de quem este passo é a resposta; nulo no primeiro nível.
+  optionId Int?    @map("option_id")
+  /// A ordem, de 1 em diante. CHECK > 0 (migration quest_dialogues)
+  position Int     @db.SmallInt
+  /// 1 fala, 2 escolha. CHECK 1–2 (migration quest_dialogues)
+  kind     Int     @db.SmallInt
+  /// Só na fala: 1 NPC, 2 Domador, 3 narração. CHECK 1–3 na fala, nulo na escolha (migration quest_dialogues)
+  speaker  Int?    @db.SmallInt
+  /// Só na fala. CHECK 1–300 caracteres na fala, nulo na escolha (migration quest_dialogues)
+  text     String?
+
+  quest   Quest                 @relation(fields: [questId], references: [id], onDelete: Cascade)
+  option  QuestDialogueOption?  @relation("OptionSteps", fields: [optionId], references: [id], onDelete: Cascade)
+  options QuestDialogueOption[] @relation("ChoiceOptions")
+
+  @@index([questId])
+  @@index([optionId])
+  @@map("quest_dialogue_steps")
+  @@schema("ecobeasts")
+}
+
+/// Uma opção de uma escolha da conversa da missão (auralis/10).
+model QuestDialogueOption {
+  id       Int    @id @default(autoincrement())
+  /// A escolha.
+  stepId   Int    @map("step_id")
+  /// CHECK 1–4 (migration quest_dialogues)
+  position Int    @db.SmallInt
+  /// CHECK 1–40 caracteres (migration quest_dialogues)
+  text     String
+  /// Só no início: 1 aceita, 2 recusa; nulo segue. CHECK 1–2 (migration quest_dialogues)
+  outcome  Int?   @db.SmallInt
+
+  step  QuestDialogueStep   @relation("ChoiceOptions", fields: [stepId], references: [id], onDelete: Cascade)
+  steps QuestDialogueStep[] @relation("OptionSteps")
+
+  @@unique([stepId, position])
+  @@map("quest_dialogue_options")
+  @@schema("ecobeasts")
+}
+
 model QuestTile {
   questId Int @map("quest_id")
   q       Int

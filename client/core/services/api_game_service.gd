@@ -37,6 +37,7 @@ const DISCOVERIES_PATH := "/v1/me/islands/%d/discoveries"
 const ARCHIPELAGO_PATH := "/v1/me/archipelago"
 const QUEST_TALK_PATH := "/v1/me/quests/talk"
 const QUEST_REACH_PATH := "/v1/me/quests/reach"
+const QUEST_ACCEPT_PATH := "/v1/me/quests/accept"
 const GROUND_ITEM_PICK_PATH := "/v1/me/ground-items/pick"
 const UNLOCK_ISLAND_PATH := "/v1/me/archipelago/%d/unlock"
 const EVOLUTION_PATH := "/v1/me/creatures/%s/evolution"
@@ -143,6 +144,15 @@ func start_exploration(island_id: int = 0) -> Result:
 
 func talk_quest(npc_id: int) -> Result:
 	var response: ApiResponse = await Api.request(HTTPClient.METHOD_POST, QUEST_TALK_PATH, {"npc_id": npc_id}, true)
+	if not response.ok:
+		return Result.failure(response.error)
+	if not response.data is Dictionary:
+		return Result.failure(ApiResponse.SERVER_ERROR)
+	return Result.success(QuestTalk.from_dict(response.data))
+
+
+func accept_quest(quest_id: int) -> Result:
+	var response: ApiResponse = await Api.request(HTTPClient.METHOD_POST, QUEST_ACCEPT_PATH, {"quest_id": quest_id}, true)
 	if not response.ok:
 		return Result.failure(response.error)
 	if not response.data is Dictionary:

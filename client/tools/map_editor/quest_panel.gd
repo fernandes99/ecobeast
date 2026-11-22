@@ -68,6 +68,7 @@ var _item: OptionButton
 var _item_quantity: EditorNumberField
 var _item_quantity_row: HBoxContainer
 var _counts: CheckBox
+var _dialogue: QuestDialogueEditor
 var _delete: Button
 
 
@@ -101,6 +102,7 @@ func _init() -> void:
 	_form_title.theme_type_variation = &"BoldLabel"
 	_form.add_child(_form_title)
 	_giver = OptionButton.new()
+	_giver.item_selected.connect(func(_index: int) -> void: _dialogue.set_giver_on_map(_placed(_giver.get_selected_id())))
 	_form.add_child(_row("Quem dá", _giver))
 	_type = OptionButton.new()
 	_type.item_selected.connect(func(_index: int) -> void: _refresh_fields())
@@ -160,6 +162,9 @@ func _init() -> void:
 	_counts.text = "Conta para abrir a próxima ilha"
 	_counts.focus_mode = Control.FOCUS_NONE
 	_form.add_child(_counts)
+	_form.add_child(HSeparator.new())
+	_dialogue = QuestDialogueEditor.new()
+	_form.add_child(_dialogue)
 
 	var actions := HBoxContainer.new()
 	actions.add_theme_constant_override(&"separation", 6)
@@ -364,6 +369,9 @@ func _open(id: int, giver := 0) -> void:
 	var quantity: Variant = quest.get("item_quantity")
 	_item_quantity.set_value(int(quantity) if quantity != null else 1)
 	_counts.button_pressed = bool(quest.get("counts_for_unlock", true))
+	var scene: Variant = quest.get("offer_scene")
+	_dialogue.set_dialogues(quest.get("dialogues"), str(scene) if scene is String else "", _island_id)
+	_dialogue.set_giver_on_map(_placed(_giver.get_selected_id()))
 	cancel_pick()
 	_render()
 	changed.emit()
@@ -419,6 +427,8 @@ func _body_of_form() -> Dictionary:
 		"item_quantity": 0 if is_nan(quantity) else int(quantity),
 		"counts_for_unlock": _counts.button_pressed,
 		"tiles": tiles,
+		"dialogues": _dialogue.dialogues(),
+		"offer_scene": _text_or_null(_dialogue.offer_scene()),
 	}
 
 
@@ -526,6 +536,12 @@ func _find(id: int) -> Dictionary:
 		if int(quest.get("id", 0)) == id:
 			return quest
 	return {}
+
+
+static func _text_or_null(text: String) -> Variant:
+	if text.is_empty():
+		return null
+	return text
 
 
 ## O JSON pede nulo no campo que o tipo não usa.

@@ -5,6 +5,11 @@ import {
 } from '@nestjs/common';
 import type { HexCoord } from '../domain/exploration/hex.js';
 import {
+  dialoguesFromRows,
+  type DialogueStage,
+  type DialogueStep,
+} from '../domain/quests/quest-dialogue.js';
+import {
   acceptedLine,
   type BattleQuestEvents,
   battleQuestDeltas,
@@ -30,6 +35,8 @@ export const NOT_ON_ISLAND = 'Missões só numa ilha.';
 export const NPC_NOT_HERE = 'Esse NPC não está nesta ilha.';
 export const NO_EXPLORATION = 'Essa exploração acabou. Saia e entre de novo.';
 export const UNREACHABLE = 'Você não chegou até aí.';
+export const QUEST_NOT_FOUND = 'Missão não encontrada.';
+export const QUEST_NOT_NEXT = 'Essa missão não é a da vez.';
 
 const PUBLISHED = 'published';
 
@@ -46,11 +53,33 @@ export interface QuestReward {
   xp: number;
 }
 
+/** Em que ponto está a primeira missão não entregue do NPC (auralis/10). */
+export type TalkStage = 'none' | DialogueStage;
+
+/** A oferta de uma missão: a conversa de início ou a cena. */
+export interface QuestOffer {
+  questId: number;
+  dialogue: DialogueStep[];
+  offerScene: string | null;
+}
+
 export interface TalkResult {
+  stage: TalkStage;
+  questId: number | null;
+  /** A conversa do momento; vazia sem conversa escrita. */
+  dialogue: DialogueStep[];
+  offerScene: string | null;
+  /** Depois da entrega, a próxima da fila, ainda não aceita. */
+  next: QuestOffer | null;
   lines: string[];
   reward: QuestReward | null;
   tamerProgress: TamerProgressDto | null;
   islandUnlocked: UnlockedIsland | null;
+  questPlaces: QuestPlace[];
+}
+
+export interface AcceptResult {
+  lines: string[];
   questPlaces: QuestPlace[];
 }
 
@@ -72,6 +101,8 @@ const QUEST_SELECT = {
   species: { select: { name: true } },
   targetNpc: { select: { name: true } },
   targetItem: { select: { name: true } },
+  offerScene: true,
+  dialogue: { include: { options: true } },
 } as const;
 
 type QuestRow = Prisma.QuestGetPayload<{ select: typeof QUEST_SELECT }>;
@@ -186,7 +217,8 @@ export class QuestsService {
 
   /**
    * A conversa com o NPC: cumpre as "Fale com" ele e, se ele dá missões nesta
-   * ilha, aceita, entrega ou mostra o progresso da primeira não entregue.
+   * ilha, oferece (sem aceitar), entrega ou mostra o progresso da primeira não
+   * entregue, com a conversa escrita daquele momento (auralis/10).
    */
   async talk(userId: string, npcId: number): Promise<TalkResult> {
     const islandId = this.explorations.get(userId)?.islandId;
@@ -220,6 +252,11 @@ export class QuestsService {
       this.islandName(islandId),
     ]);
     const result: TalkResult = {
+      stage: 'none',
+      questId: null,
+      dialogue: [],
+      offerScene: null,
+      next: null,
       lines: [],
       reward: null,
       tamerProgress: null,
@@ -231,27 +268,71 @@ export class QuestsService {
     if (quest) {
       const title = questTitle(quest, namesOf(quest, islandName));
       const row = quest.players[0];
+      result.questId = quest.id;
       if (!row) {
-        await this.accept(userId, quest.id);
-        result.lines.push(acceptedLine(title));
+        Object.assign(result, offerOf(quest));
+        result.stage = 'offer';
       } else {
         const progress = await this.progressOf(userId, quest, row.progress);
         if (progress >= questTarget(quest)) {
           const next = queue[index + 1];
-          Object.assign(result, await this.claim(userId, quest, next?.id));
+          Object.assign(result, await this.claim(userId, quest));
+          result.stage = 'done';
+          result.dialogue = dialogueOf(quest, 'done');
           result.lines.push(claimedLine(title));
-          if (next) {
-            result.lines.push(
-              acceptedLine(questTitle(next, namesOf(next, islandName))),
-            );
-          }
+          result.next = next ? offerOf(next) : null;
         } else {
+          result.stage = 'ongoing';
+          result.dialogue = dialogueOf(quest, 'ongoing');
           result.lines.push(progressLine(quest, title, progress));
         }
       }
     }
     result.questPlaces = await this.places(userId, islandId);
     return result;
+  }
+
+  /**
+   * Aceita a missão, se ela é a primeira não entregue do NPC dela nesta ilha,
+   * com o NPC posto; uma já aceita responde sem falas (auralis/10).
+   */
+  async acceptQuest(userId: string, questId: number): Promise<AcceptResult> {
+    const islandId = this.explorations.get(userId)?.islandId;
+    if (islandId === undefined) throw new ConflictException(NOT_ON_ISLAND);
+    const quest = await this.prisma.quest.findUnique({
+      where: { id: questId },
+      select: { ...QUEST_SELECT, npcId: true },
+    });
+    if (!quest || quest.islandId !== islandId) {
+      throw new NotFoundException(QUEST_NOT_FOUND);
+    }
+    const placed = await this.completion.placedNpcs(islandId);
+    if (!this.completion.isPlaced(placed, quest.npcId)) {
+      throw new ConflictException(NPC_NOT_HERE);
+    }
+    const first = await this.prisma.quest.findFirst({
+      where: {
+        islandId,
+        npcId: quest.npcId,
+        players: { none: { playerId: userId, claimedAt: { not: null } } },
+      },
+      orderBy: { position: 'asc' },
+      select: {
+        id: true,
+        players: { where: { playerId: userId }, select: { questId: true } },
+      },
+    });
+    if (first?.id !== questId) throw new ConflictException(QUEST_NOT_NEXT);
+    const lines: string[] = [];
+    if (first.players.length === 0) {
+      await this.accept(userId, questId);
+      const title = questTitle(
+        quest,
+        namesOf(quest, await this.islandName(islandId)),
+      );
+      lines.push(acceptedLine(title));
+    }
+    return { lines, questPlaces: await this.places(userId, islandId) };
   }
 
   /** O Domador pisou em (q, r): cumpre as "Vá até" da ilha com esse hexágono. */
@@ -331,12 +412,11 @@ export class QuestsService {
     return progress;
   }
 
-  /** A entrega: moedas, item e XP numa transação, e a missão seguinte aceita. */
+  /** A entrega: moedas, item e XP numa transação; a seguinte fica para oferecer. */
   private async claim(
     userId: string,
     quest: QuestRow,
-    nextQuestId: number | undefined,
-  ): Promise<Omit<TalkResult, 'lines' | 'questPlaces'>> {
+  ): Promise<Pick<TalkResult, 'reward' | 'tamerProgress' | 'islandUnlocked'>> {
     const [unlocked, { levels, sources }] = await Promise.all([
       this.completion.unlockedBy(userId, quest.islandId, {
         questId: quest.id,
@@ -383,17 +463,6 @@ export class QuestsService {
             }),
           ]
         : []),
-      ...(nextQuestId !== undefined
-        ? [
-            this.prisma.playerQuest.upsert({
-              where: {
-                playerId_questId: { playerId: userId, questId: nextQuestId },
-              },
-              create: { playerId: userId, questId: nextQuestId },
-              update: {},
-            }),
-          ]
-        : []),
     ]);
     return {
       reward: { coins, itemId, itemQuantity, xp },
@@ -423,6 +492,21 @@ export class QuestsService {
     });
     return map?.name ?? '';
   }
+}
+
+function dialogueOf(quest: QuestRow, stage: DialogueStage): DialogueStep[] {
+  return dialoguesFromRows(
+    quest.dialogue,
+    quest.dialogue.flatMap(({ options }) => options),
+  )[stage];
+}
+
+function offerOf(quest: QuestRow): QuestOffer {
+  return {
+    questId: quest.id,
+    dialogue: dialogueOf(quest, 'offer'),
+    offerScene: quest.offerScene,
+  };
 }
 
 function namesOf(quest: QuestRow, island: string) {

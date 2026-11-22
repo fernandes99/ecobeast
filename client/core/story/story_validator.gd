@@ -6,7 +6,7 @@ extends RefCounted
 
 const SLUG_PATTERN := "^[a-z0-9_]{1,48}$"
 const KEY_PATTERN := "^[a-z0-9_]{1,24}$"
-const TRIGGERS: Array[String] = ["auto", "npc", "area"]
+const TRIGGERS: Array[String] = ["auto", "npc", "area", "quest"]
 const MAX_TEXT := 300
 const MIN_SECONDS := 0.1
 const MAX_SECONDS := 10.0

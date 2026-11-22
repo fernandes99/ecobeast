@@ -236,6 +236,15 @@ func talk_quest(npc_id: int) -> Result:
 	return result
 
 
+## Aceita a missão oferecida (auralis/10) e guarda os lugares que faltam.
+func accept_quest(quest_id: int) -> Result:
+	@warning_ignore("redundant_await")
+	var result: Result = await _service.accept_quest(quest_id)
+	if result.ok:
+		quest_places = (result.data as QuestTalk).places
+	return result
+
+
 ## Pega um item no chão (auralis/09) e relê o Domador, para a Mochila.
 func pick_ground_item(key: int) -> Result:
 	@warning_ignore("redundant_await")

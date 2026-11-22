@@ -7,6 +7,7 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator';
+import type { QuestDialogues } from '../domain/quests/quest-dialogue.js';
 
 export const INVALID_QUEST = 'Missão inválida.';
 export const INVALID_DIRECTION = 'Use "up" ou "down".';
@@ -106,6 +107,25 @@ export class QuestEditorBodyDto {
   @IsOptional()
   @IsArray({ message: INVALID_QUEST })
   tiles?: QuestEditorTileDto[];
+
+  @ApiPropertyOptional({
+    description:
+      'As conversas de início (`offer`), durante (`ongoing`) e fim (`done`), em falas (`say`) e escolhas (`choice`) (auralis/10). Sem ela, as conversas ficam vazias.',
+    type: 'object',
+    additionalProperties: true,
+  })
+  @IsOptional()
+  dialogues?: unknown;
+
+  @ApiPropertyOptional({
+    description:
+      'O slug de uma cena da história de gatilho "Pela missão", no lugar da conversa de início.',
+    type: String,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsString({ message: INVALID_QUEST })
+  offer_scene?: string | null;
 }
 
 export class QuestMoveBodyDto {
@@ -192,6 +212,16 @@ export class QuestEditorDto {
     example: 'Capture 3 Ecobeasts',
   })
   display_title: string;
+
+  @ApiProperty({
+    description: 'As conversas de início, durante e fim (auralis/10).',
+    type: 'object',
+    additionalProperties: true,
+  })
+  dialogues: QuestDialogues;
+
+  @ApiProperty({ type: String, nullable: true })
+  offer_scene: string | null;
 }
 
 export class QuestsEditorResponseDto {

@@ -80,8 +80,9 @@ var _talking_prop := -1
 var _talk_lines: Array[String] = []
 var _talk_index := 0
 ## O NPC cujas falas de missão estão na caixa, ou esperando o servidor (auralis/06).
-var _quest_npc: MapNpc = null
-var _quest_lines: Array[String] = []
+## A conversa com um NPC numa ilha, com a missão dele (auralis/10).
+var _conversation: QuestConversation = null
+var _conversing := false
 var _reaching_place := false
 ## Os itens no chão ainda no mapa, pela key (auralis/09), e os que estão indo ao servidor.
 var _ground_items: Dictionary[int, GroundItemSprite] = {}
@@ -976,9 +977,12 @@ func _talk(npc: NpcSprite) -> void:
 		if is_instance_valid(npc) and not _followers.has(npc):
 			npc.resume()
 		return
+	if _map.island_id > 0:
+		_converse(npc)
+		return
 	var lines := npc.npc.lines()
 	if lines.is_empty():
-		_after_talk(npc.npc)
+		_finish_talk(npc.npc)
 		return
 	_talking = npc
 	_talk_lines = lines
@@ -992,6 +996,36 @@ func _talk(npc: NpcSprite) -> void:
 	_say_line()
 
 
+## Numa ilha, a missão do NPC decide a conversa (auralis/10); depois vem a luta ou a ação.
+func _converse(npc: NpcSprite) -> void:
+	var map_npc := npc.npc
+	_conversing = true
+	npc.hold(true, _player_art_point())
+	_marker.face_toward(npc.position - _player_art_point())
+	_marker.play_idle()
+	_debug_panel.hide()
+	_message.hide()
+	_set_controls_enabled(false)
+	await _conversation.run(map_npc, _quest_scene.bind(npc))
+	if not is_inside_tree():
+		return
+	_conversing = false
+	_set_controls_enabled(true)
+	if is_instance_valid(npc) and not _followers.has(npc):
+		npc.hold(false)
+	_finish_talk(map_npc)
+
+
+## A cena do início da missão, sem olhar as condições dela; devolve se tocou.
+func _quest_scene(slug: String, npc: NpcSprite) -> bool:
+	var scene := Story.library.find(slug)
+	if scene == null or scene.island_id != _map.island_id or _story_busy() or not _playable(scene):
+		return false
+	await _story.play(scene, npc if is_instance_valid(npc) else null)
+	_set_controls_enabled(false)
+	return true
+
+
 func _say_line() -> void:
 	if _talking_prop >= 0:
 		_greeting.say(_talk_lines[_talk_index], GameData.voice_by_slug(StoryPlayer.NARRATION_VOICE))
@@ -1001,6 +1035,8 @@ func _say_line() -> void:
 
 
 func _on_greeting_tapped() -> void:
+	if _conversing:
+		return
 	if _found_item:
 		_found_item = false
 		_greeting.close()
@@ -1008,9 +1044,6 @@ func _on_greeting_tapped() -> void:
 		return
 	if not _in_talk():
 		_fight_challenger()
-		return
-	if _quest_npc != null:
-		_next_quest_line()
 		return
 	_talk_index += 1
 	if _talk_index < _talk_lines.size():
@@ -1028,43 +1061,7 @@ func _on_greeting_tapped() -> void:
 	_greeting.close()
 	_set_controls_enabled(true)
 	npc.hold(false)
-	_after_talk(npc.npc)
-
-
-## Numa ilha, as falas da missão vêm antes da luta ou da ação (auralis/06).
-func _after_talk(npc: MapNpc) -> void:
-	if _map.island_id <= 0:
-		_finish_talk(npc)
-		return
-	_quest_npc = npc
-	_quest_lines = []
-	_set_controls_enabled(false)
-	var result: Result = await Session.talk_quest(npc.npc_id)
-	if not is_inside_tree() or _quest_npc != npc:
-		return
-	if result.ok:
-		var talk: QuestTalk = result.data
-		var item := GameData.get_item(talk.item_id) if talk.item_id > 0 else null
-		_quest_lines = talk.display_lines(item.name if item != null else "item")
-	if _quest_lines.is_empty():
-		_quest_npc = null
-		_set_controls_enabled(true)
-		_finish_talk(npc)
-		return
-	_talk_index = 0
-	_greeting.say(_quest_lines[0], GameData.voice_by_slug(StoryPlayer.NARRATION_VOICE))
-
-
-func _next_quest_line() -> void:
-	_talk_index += 1
-	if _talk_index < _quest_lines.size():
-		_greeting.say(_quest_lines[_talk_index], GameData.voice_by_slug(StoryPlayer.NARRATION_VOICE))
-		return
-	var npc := _quest_npc
-	_quest_npc = null
-	_greeting.close()
-	_set_controls_enabled(true)
-	_finish_talk(npc)
+	_finish_talk(npc.npc)
 
 
 func _check_quest_place(coord: Vector2i) -> void:
@@ -1086,7 +1083,7 @@ func _finish_talk(npc: MapNpc) -> void:
 
 
 func _in_talk() -> bool:
-	return _talking != null or _talking_prop >= 0 or _quest_npc != null or _found_item
+	return _talking != null or _talking_prop >= 0 or _conversing or _found_item
 
 
 func _fight_challenger() -> void:
@@ -1432,6 +1429,7 @@ func _build_story() -> void:
 	column.add_child(_story_choices)
 	column.move_child(_story_choices, _greeting.get_index())
 	_story.setup(self, _greeting, _story_choices, _story_fade)
+	_conversation = QuestConversation.new(_greeting, _story_choices)
 	add_child(_story)
 
 

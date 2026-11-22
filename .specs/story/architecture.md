@@ -103,6 +103,7 @@ Uma cena só pode rodar se: a ilha é a da cena, todos os `requires` estão liga
 | `auto` | — | o Domador está na ilha e a cena pode rodar: ao entrar na ilha e logo depois de outra cena terminar. Uma `auto` repetível roda no máximo uma vez por entrada ([liora-intro/03](../liora-intro/03-intro-steps.md), RF-16) |
 | `npc` | `npc_id` | o Domador toca, por perto, num NPC da ilha com esse `npc_id` do catálogo; a cena toma o lugar do diálogo dele. É o `npc_id`, e não o `id` de `map.npcs`, porque esse `id` muda quando a ilha ganha ou perde NPCs numa versão nova |
 | `area` | `tiles`: lista de `{ q, r }` | o Domador termina um passo num desses hexágonos |
+| `quest` | — | nunca sozinha: a missão a toca no lugar da conversa de início, sem olhar `requires` nem `forbids` ([auralis/10](../auralis/10-quest-dialogues.md)) |
 
 Com nenhuma cena para o toque, o NPC fala o diálogo da ilha, como hoje.
 

@@ -83,11 +83,11 @@ describe('Os itens no chão (e2e)', () => {
         ).body as { ground_items: GroundItem[] },
       pick: (key: number) =>
         http().post('/v1/me/ground-items/pick').set(auth).send({ key }),
-      talk: (npcId: number) =>
+      accept: (questId: number) =>
         http()
-          .post('/v1/me/quests/talk')
+          .post('/v1/me/quests/accept')
           .set(auth)
-          .send({ npc_id: npcId })
+          .send({ quest_id: questId })
           .expect(200),
       buy: (itemId: number) =>
         http()
@@ -247,7 +247,7 @@ describe('Os itens no chão (e2e)', () => {
 
     // Antes de aceitar, a compra não conta; depois, a Loja e o chão contam.
     await me.buy(potion.id);
-    await me.talk(giver);
+    await me.accept(quest.id);
     const progress = async () =>
       (
         await prisma.playerQuest.findUniqueOrThrow({

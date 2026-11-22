@@ -165,6 +165,7 @@ A fase 8 também está adiada. No mesmo dia, o dono pediu: "vamos pular a fase 8
 | 7 | [07-quest-editor](07-quest-editor.md) | A ferramenta Missões do F2: criar, editar, ordenar e apagar as missões de cada NPC, com o lugar do "Vá até" escolhido no mapa | concluída (falta o dono conferir no F2) |
 | 8 | 08-extra-quests | Os modelos de missão e o quadro de missões extras do Arquipélago | adiada |
 | 9 | [09-ground-items](09-ground-items.md) | O item no chão da ilha para pegar e as missões "Encontre X item" | concluída (falta o dono conferir no F2 e no jogo) |
+| 10 | [10-quest-dialogues](10-quest-dialogues.md) | As conversas de início (ou uma cena), durante e fim de cada missão, com escolhas que podem recusar, escritas na ferramenta Missões do F2 | concluída (falta o dono conferir no F2 e no jogo) |
 
 As specs das fases são escritas quando cada uma for planejada.
 

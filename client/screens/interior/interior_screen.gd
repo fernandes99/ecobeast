@@ -21,12 +21,11 @@ var _leaving := false
 var _press_position := Vector2.ZERO
 var _npc_sprites: Array[NpcSprite] = []
 var _npc_target: NpcSprite = null
-var _talking: NpcSprite = null
-var _talk_lines: Array[String] = []
-var _talk_index := 0
+## A conversa com o NPC, com a missão dele (auralis/10).
+var _choices := StoryChoicePanel.new()
+var _conversation: QuestConversation = null
+var _conversing := false
 ## O NPC cujas falas de missão estão na caixa, ou esperando o servidor (auralis/06).
-var _quest_npc: MapNpc = null
-var _quest_lines: Array[String] = []
 
 @onready var _background: ColorRect = %Background
 @onready var _room_area: Control = %RoomArea
@@ -57,7 +56,10 @@ func _ready() -> void:
 	_room_area.gui_input.connect(_on_room_input)
 	_room_area.resized.connect(_place_camera)
 	_status_back.pressed.connect(Router.back)
-	_greeting.tapped.connect(_on_greeting_tapped)
+	var column := _greeting.get_parent()
+	column.add_child(_choices)
+	column.move_child(_choices, _greeting.get_index())
+	_conversation = QuestConversation.new(_greeting, _choices)
 	if _interior != null:
 		_show(_interior)
 		return
@@ -72,16 +74,9 @@ func _ready() -> void:
 	_show(result.data)
 
 
-## Com a conversa aberta, o voltar só a fecha, sem a ação do NPC.
+## Com a conversa aberta, o voltar não sai da sala.
 func handle_back() -> bool:
-	if _quest_npc != null:
-		return true
-	if _talking == null:
-		return false
-	_greeting.close()
-	_talking.hold(false)
-	_talking = null
-	return true
+	return _conversing
 
 
 ## O ponto dos pés do Domador, em pixels da arte.
@@ -91,7 +86,7 @@ func player_point() -> Vector2:
 
 ## O toque na sala, em pixels da arte (o mesmo caminho do toque na tela).
 func tap_art(point: Vector2) -> void:
-	if _route == null or _leaving or _talking != null or _quest_npc != null:
+	if _route == null or _leaving or _conversing:
 		return
 	_npc_target = null
 	_show_message("")
@@ -201,67 +196,14 @@ func _talk(sprite: NpcSprite) -> void:
 	_tamer.face_toward(sprite.position - _point)
 	_tamer.play_idle()
 	sprite.hold(true, _point)
-	var lines := sprite.npc.lines()
-	if lines.is_empty():
+	_conversing = true
+	var npc := sprite.npc
+	await _conversation.run(npc)
+	if not is_inside_tree():
+		return
+	_conversing = false
+	if is_instance_valid(sprite):
 		sprite.hold(false)
-		_after_talk(sprite.npc)
-		return
-	_talking = sprite
-	_talk_lines = lines
-	_talk_index = 0
-	_say_line()
-
-
-func _say_line() -> void:
-	var npc_id := _talking.npc.npc_id
-	var npc_name := str(GameData.get_npc(npc_id).get("name", ""))
-	_greeting.say("%s: %s" % [npc_name, _talk_lines[_talk_index]], GameData.npc_voice(npc_id))
-
-
-func _on_greeting_tapped() -> void:
-	if _quest_npc != null:
-		_next_quest_line()
-		return
-	if _talking == null:
-		return
-	_talk_index += 1
-	if _talk_index < _talk_lines.size():
-		_say_line()
-		return
-	var sprite := _talking
-	_talking = null
-	_greeting.close()
-	sprite.hold(false)
-	_after_talk(sprite.npc)
-
-
-## As falas da missão vêm antes da luta ou da ação (auralis/06).
-func _after_talk(npc: MapNpc) -> void:
-	_quest_npc = npc
-	_quest_lines = []
-	var result: Result = await Session.talk_quest(npc.npc_id)
-	if not is_inside_tree() or _quest_npc != npc:
-		return
-	if result.ok:
-		var talk: QuestTalk = result.data
-		var item := GameData.get_item(talk.item_id) if talk.item_id > 0 else null
-		_quest_lines = talk.display_lines(item.name if item != null else "item")
-	if _quest_lines.is_empty():
-		_quest_npc = null
-		_finish_talk(npc)
-		return
-	_talk_index = 0
-	_greeting.say(_quest_lines[0], GameData.voice_by_slug(StoryPlayer.NARRATION_VOICE))
-
-
-func _next_quest_line() -> void:
-	_talk_index += 1
-	if _talk_index < _quest_lines.size():
-		_greeting.say(_quest_lines[_talk_index], GameData.voice_by_slug(StoryPlayer.NARRATION_VOICE))
-		return
-	var npc := _quest_npc
-	_quest_npc = null
-	_greeting.close()
 	_finish_talk(npc)
 
 

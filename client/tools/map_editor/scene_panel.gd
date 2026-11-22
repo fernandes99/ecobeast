@@ -12,7 +12,7 @@ signal scene_opened
 signal message(text: String, error: bool)
 signal test_requested(scene: StoryScene, marks: Array[String])
 
-const TRIGGERS: Array[Array] = [["Ao entrar na ilha", "auto"], ["Ao tocar no NPC", "npc"], ["Ao pisar na área", "area"]]
+const TRIGGERS: Array[Array] = [["Ao entrar na ilha", "auto"], ["Ao tocar no NPC", "npc"], ["Ao pisar na área", "area"], ["Pela missão", "quest"]]
 const PICK_TEXT := "Clique num hexágono da ilha. Esc ou o botão direito desistem."
 const AREA_PICK_TEXT := "Cada clique põe ou tira um hexágono da área. Aperte Pronto no fim."
 const OUTSIDE_TEXT := "Esse hexágono não é da ilha."

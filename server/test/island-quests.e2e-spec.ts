@@ -16,6 +16,7 @@ const RUVO = 1;
 const BASE_ORDER = 930_000;
 const NOT_ON_ISLAND = 'Missões só numa ilha.';
 const NPC_NOT_HERE = 'Esse NPC não está nesta ilha.';
+const QUEST_NOT_NEXT = 'Essa missão não é a da vez.';
 
 interface Place {
   quest_id: number;
@@ -23,7 +24,18 @@ interface Place {
   tiles: { q: number; r: number }[];
 }
 
+interface Offer {
+  quest_id: number;
+  dialogue: unknown[];
+  offer_scene: string | null;
+}
+
 interface TalkBody {
+  stage: 'none' | 'offer' | 'ongoing' | 'done';
+  quest_id: number | null;
+  dialogue: unknown[];
+  offer_scene: string | null;
+  next: Offer | null;
   lines: string[];
   reward: {
     coins: number;
@@ -162,6 +174,11 @@ describe('As missões das ilhas (e2e)', () => {
         ).body as TalkBody,
       reach: (q: number, r: number) =>
         http().post('/v1/me/quests/reach').set(auth).send({ q, r }),
+      accept: (questId: number) =>
+        http()
+          .post('/v1/me/quests/accept')
+          .set(auth)
+          .send({ quest_id: questId }),
       win: async (npcId: number) =>
         playOut(
           act,
@@ -244,6 +261,19 @@ describe('As missões das ilhas (e2e)', () => {
         coins: 50,
         itemId: potion.id,
         itemQuantity: 2,
+        dialogue: {
+          create: [
+            {
+              stage: 1,
+              position: 1,
+              kind: 1,
+              speaker: 1,
+              text: 'Pode me ajudar?',
+            },
+            { stage: 2, position: 1, kind: 1, speaker: 1, text: 'E aí?' },
+            { stage: 3, position: 1, kind: 1, speaker: 3, text: 'Ele sorri.' },
+          ],
+        },
       },
     });
     const farol = await prisma.quest.create({
@@ -265,12 +295,35 @@ describe('As missões das ilhas (e2e)', () => {
       NPC_NOT_HERE,
     );
 
-    const accepted = await me.said(giver);
-    expect(accepted.lines).toEqual(['Nova missão: Derrote 1 Ecobeast.']);
-    expect(accepted.reward).toBeNull();
-    expect((await me.said(giver)).lines).toEqual([
-      'Derrote 1 Ecobeast: 0 de 1.',
+    // Oferecer não aceita: falar de novo oferece de novo (auralis/10).
+    for (let index = 0; index < 2; index++) {
+      const offered = await me.said(giver);
+      expect(offered.stage).toBe('offer');
+      expect(offered.quest_id).toBe(defeat.id);
+      expect(offered.dialogue).toEqual([
+        { type: 'say', speaker: 'npc', text: 'Pode me ajudar?' },
+      ]);
+      expect(offered.lines).toEqual([]);
+      expect(offered.reward).toBeNull();
+    }
+    expect(await prisma.playerQuest.count({ where: { playerId: me.id } })).toBe(
+      0,
+    );
+    expect((await me.accept(farol.id).expect(409)).body.message).toBe(
+      QUEST_NOT_NEXT,
+    );
+    await me.accept(2_000_000_000).expect(404);
+    expect((await me.accept(defeat.id).expect(200)).body).toEqual({
+      lines: ['Nova missão: Derrote 1 Ecobeast.'],
+      quest_places: [],
+    });
+    expect((await me.accept(defeat.id).expect(200)).body.lines).toEqual([]);
+    const ongoing = await me.said(giver);
+    expect(ongoing.stage).toBe('ongoing');
+    expect(ongoing.dialogue).toEqual([
+      { type: 'say', speaker: 'npc', text: 'E aí?' },
     ]);
+    expect(ongoing.lines).toEqual(['Derrote 1 Ecobeast: 0 de 1.']);
 
     await me.win(rival);
     expect(await progressOf(me.id, defeat.id)).toBe(1);
@@ -279,10 +332,16 @@ describe('As missões das ilhas (e2e)', () => {
       await prisma.player.findUniqueOrThrow({ where: { id: me.id } })
     ).coins;
     const claimed = await me.said(giver);
-    expect(claimed.lines).toEqual([
-      'Missão cumprida: Derrote 1 Ecobeast!',
-      'Nova missão: Vá até o Farol.',
+    expect(claimed.stage).toBe('done');
+    expect(claimed.dialogue).toEqual([
+      { type: 'say', speaker: 'narration', text: 'Ele sorri.' },
     ]);
+    expect(claimed.lines).toEqual(['Missão cumprida: Derrote 1 Ecobeast!']);
+    expect(claimed.next).toEqual({
+      quest_id: farol.id,
+      dialogue: [],
+      offer_scene: null,
+    });
     expect(claimed.reward).toEqual({
       coins: 50,
       item_id: potion.id,
@@ -291,9 +350,13 @@ describe('As missões das ilhas (e2e)', () => {
     });
     expect(claimed.tamer_progress!.xp_gained).toBe(questXp);
     expect(claimed.island_unlocked).toBeNull();
-    expect(claimed.quest_places).toEqual([
-      { quest_id: farol.id, name: 'o Farol', tiles: [{ q: 1, r: 0 }] },
-    ]);
+    expect(claimed.quest_places).toEqual([]);
+    expect((await me.accept(farol.id).expect(200)).body).toEqual({
+      lines: ['Nova missão: Vá até o Farol.'],
+      quest_places: [
+        { quest_id: farol.id, name: 'o Farol', tiles: [{ q: 1, r: 0 }] },
+      ],
+    });
     const after = await prisma.player.findUniqueOrThrow({
       where: { id: me.id },
       include: { inventory: { where: { itemId: potion.id } } },
@@ -314,9 +377,12 @@ describe('As missões das ilhas (e2e)', () => {
 
     const last = await me.said(giver);
     expect(last.lines).toEqual(['Missão cumprida: Vá até o Farol!']);
+    expect(last.next).toBeNull();
     expect(last.island_unlocked).toEqual({ id: second, name: 'Missões B' });
     expect(last.reward!.xp).toBeGreaterThan(questXp);
-    expect((await me.said(giver)).lines).toEqual([]);
+    const done = await me.said(giver);
+    expect(done.stage).toBe('none');
+    expect(done.lines).toEqual([]);
   }, 120_000);
 
   it('cada tipo soma pelo seu acontecimento, sem passar do alvo', async () => {
@@ -399,8 +465,10 @@ describe('As missões das ilhas (e2e)', () => {
       expect((await me.said(giver)).lines[0]).toMatch(/^Missão cumprida/);
     }
     const explore = await me.said(giver);
-    expect(explore.lines[0]).toBe('Missão cumprida: Explore 30% de Missões C!');
-    expect(explore.lines[1]).toBe('Nova missão: Capture 2 Ecobeasts.');
+    expect(explore.lines).toEqual([
+      'Missão cumprida: Explore 30% de Missões C!',
+    ]);
+    expect(explore.next?.quest_id).toBe(quests[6]!.id);
   }, 120_000);
 
   it('no mapa sorteado, os lugares vêm vazios e a conversa é recusada', async () => {
