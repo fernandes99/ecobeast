@@ -1,8 +1,7 @@
 class_name CreatureFace
 extends Control
 ## O rosto de um Ecobeast num círculo (.specs/creature-faces/02-face-component.md): o fundo
-## na cor do Elemento, o `face.png` recortado no círculo, o anel de HP e o anel de
-## selecionado. Sem `face.png`, e na sombra do Bestiário, o `front.png` inteiro faz o papel
+## na cor do Elemento, o `face.png` recortado no círculo e o anel de HP. Sem `face.png`, e na sombra do Bestiário, o `front.png` inteiro faz o papel
 ## do rosto.
 
 const FACE_PATH := "res://assets/creatures/%s/face.png"
@@ -10,7 +9,6 @@ const SilhouetteShader := preload("res://ui/components/silhouette.gdshader")
 
 const FILL_DARKEN := 0.45
 const HP_WIDTH := 0.05
-const SELECTED_WIDTH := 0.04
 ## O anel de HP vai do verde ao laranja e ao vermelho conforme a vida cai: a cor de cada
 ## parte da vida, lida em degradê entre elas.
 const HP_STOPS: Array[float] = [0.15, 0.5, 1.0]
@@ -31,7 +29,6 @@ var _shown_ratio := 0.0:
 		_shown_ratio = value
 		if _rings != null:
 			_rings.queue_redraw()
-var _selected := false
 var _silhouette := false
 var _hp_tween: Tween = null
 var _colors: Array[Color] = []
@@ -100,12 +97,6 @@ func set_hp(current: int, maximum: int) -> void:
 		_layout()
 
 
-func set_selected(on: bool) -> void:
-	_selected = on
-	if is_node_ready():
-		_rings.queue_redraw()
-
-
 func set_silhouette(on: bool) -> void:
 	_silhouette = on
 	if is_node_ready():
@@ -165,7 +156,7 @@ func _layout() -> void:
 
 
 func _inner_radius(side: float) -> float:
-	var radius := side / 2.0 - side * SELECTED_WIDTH
+	var radius := side / 2.0
 	if _show_hp:
 		radius -= side * HP_WIDTH
 	return radius
@@ -192,21 +183,17 @@ func _draw_backdrop() -> void:
 		_backdrop.draw_colored_polygon(half, _colors[1])
 
 
-## O anel de HP esvazia no sentido horário a partir do topo, sobre o trilho; o de
-## selecionado fica por fora dele.
+## O anel de HP esvazia no sentido horário a partir do topo, sobre o trilho.
 func _draw_rings() -> void:
 	var side := minf(_rings.size.x, _rings.size.y)
 	var center := _rings.size / 2.0
-	var selected_width := side * SELECTED_WIDTH
 	if _show_hp and _species_id > 0:
 		var width := side * HP_WIDTH
-		var radius := side / 2.0 - selected_width - width / 2.0
+		var radius := side / 2.0 - width / 2.0
 		_rings.draw_arc(center, radius, 0.0, TAU, ARC_POINTS, UiPalette.TRACK, width, true)
 		if _shown_ratio > 0.0 and not _fainted():
 			var start := -PI / 2.0
 			_rings.draw_arc(center, radius, start, start + TAU * _shown_ratio, ARC_POINTS, _hp_color(), width, true)
-	if _selected:
-		_rings.draw_arc(center, side / 2.0 - selected_width / 2.0, 0.0, TAU, ARC_POINTS, UiPalette.TEXT, selected_width, true)
 
 
 func _hp_color() -> Color:

@@ -44,7 +44,7 @@ Escolhas de Claude (_a revisar_; ao mudar uma, atualize aqui e na fase):
 | O script acha um quadrado inicial sozinho, pela parte de cima da figura, e os tortos são corrigidos olhando uma folha com todos os rostos | Na prática, o cálculo errou a maioria (pegou orelhas, cristais e asas), e os 37 quadrados de hoje foram marcados à mão; para uma espécie nova, ele ainda serve de ponto de partida |
 | O `face.png` sai com o fundo transparente, e o jogo pinta o fundo | O fundo muda com o Elemento (as duas cores de quem tem dois), com a sombra do Bestiário e com o desmaiado, sem refazer a imagem |
 | O anel de HP esvazia no sentido horário a partir do topo, sobre um trilho escuro | O topo é onde o olho começa |
-| O anel de selecionado fica por fora do anel de HP, fino e branco | O anel de HP passa a ocupar o lugar do anel na cor do Elemento das bolinhas de hoje |
+| O rosto não tem anel de selecionado: na Home, o escolhido fica 15% maior, crescendo para cima, com uma sombra no pé, e os outros ficam apagados | O anel branco por fora do de HP ficou estranho para o dono, que escolheu essa versão entre três prints (sem o ponto embaixo); o anel de HP fica sendo o único anel do círculo |
 
 ## Fora do escopo
 
