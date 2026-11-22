@@ -10,6 +10,8 @@ var still := false
 var tiles: Array[Vector2i] = []
 var dialogue := ""
 var action_type_id: int = -1
+## Um Domador desta ilha (auralis/04): a luta começa depois da última fala, no lugar da ação.
+var tamer := false
 
 
 func walk_tiles() -> Array[Vector2i]:
@@ -41,7 +43,7 @@ static func paragraphs(text: String) -> Array[String]:
 
 
 func has_talk() -> bool:
-	return not lines().is_empty() or action_type_id > 0
+	return not lines().is_empty() or action_type_id > 0 or tamer
 
 
 static func from_dict(d: Dictionary) -> MapNpc:
@@ -55,4 +57,5 @@ static func from_dict(d: Dictionary) -> MapNpc:
 			npc.tiles.append(Vector2i(DictFields.get_int(tile, "q"), DictFields.get_int(tile, "r")))
 	npc.dialogue = DictFields.get_string(d, "dialogue")
 	npc.action_type_id = DictFields.get_id(d, "action_type_id")
+	npc.tamer = DictFields.get_bool(d, "tamer")
 	return npc if npc.npc_id > 0 else null

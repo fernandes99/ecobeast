@@ -81,7 +81,7 @@ describe('O Arquipélago (e2e)', () => {
           .set(auth)
           .expect(200);
         return (body as { islands: Entry[] }).islands.filter(
-          ({ order }) => order > BASE_ORDER,
+          ({ order }) => order > BASE_ORDER && order < BASE_ORDER + 1_000,
         );
       },
       islandIds: async (): Promise<number[]> => {

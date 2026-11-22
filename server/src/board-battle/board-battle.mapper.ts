@@ -37,7 +37,11 @@ export function toBoardBattleDto(
       entry_cells: state.entryCells,
     },
     enemy: { ...dto.enemy, cells: state.cells.enemy },
-    tamer: tamer && { name_id: tamer.nameId, source: tamer.source },
+    tamer: tamer && {
+      name_id: tamer.nameId,
+      source: tamer.source,
+      name: tamer.name ?? null,
+    },
   };
 }
 

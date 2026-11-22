@@ -921,7 +921,7 @@ func _talk(npc: NpcSprite) -> void:
 		return
 	var lines := npc.npc.lines()
 	if lines.is_empty():
-		_run_action_type(npc.npc.action_type_id)
+		_after_talk(npc.npc)
 		return
 	_talking = npc
 	_talk_lines = lines
@@ -963,7 +963,15 @@ func _on_greeting_tapped() -> void:
 	_greeting.close()
 	_set_controls_enabled(true)
 	npc.hold(false)
-	_run_action_type(npc.npc.action_type_id)
+	_after_talk(npc.npc)
+
+
+## O Domador da ilha luta no lugar da ação (auralis/04).
+func _after_talk(npc: MapNpc) -> void:
+	if npc.tamer:
+		_open_battle({"island_tamer": npc.npc_id}, &"tamer")
+	else:
+		_run_action_type(npc.action_type_id)
 
 
 func _in_talk() -> bool:

@@ -349,6 +349,7 @@ describe('Ilhas do jogador (e2e)', () => {
           ],
           dialogue: 'Bem-vindo!\n\nO Refúgio fica ali.',
           action_type_id: refuge,
+          tamer: false,
         },
         {
           id: 2,
@@ -359,6 +360,7 @@ describe('Ilhas do jogador (e2e)', () => {
           tiles: [],
           dialogue: '',
           action_type_id: null,
+          tamer: false,
         },
       ]);
       expect(map.tamers).toEqual([]);

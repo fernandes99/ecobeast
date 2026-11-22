@@ -41,6 +41,10 @@ import {
   loadTamerTexts,
   partyAverageLevel,
 } from '../exploration/spawn-data.js';
+import {
+  IslandTamersService,
+  NO_ISLAND_TAMER,
+} from '../islands/island-tamers.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import {
   INVALID_SKILL_TEST,
@@ -53,6 +57,7 @@ const NOT_FINISHED: BattleFinish = {
   progression: [],
   registeredSpeciesIds: [],
   tamerProgress: null,
+  islandUnlocked: null,
 };
 
 function toResponse(
@@ -64,6 +69,7 @@ function toResponse(
     progression,
     registeredSpeciesIds,
     tamerProgress,
+    islandUnlocked,
   }: BattleFinish = NOT_FINISHED,
 ): BoardBattleResponseDto {
   return {
@@ -75,6 +81,7 @@ function toResponse(
     progression,
     registered_species_ids: registeredSpeciesIds,
     tamer_progress: tamerProgress,
+    island_unlocked: islandUnlocked,
   };
 }
 
@@ -106,6 +113,7 @@ export class BoardBattleService {
     private readonly records: BattleRecordsService,
     private readonly codex: CodexService,
     private readonly config: ConfigService<Env, true>,
+    private readonly islandTamers: IslandTamersService,
   ) {}
 
   async start(
@@ -194,6 +202,31 @@ export class BoardBattleService {
       })),
       tamer_id: tamer.id,
     };
+  }
+
+  /** O Domador fixo de um NPC da ilha explorada (auralis/04). */
+  async startIslandTamer(
+    userId: string,
+    npcId: number,
+    god = false,
+  ): Promise<BoardBattleResponseDto> {
+    const team = await this.records.loadTeam(userId);
+    const islandId = this.records.currentIslandId(userId);
+    const tamer =
+      islandId === null ? null : await this.islandTamers.find(islandId, npcId);
+    if (!tamer) throw new ConflictException(NO_ISLAND_TAMER);
+    const enemies = await this.tamerTeam(tamer.team);
+    return this.begin(userId, team, enemies, {
+      godMode: this.godMode(god),
+      slots: tamer.size,
+      opponent: 'tamer',
+      tamer: {
+        nameId: 0,
+        source: 'island',
+        name: tamer.name,
+        islandTamer: { id: tamer.id, islandId: tamer.islandId },
+      },
+    });
   }
 
   async startChallenge(userId: string): Promise<BoardBattleResponseDto> {
@@ -290,8 +323,16 @@ export class BoardBattleService {
     wilds: WildCreature[],
     tamer: BattleTamer | null,
   ): Promise<BattleFinish> {
-    const finish = await this.records.finish(userId, state, wilds);
-    if (state.result === 'defeat' && tamer?.source === 'map') {
+    const finish = await this.records.finish(
+      userId,
+      state,
+      wilds,
+      tamer?.islandTamer ?? null,
+    );
+    if (
+      state.result === 'defeat' &&
+      (tamer?.source === 'map' || tamer?.source === 'island')
+    ) {
       this.records.endExploration(userId);
     }
     return finish;

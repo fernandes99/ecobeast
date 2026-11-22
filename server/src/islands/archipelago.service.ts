@@ -8,6 +8,7 @@ import { ConfigService } from '@nestjs/config';
 import type { Env } from '../config/env.js';
 import {
   type ArchipelagoEntry,
+  type ArchipelagoIsland,
   archipelagoStates,
 } from '../domain/islands/archipelago.js';
 import { PrismaService } from '../prisma/prisma.service.js';
@@ -69,30 +70,37 @@ export class ArchipelagoService {
     });
   }
 
+  /** As ilhas publicadas do Arquipélago, com a ordem e o nome, sem o estado. */
+  async publishedIslands(): Promise<(ArchipelagoIsland & { name: string })[]> {
+    const islands = await this.prisma.island.findMany({
+      where: {
+        archipelagoOrder: { not: null },
+        maps: { some: { kind: PUBLISHED } },
+      },
+      select: {
+        id: true,
+        archipelagoOrder: true,
+        maps: { where: { kind: PUBLISHED }, select: { name: true } },
+      },
+    });
+    return islands.map(({ id, archipelagoOrder, maps }) => ({
+      id,
+      order: archipelagoOrder ?? 0,
+      name: maps[0]?.name ?? '',
+    }));
+  }
+
   private async entries(userId: string): Promise<NamedEntry[]> {
     const [islands, unlocked] = await Promise.all([
-      this.prisma.island.findMany({
-        where: {
-          archipelagoOrder: { not: null },
-          maps: { some: { kind: PUBLISHED } },
-        },
-        select: {
-          id: true,
-          archipelagoOrder: true,
-          maps: { where: { kind: PUBLISHED }, select: { name: true } },
-        },
-      }),
+      this.publishedIslands(),
       this.prisma.playerIsland.findMany({
         where: { playerId: userId },
         select: { islandId: true },
       }),
     ]);
-    const names = new Map(islands.map(({ id, maps }) => [id, maps[0].name]));
+    const names = new Map(islands.map(({ id, name }) => [id, name]));
     return archipelagoStates(
-      islands.map(({ id, archipelagoOrder }) => ({
-        id,
-        order: archipelagoOrder ?? 0,
-      })),
+      islands,
       new Set(unlocked.map(({ islandId }) => islandId)),
     ).map((entry) => ({ ...entry, name: names.get(entry.id) ?? '' }));
   }

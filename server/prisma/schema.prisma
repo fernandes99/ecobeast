@@ -341,6 +341,7 @@ model Npc {
   voice           Voice               @relation(fields: [voiceId], references: [id], onDelete: Restrict)
   skinPalette     Palette?            @relation(fields: [skinPaletteId], references: [id], onDelete: Restrict)
   islandNpcs      IslandNpc[]
+  tamer           Tamer?
   appearanceParts NpcAppearancePart[]
   interiorNpcs    InteriorNpc[]
 
@@ -640,6 +641,7 @@ model Species {
   biomes         SpeciesBiome[]
   biomeZones     SpeciesBiomeZone[]
   unlockedBy     IslandUnlockSpecies[]
+  tamerCreatures TamerCreature[]
   dayPhases      SpeciesDayPhase[]
   codexEntries   CodexEntry[]
   islandAreas    IslandAreaSpecies[]
@@ -1018,6 +1020,7 @@ model Player {
   storyMarks      PlayerStoryMark[]
   counters        PlayerCounter[]
   islands         PlayerIsland[]
+  tamerWins       PlayerTamerWin[]
 
   @@index([bodyTypeId])
   @@index([skinPaletteId])
@@ -1198,19 +1201,22 @@ model CodexEntry {
 }
 
 model Island {
-  id               Int       @id @default(autoincrement())
-  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
-  publishedAt      DateTime? @map("published_at") @db.Timestamptz(3)
+  id                Int       @id @default(autoincrement())
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  publishedAt       DateTime? @map("published_at") @db.Timestamptz(3)
   /// A casa do jogador. Só uma: índice único parcial islands_one_home (migration home_island)
-  isHome           Boolean   @default(false) @map("is_home")
+  isHome            Boolean   @default(false) @map("is_home")
   /// A posição no Arquipélago Auralis; nulo fica fora dele. CHECK > 0 (migration archipelago)
-  archipelagoOrder Int?      @unique @map("archipelago_order")
+  archipelagoOrder  Int?      @unique @map("archipelago_order")
+  /// Quantos Domadores que contam abrem a seguinte; nulo pede todos. CHECK > 0 (migration island_tamers)
+  requiredTamerWins Int?      @map("required_tamer_wins")
 
   maps          IslandMap[]
   discoveries   IslandDiscovery[]
   unlockBiomes  IslandUnlockBiome[]
   unlockSpecies IslandUnlockSpecies[]
   players       PlayerIsland[]
+  tamers        Tamer[]
 
   @@map("islands")
   @@schema("ecobeasts")
@@ -1740,5 +1746,60 @@ model InteriorNpc {
   @@index([npcId])
   @@index([actionTypeId])
   @@map("interior_npcs")
+  @@schema("ecobeasts")
+}
+
+/// Um NPC do catálogo que é Domador de uma ilha do Arquipélago (auralis/04).
+model Tamer {
+  id              Int     @id @default(autoincrement())
+  npcId           Int     @unique @map("npc_id")
+  islandId        Int     @map("island_id")
+  /// O formato da luta. CHECK 1–3 (migration island_tamers)
+  size            Int     @default(1)
+  /// Conta para abrir a ilha seguinte.
+  countsForUnlock Boolean @default(true) @map("counts_for_unlock")
+
+  npc       Npc              @relation(fields: [npcId], references: [id], onDelete: Restrict)
+  island    Island           @relation(fields: [islandId], references: [id], onDelete: Cascade)
+  creatures TamerCreature[]
+  wins      PlayerTamerWin[]
+
+  @@index([islandId])
+  @@map("tamers")
+  @@schema("ecobeasts")
+}
+
+/// A equipe fixa de um Domador da ilha; as Técnicas são as da espécie até o nível.
+model TamerCreature {
+  tamerId   Int @map("tamer_id")
+  /// CHECK 1–6 (migration island_tamers)
+  position  Int
+  speciesId Int @map("species_id")
+  /// CHECK 1–100 (migration island_tamers)
+  level     Int
+
+  tamer   Tamer   @relation(fields: [tamerId], references: [id], onDelete: Cascade)
+  species Species @relation(fields: [speciesId], references: [id], onDelete: Restrict)
+
+  @@id([tamerId, position])
+  @@index([speciesId])
+  @@map("tamer_creatures")
+  @@schema("ecobeasts")
+}
+
+/// As vitórias do Domador contra cada Domador da ilha; só a primeira conta.
+model PlayerTamerWin {
+  playerId   String   @map("player_id") @db.Uuid
+  tamerId    Int      @map("tamer_id")
+  /// CHECK ≥ 1 (migration island_tamers)
+  wins       Int      @default(1)
+  firstWonAt DateTime @default(now()) @map("first_won_at") @db.Timestamptz(3)
+
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  tamer  Tamer  @relation(fields: [tamerId], references: [id], onDelete: Cascade)
+
+  @@id([playerId, tamerId])
+  @@index([tamerId])
+  @@map("player_tamer_wins")
   @@schema("ecobeasts")
 }

@@ -9,6 +9,9 @@ const SOURCES = new Map([
   ['battle_xp_percent', 10],
   ['new_species', 100],
   ['tamer_win', 50],
+  ['island_tamer_win', 150],
+  ['island_tamer_rematch', 15],
+  ['island_unlocked', 1000],
 ]);
 
 function row(level: number, xpTotal: number, rewardCoins = 0): TamerLevelRow {
@@ -57,6 +60,38 @@ describe('tamerXpFromBattle', () => {
     expect(tamerXpFromBattle({ ...base, opponentIsTamer: true }, SOURCES)).toBe(
       58,
     );
+  });
+
+  it('o Domador da ilha paga a primeira vitória no lugar do tamer_win', () => {
+    expect(
+      tamerXpFromBattle(
+        { ...base, opponentIsTamer: true, islandTamer: 'first' },
+        SOURCES,
+      ),
+    ).toBe(158);
+  });
+
+  it('a revanche contra o Domador da ilha paga o valor menor', () => {
+    expect(
+      tamerXpFromBattle(
+        { ...base, opponentIsTamer: true, islandTamer: 'rematch' },
+        SOURCES,
+      ),
+    ).toBe(23);
+  });
+
+  it('a ilha aberta soma o island_unlocked', () => {
+    expect(
+      tamerXpFromBattle(
+        {
+          ...base,
+          opponentIsTamer: true,
+          islandTamer: 'first',
+          islandUnlocked: true,
+        },
+        SOURCES,
+      ),
+    ).toBe(1158);
   });
 
   it('não dá o Domador sem vitória', () => {

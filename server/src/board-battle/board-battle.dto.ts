@@ -77,6 +77,8 @@ export class StartBoardBattleBodyDto {
 export const INVALID_SKILL_TEST = 'Técnica, espécie ou nível inválidos.';
 export const SKILL_TEST_LEVEL = 50;
 
+export const INVALID_ISLAND_TAMER = 'Domador inválido.';
+
 export class StartSkillTestBodyDto {
   @ApiProperty({ description: 'A Técnica testada.', example: 84 })
   @IsInt({ message: INVALID_SKILL_TEST })
@@ -335,12 +337,52 @@ export class BattleTamerDto {
 
   @ApiProperty({
     description:
-      'De onde o Domador veio: `map`, do hexágono do jogador, ou `challenge`, ' +
-      'do Desafiar do Hub.',
-    enum: ['map', 'challenge'],
+      'De onde o Domador veio: `map`, do hexágono do jogador; `challenge`, ' +
+      'do Desafiar do Hub; ou `island`, um Domador fixo da ilha (auralis/04).',
+    enum: ['map', 'challenge', 'island'],
     example: 'map',
   })
-  source: 'map' | 'challenge';
+  source: 'map' | 'challenge' | 'island';
+
+  @ApiProperty({
+    type: String,
+    nullable: true,
+    description:
+      'O nome do Domador da ilha, o do NPC; nulo nos outros, que usam o `name_id`.',
+    example: 'Caio',
+  })
+  name: string | null;
+}
+
+export class IslandUnlockedDto {
+  @ApiProperty({ example: 1200 })
+  id: number;
+
+  @ApiProperty({
+    description: 'O nome da versão publicada.',
+    example: 'Brumas',
+  })
+  name: string;
+}
+
+export class StartIslandTamerBodyDto {
+  @ApiProperty({
+    description:
+      'O NPC do catálogo (`npcs`) que é o Domador, como vem na exploração.',
+    example: 17,
+  })
+  @IsInt({ message: INVALID_ISLAND_TAMER })
+  npc_id: number;
+
+  @ApiPropertyOptional({
+    description:
+      'Depuração: todo golpe do jogador que acerta derruba o inimigo. Só vale com ' +
+      '`ENABLE_TEST_BATTLE` ligada; sem ela, é ignorado.',
+    example: false,
+  })
+  @IsOptional()
+  @IsBoolean({ message: INVALID_ISLAND_TAMER })
+  god?: boolean;
 }
 
 export class BoardBattleDto extends BattleDto {
@@ -441,4 +483,13 @@ export class BoardBattleResponseDto {
     nullable: true,
   })
   tamer_progress: TamerProgressDto | null;
+
+  @ApiProperty({
+    description:
+      'No fim de uma vitória contra um Domador da ilha, a ilha seguinte que ela ' +
+      'abriu (auralis/04). Nulo nas outras respostas.',
+    type: () => IslandUnlockedDto,
+    nullable: true,
+  })
+  island_unlocked: IslandUnlockedDto | null;
 }

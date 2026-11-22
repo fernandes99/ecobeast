@@ -80,6 +80,10 @@ extends RefCounted
 @abstract func start_board_challenge() -> Result
 
 
+## O Domador fixo do NPC da ilha explorada (auralis/04).
+@abstract func start_board_island_tamer(npc_id: int, god: bool = false) -> Result
+
+
 @abstract func start_board_test_battle(enemies: Array[Dictionary], slots: int) -> Result
 
 

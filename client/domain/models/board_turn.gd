@@ -10,6 +10,8 @@ var progression: Array[CreatureProgress] = []
 var registered_species_ids: Array[int] = []
 ## O XP do Domador no fim da luta; nulo nas outras respostas (tamer-level/02).
 var tamer_progress: TamerProgress = null
+## A ilha que a vitória contra o Domador da ilha abriu (auralis/04); vazio sem.
+var island_unlocked_name: String = ""
 
 
 static func from_dict(d: Dictionary) -> BoardTurn:
@@ -32,4 +34,5 @@ static func from_dict(d: Dictionary) -> BoardTurn:
 	var tamer: Variant = d.get("tamer_progress")
 	if tamer is Dictionary:
 		turn.tamer_progress = TamerProgress.from_dict(tamer)
+	turn.island_unlocked_name = DictFields.get_string(DictFields.get_dict(d, "island_unlocked"), "name")
 	return turn

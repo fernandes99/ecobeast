@@ -7,6 +7,8 @@ var round_number: int = 1
 var can_flee: bool = false
 var tamer_name_id: int = 0
 var tamer_source: String = ""
+## O nome do Domador da ilha (auralis/04); vazio nos que têm o `tamer_name_id`.
+var tamer_name: String = ""
 var team: Array[BattleCreature] = []
 var items: Array[InventorySlot] = []
 var board_cells: Array[Vector2i] = []
@@ -53,6 +55,7 @@ static func from_dict(d: Dictionary) -> BoardBattleView:
 	var tamer := DictFields.get_dict(d, "tamer")
 	view.tamer_name_id = DictFields.get_int(tamer, "name_id")
 	view.tamer_source = DictFields.get_string(tamer, "source")
+	view.tamer_name = DictFields.get_string(tamer, "name")
 
 	var board := DictFields.get_dict(d, "board")
 	view.board_cells = _cells(DictFields.get_array(board, "cells"))

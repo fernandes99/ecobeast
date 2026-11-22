@@ -157,7 +157,7 @@ A fase 2 está adiada. Em 2026-11-22, o dono pediu: "vamos pular a parte do Expl
 | 1 | [01-unlock-config](01-unlock-config.md) | A ordem das ilhas, o que cada uma destrava, as ilhas abertas do jogador (Liora para todos) e a entrada numa ilha trancada recusada | concluída |
 | 2 | 02-random-filter | O mapa aleatório com os biomas travados trocados e só os Ecobeasts destravados, os "só do randômico" incluídos | adiada |
 | 3 | [03-archipelago-screen](03-archipelago-screen.md) | A escolha do Explorar e a tela do Arquipélago | concluída (falta o dono conferir no jogo) |
-| 4 | 04-island-tamers | O catálogo `tamers`, o Domador posto no F2 com a equipe fixa, a primeira vitória contando, a ilha seguinte abrindo e o aviso da ilha nova | rascunho |
+| 4 | [04-island-tamers](04-island-tamers.md) | O catálogo `tamers` (um NPC do catálogo como Domador, com a equipe fixa), a luta ao tocar no NPC, a primeira vitória contando, a ilha seguinte abrindo e o aviso da ilha nova | concluída (falta o dono conferir no jogo) |
 | 5 | 05-arenas | As Arenas de cada ilha, com a sala, os Domadores de treino, o Mestre e o emblema, uma abrindo a seguinte | rascunho |
 | 6 | 06-island-quests | As missões escritas pelo dono, os contadores novos, o sinal no NPC, a entrega e a recompensa | rascunho |
 | 7 | 07-extra-quests | Os modelos de missão e o quadro de missões extras do Arquipélago | rascunho |
@@ -170,5 +170,5 @@ As specs das fases são escritas quando cada uma for planejada.
 - **O nível dos selvagens no mapa aleatório:** hoje não depende da ilha da vez. Uma ilha mais adiante pode pedir selvagens mais fortes no aleatório também.
 - **Os itens destravados por ilha:** o dono citou "novos itens". Falta dizer se é a Loja que vende mais, se é a recompensa das missões, ou as duas.
 - **A Liga:** se vale a pena e o que ela pede.
-- **A luta contra um Domador da ilha:** começa quando o Domador chega perto, com o mapa travando como no mapa aleatório, ou só quando o jogador toca no NPC? E, dentro de uma Arena, perder volta ao Hub, como a derrota para um Domador de hoje, ou volta para a porta da Arena? Sugestão de Claude: ao tocar no NPC e, na Arena, voltar para a porta. Decide as fases 4 e 5.
+- **A derrota dentro de uma Arena:** volta ao Hub, como a do Domador da ilha, ou para a porta da Arena? Em 2026-11-22, o dono decidiu que a luta contra o Domador da ilha começa ao tocar no NPC e que a derrota volta ao Hub ("Tocar no NPC e Volta o Hub"); falta confirmar se a Arena segue a mesma regra. Decide a fase 5.
 - **"Vire a noite":** o tempo jogado durante a Noite somado em vários dias (o `play_seconds_by_day_phase` das escolhas acima), ou jogar uma Noite inteira sem sair? Sugestão de Claude: o tempo somado, mais simples e mais justo no celular. Decide o contador novo da fase 6.

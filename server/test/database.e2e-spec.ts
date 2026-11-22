@@ -38,10 +38,10 @@ describe('restrições do banco (e2e)', () => {
     expect(rows.map((row) => row.table_name)).toEqual([]);
   });
 
-  it('as 88 tabelas e o histórico de migrations ficam no schema ecobeasts', async () => {
+  it('as 91 tabelas e o histórico de migrations ficam no schema ecobeasts', async () => {
     const rows = await prisma.$queryRaw<{ n: number }[]>`
       SELECT count(*)::int AS n FROM information_schema.tables WHERE table_schema = 'ecobeasts'`;
-    expect(rows[0].n).toBe(88);
+    expect(rows[0].n).toBe(91);
   });
 
   it('recusa uma marca que muda um atributo em 0 estágio (puffcoo-line)', async () => {

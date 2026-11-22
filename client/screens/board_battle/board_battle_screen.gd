@@ -7,6 +7,7 @@ const SKILL_SLOTS := 3
 const SEARCHING_TEXT := "Procurando um Ecobeast..."
 const GONE_TEXT := "Essa luta não existe mais."
 const TAMER_XP_TEXT := "+%d XP de Domador"
+const ISLAND_UNLOCKED_TEXT := "Ilha nova aberta: %s!"
 const PICK_ENTRY_TEXT := "Toque no hexágono verde onde ele entra."
 const CANNOT_ENTER_TEXT := "Esse Ecobeast não pode entrar."
 const PICK_SPHERE_TEXT := "Toque no Ecobeast selvagem."
@@ -70,6 +71,8 @@ var _test_slots := 0
 var _skill_test: Dictionary = {}
 var _retry_button: Button = null
 var _against_tamer: bool = false
+## O NPC do Domador da ilha (auralis/04); 0 nas outras lutas.
+var _island_tamer_npc: int = 0
 var _challenge: bool = false
 var _tamer_name := ""
 var _biome := BoardView.DEFAULT_BIOME
@@ -178,6 +181,7 @@ var _opening_tween: Tween
 
 func setup(params: Dictionary) -> void:
 	_against_tamer = params.has("tamer_coord")
+	_island_tamer_npc = params.get("island_tamer", 0)
 	_challenge = params.get("challenge", false)
 	_coord = params.get("tamer_coord", params.get("coord", Vector2i.ZERO))
 	_test_slots = params.get("test_slots", 0)
@@ -351,6 +355,8 @@ func _begin() -> void:
 		result = await Session.start_board_skill_test(_skill_test)
 	elif _test_slots > 0:
 		result = await Session.start_board_test_battle(_test_enemies(), _test_slots)
+	elif _island_tamer_npc > 0:
+		result = await Session.start_board_island_tamer(_island_tamer_npc)
 	elif _against_tamer:
 		result = await Session.start_board_tamer_battle(_coord)
 	elif _challenge:
@@ -391,9 +397,12 @@ func _xp_of(key: String) -> float:
 
 
 func _meet_tamer(view: BoardBattleView) -> void:
-	if view.tamer_name_id <= 0:
+	if not view.tamer_name.is_empty():
+		_tamer_name = view.tamer_name
+	elif view.tamer_name_id > 0:
+		_tamer_name = GameData.get_npc_tamer_name(view.tamer_name_id)
+	else:
 		return
-	_tamer_name = GameData.get_npc_tamer_name(view.tamer_name_id)
 	_narrator.set_tamer_name(_tamer_name)
 	_flee_button.hide()
 
@@ -613,7 +622,11 @@ func _show_turn(turn: BoardTurn) -> void:
 			_show_controls(false)
 			await _celebrate(turn.progression)
 			await _celebrate_tamer(turn.tamer_progress)
-			_show_exit(_result_text(), true)
+			var text := _result_text()
+			if not turn.island_unlocked_name.is_empty():
+				text += "
+" + ISLAND_UNLOCKED_TEXT % turn.island_unlocked_name
+			_show_exit(text, true)
 
 
 func _play_event(event: Dictionary) -> void:
@@ -1622,7 +1635,7 @@ func _result_text() -> String:
 
 
 func _exits_to_hub() -> bool:
-	return _view != null and _view.phase == "ended" and _view.result == "defeat" and _view.tamer_source == "map"
+	return _view != null and _view.phase == "ended" and _view.result == "defeat" and _view.tamer_source in ["map", "island"]
 
 
 func _set_busy(busy: bool) -> void:

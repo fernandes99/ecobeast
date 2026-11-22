@@ -10,6 +10,8 @@ export interface StoredExploration {
   tamers: Map<number, MapTamer>;
   position: HexCoord;
   positionAt: number;
+  /** A ilha da exploração; ausente no mapa sorteado. */
+  islandId?: number;
   /** Os biomas do mapa e o último crédito de hexágonos andados (player-stats/02). */
   biomeIds: Set<number>;
   hexesCreditedAt: number;

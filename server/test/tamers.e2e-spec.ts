@@ -121,7 +121,11 @@ describe('Domadores NPC (e2e)', () => {
     expect(body.tamer_id).toBe(1);
     expect(body.spawn_id).toBeNull();
     expect(body.battle.can_flee).toBe(false);
-    expect(body.battle.tamer).toEqual({ name_id: 1, source: 'map' });
+    expect(body.battle.tamer).toEqual({
+      name_id: 1,
+      source: 'map',
+      name: null,
+    });
     expect(
       body.battle.enemy.cells.filter((cell) => cell !== null),
     ).toHaveLength(3);
@@ -158,7 +162,11 @@ describe('Domadores NPC (e2e)', () => {
       .expect(400);
     expect(refused.body.message).toBe(TAMER_CREATURE);
     const next = await user.act(waitVez(body.battle));
-    expect(next.battle.tamer).toEqual({ name_id: 2, source: 'map' });
+    expect(next.battle.tamer).toEqual({
+      name_id: 2,
+      source: 'map',
+      name: null,
+    });
   });
 
   it('Procurar num hexágono com Domador é recusado, e o selvagem fica', async () => {

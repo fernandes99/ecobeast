@@ -291,6 +291,14 @@ export class MapNpcDto extends HexCoordDto {
     type: Number,
   })
   action_type_id: number | null;
+
+  @ApiPropertyOptional({
+    description:
+      'Só na exploração: o NPC é um Domador desta ilha (`tamers`, auralis/04), ' +
+      'e a luta contra ele começa depois da última fala, no lugar da ação.',
+    example: false,
+  })
+  tamer?: boolean;
 }
 
 export class ExplorationMapDto {

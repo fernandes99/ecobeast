@@ -10,6 +10,10 @@ import { tamerXpFromBattle } from '../domain/progression/tamer-level.js';
 import type { TamerProgressDto } from '../tamer-level/tamer-level.dto.js';
 import { TamerLevelService } from '../tamer-level/tamer-level.service.js';
 import {
+  IslandTamersService,
+  type UnlockedIsland,
+} from '../islands/island-tamers.service.js';
+import {
   battleCounters,
   foughtCreatureIndices,
 } from '../domain/counters/battle-counters.js';
@@ -69,7 +73,7 @@ import {
   toCombatant,
   toEnemyCombatant,
 } from './battle.mapper.js';
-import type { WildCreature } from './battle.store.js';
+import type { BattleTamer, WildCreature } from './battle.store.js';
 
 const NO_PLAYER = 'Crie seu Domador primeiro.';
 const NO_HEALTHY_CREATURE = 'Cure sua equipe no Refúgio.';
@@ -94,7 +98,11 @@ export interface BattleFinish {
   progression: CreatureProgressDto[];
   registeredSpeciesIds: number[];
   tamerProgress: TamerProgressDto | null;
+  /** A ilha que a vitória contra o Domador da ilha abriu (auralis/04). */
+  islandUnlocked: UnlockedIsland | null;
 }
+
+type IslandTamerRef = NonNullable<BattleTamer['islandTamer']>;
 
 interface ProgressedCreature {
   uid: string;
@@ -156,6 +164,7 @@ export class BattleRecordsService {
     private readonly codex: CodexService,
     private readonly counters: CountersService,
     private readonly tamerLevel: TamerLevelService,
+    private readonly islandTamers: IslandTamersService,
   ) {}
 
   async loadTeam(userId: string): Promise<Team> {
@@ -270,10 +279,11 @@ export class BattleRecordsService {
     userId: string,
     state: BattleState,
     wilds: WildCreature[],
+    islandTamer: IslandTamerRef | null = null,
   ): Promise<BattleFinish> {
     const { progressed, leveled } = await this.progressTeam(userId, state);
-    const { capturedTo, registeredSpeciesIds, tamerProgress } =
-      await this.saveTeam(userId, state, wilds, progressed);
+    const { capturedTo, registeredSpeciesIds, tamerProgress, islandUnlocked } =
+      await this.saveTeam(userId, state, wilds, progressed, islandTamer);
     if (state.result === 'victory') {
       const plans = new Map(
         progressed.flatMap(({ uid, plan }) => (plan ? [[uid, plan]] : [])),
@@ -285,7 +295,13 @@ export class BattleRecordsService {
       progression: progressed.map(toProgressDto),
       registeredSpeciesIds,
       tamerProgress,
+      islandUnlocked,
     };
+  }
+
+  /** A ilha da exploração guardada; nula no mapa sorteado ou sem exploração. */
+  currentIslandId(userId: string): number | null {
+    return this.explorations.get(userId)?.islandId ?? null;
   }
 
   private async progressTeam(
@@ -351,10 +367,12 @@ export class BattleRecordsService {
     state: BattleState,
     wilds: WildCreature[],
     progressed: ProgressedCreature[],
+    islandTamer: IslandTamerRef | null,
   ): Promise<{
     capturedTo: CapturedTo | null;
     registeredSpeciesIds: number[];
     tamerProgress: TamerProgressDto | null;
+    islandUnlocked: UnlockedIsland | null;
   }> {
     const progressByUid = new Map(
       progressed.map(({ uid, progress }) => [uid, progress]),
@@ -381,7 +399,14 @@ export class BattleRecordsService {
         : null;
 
     const counterWrites = await this.counterWrites(userId, state);
-    const tamer = await this.tamerAward(userId, state, caughtSpecies);
+    const island =
+      islandTamer &&
+      state.result === 'victory' &&
+      !state.godMode &&
+      !state.noRewards
+        ? await this.islandTamers.victory(userId, islandTamer)
+        : null;
+    const tamer = await this.tamerAward(userId, state, caughtSpecies, island);
 
     const results = await this.prisma.$transaction([
       ...state.player.team.flatMap((creature) => {
@@ -455,6 +480,7 @@ export class BattleRecordsService {
       }),
       ...counterWrites,
       ...tamer.writes,
+      ...(island?.writes ?? []),
       // O Bestiário fica por último: o resultado dele é o `results.at(-1)`.
       ...(codexWrite ? [codexWrite] : []),
     ]);
@@ -467,6 +493,7 @@ export class BattleRecordsService {
           )
         : [],
       tamerProgress: tamer.progress,
+      islandUnlocked: island?.unlocked ?? null,
     };
   }
 
@@ -475,6 +502,7 @@ export class BattleRecordsService {
     userId: string,
     state: BattleState,
     caughtSpecies: number[],
+    island: { kind: 'first' | 'rematch'; unlocked: unknown } | null,
   ) {
     if (state.godMode || state.noRewards) return { writes: [], progress: null };
     const known = await this.prisma.codexEntry.findMany({
@@ -494,6 +522,8 @@ export class BattleRecordsService {
         victory: state.result === 'victory',
         opponentIsTamer: state.opponent === 'tamer',
         newSpeciesCount: fresh.size,
+        islandTamer: island?.kind,
+        islandUnlocked: island?.unlocked != null,
       },
       sources,
     );

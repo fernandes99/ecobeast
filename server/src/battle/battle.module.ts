@@ -3,6 +3,7 @@ import { AuthModule } from '../auth/auth.module.js';
 import { CodexModule } from '../codex/codex.module.js';
 import { CountersModule } from '../counters/counters.module.js';
 import { ExplorationModule } from '../exploration/exploration.module.js';
+import { IslandsModule } from '../islands/islands.module.js';
 import { ProgressionModule } from '../progression/progression.module.js';
 import { TamerLevelModule } from '../tamer-level/tamer-level.module.js';
 import { BattleRecordsService } from './battle-records.service.js';
@@ -14,6 +15,7 @@ import { BattleStore } from './battle.store.js';
     CodexModule,
     CountersModule,
     ExplorationModule,
+    IslandsModule,
     ProgressionModule,
     TamerLevelModule,
   ],

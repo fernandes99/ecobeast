@@ -19,6 +19,7 @@ const EXPLORATION_PATH := "/v1/me/exploration"
 const BOARD_BATTLE_PATH := "/v1/me/board-battle"
 const BOARD_WILD_PATH := "/v1/me/board-battle/wild"
 const BOARD_TAMER_PATH := "/v1/me/board-battle/tamer"
+const BOARD_ISLAND_TAMER_PATH := "/v1/me/board-battle/island-tamer"
 const BOARD_CHALLENGE_PATH := "/v1/me/board-battle/challenge"
 const BOARD_SKILL_TEST_PATH := "/v1/me/board-battle/skill-test"
 const BOARD_ACTION_PATH := "/v1/me/board-battle/action"
@@ -218,6 +219,13 @@ func start_board_tamer_battle(coord: Vector2i, god: bool = false) -> Result:
 	if god:
 		body["god"] = true
 	return _board_result(await Api.request(HTTPClient.METHOD_POST, BOARD_TAMER_PATH, body, true))
+
+
+func start_board_island_tamer(npc_id: int, god: bool = false) -> Result:
+	var body := {"npc_id": npc_id}
+	if god:
+		body["god"] = true
+	return _board_result(await Api.request(HTTPClient.METHOD_POST, BOARD_ISLAND_TAMER_PATH, body, true))
 
 
 func start_board_challenge() -> Result:

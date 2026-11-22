@@ -10,8 +10,12 @@ export interface WildCreature {
 }
 
 export interface BattleTamer {
+  /** 0 no Domador da ilha, que tem o `name`. */
   nameId: number;
-  source: 'map' | 'challenge';
+  source: 'map' | 'challenge' | 'island';
+  name?: string;
+  /** O Domador da ilha (auralis/04), em `tamers`. */
+  islandTamer?: { id: number; islandId: number };
 }
 
 /** O catálogo fica junto: uma edição no painel não muda uma luta em andamento. */

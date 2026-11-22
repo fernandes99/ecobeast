@@ -65,9 +65,7 @@ export class IslandsController {
       'com `{island_id}`.',
   })
   @ApiOkResponse({ type: PlayerIslandsResponseDto })
-  async list(
-    @CurrentUser() userId: string,
-  ): Promise<PlayerIslandsResponseDto> {
+  async list(@CurrentUser() userId: string): Promise<PlayerIslandsResponseDto> {
     const [islands, locked] = await Promise.all([
       this.islands.listPublished(),
       this.archipelago.lockedIds(userId),

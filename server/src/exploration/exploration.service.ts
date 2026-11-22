@@ -56,6 +56,7 @@ import {
   toWallDto,
 } from './exploration.dto.js';
 import { ArchipelagoService } from '../islands/archipelago.service.js';
+import { IslandTamersService } from '../islands/island-tamers.service.js';
 import { DiscoveriesService } from '../islands/discoveries.service.js';
 import { ExplorationStore } from './exploration.store.js';
 import {
@@ -94,6 +95,7 @@ export class ExplorationService {
     private readonly discoveries: DiscoveriesService,
     private readonly counters: CountersService,
     private readonly archipelago: ArchipelagoService,
+    private readonly islandTamers: IslandTamersService,
   ) {}
 
   async start(
@@ -212,10 +214,11 @@ export class ExplorationService {
     if (!island) throw new NotFoundException(ISLAND_NOT_FOUND);
     await this.archipelago.assertOpen(userId, islandId);
     const { draft } = island;
-    const [typeBlocks, born, discovered] = await Promise.all([
+    const [typeBlocks, born, discovered, tamerNpcIds] = await Promise.all([
       this.islands.readTypeBlocks(),
       speciesBornAt(this.prisma, minute),
       this.discoveries.listDiscovered(userId, island.id, draft.tiles),
+      this.islandTamers.npcIds(island.id),
     ]);
     const spawns = rollAreaSpawns(
       areasBornIn(spawnAreas(draft, typeBlocks), born),
@@ -226,6 +229,7 @@ export class ExplorationService {
       tamers: new Map(),
       position: draft.start,
       positionAt: Date.now(),
+      islandId: island.id,
       biomeIds: await this.biomeIdsOf(draft.tiles),
       hexesCreditedAt: Date.now(),
     });
@@ -263,6 +267,7 @@ export class ExplorationService {
         npcs: (draft.npcs ?? []).map((npc, index) => ({
           id: index + 1,
           ...toNpcDto(npc),
+          tamer: tamerNpcIds.has(npc.npcId),
         })),
       },
       discovered,

@@ -29,11 +29,14 @@ import { NO_BATTLE } from '../battle/battle.dto.js';
 import {
   BoardBattleResponseDto,
   BoardVezBodyDto,
+  INVALID_ISLAND_TAMER,
   INVALID_SKILL_TEST,
   SKILL_TEST_LEVEL,
   StartBoardBattleBodyDto,
+  StartIslandTamerBodyDto,
   StartSkillTestBodyDto,
 } from './board-battle.dto.js';
+import { NO_ISLAND_TAMER } from '../islands/island-tamers.service.js';
 import { toBoardInput } from './board-battle.mapper.js';
 import { BoardBattleService } from './board-battle.service.js';
 
@@ -170,6 +173,38 @@ export class BoardBattleController {
     return this.battles.startTamer(
       userId,
       { q: body.q, r: body.r },
+      body.god === true,
+    );
+  }
+
+  @Post('island-tamer')
+  @ApiOperation({
+    summary: 'Começar a luta contra o Domador de um NPC da ilha',
+    description:
+      'A luta contra o Domador fixo da ilha explorada (auralis/04): o NPC do ' +
+      'catálogo com uma linha em `tamers`, posto na versão publicada da ilha. A ' +
+      'equipe é a de `tamer_creatures`, no formato do Domador, sem fuga nem ' +
+      'Esfera. A distância até o NPC não é conferida. A primeira vitória conta ' +
+      'para abrir a ilha seguinte, e a resposta do fim traz `island_unlocked` ' +
+      'quando ela abre. Perder encerra a exploração. Uma luta em andamento, de ' +
+      'qualquer tipo, é descartada, sem gravar nada.',
+  })
+  @ApiCreatedResponse({ type: BoardBattleResponseDto })
+  @ApiBadRequestResponse({
+    description: `Corpo malformado: "${INVALID_ISLAND_TAMER}"`,
+  })
+  @ApiConflictResponse({
+    description:
+      `${NO_TEAM_RESPONSES} Sem exploração numa ilha, ou o NPC não é um ` +
+      `Domador dela na versão publicada, ou sem equipe: "${NO_ISLAND_TAMER}"`,
+  })
+  startIslandTamer(
+    @CurrentUser() userId: string,
+    @Body() body: StartIslandTamerBodyDto,
+  ): Promise<BoardBattleResponseDto> {
+    return this.battles.startIslandTamer(
+      userId,
+      body.npc_id,
       body.god === true,
     );
   }

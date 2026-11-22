@@ -334,6 +334,11 @@ func take_fought_tamer() -> int:
 	return tamer_id
 
 
+func start_board_island_tamer(npc_id: int) -> Result:
+	@warning_ignore("redundant_await")
+	return await _service.start_board_island_tamer(npc_id, debug_god)
+
+
 func start_board_challenge() -> Result:
 	@warning_ignore("redundant_await")
 	return await _service.start_board_challenge()
