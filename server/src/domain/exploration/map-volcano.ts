@@ -86,25 +86,60 @@ export function placeVolcano<C extends VolcanoCell>(
   if (random() >= config.volcanoChance) return null;
   const span = config.volcanoMaxRadius - config.volcanoMinRadius + 1;
   const rolled = config.volcanoMinRadius + Math.floor(random() * span);
-  const clear = clearance(
-    cells,
-    (cell) => cell === start || isBlocked(cell) || !openGround(cell),
-  );
+  const blocked = (cell: C) =>
+    cell === start || isBlocked(cell) || !openGround(cell);
+  const clear = clearance(cells, blocked);
   const edge = clearance(cells, () => false);
   for (let radius = rolled; radius >= config.volcanoMinRadius; radius -= 1) {
+    // O cone e a terra encostada nele vão até `R + 2` em linha reta; pela grade isso
+    // pode ser até `(R + 2) / 0,866` passos, e a beira do mapa fica além disso.
+    const reach = radius + VOLCANO_MARGIN;
+    const steps = Math.ceil(reach / ROW_HEIGHT);
     const fits = cells.filter(
-      (cell) => clear.get(cell)! > radius + VOLCANO_MARGIN,
+      (cell) => clear.get(cell)! > reach && edge.get(cell)! > steps,
     );
     if (fits.length === 0) continue;
     fits.sort((a, b) => edge.get(b)! - edge.get(a)!);
-    const pool = fits.slice(
-      0,
-      Math.max(1, Math.ceil(fits.length * CENTER_POOL)),
+    const poolSize = Math.max(1, Math.ceil(fits.length * CENTER_POOL));
+    const order = [
+      ...shuffled(fits.slice(0, poolSize), random),
+      ...fits.slice(poolSize),
+    ];
+    const center = order.find((cell) =>
+      within(cell, steps).every(
+        (other) => straightDistance(cell, other) > reach || !blocked(other),
+      ),
     );
-    const center = pool[Math.floor(random() * pool.length)]!;
-    return buildCone(cells, center, radius, random, LAND_CONE);
+    if (center) return buildCone(cells, center, radius, random, LAND_CONE);
   }
   return null;
+}
+
+/** Os hexágonos a até `steps` passos de `center`, pelos vizinhos. */
+function within<C extends VolcanoCell>(center: C, steps: number): C[] {
+  const seen = new Set([center]);
+  let layer = [center];
+  for (let step = 0; step < steps; step += 1) {
+    const next: C[] = [];
+    for (const cell of layer) {
+      for (const other of cell.neighbors as readonly C[]) {
+        if (seen.has(other)) continue;
+        seen.add(other);
+        next.push(other);
+      }
+    }
+    layer = next;
+  }
+  return [...seen];
+}
+
+function shuffled<T>(items: readonly T[], random: Random): T[] {
+  const copy = [...items];
+  for (let index = copy.length - 1; index > 0; index -= 1) {
+    const other = Math.floor(random() * (index + 1));
+    [copy[index], copy[other]] = [copy[other]!, copy[index]!];
+  }
+  return copy;
 }
 
 function openGround(cell: VolcanoCell): boolean {

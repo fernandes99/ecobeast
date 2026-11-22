@@ -82,6 +82,13 @@ describe('a ilha vulcânica (volcano/05)', () => {
     ).toBe(false);
   });
 
+  it('não sai num mapa pequeno, onde o cone não cabe com a praia e o cinto', () => {
+    for (const tileCount of [100, 400, 2000]) {
+      expect(isVolcanicIsland(3, { ...ISLAND, tileCount })).toBe(false);
+    }
+    expect(isVolcanicIsland(3, { ...ISLAND, tileCount: 2500 })).toBe(true);
+  });
+
   it('a terra é uma ilha só, cercada de água, sem lago, rio nem ponte', () => {
     for (const map of maps) {
       const byKey = new Map(map.tiles.map((tile) => [hexKey(tile), tile]));

@@ -147,8 +147,9 @@ void fragment() {
 		}
 	}
 	vec3 result = color * min(light, vec3(1.0)) + glow;
+	// A lava sai do tom da hora junto com as luzes, sem pular de cor às 17h e às 7h.
 	if (lava) {
-		result = original;
+		result = mix(result, original, light_strength);
 	}
 	COLOR = vec4(mix(result, FIREFLY, firefly * light_strength), 1.0);
 }

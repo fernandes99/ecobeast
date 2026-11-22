@@ -208,6 +208,8 @@ const VOLCANO_ROCKS_SALT = 0x70c4b1;
 const VOLCANIC_ISLAND_SALT = 0x751a4d;
 /** O `climate` fixado em Frio (o segundo de `CLIMATES`) desliga a ilha vulcânica. */
 const COLD_CLIMATE = 2;
+/** Abaixo disto, o cone não cabe com a praia e o cinto de floresta em volta (volcano/05). */
+const MIN_ISLAND_TILES = 2500;
 const MEANDER_SCALE = 6;
 const BRIDGE_TYPE = 'wood_bridge';
 const BRIDGE_WIDTH = 28;
@@ -523,7 +525,9 @@ export function generateShapedMap(
  */
 function rollsVolcanicIsland(random: Random, config: MapConfig): boolean {
   return (
-    random() < config.volcanoIslandChance && config.climate !== COLD_CLIMATE
+    random() < config.volcanoIslandChance &&
+    config.climate !== COLD_CLIMATE &&
+    config.tileCount >= MIN_ISLAND_TILES
   );
 }
 

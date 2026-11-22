@@ -17,7 +17,8 @@ Com o contorno recortado do mapa sorteado (`edgeRoughness` 200), o meio do mapa 
 - **RF-02:** O sorteio da ilha (`rollsVolcanicIsland`, e `isVolcanicIsland(seed, config)` para medir sem gerar o mapa):
   - vem de um sorteio próprio a partir da seed (`VOLCANIC_ISLAND_SALT`), antes do contorno do mapa;
   - roda sempre, independente do vulcão em terra; quando a ilha sai, o `placeVolcano` não roda;
-  - não sai com o `climate` fixado em Frio. Com outro `climate`, a ilha sai do mesmo jeito: o cinto é de Planície e Boreal, como no clima Úmido.
+  - não sai com o `climate` fixado em Frio. Com outro `climate`, a ilha sai do mesmo jeito: o cinto é de Planície e Boreal, como no clima Úmido;
+  - não sai num mapa de menos de 2.500 hexágonos (`MIN_ISLAND_TILES`), onde o cone não cabe com a praia e o cinto: o revisor achou, no gerador do F2 com 100 a 400 hexágonos, o cone chegando no mar.
 - **RF-03:** A forma (`shapeVolcanicIsland`, em `map-volcanic-island.ts`):
   - o centro é o hexágono mais longe da beira do mapa;
   - a terra é uma ilha só, mais ou menos redonda (a costa entorta até 10% do raio, em 10 pontos), com o raio buscado até a terra dar a parte sorteada, de 45% a 60% do mapa, sem chegar perto da beira (fica pelo menos a água rasa e mais 2 hexágonos de mar);

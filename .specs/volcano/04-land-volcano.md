@@ -40,7 +40,8 @@ O primeiro desenho (o cone de raio 10 a 14 só em chão plano dos patamares 1 e 
 - **RF-02:** `placeVolcano(cells, climate, start, random, config, isBlocked)`, em `map-volcano.ts`:
   - **Quando roda:** depois do `openSlopes` e antes da Geleira, com um sorteio próprio a partir da seed (`VOLCANO_SALT`). Só os climas que não são `cold` entram.
   - **O sorteio:** decide se sai o vulcão, o raio (de `volcanoMinRadius` a `volcanoMaxRadius`) e o lugar.
-  - **O lugar:** o centro de um disco de raio `R + 2` sem água, lava, ponte (`isBlocked`, as margens das pontes), Montanha, terreno de 8 para cima nem a chegada (`clearance`). Entre os lugares possíveis, o sorteio pega um dos 25% mais longe da borda do mapa.
+  - **O lugar:** o centro de um disco de raio `R + 2` sem água, lava, ponte (`isBlocked`, as margens das pontes), Montanha, terreno de 8 para cima nem a chegada. O `clearance` (pela grade) separa os candidatos, e o escolhido é conferido em linha reta, porque o cone e a terra encostada nele vão até `R + 2` em linha reta, o que pela grade pode ser até `(R + 2) / 0,866` passos. Os 25% mais longe da borda do mapa são tentados primeiro, numa ordem sorteada.
+  - **Na revisão final** (2026-11-22), o revisor achou que, só pela grade, um cone de raio 12 ou mais cobria água e rebaixava Montanha e terreno de 8; a conferência em linha reta veio daí, com o teste do cone grande.
   - **Sem lugar no raio sorteado:** o sorteio tenta raios menores, até o `volcanoMinRadius`. Se nenhum couber, o mapa fica sem vulcão.
   - **A raridade:** medida em 200 mapas do tamanho do jogo com o padrão 0,07: 7 vulcões, perto de 6% dos mapas que não são frios (3,5% de todos), com 290 hexágonos de cone em média; o vulcão forçado (`volcanoChance` 1) não achou lugar em 4 dos 118 mapas sem Neve. O padrão fica em 0,07.
 - **RF-03:** O perfil do cone (`buildCone`), pela distância em linha reta ao centro, menos uma onda do sorteio próprio (8 pontos, até 1 hexágono, a mesma em todas as faixas, e sumindo perto do centro):
@@ -69,6 +70,7 @@ O primeiro desenho (o cone de raio 10 a 14 só em chão plano dos patamares 1 e 
   - toda terra que se alcançava continua alcançável;
   - fora do cone e da terra encostada nele, os biomas, a chegada e as pontes são os do mapa sem o vulcão;
   - os picos e as rachaduras ficam no cone, fora das escadarias, os picos fora do piso e as rachaduras fora da borda;
+  - um cone grande (raio de 14 a 20, sem lagos nem rios) não cobre nem rebaixa água, Montanha ou terreno de 8 para cima (a seed 39.600 quebrava antes da conferência em linha reta);
   - com o `volcanoChance` em 0, o hash de 5 seeds é o do commit da [03](03-volcano-records.md) (conferido em 20 seeds contra uma cópia do código daquele commit).
 - [x] A frequência medida em 200 mapas do tamanho do jogo (RF-02). Ela fica fora dos testes de unidade, porque 200 mapas levam perto de 2 minutos.
 - [x] Nos testes do `map-generator.spec.ts`, o Vulcão e a lava estão em `RARE_BIOMES`, e a configuração deles desliga o vulcão.

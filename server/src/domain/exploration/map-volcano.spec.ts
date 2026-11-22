@@ -28,6 +28,7 @@ const WARM: MapConfig = {
 const SLOW = 120_000;
 const CONE = new Set(['volcano', 'lshallow', 'ldeep']);
 const LAVA = new Set(['lshallow', 'ldeep']);
+const WATER = new Set(['wshallow', 'wdeep']);
 
 interface Sample {
   map: ShapedMap;
@@ -199,6 +200,40 @@ describe('placeVolcano (volcano/04)', () => {
       expect(lost).toEqual([]);
     }
   });
+
+  it(
+    'um cone grande não cobre nem rebaixa água, Montanha ou terreno de 8 para cima',
+    () => {
+      const big: MapConfig = {
+        ...WARM,
+        volcanoMinRadius: 14,
+        volcanoMaxRadius: 20,
+        lakeCount: 0,
+        riverCount: 0,
+      };
+      let cones = 0;
+      // A 39.600 é a que o cone grande quebrava antes da conferência em linha reta.
+      for (const seed of [39600, 7924, 23762]) {
+        const map = generateShapedMap(seed, big);
+        const plain = generateShapedMap(seed, { ...big, volcanoChance: 0 });
+        if (!map.tiles.some(({ biome }) => CONE.has(biome))) continue;
+        cones += 1;
+        const after = new Map(map.tiles.map((tile) => [hexKey(tile), tile]));
+        for (const tile of plain.tiles) {
+          const kept =
+            WATER.has(tile.biome) || tile.shape === 'mont' || tile.height >= 8;
+          if (!kept) continue;
+          const now = after.get(hexKey(tile))!;
+          expect([now.biome, now.height], hexKey(tile)).toEqual([
+            tile.biome,
+            tile.height,
+          ]);
+        }
+      }
+      expect(cones).toBeGreaterThan(0);
+    },
+    SLOW,
+  );
 
   it('fora do cone e da terra encostada nele, os biomas ficam iguais', () => {
     for (const { map, plain } of samples) {
