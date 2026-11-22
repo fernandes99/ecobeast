@@ -28,6 +28,15 @@ const HUB_SKY: Dictionary[String, Array] = {
 	"dusk": [Color("#3A2C6B"), Color("#F0895A")],
 	"night": [Color("#070F26"), Color("#1F3263")],
 }
+## A cor das nuvens da Home em cada parte do dia, multiplicada pela arte (hub-start/05).
+const HUB_CLOUD_TINT: Dictionary[String, Color] = {
+	"morning": Color("#FFF6EA"),
+	"afternoon": Color("#FFFFFF"),
+	"dusk": Color("#F2C2B0"),
+	"night": Color("#4A5A86"),
+}
+## A vinheta das bordas da Home.
+const HUB_VIGNETTE := Color("#06111F99")
 ## O contorno escuro dos textos grandes do Hub.
 const TEXT_OUTLINE := Color("#06111F")
 const MAP_ROUTE := Color("#FFFFFFD9")

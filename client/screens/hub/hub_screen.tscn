@@ -5,6 +5,7 @@
 [ext_resource type="Texture2D" uid="uid://d0b8j3jbsaqfe" path="res://ui/icons/coin.svg" id="3_coin"]
 [ext_resource type="Script" path="res://ui/components/tap_panel.gd" id="4_tap_panel"]
 [ext_resource type="Script" path="res://screens/hub/hub_island.gd" id="5_island"]
+[ext_resource type="Script" path="res://screens/hub/hub_clouds.gd" id="8_clouds"]
 [ext_resource type="FontVariation" path="res://ui/theme/fonts/nunito_bold.tres" id="6_bold"]
 [ext_resource type="PackedScene" path="res://ui/components/hp_bar.tscn" id="7_hp_bar"]
 [ext_resource type="PackedScene" path="res://ui/components/day_phase_badge.tscn" id="90_day_phase"]
@@ -53,7 +54,45 @@ grow_vertical = 2
 mouse_filter = 2
 expand_mode = 1
 
+[node name="BackClouds" type="Control" parent="Pages/HomePage"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("8_clouds")
+count = 6
+top = 0.08
+bottom = 0.55
+min_speed = 5.0
+max_speed = 11.0
+
+[node name="Island" type="Control" parent="Pages/HomePage"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("5_island")
+
 [node name="SceneShade" type="TextureRect" parent="Pages/HomePage" unique_id=973738555]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+expand_mode = 1
+
+[node name="Vignette" type="TextureRect" parent="Pages/HomePage"]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 15
@@ -209,9 +248,8 @@ layout_mode = 2
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
-mouse_filter = 2
 
-[node name="Island" type="Control" parent="Pages/HomePage/SafeArea/Padding/Column/Stage"]
+[node name="FrontClouds" type="Control" parent="Pages/HomePage/SafeArea/Padding/Column/Stage"]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 15
@@ -220,7 +258,13 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-script = ExtResource("5_island")
+script = ExtResource("8_clouds")
+count = 3
+top = 0.82
+bottom = 0.95
+min_speed = 9.0
+max_speed = 16.0
+cloud_alpha = 0.92
 
 [node name="CreatureTap" type="PanelContainer" parent="Pages/HomePage/SafeArea/Padding/Column/Stage"]
 unique_name_in_owner = true

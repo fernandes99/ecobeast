@@ -33,8 +33,6 @@ const SHADE_ALPHA := 0.55
 const SHADE_BOTTOM_ALPHA := 0.85
 const SHADE_FADE := 120.0
 
-const ACTOR_SPREAD := 14.0
-const PORTRAIT_SIZE := 96
 const PLATE_GAP := 10.0
 const LEVEL_BADGE_BORDER := 3
 const LEVEL_BADGE_SIZE := 40
@@ -67,6 +65,9 @@ var _bubbles: Array[PartyBubble] = []
 @onready var _home_safe: SafeArea = %SafeArea
 @onready var _sky: TextureRect = %Sky
 @onready var _scene_shade: TextureRect = %SceneShade
+@onready var _vignette: TextureRect = %Vignette
+@onready var _back_clouds: HubClouds = %BackClouds
+@onready var _front_clouds: HubClouds = %FrontClouds
 @onready var _player_area: Control = %Player
 @onready var _avatar_initial: Label = %AvatarInitial
 @onready var _name_label: Label = %NameLabel
@@ -100,6 +101,7 @@ func _ready() -> void:
 	_paint_level_badge()
 	for label: Label in [_name_label, _level_label, _coins_label, _featured_name, _featured_level]:
 		_outline(label, OUTLINE)
+	_vignette.texture = _vignette_texture()
 	_build_stage()
 	_build_party()
 	_build_explore()
@@ -263,12 +265,32 @@ func _paint_sky() -> void:
 	gradient.set_color(0, colors[0])
 	gradient.set_color(1, colors[1])
 	_sky.texture = _vertical(gradient)
+	var tint: Color = UiPalette.HUB_CLOUD_TINT.get(phase.slug if phase != null else "", Color.WHITE)
+	for clouds: HubClouds in [_back_clouds, _front_clouds]:
+		for cloud: Node in clouds.get_children():
+			(cloud as CanvasItem).self_modulate = tint
+
+
+## As bordas da Home escurecem de leve, por baixo da interface.
+func _vignette_texture() -> GradientTexture2D:
+	var clear := UiPalette.HUB_VIGNETTE
+	clear.a = 0.0
+	var gradient := Gradient.new()
+	gradient.offsets = PackedFloat32Array([0.0, 0.55, 1.0])
+	gradient.colors = PackedColorArray([clear, clear, UiPalette.HUB_VIGNETTE])
+	var texture := GradientTexture2D.new()
+	texture.gradient = gradient
+	texture.fill = GradientTexture2D.FILL_RADIAL
+	texture.fill_from = Vector2(0.5, 0.5)
+	texture.fill_to = Vector2(1.1, 0.5)
+	return texture
 
 
 func _build_stage() -> void:
-	_island.add_actor(_tamer, -ACTOR_SPREAD)
-	_tamer.face_row(SheetSprite.LOWER_ROW, false)
-	_island.placed.connect(_place_plate)
+	_island.set_tamer(_tamer)
+	_island.moved.connect(_place_plate)
+	_stage.gui_input.connect(_island.handle_touch)
+	_stage.item_rect_changed.connect(_focus_island)
 	_creature_tap.pressed.connect(_open_featured)
 
 
@@ -292,48 +314,45 @@ func _build_party() -> void:
 
 
 func _show_creature(creature: CreatureInstance) -> void:
-	if _creature != null:
-		_creature.queue_free()
-		_creature = null
 	if creature == null:
+		_island.set_creature(null)
 		return
 	var species := GameData.get_species(creature.species_id)
 	if CreatureSprite.has_sheets(species.slug):
-		var sprite := CreatureSprite.new(species.slug)
-		sprite.face_toward(Vector2(-1.0, 0.6))
-		sprite.play_idle()
-		_creature = sprite
-		_island.add_actor(sprite, ACTOR_SPREAD)
+		_island.set_creature(CreatureSprite.new(species.slug))
+		return
+	var front := CreaturePortrait.SPRITE_PATH % species.slug
+	if ResourceLoader.exists(front):
+		_island.set_creature(HubIsland.fallback_creature(load(front) as Texture2D))
 	else:
-		var portrait: CreaturePortrait = preload("res://ui/components/creature_portrait.tscn").instantiate()
-		portrait.portrait_size = PORTRAIT_SIZE
-		portrait.flipped = true
-		portrait.mouse_filter = MOUSE_FILTER_IGNORE
-		portrait.set_species(species.id)
-		_creature = portrait
-		_stage.add_child(portrait)
-		_stage.move_child(portrait, _creature_tap.get_index())
+		_island.set_creature(null)
 
 
-## A etiqueta e a área de toque acompanham o Ecobeast na ilhota.
+## A câmera da ilha põe o Domador no meio do palco.
+func _focus_island() -> void:
+	var stage := _stage.get_global_rect()
+	_island.set_focus(_island.get_global_transform_with_canvas().affine_inverse() * stage.get_center())
+
+
+## A etiqueta e a área de toque acompanham o Ecobeast na ilha.
 func _place_plate() -> void:
+	var node := _island.creature_node()
+	_plate.visible = node != null
+	_creature_tap.visible = node != null
+	if node == null:
+		return
 	var art_scale := _island.pixel_scale()
-	var feet := _island.to_local_point(_island.surface_point(ACTOR_SPREAD))
-	var top := feet.y
+	var feet := _stage.get_global_transform_with_canvas().affine_inverse() * (_island.get_global_transform_with_canvas() * _island.to_local_point(node.position))
+	var height := HubIsland.FALLBACK_HEIGHT
+	if node is CreatureSprite:
+		height = _visible_height(node as CreatureSprite)
+	var top := feet.y - height * art_scale
 	var half_width := SheetSprite.CELL_SIZE.x * art_scale / 2.0
-	if _creature is CreatureSprite:
-		top = feet.y - _visible_height(_creature as CreatureSprite) * art_scale
-	elif _creature is CreaturePortrait:
-		var portrait := _creature as CreaturePortrait
-		portrait.size = Vector2(PORTRAIT_SIZE, PORTRAIT_SIZE)
-		portrait.position = feet - Vector2(PORTRAIT_SIZE / 2.0, PORTRAIT_SIZE)
-		top = portrait.position.y
-		half_width = PORTRAIT_SIZE / 2.0
 	_plate.size = _plate.get_combined_minimum_size()
 	_plate.position = Vector2(feet.x - _plate.size.x / 2.0, top - PLATE_GAP - _plate.size.y).round()
 	_plate.position.x = clampf(_plate.position.x, 0.0, _stage.size.x - _plate.size.x)
-	_creature_tap.position = Vector2(feet.x - half_width, _plate.position.y)
-	_creature_tap.size = Vector2(half_width * 2.0, feet.y - _plate.position.y)
+	_creature_tap.position = Vector2(feet.x - half_width, top)
+	_creature_tap.size = Vector2(half_width * 2.0, feet.y - top)
 
 
 ## A altura dos pixels do Ecobeast no quadro parado, do pé até o topo.
@@ -451,7 +470,6 @@ func _refresh() -> void:
 	_level_label.text = str(player.level)
 	_coins_label.text = NumberFormat.thousands(player.coins)
 	_tamer.set_appearance(player.appearance)
-	_tamer.face_row(SheetSprite.LOWER_ROW, false)
 	for index: int in Player.PARTY_SIZE:
 		var creature: CreatureInstance = player.party[index] if index < player.party.size() else null
 		_bubbles[index].set_creature(creature)
@@ -475,8 +493,6 @@ func _show_featured() -> void:
 	var party := Session.player.party
 	for slot: int in Player.PARTY_SIZE:
 		_bubbles[slot].set_selected(slot == index)
-	_plate.visible = index >= 0
-	_creature_tap.visible = index >= 0
 	if index < 0:
 		_featured_uid = ""
 		_show_creature(null)

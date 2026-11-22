@@ -89,3 +89,4 @@ Escolhas de Claude (_a revisar_; ao mudar uma, atualize aqui e na fase):
 | 2 | [02-ecobeasts-profile-settings](02-ecobeasts-profile-settings.md) | A tela Ecobeasts, o Perfil e as Configurações | concluída |
 | 3 | [03-tab-bar](03-tab-bar.md) | A barra de abas no estilo do Clash Royale, com a Home no meio, e a Home como o palco no campo | concluída |
 | 4 | [04-game-look](04-game-look.md) | A Home com cara de jogo: o céu da parte do dia, a ilhota de hexágonos do mapa com o Domador e o Ecobeast, os contornos, o selo do nível e o Explorar de jogo | concluída |
+| 5 | [05-island-walk](05-island-walk.md) | A ilha maior atrás da Home inteira, o andar por toque com o Ecobeast seguindo, a câmera no Domador, as nuvens em pixel art e a vinheta | concluída |
