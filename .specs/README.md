@@ -129,6 +129,7 @@ O Ecobeast é um jogo mobile (Android/iOS, retrato): o cliente em **Godot 4.7 co
 | [creature-roles](creature-roles/) | Os papéis dos Ecobeasts na luta (Guardião, Suporte, Controlador, Atacante e Lutador) e os subpapéis, que toda linha nova segue |
 | [ground-variety](ground-variety/) | Vinte tipos novos de chão e de caminho para o editor de ilhas, do deck de madeira às pedras soltas sobre o bioma |
 | [nectoad-line](nectoad-line/) | O sapo do néctar, Nectoad e Toxbloom (Toxina, com a Flora na final), o primeiro Guardião Muralha física, do Campo florido |
+| [bumbit-line](bumbit-line/) | A abelha operária, Bumbit, Buzzwork e Bloomarch (Inseto, com a Flora na final), o primeiro Controlador Arquiteto, do Campo florido, com a marca Melado |
 
 As próximas iniciativas estão no [roadmap.md](roadmap.md).
 

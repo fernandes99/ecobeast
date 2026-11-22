@@ -153,6 +153,9 @@ const GROUND_PETALS: Array[Color] = [Color("#F7A8C8"), Color("#FFE27A"), Color("
 const GROUND_FLOWER_CORE := Color("#F2B33D")
 const GROUND_GARDEN_SPARKLE := Color("#E9FFD9")
 const GROUND_RIPPLE := Color("#DDF0FF")
+const GROUND_HONEY := Color("#E8A33A")
+const GROUND_HONEY_DARK := Color("#B8741E")
+const GROUND_HONEY_SHINE := Color("#FFE9A8")
 
 ## Modulate de um painel tocável enquanto o dedo está nele: clareia, porque
 ## escurecer não aparece no fundo escuro.

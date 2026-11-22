@@ -17,6 +17,8 @@ const THORN_SPOTS: Array[Vector2] = [
 const BUBBLE_SPOTS: Array[Vector2] = [Vector2(-22, -6), Vector2(20, -12), Vector2(-14, 20), Vector2(18, 18), Vector2(2, -24)]
 const CRYSTAL_SPOTS: Array[Vector2] = [Vector2(-26, -4), Vector2(24, -10), Vector2(-12, 22), Vector2(16, 22), Vector2(0, -22), Vector2(32, 8)]
 const FLOWER_SPOTS: Array[Vector2] = [Vector2(-26, 0), Vector2(26, -4), Vector2(-12, 24), Vector2(14, 26), Vector2(-6, -20), Vector2(18, -22)]
+const HONEY_BLOBS: Array[Vector3] = [Vector3(-16, -4, 11), Vector3(14, 6, 13), Vector3(-2, 20, 9), Vector3(6, -18, 8)]
+const HONEY_STRANDS: Array[Vector2] = [Vector2(-20, 2), Vector2(18, 14), Vector2(2, -14)]
 const SAND_RADIUS := 34.0
 const RIPPLES := 3
 const RIPPLE_PERIOD := 1.6
@@ -69,6 +71,8 @@ func _draw() -> void:
 				_draw_garden(at, t)
 			"puddle":
 				_draw_puddle(cell, at, t)
+			"honey":
+				_draw_honey(at, t)
 
 
 func _draw_fire(at: Vector2, t: float) -> void:
@@ -232,6 +236,23 @@ func _draw_puddle(cell: Vector2i, at: Vector2, t: float) -> void:
 			_ring(spot, Vector2(radius, radius * 0.55) * 0.55, Color(UiPalette.GROUND_RIPPLE, (1.0 - grow) * 0.6), 1.0)
 		if grow < 0.1:
 			draw_circle(spot + Vector2(0.0, -3.0), 1.5, Color(UiPalette.GROUND_RIPPLE, 0.9))
+
+
+func _draw_honey(at: Vector2, t: float) -> void:
+	for index: int in HONEY_BLOBS.size():
+		var blob := HONEY_BLOBS[index]
+		var spot := at + Vector2(blob.x, blob.y)
+		var size := Vector2(blob.z, blob.z * SQUASH) * (1.0 + 0.06 * sin(t * 1.2 + index * 1.7))
+		draw_colored_polygon(_ellipse(spot + Vector2(0.0, 1.5), size), Color(UiPalette.GROUND_HONEY_DARK, 0.85))
+		draw_colored_polygon(_ellipse(spot, size), Color(UiPalette.GROUND_HONEY, 0.9))
+		draw_colored_polygon(_ellipse(spot - size * 0.35, size * 0.3), Color(UiPalette.GROUND_HONEY_SHINE, 0.8))
+	for index: int in 3:
+		var stretch := fposmod(t * 0.35 + index / 3.0, 1.0)
+		var top := at + HONEY_STRANDS[index]
+		var bottom := top + Vector2(0.0, lerpf(2.0, 9.0, stretch))
+		var alpha := sin(stretch * PI)
+		draw_line(top, bottom, Color(UiPalette.GROUND_HONEY, alpha), 1.5, true)
+		draw_circle(bottom, 1.8, Color(UiPalette.GROUND_HONEY, alpha))
 
 
 func _ring(at: Vector2, radius: Vector2, color: Color, width: float) -> void:

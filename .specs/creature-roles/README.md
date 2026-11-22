@@ -126,8 +126,9 @@ As formas finais em 2026-11-22, pelos atributos e pelas Técnicas do banco. Quan
 | Pouchmend | Suporte Curandeiro | Suporte Protetor (Atadura Firme) | médio |
 | Toxbloom | Guardião Muralha ([nectoad-line](../nectoad-line/README.md#papel)) | Controlador Arquiteto (Poça Tóxica, Abraço da Flor) | físico, lento |
 | Blizzvolt | Controlador Perturbador (pelos atributos, seria Lutador misto) | — | misto, médio |
+| Bloomarch | Controlador Arquiteto ([bumbit-line](../bumbit-line/README.md#papel); pelos atributos, seria Lutador misto) | Controlador Perturbador (Zumbido) e Enfraquecedor (Nuvem de Pólen) | especial, médio |
 
-Contagem, com o Toxbloom: Atacante 11 de 18 (61%), Lutador 3, Guardião 2, Suporte 1, Controlador 1. Nenhuma Muralha mista, nenhum Inspirador, Enfraquecedor ou Atirador como papel principal.
+Contagem, com o Toxbloom e o Bloomarch: Atacante 11 de 19 (58%), Lutador 3, Guardião 2, Suporte 1, Controlador 2. Nenhuma Muralha mista, nenhum Inspirador, Enfraquecedor ou Atirador como papel principal.
 
 ## Decisões
 
