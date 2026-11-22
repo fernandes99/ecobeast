@@ -187,6 +187,7 @@ export function makeState(
     godMode: false,
     coins: 0,
     coinsChange: 0,
+    rawEnemyXp: 0,
     partyFree: 0,
     ...overrides,
   };

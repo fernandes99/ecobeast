@@ -41,6 +41,7 @@ func _run(tables: Dictionary) -> Array[String]:
 	_check_npc_appearance_parts()
 	_check_voices()
 	_check_biome_zones()
+	_check_tamer_levels()
 	return _errors
 
 
@@ -536,3 +537,24 @@ func _check_biome_zones() -> void:
 			return zone["slug"] == biome["slug"] and zone["biome_id"] == biome["id"])
 		if not common:
 			_row_error("biomes", lines[i], "bioma '%s' sem a zona Comum em biome_zones.json" % biome["slug"])
+
+
+func _check_tamer_levels() -> void:
+	var rows: Array[Dictionary] = _rows["tamer_levels"].duplicate()
+	if rows.is_empty():
+		_table_error("tamer_levels", "deve ter pelo menos o nível 1")
+		return
+	rows.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return int(a["level"]) < int(b["level"]))
+	if int(rows[0]["level"]) != 1 or int(rows[0]["xp_total"]) != 0:
+		_table_error("tamer_levels", "deve começar no nível 1 com xp_total 0")
+	for index: int in rows.size():
+		var row: Dictionary = rows[index]
+		if (row["reward_item_id"] == null) != (row["reward_item_quantity"] == null):
+			_table_error("tamer_levels", "nível %d: reward_item_id e reward_item_quantity vêm juntos" % int(row["level"]))
+		if index == 0:
+			continue
+		var previous: Dictionary = rows[index - 1]
+		if int(row["level"]) != int(previous["level"]) + 1:
+			_table_error("tamer_levels", "falta o nível %d" % (int(previous["level"]) + 1))
+		if int(row["xp_total"]) <= int(previous["xp_total"]):
+			_table_error("tamer_levels", "nível %d: xp_total deve ser maior que o do nível anterior" % int(row["level"]))

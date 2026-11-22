@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
+import { TamerProgressDto } from '../tamer-level/tamer-level.dto.js';
 import {
   ArrayMaxSize,
   ArrayMinSize,
@@ -431,4 +432,13 @@ export class BoardBattleResponseDto {
     example: [],
   })
   registered_species_ids: number[];
+
+  @ApiProperty({
+    description:
+      'No fim da luta, o XP que o Domador ganhou e os níveis que subiu. Nulo ' +
+      'nas outras respostas e quando ele não ganhou XP.',
+    type: () => TamerProgressDto,
+    nullable: true,
+  })
+  tamer_progress: TamerProgressDto | null;
 }

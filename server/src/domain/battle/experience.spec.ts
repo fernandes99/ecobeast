@@ -101,6 +101,21 @@ describe('XP ao derrubar o inimigo', () => {
     expect(eventsOf(events, 'xp_gained')).toEqual([]);
   });
 
+  it('o XP bruto do inimigo soma mesmo sem ninguém para receber', () => {
+    const turn = defeat(makeState(fighter({ level: 100 }), wild()));
+    expect(turn.state.rawEnemyXp).toBe(44);
+  });
+
+  it('o XP bruto não divide entre quem recebe', () => {
+    const turn = defeat(afterSwitch(fighter()));
+    expect(turn.state.rawEnemyXp).toBe(44);
+  });
+
+  it('a luta sem recompensa não soma XP bruto', () => {
+    const turn = defeat(makeState(fighter(), wild(), { noRewards: true }));
+    expect(turn.state.rawEnemyXp).toBe(0);
+  });
+
   it('o XP soma a cada inimigo derrubado', () => {
     const turn = contextOf(makeState(fighter(), [wild(), wild()]), catalog);
     for (const enemy of turn.state.enemy.team) {

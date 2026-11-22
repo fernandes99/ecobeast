@@ -146,6 +146,8 @@ export interface BattleState {
   godMode: boolean;
   coins: number;
   coinsChange: number;
+  /** O XP de cada inimigo derrubado antes da divisão, para o XP do Domador (tamer-level/01). */
+  rawEnemyXp: number;
   partyFree: number;
   /** A luta de teste da Técnica (skill-test/01): sem XP e sem moedas. */
   noRewards?: boolean;

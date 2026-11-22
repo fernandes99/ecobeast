@@ -106,8 +106,6 @@ func _ready() -> void:
 	_build_party()
 	_build_explore()
 	_build_tab_bar()
-	# O Domador ainda não sobe de nível (o GDD não define como).
-	_xp_bar.value = 0.0
 	get_viewport().size_changed.connect(_place_tab_bar)
 	_place_tab_bar()
 	resized.connect(_layout_scene)
@@ -468,6 +466,7 @@ func _refresh() -> void:
 	_avatar_initial.text = player.name.left(1).to_upper()
 	_name_label.text = player.name
 	_level_label.text = str(player.level)
+	_xp_bar.value = player.level_ratio()
 	_coins_label.text = NumberFormat.thousands(player.coins)
 	_tamer.set_appearance(player.appearance)
 	for index: int in Player.PARTY_SIZE:

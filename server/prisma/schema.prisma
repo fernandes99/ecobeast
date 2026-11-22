@@ -931,9 +931,43 @@ model Item {
 
   itemCategory ItemCategory    @relation(fields: [itemCategoryId], references: [id], onDelete: Restrict)
   inventory    InventoryItem[]
+  tamerLevels  TamerLevel[]
 
   @@index([itemCategoryId])
   @@map("items")
+  @@schema("ecobeasts")
+}
+
+/// O XP somado para chegar a cada nível do Domador e a recompensa dele (tamer-level/01).
+model TamerLevel {
+  /// CHECK ≥ 1 (migration tamer_level)
+  level              Int  @id
+  /// CHECK ≥ 0 (migration tamer_level)
+  xpTotal            Int  @map("xp_total")
+  /// CHECK ≥ 0 (migration tamer_level)
+  rewardCoins        Int  @default(0) @map("reward_coins")
+  /// CHECK nulo junto com reward_item_quantity (migration tamer_level)
+  rewardItemId       Int? @map("reward_item_id")
+  /// CHECK ≥ 1 (migration tamer_level)
+  rewardItemQuantity Int? @map("reward_item_quantity")
+
+  rewardItem Item? @relation(fields: [rewardItemId], references: [id], onDelete: Restrict)
+
+  @@index([rewardItemId])
+  @@map("tamer_levels")
+  @@schema("ecobeasts")
+}
+
+/// Quanto XP de Domador cada fonte dá (tamer-level/01).
+model TamerXpSource {
+  id     Int    @id @default(autoincrement())
+  /// CHECK ^[a-z0-9_]+$ (migration tamer_level)
+  slug   String @unique
+  name   String
+  /// CHECK ≥ 0 (migration tamer_level)
+  amount Int
+
+  @@map("tamer_xp_sources")
   @@schema("ecobeasts")
 }
 
@@ -961,6 +995,9 @@ model Player {
   level         Int       @default(1)
   /// CHECK ≥ 0 (migration init)
   coins         Int       @default(0)
+  /// O XP total do Domador (tamer-level/01).
+  /// CHECK ≥ 0 (migration tamer_level)
+  xp            Int       @default(0)
   createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
   bodyTypeId    Int       @default(1) @map("body_type_id")
   skinPaletteId Int       @default(1) @map("skin_palette_id")

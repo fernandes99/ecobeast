@@ -7,6 +7,10 @@ const PARTY_SIZE := 6
 var id: String
 var name: String
 var level: int = 1
+## O XP total do Domador e os limites do nível atual; -1 no próximo é o nível máximo (tamer-level/02).
+var xp: int = 0
+var level_xp: int = 0
+var next_level_xp: int = -1
 var coins: int = 0
 var created_at: String
 var party: Array[CreatureInstance] = []
@@ -23,6 +27,16 @@ func has_starter() -> bool:
 ## O Domador nasce sem nome (`""`) e ganha o nome na introdução (liora-intro/01).
 func has_name() -> bool:
 	return not name.is_empty()
+
+
+func is_max_level() -> bool:
+	return next_level_xp < 0
+
+
+func level_ratio() -> float:
+	if is_max_level():
+		return 1.0
+	return clampf(float(xp - level_xp) / maxi(next_level_xp - level_xp, 1), 0.0, 1.0)
 
 
 func quantity_of(item_id: int) -> int:
@@ -46,6 +60,9 @@ static func from_dict(d: Dictionary) -> Player:
 	player.id = DictFields.get_string(d, "id")
 	player.name = DictFields.get_string(d, "name")
 	player.level = DictFields.get_int(d, "level", 1)
+	player.xp = DictFields.get_int(d, "xp")
+	player.level_xp = DictFields.get_int(d, "level_xp")
+	player.next_level_xp = DictFields.get_id(d, "next_level_xp")
 	player.coins = DictFields.get_int(d, "coins")
 	player.created_at = DictFields.get_string(d, "created_at")
 	for creature_dict: Variant in DictFields.get_array(d, "party"):

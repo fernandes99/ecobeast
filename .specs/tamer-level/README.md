@@ -2,7 +2,7 @@
 
 O Domador passa a ter XP e nível, de 1 a 99, separados dos Ecobeasts. O XP vem um pouco das lutas e principalmente dos marcos (a primeira captura de cada espécie, os Domadores vencidos e, quando a [auralis](../auralis/) existir, as missões, as Arenas e as ilhas). Cada nível paga uma recompensa pequena. O 99 é difícil de alcançar. Mais tarde, o nível dá os pontos de uma árvore de melhorias.
 
-- **Status:** aprovada
+- **Status:** concluída (falta o dono conferir no jogo)
 - **Depende de:** [progression](../progression/) (o XP dos Ecobeasts no fim da luta), [codex](../codex/) (a primeira captura de cada espécie), [npc-tamers](../npc-tamers/), [player-stats](../player-stats/) (a luta de teste e o modo deus não contam) e [hub-start](../hub-start/) (o selo e a barra de XP da Home, o Perfil)
 
 ## Contexto
@@ -130,6 +130,6 @@ Fica para uma iniciativa própria. O que esta deixa pronto: o nível guardado no
 
 | # | Fase | Entrega | Status |
 | --- | --- | --- | --- |
-| 1 | [01-tamer-xp-server](01-tamer-xp-server.md) | As tabelas `tamer_levels` e `tamer_xp_sources` com a curva e as fontes, a coluna `players.xp`, as regras puras com testes, o XP no fim da luta com as recompensas, o `tamer_progress` na resposta e o `xp` no `PlayerDto`; o `CatalogValidator` confere as tabelas novas | aprovada |
-| 2 | [02-tamer-level-client](02-tamer-level-client.md) | A barra da Home e o selo, o XP no Perfil, o "+N XP de Domador" no fim da luta e o aviso de nível novo com as recompensas | aprovada |
+| 1 | [01-tamer-xp-server](01-tamer-xp-server.md) | As tabelas `tamer_levels` e `tamer_xp_sources` com a curva e as fontes, a coluna `players.xp`, as regras puras com testes, o XP no fim da luta com as recompensas, o `tamer_progress` na resposta e o `xp` no `PlayerDto`; o `CatalogValidator` confere as tabelas novas | concluída |
+| 2 | [02-tamer-level-client](02-tamer-level-client.md) | A barra da Home e o selo, o XP no Perfil, o "+N XP de Domador" no fim da luta e o aviso de nível novo com as recompensas | concluída (falta o dono conferir no jogo) |
 

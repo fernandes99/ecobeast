@@ -69,6 +69,12 @@ layout_mode = 2
 theme_type_variation = &"BoldLabel"
 theme_override_font_sizes/font_size = 26
 
+[node name="XpLabel" type="Label" parent="SafeArea/Column/Header/Identity"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"SecondaryLabel"
+theme_override_font_sizes/font_size = 22
+
 [node name="SinceLabel" type="Label" parent="SafeArea/Column/Header/Identity"]
 unique_name_in_owner = true
 layout_mode = 2

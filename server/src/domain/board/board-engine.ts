@@ -153,6 +153,7 @@ export function startBoardBattle(
     godMode,
     coins,
     coinsChange: 0,
+    rawEnemyXp: 0,
     partyFree,
     board,
     cells: { player: [], enemy: [] },

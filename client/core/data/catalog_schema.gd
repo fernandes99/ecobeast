@@ -479,6 +479,20 @@ const TABLES := {
 			"cures_status": {"type": "bool"},
 		},
 	},
+	"tamer_levels": {
+		"key": ["level"],
+		"columns": {
+			"level": {"type": "int", "min": 1},
+			"xp_total": {"type": "int", "min": 0},
+			"reward_coins": {"type": "int", "min": 0},
+			"reward_item_id": {"type": "int", "nullable": true, "fk": "items"},
+			"reward_item_quantity": {"type": "int", "nullable": true, "min": 1},
+		},
+	},
+	"tamer_xp_sources": {
+		"key": ["id"],
+		"columns": {"id": ID, "slug": SLUG, "name": TEXT, "amount": {"type": "int", "min": 0}},
+	},
 	"starter_options": {
 		"key": ["species_id"],
 		"columns": {

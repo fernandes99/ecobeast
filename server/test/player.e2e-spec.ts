@@ -156,6 +156,9 @@ describe('Rotas do jogador (e2e)', () => {
       id: user.id,
       name: 'Ana Maria',
       level: 1,
+      xp: 0,
+      level_xp: 0,
+      next_level_xp: expect.any(Number) as number,
       coins: 1000,
       created_at: expect.stringMatching(
         /^\d{4}-\d{2}-\d{2}T[\d:.]+Z$/,

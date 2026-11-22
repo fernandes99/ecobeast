@@ -1,6 +1,10 @@
 import { geneRank, genesTotal } from '../domain/rules/genes.js';
 import { calculateStats } from '../domain/rules/stat-calculator.js';
 import { STAT_SLUGS, StatBlock, StatSlug } from '../domain/rules/types.js';
+import {
+  levelBounds,
+  type TamerLevelRow,
+} from '../domain/progression/tamer-level.js';
 import { MAX_LEVEL, totalXpForLevel } from '../domain/rules/xp-curve.js';
 import { Prisma } from '../generated/prisma/client.js';
 import { CreatureDto, PlayerDto } from './player.dto.js';
@@ -73,11 +77,18 @@ export function creatureStats(
   );
 }
 
-export function toPlayerDto(row: PlayerRow): PlayerDto {
+export function toPlayerDto(
+  row: PlayerRow,
+  tamerLevels: readonly TamerLevelRow[] = [],
+): PlayerDto {
+  const bounds = levelBounds(row.level, tamerLevels);
   return {
     id: row.id,
     name: row.name,
     level: row.level,
+    xp: row.xp,
+    level_xp: bounds.levelXp,
+    next_level_xp: bounds.nextLevelXp,
     coins: row.coins,
     created_at: row.createdAt.toISOString(),
     party: row.creatures.map(toCreatureDto),

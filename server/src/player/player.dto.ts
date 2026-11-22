@@ -257,8 +257,25 @@ export class PlayerDto {
   @ApiProperty({ example: 'Ana Maria' })
   name: string;
 
-  @ApiProperty({ example: 1 })
+  @ApiProperty({ description: 'O nível do Domador.', example: 1 })
   level: number;
+
+  @ApiProperty({ description: 'O XP total do Domador.', example: 0 })
+  xp: number;
+
+  @ApiProperty({
+    description: 'O XP total do começo do nível atual do Domador.',
+    example: 0,
+  })
+  level_xp: number;
+
+  @ApiProperty({
+    description: 'O XP total do próximo nível do Domador; nulo no máximo.',
+    type: 'integer',
+    nullable: true,
+    example: 41,
+  })
+  next_level_xp: number | null;
 
   @ApiProperty({ example: 1000 })
   coins: number;

@@ -15,6 +15,7 @@ import { Prisma } from '../generated/prisma/client.js';
 import { CountersService } from '../counters/counters.service.js';
 import { counterTotal } from '../domain/counters/counters.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { TamerLevelService } from '../tamer-level/tamer-level.service.js';
 import { checkedAppearance } from './appearance-check.js';
 import { loadCreatureBlueprint, newCreatureData } from './creature-params.js';
 import {
@@ -72,6 +73,7 @@ export class PlayerService {
     private readonly codex: CodexService,
     private readonly config: ConfigService<Env, true>,
     private readonly counters: CountersService,
+    private readonly tamerLevel: TamerLevelService,
   ) {}
 
   async get(userId: string): Promise<PlayerDto | null> {
@@ -79,7 +81,7 @@ export class PlayerService {
       where: { id: userId },
       include: PLAYER_INCLUDE,
     });
-    return player ? toPlayerDto(player) : null;
+    return player ? toPlayerDto(player, await this.tamerLevel.levels()) : null;
   }
 
   /** Sem nome, o Domador nasce com `""`, e a introdução o nomeia (liora-intro/01). */
@@ -95,7 +97,7 @@ export class PlayerService {
         },
         include: PLAYER_INCLUDE,
       });
-      return toPlayerDto(player);
+      return toPlayerDto(player, await this.tamerLevel.levels());
     } catch (error) {
       if (isUniqueViolation(error)) throw new ConflictException(PLAYER_EXISTS);
       throw error;

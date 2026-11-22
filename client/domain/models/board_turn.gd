@@ -8,6 +8,8 @@ var spawn_id: int = 0
 var tamer_id: int = 0
 var progression: Array[CreatureProgress] = []
 var registered_species_ids: Array[int] = []
+## O XP do Domador no fim da luta; nulo nas outras respostas (tamer-level/02).
+var tamer_progress: TamerProgress = null
 
 
 static func from_dict(d: Dictionary) -> BoardTurn:
@@ -27,4 +29,7 @@ static func from_dict(d: Dictionary) -> BoardTurn:
 	for value: Variant in DictFields.get_array(d, "registered_species_ids"):
 		if value is int or value is float:
 			turn.registered_species_ids.append(int(value))
+	var tamer: Variant = d.get("tamer_progress")
+	if tamer is Dictionary:
+		turn.tamer_progress = TamerProgress.from_dict(tamer)
 	return turn

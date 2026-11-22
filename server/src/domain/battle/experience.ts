@@ -41,14 +41,6 @@ export function recordEntry(context: TurnContext, spot: Spot): void {
 export function awardXp(context: TurnContext, enemy: Combatant): void {
   const { state, catalog, events } = context;
   if (state.noRewards) return;
-  const receivers = [...enemy.foughtBy]
-    .sort((a, b) => a - b)
-    .filter((index) => {
-      const creature = state.player.team[index]!;
-      return creature.currentHp > 0 && creature.level < MAX_LEVEL;
-    });
-  if (receivers.length === 0) return;
-
   const wildTotal = xpYield(
     catalog.xpYields.get(enemy.speciesId) ?? 0,
     enemy.level,
@@ -57,6 +49,15 @@ export function awardXp(context: TurnContext, enemy: Combatant): void {
     state.opponent === 'tamer'
       ? Math.floor(wildTotal * TAMER_XP_MULTIPLIER)
       : wildTotal;
+  state.rawEnemyXp += total;
+
+  const receivers = [...enemy.foughtBy]
+    .sort((a, b) => a - b)
+    .filter((index) => {
+      const creature = state.player.team[index]!;
+      return creature.currentHp > 0 && creature.level < MAX_LEVEL;
+    });
+  if (receivers.length === 0) return;
   const amount = splitXp(total, receivers.length);
   for (const index of receivers) {
     state.player.team[index]!.xpEarned += amount;

@@ -52,6 +52,7 @@ const NOT_FINISHED: BattleFinish = {
   capturedTo: null,
   progression: [],
   registeredSpeciesIds: [],
+  tamerProgress: null,
 };
 
 function toResponse(
@@ -62,6 +63,7 @@ function toResponse(
     capturedTo,
     progression,
     registeredSpeciesIds,
+    tamerProgress,
   }: BattleFinish = NOT_FINISHED,
 ): BoardBattleResponseDto {
   return {
@@ -72,6 +74,7 @@ function toResponse(
     tamer_id: null,
     progression,
     registered_species_ids: registeredSpeciesIds,
+    tamer_progress: tamerProgress,
   };
 }
 

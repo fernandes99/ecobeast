@@ -17,7 +17,7 @@ const table = (
 });
 
 /**
- * As 52 tabelas do catálogo em ordem de dependência: cada FK aponta para uma
+ * As 54 tabelas do catálogo em ordem de dependência: cada FK aponta para uma
  * tabela que vem antes (a autorreferência de species é tratada no seed).
  * Usada pelo seed e pelo catálogo inteiro (GET /v1/catalog).
  */
@@ -95,6 +95,8 @@ export const CATALOG_TABLES: readonly CatalogTable[] = [
   table('evolutions', 'evolution'),
   table('item_categories', 'itemCategory'),
   table('items', 'item'),
+  table('tamer_levels', 'tamerLevel', ['level']),
+  table('tamer_xp_sources', 'tamerXpSource'),
   table('starter_options', 'starterOption', ['species_id']),
 ];
 

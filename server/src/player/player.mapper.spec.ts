@@ -58,6 +58,7 @@ function player(creatures: CreatureRow[] = []): PlayerRow {
     id: 'p1',
     name: 'Ana',
     level: 1,
+    xp: 0,
     coins: 1000,
     createdAt: new Date('2026-10-30T12:00:00.000Z'),
     bodyTypeId: 1,
@@ -77,6 +78,9 @@ describe('toPlayerDto', () => {
       id: 'p1',
       name: 'Ana',
       level: 1,
+      xp: 0,
+      level_xp: 0,
+      next_level_xp: null,
       coins: 1000,
       created_at: '2026-10-30T12:00:00.000Z',
       party: [],
@@ -88,6 +92,34 @@ describe('toPlayerDto', () => {
       },
       story_marks: [],
     });
+  });
+
+  it('devolve o XP do Domador com os limites do nível', () => {
+    const levels = [
+      {
+        level: 1,
+        xpTotal: 0,
+        rewardCoins: 0,
+        rewardItemId: null,
+        rewardItemQuantity: null,
+      },
+      {
+        level: 2,
+        xpTotal: 41,
+        rewardCoins: 70,
+        rewardItemId: null,
+        rewardItemQuantity: null,
+      },
+      {
+        level: 3,
+        xpTotal: 86,
+        rewardCoins: 80,
+        rewardItemId: null,
+        rewardItemQuantity: null,
+      },
+    ];
+    const dto = toPlayerDto({ ...player(), level: 2, xp: 50 }, levels);
+    expect([dto.xp, dto.level_xp, dto.next_level_xp]).toEqual([50, 41, 86]);
   });
 
   it('devolve os Marcos da história como textos', () => {

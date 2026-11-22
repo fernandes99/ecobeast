@@ -21,6 +21,7 @@ var _pages: Array[VBoxContainer] = []
 @onready var _preview: TamerSprite = %Preview
 @onready var _name_label: Label = %NameLabel
 @onready var _level_label: Label = %LevelLabel
+@onready var _xp_label: Label = %XpLabel
 @onready var _since_label: Label = %SinceLabel
 @onready var _highlights_row: HBoxContainer = %Highlights
 @onready var _body: VBoxContainer = %Body
@@ -96,6 +97,13 @@ func _refresh_player() -> void:
 	_preview.set_appearance(player.appearance)
 	_name_label.text = player.name
 	_level_label.text = "Nível %d" % player.level
+	if player.is_max_level():
+		_xp_label.text = "Nível máximo"
+	else:
+		_xp_label.text = "%s / %s XP" % [
+			NumberFormat.thousands(player.xp - player.level_xp),
+			NumberFormat.thousands(player.next_level_xp - player.level_xp),
+		]
 	if _counters != null:
 		_fill_pages()
 

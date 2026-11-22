@@ -6,6 +6,7 @@ const SkillDetailScene := preload("res://screens/board_battle/skill_detail_card.
 const SKILL_SLOTS := 3
 const SEARCHING_TEXT := "Procurando um Ecobeast..."
 const GONE_TEXT := "Essa luta não existe mais."
+const TAMER_XP_TEXT := "+%d XP de Domador"
 const PICK_ENTRY_TEXT := "Toque no hexágono verde onde ele entra."
 const CANNOT_ENTER_TEXT := "Esse Ecobeast não pode entrar."
 const PICK_SPHERE_TEXT := "Toque no Ecobeast selvagem."
@@ -168,6 +169,7 @@ var _opening_tween: Tween
 @onready var _items_panel: BattleItemsPanel = %ItemsPanel
 @onready var _capture_overlay: CaptureOverlay = %CaptureOverlay
 @onready var _level_up_overlay: LevelUpOverlay = %LevelUpOverlay
+@onready var _tamer_level_overlay: TamerLevelOverlay = %TamerLevelOverlay
 @onready var _evolution_overlay: EvolutionOverlay = %EvolutionOverlay
 @onready var _codex_overlay: CodexRegisteredOverlay = %CodexRegisteredOverlay
 @onready var _skill_overlay: SkillLearnOverlay = %SkillLearnOverlay
@@ -248,7 +250,7 @@ func _input(event: InputEvent) -> void:
 func _zoom_area() -> Rect2:
 	if _board.board_size() == Vector2.ZERO or _leaving:
 		return Rect2()
-	for panel: Control in [_history, _codex_overlay, _level_up_overlay, _evolution_overlay, _skill_overlay, _next_panel, _items_panel, _capture_overlay]:
+	for panel: Control in [_history, _codex_overlay, _level_up_overlay, _tamer_level_overlay, _evolution_overlay, _skill_overlay, _next_panel, _items_panel, _capture_overlay]:
 		if panel.visible:
 			return Rect2()
 	return _board_area.get_global_rect()
@@ -321,6 +323,8 @@ func handle_back() -> bool:
 		_codex_overlay.close()
 	elif _level_up_overlay.visible:
 		_level_up_overlay.close()
+	elif _tamer_level_overlay.visible:
+		_tamer_level_overlay.close()
 	elif _evolution_overlay.visible:
 		_evolution_overlay.go_back()
 	elif _skill_overlay.visible:
@@ -608,6 +612,7 @@ func _show_turn(turn: BoardTurn) -> void:
 		"ended":
 			_show_controls(false)
 			await _celebrate(turn.progression)
+			await _celebrate_tamer(turn.tamer_progress)
 			_show_exit(_result_text(), true)
 
 
@@ -1496,6 +1501,14 @@ func _celebrate(progression: Array[CreatureProgress]) -> void:
 			await _celebrate_level(progress, creature, display_name)
 		await _player_card.fill_xp(progress.xp_ratio())
 		_xp_by_uid[progress.uid] = progress.xp_ratio()
+
+
+func _celebrate_tamer(progress: TamerProgress) -> void:
+	if progress == null:
+		return
+	_history.add_line(TAMER_XP_TEXT % progress.xp_gained)
+	if progress.leveled_up() and Session.player != null:
+		await _tamer_level_overlay.play(progress, Session.player.appearance)
 
 
 func _celebrate_level(progress: CreatureProgress, creature: BattleCreature, display_name: String) -> void:

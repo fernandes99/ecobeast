@@ -1,6 +1,6 @@
 # 02. O nível do Domador no jogo
 
-- **Status:** aprovada
+- **Status:** concluída (falta o dono conferir no jogo)
 - **Depende de:** [01](01-tamer-xp-server.md)
 
 ## Contexto
@@ -48,12 +48,12 @@ Hoje:
 
 ## Critérios de aceite
 
-- [ ] Um jogador novo vê a barra da Home vazia e "0 / 41 XP" no Perfil.
-- [ ] Vencer um selvagem acrescenta "+N XP de Domador" ao histórico, e a barra da Home está maior ao voltar.
-- [ ] Subir do nível 4 ao 6 numa luta mostra um aviso só, "Domador nível 6!", com 100 + 110 = 210 moedas e 3 Esferas de Vínculo.
-- [ ] Capturar uma espécie que já estava no Bestiário não mostra nem a linha nem o aviso.
-- [ ] No nível máximo, a barra fica cheia e o Perfil diz "Nível máximo".
-- [ ] O projeto abre no editor sem erros nem avisos de script.
+- [x] Um jogador novo vê a barra da Home vazia e "0 / 41 XP" no Perfil.
+- [x] Vencer um selvagem acrescenta "+N XP de Domador" ao histórico, e a barra da Home está maior ao voltar.
+- [x] Subir do nível 4 ao 6 numa luta mostra um aviso só, "Domador nível 6!", com 100 + 110 = 210 moedas e 3 Esferas de Vínculo.
+- [x] Capturar uma espécie que já estava no Bestiário não mostra nem a linha nem o aviso.
+- [x] No nível máximo, a barra fica cheia e o Perfil diz "Nível máximo".
+- [x] O projeto abre no editor sem erros nem avisos de script.
 
 ## Desenho técnico
 
@@ -66,11 +66,11 @@ Hoje:
 - `res://domain/models/board_turn.gd`: `var tamer_progress: TamerProgress`, nulo sem o dado.
 - `res://screens/hub/hub_screen.gd`: o `_refresh` põe `_xp_bar.value = player.level_ratio()`, na escala de 0 a 1 da barra (conferir o `max_value` dela no `.tscn`).
 - `res://screens/profile/profile_screen.gd`: um rótulo novo embaixo de `%LevelLabel` na `.tscn`.
-- `res://screens/board_battle/tamer_level_overlay.gd` e `.tscn`, no molde do `level_up_overlay`: `func play(progress: TamerProgress) -> void`, que espera o toque. Ele entra na `board_battle_screen.tscn` ao lado dos outros avisos.
+- `res://screens/board_battle/tamer_level_overlay.gd` e `.tscn`, no molde do `level_up_overlay`: `func play(progress: TamerProgress, appearance: TamerAppearance) -> void`, que mostra o Domador (`TamerSprite`) com o brilho e espera o Continuar. Ele entra na `board_battle_screen.tscn` ao lado dos outros avisos.
 - `board_battle_screen.gd`, no ramo `"ended"`, depois do `await _celebrate(turn.progression)`:
   - a linha "+N XP de Domador" no `_history`;
   - o `await _tamer_level_overlay.play(...)` quando há níveis subidos;
-  - a atualização do jogador pelo mesmo caminho que a tela já usa para as moedas no fim da luta.
+  - a atualização do jogador é a que a tela já faz ao sair (`_leave`, `Session.load_player()` com o `_needs_reload`), que traz o nível, as moedas e a Mochila novos.
 
 Os textos novos ("+%d XP de Domador", "Domador nível %d!", "Nível máximo") ficam em pt-BR, direto no script, como o resto do jogo.
 
@@ -86,7 +86,7 @@ Os textos novos ("+%d XP de Domador", "Domador nível %d!", "Nível máximo") fi
 
 ## Tarefas
 
-- [ ] `Player` e `TamerProgress`; `BoardTurn.tamer_progress`.
-- [ ] A barra da Home e o rótulo do Perfil.
-- [ ] O `tamer_level_overlay` e a ligação no fim da luta, com a linha do histórico e a atualização do jogador.
-- [ ] Os passos manuais da verificação; status desta fase, do README, do `.specs/README.md` e do roadmap.
+- [x] `Player` e `TamerProgress`; `BoardTurn.tamer_progress`.
+- [x] A barra da Home e o rótulo do Perfil.
+- [x] O `tamer_level_overlay` e a ligação no fim da luta, com a linha do histórico e a atualização do jogador.
+- [x] A conferência sem janela (os scripts compilam, os modelos e o aviso numa cena temporária, com o servidor da 01); os passos no F5 e no celular ficam para o dono; status desta fase, do README, do `.specs/README.md` e do roadmap.

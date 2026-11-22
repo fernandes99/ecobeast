@@ -95,6 +95,7 @@ describe('toCombatant', () => {
       id: 'p1',
       name: 'Ana',
       level: 1,
+      xp: 0,
       coins: 0,
       createdAt: new Date(),
       bodyTypeId: 1,

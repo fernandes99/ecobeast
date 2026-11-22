@@ -6,6 +6,9 @@ import {
 } from '@nestjs/common';
 import { CodexService } from '../codex/codex.service.js';
 import { CountersService } from '../counters/counters.service.js';
+import { tamerXpFromBattle } from '../domain/progression/tamer-level.js';
+import type { TamerProgressDto } from '../tamer-level/tamer-level.dto.js';
+import { TamerLevelService } from '../tamer-level/tamer-level.service.js';
 import {
   battleCounters,
   foughtCreatureIndices,
@@ -90,6 +93,7 @@ export interface BattleFinish {
   capturedTo: CapturedTo | null;
   progression: CreatureProgressDto[];
   registeredSpeciesIds: number[];
+  tamerProgress: TamerProgressDto | null;
 }
 
 interface ProgressedCreature {
@@ -151,6 +155,7 @@ export class BattleRecordsService {
     private readonly progression: ProgressionService,
     private readonly codex: CodexService,
     private readonly counters: CountersService,
+    private readonly tamerLevel: TamerLevelService,
   ) {}
 
   async loadTeam(userId: string): Promise<Team> {
@@ -267,12 +272,8 @@ export class BattleRecordsService {
     wilds: WildCreature[],
   ): Promise<BattleFinish> {
     const { progressed, leveled } = await this.progressTeam(userId, state);
-    const { capturedTo, registeredSpeciesIds } = await this.saveTeam(
-      userId,
-      state,
-      wilds,
-      progressed,
-    );
+    const { capturedTo, registeredSpeciesIds, tamerProgress } =
+      await this.saveTeam(userId, state, wilds, progressed);
     if (state.result === 'victory') {
       const plans = new Map(
         progressed.flatMap(({ uid, plan }) => (plan ? [[uid, plan]] : [])),
@@ -283,6 +284,7 @@ export class BattleRecordsService {
       capturedTo,
       progression: progressed.map(toProgressDto),
       registeredSpeciesIds,
+      tamerProgress,
     };
   }
 
@@ -352,6 +354,7 @@ export class BattleRecordsService {
   ): Promise<{
     capturedTo: CapturedTo | null;
     registeredSpeciesIds: number[];
+    tamerProgress: TamerProgressDto | null;
   }> {
     const progressByUid = new Map(
       progressed.map(({ uid, progress }) => [uid, progress]),
@@ -378,6 +381,7 @@ export class BattleRecordsService {
         : null;
 
     const counterWrites = await this.counterWrites(userId, state);
+    const tamer = await this.tamerAward(userId, state, caughtSpecies);
 
     const results = await this.prisma.$transaction([
       ...state.player.team.flatMap((creature) => {
@@ -450,6 +454,7 @@ export class BattleRecordsService {
         });
       }),
       ...counterWrites,
+      ...tamer.writes,
       // O Bestiário fica por último: o resultado dele é o `results.at(-1)`.
       ...(codexWrite ? [codexWrite] : []),
     ]);
@@ -461,7 +466,38 @@ export class BattleRecordsService {
             results.at(-1) as { species_id: number }[],
           )
         : [],
+      tamerProgress: tamer.progress,
     };
+  }
+
+  /** O XP do Domador (tamer-level/01); o modo deus e a luta de teste não contam. */
+  private async tamerAward(
+    userId: string,
+    state: BattleState,
+    caughtSpecies: number[],
+  ) {
+    if (state.godMode || state.noRewards) return { writes: [], progress: null };
+    const known = await this.prisma.codexEntry.findMany({
+      where: {
+        playerId: userId,
+        speciesId: { in: caughtSpecies },
+        caughtAt: { not: null },
+      },
+      select: { speciesId: true },
+    });
+    const caughtBefore = new Set(known.map(({ speciesId }) => speciesId));
+    const fresh = new Set(caughtSpecies.filter((id) => !caughtBefore.has(id)));
+    const { levels, sources } = await this.tamerLevel.catalog();
+    const gained = tamerXpFromBattle(
+      {
+        rawEnemyXp: state.rawEnemyXp,
+        victory: state.result === 'victory',
+        opponentIsTamer: state.opponent === 'tamer',
+        newSpeciesCount: fresh.size,
+      },
+      sources,
+    );
+    return this.tamerLevel.award(userId, gained, levels);
   }
 
   /** Os contadores do Perfil (player-stats/01); o modo deus não conta. */

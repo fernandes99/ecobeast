@@ -12,6 +12,7 @@
 [ext_resource type="PackedScene" path="res://screens/board_battle/battle_items_panel.tscn" id="10_items"]
 [ext_resource type="PackedScene" path="res://screens/board_battle/capture_overlay.tscn" id="11_capture"]
 [ext_resource type="PackedScene" path="res://screens/codex/codex_registered_overlay.tscn" id="12_codex"]
+[ext_resource type="PackedScene" path="res://screens/board_battle/tamer_level_overlay.tscn" id="13_tamer_level"]
 
 [node name="BoardBattleScreen" type="Control"]
 layout_mode = 3
@@ -232,6 +233,10 @@ unique_name_in_owner = true
 layout_mode = 1
 
 [node name="LevelUpOverlay" parent="." instance=ExtResource("6_level_up")]
+unique_name_in_owner = true
+layout_mode = 1
+
+[node name="TamerLevelOverlay" parent="." instance=ExtResource("13_tamer_level")]
 unique_name_in_owner = true
 layout_mode = 1
 

@@ -5,9 +5,9 @@ import { CATALOG_TABLES, SEED_DATA_DIR } from './catalog-tables.js';
 describe('CATALOG_TABLES', () => {
   const names = CATALOG_TABLES.map((table) => table.name);
 
-  it('tem as 52 tabelas, sem repetição', () => {
-    expect(names).toHaveLength(52);
-    expect(new Set(names).size).toBe(52);
+  it('tem as 54 tabelas, sem repetição', () => {
+    expect(names).toHaveLength(54);
+    expect(new Set(names).size).toBe(54);
   });
 
   it('casa com os arquivos .json da pasta de dados do seed', () => {
@@ -54,6 +54,7 @@ describe('CATALOG_TABLES', () => {
       names.indexOf('ground_effect_stats'),
     );
     expect(names.indexOf('voices')).toBeLessThan(names.indexOf('npcs'));
+    expect(names.indexOf('items')).toBeLessThan(names.indexOf('tamer_levels'));
     expect(names.indexOf('prop_categories')).toBeLessThan(
       names.indexOf('prop_types'),
     );
@@ -836,5 +837,55 @@ describe('carga inicial das zonas (biome-zones/01)', () => {
     for (const { biome_zone_id } of exceptions) {
       expect(zones.some(({ id }) => id === biome_zone_id)).toBe(true);
     }
+  });
+});
+
+describe('carga inicial do nível do Domador (tamer-level/01)', () => {
+  const read = <T>(name: string) =>
+    JSON.parse(
+      readFileSync(join(SEED_DATA_DIR, `${name}.json`), 'utf8'),
+    ) as T[];
+  const levels = read<{
+    level: number;
+    xp_total: number;
+    reward_coins: number;
+    reward_item_id: number | null;
+    reward_item_quantity: number | null;
+  }>('tamer_levels');
+  const sources = read<{ id: number; slug: string; amount: number }>(
+    'tamer_xp_sources',
+  );
+
+  it('vai do 1 ao 99, sem buraco, começando do 0 e sempre crescendo', () => {
+    expect(levels.map(({ level }) => level)).toEqual(
+      Array.from({ length: 99 }, (_, index) => index + 1),
+    );
+    expect(levels[0]).toMatchObject({ xp_total: 0, reward_coins: 0 });
+    for (let index = 1; index < levels.length; index++) {
+      expect(levels[index]!.xp_total).toBeGreaterThan(
+        levels[index - 1]!.xp_total,
+      );
+    }
+  });
+
+  it('o item da recompensa vem sempre com a quantidade', () => {
+    for (const row of levels) {
+      expect(row.reward_item_id === null).toBe(
+        row.reward_item_quantity === null,
+      );
+    }
+  });
+
+  it('tem as 8 fontes com ids estáveis', () => {
+    expect(sources.map(({ id, slug }) => [id, slug])).toEqual([
+      [1, 'battle_xp_percent'],
+      [2, 'new_species'],
+      [3, 'tamer_win'],
+      [4, 'island_tamer_win'],
+      [5, 'island_tamer_rematch'],
+      [6, 'quest'],
+      [7, 'arena'],
+      [8, 'island_unlocked'],
+    ]);
   });
 });

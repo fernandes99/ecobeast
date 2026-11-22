@@ -121,6 +121,10 @@ temperaments ──> stats (aumentado, diminuído)
 
 **`counters`** — `id`, `slug`, `name`, `subject` (`none`, `element`, `day_phase` ou `biome`: o que o `subject_id` de `player_counters` quer dizer). Os números do Domador no Perfil ([player-stats](../player-stats/architecture.md)).
 
+**`tamer_levels`** — `level` (a chave, de 1 em diante, sem buraco), `xp_total` (o XP somado para chegar no nível, 0 no 1, crescente), `reward_coins`, `reward_item_id?` → `items` e `reward_item_quantity?` (vêm juntos). O nível do Domador e a recompensa de cada um ([tamer-level](../tamer-level/README.md)).
+
+**`tamer_xp_sources`** — `id`, `slug`, `name`, `amount`. Quanto XP de Domador cada fonte dá; `battle_xp_percent` é uma porcentagem do XP bruto da luta ([tamer-level](../tamer-level/README.md)).
+
 **`evolution_triggers`** — `id`, `slug` (`level`, `item`, `bond`, `time_of_day`, `zone`, `trade`, `temperament`), `name`. No MVP só `level` é usado em `evolutions`.
 
 ### Conteúdo (preenchidas em [03-starter-content](03-starter-content.md))
@@ -314,7 +318,7 @@ Entram com as iniciativas do [roadmap](../roadmap.md); não têm arquivo no MVP.
 
 O cliente nunca lê essas tabelas: recebe o jogador pronto, no formato do contrato descrito em [onboarding/architecture.md](../onboarding/architecture.md). Elas ficam registradas aqui para o banco do backend nascer junto com o catálogo.
 
-- `players` (`id` uuid, `name`, `level`, `coins`, `created_at`, `last_ping_at?`, `last_play_day?`).
+- `players` (`id` uuid, `name`, `level`, `xp`, `coins`, `created_at`, `last_ping_at?`, `last_play_day?`). O `xp` é o XP total do Domador ([tamer-level](../tamer-level/README.md)).
 - `creature_instances` (`uid` uuid, `player_id`, `species_id`, `nickname?`, `level`, `current_xp`, `current_hp`, `temperament_id`, `trait_id`, `gender`, `is_prismatic`, `bond`, `held_item_id?`, `status_condition_id?`, `location` `party`/`storage`, `party_slot?`, `original_player_id`, `caught_at`, `caught_zone_id?`, `battles`).
 - `player_counters` (`player_id`, `counter_id`, `subject_id`, `value`): os contadores do Domador ([player-stats](../player-stats/architecture.md)).
 - `creature_instance_stats` (`creature_uid`, `stat_id`, `genes` 0–31, `training_points` 0–252).

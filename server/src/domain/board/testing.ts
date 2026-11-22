@@ -114,6 +114,7 @@ export function makeBoardState(
     godMode: false,
     coins: 0,
     coinsChange: 0,
+    rawEnemyXp: 0,
     partyFree: 0,
     board: makeBoard(),
     cells: {
