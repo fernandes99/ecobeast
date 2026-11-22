@@ -21,6 +21,15 @@ const OVERLAY := Color(0.0, 0.0, 0.0, 0.6)
 const SILHOUETTE := Color("#060E18")
 
 const SKY := Color("#52C4F5")
+## O céu da Home do Hub em cada parte do dia (`day_phases.slug`): o alto e o pé (hub-start/04).
+const HUB_SKY: Dictionary[String, Array] = {
+	"morning": [Color("#5FB6EE"), Color("#F6DDB0")],
+	"afternoon": [Color("#2F86D6"), Color("#9ED6F5")],
+	"dusk": [Color("#3A2C6B"), Color("#F0895A")],
+	"night": [Color("#070F26"), Color("#1F3263")],
+}
+## O contorno escuro dos textos grandes do Hub.
+const TEXT_OUTLINE := Color("#06111F")
 const MAP_ROUTE := Color("#FFFFFFD9")
 const MAP_ROUTE_SHADOW := Color("#0000004D")
 const MAP_AREA_COLORS: Array[Color] = [

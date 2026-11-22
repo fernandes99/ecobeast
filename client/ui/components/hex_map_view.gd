@@ -725,6 +725,11 @@ func _fit_whole_map() -> void:
 	position = _whole_map_area.get_center() - bounds.get_center() * scale
 
 
+## O retângulo dos hexágonos do mapa, com os paredões, em pixels da arte.
+func map_bounds() -> Rect2:
+	return _map_bounds()
+
+
 func _map_bounds() -> Rect2:
 	var bounds := Rect2()
 	for tile: HexTile in _map.tiles.values():
