@@ -17,6 +17,10 @@ const SLUGS = new Map<number, QuestTypeSlug>(
   Object.entries(QUEST_TYPES).map(([slug, id]) => [id, slug as QuestTypeSlug]),
 );
 
+export function findQuestSlug(questTypeId: number): QuestTypeSlug | undefined {
+  return SLUGS.get(questTypeId);
+}
+
 export function questSlug(questTypeId: number): QuestTypeSlug {
   const slug = SLUGS.get(questTypeId);
   if (!slug) throw new Error(`Tipo de missão desconhecido: ${questTypeId}`);

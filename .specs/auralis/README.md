@@ -160,8 +160,9 @@ A fase 2 está adiada. Em 2026-11-22, o dono pediu: "vamos pular a parte do Expl
 | 4 | [04-island-tamers](04-island-tamers.md) | O catálogo `tamers` (um NPC do catálogo como Domador, com a equipe fixa), a luta ao tocar no NPC, a primeira vitória contando, a ilha seguinte abrindo e o aviso da ilha nova | concluída (falta o dono conferir no jogo) |
 | 5 | [05-arenas](05-arenas.md) | As Arenas de cada ilha, com a sala, os Domadores de treino, o Mestre e o emblema, uma abrindo a seguinte | concluída (falta o dono conferir no jogo) |
 | 6 | [06-island-quests](06-island-quests.md) | Os 9 tipos de missão base, as missões presas a um NPC da ilha, o progresso, a entrega e a recompensa | concluída (falta o dono conferir no jogo) |
-| 7 | 07-extra-quests | Os modelos de missão e o quadro de missões extras do Arquipélago | rascunho |
-| 8 | 08-ground-items | O item no chão da ilha para pegar e as missões "Encontre X item" | rascunho |
+| 7 | [07-quest-editor](07-quest-editor.md) | A ferramenta Missões do F2: criar, editar, ordenar e apagar as missões de cada NPC, com o lugar do "Vá até" escolhido no mapa | concluída (falta o dono conferir no F2) |
+| 8 | 08-extra-quests | Os modelos de missão e o quadro de missões extras do Arquipélago | rascunho |
+| 9 | 09-ground-items | O item no chão da ilha para pegar e as missões "Encontre X item" | rascunho |
 
 As specs das fases são escritas quando cada uma for planejada.
 

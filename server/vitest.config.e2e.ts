@@ -17,6 +17,8 @@ const CATALOG_WRITERS = [
   'test/arenas.e2e-spec.ts',
   // Cria e apaga NPCs, as ilhas de teste e as missões delas.
   'test/island-quests.e2e-spec.ts',
+  // Cria e apaga NPCs, ilhas e as missões delas pelo editor.
+  'test/quests-editor.e2e-spec.ts',
 ];
 
 export default defineConfig({

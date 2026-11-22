@@ -676,6 +676,9 @@ func _tool_key(key: InputEventKey) -> bool:
 	if _tools.tool == EditorTools.Tool.SCENES and key.keycode == KEY_ESCAPE and _tools.scene_panel.is_picking():
 		_tools.scene_panel.cancel_pick()
 		return true
+	if _tools.tool == EditorTools.Tool.QUESTS and key.keycode == KEY_ESCAPE and _tools.quest_panel.picking:
+		_tools.quest_panel.cancel_pick()
+		return true
 	if _tools.tool == EditorTools.Tool.NPC and _tools.npc_panel.selected >= 0:
 		if key.keycode == KEY_DELETE or key.keycode == KEY_BACKSPACE:
 			_tools.npc_panel.delete_selected()
@@ -889,6 +892,8 @@ func _build() -> void:
 	_tools.scene_panel.changed.connect(func() -> void: _canvas.refresh_brush())
 	_tools.scene_panel.message.connect(func(text: String, error: bool) -> void: _set_message(text, error))
 	_tools.npc_panel.message.connect(func(text: String, error: bool) -> void: _set_message(text, error))
+	_tools.quest_panel.changed.connect(func() -> void: _canvas.refresh_brush())
+	_tools.quest_panel.message.connect(func(text: String, error: bool) -> void: _set_message(text, error))
 	_tools.scene_panel.test_requested.connect(_test_scene)
 	_tools.path_panel.changed.connect(func() -> void:
 		_canvas.selected_trail = _tools.path_panel.selected
@@ -923,7 +928,11 @@ func _build() -> void:
 	_canvas.brush = _tools.brush_coords
 	_canvas.marked = _tools.marked_coords
 	_canvas.scene_marks = func() -> Dictionary:
-		return _tools.scene_panel.map_marks() if _tools.tool == EditorTools.Tool.SCENES else {}
+		if _tools.tool == EditorTools.Tool.SCENES:
+			return _tools.scene_panel.map_marks()
+		if _tools.tool == EditorTools.Tool.QUESTS:
+			return _tools.quest_panel.map_marks()
+		return {}
 	_canvas.fence_preview = _tools.fence_points
 	_canvas.bridge_preview = _tools.bridge_points
 	_canvas.brush_color = func(coord: Vector2i) -> Color: return _tools.brush_color(_draft, coord)

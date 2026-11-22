@@ -11,6 +11,8 @@ import { IslandsEditorService } from './islands-editor.service.js';
 import { MapGeneratorController } from './map-generator.controller.js';
 import { NpcsEditorController } from './npcs-editor.controller.js';
 import { NpcsEditorService } from './npcs-editor.service.js';
+import { QuestsEditorController } from './quests-editor.controller.js';
+import { QuestsEditorService } from './quests-editor.service.js';
 import { PropTypesEditorController } from './prop-types-editor.controller.js';
 import { PropTypesEditorService } from './prop-types-editor.service.js';
 import { SkillsEditorController } from './skills-editor.controller.js';
@@ -24,6 +26,7 @@ import { SkillsEditorService } from './skills-editor.service.js';
     MapGeneratorController,
     NpcsEditorController,
     PropTypesEditorController,
+    QuestsEditorController,
     SkillsEditorController,
   ],
   providers: [
@@ -31,6 +34,7 @@ import { SkillsEditorService } from './skills-editor.service.js';
     IslandsEditorService,
     NpcsEditorService,
     PropTypesEditorService,
+    QuestsEditorService,
     SkillsEditorService,
     EditorGuard,
   ],

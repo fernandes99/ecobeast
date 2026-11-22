@@ -66,8 +66,8 @@ Derrubar é terminar a luta com o HP em 0, sem ter sido capturado. A luta de tes
 ## Fora do escopo
 
 - Uma tela com a lista das missões (o progresso aparece no NPC).
-- Criar as missões pelo F2: o dono pede a Claude ou cria a linha no painel do Supabase, pelas receitas abaixo.
-- As missões extras sorteadas ([07](07-extra-quests.md)) e "Encontre X item" ([08](08-ground-items.md)).
+- Criar as missões pelo F2: veio na [07](07-quest-editor.md). Até ela, o dono pedia a Claude ou criava a linha no painel do Supabase, pelas receitas abaixo.
+- As missões extras sorteadas (08) e "Encontre X item" (09), na tabela de fases do [README](README.md#fases).
 
 ## Como criar uma missão
 

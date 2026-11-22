@@ -7,6 +7,7 @@ const SKILLS_PATH := "/v1/editor/skills"
 const PROP_TYPES_PATH := "/v1/editor/prop-types"
 const NPCS_PATH := "/v1/editor/npcs"
 const INTERIORS_PATH := "/v1/editor/interiors"
+const QUESTS_PATH := "/v1/editor/quests"
 const TIMEOUT_SECONDS := 60.0
 const NOT_FOUND := 404
 const FORBIDDEN := 403
@@ -88,6 +89,32 @@ static func save_skill(id: int, body: Dictionary) -> ApiResponse:
 ## (free-objects/02, prop-depth-blocks/02).
 static func save_prop_type_blocks(prop_type_id: int, variant: int, blocks: Array) -> ApiResponse:
 	return await _call(HTTPClient.METHOD_PUT, "%s/%d/blocks" % [PROP_TYPES_PATH, prop_type_id], {"variant": variant, "blocks": blocks})
+
+
+## As missões da ilha (auralis/07): toda escrita responde a lista inteira.
+static func list_quests(island_id: int) -> ApiResponse:
+	return await _call(HTTPClient.METHOD_GET, "%s/%d/quests" % [ISLANDS_PATH, island_id])
+
+
+static func create_quest(island_id: int, body: Dictionary) -> ApiResponse:
+	return await _call(HTTPClient.METHOD_POST, "%s/%d/quests" % [ISLANDS_PATH, island_id], body)
+
+
+static func save_quest(id: int, body: Dictionary) -> ApiResponse:
+	return await _call(HTTPClient.METHOD_PUT, "%s/%d" % [QUESTS_PATH, id], body)
+
+
+static func delete_quest(id: int) -> ApiResponse:
+	return await _call(HTTPClient.METHOD_DELETE, "%s/%d" % [QUESTS_PATH, id])
+
+
+static func move_quest(id: int, up: bool) -> ApiResponse:
+	return await _call(HTTPClient.METHOD_POST, "%s/%d/move" % [QUESTS_PATH, id], {"direction": "up" if up else "down"})
+
+
+## Nulo pede todas as missões que contam.
+static func set_required_quests(island_id: int, required: Variant) -> ApiResponse:
+	return await _call(HTTPClient.METHOD_PUT, "%s/%d/required-quests" % [ISLANDS_PATH, island_id], {"required_quests": required})
 
 
 static func _call(method: HTTPClient.Method, path: String, body: Variant = null) -> ApiResponse:
