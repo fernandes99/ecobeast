@@ -2,7 +2,7 @@
 
 Cada Ecobeast ganha um **rosto**: o recorte do rosto do `front.png`, centrado, para os lugares pequenos, onde o corpo inteiro encolhido fica ilegível. O rosto aparece num círculo com o fundo na cor do Elemento e, em volta, o **anel de HP**, que esvazia conforme o Ecobeast perde vida.
 
-- **Status:** proposta
+- **Status:** em andamento (fase 1 concluída)
 - **Depende de:** [creature-fronts](../creature-fronts/), [hub-start](../hub-start/) e [board-battle](../board-battle/)
 
 ## Contexto
@@ -40,7 +40,7 @@ Escolhas de Claude (_a revisar_; ao mudar uma, atualize aqui e na fase):
 | Decisão | Motivo |
 | --- | --- |
 | O rosto é recortado do `front.png` por um script, pelo quadrado do rosto de cada espécie, e não desenhado | Sai igual ao Ecobeast, no mesmo pixel art e contorno, e uma linha nova ganha o rosto na hora; se o front mudar, basta rodar de novo |
-| O script acha um quadrado inicial sozinho, pela parte de cima da figura, e o dono corrige os que saírem tortos numa folha com todos os rostos | Marcar 37 quadrados do zero é trabalho à toa; a maioria das figuras tem a cabeça em cima |
+| O script acha um quadrado inicial sozinho, pela parte de cima da figura, e os tortos são corrigidos olhando uma folha com todos os rostos | Na prática, o cálculo errou a maioria (pegou orelhas, cristais e asas), e os 37 quadrados de hoje foram marcados à mão; para uma espécie nova, ele ainda serve de ponto de partida |
 | O `face.png` sai com o fundo transparente, e o jogo pinta o fundo | O fundo muda com o Elemento (as duas cores de quem tem dois), com a sombra do Bestiário e com o desmaiado, sem refazer a imagem |
 | O anel de HP usa as 3 cores do `HpBar` e esvazia no sentido horário a partir do topo, sobre um trilho escuro | O jogador já lê essas cores na barra; o topo é onde o olho começa |
 | O anel de selecionado fica por fora do anel de HP, fino e branco | O anel de HP passa a ocupar o lugar do anel na cor do Elemento das bolinhas de hoje |
@@ -54,6 +54,6 @@ Escolhas de Claude (_a revisar_; ao mudar uma, atualize aqui e na fase):
 
 | # | Fase | Entrega | Status |
 | --- | --- | --- | --- |
-| 1 | [01-face-art](01-face-art.md) | O script dos rostos, o quadrado de cada espécie e os `face.png` | proposta |
+| 1 | [01-face-art](01-face-art.md) | O script dos rostos, o quadrado de cada espécie e os `face.png` | concluída |
 | 2 | [02-face-component](02-face-component.md) | O componente `CreatureFace`, com o fundo, o anel de HP e os estados, nas bolinhas da Home e no cartão da luta | proposta |
 | 3 | [03-face-everywhere](03-face-everywhere.md) | O rosto nas outras listas e grades pequenas | proposta |
