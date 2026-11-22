@@ -108,7 +108,7 @@ O dono escolheu a A e pediu, além dela, a forma da ilha vulcânica.
 | # | Fase | Entrega | Status |
 | --- | --- | --- | --- |
 | 1 | [01-volcano-art](01-volcano-art.md) | O `make_volcano.py`: o chão de placas de basalto, o paredão de colunas, a lava rasa e a funda (um nível abaixo do chão), os arremates e as decorações, aprovados pelo dono numa prévia; a lava se mexendo e acesa à noite; os tipos de peça no grupo Vulcão, com a rachadura de lava bloqueando | concluída (falta o dono conferir no F2) |
-| 2 | [02-basalt-spires](02-basalt-spires.md) | Os picos de basalto, aprovados pelo dono numa prévia, como tipos de peça solta com o bloqueio no pé, no grupo Picos de basalto | concluída (falta o dono aprovar a arte e conferir no F2) |
+| 2 | [02-basalt-spires](02-basalt-spires.md) | Os picos de basalto, aprovados pelo dono numa prévia, como tipos de peça solta com o bloqueio no pé, no grupo Picos de basalto | concluída (falta o dono conferir no F2) |
 | 3 | [03-volcano-records](03-volcano-records.md) | O Vulcão e a lava (13 a 15) no catálogo, com as zonas Comum, as taxas da linha do Ruvo, a lava bloqueando o andar, o slug aceito pelas rotas e as amostras no F2 | concluída (falta o dono conferir no F2) |
 | 4 | [04-land-volcano](04-land-volcano.md) | O vulcão em terra no mapa sorteado e na ilha nova pelo F2: o cone, a cratera, a lava, as escadarias e os picos | concluída (falta o dono conferir no jogo) |
-| 5 | [05-volcanic-island](05-volcanic-island.md) | A ilha vulcânica: o mapa inteiro como o vulcão no meio do oceano, com a praia e a floresta no pé | concluída (falta o dono aprovar a prévia e conferir no jogo) |
+| 5 | [05-volcanic-island](05-volcanic-island.md) | A ilha vulcânica: o mapa inteiro como o vulcão no meio do oceano, com a praia e a floresta no pé | concluída (falta o dono conferir no jogo) |

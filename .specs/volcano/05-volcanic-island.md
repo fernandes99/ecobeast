@@ -1,6 +1,6 @@
 # 05. A ilha vulcânica
 
-- **Status:** concluída (falta o dono aprovar a prévia e conferir no jogo)
+- **Status:** concluída (falta o dono conferir no jogo)
 - **Depende de:** [04](04-land-volcano.md) (o perfil do cone, as escadarias e os picos)
 
 ## Contexto
@@ -44,7 +44,7 @@ Com o contorno recortado do mapa sorteado (`edgeRoughness` 200), o meio do mapa 
   - o cone tem a borda no 10, o piso no 6 e a lava no 5;
   - a chegada fica no cinto, toda a terra de fora do cone e o piso se alcançam dela, há pelo menos 3 escadarias, e sem elas a borda não se alcança.
 - [x] Com o `volcanoIslandChance` em 0 (e o `volcanoChance` em 0), o hash do mapa de 5 seeds é o do commit da [03](03-volcano-records.md) (no `map-volcano.spec.ts`).
-- [ ] A prévia das 3 ilhas vistas de cima (seeds 140, 185 e 197, com os parâmetros padrão) e de um vulcão em terra (seed 61) aprovada pelo dono.
+- [x] A prévia das 3 ilhas vistas de cima (seeds 140, 185 e 197, com os parâmetros padrão) e de um vulcão em terra (seed 61) aprovada pelo dono (2026-11-22, "Aprovados").
 - [x] Um e2e gera pelo F2 uma ilha vulcânica.
 - [ ] O dono confere no jogo uma ilha vulcânica, pela seed 140 no F2 ou pelo `volcanoIslandChance` em 1.
 - [x] `npm run lint`, `npm run typecheck` e `npm test` passam.

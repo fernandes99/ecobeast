@@ -1,6 +1,6 @@
 # 02. Os picos de basalto
 
-- **Status:** concluída (falta o dono aprovar a arte e conferir no F2)
+- **Status:** concluída (falta o dono conferir no F2)
 - **Depende de:** [01](01-volcano-art.md) (o chão da prévia, a categoria e o grupo do pincel) e [glacier/02](../glacier/02-ice-rocks.md) (o caminho das pedras de gelo)
 
 ## Contexto
@@ -49,7 +49,7 @@ Os 6 entraram como tipos 184 a 189, com 1 variante cada. O dono pediu para fazer
 
 ## Critérios de aceite
 
-- [ ] A prévia aprovada pelo dono (na revisão final da iniciativa).
+- [x] A prévia aprovada pelo dono, na revisão final da iniciativa (2026-11-22, "Aprovados").
 - [ ] No F2, cada pico aparece na ferramenta Peças e bloqueia o Domador pelo pé. Fica para o dono conferir.
 - [x] `godot --headless --path client --quit-after 60` sem erro de script.
 - [x] `npm run lint`, `npm run typecheck` e `npm test` passam.
