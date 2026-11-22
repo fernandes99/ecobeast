@@ -126,6 +126,7 @@ O Ecobeast é um jogo mobile (Android/iOS, retrato): o cliente em **Godot 4.7 co
 | [snelt-line](snelt-line/) | O caracol-fornalha, Snelt, Smeltrudge e Magmollusk (Metal, com o Fogo na final), o primeiro canhão especial lento, com as primeiras Técnicas Especiais de Metal |
 | [fuzzap-line](fuzzap-line/) | O lêmingue de estática, Fuzzap e Blizzvolt (Volt, com o Gelo na final), o primeiro de controle, com as primeiras Técnicas Físicas de Volt, que paralisam |
 | [prop-dialogue](prop-dialogue/) | A fala da peça solta: a caixa Fala no F2 e a conversa ao tocar na peça em Explorar |
+| [creature-roles](creature-roles/) | Os papéis dos Ecobeasts na luta (Guardião, Suporte, Controlador, Atacante e Lutador) e os subpapéis, que toda linha nova segue |
 
 As próximas iniciativas estão no [roadmap.md](roadmap.md).
 

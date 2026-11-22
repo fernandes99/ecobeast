@@ -180,6 +180,10 @@ Separe em duas camadas: a **Espécie** (dados fixos, uma linha do catálogo por 
 
 Stats calculados em batalha (não salvos): HP, Atk, Def, SpAtk, SpDef, Spd + modificadores temporários de -6 a +6, Precisão e Evasão.
 
+## Papéis na luta
+
+Cada Ecobeast tem um papel principal e pode ter um secundário. São 5 famílias: **Guardião** (Muralha, Provocador, Guarda-costas), **Suporte** (Curandeiro, Protetor, Inspirador), **Controlador** (Enfraquecedor, Perturbador, Arquiteto, Posicionador), **Atacante** (Veloz, Canhão, Atirador) e **Lutador** (Brigão, Contra-atacador, Iniciador), mais o segundo eixo (físico, especial ou misto; rápido, médio ou lento). A regra de cada um, o que o motor ainda não faz e a regra para as linhas novas estão em [`.specs/creature-roles`](.specs/creature-roles/README.md).
+
 ## Fórmulas
 
 Mecânicas de jogo não são protegidas por direito autoral, então você pode usar fórmulas no mesmo estilo. Ajuste as constantes para ter identidade própria e equilíbrio no mobile.

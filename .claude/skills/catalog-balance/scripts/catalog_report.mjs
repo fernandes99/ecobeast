@@ -57,8 +57,8 @@ function role(s) {
   const side = Math.abs(t.atk - t.sp_atk) < 15 ? 'misto' : t.atk > t.sp_atk ? 'físico' : 'especial';
   const guard = Math.abs(t.def - t.sp_def) < 15 ? 'misto' : t.def > t.sp_def ? 'físico' : 'especial';
   const pace = t.spd >= 100 ? 'rápido' : t.spd <= 60 ? 'lento' : 'médio';
-  if (bulk >= off + 15) return s.supportShare >= 0.4 ? 'Suporte' : `Tanque ${guard}`;
-  if (bulk >= off - 10) return `Bruiser ${side} ${pace}`;
+  if (bulk >= off + 15) return s.supportShare >= 0.4 ? 'Suporte' : `Guardião ${guard}`;
+  if (bulk >= off - 10) return `Lutador ${side} ${pace}`;
   return `Atacante ${side} ${pace}`;
 }
 
