@@ -201,9 +201,38 @@ def stamp(image, piece, center_x, bottom):
     image.alpha_composite(piece, (center_x - piece.width // 2, bottom - piece.height))
 
 
-def wall_bottom(image, x):
+def is_wall(color):
+    if color[3] < 255:
+        return False
+    h, s, v = colorsys.rgb_to_hsv(*(c / 255 for c in color[:3]))
+    return s < 0.35 and v >= 0.85 and 15 <= h * 360 <= 45
+
+
+def wall_span(image, x):
+    """O reboco liso da coluna `x`, do beiral (ou da viga) até a faixa de pedra do pé."""
     px = image.load()
-    return max(y for y in range(image.height) if px[x, y][3])
+    y = image.height - 1
+    while not is_wall(px[x, y]):
+        y -= 1
+    end = y + 1
+    while y > 0 and is_wall(px[x, y - 1]):
+        y -= 1
+    return y, end
+
+
+def centered(top, end, height):
+    return top + (end - top + height + 1) // 2
+
+
+def middle(image, x, y, width):
+    """A coluna do meio da janela de `width` no reboco da linha `y`, entre os dois postes."""
+    px = image.load()
+    left = right = x
+    while left > 0 and is_wall(px[left - 1, y]):
+        left -= 1
+    while right < image.width - 1 and is_wall(px[right + 1, y]):
+        right += 1
+    return left + (right + 1 - left - width) // 2 + width // 2
 
 
 def roof_top(image, x):
@@ -227,6 +256,8 @@ FORMS = {
     "row_house": {"parts": [("small", 0, 32), ("long", 80, 128), ("long", 32, 128), ("long", 32, 80), ("small", 32, 64)], "tall": True, "doors": [32, 128, 224], "windows": [80, 176], "round": [32, 128, 224], "chimney": 200},
 }
 ROUND_BOTTOM = 66
+# A distância entre o pé da janela de baixo e o da de cima, nas alas do sobrado.
+WINDOW_STEP = 24
 # A boca da chaminé fica estas linhas abaixo do topo dela, e a fumaça da big_house sai do
 # ponto (21, 38) do quadro de 48x48.
 MOUTH_DEPTH = 2
@@ -258,15 +289,20 @@ def shape(sheet, name, color):
         house = add_rows(house, house.height - FLOOR_SEAM, rows)
     bottom = house.height
     door, window, round_window = tile(sheet, DOOR), tile(sheet, WINDOW), tile(sheet, ROUND_WINDOW)
+    spans = {x: wall_span(house, x) for x in form["windows"] + form.get("upper", [])}
     for x in form["doors"]:
         stamp(house, door, x, bottom)
-    for x in form["windows"]:
-        low = wall_bottom(house, x) - 5
-        stamp(house, window, x, low)
+    for column in form["windows"]:
+        top, end = spans[column]
+        x = middle(house, column, (top + end) // 2, window.width)
         if rows:
-            stamp(house, window, x, low - rows - 4)
+            low = centered(top, end, window.height + WINDOW_STEP)
+            stamp(house, window, x, low)
+            stamp(house, window, x, low - WINDOW_STEP)
+        else:
+            stamp(house, window, x, centered(top, end, window.height))
     for x in form.get("upper", []):
-        stamp(house, window, x, bottom - door.height - 6)
+        stamp(house, window, x, centered(spans[x][0], bottom - door.height, window.height))
     for x in form["round"]:
         stamp(house, round_window, x, tops[x] + ROUND_BOTTOM)
     chimney = tile(sheet, CHIMNEY)

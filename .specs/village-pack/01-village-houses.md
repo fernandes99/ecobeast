@@ -19,7 +19,7 @@ O dono quer o máximo de casas do tileset Village, em tamanhos diferentes e em 8
   - o telhado da cor do pacote (vermelho, azul ou ardósia) do formato, ou um pedaço dele repetido para esticar uma ala;
   - o corpo de reboco e postes por baixo, esticado pela coluna do meio de uma parede lisa;
   - a porta fechada no batente de madeira (o primeiro quadro) no meio do frontão;
-  - uma janela de vidro em cada ala (o tile de vidro azul de 16×16), e no frontão, acima da porta, quando houver espaço;
+  - uma janela de vidro em cada ala (o tile de vidro azul de 16×16), no meio do reboco dela, na altura (do beiral à faixa de pedra do pé) e na largura (entre os postes), com as duas do sobrado centralizadas como par; e no frontão, acima da porta, no meio entre a viga e a porta, quando houver espaço;
   - a chaminé de pedra numa ala (ou no lado do telhado, na casinha), por baixo do telhado onde ela some atrás dele.
   Recorta pelos pixels e grava `village_<formato>/1.png` a `8.png` e `smoke.png` (a cópia de `big_house/smoke.png`), e imprime o tamanho de cada formato e o canto do quadro da fumaça em relação ao pé.
 - **RF-02:** Com `--preview`, o script não grava as pastas: grava uma folha com todos os formatos candidatos na cor 1, lado a lado sobre um fundo de grama, com o Domador ao lado para a escala e o nome de cada um. Os candidatos:
