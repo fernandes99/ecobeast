@@ -93,7 +93,7 @@ def main():
         faces.append((slug, face))
     BOXES.write_text(
         "{\n" + ",\n".join(f'\t"{slug}": {json.dumps(boxes[slug])}' for slug in sorted(boxes)) + "\n}\n",
-        encoding="utf-8")
+        encoding="utf-8", newline="\n")
     rows = (len(faces) + SHEET_COLUMNS - 1) // SHEET_COLUMNS
     sheet = Image.new("RGBA", (SHEET_COLUMNS * FACE, rows * (FACE + LABEL)), SHEET_BACK)
     draw = ImageDraw.Draw(sheet)
