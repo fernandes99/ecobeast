@@ -128,7 +128,7 @@ export class ExplorationService {
       speciesBornAt(this.prisma, minute),
       loadZones(this.prisma),
     ]);
-    const { inland, ...shown } = generated;
+    const { inland, iceLake, ...shown } = generated;
     const map = {
       ...shown,
       tiles: assignZones(
@@ -137,6 +137,7 @@ export class ExplorationService {
         zones,
         undefined,
         inland,
+        iceLake,
       ),
     };
     const rocks = new Set(

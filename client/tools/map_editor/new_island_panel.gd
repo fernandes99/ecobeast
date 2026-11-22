@@ -38,6 +38,10 @@ const PARAM_LABELS: Dictionary[String, String] = {
 	"ramp_every": "Bordas de paredão por encosta extra (0 = nenhuma)",
 	"detail_chance": "Chance de detalhe no plano",
 	"cleanup_passes": "Passadas de limpeza",
+	"glacier_chance": "Chance de Geleira num mapa frio",
+	"glacier_min": "Tamanho mínimo da Geleira",
+	"glacier_max": "Tamanho máximo da Geleira",
+	"glacier_lake_chance": "Chance de lago na Geleira",
 }
 
 var _name_edit: LineEdit

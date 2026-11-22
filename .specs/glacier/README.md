@@ -68,6 +68,8 @@ Escolhas de Claude (_a revisar_; ao mudar uma, atualize aqui e na fase):
 | O lago da Geleira fica numa zona nova, Lago gelado, da Água rasa (36) e da Água profunda (37), com placas de gelo boiando | É a água de sempre, mas fria, e só o lago da Geleira cai nela |
 | Os parâmetros entram no gerador do F2, ao lado dos do mar e dos lagos | Como os da `coast-rivers`: o dono testa a Geleira na ilha nova |
 | A Geleira guarda a altura da Neve que ela troca | A `terrain-plateaus` já deu a altura ao terreno, e trocar só o bioma não mexe nos paredões nem nas escadarias |
+| A mancha entra depois da garantia de alcance (`openSlopes`), e só o lago passa de novo por ela, com um sorteio próprio | Na fase 4, com a mancha antes da garantia, o lago mudava o caminho dela e as encostas de fora da mancha saíam em outro lugar |
+| O lago só entra onde o anel de hexágonos em volta dele também vira Geleira, e esse anel entra primeiro na mancha | Assim o lago fica todo dentro da mancha, sem encostar na Neve |
 | No arremate, a Geleira vem logo antes da Neve em `SURFACE_ORDER` | A neve soprada avança sobre a borda do gelo |
 | O paredão da Geleira é o `cliff.png`, de rocha | O gelo é duro como a pedra, e o `side.png` é de terra |
 | Decorações da Comum: rachaduras, bolhas presas no gelo, lascas soltas, montinhos de neve soprada, os `ice_shards` da Neve e, raríssimo, um peixe preso no gelo | As sugestões de Claude na conversa. O dono não corrigiu, mas também não escolheu |
@@ -106,4 +108,4 @@ O dono escolheu a B.
 | 1 | [01-glacier-art](01-glacier-art.md) | O `make_glacier.py`: o chão, os arremates, o escorrido, as decorações da Comum e as placas de gelo do Lago gelado, aprovados pelo dono numa prévia, e os tipos de peça delas no grupo Geleira | concluída (falta o dono conferir no F2) |
 | 2 | [02-ice-rocks](02-ice-rocks.md) | As pedras grandes de gelo, aprovadas pelo dono numa prévia, como tipos de peça solta com o bloqueio no pé, na categoria Pedras e no grupo Pedras de gelo | concluída (falta o dono conferir no F2) |
 | 3 | [03-glacier-records](03-glacier-records.md) | A Geleira (12) no catálogo, com a zona Comum (35), as zonas Lago gelado (36 e 37), as taxas do Hushling e do Echofrost, o slug aceito pelas rotas e a amostra no F2 | concluída (falta o dono conferir no F2) |
-| 4 | [04-generated-glacier](04-generated-glacier.md) | A mancha no mapa sorteado e na ilha nova pelo F2, com o lago às vezes e as pedras de gelo | proposta |
+| 4 | [04-generated-glacier](04-generated-glacier.md) | A mancha no mapa sorteado e na ilha nova pelo F2, com o lago às vezes e as pedras de gelo | concluída (falta o dono conferir no jogo) |

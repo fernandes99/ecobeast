@@ -37,6 +37,10 @@ describe('mapConfigError', () => {
     [{ cleanupPasses: 11 }, 'cleanupPasses precisa ficar entre 0 e 10.'],
     [{ hillFraction: 1.2 }, 'hillFraction precisa ficar entre 0 e 1.'],
     [{ foothillChance: -0.1 }, 'foothillChance precisa ficar entre 0 e 1.'],
+    [{ glacierChance: 1.5 }, 'glacierChance precisa ficar entre 0 e 1.'],
+    [{ glacierMin: 4 }, 'glacierMin precisa ficar entre 5 e 100.'],
+    [{ glacierMax: 201 }, 'glacierMax precisa ficar entre 5 e 200.'],
+    [{ glacierLakeChance: -1 }, 'glacierLakeChance precisa ficar entre 0 e 1.'],
   ])('recusa %o', (config, message) => {
     expect(mapConfigError(config)).toBe(message);
   });
@@ -49,6 +53,13 @@ describe('mapConfigError', () => {
       'terraceLow precisa ser menor que terraceHigh.',
     );
     expect(mapConfigError({ terraceLow: 0.3, terraceHigh: 0.6 })).toBeNull();
+  });
+
+  it('recusa a Geleira mínima maior que a máxima (glacier/04)', () => {
+    expect(mapConfigError({ glacierMin: 70 })).toBe(
+      'glacierMin não pode passar de glacierMax.',
+    );
+    expect(mapConfigError({ glacierMin: 30, glacierMax: 30 })).toBeNull();
   });
 
   it.each([{ tileCount: 150.5 }, { cleanupPasses: 2.5 }])(

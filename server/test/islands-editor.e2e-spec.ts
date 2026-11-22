@@ -992,6 +992,37 @@ describe('Editor de ilhas (e2e)', () => {
       expect(water(wetter)).toBeGreaterThan(water(first));
     });
 
+    it('gera a Geleira com o Lago gelado e as pedras de gelo (glacier/04)', async () => {
+      const body = (
+        await call('post', '/map-generator')
+          .send({
+            seed: 3,
+            config: {
+              tile_count: 3000,
+              climate: 2,
+              glacier_chance: 1,
+              glacier_lake_chance: 1,
+            },
+          })
+          .expect(200)
+      ).body as Generated & { props: { prop_type_id: number }[] };
+      expect(body.tiles.some(({ biome }) => biome === 'glacier')).toBe(true);
+      const lake = body.tiles.filter(({ zone }) => zone?.endsWith('_ice_lake'));
+      expect(lake).toHaveLength(19);
+      expect(body.props.some(({ prop_type_id }) => prop_type_id >= 171)).toBe(
+        true,
+      );
+    });
+
+    it('recusa a Geleira mínima maior que a máxima (400)', async () => {
+      const response = await call('post', '/map-generator')
+        .send({ seed: 1, config: { glacier_min: 80, glacier_max: 40 } })
+        .expect(400);
+      expect(response.body.message).toBe(
+        'glacier_min não pode passar de glacier_max.',
+      );
+    });
+
     it('recusa um parâmetro fora da faixa (400)', async () => {
       const response = await call('post', '/map-generator')
         .send({ seed: 1, config: { tile_count: 50 } })

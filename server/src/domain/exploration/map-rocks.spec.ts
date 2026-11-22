@@ -1,5 +1,6 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { hexKey, hexNeighbors } from './hex.js';
+import { DEFAULT_MAP_CONFIG } from './map-config.js';
 import { generateShapedMap, type ShapedMap } from './map-generator.js';
 import {
   bridgeLinks,
@@ -14,7 +15,9 @@ describe('as pedras gigantes no mapa sorteado (giant-rocks/02)', () => {
   let maps: ShapedMap[];
 
   beforeAll(() => {
-    maps = SEEDS.map((seed) => generateShapedMap(seed));
+    // Só as pedras da Montanha; as de gelo ficam no map-glacier.spec.ts.
+    const config = { ...DEFAULT_MAP_CONFIG, glacierChance: 0 };
+    maps = SEEDS.map((seed) => generateShapedMap(seed, config));
   }, 60_000);
 
   it('há pedras ao longo das seeds, de todos os tipos', () => {

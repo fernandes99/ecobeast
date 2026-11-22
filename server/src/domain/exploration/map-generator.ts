@@ -15,7 +15,12 @@ import {
   placeRivers,
   RiverSource,
 } from './map-water.js';
-import { type GeneratedProp, placeGiantRocks } from './map-rocks.js';
+import { placeGlacier } from './map-glacier.js';
+import {
+  type GeneratedProp,
+  placeGiantRocks,
+  placeIceRocks,
+} from './map-rocks.js';
 import { levelLinks, openRamps, openSlopes } from './map-slopes.js';
 
 export const BIOMES = [
@@ -83,6 +88,8 @@ export interface GeneratedMap {
    * não vai para a resposta.
    */
   inland: HexCoord[][];
+  /** O lago da Geleira, na zona Lago gelado (glacier/04); não vai para a resposta. */
+  iceLake: HexCoord[];
 }
 
 export interface ShapedTile extends HexCoord {
@@ -102,6 +109,8 @@ export interface ShapedMap {
   /** Os lagos e os rios, só para quem gera o mapa (coast-rivers/02). */
   lakes: HexCoord[][];
   rivers: { path: HexCoord[]; cells: HexCoord[]; source: RiverSource }[];
+  /** O lago da Geleira, fora de `lakes` (glacier/04). */
+  iceLake: HexCoord[];
 }
 
 interface Cell extends HexCoord {
@@ -178,6 +187,9 @@ const WATER_SALT = 0x5ea5a1;
 const ROCKS_SALT = 0x60c4b1;
 /** As encostas vêm de um sorteio à parte (terrain-plateaus/01). */
 const SLOPES_SALT = 0x51095e;
+const GLACIER_SALT = 0x91ac1e;
+const ICE_ROCKS_SALT = 0x1ce60c;
+const GLACIER_SLOPES_SALT = 0x91a5e5;
 const MEANDER_SCALE = 6;
 const BRIDGE_TYPE = 'wood_bridge';
 const BRIDGE_WIDTH = 28;
@@ -231,6 +243,7 @@ export function generateMap(
     bridges: map.bridges,
     props: map.props,
     inland: [...map.lakes, ...map.rivers.map(({ cells }) => cells)],
+    iceLake: map.iceLake,
   };
 }
 
@@ -351,6 +364,24 @@ export function generateShapedMap(
     slopes,
   );
   openSlopes(cells, startCell, links, (cell) => isWater(cell.biome), slopes);
+  // A Geleira vem depois da garantia de alcance, para as encostas de fora dela não
+  // mudarem; o lago dela passa de novo pela garantia, com um sorteio próprio.
+  const glacier = placeGlacier(
+    cells,
+    climate.slug,
+    startCell,
+    seededRandom(seed ^ GLACIER_SALT),
+    config,
+  );
+  if (glacier && glacier.lake.length > 0) {
+    openSlopes(
+      cells,
+      startCell,
+      links,
+      (cell) => isWater(cell.biome),
+      seededRandom(seed ^ GLACIER_SLOPES_SALT),
+    );
+  }
 
   const plain = (body: Cell[]) => body.map(({ q, r }) => ({ q, r }));
   const origin = flatCenter({ q: 0, r: 0 });
@@ -380,23 +411,36 @@ export function generateShapedMap(
       },
     ];
   });
+  const rocks = placeGiantRocks(
+    tiles,
+    start,
+    bridges,
+    seededRandom(seed ^ ROCKS_SALT),
+  );
   return {
     seed,
     start,
     tiles,
     bridges,
-    props: placeGiantRocks(
-      tiles,
-      start,
-      bridges,
-      seededRandom(seed ^ ROCKS_SALT),
-    ),
+    props: glacier
+      ? [
+          ...rocks,
+          ...placeIceRocks(
+            tiles,
+            start,
+            bridges,
+            seededRandom(seed ^ ICE_ROCKS_SALT),
+            rocks,
+          ),
+        ]
+      : rocks,
     lakes: [...lakes, ...ponds].map(({ cells: body }) => plain(body)),
     rivers: rivers.map(({ path, cells: body, source }) => ({
       path: plain(path),
       cells: plain(body),
       source,
     })),
+    iceLake: glacier ? plain(glacier.lake) : [],
   };
 }
 

@@ -31,6 +31,13 @@ export interface MapConfig {
   rampEvery: number;
   detailChance: number;
   cleanupPasses: number;
+  /** A chance de um mapa frio ganhar a mancha de Geleira (glacier/04). */
+  glacierChance: number;
+  /** O tamanho da mancha, em hexágonos de terra. */
+  glacierMin: number;
+  glacierMax: number;
+  /** A chance de a Geleira ter um lago no meio. */
+  glacierLakeChance: number;
 }
 
 export const DEFAULT_MAP_CONFIG: MapConfig = {
@@ -62,6 +69,10 @@ export const DEFAULT_MAP_CONFIG: MapConfig = {
   rampEvery: 25,
   detailChance: 0.2,
   cleanupPasses: 3,
+  glacierChance: 0.25,
+  glacierMin: 20,
+  glacierMax: 60,
+  glacierLakeChance: 0.5,
 };
 
 export interface ConfigRange {
@@ -101,6 +112,10 @@ export const MAP_CONFIG_RANGES: Record<keyof MapConfig, ConfigRange> = {
   rampEvery: { min: 0, max: 500, integer: true },
   detailChance: fraction,
   cleanupPasses: { min: 0, max: 10, integer: true },
+  glacierChance: fraction,
+  glacierMin: { min: 5, max: 100, integer: true },
+  glacierMax: { min: 5, max: 200, integer: true },
+  glacierLakeChance: fraction,
 };
 
 export function mapConfigError(
@@ -117,9 +132,13 @@ export function mapConfigError(
       return `${label(field)} precisa ficar entre ${range.min} e ${range.max}.`;
     }
   }
-  const { terraceLow, terraceHigh } = withDefaults(config);
+  const { terraceLow, terraceHigh, glacierMin, glacierMax } =
+    withDefaults(config);
   if (terraceLow >= terraceHigh) {
     return `${label('terraceLow')} precisa ser menor que ${label('terraceHigh')}.`;
+  }
+  if (glacierMin > glacierMax) {
+    return `${label('glacierMin')} não pode passar de ${label('glacierMax')}.`;
   }
   return null;
 }

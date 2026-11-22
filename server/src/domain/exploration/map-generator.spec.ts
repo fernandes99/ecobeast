@@ -23,7 +23,7 @@ const SEEDS = Array.from({ length: 200 }, (_, index) => index * 7919 + 1);
 const MAX_LONELY_LAND = 0.05;
 /** A grama é a base da região; nenhum bioma deve ir além disto. */
 const MAX_BIOME_SHARE = 0.6;
-/** A Geleira é rara de propósito e ainda não nasce no mapa sorteado (glacier/04). */
+/** A Geleira é rara de propósito; o map-glacier.spec.ts confere que ela aparece nos mapas frios. */
 const RARE_BIOMES: readonly ShapedBiome[] = ['glacier'];
 const CONFIG: MapConfig = {
   tileCount: 300,
@@ -54,6 +54,10 @@ const CONFIG: MapConfig = {
   rampEvery: 25,
   detailChance: 0.2,
   cleanupPasses: 3,
+  glacierChance: 0.25,
+  glacierMin: 20,
+  glacierMax: 60,
+  glacierLakeChance: 0.5,
 };
 
 function indexed(map: ShapedMap): Map<string, ShapedTile> {
@@ -489,7 +493,9 @@ describe('generateShapedMap', () => {
     const seen = new Set<ShapedBiome>(
       maps.flatMap(({ tiles }) => tiles.map((tile) => tile.biome)),
     );
-    expect([...seen].sort()).toEqual(
+    expect(
+      [...seen].filter((slug) => !RARE_BIOMES.includes(slug)).sort(),
+    ).toEqual(
       SHAPED_BIOMES.filter((slug) => !RARE_BIOMES.includes(slug)).sort(),
     );
   });

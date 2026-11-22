@@ -22,6 +22,11 @@ const LAKE_ZONES: Partial<Record<Biome, string>> = {
   wshallow: 'wshallow_lake',
   wdeep: 'wdeep_lake',
 };
+/** O lago da Geleira fica no Lago gelado, com as placas de gelo (glacier/04). */
+const ICE_LAKE_ZONES: Partial<Record<Biome, string>> = {
+  wshallow: 'wshallow_ice_lake',
+  wdeep: 'wdeep_ice_lake',
+};
 /**
  * As zonas de lixo não são faixas: são uma mancha no mar, quase toda na Água
  * profunda e encostada na rasa, e, bem raramente, uma pequena num lago ou num rio
@@ -51,13 +56,15 @@ export function assignZones(
   zones: readonly MapZone[],
   config: MapConfig = DEFAULT_MAP_CONFIG,
   inland: readonly (readonly HexCoord[])[] = [],
+  iceLake: readonly HexCoord[] = [],
 ): MapTile[] {
   const noise = createNoise(seededRandom(seed ^ ZONE_SALT));
   const scale = config.noiseScale * ZONE_SCALE;
   const value = ({ q, r }: MapTile): number =>
     noise((q + r / 2) * scale, r * ROW_HEIGHT * scale);
   const known = new Set(zones.map(({ slug }) => slug));
-  const freshKeys = new Set(inland.flat().map(hexKey));
+  const iceKeys = new Set(iceLake.map(hexKey));
+  const freshKeys = new Set([...inland.flat().map(hexKey), ...iceKeys]);
   const isLake = (tile: MapTile): boolean =>
     isWater(tile.biome) && freshKeys.has(hexKey(tile));
   const zoneOf = new Map<MapTile, string>();
@@ -94,7 +101,9 @@ export function assignZones(
     }
   }
   for (const tile of tiles.filter(isLake)) {
-    const slug = LAKE_ZONES[tile.biome];
+    const slug = (iceKeys.has(hexKey(tile)) ? ICE_LAKE_ZONES : LAKE_ZONES)[
+      tile.biome
+    ];
     if (slug !== undefined && known.has(slug)) zoneOf.set(tile, slug);
   }
   placePatches(tiles, seed, known, isLake, inland, zoneOf);

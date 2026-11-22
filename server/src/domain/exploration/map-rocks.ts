@@ -29,6 +29,8 @@ interface RockKind {
   variants: number[];
   /** A linha fechada do pé, igual à de `prop_type_blocks` (migration giant_rocks). */
   points: number[];
+  /** As linhas do pé, quando são mais de uma (o Arco de gelo, uma em cada perna). */
+  lines?: number[][];
   /** Ocupa este hexágono e o da direita (q + 1). */
   wide?: true;
 }
@@ -60,6 +62,39 @@ export const SNOWY_ROCK_TYPES = [136, 137, 138];
 /** A chance de um hexágono de Montanha ganhar uma pedra. A revisar. */
 export const ROCK_CHANCE = 0.35;
 
+const ICE_FOOT = [-28, -19, -14, -8, 14, -8, 28, -19, 14, -30, -14, -30];
+const ARCH_LEFT = [-41, -16, -36, -10, -26, -10, -21, -16, -26, -22, -36, -22];
+const ARCH_RIGHT = [21, -16, 26, -10, 36, -10, 41, -16, 36, -22, 26, -22];
+/** As pedras de gelo da Geleira (glacier/02), com as linhas da migration ice_rocks. */
+export const ICE_ROCKS: RockKind[] = [
+  {
+    propTypeId: 171,
+    variants: [1, 2],
+    points: [-26, -18, -13, -7, 13, -7, 26, -18, 13, -29, -13, -29],
+  },
+  {
+    propTypeId: 172,
+    variants: [1],
+    points: [-29, -20, -15, -8, 14, -8, 29, -20, 14, -32, -15, -32],
+  },
+  {
+    propTypeId: 173,
+    variants: [1],
+    points: [...ARCH_LEFT, ...ARCH_RIGHT],
+    lines: [ARCH_LEFT, ARCH_RIGHT],
+  },
+  { propTypeId: 174, variants: [1], points: ICE_FOOT },
+  { propTypeId: 175, variants: [1], points: ICE_FOOT },
+  {
+    propTypeId: 176,
+    variants: [1],
+    points: [-42, -26, -21, -12, 21, -12, 42, -26, 21, -40, -21, -40],
+  },
+];
+export const ICE_ROCK_TYPES = ICE_ROCKS.map(({ propTypeId }) => propTypeId);
+/** A chance de um hexágono de Geleira ganhar uma pedra de gelo; ela é plana e se anda nela. A revisar. */
+export const ICE_ROCK_CHANCE = 0.15;
+
 /** Os hexágonos que as linhas de uma pedra fecham. */
 export function rockHexes(prop: GeneratedProp): Set<string> {
   const keys = new Set<string>();
@@ -79,26 +114,67 @@ export function placeGiantRocks(
   bridges: readonly { points: readonly number[] }[],
   random: Random,
 ): GeneratedProp[] {
+  return placeRocks(tiles, start, bridges, random, {
+    allowed: ({ shape }) => shape === 'mont',
+    kindsOf: (tile) => ROCKS_BY_BIOME[tile.biome] ?? ROCKS_BY_BIOME.other!,
+    chance: ROCK_CHANCE,
+    taken: [],
+  });
+}
+
+/**
+ * As pedras de gelo só na Geleira (glacier/04), pelas regras das gigantes e longe
+ * das que já estão no mapa (`taken`). O sorteio é próprio, para as da Montanha não mudarem.
+ */
+export function placeIceRocks(
+  tiles: readonly RockTile[],
+  start: HexCoord,
+  bridges: readonly { points: readonly number[] }[],
+  random: Random,
+  taken: readonly GeneratedProp[],
+): GeneratedProp[] {
+  return placeRocks(tiles, start, bridges, random, {
+    allowed: ({ biome, shape }) => biome === 'glacier' && shape !== 'mont',
+    kindsOf: () => ICE_ROCKS,
+    chance: ICE_ROCK_CHANCE,
+    taken,
+  });
+}
+
+interface RockRule {
+  allowed: (tile: RockTile) => boolean;
+  kindsOf: (tile: RockTile) => readonly RockKind[];
+  chance: number;
+  taken: readonly GeneratedProp[];
+}
+
+function placeRocks(
+  tiles: readonly RockTile[],
+  start: HexCoord,
+  bridges: readonly { points: readonly number[] }[],
+  random: Random,
+  rule: RockRule,
+): GeneratedProp[] {
   const byKey = new Map(tiles.map((tile) => [hexKey(tile), tile]));
   const links = bridgeLinks(bridges);
   const startKey = hexKey(start);
-  const blocked = new Set<string>();
+  const blocked = new Set(rule.taken.flatMap((prop) => [...rockHexes(prop)]));
   const reach = reachable(byKey, links, startKey, blocked);
-  const mountains = tiles.filter(({ shape }) => shape === 'mont');
-  const order = mountains
+  const order = tiles
+    .filter(rule.allowed)
     .map((tile) => ({ tile, roll: random() }))
     .sort((a, b) => a.roll - b.roll)
     .map(({ tile }) => tile);
   const props: GeneratedProp[] = [];
   for (const tile of order) {
-    if (random() >= ROCK_CHANCE) continue;
-    const kinds = ROCKS_BY_BIOME[tile.biome] ?? ROCKS_BY_BIOME.other!;
+    if (random() >= rule.chance) continue;
+    const kinds = rule.kindsOf(tile);
     const kind = kinds[Math.floor(random() * kinds.length)]!;
     const variant = kind.variants[Math.floor(random() * kind.variants.length)]!;
     const mirrored = random() < 0.5;
     const prop = rockAt(tile, kind, variant, mirrored);
     const hexes = rockHexes(prop);
-    if (!fits(hexes, byKey, blocked, startKey)) continue;
+    if (!fits(hexes, byKey, blocked, startKey, rule.allowed)) continue;
     if (!staysConnected(hexes, byKey, links, blocked, reach)) continue;
     for (const key of hexes) blocked.add(key);
     props.push(prop);
@@ -160,7 +236,10 @@ function rockAt(
     dy: -Math.round(middleY),
     variant,
     mirrored,
-    block: [{ closed: true, points: [...kind.points] }],
+    block: (kind.lines ?? [kind.points]).map((points) => ({
+      closed: true,
+      points: [...points],
+    })),
   };
 }
 
@@ -169,10 +248,11 @@ function fits(
   byKey: ReadonlyMap<string, RockTile>,
   blocked: ReadonlySet<string>,
   startKey: string,
+  allowed: (tile: RockTile) => boolean,
 ): boolean {
   for (const key of hexes) {
     const tile = byKey.get(key);
-    if (!tile || tile.shape !== 'mont' || key === startKey) return false;
+    if (!tile || !allowed(tile) || key === startKey) return false;
     if (blocked.has(key)) return false;
     if (hexNeighbors(tile).some((next) => blocked.has(hexKey(next)))) {
       return false;
