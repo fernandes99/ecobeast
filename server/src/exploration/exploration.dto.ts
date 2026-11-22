@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { QuestPlaceDto } from '../quests/quests.dto.js';
 import {
   IsInt,
   IsOptional,
@@ -449,6 +450,15 @@ export class ExplorationResponseDto {
     example: [],
   })
   tamer_npc_ids: number[];
+
+  @ApiProperty({
+    type: () => [QuestPlaceDto],
+    description:
+      'Numa ilha, os lugares das missões "Vá até" aceitas e não alcançadas ' +
+      'dela (auralis/06); pisar num hexágono avisa `POST /v1/me/quests/reach`. ' +
+      'No mapa sorteado, sempre vazia.',
+  })
+  quest_places: QuestPlaceDto[];
 }
 
 export class DebugSpawnBodyDto {

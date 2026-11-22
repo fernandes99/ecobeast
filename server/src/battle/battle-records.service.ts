@@ -25,11 +25,7 @@ import type {
   BattleState,
   Combatant,
 } from '../domain/battle/types.js';
-import {
-  type HexCoord,
-  hexDistance,
-  MIN_STEP_MS,
-} from '../domain/exploration/hex.js';
+import type { HexCoord } from '../domain/exploration/hex.js';
 import type { MapSpawn } from '../domain/exploration/spawns.js';
 import type { MapTamer } from '../domain/tamers/tamers.js';
 import {
@@ -54,6 +50,7 @@ import {
 import { CREATURE_INCLUDE, creatureStats } from '../player/player.mapper.js';
 import type { Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { QuestsService } from '../quests/quests.service.js';
 import {
   type LeveledCreature,
   ProgressionService,
@@ -168,6 +165,7 @@ export class BattleRecordsService {
     private readonly counters: CountersService,
     private readonly tamerLevel: TamerLevelService,
     private readonly islandTamers: IslandTamersService,
+    private readonly quests: QuestsService,
   ) {}
 
   async loadTeam(userId: string): Promise<Team> {
@@ -262,19 +260,11 @@ export class BattleRecordsService {
     userId: string,
     position: HexCoord,
   ): StoredExploration {
-    const exploration = this.explorations.get(userId);
-    if (!exploration) throw new NotFoundException(NO_EXPLORATION);
-
-    const now = Date.now();
-    const walked = hexDistance(exploration.position, position);
-    if (walked * MIN_STEP_MS > now - exploration.positionAt) {
+    const exploration = this.explorations.confirmPosition(userId, position);
+    if (exploration === 'none') throw new NotFoundException(NO_EXPLORATION);
+    if (exploration === 'unreachable') {
       throw new ConflictException(UNREACHABLE);
     }
-    this.explorations.set(userId, {
-      ...exploration,
-      position,
-      positionAt: now,
-    });
     return exploration;
   }
 
@@ -409,6 +399,12 @@ export class BattleRecordsService {
         : null;
 
     const counterWrites = await this.counterWrites(userId, state);
+    const questWrites = await this.questWrites(
+      userId,
+      state,
+      caughtSpecies,
+      islandTamer,
+    );
     const island =
       islandTamer &&
       state.result === 'victory' &&
@@ -489,6 +485,7 @@ export class BattleRecordsService {
         });
       }),
       ...counterWrites,
+      ...questWrites,
       ...tamer.writes,
       ...(island?.writes ?? []),
       // O Bestiário fica por último: o resultado dele é o `results.at(-1)`.
@@ -539,6 +536,26 @@ export class BattleRecordsService {
       sources,
     );
     return this.tamerLevel.award(userId, gained, levels);
+  }
+
+  /** O progresso das missões (auralis/06); o modo deus e a luta de teste não contam. */
+  private async questWrites(
+    userId: string,
+    state: BattleState,
+    caughtSpecies: number[],
+    islandTamer: IslandTamerRef | null,
+  ): Promise<Prisma.PrismaPromise<unknown>[]> {
+    if (state.godMode || state.noRewards) return [];
+    const enemies = state.enemy.team;
+    return this.quests.battleWrites(userId, {
+      capturedSpeciesIds: caughtSpecies,
+      defeatedSpeciesIds: enemies
+        .filter((enemy) => enemy.currentHp === 0 && !enemy.captured)
+        .map(({ speciesId }) => speciesId),
+      enemySpeciesIds: [...new Set(enemies.map(({ speciesId }) => speciesId))],
+      beatenTamerId:
+        islandTamer && state.result === 'victory' ? islandTamer.id : null,
+    });
   }
 
   /** Os contadores do Perfil (player-stats/01); o modo deus não conta. */

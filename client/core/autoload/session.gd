@@ -18,6 +18,8 @@ var player: Player = null
 var home_island_id: int = 0
 ## As salas de Arena abertas desde o começo da exploração (auralis/05).
 var opened_arena_rooms: Array[int] = []
+## Os lugares das missões "Vá até" da ilha explorada, que as conversas e os passos atualizam (auralis/06).
+var quest_places: Dictionary[Vector2i, String] = {}
 var storage: Array[CreatureInstance] = []
 
 var _service: GameService = ApiGameService.new()
@@ -213,8 +215,36 @@ func reset_progress() -> Result:
 
 func start_exploration(island_id: int = 0) -> Result:
 	opened_arena_rooms.clear()
+	quest_places = {}
 	@warning_ignore("redundant_await")
-	return await _service.start_exploration(island_id)
+	var result: Result = await _service.start_exploration(island_id)
+	if result.ok:
+		quest_places = (result.data as ExplorationMap).quest_places
+	return result
+
+
+## A conversa da missão; com recompensa, relê o Domador (moedas, Mochila e nível).
+func talk_quest(npc_id: int) -> Result:
+	@warning_ignore("redundant_await")
+	var result: Result = await _service.talk_quest(npc_id)
+	if not result.ok:
+		return result
+	var talk: QuestTalk = result.data
+	quest_places = talk.places
+	if talk.has_reward:
+		await load_player()
+	return result
+
+
+## Devolve os nomes dos lugares alcançados (vazio se nenhum ou se o servidor recusou).
+func reach_quest_place(coord: Vector2i) -> Array[String]:
+	@warning_ignore("redundant_await")
+	var result: Result = await _service.reach_quest_place(coord)
+	var reached: Array[String] = []
+	if result.ok:
+		quest_places = result.data["places"]
+		reached = result.data["reached"]
+	return reached
 
 
 ## A sala da Arena seguinte, aberta por uma vitória sem sair da ilha (auralis/05).

@@ -86,12 +86,23 @@ export interface IslandConditions {
   requiredTamerWins: number | null;
   arenaIds: readonly number[];
   wonArenaIds: ReadonlySet<number>;
+  /** As missões que contam (auralis/06); ausentes valem como nenhuma. */
+  questIds?: readonly number[];
+  claimedQuestIds?: ReadonlySet<number>;
+  requiredQuests?: number | null;
 }
 
 /** A ilha completa: pelo menos uma condição, e todas cumpridas. */
 export function islandComplete(conditions: IslandConditions): boolean {
   const { countingTamerIds, arenaIds } = conditions;
-  if (countingTamerIds.length === 0 && arenaIds.length === 0) return false;
+  const questIds = conditions.questIds ?? [];
+  if (
+    countingTamerIds.length === 0 &&
+    arenaIds.length === 0 &&
+    questIds.length === 0
+  ) {
+    return false;
+  }
   const tamers =
     countingTamerIds.length === 0 ||
     tamersComplete(
@@ -99,5 +110,14 @@ export function islandComplete(conditions: IslandConditions): boolean {
       conditions.wonTamerIds,
       conditions.requiredTamerWins,
     );
-  return tamers && arenaIds.every((id) => conditions.wonArenaIds.has(id));
+  const quests =
+    questIds.length === 0 ||
+    tamersComplete(
+      questIds,
+      conditions.claimedQuestIds ?? new Set(),
+      conditions.requiredQuests ?? null,
+    );
+  return (
+    tamers && quests && arenaIds.every((id) => conditions.wonArenaIds.has(id))
+  );
 }

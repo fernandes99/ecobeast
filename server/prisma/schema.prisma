@@ -344,6 +344,8 @@ model Npc {
   tamer           Tamer?
   appearanceParts NpcAppearancePart[]
   interiorNpcs    InteriorNpc[]
+  givenQuests     Quest[]             @relation("QuestGiver")
+  targetQuests    Quest[]             @relation("QuestTarget")
 
   @@index([bodyTypeId])
   @@index([skinPaletteId])
@@ -645,6 +647,7 @@ model Species {
   dayPhases      SpeciesDayPhase[]
   codexEntries   CodexEntry[]
   islandAreas    IslandAreaSpecies[]
+  quests         Quest[]
 
   @@index([growthRateId])
   @@index([rarityId])
@@ -936,6 +939,7 @@ model Item {
   itemCategory ItemCategory    @relation(fields: [itemCategoryId], references: [id], onDelete: Restrict)
   inventory    InventoryItem[]
   tamerLevels  TamerLevel[]
+  quests       Quest[]
 
   @@index([itemCategoryId])
   @@map("items")
@@ -1022,6 +1026,7 @@ model Player {
   islands         PlayerIsland[]
   tamerWins       PlayerTamerWin[]
   arenas          PlayerArena[]
+  quests          PlayerQuest[]
 
   @@index([bodyTypeId])
   @@index([skinPaletteId])
@@ -1211,6 +1216,8 @@ model Island {
   archipelagoOrder  Int?      @unique @map("archipelago_order")
   /// Quantos Domadores que contam abrem a seguinte; nulo pede todos. CHECK > 0 (migration island_tamers)
   requiredTamerWins Int?      @map("required_tamer_wins")
+  /// Quantas missões que contam abrem a seguinte; nulo pede todas. CHECK > 0 (migration island_quests)
+  requiredQuests    Int?      @map("required_quests")
 
   maps          IslandMap[]
   discoveries   IslandDiscovery[]
@@ -1219,6 +1226,7 @@ model Island {
   players       PlayerIsland[]
   tamers        Tamer[]
   arenas        Arena[]
+  quests        Quest[]
 
   @@map("islands")
   @@schema("ecobeasts")
@@ -1842,5 +1850,94 @@ model PlayerArena {
   @@id([playerId, arenaId])
   @@index([arenaId])
   @@map("player_arenas")
+  @@schema("ecobeasts")
+}
+
+/// Os tipos de missão (auralis/06): 1 capture_any, 2 defeat_any, 3 explore_percent, 4 reach_place, 5 talk_npc, 6 stay_minutes, 7 find_species, 8 defeat_species, 9 defeat_tamer.
+model QuestType {
+  id          Int    @id
+  /// CHECK ^[a-z0-9_]+$ (migration island_quests)
+  slug        String @unique
+  name        String
+  description String
+
+  quests Quest[]
+
+  @@map("quest_types")
+  @@schema("ecobeasts")
+}
+
+/// Uma missão dada por um NPC da ilha. Os parâmetros pedidos por tipo têm CHECK: quests_params_check (migration island_quests)
+model Quest {
+  id              Int     @id @default(autoincrement())
+  islandId        Int     @map("island_id")
+  /// Quem dá a missão.
+  npcId           Int     @map("npc_id")
+  /// A ordem na fila do NPC. CHECK > 0 (migration island_quests)
+  position        Int
+  questTypeId     Int     @map("quest_type_id")
+  amount          Int?
+  speciesId       Int?    @map("species_id")
+  targetNpcId     Int?    @map("target_npc_id")
+  /// CHECK 1–40 caracteres (migration island_quests)
+  placeName       String? @map("place_name")
+  /// O título no lugar do que sai do tipo. CHECK 1–60 caracteres (migration island_quests)
+  title           String?
+  /// CHECK ≥ 0 (migration island_quests)
+  coins           Int     @default(0)
+  itemId          Int?    @map("item_id")
+  /// Junto com o item. CHECK ≥ 1 (migration island_quests)
+  itemQuantity    Int?    @map("item_quantity")
+  /// Conta para abrir a ilha seguinte.
+  countsForUnlock Boolean @default(true) @map("counts_for_unlock")
+
+  island    Island        @relation(fields: [islandId], references: [id], onDelete: Cascade)
+  npc       Npc           @relation("QuestGiver", fields: [npcId], references: [id], onDelete: Restrict)
+  questType QuestType     @relation(fields: [questTypeId], references: [id], onDelete: Restrict)
+  species   Species?      @relation(fields: [speciesId], references: [id], onDelete: Restrict)
+  targetNpc Npc?          @relation("QuestTarget", fields: [targetNpcId], references: [id], onDelete: Restrict)
+  item      Item?         @relation(fields: [itemId], references: [id], onDelete: Restrict)
+  tiles     QuestTile[]
+  players   PlayerQuest[]
+
+  @@unique([islandId, npcId, position])
+  @@index([npcId])
+  @@index([questTypeId])
+  @@index([speciesId])
+  @@index([targetNpcId])
+  @@index([itemId])
+  @@map("quests")
+  @@schema("ecobeasts")
+}
+
+/// Os hexágonos do lugar de uma missão "Vá até" (auralis/06).
+model QuestTile {
+  questId Int @map("quest_id")
+  q       Int
+  r       Int
+
+  quest Quest @relation(fields: [questId], references: [id], onDelete: Cascade)
+
+  @@id([questId, q, r])
+  @@map("quest_tiles")
+  @@schema("ecobeasts")
+}
+
+/// As missões aceitas pelo jogador (auralis/06).
+model PlayerQuest {
+  playerId   String    @map("player_id") @db.Uuid
+  questId    Int       @map("quest_id")
+  /// No "Fique no mapa", em segundos; no "Explore", em %. CHECK ≥ 0 (migration island_quests)
+  progress   Int       @default(0)
+  acceptedAt DateTime  @default(now()) @map("accepted_at") @db.Timestamptz(3)
+  /// Nulo até a entrega.
+  claimedAt  DateTime? @map("claimed_at") @db.Timestamptz(3)
+
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  quest  Quest  @relation(fields: [questId], references: [id], onDelete: Cascade)
+
+  @@id([playerId, questId])
+  @@index([questId])
+  @@map("player_quests")
   @@schema("ecobeasts")
 }

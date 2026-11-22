@@ -175,4 +175,36 @@ describe('islandComplete', () => {
       }),
     ).toBe(true);
   });
+
+  it('só com missões, pede as entregues que contam (auralis/06)', () => {
+    const quests = { ...none, questIds: [7, 8] };
+    expect(islandComplete({ ...quests, claimedQuestIds: new Set([7]) })).toBe(
+      false,
+    );
+    expect(
+      islandComplete({ ...quests, claimedQuestIds: new Set([7, 8]) }),
+    ).toBe(true);
+    expect(
+      islandComplete({
+        ...quests,
+        claimedQuestIds: new Set([8]),
+        requiredQuests: 1,
+      }),
+    ).toBe(true);
+  });
+
+  it('com Domadores e missões, pede os dois', () => {
+    const both = { ...none, countingTamerIds: [3], questIds: [7] };
+    expect(islandComplete({ ...both, wonTamerIds: new Set([3]) })).toBe(false);
+    expect(islandComplete({ ...both, claimedQuestIds: new Set([7]) })).toBe(
+      false,
+    );
+    expect(
+      islandComplete({
+        ...both,
+        wonTamerIds: new Set([3]),
+        claimedQuestIds: new Set([7]),
+      }),
+    ).toBe(true);
+  });
 });

@@ -21,6 +21,7 @@ const HOME_KNOWN_RADIUS := 30
 const NOTHING_HERE_TEXT := "Nada por aqui."
 const NO_PATH_TEXT := "Não dá para chegar lá."
 const ARENA_LOCKED_TEXT := "Essa Arena ainda está trancada."
+const QUEST_REACHED_TEXT := "Você chegou em %s."
 ## Encostado numa peça: a até isto das linhas dela, em pixels da arte (free-objects/03).
 const TOUCH_REACH := 8.0
 const HIT_ALPHA := 0.5
@@ -78,6 +79,10 @@ var _talking: NpcSprite = null
 var _talking_prop := -1
 var _talk_lines: Array[String] = []
 var _talk_index := 0
+## O NPC cujas falas de missão estão na caixa, ou esperando o servidor (auralis/06).
+var _quest_npc: MapNpc = null
+var _quest_lines: Array[String] = []
+var _reaching_place := false
 var _debug_spawn_ids: Array[int] = []
 var _debug_tamer_ids: Array[int] = []
 var _pinch := PinchZoom.new()
@@ -448,6 +453,7 @@ func _walk(route: PackedVector2Array) -> void:
 			Session.count_hex(_map.tile_at(coord).biome)
 			_map_view.set_current(coord)
 			_discover()
+			_check_quest_place(coord)
 			_refresh_wild_sprites()
 			_lead_followers(origin)
 			if not _story_busy():
@@ -951,6 +957,9 @@ func _on_greeting_tapped() -> void:
 	if not _in_talk():
 		_fight_challenger()
 		return
+	if _quest_npc != null:
+		_next_quest_line()
+		return
 	_talk_index += 1
 	if _talk_index < _talk_lines.size():
 		_say_line()
@@ -970,8 +979,54 @@ func _on_greeting_tapped() -> void:
 	_after_talk(npc.npc)
 
 
-## O Domador da ilha luta no lugar da ação (auralis/04).
+## Numa ilha, as falas da missão vêm antes da luta ou da ação (auralis/06).
 func _after_talk(npc: MapNpc) -> void:
+	if _map.island_id <= 0:
+		_finish_talk(npc)
+		return
+	_quest_npc = npc
+	_quest_lines = []
+	_set_controls_enabled(false)
+	var result: Result = await Session.talk_quest(npc.npc_id)
+	if not is_inside_tree() or _quest_npc != npc:
+		return
+	if result.ok:
+		var talk: QuestTalk = result.data
+		var item := GameData.get_item(talk.item_id) if talk.item_id > 0 else null
+		_quest_lines = talk.display_lines(item.name if item != null else "item")
+	if _quest_lines.is_empty():
+		_quest_npc = null
+		_set_controls_enabled(true)
+		_finish_talk(npc)
+		return
+	_talk_index = 0
+	_greeting.say(_quest_lines[0], GameData.voice_by_slug(StoryPlayer.NARRATION_VOICE))
+
+
+func _next_quest_line() -> void:
+	_talk_index += 1
+	if _talk_index < _quest_lines.size():
+		_greeting.say(_quest_lines[_talk_index], GameData.voice_by_slug(StoryPlayer.NARRATION_VOICE))
+		return
+	var npc := _quest_npc
+	_quest_npc = null
+	_greeting.close()
+	_set_controls_enabled(true)
+	_finish_talk(npc)
+
+
+func _check_quest_place(coord: Vector2i) -> void:
+	if _reaching_place or not Session.quest_places.has(coord):
+		return
+	_reaching_place = true
+	var reached: Array[String] = await Session.reach_quest_place(coord)
+	_reaching_place = false
+	if is_inside_tree() and not reached.is_empty():
+		_show_message(QUEST_REACHED_TEXT % ", ".join(reached), &"SecondaryLabel")
+
+
+## O Domador da ilha luta no lugar da ação (auralis/04).
+func _finish_talk(npc: MapNpc) -> void:
 	if npc.tamer:
 		_open_battle({"island_tamer": npc.npc_id}, &"tamer")
 	else:
@@ -979,7 +1034,7 @@ func _after_talk(npc: MapNpc) -> void:
 
 
 func _in_talk() -> bool:
-	return _talking != null or _talking_prop >= 0
+	return _talking != null or _talking_prop >= 0 or _quest_npc != null
 
 
 func _fight_challenger() -> void:

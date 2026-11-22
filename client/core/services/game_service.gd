@@ -84,6 +84,14 @@ extends RefCounted
 @abstract func start_board_island_tamer(npc_id: int, god: bool = false) -> Result
 
 
+## A conversa da missão depois da última fala do NPC (auralis/06); `data` é um `QuestTalk`.
+@abstract func talk_quest(npc_id: int) -> Result
+
+
+## O Domador pisou num lugar de missão; `data` é `{"reached": Array[String], "places": Dictionary[Vector2i, String]}`.
+@abstract func reach_quest_place(coord: Vector2i) -> Result
+
+
 @abstract func start_board_test_battle(enemies: Array[Dictionary], slots: int) -> Result
 
 

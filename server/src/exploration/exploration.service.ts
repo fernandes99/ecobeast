@@ -58,6 +58,8 @@ import {
 import { ArchipelagoService } from '../islands/archipelago.service.js';
 import { IslandTamersService } from '../islands/island-tamers.service.js';
 import { DiscoveriesService } from '../islands/discoveries.service.js';
+import { toQuestPlaceDto } from '../quests/quests.dto.js';
+import { QuestsService } from '../quests/quests.service.js';
 import { ExplorationStore } from './exploration.store.js';
 import {
   loadSpawnSpecies,
@@ -96,6 +98,7 @@ export class ExplorationService {
     private readonly counters: CountersService,
     private readonly archipelago: ArchipelagoService,
     private readonly islandTamers: IslandTamersService,
+    private readonly quests: QuestsService,
   ) {}
 
   async start(
@@ -189,6 +192,7 @@ export class ExplorationService {
       discovered: [],
       locked_interior_ids: [],
       tamer_npc_ids: [],
+      quest_places: [],
     };
   }
 
@@ -216,14 +220,21 @@ export class ExplorationService {
     if (!island) throw new NotFoundException(ISLAND_NOT_FOUND);
     await this.archipelago.assertOpen(userId, islandId);
     const { draft } = island;
-    const [typeBlocks, born, discovered, tamerNpcIds, lockedInteriorIds] =
-      await Promise.all([
-        this.islands.readTypeBlocks(),
-        speciesBornAt(this.prisma, minute),
-        this.discoveries.listDiscovered(userId, island.id, draft.tiles),
-        this.islandTamers.npcIds(island.id),
-        this.islandTamers.lockedInteriorIds(userId, island.id),
-      ]);
+    const [
+      typeBlocks,
+      born,
+      discovered,
+      tamerNpcIds,
+      lockedInteriorIds,
+      questPlaces,
+    ] = await Promise.all([
+      this.islands.readTypeBlocks(),
+      speciesBornAt(this.prisma, minute),
+      this.discoveries.listDiscovered(userId, island.id, draft.tiles),
+      this.islandTamers.npcIds(island.id),
+      this.islandTamers.lockedInteriorIds(userId, island.id),
+      this.quests.places(userId, island.id),
+    ]);
     const spawns = rollAreaSpawns(
       areasBornIn(spawnAreas(draft, typeBlocks), born),
       secureRandom,
@@ -277,6 +288,7 @@ export class ExplorationService {
       discovered,
       locked_interior_ids: lockedInteriorIds,
       tamer_npc_ids: [...tamerNpcIds],
+      quest_places: questPlaces.map(toQuestPlaceDto),
     };
   }
 

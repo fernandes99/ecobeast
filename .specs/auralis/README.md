@@ -97,8 +97,7 @@ Escolhas de Claude (_a revisar_; ao mudar uma, atualize aqui e na fase):
 | O Domador da ilha e o Mestre de Arena são um catálogo novo (`tamers`, com a equipe em `tamer_creatures`), ligado ao NPC posto no F2 ou na sala (`island_npcs.tamer_id` e o mesmo na sala) | O id do `tamers` não muda ao publicar a ilha; o progresso guarda esse id |
 | A luta contra um Domador da ilha usa a luta de Domador de hoje, com a equipe fixa do catálogo, e paga como hoje | Não muda a luta, e o dono ajusta a dificuldade pela equipe |
 | Revencer um Domador da ilha é possível, mas só a primeira vitória conta | Dá para treinar sem inflar a contagem |
-| As missões guardam o valor do contador quando o jogador aceita (`player_quests.baseline`), e contam a diferença | Só conta o que o jogador fez depois de aceitar, sem um sistema novo de contagem |
-| Faltam contadores para as missões do dono: capturas por espécie (`captures_by_species`, recorte novo `species`) e tempo jogado por parte do dia (`play_seconds_by_day_phase`, para "Vire a noite") | Os 18 de hoje não dizem qual espécie foi pega nem quando o jogador jogou |
+| As missões da ilha são de 9 tipos base (`quest_types`), e cada uma é uma linha com o tipo e os parâmetros; o progresso fica em `player_quests.progress`, somado depois de aceitar (fase 6) | Em 2026-11-22, o dono pediu "missões base para eu conseguir replicar e usar fácil", com a quantidade, a espécie, o NPC ou o lugar escolhidos na hora |
 | O jogador entrega a missão da ilha ao NPC que a deu, que paga a recompensa (moedas ou itens, por missão) | Faz o jogador circular pela ilha; o NPC já tem a conversa |
 | As missões extras ficam num quadro da tela do Arquipélago, 3 de cada vez, e uma nova é sorteada quando o jogador entrega outra; elas só sorteiam espécies, Elementos e biomas já destravados | Não dependem de uma ilha, e o quadro mostra a todo momento o que fazer |
 | A tela do Arquipélago mostra as ilhas abertas, a próxima trancada com o nome e a lista do que falta, e as seguintes como silhuetas sem nome | Dá a meta seguinte sem estragar a surpresa das outras |
@@ -114,7 +113,7 @@ Escolhas de Claude (_a revisar_; ao mudar uma, atualize aqui e na fase):
 - `biomes.locked_fallback_biome_id`: o bioma posto no lugar quando este está travado; nulo é "não pôr".
 - `tamers` (nome, aparência ou sprite do NPC, fala antes e depois da luta, formato 1×1, 2×2 ou 3×3, `counts_for_unlock`) e `tamer_creatures` (espécie, nível, Técnicas): os Domadores das ilhas e os Mestres de Arena.
 - `arenas` (`island_id`, ordem na ilha, nome, `interior_id`, `boss_tamer_id`): as Arenas de cada ilha. A de ordem 1 começa aberta; cada uma abre a seguinte.
-- `quests` (`island_id`, `npc_id` do catálogo `npcs`, título, texto, `counter_id`, `subject_id`, alvo, recompensa, `counts_for_unlock`): as missões escritas pelo dono.
+- `quest_types` (os 9 tipos base) e `quests` (`island_id`, `npc_id` do catálogo `npcs`, a ordem no NPC, o tipo, os parâmetros, a recompensa, `counts_for_unlock`), com os hexágonos do "Vá até" em `quest_tiles`: as missões escritas pelo dono ([06](06-island-quests.md)).
 - `quest_templates` (contador, de onde vem o recorte, faixa do alvo, recompensa): os modelos das missões extras.
 
 Os nomes das tabelas e das colunas são propostas; a fase de cada uma decide o nome final.
@@ -124,7 +123,7 @@ Os nomes das tabelas e das colunas são propostas; a fase de cada uma decide o n
 - `player_islands` (`player_id`, `island_id`, `unlocked_at`): as ilhas abertas.
 - `player_tamer_wins` (`player_id`, `tamer_id`, `won_at`): a primeira vitória sobre cada Domador.
 - `player_arenas` (`player_id`, `arena_id`, `won_at`): os emblemas.
-- `player_quests` (`player_id`, a missão ou o modelo sorteado, `baseline`, alvo, situação aceita, cumprida ou entregue).
+- `player_quests` (`player_id`, `quest_id`, `progress`, `accepted_at`, `claimed_at`).
 
 O servidor confere se a ilha da vez ficou completa a cada vitória de Domador, emblema e missão entregue, e abre a próxima na mesma transação.
 
@@ -160,7 +159,7 @@ A fase 2 está adiada. Em 2026-11-22, o dono pediu: "vamos pular a parte do Expl
 | 3 | [03-archipelago-screen](03-archipelago-screen.md) | A escolha do Explorar e a tela do Arquipélago | concluída (falta o dono conferir no jogo) |
 | 4 | [04-island-tamers](04-island-tamers.md) | O catálogo `tamers` (um NPC do catálogo como Domador, com a equipe fixa), a luta ao tocar no NPC, a primeira vitória contando, a ilha seguinte abrindo e o aviso da ilha nova | concluída (falta o dono conferir no jogo) |
 | 5 | [05-arenas](05-arenas.md) | As Arenas de cada ilha, com a sala, os Domadores de treino, o Mestre e o emblema, uma abrindo a seguinte | concluída (falta o dono conferir no jogo) |
-| 6 | 06-island-quests | As missões escritas pelo dono, os contadores novos, o sinal no NPC, a entrega e a recompensa | rascunho |
+| 6 | [06-island-quests](06-island-quests.md) | Os 9 tipos de missão base, as missões presas a um NPC da ilha, o progresso, a entrega e a recompensa | concluída (falta o dono conferir no jogo) |
 | 7 | 07-extra-quests | Os modelos de missão e o quadro de missões extras do Arquipélago | rascunho |
 | 8 | 08-ground-items | O item no chão da ilha para pegar e as missões "Encontre X item" | rascunho |
 
@@ -171,4 +170,3 @@ As specs das fases são escritas quando cada uma for planejada.
 - **O nível dos selvagens no mapa aleatório:** hoje não depende da ilha da vez. Uma ilha mais adiante pode pedir selvagens mais fortes no aleatório também.
 - **Os itens destravados por ilha:** o dono citou "novos itens". Falta dizer se é a Loja que vende mais, se é a recompensa das missões, ou as duas.
 - **A Liga:** se vale a pena e o que ela pede.
-- **"Vire a noite":** o tempo jogado durante a Noite somado em vários dias (o `play_seconds_by_day_phase` das escolhas acima), ou jogar uma Noite inteira sem sair? Sugestão de Claude: o tempo somado, mais simples e mais justo no celular. Decide o contador novo da fase 6.

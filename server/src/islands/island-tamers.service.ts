@@ -1,18 +1,17 @@
 import { ConflictException, Injectable } from '@nestjs/common';
-import {
-  arenaOpen,
-  islandComplete,
-  nextIslandAfter,
-} from '../domain/islands/archipelago.js';
+import { arenaOpen } from '../domain/islands/archipelago.js';
 import type { TamerCreature } from '../domain/tamers/tamers.js';
 import type { Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
-import { ArchipelagoService } from './archipelago.service.js';
+import {
+  IslandCompletionService,
+  type UnlockedIsland,
+} from './island-completion.service.js';
+
+export type { UnlockedIsland } from './island-completion.service.js';
 
 export const NO_ISLAND_TAMER = 'Nenhum Domador aqui.';
 export const ARENA_LOCKED = 'Essa Arena ainda está trancada.';
-
-const PUBLISHED = 'published';
 
 export interface IslandTamer {
   id: number;
@@ -20,11 +19,6 @@ export interface IslandTamer {
   name: string;
   size: number;
   team: TamerCreature[];
-}
-
-export interface UnlockedIsland {
-  id: number;
-  name: string;
 }
 
 export interface WonArena {
@@ -55,7 +49,7 @@ interface ArenaRow {
 export class IslandTamersService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly archipelago: ArchipelagoService,
+    private readonly completion: IslandCompletionService,
   ) {}
 
   /**
@@ -83,8 +77,8 @@ export class IslandTamersService {
     if (!tamer || tamer.islandId !== islandId || tamer.creatures.length === 0) {
       return null;
     }
-    const placed = await this.placedNpcs(islandId);
-    if (!placed.outside.has(npcId) && !placed.inside.has(npcId)) return null;
+    const placed = await this.completion.placedNpcs(islandId);
+    if (!this.completion.isPlaced(placed, npcId)) return null;
     const rooms = placed.inside.get(npcId) ?? new Set<number>();
     if (rooms.size > 0) {
       const [arenas, won] = await Promise.all([
@@ -168,7 +162,10 @@ export class IslandTamersService {
         }),
       );
     }
-    const unlocked = await this.unlockedBy(userId, tamer, arenas, bossOf);
+    const unlocked = await this.completion.unlockedBy(userId, tamer.islandId, {
+      tamerId: tamer.id,
+      arenaId: bossOf?.id,
+    });
     if (unlocked) {
       writes.push(
         this.prisma.playerIsland.create({
@@ -182,58 +179,6 @@ export class IslandTamersService {
       arena: bossOf ? wonArena(arenas, bossOf) : null,
       writes,
     };
-  }
-
-  /** A ilha que esta vitória abre, se ela completa a ilha do Domador. */
-  private async unlockedBy(
-    userId: string,
-    tamer: Pick<IslandTamer, 'id' | 'islandId'>,
-    arenas: ArenaRow[],
-    bossOf: ArenaRow | undefined,
-  ): Promise<UnlockedIsland | null> {
-    const [island, counting, placed, won, wonArenas, islands, open] =
-      await Promise.all([
-        this.prisma.island.findUnique({
-          where: { id: tamer.islandId },
-          select: { requiredTamerWins: true },
-        }),
-        this.prisma.tamer.findMany({
-          where: { islandId: tamer.islandId, countsForUnlock: true },
-          select: { id: true, npcId: true },
-        }),
-        this.placedNpcs(tamer.islandId),
-        this.prisma.playerTamerWin.findMany({
-          where: { playerId: userId },
-          select: { tamerId: true },
-        }),
-        this.wonArenaIds(userId),
-        this.archipelago.publishedIslands(),
-        this.prisma.playerIsland.findMany({
-          where: { playerId: userId },
-          select: { islandId: true },
-        }),
-      ]);
-    const bosses = new Set(arenas.map(({ bossTamerId }) => bossTamerId));
-    const countingTamerIds = counting
-      .filter(
-        ({ id, npcId }) =>
-          !bosses.has(id) &&
-          (placed.outside.has(npcId) || placed.inside.has(npcId)),
-      )
-      .map(({ id }) => id);
-    const complete = islandComplete({
-      countingTamerIds,
-      wonTamerIds: new Set([...won.map(({ tamerId }) => tamerId), tamer.id]),
-      requiredTamerWins: island?.requiredTamerWins ?? null,
-      arenaIds: arenas.map(({ id }) => id),
-      wonArenaIds: bossOf ? new Set([...wonArenas, bossOf.id]) : wonArenas,
-    });
-    if (!complete) return null;
-    const nextId = nextIslandAfter(islands, tamer.islandId);
-    if (nextId === null) return null;
-    if (open.some(({ islandId }) => islandId === nextId)) return null;
-    const name = islands.find(({ id }) => id === nextId)?.name ?? '';
-    return { id: nextId, name };
   }
 
   private arenas(islandId: number): Promise<ArenaRow[]> {
@@ -256,39 +201,6 @@ export class IslandTamersService {
       select: { arenaId: true },
     });
     return new Set(rows.map(({ arenaId }) => arenaId));
-  }
-
-  /**
-   * Os NPCs postos na ilha: os do mapa publicado e, para cada NPC de uma sala
-   * que uma peça do mapa publicado abre, as salas onde ele está.
-   */
-  private async placedNpcs(islandId: number): Promise<{
-    outside: Set<number>;
-    inside: Map<number, Set<number>>;
-  }> {
-    const where = { islandMap: { islandId, kind: PUBLISHED } };
-    const [npcs, props] = await Promise.all([
-      this.prisma.islandNpc.findMany({ where, select: { npcId: true } }),
-      this.prisma.islandProp.findMany({
-        where: { ...where, interiorId: { not: null } },
-        select: { interiorId: true },
-      }),
-    ]);
-    const roomIds = [...new Set(props.map(({ interiorId }) => interiorId!))];
-    const roomNpcs =
-      roomIds.length === 0
-        ? []
-        : await this.prisma.interiorNpc.findMany({
-            where: { interiorId: { in: roomIds } },
-            select: { npcId: true, interiorId: true },
-          });
-    const inside = new Map<number, Set<number>>();
-    for (const { npcId, interiorId } of roomNpcs) {
-      const rooms = inside.get(npcId) ?? new Set<number>();
-      rooms.add(interiorId);
-      inside.set(npcId, rooms);
-    }
-    return { outside: new Set(npcs.map(({ npcId }) => npcId)), inside };
   }
 }
 

@@ -24,6 +24,9 @@ var _npc_target: NpcSprite = null
 var _talking: NpcSprite = null
 var _talk_lines: Array[String] = []
 var _talk_index := 0
+## O NPC cujas falas de missão estão na caixa, ou esperando o servidor (auralis/06).
+var _quest_npc: MapNpc = null
+var _quest_lines: Array[String] = []
 
 @onready var _background: ColorRect = %Background
 @onready var _room_area: Control = %RoomArea
@@ -71,6 +74,8 @@ func _ready() -> void:
 
 ## Com a conversa aberta, o voltar só a fecha, sem a ação do NPC.
 func handle_back() -> bool:
+	if _quest_npc != null:
+		return true
 	if _talking == null:
 		return false
 	_greeting.close()
@@ -86,7 +91,7 @@ func player_point() -> Vector2:
 
 ## O toque na sala, em pixels da arte (o mesmo caminho do toque na tela).
 func tap_art(point: Vector2) -> void:
-	if _route == null or _leaving or _talking != null:
+	if _route == null or _leaving or _talking != null or _quest_npc != null:
 		return
 	_npc_target = null
 	_show_message("")
@@ -214,6 +219,9 @@ func _say_line() -> void:
 
 
 func _on_greeting_tapped() -> void:
+	if _quest_npc != null:
+		_next_quest_line()
+		return
 	if _talking == null:
 		return
 	_talk_index += 1
@@ -227,8 +235,38 @@ func _on_greeting_tapped() -> void:
 	_after_talk(sprite.npc)
 
 
-## O Domador da ilha luta no lugar da ação; perder volta ao Hub (auralis/05).
+## As falas da missão vêm antes da luta ou da ação (auralis/06).
 func _after_talk(npc: MapNpc) -> void:
+	_quest_npc = npc
+	_quest_lines = []
+	var result: Result = await Session.talk_quest(npc.npc_id)
+	if not is_inside_tree() or _quest_npc != npc:
+		return
+	if result.ok:
+		var talk: QuestTalk = result.data
+		var item := GameData.get_item(talk.item_id) if talk.item_id > 0 else null
+		_quest_lines = talk.display_lines(item.name if item != null else "item")
+	if _quest_lines.is_empty():
+		_quest_npc = null
+		_finish_talk(npc)
+		return
+	_talk_index = 0
+	_greeting.say(_quest_lines[0], GameData.voice_by_slug(StoryPlayer.NARRATION_VOICE))
+
+
+func _next_quest_line() -> void:
+	_talk_index += 1
+	if _talk_index < _quest_lines.size():
+		_greeting.say(_quest_lines[_talk_index], GameData.voice_by_slug(StoryPlayer.NARRATION_VOICE))
+		return
+	var npc := _quest_npc
+	_quest_npc = null
+	_greeting.close()
+	_finish_talk(npc)
+
+
+## O Domador da ilha luta no lugar da ação; perder volta ao Hub (auralis/05).
+func _finish_talk(npc: MapNpc) -> void:
 	if not npc.tamer:
 		_run_action(npc.action_type_id)
 		return

@@ -17,6 +17,7 @@ import {
 import type { Prisma } from '../generated/prisma/client.js';
 import { ExplorationStore } from '../exploration/exploration.store.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { QuestsService } from '../quests/quests.service.js';
 
 export const NO_PLAYER = 'Crie seu Domador primeiro.';
 
@@ -34,6 +35,7 @@ export class CountersService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly explorations: ExplorationStore,
+    private readonly quests: QuestsService,
   ) {}
 
   /** Um `upsert` por contador; o `client` aceita o `tx` de uma transação. */
@@ -94,6 +96,7 @@ export class CountersService {
         return biomeId === undefined ? [] : [{ biomeId, count }];
       }),
     );
+    const islandId = this.explorations.get(userId)?.islandId;
     const today = playDayOf(now);
     const lastDay = player.lastPlayDay?.toISOString().slice(0, 10) ?? null;
     const { newDay, streak } = nextStreak(
@@ -119,9 +122,11 @@ export class CountersService {
         ),
       );
       if (claimed === 1) {
-        list.push(
-          counterTotal('play_seconds', playSecondsFor(player.lastPingAt, now)),
-        );
+        const seconds = playSecondsFor(player.lastPingAt, now);
+        list.push(counterTotal('play_seconds', seconds));
+        if (islandId !== undefined && seconds > 0) {
+          await this.quests.stayWrite(tx, userId, islandId, seconds);
+        }
         if (newDay) list.push(counterTotal('play_days', 1));
       }
       await Promise.all(this.increments(userId, mergeIncrements(list), tx));

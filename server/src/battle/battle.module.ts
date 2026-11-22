@@ -5,6 +5,7 @@ import { CountersModule } from '../counters/counters.module.js';
 import { ExplorationModule } from '../exploration/exploration.module.js';
 import { IslandsModule } from '../islands/islands.module.js';
 import { ProgressionModule } from '../progression/progression.module.js';
+import { QuestsModule } from '../quests/quests.module.js';
 import { TamerLevelModule } from '../tamer-level/tamer-level.module.js';
 import { BattleRecordsService } from './battle-records.service.js';
 import { BattleStore } from './battle.store.js';
@@ -17,6 +18,7 @@ import { BattleStore } from './battle.store.js';
     ExplorationModule,
     IslandsModule,
     ProgressionModule,
+    QuestsModule,
     TamerLevelModule,
   ],
   providers: [

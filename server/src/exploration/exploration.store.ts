@@ -1,5 +1,9 @@
 import { cappedHexes, type BiomeHexes } from '../domain/counters/ping.js';
-import { type HexCoord, MIN_STEP_MS } from '../domain/exploration/hex.js';
+import {
+  type HexCoord,
+  hexDistance,
+  MIN_STEP_MS,
+} from '../domain/exploration/hex.js';
 import type { MapSpawn } from '../domain/exploration/spawns.js';
 import type { MapTamer } from '../domain/tamers/tamers.js';
 
@@ -35,6 +39,25 @@ export class ExplorationStore {
   set(userId: string, exploration: StoredExploration): void {
     this.removeExpired();
     this.entries.set(userId, { exploration, lastUsedAt: this.now() });
+  }
+
+  /**
+   * Confere o passo até `position` (o Procurar, as missões): quem mente a
+   * posição não chega antes de quem anda. Aceito, a posição vira a de agora.
+   */
+  confirmPosition(
+    userId: string,
+    position: HexCoord,
+  ): StoredExploration | 'none' | 'unreachable' {
+    const exploration = this.get(userId);
+    if (!exploration) return 'none';
+    const now = this.now();
+    const walked = hexDistance(exploration.position, position);
+    if (walked * MIN_STEP_MS > now - exploration.positionAt) {
+      return 'unreachable';
+    }
+    this.set(userId, { ...exploration, position, positionAt: now });
+    return exploration;
   }
 
   /** Os hexágonos aceitos: só dos biomas do mapa e no máximo um por passo mínimo desde o último crédito. */

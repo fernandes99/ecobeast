@@ -35,6 +35,8 @@ const COUNTERS_PING_PATH := "/v1/me/counters/ping"
 const ISLANDS_PATH := "/v1/me/islands"
 const DISCOVERIES_PATH := "/v1/me/islands/%d/discoveries"
 const ARCHIPELAGO_PATH := "/v1/me/archipelago"
+const QUEST_TALK_PATH := "/v1/me/quests/talk"
+const QUEST_REACH_PATH := "/v1/me/quests/reach"
 const UNLOCK_ISLAND_PATH := "/v1/me/archipelago/%d/unlock"
 const EVOLUTION_PATH := "/v1/me/creatures/%s/evolution"
 const LEARN_SKILL_PATH := "/v1/me/creatures/%s/skills"
@@ -133,7 +135,30 @@ func start_exploration(island_id: int = 0) -> Result:
 	exploration.discovered = _coords(DictFields.get_array(response.data, "discovered"))
 	exploration.locked_interior_ids = _ints(DictFields.get_array(response.data, "locked_interior_ids"))
 	exploration.tamer_npc_ids = _ints(DictFields.get_array(response.data, "tamer_npc_ids"))
+	exploration.quest_places = QuestTalk.places_from(DictFields.get_array(response.data, "quest_places"))
 	return Result.success(exploration)
+
+
+func talk_quest(npc_id: int) -> Result:
+	var response: ApiResponse = await Api.request(HTTPClient.METHOD_POST, QUEST_TALK_PATH, {"npc_id": npc_id}, true)
+	if not response.ok:
+		return Result.failure(response.error)
+	if not response.data is Dictionary:
+		return Result.failure(ApiResponse.SERVER_ERROR)
+	return Result.success(QuestTalk.from_dict(response.data))
+
+
+func reach_quest_place(coord: Vector2i) -> Result:
+	var response: ApiResponse = await Api.request(HTTPClient.METHOD_POST, QUEST_REACH_PATH, {"q": coord.x, "r": coord.y}, true)
+	if not response.ok:
+		return Result.failure(response.error)
+	if not response.data is Dictionary:
+		return Result.failure(ApiResponse.SERVER_ERROR)
+	var reached: Array[String] = []
+	for place_name: Variant in DictFields.get_array(response.data, "reached"):
+		if place_name is String:
+			reached.append(place_name)
+	return Result.success({"reached": reached, "places": QuestTalk.places_from(DictFields.get_array(response.data, "quest_places"))})
 
 
 static func _ints(items: Array) -> Array[int]:
