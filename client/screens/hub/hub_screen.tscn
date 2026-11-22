@@ -4,12 +4,11 @@
 [ext_resource type="PackedScene" path="res://ui/components/safe_area.tscn" id="2_safe_area"]
 [ext_resource type="Texture2D" uid="uid://d0b8j3jbsaqfe" path="res://ui/icons/coin.svg" id="3_coin"]
 [ext_resource type="Script" path="res://ui/components/tap_panel.gd" id="4_tap_panel"]
-[ext_resource type="PackedScene" path="res://ui/components/creature_portrait.tscn" id="5_portrait"]
 [ext_resource type="FontVariation" path="res://ui/theme/fonts/nunito_bold.tres" id="6_bold"]
 [ext_resource type="PackedScene" path="res://ui/components/hp_bar.tscn" id="7_hp_bar"]
 [ext_resource type="PackedScene" path="res://ui/components/day_phase_badge.tscn" id="90_day_phase"]
 
-[sub_resource type="StyleBoxEmpty" id="featured_panel"]
+[sub_resource type="StyleBoxEmpty" id="tap_area"]
 
 [node name="HubScreen" type="Control" unique_id=949083238]
 texture_filter = 4
@@ -21,13 +20,34 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_script")
 
-[node name="SceneArt" type="TextureRect" parent="." unique_id=466608109]
+[node name="Pages" type="Control" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="HomePage" type="Control" parent="Pages"]
+unique_name_in_owner = true
+clip_contents = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="SceneArt" type="TextureRect" parent="Pages/HomePage" unique_id=466608109]
 unique_name_in_owner = true
 layout_mode = 0
 mouse_filter = 2
 expand_mode = 1
 
-[node name="SceneShade" type="TextureRect" parent="." unique_id=973738555]
+[node name="SceneShade" type="TextureRect" parent="Pages/HomePage" unique_id=973738555]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 15
@@ -38,30 +58,31 @@ grow_vertical = 2
 mouse_filter = 2
 expand_mode = 1
 
-[node name="SafeArea" parent="." unique_id=710764170 instance=ExtResource("2_safe_area")]
+[node name="SafeArea" parent="Pages/HomePage" unique_id=710764170 instance=ExtResource("2_safe_area")]
+unique_name_in_owner = true
 layout_mode = 1
 
-[node name="Padding" type="MarginContainer" parent="SafeArea" unique_id=1973163270]
+[node name="Padding" type="MarginContainer" parent="Pages/HomePage/SafeArea" unique_id=1973163270]
 layout_mode = 2
 theme_override_constants/margin_top = 12
-theme_override_constants/margin_bottom = 12
+theme_override_constants/margin_bottom = 16
 
-[node name="Column" type="VBoxContainer" parent="SafeArea/Padding" unique_id=2094212581]
+[node name="Column" type="VBoxContainer" parent="Pages/HomePage/SafeArea/Padding" unique_id=2094212581]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="TopBar" type="HBoxContainer" parent="Pages/HomePage/SafeArea/Padding/Column" unique_id=1905581002]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="TopBar" type="HBoxContainer" parent="SafeArea/Padding/Column" unique_id=1905581002]
-layout_mode = 2
-theme_override_constants/separation = 12
-
-[node name="Player" type="Control" parent="SafeArea/Padding/Column/TopBar" unique_id=1388307208]
+[node name="Player" type="Control" parent="Pages/HomePage/SafeArea/Padding/Column/TopBar" unique_id=1388307208]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 96)
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_default_cursor_shape = 2
 
-[node name="PlayerPanel" type="PanelContainer" parent="SafeArea/Padding/Column/TopBar/Player" unique_id=506076531]
+[node name="PlayerPanel" type="PanelContainer" parent="Pages/HomePage/SafeArea/Padding/Column/TopBar/Player" unique_id=506076531]
 layout_mode = 1
 anchors_preset = 14
 anchor_top = 0.5
@@ -75,32 +96,32 @@ grow_vertical = 2
 mouse_filter = 2
 theme_type_variation = &"PlayerPanel"
 
-[node name="Info" type="VBoxContainer" parent="SafeArea/Padding/Column/TopBar/Player/PlayerPanel" unique_id=2044186793]
+[node name="Info" type="VBoxContainer" parent="Pages/HomePage/SafeArea/Padding/Column/TopBar/Player/PlayerPanel" unique_id=2044186793]
 layout_mode = 2
 size_flags_vertical = 4
 mouse_filter = 2
 theme_override_constants/separation = 2
 
-[node name="NameLabel" type="Label" parent="SafeArea/Padding/Column/TopBar/Player/PlayerPanel/Info" unique_id=1533689128]
+[node name="NameLabel" type="Label" parent="Pages/HomePage/SafeArea/Padding/Column/TopBar/Player/PlayerPanel/Info" unique_id=1533689128]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"TitleLabel"
 theme_override_font_sizes/font_size = 26
 text_overrun_behavior = 3
 
-[node name="LevelRow" type="HBoxContainer" parent="SafeArea/Padding/Column/TopBar/Player/PlayerPanel/Info" unique_id=232463194]
+[node name="LevelRow" type="HBoxContainer" parent="Pages/HomePage/SafeArea/Padding/Column/TopBar/Player/PlayerPanel/Info" unique_id=232463194]
 layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 8
 
-[node name="LevelLabel" type="Label" parent="SafeArea/Padding/Column/TopBar/Player/PlayerPanel/Info/LevelRow" unique_id=254982445]
+[node name="LevelLabel" type="Label" parent="Pages/HomePage/SafeArea/Padding/Column/TopBar/Player/PlayerPanel/Info/LevelRow" unique_id=254982445]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"SecondaryLabel"
 theme_override_fonts/font = ExtResource("6_bold")
 theme_override_font_sizes/font_size = 18
 
-[node name="XpBar" type="ProgressBar" parent="SafeArea/Padding/Column/TopBar/Player/PlayerPanel/Info/LevelRow" unique_id=11830913]
+[node name="XpBar" type="ProgressBar" parent="Pages/HomePage/SafeArea/Padding/Column/TopBar/Player/PlayerPanel/Info/LevelRow" unique_id=11830913]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 12)
 layout_mode = 2
@@ -112,7 +133,7 @@ max_value = 1.0
 step = 0.0
 show_percentage = false
 
-[node name="Avatar" type="PanelContainer" parent="SafeArea/Padding/Column/TopBar/Player" unique_id=1249235342]
+[node name="Avatar" type="PanelContainer" parent="Pages/HomePage/SafeArea/Padding/Column/TopBar/Player" unique_id=1249235342]
 layout_mode = 1
 anchors_preset = 4
 anchor_top = 0.5
@@ -124,25 +145,25 @@ grow_vertical = 2
 mouse_filter = 2
 theme_type_variation = &"AvatarPanel"
 
-[node name="AvatarInitial" type="Label" parent="SafeArea/Padding/Column/TopBar/Player/Avatar" unique_id=281852641]
+[node name="AvatarInitial" type="Label" parent="Pages/HomePage/SafeArea/Padding/Column/TopBar/Player/Avatar" unique_id=281852641]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"TitleLabel"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="CoinChip" type="PanelContainer" parent="SafeArea/Padding/Column/TopBar" unique_id=571315394]
+[node name="CoinChip" type="PanelContainer" parent="Pages/HomePage/SafeArea/Padding/Column/TopBar" unique_id=571315394]
 layout_mode = 2
 size_flags_vertical = 4
 mouse_filter = 2
 theme_type_variation = &"CoinChip"
 
-[node name="Row" type="HBoxContainer" parent="SafeArea/Padding/Column/TopBar/CoinChip" unique_id=1324597435]
+[node name="Row" type="HBoxContainer" parent="Pages/HomePage/SafeArea/Padding/Column/TopBar/CoinChip" unique_id=1324597435]
 layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 6
 
-[node name="CoinIcon" type="TextureRect" parent="SafeArea/Padding/Column/TopBar/CoinChip/Row" unique_id=1802986262]
+[node name="CoinIcon" type="TextureRect" parent="Pages/HomePage/SafeArea/Padding/Column/TopBar/CoinChip/Row" unique_id=1802986262]
 custom_minimum_size = Vector2(36, 36)
 layout_mode = 2
 size_flags_vertical = 4
@@ -151,13 +172,13 @@ texture = ExtResource("3_coin")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="CoinsLabel" type="Label" parent="SafeArea/Padding/Column/TopBar/CoinChip/Row" unique_id=1582479085]
+[node name="CoinsLabel" type="Label" parent="Pages/HomePage/SafeArea/Padding/Column/TopBar/CoinChip/Row" unique_id=1582479085]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"BoldLabel"
 theme_override_font_sizes/font_size = 24
 
-[node name="SettingsButton" type="Button" parent="SafeArea/Padding/Column/TopBar"]
+[node name="SettingsButton" type="Button" parent="Pages/HomePage/SafeArea/Padding/Column/TopBar"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(56, 56)
 layout_mode = 2
@@ -166,86 +187,109 @@ theme_type_variation = &"IconButton"
 theme_override_constants/icon_max_width = 32
 icon_alignment = 1
 
-[node name="Featured" type="PanelContainer" parent="SafeArea/Padding/Column"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_vertical = 3
-mouse_default_cursor_shape = 2
-theme_override_styles/panel = SubResource("featured_panel")
-script = ExtResource("4_tap_panel")
-
-[node name="FeaturedColumn" type="VBoxContainer" parent="SafeArea/Padding/Column/Featured"]
-layout_mode = 2
-mouse_filter = 2
-theme_override_constants/separation = 8
-
-[node name="BadgeRow" type="HBoxContainer" parent="SafeArea/Padding/Column/Featured/FeaturedColumn"]
+[node name="BadgeRow" type="HBoxContainer" parent="Pages/HomePage/SafeArea/Padding/Column"]
 layout_mode = 2
 mouse_filter = 2
 alignment = 2
 
-[node name="DayPhaseBadge" parent="SafeArea/Padding/Column/Featured/FeaturedColumn/BadgeRow" instance=ExtResource("90_day_phase")]
+[node name="DayPhaseBadge" parent="Pages/HomePage/SafeArea/Padding/Column/BadgeRow" instance=ExtResource("90_day_phase")]
 layout_mode = 2
 
-[node name="FeaturedPortrait" parent="SafeArea/Padding/Column/Featured/FeaturedColumn" instance=ExtResource("5_portrait")]
+[node name="Stage" type="Control" parent="Pages/HomePage/SafeArea/Padding/Column"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
-portrait_size = 200
+mouse_filter = 2
 
-[node name="FeaturedPlate" type="PanelContainer" parent="SafeArea/Padding/Column/Featured/FeaturedColumn"]
+[node name="Actors" type="Node2D" parent="Pages/HomePage/SafeArea/Padding/Column/Stage"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(320, 0)
-layout_mode = 2
-size_flags_horizontal = 4
-mouse_filter = 2
-theme_type_variation = &"NamePlatePanel"
 
-[node name="PlateColumn" type="VBoxContainer" parent="SafeArea/Padding/Column/Featured/FeaturedColumn/FeaturedPlate"]
+[node name="CreatureTap" type="PanelContainer" parent="Pages/HomePage/SafeArea/Padding/Column/Stage"]
+unique_name_in_owner = true
+layout_mode = 0
+mouse_default_cursor_shape = 2
+theme_override_styles/panel = SubResource("tap_area")
+script = ExtResource("4_tap_panel")
+
+[node name="Plate" type="PanelContainer" parent="Pages/HomePage/SafeArea/Padding/Column/Stage"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 0
+mouse_filter = 2
+theme_type_variation = &"CoinChip"
+
+[node name="PlateColumn" type="VBoxContainer" parent="Pages/HomePage/SafeArea/Padding/Column/Stage/Plate"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_constants/separation = 6
+theme_override_constants/separation = 4
 
-[node name="PlateRow" type="HBoxContainer" parent="SafeArea/Padding/Column/Featured/FeaturedColumn/FeaturedPlate/PlateColumn"]
+[node name="PlateRow" type="HBoxContainer" parent="Pages/HomePage/SafeArea/Padding/Column/Stage/Plate/PlateColumn"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_constants/separation = 12
+theme_override_constants/separation = 10
 
-[node name="FeaturedName" type="Label" parent="SafeArea/Padding/Column/Featured/FeaturedColumn/FeaturedPlate/PlateColumn/PlateRow"]
+[node name="FeaturedName" type="Label" parent="Pages/HomePage/SafeArea/Padding/Column/Stage/Plate/PlateColumn/PlateRow"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-theme_type_variation = &"TitleLabel"
-theme_override_font_sizes/font_size = 30
-text_overrun_behavior = 3
-
-[node name="FeaturedLevel" type="Label" parent="SafeArea/Padding/Column/Featured/FeaturedColumn/FeaturedPlate/PlateColumn/PlateRow"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_vertical = 4
 theme_type_variation = &"BoldLabel"
 theme_override_font_sizes/font_size = 22
+text_overrun_behavior = 3
 
-[node name="FeaturedHp" parent="SafeArea/Padding/Column/Featured/FeaturedColumn/FeaturedPlate/PlateColumn" instance=ExtResource("7_hp_bar")]
+[node name="FeaturedLevel" type="Label" parent="Pages/HomePage/SafeArea/Padding/Column/Stage/Plate/PlateColumn/PlateRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"SecondaryLabel"
+theme_override_fonts/font = ExtResource("6_bold")
+theme_override_font_sizes/font_size = 18
+
+[node name="FeaturedHp" parent="Pages/HomePage/SafeArea/Padding/Column/Stage/Plate/PlateColumn" instance=ExtResource("7_hp_bar")]
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="PartyRow" type="HBoxContainer" parent="SafeArea/Padding/Column" unique_id=1522476882]
+[node name="PartyRow" type="HBoxContainer" parent="Pages/HomePage/SafeArea/Padding/Column" unique_id=1522476882]
 unique_name_in_owner = true
 layout_mode = 2
 mouse_filter = 2
-theme_override_constants/separation = 8
+alignment = 1
+theme_override_constants/separation = 20
 
-[node name="ExploreButton" type="Button" parent="SafeArea/Padding/Column"]
+[node name="ExploreButton" type="Button" parent="Pages/HomePage/SafeArea/Padding/Column"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 120)
+custom_minimum_size = Vector2(0, 116)
 layout_mode = 2
 theme_override_constants/icon_max_width = 56
 theme_override_constants/h_separation = 16
 theme_override_font_sizes/font_size = 44
 text = "Explorar"
 
-[node name="Shortcuts" type="HBoxContainer" parent="SafeArea/Padding/Column"]
+[node name="TabBar" type="Control" parent="."]
 unique_name_in_owner = true
-layout_mode = 2
-theme_override_constants/separation = 12
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+
+[node name="TabBackground" type="Panel" parent="TabBar"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Tabs" type="HBoxContainer" parent="TabBar"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_constants/separation = 0

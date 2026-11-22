@@ -87,3 +87,4 @@ Escolhas de Claude (_a revisar_; ao mudar uma, atualize aqui e na fase):
 | --- | --- | --- | --- |
 | 1 | [01-hub](01-hub.md) | Liora sem a marca de casa, o Hub novo (o topo, o destaque, o Explorar e os 4 ícones) e as voltas ao Hub | concluída |
 | 2 | [02-ecobeasts-profile-settings](02-ecobeasts-profile-settings.md) | A tela Ecobeasts, o Perfil e as Configurações | concluída |
+| 3 | [03-tab-bar](03-tab-bar.md) | A barra de abas no estilo do Clash Royale, com a Home no meio, e a Home como o palco no campo | concluída |

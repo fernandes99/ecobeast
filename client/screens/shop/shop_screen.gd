@@ -8,6 +8,9 @@ const PURCHASED_MESSAGE := "Item comprado!"
 var _categories: Array[ItemCategory] = []
 var _buying: bool = false
 
+## Numa aba do Hub, a tela fica sem o Voltar (hub-start/03).
+var _in_tab: bool = false
+
 @onready var _coins_label: Label = %CoinsLabel
 @onready var _tab_row: HBoxContainer = %TabRow
 @onready var _scroll: ScrollContainer = %Scroll
@@ -16,7 +19,12 @@ var _buying: bool = false
 @onready var _back_button: Button = %BackButton
 
 
+func setup(params: Dictionary) -> void:
+	_in_tab = params.get("in_tab", false)
+
+
 func _ready() -> void:
+	_back_button.visible = not _in_tab
 	_back_button.pressed.connect(Router.back)
 	for category: ItemCategory in GameData.get_item_categories():
 		if not _items_of(category).is_empty():

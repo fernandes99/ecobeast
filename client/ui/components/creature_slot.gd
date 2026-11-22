@@ -7,11 +7,9 @@ const ELEMENT_DARKEN := 0.45
 const INFO_ALPHA := 0.85
 const EMPTY_ALPHA := 0.5
 const XP_HEIGHT := 3
-const SELECTED_BORDER := 4
 
 var _xp_line := XpLine.new(XP_HEIGHT)
 var _creature: CreatureInstance = null
-var _selected: bool = false
 
 @onready var _content: VBoxContainer = %Content
 @onready var _portrait: CreaturePortrait = %Portrait
@@ -49,12 +47,6 @@ func set_empty() -> void:
 	set_creature(null)
 
 
-func set_selected(on: bool) -> void:
-	_selected = on
-	if is_node_ready():
-		_refresh()
-
-
 func _refresh() -> void:
 	var style := StyleBoxFlat.new()
 	style.set_corner_radius_all(CORNER_RADIUS)
@@ -74,11 +66,6 @@ func _refresh() -> void:
 		style.set_border_width_all(BORDER_WIDTH)
 		style.border_color = element_color
 		style.set_content_margin_all(BORDER_WIDTH)
-		if _selected:
-			# A borda cresce para fora, sem empurrar o conteúdo.
-			style.set_border_width_all(SELECTED_BORDER)
-			style.set_expand_margin_all(SELECTED_BORDER - BORDER_WIDTH)
-			style.border_color = UiPalette.TEXT
 		var dot := StyleBoxFlat.new()
 		dot.bg_color = element_color
 		dot.set_corner_radius_all(7)

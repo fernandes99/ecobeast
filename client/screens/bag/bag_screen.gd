@@ -7,6 +7,9 @@ const USED_MESSAGE := "%s usado em %s."
 var _using: bool = false
 var _selected_item: Item = null
 
+## Numa aba do Hub, a tela fica sem o Voltar (hub-start/03).
+var _in_tab: bool = false
+
 @onready var _scroll: ScrollContainer = %Scroll
 @onready var _item_list: VBoxContainer = %ItemList
 @onready var _empty_label: Label = %EmptyLabel
@@ -15,7 +18,12 @@ var _selected_item: Item = null
 @onready var _target_panel: BagTargetPanel = %TargetPanel
 
 
+func setup(params: Dictionary) -> void:
+	_in_tab = params.get("in_tab", false)
+
+
 func _ready() -> void:
+	_back_button.visible = not _in_tab
 	_back_button.pressed.connect(Router.back)
 	_target_panel.chosen.connect(_use)
 	_refresh()

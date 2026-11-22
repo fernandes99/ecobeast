@@ -1,36 +1,63 @@
 extends Control
 
-## O Hub, a primeira tela do jogo (.specs/hub-start/01-hub.md).
-
-const CreatureSlotScene := preload("res://ui/components/creature_slot.tscn")
+## O Hub, a primeira tela do jogo (.specs/hub-start/): a barra de abas embaixo, com a
+## Home no meio, e as outras abas trocando a página dentro dele (03-tab-bar.md).
 
 const ICON_PATH := "res://ui/icons/%s.svg"
+const HOME := &"home"
+## As abas, da esquerda para a direita; `screen` é a tela do Router mostrada na aba.
+const TABS: Array[Dictionary] = [
+	{"id": &"shop", "title": "Loja", "icon": "shop"},
+	{"id": &"heal_station", "title": "Refúgio", "icon": "refuge"},
+	{"id": HOME, "title": "Home", "icon": "home"},
+	{"id": &"team", "title": "Ecobeasts", "icon": "team"},
+	{"id": &"bag", "title": "Mochila", "icon": "bag"},
+]
+
+const BAR_HEIGHT := 96
+const RAISED_HEIGHT := 124
+const RAISED_RATIO := 1.6
+const TAB_ICON := 40
+const RAISED_ICON := 52
+const TAB_FONT := 20
+const TAB_RADIUS := 20
+const TAB_BORDER := 3
+const TAB_SWITCH_SECONDS := 0.15
+const TAB_LINE := 2
 
 const SCENE_PATH := "res://assets/backgrounds/hub.png"
-const SCENE_TOP_CROP := 0.22
-const SKY_HEIGHT := 0.45
-const SHADE_ALPHA := 0.75
-const SHADE_FADE := 140.0
+## Onde fica a grama do primeiro plano na arte, da altura dela: vai sob os pés do palco.
+const ART_GROUND := 0.84
+const SKY_HEIGHT := 0.6
+const SHADE_ALPHA := 0.7
+const SHADE_BOTTOM_ALPHA := 0.92
+const SHADE_FADE := 120.0
+
+const ACTOR_SCALE := 4
+const FEET_GAP := 24.0
+const ACTOR_SPREAD := 72.0
+const PORTRAIT_SIZE := 120
+const PLATE_GAP := 12.0
+const SHADOW_SIZE := Vector2(26.0, 6.0)
+const SHADOW_ALPHA := 0.3
 
 const BUTTON_RADIUS := 20
 const BUTTON_BORDER := 2
 const BORDER_LIGHTEN := 0.25
 const PRESSED_DARKEN := 0.2
-const SHORTCUT_HEIGHT := 104
-const SHORTCUT_ICON := 40
-const SHORTCUT_FONT := 20
-
-## Os atalhos embaixo do Explorar, nesta ordem; as cores ficam em UiPalette.ACTION_COLORS.
-const SHORTCUTS: Array[Dictionary] = [
-	{"id": &"shop", "title": "Loja", "icon": "shop", "screen": &"shop"},
-	{"id": &"heal", "title": "Refúgio", "icon": "heal", "screen": &"heal_station"},
-	{"id": &"team", "title": "Ecobeasts", "icon": "team", "screen": &"team"},
-	{"id": &"bag", "title": "Mochila", "icon": "bag", "screen": &"bag"},
-]
 
 var _scene_texture: Texture2D = null
 var _featured_uid := ""
+var _current := HOME
+var _pages: Dictionary[StringName, Control] = {}
+var _tab_buttons: Dictionary[StringName, Button] = {}
+var _tab_tween: Tween = null
+var _tamer := TamerSprite.new()
+var _creature: Node = null
 
+@onready var _pages_host: Control = %Pages
+@onready var _home_page: Control = %HomePage
+@onready var _home_safe: SafeArea = %SafeArea
 @onready var _scene_art: TextureRect = %SceneArt
 @onready var _scene_shade: TextureRect = %SceneShade
 @onready var _player_area: Control = %Player
@@ -40,60 +67,251 @@ var _featured_uid := ""
 @onready var _xp_bar: ProgressBar = %XpBar
 @onready var _coins_label: Label = %CoinsLabel
 @onready var _settings_button: Button = %SettingsButton
-@onready var _featured: TapPanel = %Featured
-@onready var _featured_portrait: CreaturePortrait = %FeaturedPortrait
-@onready var _featured_plate: PanelContainer = %FeaturedPlate
+@onready var _stage: Control = %Stage
+@onready var _actors: Node2D = %Actors
+@onready var _creature_tap: TapPanel = %CreatureTap
+@onready var _plate: PanelContainer = %Plate
 @onready var _featured_name: Label = %FeaturedName
 @onready var _featured_level: Label = %FeaturedLevel
 @onready var _featured_hp: HpBar = %FeaturedHp
 @onready var _party_row: HBoxContainer = %PartyRow
 @onready var _explore_button: Button = %ExploreButton
-@onready var _shortcuts: HBoxContainer = %Shortcuts
+@onready var _tab_bar: Control = %TabBar
+@onready var _tab_background: Panel = %TabBackground
+@onready var _tabs: HBoxContainer = %Tabs
 
 
 func _ready() -> void:
+	_pages[HOME] = _home_page
+	_home_safe.bottom_override = RAISED_HEIGHT - BAR_HEIGHT
 	_player_area.gui_input.connect(_on_player_input)
 	_settings_button.icon = load(ICON_PATH % "gear") as Texture2D
 	_settings_button.pressed.connect(Router.push.bind(&"settings"))
 	if ResourceLoader.exists(SCENE_PATH):
 		_scene_texture = load(SCENE_PATH) as Texture2D
 	_scene_art.texture = _scene_texture if _scene_texture != null else _sky_gradient()
-	_featured.pressed.connect(_open_featured)
+	_build_stage()
 	for index: int in Player.PARTY_SIZE:
-		var slot: CreatureSlot = CreatureSlotScene.instantiate()
-		slot.pressed.connect(_feature.bind(index))
-		_party_row.add_child(slot)
+		var bubble := PartyBubble.new()
+		bubble.pressed.connect(_feature.bind(index))
+		_party_row.add_child(bubble)
 	_explore_button.icon = load(ICON_PATH % "explore") as Texture2D
 	_paint_button(_explore_button, UiPalette.ACTION_COLORS[&"explore"][0])
 	_explore_button.pressed.connect(_explore)
-	for shortcut: Dictionary in SHORTCUTS:
-		_shortcuts.add_child(_make_shortcut(shortcut))
+	var bar := StyleBoxFlat.new()
+	bar.bg_color = UiPalette.BACKGROUND_DEEP
+	bar.border_color = UiPalette.BORDER
+	bar.border_width_top = TAB_LINE
+	_tab_background.add_theme_stylebox_override(&"panel", bar)
+	for tab: Dictionary in TABS:
+		_tabs.add_child(_make_tab(tab))
+	_show_tabs(false)
 	# O Domador ainda não sobe de nível (o GDD não define como).
 	_xp_bar.value = 0.0
+	get_viewport().size_changed.connect(_place_tab_bar)
+	_place_tab_bar()
 	resized.connect(_layout_scene)
+	_stage.resized.connect(_place_actors)
 	_party_row.item_rect_changed.connect(_layout_scene)
 	_layout_scene.call_deferred()
 	Session.player_changed.connect(_refresh)
 	_refresh()
 
 
-func _make_shortcut(shortcut: Dictionary) -> Button:
+## Numa aba, a tela dela fecha o que tem aberto; sem nada, o Voltar leva à Home.
+func handle_back() -> bool:
+	if _current == HOME:
+		return false
+	var page := _pages[_current]
+	if page.has_method(&"handle_back") and page.call(&"handle_back"):
+		return true
+	_select(HOME)
+	return true
+
+
+# --- A barra de abas ---
+
+
+func _place_tab_bar() -> void:
+	var bottom := SafeArea.screen_insets(get_viewport())[3]
+	_tab_bar.offset_top = -(BAR_HEIGHT + bottom)
+	_tabs.offset_top = -(RAISED_HEIGHT + bottom)
+	_tabs.offset_bottom = -bottom
+	_pages_host.offset_bottom = -(BAR_HEIGHT + bottom)
+
+
+func _make_tab(tab: Dictionary) -> Button:
 	var button := Button.new()
-	button.text = shortcut["title"]
-	button.icon = load(ICON_PATH % shortcut["icon"]) as Texture2D
+	button.icon = load(ICON_PATH % tab["icon"]) as Texture2D
 	button.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	button.vertical_icon_alignment = VERTICAL_ALIGNMENT_TOP
-	button.custom_minimum_size.y = SHORTCUT_HEIGHT
 	button.size_flags_horizontal = SIZE_EXPAND_FILL
-	button.add_theme_constant_override(&"icon_max_width", SHORTCUT_ICON)
-	button.add_theme_font_size_override(&"font_size", SHORTCUT_FONT)
-	_paint_button(button, UiPalette.ACTION_COLORS[shortcut["id"]][1], UiPalette.ACTION_COLORS[shortcut["id"]][0])
-	button.pressed.connect(Router.push.bind(shortcut["screen"]))
+	button.size_flags_vertical = SIZE_SHRINK_END
+	button.focus_mode = FOCUS_NONE
+	button.add_theme_font_size_override(&"font_size", TAB_FONT)
+	button.add_theme_stylebox_override(&"focus", StyleBoxEmpty.new())
+	button.pressed.connect(_select.bind(tab["id"]))
+	_tab_buttons[tab["id"]] = button
 	return button
 
 
-func _paint_button(button: Button, fill: Color, border: Color = Color.TRANSPARENT) -> void:
-	var edge := border if border.a > 0.0 else fill.lightened(BORDER_LIGHTEN)
+func _select(id: StringName) -> void:
+	if id == _current:
+		return
+	_open_page(id)
+	_pages[_current].hide()
+	_current = id
+	_pages[id].show()
+	_show_tabs(true)
+
+
+## A tela da aba, criada na primeira vez e guardada até sair do Hub.
+func _open_page(id: StringName) -> void:
+	if _pages.has(id):
+		return
+	var page: Control = (load(Router.SCREENS[id]) as PackedScene).instantiate()
+	page.set_meta(Router.SCREEN_ID_META, id)
+	if page.has_method(&"setup"):
+		page.call(&"setup", {"in_tab": true})
+	var safe := page.get_node_or_null("SafeArea") as SafeArea
+	if safe != null:
+		safe.bottom_override = RAISED_HEIGHT - BAR_HEIGHT
+	page.hide()
+	_pages_host.add_child(page)
+	_pages[id] = page
+
+
+func _show_tabs(animate: bool) -> void:
+	if _tab_tween != null:
+		_tab_tween.kill()
+	_tab_tween = create_tween().set_parallel() if animate else null
+	for tab: Dictionary in TABS:
+		var button := _tab_buttons[tab["id"]]
+		var raised: bool = tab["id"] == _current
+		button.text = tab["title"] if raised else ""
+		button.add_theme_constant_override(&"icon_max_width", RAISED_ICON if raised else TAB_ICON)
+		_paint_tab(button, raised)
+		var height := float(RAISED_HEIGHT if raised else BAR_HEIGHT)
+		var ratio := RAISED_RATIO if raised else 1.0
+		if animate:
+			_tab_tween.tween_property(button, "custom_minimum_size:y", height, TAB_SWITCH_SECONDS)
+			_tab_tween.tween_property(button, "size_flags_stretch_ratio", ratio, TAB_SWITCH_SECONDS)
+		else:
+			button.custom_minimum_size.y = height
+			button.size_flags_stretch_ratio = ratio
+
+
+func _paint_tab(button: Button, raised: bool) -> void:
+	var style: StyleBox = StyleBoxEmpty.new()
+	if raised:
+		var flat := StyleBoxFlat.new()
+		flat.bg_color = UiPalette.SURFACE_RAISED
+		flat.border_color = UiPalette.ACCENT
+		flat.border_width_top = TAB_BORDER
+		flat.border_width_left = TAB_BORDER
+		flat.border_width_right = TAB_BORDER
+		flat.corner_radius_top_left = TAB_RADIUS
+		flat.corner_radius_top_right = TAB_RADIUS
+		flat.content_margin_top = 14
+		flat.content_margin_bottom = 10
+		style = flat
+	else:
+		style.content_margin_top = 26
+	for state: StringName in [&"normal", &"hover", &"pressed", &"hover_pressed"]:
+		button.add_theme_stylebox_override(state, style)
+	var icon_color := UiPalette.TEXT if raised else UiPalette.TEXT_SECONDARY
+	for state: StringName in [&"icon_normal_color", &"icon_hover_color", &"icon_pressed_color", &"icon_hover_pressed_color", &"icon_focus_color"]:
+		button.add_theme_color_override(state, icon_color)
+	for state: StringName in [&"font_color", &"font_hover_color", &"font_pressed_color", &"font_hover_pressed_color", &"font_focus_color"]:
+		button.add_theme_color_override(state, UiPalette.TEXT)
+
+
+# --- A Home ---
+
+
+func _build_stage() -> void:
+	_tamer.scale = Vector2.ONE * ACTOR_SCALE
+	_tamer.face_row(SheetSprite.LOWER_ROW, false)
+	_actors.add_child(_shadow())
+	_actors.add_child(_tamer)
+	_actors.add_child(_shadow())
+	_creature_tap.pressed.connect(_open_featured)
+
+
+func _shadow() -> Polygon2D:
+	var shadow := Polygon2D.new()
+	var points := PackedVector2Array()
+	for step: int in 16:
+		var angle := TAU * step / 16.0
+		points.append(Vector2(cos(angle) * SHADOW_SIZE.x, sin(angle) * SHADOW_SIZE.y) * ACTOR_SCALE / 2.0)
+	shadow.polygon = points
+	shadow.color = UiPalette.OVERLAY
+	shadow.color.a = SHADOW_ALPHA
+	return shadow
+
+
+func _show_creature(creature: CreatureInstance) -> void:
+	if _creature != null:
+		_creature.queue_free()
+		_creature = null
+	if creature == null:
+		return
+	var species := GameData.get_species(creature.species_id)
+	if CreatureSprite.has_sheets(species.slug):
+		var sprite := CreatureSprite.new(species.slug)
+		sprite.scale = Vector2.ONE * ACTOR_SCALE
+		sprite.face_toward(Vector2(-1.0, 0.6))
+		sprite.play_idle()
+		_creature = sprite
+		_actors.add_child(sprite)
+	else:
+		var portrait: CreaturePortrait = preload("res://ui/components/creature_portrait.tscn").instantiate()
+		portrait.portrait_size = PORTRAIT_SIZE
+		portrait.flipped = true
+		portrait.mouse_filter = MOUSE_FILTER_IGNORE
+		portrait.set_species(species.id)
+		_creature = portrait
+		_stage.add_child(portrait)
+		_stage.move_child(portrait, _creature_tap.get_index())
+
+
+func _place_actors() -> void:
+	var feet := Vector2(roundf(_stage.size.x / 2.0), roundf(_stage.size.y - FEET_GAP))
+	var tamer_feet := feet - Vector2(ACTOR_SPREAD, 0.0)
+	var creature_feet := feet + Vector2(ACTOR_SPREAD, 0.0)
+	_tamer.position = tamer_feet
+	(_actors.get_child(0) as Node2D).position = tamer_feet
+	(_actors.get_child(2) as Node2D).position = creature_feet
+	var top := creature_feet.y
+	var half_width := SheetSprite.CELL_SIZE.x * ACTOR_SCALE / 2.0
+	if _creature is CreatureSprite:
+		var sprite := _creature as CreatureSprite
+		sprite.position = creature_feet
+		top = creature_feet.y - _visible_height(sprite) * ACTOR_SCALE
+	elif _creature is CreaturePortrait:
+		var portrait := _creature as CreaturePortrait
+		portrait.size = Vector2(PORTRAIT_SIZE, PORTRAIT_SIZE)
+		portrait.position = creature_feet - Vector2(PORTRAIT_SIZE / 2.0, PORTRAIT_SIZE)
+		top = portrait.position.y
+		half_width = PORTRAIT_SIZE / 2.0
+	_plate.size = _plate.get_combined_minimum_size()
+	_plate.position = Vector2(creature_feet.x - _plate.size.x / 2.0, top - PLATE_GAP - _plate.size.y).round()
+	_plate.position.x = clampf(_plate.position.x, 0.0, _stage.size.x - _plate.size.x)
+	_creature_tap.position = Vector2(creature_feet.x - half_width, _plate.position.y)
+	_creature_tap.size = Vector2(half_width * 2.0, creature_feet.y - _plate.position.y)
+
+
+## A altura dos pixels do Ecobeast no quadro parado, do pé até o topo.
+static func _visible_height(sprite: CreatureSprite) -> float:
+	var texture := sprite.sprite_frames.get_frame_texture(sprite.animation, 0)
+	if texture == null:
+		return SheetSprite.CELL_SIZE.y
+	var used := texture.get_image().get_used_rect()
+	return SheetSprite.CELL_SIZE.y - used.position.y
+
+
+func _paint_button(button: Button, fill: Color) -> void:
+	var edge := fill.lightened(BORDER_LIGHTEN)
 	var normal := _button_style(fill, edge)
 	button.add_theme_stylebox_override(&"normal", normal)
 	button.add_theme_stylebox_override(&"hover", normal)
@@ -117,33 +335,40 @@ func _button_style(fill: Color, border: Color) -> StyleBoxFlat:
 	return style
 
 
+## A grama do primeiro plano da arte fica sob os pés do palco; sem altura que chegue, a
+## arte cresce para não deixar faixa vazia em cima.
 func _layout_scene() -> void:
-	var height := size.y
-	if height <= 0.0:
+	var page := _home_page.size
+	if page.y <= 0.0:
 		return
-	var art_height := height * SKY_HEIGHT
+	var origin := _home_page.get_global_rect().position
+	var feet_y := _stage.get_global_rect().end.y - FEET_GAP - origin.y
+	var art_size := Vector2(page.x, page.y * SKY_HEIGHT)
 	var art_top := 0.0
 	if _scene_texture != null:
-		art_height = size.x * _scene_texture.get_height() / _scene_texture.get_width()
-		art_top = -art_height * SCENE_TOP_CROP
-	_scene_art.position = Vector2(0.0, art_top)
-	_scene_art.size = Vector2(size.x, art_height)
-	var party_top := _party_row.get_global_rect().position.y - get_global_rect().position.y
-	var art_bottom := clampf((art_top + art_height) / height, 0.0, 1.0)
-	var dim_at := clampf(party_top / height, 0.0, art_bottom)
-	var fade_start := clampf((party_top - SHADE_FADE) / height, 0.0, dim_at)
-	_scene_shade.texture = _shade_gradient(fade_start, dim_at, art_bottom)
+		art_size = Vector2(page.x, page.x * _scene_texture.get_height() / _scene_texture.get_width())
+		art_top = feet_y - art_size.y * ART_GROUND
+		if art_top > 0.0:
+			art_size *= feet_y / (art_size.y * ART_GROUND)
+			art_top = 0.0
+	_scene_art.position = Vector2((page.x - art_size.x) / 2.0, art_top).round()
+	_scene_art.size = art_size.round()
+	var party_top := _party_row.get_global_rect().position.y - origin.y
+	var dim_at := clampf(party_top / page.y, 0.0, 1.0)
+	_scene_shade.texture = _shade_gradient(clampf((party_top - SHADE_FADE) / page.y, 0.0, dim_at), dim_at)
+	_place_actors()
 
 
-## O fundo fica limpo atrás do destaque e escurece da fileira para baixo, até o fim da arte.
-func _shade_gradient(fade_start: float, dim_at: float, art_bottom: float) -> GradientTexture2D:
+## O fundo fica limpo atrás do palco e escurece da fileira para baixo.
+func _shade_gradient(fade_start: float, dim_at: float) -> GradientTexture2D:
 	var clear := UiPalette.BACKGROUND
 	clear.a = 0.0
 	var dim := UiPalette.BACKGROUND
 	dim.a = SHADE_ALPHA
-	var solid := UiPalette.BACKGROUND.lerp(UiPalette.BACKGROUND_DEEP, art_bottom)
+	var solid := UiPalette.BACKGROUND_DEEP
+	solid.a = SHADE_BOTTOM_ALPHA
 	var gradient := Gradient.new()
-	gradient.offsets = PackedFloat32Array([0.0, fade_start, dim_at, art_bottom])
+	gradient.offsets = PackedFloat32Array([0.0, fade_start, dim_at, 1.0])
 	gradient.colors = PackedColorArray([clear, clear, dim, solid])
 	return _vertical(gradient)
 
@@ -173,12 +398,11 @@ func _refresh() -> void:
 	_name_label.text = player.name
 	_level_label.text = "Nv. %d" % player.level
 	_coins_label.text = NumberFormat.thousands(player.coins)
+	_tamer.set_appearance(player.appearance)
+	_tamer.face_row(SheetSprite.LOWER_ROW, false)
 	for index: int in Player.PARTY_SIZE:
-		var slot := _party_row.get_child(index) as CreatureSlot
-		if index < player.party.size():
-			slot.set_creature(player.party[index])
-		else:
-			slot.set_empty()
+		var bubble := _party_row.get_child(index) as PartyBubble
+		bubble.set_creature(player.party[index] if index < player.party.size() else null)
 	_explore_button.disabled = player.party.is_empty()
 	_show_featured()
 
@@ -194,23 +418,25 @@ func _featured_index() -> int:
 func _show_featured() -> void:
 	var index := _featured_index()
 	var party := Session.player.party
-	for slot_index: int in Player.PARTY_SIZE:
-		(_party_row.get_child(slot_index) as CreatureSlot).set_selected(slot_index == index)
-	_featured_portrait.visible = index >= 0
-	_featured_plate.visible = index >= 0
+	for slot: int in Player.PARTY_SIZE:
+		(_party_row.get_child(slot) as PartyBubble).set_selected(slot == index)
+	_plate.visible = index >= 0
+	_creature_tap.visible = index >= 0
 	if index < 0:
 		_featured_uid = ""
+		_show_creature(null)
 		return
 	var creature := party[index]
 	_featured_uid = creature.uid
 	var species := GameData.get_species(creature.species_id)
-	_featured_portrait.set_species(species.id)
+	_show_creature(creature)
 	_featured_name.text = creature.display_name(species)
 	_featured_level.text = "Nv. %d" % creature.level
 	_featured_hp.set_hp(creature.current_hp, creature.stats.hp)
+	_place_actors.call_deferred()
 
 
-## Só muda quem aparece no Hub; o líder continua o mesmo.
+## Só muda quem aparece no palco; o líder continua o mesmo.
 func _feature(index: int) -> void:
 	var party := Session.player.party
 	if index >= party.size():

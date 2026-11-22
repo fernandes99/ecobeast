@@ -10,14 +10,22 @@ const NO_STATUS := -1
 
 var _healing: bool = false
 
+## Numa aba do Hub, a tela fica sem o Voltar (hub-start/03).
+var _in_tab: bool = false
+
 @onready var _team_list: VBoxContainer = %TeamList
 @onready var _message: Label = %Message
 @onready var _heal_button: Button = %HealButton
 @onready var _back_button: Button = %BackButton
 
 
+func setup(params: Dictionary) -> void:
+	_in_tab = params.get("in_tab", false)
+
+
 func _ready() -> void:
 	_heal_button.pressed.connect(_heal)
+	_back_button.visible = not _in_tab
 	_back_button.pressed.connect(Router.back)
 	_refresh()
 

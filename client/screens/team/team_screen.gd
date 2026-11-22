@@ -13,6 +13,9 @@ var _gap := Control.new()
 var _origin: int = 0
 var _grab_offset: float = 0.0
 
+## Numa aba do Hub, a tela fica sem o Voltar (hub-start/03).
+var _in_tab: bool = false
+
 @onready var _list: VBoxContainer = %List
 @onready var _message: Label = %Message
 @onready var _back_button: Button = %BackButton
@@ -21,7 +24,12 @@ var _grab_offset: float = 0.0
 @onready var _actions_panel: CreatureActionsPanel = %ActionsPanel
 
 
+func setup(params: Dictionary) -> void:
+	_in_tab = params.get("in_tab", false)
+
+
 func _ready() -> void:
+	_back_button.visible = not _in_tab
 	_back_button.pressed.connect(Router.back)
 	_storage_button.pressed.connect(_open_link.bind(&"storage"))
 	_codex_button.pressed.connect(_open_link.bind(&"codex"))

@@ -45,7 +45,6 @@ const ACTION_COLORS: Dictionary[StringName, Array] = {
 	&"storage": [Color("#6A44C2"), Color("#2A2360")],
 	&"codex": [Color("#1E7FD0"), Color("#0E3C61")],
 	&"bag": [Color("#9C6E43"), Color("#3E362F")],
-	&"team": [Color("#2370E0"), Color("#15335E")],
 }
 
 const GENE_RANK_COLORS: Dictionary[String, Color] = {
