@@ -5,6 +5,8 @@ extends WanderingSprite
 
 const BODY_FOLDER := "res://assets/tamer/bodies/%s"
 const PART_FOLDER := "res://assets/tamer/parts/%s"
+## As folhas das peças no tamanho da criança (village-crowd/02).
+const CHILD_PART_FOLDER := "res://assets/tamer/parts/%s/child"
 const IDLE := "idle"
 const RUN := "run"
 const BACK_SUFFIX := "_back"
@@ -48,6 +50,7 @@ func set_appearance(appearance: TamerAppearance) -> void:
 		body_frames = frames_for(BODY_FOLDER % "male")
 	_swap_frames(body_frames)
 	material = palette_material(appearance.skin_palette_id)
+	var part_folder := CHILD_PART_FOLDER if is_child_body(body) else PART_FOLDER
 
 	var hair_cut := "none"
 	for part: Dictionary in appearance.parts:
@@ -57,7 +60,7 @@ func set_appearance(appearance: TamerAppearance) -> void:
 		var row := GameData.get_row("appearance_parts", part["part_id"])
 		if row.is_empty():
 			continue
-		var folder: String = PART_FOLDER % row["slug"]
+		var folder: String = part_folder % row["slug"]
 		var front := frames_for(folder)
 		if _slot_slug(part) == HAIR_SLOT:
 			if hair_cut == "all":
@@ -71,6 +74,16 @@ func set_appearance(appearance: TamerAppearance) -> void:
 		if back != null:
 			_add_layer(back, true, part["palette_id"])
 	_sync_layers()
+
+
+static func is_child_body(body: Dictionary) -> bool:
+	return body.get("adult_body_type_id") != null
+
+
+## A peça serve no corpo: é de todos, do próprio corpo ou do adulto da criança.
+static func part_fits(part: Dictionary, body_id: int) -> bool:
+	var owner: Variant = part.get("body_type_id")
+	return owner == null or owner == body_id or owner == GameData.get_row("body_types", body_id).get("adult_body_type_id")
 
 
 ## Vira para uma linha da folha, espelhada ou não; a tela Aparência gira por elas.

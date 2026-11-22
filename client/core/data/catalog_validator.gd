@@ -37,6 +37,7 @@ func _run(tables: Dictionary) -> Array[String]:
 	_check_day_phases()
 	_check_prop_type_lights()
 	_check_ground_effect_stats()
+	_check_child_bodies()
 	_check_npcs()
 	_check_npc_appearance_parts()
 	_check_voices()
@@ -470,6 +471,16 @@ func _check_npcs() -> void:
 			_row_error("npcs", lines[i], "skin_palette_id não é uma paleta de pele")
 
 
+## O corpo de criança veste as peças de um corpo de adulto (village-crowd/02).
+func _check_child_bodies() -> void:
+	var rows: Array[Dictionary] = _rows["body_types"]
+	var lines: Array[int] = _lines["body_types"]
+	for i: int in rows.size():
+		var adult: Variant = rows[i]["adult_body_type_id"]
+		if adult != null and _row_by_id("body_types", adult).get("adult_body_type_id") != null:
+			_row_error("body_types", lines[i], "adult_body_type_id precisa ser um corpo de adulto")
+
+
 ## As peças de um NPC pessoa seguem as regras das do Domador.
 func _check_npc_appearance_parts() -> void:
 	var rows: Array[Dictionary] = _rows["npc_appearance_parts"]
@@ -487,7 +498,8 @@ func _check_npc_appearance_parts() -> void:
 			continue
 		if part["appearance_slot_id"] != row["appearance_slot_id"]:
 			_row_error("npc_appearance_parts", lines[i], "a peça %d não é do lugar %d" % [row["appearance_part_id"], row["appearance_slot_id"]])
-		if part["body_type_id"] != null and part["body_type_id"] != npc["body_type_id"]:
+		var adult: Variant = _row_by_id("body_types", npc["body_type_id"]).get("adult_body_type_id")
+		if part["body_type_id"] != null and part["body_type_id"] != npc["body_type_id"] and part["body_type_id"] != adult:
 			_row_error("npc_appearance_parts", lines[i], "a peça %d não serve no corpo do NPC" % row["appearance_part_id"])
 		var kind: Variant = slot["palette_kind"]
 		if kind == null and row["palette_id"] != null:

@@ -281,7 +281,12 @@ const TABLES := {
 	},
 	"body_types": {
 		"key": ["id"],
-		"columns": {"id": ID, "slug": SLUG, "name": TEXT},
+		"columns": {
+			"id": ID,
+			"slug": SLUG,
+			"name": TEXT,
+			"adult_body_type_id": {"type": "int", "nullable": true, "fk": "body_types"},
+		},
 	},
 	"appearance_slots": {
 		"key": ["id"],

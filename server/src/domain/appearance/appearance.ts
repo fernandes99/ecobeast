@@ -5,7 +5,8 @@ export interface AppearanceInput {
 }
 
 export interface AppearanceCatalog {
-  bodies: { id: number; name: string }[];
+  /** `adultBodyTypeId` só na criança: o corpo de adulto cujas peças ela veste. */
+  bodies: { id: number; name: string; adultBodyTypeId: number | null }[];
   slots: {
     id: number;
     name: string;
@@ -21,13 +22,20 @@ export interface AppearanceCatalog {
   palettes: { id: number; kind: string }[];
 }
 
-/** A mensagem do primeiro erro da aparência, ou `null` se ela vale. */
+/**
+ * A mensagem do primeiro erro da aparência, ou `null` se ela vale. O corpo de
+ * criança só vale com `npc` (village-crowd/02).
+ */
 export function appearanceError(
   input: AppearanceInput,
   catalog: AppearanceCatalog,
+  npc = false,
 ): string | null {
   const body = catalog.bodies.find(({ id }) => id === input.bodyTypeId);
   if (!body) return 'Esse corpo não existe.';
+  if (body.adultBodyTypeId !== null && !npc) {
+    return 'Esse corpo é só de NPC.';
+  }
   const skin = catalog.palettes.find(({ id }) => id === input.skinPaletteId);
   if (skin?.kind !== 'skin') return 'Essa cor de pele não existe.';
 
@@ -37,7 +45,11 @@ export function appearanceError(
   for (const { partId } of input.parts) {
     const part = catalog.parts.find(({ id }) => id === partId);
     if (!part) return `A peça ${partId} não existe.`;
-    if (part.bodyTypeId !== null && part.bodyTypeId !== body.id) {
+    if (
+      part.bodyTypeId !== null &&
+      part.bodyTypeId !== body.id &&
+      part.bodyTypeId !== body.adultBodyTypeId
+    ) {
       return `A peça ${part.name} não serve no corpo ${body.name}.`;
     }
     if (worn.has(part.slotId)) {

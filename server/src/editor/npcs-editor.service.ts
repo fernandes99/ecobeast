@@ -39,7 +39,7 @@ export class NpcsEditorService {
     if (!npc) throw new NotFoundException(NPC_NOT_FOUND);
     if (npc.bodyTypeId === null) throw new BadRequestException(NPC_IS_CREATURE);
 
-    const worn = await checkedAppearance(this.prisma, appearance);
+    const worn = await checkedAppearance(this.prisma, appearance, true);
     await this.prisma.$transaction([
       this.prisma.npc.update({
         where: { id },

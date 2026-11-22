@@ -19,6 +19,8 @@ const NAME_HINT := "De 2 a 16 letras ou números."
 const NAME_PLACEHOLDER := "Nome do Domador"
 
 var draft := TamerAppearance.standard()
+## Os corpos de criança só aparecem ao vestir um NPC (village-crowd/02).
+var allow_child_bodies := false
 var _slots: Array[Dictionary] = []
 ## 0 é Corpo; os outros são o índice + 1 em `_slots`.
 var _tab: int = BODY_TAB
@@ -125,6 +127,8 @@ func _refresh() -> void:
 func _build_body_options() -> void:
 	var bodies: Array[Dictionary] = []
 	for body: Dictionary in GameData.get_rows("body_types"):
+		if TamerSprite.is_child_body(body) and not allow_child_bodies:
+			continue
 		bodies.append({"label": body["name"], "selected": body["id"] == draft.body_type_id, "action": _choose_body.bind(body["id"])})
 	_add_section("Corpo", _option_grid(bodies))
 	_add_section("Pele", _swatch_grid("skin", draft.skin_palette_id, _choose_skin))
@@ -257,8 +261,7 @@ func _parts_of(slot_id: int) -> Array[Dictionary]:
 
 
 func _fits(part: Dictionary) -> bool:
-	var body: Variant = part.get("body_type_id")
-	return body == null or body == draft.body_type_id
+	return TamerSprite.part_fits(part, draft.body_type_id)
 
 
 func _palettes_of(kind: String) -> Array[Dictionary]:

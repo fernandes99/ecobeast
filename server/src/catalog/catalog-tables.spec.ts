@@ -538,6 +538,9 @@ describe('carga inicial dos NPCs (island-npcs/01)', () => {
       [14, 'villager_clara'],
       [15, 'villager_rosa'],
       [16, 'villager_dalia'],
+      [17, 'villager_juca'],
+      [18, 'villager_nina'],
+      [19, 'villager_bia'],
     ]);
   });
 
@@ -550,8 +553,8 @@ describe('carga inicial dos NPCs (island-npcs/01)', () => {
       palettes.find((palette) => palette.id === id)?.kind ?? null;
     const villagers = read<
       { id: number; skin_palette_id: number; default_dialogue: string }[]
-    >('npcs.json').filter(({ id }) => id >= 7 && id <= 16);
-    expect(villagers).toHaveLength(10);
+    >('npcs.json').filter(({ id }) => id >= 7 && id <= 19);
+    expect(villagers).toHaveLength(13);
     for (const villager of villagers) {
       expect(kind(villager.skin_palette_id), String(villager.id)).toBe('skin');
       expect(villager.default_dialogue.length).toBeGreaterThan(0);
@@ -652,6 +655,9 @@ describe('carga inicial das vozes (dialogue-voices/01)', () => {
       villager_clara: 5,
       villager_rosa: 4,
       villager_dalia: 5,
+      villager_juca: 5,
+      villager_nina: 5,
+      villager_bia: 5,
     });
   });
 
@@ -674,7 +680,10 @@ describe('carga inicial das vozes (dialogue-voices/01)', () => {
 describe('carga inicial da aparência (tamer-appearance/01)', () => {
   const read = <T>(file: string): T =>
     JSON.parse(readFileSync(join(SEED_DATA_DIR, file), 'utf8')) as T;
-  const bodies = read<{ id: number; slug: string }[]>('body_types.json');
+  const bodies =
+    read<{ id: number; slug: string; adult_body_type_id: number | null }[]>(
+      'body_types.json',
+    );
   const slots = read<{ id: number; slug: string; layer: number }[]>(
     'appearance_slots.json',
   );
@@ -683,10 +692,18 @@ describe('carga inicial da aparência (tamer-appearance/01)', () => {
     'appearance_parts.json',
   );
 
-  it('tem os 2 corpos e os 6 lugares na ordem de desenho, com ids estáveis', () => {
-    expect(bodies.map(({ id, slug }) => [id, slug])).toEqual([
-      [1, 'male'],
-      [2, 'female'],
+  it('tem os 4 corpos, as crianças vestindo as peças de um adulto, e os 6 lugares na ordem de desenho, com ids estáveis (village-crowd/02)', () => {
+    expect(
+      bodies.map(({ id, slug, adult_body_type_id }) => [
+        id,
+        slug,
+        adult_body_type_id,
+      ]),
+    ).toEqual([
+      [1, 'male', null],
+      [2, 'female', null],
+      [3, 'boy', 1],
+      [4, 'girl', 2],
     ]);
     expect(slots.map(({ id, slug, layer }) => [id, slug, layer])).toEqual([
       [1, 'face', 1],

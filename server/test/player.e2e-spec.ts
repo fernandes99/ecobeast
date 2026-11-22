@@ -555,6 +555,11 @@ describe('Rotas do jogador (e2e)', () => {
     it.each<[string, object, string]>([
       ['corpo que não existe', { body_type_id: 999 }, 'Esse corpo não existe.'],
       [
+        'corpo de criança (village-crowd/02)',
+        { body_type_id: 3 },
+        'Esse corpo é só de NPC.',
+      ],
+      [
         'pele que não é de pele',
         { skin_palette_id: 2 },
         'Essa cor de pele não existe.',

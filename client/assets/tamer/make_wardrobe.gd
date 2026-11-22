@@ -9,10 +9,14 @@ extends SceneTree
 ## de cima e costas); nas três do meio o Domador olha para a direita. As alturas abaixo
 ## contam a partir do alto da cabeça de cada quadro: a cabeça vai até 10, o pescoço é 11,
 ## o tronco vai de 12 a 18, o quadril é 19 e as pernas começam no 20.
+##
+## A criança (village-crowd/02) é o mesmo template sem as linhas 14 a 16 do tronco: os
+## corpos boy e girl e cada peça em res://assets/tamer/parts/<slug>/child/.
 
 const TEMPLATE := "res://assets/tamer/template/%s.png"
 const BODY_OUT := "res://assets/tamer/bodies/%s/%s.png"
 const PART_OUT := "res://assets/tamer/parts/%s/%s%s.png"
+const CHILD_PART_OUT := "res://assets/tamer/parts/%s/child/%s%s.png"
 const CELL := 32
 const ROWS := 5
 const SHEETS: Array[String] = ["idle", "run"]
@@ -26,6 +30,9 @@ const NECK := 11
 const SHOULDERS := 12
 const HIPS := 19
 const LEGS := 20
+const SLEEVE := SHOULDERS + 4
+const HAIR_END := 15
+const CHILD_CUT: Array[int] = [14, 15, 16]
 const OUTLINE := Color8(0x2f, 0x25, 0x22)
 const LIGHT := Color8(0xfa, 0xf3, 0xe8)
 const SHADE := Color8(0xb9, 0xb3, 0xa1)
@@ -68,6 +75,11 @@ class Frame:
 	var hip_max := 0
 	var top_min := 0
 	var top_max := 0
+	var hips := HIPS
+	var legs := LEGS
+	var sleeve := SLEEVE
+	var hair_end := HAIR_END
+	var child := false
 
 
 func _init() -> void:
@@ -76,14 +88,21 @@ func _init() -> void:
 		template.convert(Image.FORMAT_RGBA8)
 		var columns := template.get_width() / CELL
 		var frames: Array[Frame] = []
+		var children: Array[Frame] = []
 		for row: int in ROWS:
 			for column: int in columns:
-				frames.append(_read(template, column, row))
+				var frame := _read(template, column, row)
+				frames.append(frame)
+				children.append(_shrink(frame))
 		_save(BODY_OUT % ["male", sheet], columns, frames, _body.bind(false))
 		_save(BODY_OUT % ["female", sheet], columns, frames, _body.bind(true))
+		_save(BODY_OUT % ["boy", sheet], columns, children, _body.bind(false))
+		_save(BODY_OUT % ["girl", sheet], columns, children, _body.bind(true))
 		for slug: String in PARTS:
 			for suffix: String in PARTS[slug]:
-				_save(PART_OUT % [slug, sheet, suffix], columns, frames, Callable(self, "_" + slug + suffix))
+				var draw := Callable(self, "_" + slug + suffix)
+				_save(PART_OUT % [slug, sheet, suffix], columns, frames, draw)
+				_save(CHILD_PART_OUT % [slug, sheet, suffix], columns, children, draw)
 	print("guarda-roupa gerado")
 	quit()
 
@@ -98,6 +117,33 @@ func _read(template: Image, column: int, row: int) -> Frame:
 			if color.a > 0.0:
 				frame.pixels[Vector2i(x, y)] = color
 				frame.top = mini(frame.top, y)
+	_measure(frame)
+	return frame
+
+
+## O quadro da criança: as linhas do corte saem, e o que fica acima delas desce.
+func _shrink(adult: Frame) -> Frame:
+	var frame := Frame.new()
+	frame.row = adult.row
+	frame.top = CELL
+	frame.child = true
+	frame.hips = HIPS - CHILD_CUT.size()
+	frame.legs = LEGS - CHILD_CUT.size()
+	frame.sleeve = SHOULDERS + 2
+	frame.hair_end = HAIR_END - 2
+	for p: Vector2i in adult.pixels:
+		var rel := _rel(adult, p)
+		if CHILD_CUT.has(rel):
+			continue
+		var drop := CHILD_CUT.filter(func(cut: int) -> bool: return cut > rel).size()
+		var moved := p + Vector2i.DOWN * drop
+		frame.pixels[moved] = adult.pixels[p]
+		frame.top = mini(frame.top, moved.y)
+	_measure(frame)
+	return frame
+
+
+func _measure(frame: Frame) -> void:
 	frame.head_min = CELL
 	frame.head_max = -1
 	frame.hip_min = CELL
@@ -109,13 +155,12 @@ func _read(template: Image, column: int, row: int) -> Frame:
 		if rel <= HEAD_END:
 			frame.head_min = mini(frame.head_min, p.x)
 			frame.head_max = maxi(frame.head_max, p.x)
-		if rel == LEGS + 1:
+		if rel == frame.legs + 1:
 			frame.hip_min = mini(frame.hip_min, p.x)
 			frame.hip_max = maxi(frame.hip_max, p.x)
 		if rel == 0:
 			frame.top_min = mini(frame.top_min, p.x)
 			frame.top_max = maxi(frame.top_max, p.x)
-	return frame
 
 
 func _save(path: String, columns: int, frames: Array[Frame], draw: Callable) -> void:
@@ -152,7 +197,7 @@ static func _hips(f: Frame, x: int) -> bool:
 
 
 static func _foot(f: Frame, p: Vector2i) -> bool:
-	return f.pixels.has(p) and _rel(f, p) >= LEGS and _same(f.pixels[p], LIGHT)
+	return f.pixels.has(p) and _rel(f, p) >= f.legs and _same(f.pixels[p], LIGHT)
 
 
 ## Os olhos e a bochecha: o contorno e o rosado de dentro da cabeça.
@@ -255,13 +300,13 @@ func _body(f: Frame, female: bool) -> Dictionary:
 			layer[p] = KEYS[0]
 		elif _same(color, OUTLINE):
 			layer[p] = OUTLINE
-		elif (rel == HIPS or rel == LEGS) and _hips(f, p.x):
+		elif (rel == f.hips or rel == f.legs) and _hips(f, p.x):
 			layer[p] = UNDERWEAR
 		elif _same(color, SHADE) or _same(color, EAR):
 			layer[p] = KEYS[1]
 		else:
 			layer[p] = KEYS[0]
-	if female and (f.row == FRONT or f.row == BACK):
+	if female and not f.child and (f.row == FRONT or f.row == BACK):
 		var waist := f.top + SHOULDERS + 4
 		for x: int in [f.hip_min + 1, f.hip_max - 1]:
 			var p := Vector2i(x, waist)
@@ -339,14 +384,14 @@ func _long_mask(f: Frame, volume: bool) -> Dictionary:
 	var mask := _hair_mask(f, volume)
 	match f.row:
 		FRONT:
-			_rect(mask, f.head_min, f.head_min + 1, f.top + 7, f.top + 14)
-			_rect(mask, f.head_max - 1, f.head_max, f.top + 7, f.top + 14)
+			_rect(mask, f.head_min, f.head_min + 1, f.top + 7, f.top + f.hair_end - 1)
+			_rect(mask, f.head_max - 1, f.head_max, f.top + 7, f.top + f.hair_end - 1)
 		LOWER:
-			_rect(mask, f.head_min, f.head_min + 2, f.top + 9, f.top + 14)
+			_rect(mask, f.head_min, f.head_min + 2, f.top + 9, f.top + f.hair_end - 1)
 		SIDE:
-			_rect(mask, f.head_min, f.head_min + 3, f.top + 10, f.top + 14)
+			_rect(mask, f.head_min, f.head_min + 3, f.top + 10, f.top + f.hair_end - 1)
 		UPPER, BACK:
-			_rect(mask, f.head_min + 1, f.head_max - 1, f.top + NECK, f.top + 15)
+			_rect(mask, f.head_min + 1, f.head_max - 1, f.top + NECK, f.top + f.hair_end)
 	return mask
 
 
@@ -363,7 +408,7 @@ func _hair_long_short(f: Frame) -> Dictionary:
 func _hair_long_back(f: Frame) -> Dictionary:
 	var mask := {}
 	if f.row != UPPER and f.row != BACK:
-		_rect(mask, f.head_min, f.head_max, f.top + 4, f.top + 15)
+		_rect(mask, f.head_min, f.head_max, f.top + 4, f.top + f.hair_end)
 	return _paint(f, mask, _flat.bind(2), false)
 
 
@@ -450,24 +495,24 @@ static func _helmet_shade(p: Vector2i, f: Frame) -> Color:
 
 static func _tshirt_keeps(p: Vector2i, f: Frame) -> bool:
 	var rel := _rel(f, p)
-	return (rel >= SHOULDERS and rel <= SHOULDERS + 4) or (rel > SHOULDERS + 4 and rel < HIPS and _hips(f, p.x))
+	return (rel >= SHOULDERS and rel <= f.sleeve) or (rel > f.sleeve and rel < f.hips and _hips(f, p.x))
 
 
 func _tshirt(f: Frame) -> Dictionary:
-	return _dress(f, _tshirt_keeps.bind(f), 0, 1, HIPS - 1)
+	return _dress(f, _tshirt_keeps.bind(f), 0, 1, f.hips - 1)
 
 
 static func _jacket_keeps(p: Vector2i, f: Frame) -> bool:
 	var rel := _rel(f, p)
-	return rel >= SHOULDERS and rel < HIPS
+	return rel >= SHOULDERS and rel < f.hips
 
 
 func _jacket(f: Frame) -> Dictionary:
-	var layer := _dress(f, _jacket_keeps.bind(f), 1, 2, HIPS - 1)
+	var layer := _dress(f, _jacket_keeps.bind(f), 1, 2, f.hips - 1)
 	var center := (f.hip_min + f.hip_max) / 2
 	if f.row == FRONT or f.row == LOWER:
 		var zipper := center if f.row == FRONT else center + 1
-		for y: int in range(f.top + SHOULDERS + 1, f.top + HIPS):
+		for y: int in range(f.top + SHOULDERS + 1, f.top + f.hips):
 			var p := Vector2i(zipper, y)
 			if layer.has(p) and layer[p] != OUTLINE:
 				layer[p] = KEYS[3]
@@ -476,18 +521,18 @@ func _jacket(f: Frame) -> Dictionary:
 
 static func _tank_top_keeps(p: Vector2i, f: Frame) -> bool:
 	var rel := _rel(f, p)
-	return rel > SHOULDERS and rel < HIPS and _hips(f, p.x)
+	return rel > SHOULDERS and rel < f.hips and _hips(f, p.x)
 
 
 func _tank_top(f: Frame) -> Dictionary:
-	return _dress(f, _tank_top_keeps.bind(f), 0, 1, HIPS - 1)
+	return _dress(f, _tank_top_keeps.bind(f), 0, 1, f.hips - 1)
 
 
 static func _pants_keeps(p: Vector2i, f: Frame) -> bool:
 	if _foot(f, p):
 		return false
 	var rel := _rel(f, p)
-	return ((rel == HIPS or rel == LEGS) and _hips(f, p.x)) or rel > LEGS
+	return ((rel == f.hips or rel == f.legs) and _hips(f, p.x)) or rel > f.legs
 
 
 func _pants(f: Frame) -> Dictionary:
@@ -496,26 +541,26 @@ func _pants(f: Frame) -> Dictionary:
 
 static func _shorts_keeps(p: Vector2i, f: Frame) -> bool:
 	var rel := _rel(f, p)
-	return ((rel == HIPS or rel == LEGS) and _hips(f, p.x)) or rel == LEGS + 1
+	return ((rel == f.hips or rel == f.legs) and _hips(f, p.x)) or rel == f.legs + 1
 
 
 func _shorts(f: Frame) -> Dictionary:
-	return _dress(f, _shorts_keeps.bind(f), 1, 1, LEGS + 1)
+	return _dress(f, _shorts_keeps.bind(f), 1, 1, f.legs + 1)
 
 
 func _skirt(f: Frame) -> Dictionary:
 	var mask := {}
 	for step: int in 4:
 		var grow := (step + 1) / 2
-		_rect(mask, f.hip_min - grow, f.hip_max + grow, f.top + HIPS + step, f.top + HIPS + step)
+		_rect(mask, f.hip_min - grow, f.hip_max + grow, f.top + f.hips + step, f.top + f.hips + step)
 	return _paint(f, mask, _skirt_shade.bind(f), false)
 
 
 static func _skirt_shade(p: Vector2i, f: Frame) -> Color:
 	var rel := _rel(f, p)
-	if rel == HIPS + 3:
+	if rel == f.hips + 3:
 		return KEYS[2]
-	return KEYS[1] if rel > HIPS else KEYS[0]
+	return KEYS[1] if rel > f.hips else KEYS[0]
 
 
 func _sneakers(f: Frame) -> Dictionary:
@@ -531,7 +576,7 @@ func _boots(f: Frame) -> Dictionary:
 	for p: Vector2i in f.pixels:
 		if _foot(f, p):
 			layer[p] = KEYS[2] if _foot(f, p + Vector2i.DOWN) else KEYS[3]
-		elif _rel(f, p) >= LEGS and _same(f.pixels[p], SHADE):
+		elif _rel(f, p) >= f.legs and _same(f.pixels[p], SHADE):
 			if _foot(f, p + Vector2i.DOWN) or _foot(f, p + Vector2i.DOWN * 2):
 				layer[p] = KEYS[1]
 	return layer

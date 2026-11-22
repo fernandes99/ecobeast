@@ -63,6 +63,7 @@ func _ready() -> void:
 	_back_button.visible = not _onboarding
 	_editor.changed.connect(_preview.set_appearance)
 	_editor.name_changed.connect(_update_save)
+	_editor.allow_child_bodies = _npc_id > 0
 	_editor.open(appearance, ask_name)
 	_update_save()
 	_place_preview()

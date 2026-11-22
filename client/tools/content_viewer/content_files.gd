@@ -175,6 +175,9 @@ static func appearance_part_files(slug: String) -> Array[Entry]:
 	for suffix: String in TAMER_EXTRA_SHEETS:
 		if exists("%s/%s%s.png" % [folder, TamerSprite.IDLE, suffix]):
 			files.append_array(_tamer_sheets(TAMER_EXTRA_SHEETS[suffix], folder, suffix))
+	var child := TamerSprite.CHILD_PART_FOLDER % slug
+	if exists("%s/%s.png" % [child, TamerSprite.IDLE]):
+		files.append_array(_tamer_sheets("criança", child, ""))
 	return files
 
 

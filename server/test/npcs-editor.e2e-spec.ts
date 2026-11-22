@@ -106,6 +106,33 @@ describe('Editor de NPCs (e2e)', () => {
     expect(parts).toEqual([2, 6]);
   });
 
+  it('veste a Mira de Menina, com a Saia do corpo Feminino (village-crowd/02)', async () => {
+    const body = {
+      body_type_id: 4,
+      skin_palette_id: 5,
+      parts: [
+        { part_id: 2, palette_id: null },
+        { part_id: 15, palette_id: 20 },
+      ],
+    };
+    const response = await put(MIRA, body).expect(200);
+    expect(response.body).toEqual({ id: MIRA, ...body });
+  });
+
+  it('recusa a Saia no Menino (400)', async () => {
+    const response = await put(MIRA, {
+      body_type_id: 3,
+      skin_palette_id: 5,
+      parts: [
+        { part_id: 2, palette_id: null },
+        { part_id: 15, palette_id: 20 },
+      ],
+    }).expect(400);
+    expect(response.body.message).toBe(
+      'A peça Saia não serve no corpo Menino.',
+    );
+  });
+
   it('recusa um NPC de Ecobeast (400)', async () => {
     const response = await put(RUVO_NPC, {
       body_type_id: 1,

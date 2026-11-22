@@ -9,6 +9,7 @@ Em 2026-11-19, o dono pediu: "Crie agora varios NPCs aleatório que não serão 
 ## Objetivos
 
 1. Dez moradores pessoas no catálogo, 5 de corpo masculino e 5 de feminino, cada um com nome, pele, voz e roupa próprios.
+3. Três crianças, com um corpo de criança menor que o do adulto ([fase 2](02-children.md)).
 2. Cada morador tem uma fala curta que já vem preenchida quando o dono o põe no F2, numa ilha ou numa sala.
 
 ## Anti-objetivos
@@ -33,3 +34,4 @@ Escolhas de Claude (corrigíveis; ao mudar uma, atualize aqui e na fase):
 | # | Fase | Entrega | Status |
 | --- | --- | --- | --- |
 | 1 | [01-villagers](01-villagers.md) | Os 10 moradores, a fala padrão no catálogo e no F2 | concluída (falta o dono conferir) |
+| 2 | [02-children](02-children.md) | Os corpos de criança Menino e Menina, só de NPC, e as crianças Juca, Nina e Bia | concluída (falta o dono conferir no F2) |

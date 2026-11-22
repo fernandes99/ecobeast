@@ -174,5 +174,38 @@
 		"skin_palette_id": 6,
 		"voice_id": 5,
 		"default_dialogue": "A Loja recebeu Esferas novas. Vale a pena dar uma olhada."
+	},
+	{
+		"id": 17,
+		"slug": "villager_juca",
+		"name": "Juca",
+		"description": "Criança da Vila Raiz.",
+		"sprite": null,
+		"body_type_id": 3,
+		"skin_palette_id": 5,
+		"voice_id": 5,
+		"default_dialogue": "Aposto que eu corro mais rápido que o seu Ecobeast!"
+	},
+	{
+		"id": 18,
+		"slug": "villager_nina",
+		"name": "Nina",
+		"description": "Criança da Vila Raiz.",
+		"sprite": null,
+		"body_type_id": 4,
+		"skin_palette_id": 7,
+		"voice_id": 5,
+		"default_dialogue": "Quando eu crescer, vou ter um Ecobeast de cada Elemento!"
+	},
+	{
+		"id": 19,
+		"slug": "villager_bia",
+		"name": "Bia",
+		"description": "Criança da Vila Raiz.",
+		"sprite": null,
+		"body_type_id": 4,
+		"skin_palette_id": 1,
+		"voice_id": 5,
+		"default_dialogue": "Psiu! Tem um Puffcoo dormindo ali. Não acorda ele!"
 	}
 ]

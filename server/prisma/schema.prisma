@@ -356,15 +356,20 @@ model Npc {
 
 /// Os corpos do Domador (tamer-appearance/01).
 model BodyType {
-  id   Int    @id @default(autoincrement())
+  id              Int    @id @default(autoincrement())
   /// A pasta assets/tamer/bodies/<slug>/ do jogo. CHECK ^[a-z0-9_]+$ (migration tamer_appearance)
-  slug String @unique
-  name String
+  slug            String @unique
+  name            String
+  /// O corpo de adulto cujas peças a criança veste; nulo é corpo de adulto. A criança é só de NPC (migration village_children)
+  adultBodyTypeId Int?   @map("adult_body_type_id")
 
-  parts   AppearancePart[]
-  players Player[]
-  npcs    Npc[]
+  adultBodyType BodyType?        @relation("ChildBodies", fields: [adultBodyTypeId], references: [id], onDelete: Restrict)
+  childBodies   BodyType[]       @relation("ChildBodies")
+  parts         AppearancePart[]
+  players       Player[]
+  npcs          Npc[]
 
+  @@index([adultBodyTypeId])
   @@map("body_types")
   @@schema("ecobeasts")
 }

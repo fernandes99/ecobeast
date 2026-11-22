@@ -6,8 +6,10 @@ import {
 
 const catalog: AppearanceCatalog = {
   bodies: [
-    { id: 1, name: 'Masculino' },
-    { id: 2, name: 'Feminino' },
+    { id: 1, name: 'Masculino', adultBodyTypeId: null },
+    { id: 2, name: 'Feminino', adultBodyTypeId: null },
+    { id: 3, name: 'Menino', adultBodyTypeId: 1 },
+    { id: 4, name: 'Menina', adultBodyTypeId: 2 },
   ],
   slots: [
     { id: 1, name: 'Rosto', paletteKind: null, required: true },
@@ -52,6 +54,24 @@ describe('appearanceError', () => {
     input.bodyTypeId = 2;
     input.parts[1] = { partId: 2, paletteId: 3 };
     expect(appearanceError(input, catalog)).toBeNull();
+  });
+
+  it('recusa o corpo de criança no Domador e aceita no NPC (village-crowd/02)', () => {
+    const input = valid();
+    input.bodyTypeId = 3;
+    expect(appearanceError(input, catalog)).toBe('Esse corpo é só de NPC.');
+    expect(appearanceError(input, catalog, true)).toBeNull();
+  });
+
+  it('veste na criança as peças do corpo de adulto dela', () => {
+    const input = valid();
+    input.bodyTypeId = 4;
+    input.parts[1] = { partId: 2, paletteId: 3 };
+    expect(appearanceError(input, catalog, true)).toBeNull();
+    input.bodyTypeId = 3;
+    expect(appearanceError(input, catalog, true)).toBe(
+      'A peça Saia não serve no corpo Menino.',
+    );
   });
 
   it.each<[string, (input: AppearanceInput) => void, string]>([

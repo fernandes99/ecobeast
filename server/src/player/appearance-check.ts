@@ -11,14 +11,18 @@ export interface WornPart {
 
 /**
  * Confere uma aparência pelas regras do catálogo e devolve as peças com o lugar
- * de cada uma. Serve ao Domador e aos NPCs pessoas (liora-intro/02).
+ * de cada uma. Serve ao Domador e, com `npc`, aos NPCs pessoas (liora-intro/02),
+ * que podem ter corpo de criança (village-crowd/02).
  */
 export async function checkedAppearance(
   prisma: PrismaService,
   appearance: AppearanceDto,
+  npc = false,
 ): Promise<WornPart[]> {
   const [bodies, slots, parts, palettes] = await Promise.all([
-    prisma.bodyType.findMany({ select: { id: true, name: true } }),
+    prisma.bodyType.findMany({
+      select: { id: true, name: true, adultBodyTypeId: true },
+    }),
     prisma.appearanceSlot.findMany({
       select: { id: true, name: true, paletteKind: true, required: true },
     }),
@@ -47,6 +51,7 @@ export async function checkedAppearance(
       parts: worn,
     },
     { bodies, slots, parts: catalogParts, palettes },
+    npc,
   );
   if (error) throw new BadRequestException(error);
   return worn.map(({ partId, paletteId }) => ({

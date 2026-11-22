@@ -17,6 +17,7 @@ res://assets/tamer/
   parts/<slug da peça>/idle.png, run.png            obrigatórias
   parts/<slug da peça>/idle_back.png, run_back.png  opcionais: o que fica atrás do corpo
   parts/<slug da peça>/idle_short.png, run_short.png  opcionais, só cabelo: a versão achatada para chapéu
+  parts/<slug da peça>/child/...                     as mesmas folhas no tamanho da criança
 ```
 
 `idle.png` e `run.png` da raiz (o template da Eris Esra) passam para `template/`, e o `make_wardrobe.gd` gera deles os corpos e as peças provisórias ([fase 4](04-starter-wardrobe.md)).
@@ -45,11 +46,16 @@ O corpo também é pintado com as cores-chave na pele, e a paleta de pele as tro
 | `id` | int | chave |
 | `slug` | text | `^[a-z0-9_]+$`, único: a pasta `bodies/<slug>/` |
 | `name` | text | pt-BR |
+| `adult_body_type_id` | int, opcional | FK `body_types`, `Restrict`: o corpo de adulto cujas peças a criança veste. Nulo é adulto ([village-crowd/02](../village-crowd/02-children.md)) |
 
-| id | slug | name |
-| --- | --- | --- |
-| 1 | `male` | Masculino |
-| 2 | `female` | Feminino |
+| id | slug | name | adult_body_type_id |
+| --- | --- | --- | --- |
+| 1 | `male` | Masculino | — |
+| 2 | `female` | Feminino | — |
+| 3 | `boy` | Menino | 1 |
+| 4 | `girl` | Menina | 2 |
+
+O corpo de criança é só de NPC: o `PUT /v1/me/appearance` o recusa com "Esse corpo é só de NPC.", e a tela Aparência só o mostra ao vestir um NPC. Uma peça serve num corpo quando o `body_type_id` dela é nulo, é o do corpo ou é o adulto dele.
 
 **`appearance_slots`**, os lugares do corpo, na ordem de desenho:
 

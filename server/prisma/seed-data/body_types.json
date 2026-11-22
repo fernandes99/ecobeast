@@ -2,11 +2,25 @@
 	{
 		"id": 1,
 		"slug": "male",
-		"name": "Masculino"
+		"name": "Masculino",
+		"adult_body_type_id": null
 	},
 	{
 		"id": 2,
 		"slug": "female",
-		"name": "Feminino"
+		"name": "Feminino",
+		"adult_body_type_id": null
+	},
+	{
+		"id": 3,
+		"slug": "boy",
+		"name": "Menino",
+		"adult_body_type_id": 1
+	},
+	{
+		"id": 4,
+		"slug": "girl",
+		"name": "Menina",
+		"adult_body_type_id": 2
 	}
 ]
