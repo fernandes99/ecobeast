@@ -1,6 +1,6 @@
 # 02. As Técnicas de Metal
 
-- **Status:** concluída (falta o dono conferir no jogo)
+- **Status:** concluída
 - **Depende de:** [01-snelt-line](01-snelt-line.md)
 
 ## Contexto
@@ -49,5 +49,5 @@ O catálogo tem quatro Técnicas de Metal, três Físicas de contato (Pinça de 
 ## Critérios de aceite
 
 - [x] O `CatalogValidator` aceita as Técnicas novas (o jogo sem janela abre sem erro).
-- [ ] O F1 as mostra na aba Técnicas, e o Testar técnica usa o Metal Fundido, que deixa o chão em chamas.
+- [x] O F1 as mostra na aba Técnicas, e o Testar técnica usa o Metal Fundido, que deixa o chão em chamas.
 - [x] Os testes de unidade e os e2e do servidor passam, menos as falhas antigas (veja a [fase 1](01-snelt-line.md#critérios-de-aceite)).

@@ -64,5 +64,5 @@ Escolhas de Claude (_a revisar_; ao mudar uma, atualize aqui e na fase):
 
 | # | Fase | Entrega | Status |
 | --- | --- | --- | --- |
-| 1 | [01-snelt-line](01-snelt-line.md) | As três espécies, os `front.png`, os `face.png` e as folhas do mapa | concluída (falta o dono conferir no jogo) |
-| 2 | [02-metal-skills](02-metal-skills.md) | Quatro Técnicas de Metal nos learnsets | concluída (falta o dono conferir no jogo) |
+| 1 | [01-snelt-line](01-snelt-line.md) | As três espécies, os `front.png`, os `face.png` e as folhas do mapa | concluída |
+| 2 | [02-metal-skills](02-metal-skills.md) | Quatro Técnicas de Metal nos learnsets | concluída |

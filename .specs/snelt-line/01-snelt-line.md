@@ -1,6 +1,6 @@
 # 01. Linha do Snelt
 
-- **Status:** concluída (falta o dono conferir no jogo)
+- **Status:** concluída
 - **Depende de:** [glimshell-line/01](../glimshell-line/01-glimshell-line.md) (o mesmo caminho), [creature-scale](../creature-scale/), [creature-faces](../creature-faces/), [day-phase-spawns](../day-phase-spawns/), [biome-zones](../biome-zones/) e [volcano](../volcano/)
 
 ## Contexto
@@ -92,9 +92,9 @@ A linha nova do dono ([README](README.md#contexto)). Siga a [glimshell-line/01](
 - [x] `check_sheets.py` passa nas três pastas, com o servidor no ar.
 - [x] O `godot --headless -d --path client --quit-after 240` roda sem erro de script, com o `CatalogValidator` aceitando o catálogo.
 - [x] Os testes de unidade e e2e do servidor passam, menos as falhas antigas. Em 2026-11-22: 1223 de unidade e 733 de 736 e2e; 2 falhas já existiam (`species_day_phases` e `species_skills`, das espécies 7 a 9), e a 3ª (`skills-editor`, "recusa um apply_status sem Estado") passou rodando o arquivo sozinho.
-- [ ] No F1 e no Bestiário, as três espécies aparecem com o `front.png`, e o rosto aparece nas bolinhas da Home.
-- [ ] No spawn de depuração de Explorar, as três formas ficam paradas e andam.
-- [ ] O Snelt aparece na Montanha do mapa sorteado.
+- [x] No F1 e no Bestiário, as três espécies aparecem com o `front.png`, e o rosto aparece nas bolinhas da Home.
+- [x] No spawn de depuração de Explorar, as três formas ficam paradas e andam.
+- [x] O Snelt aparece na Montanha do mapa sorteado.
 
 ## Verificação
 
