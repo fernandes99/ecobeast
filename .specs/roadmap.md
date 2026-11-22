@@ -28,7 +28,7 @@ O que vem depois do MVP de estrutura (entrada, escolha do inicial e Hub). Cada l
 | 11  | [`inventory-shop`](inventory-shop/) | Mochila e Loja (TELAS.md #12 e #13); tabelas `items`, `item_categories`, `inventory_items`; usar itens no mapa e na luta | backend-api, battle-screen, wild-battle | concluída |
 | 13  | [`codex`](codex/) | Bestiário com visto/capturado, detalhe e linha evolutiva (TELAS.md #11), e o aviso de registro na primeira captura e na Evolução | npc-tamers, progression, capture | concluída |
 | 14  | `arenas-league`     | 8 Arenas, emblemas, Liga final e desbloqueio secreto do Ancestral (TELAS.md #15)                          | npc-tamers                 | planejada |
-| 15  | `profile-settings`  | Perfil com estatísticas e configurações (TELAS.md #16)                                                    | auth-google                | planejada |
+| 15  | [`player-stats`](player-stats/) | Perfil com estatísticas (TELAS.md #16); as Configurações vieram antes, na `hub-start` | hub-start | em andamento |
 | 16  | `content`           | 60–90 espécies, ~80 técnicas, ~20 traços, balanceamento                                                   | progression                | planejada |
 | 17  | `release-pipeline`  | Export Android/iOS, ícones, assinatura, envio às lojas                                                    | —                          | planejada |
 | 18  | `audio`             | Introdução dos sons do jogo, com o som de cura do Refúgio entre os primeiros. A música da luta veio antes, na `battle-intro` | heal-station               | planejada |
