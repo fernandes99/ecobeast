@@ -322,12 +322,32 @@ describe('carga inicial do chão (island-villages/01)', () => {
       'ground_types.json',
     );
 
-  it('tem seis trilhas e dois pisos, cada um com a dureza (free-trails/01)', () => {
+  it('tem 19 trilhas e 9 pisos, cada um com a dureza (free-trails/01 e ground-variety/01 e 02)', () => {
     expect(grounds.map(({ kind }) => kind)).toEqual([
       'trail',
       'trail',
       'floor',
       'floor',
+      'trail',
+      'trail',
+      'trail',
+      'trail',
+      'floor',
+      'floor',
+      'floor',
+      'floor',
+      'trail',
+      'floor',
+      'trail',
+      'floor',
+      'floor',
+      'trail',
+      'trail',
+      'trail',
+      'trail',
+      'trail',
+      'trail',
+      'trail',
       'trail',
       'trail',
       'trail',

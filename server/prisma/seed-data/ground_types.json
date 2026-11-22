@@ -54,5 +54,145 @@
 		"name": "Trilha gasta",
 		"kind": "trail",
 		"hardness": 1
+	},
+	{
+		"id": 9,
+		"slug": "wood_planks",
+		"name": "Tábuas de madeira",
+		"kind": "floor",
+		"hardness": 2
+	},
+	{
+		"id": 10,
+		"slug": "brick_floor",
+		"name": "Tijolos",
+		"kind": "floor",
+		"hardness": 3
+	},
+	{
+		"id": 11,
+		"slug": "flagstone_floor",
+		"name": "Lajotas",
+		"kind": "floor",
+		"hardness": 3
+	},
+	{
+		"id": 12,
+		"slug": "marble_floor",
+		"name": "Mármore",
+		"kind": "floor",
+		"hardness": 3
+	},
+	{
+		"id": 13,
+		"slug": "mossy_trail",
+		"name": "Pedra com musgo",
+		"kind": "trail",
+		"hardness": 3
+	},
+	{
+		"id": 14,
+		"slug": "basalt_floor",
+		"name": "Basalto rachado",
+		"kind": "floor",
+		"hardness": 3
+	},
+	{
+		"id": 15,
+		"slug": "shell_trail",
+		"name": "Conchas",
+		"kind": "trail",
+		"hardness": 2
+	},
+	{
+		"id": 16,
+		"slug": "tilled_soil",
+		"name": "Terra arada",
+		"kind": "floor",
+		"hardness": 1
+	},
+	{
+		"id": 17,
+		"slug": "straw_floor",
+		"name": "Palha",
+		"kind": "floor",
+		"hardness": 1
+	},
+	{
+		"id": 18,
+		"slug": "mud_trail",
+		"name": "Lama",
+		"kind": "trail",
+		"hardness": 1
+	},
+	{
+		"id": 19,
+		"slug": "leaf_trail",
+		"name": "Folhas secas",
+		"kind": "trail",
+		"hardness": 1
+	},
+	{
+		"id": 20,
+		"slug": "snow_trail",
+		"name": "Neve pisada",
+		"kind": "trail",
+		"hardness": 1
+	},
+	{
+		"id": 21,
+		"slug": "blue_cobble_trail",
+		"name": "Seixos azuis",
+		"kind": "trail",
+		"hardness": 3
+	},
+	{
+		"id": 22,
+		"slug": "cracked_earth_trail",
+		"name": "Terra rachada",
+		"kind": "trail",
+		"hardness": 2
+	},
+	{
+		"id": 23,
+		"slug": "sandstone_trail",
+		"name": "Arenito",
+		"kind": "trail",
+		"hardness": 3
+	},
+	{
+		"id": 24,
+		"slug": "slate_trail",
+		"name": "Ardósia",
+		"kind": "trail",
+		"hardness": 3
+	},
+	{
+		"id": 25,
+		"slug": "pale_cobble_trail",
+		"name": "Seixos claros",
+		"kind": "trail",
+		"hardness": 3
+	},
+	{
+		"id": 26,
+		"slug": "river_stones",
+		"name": "Pedras de rio",
+		"kind": "trail",
+		"hardness": 3
+	},
+	{
+		"id": 27,
+		"slug": "loose_slabs",
+		"name": "Lajes soltas",
+		"kind": "trail",
+		"hardness": 3
+	},
+	{
+		"id": 28,
+		"slug": "pebble_scatter",
+		"name": "Pedrisco",
+		"kind": "trail",
+		"hardness": 2
 	}
 ]
