@@ -127,6 +127,7 @@ O Ecobeast é um jogo mobile (Android/iOS, retrato): o cliente em **Godot 4.7 co
 | [fuzzap-line](fuzzap-line/) | O lêmingue de estática, Fuzzap e Blizzvolt (Volt, com o Gelo na final), o primeiro de controle, com as primeiras Técnicas Físicas de Volt, que paralisam |
 | [prop-dialogue](prop-dialogue/) | A fala da peça solta: a caixa Fala no F2 e a conversa ao tocar na peça em Explorar |
 | [creature-roles](creature-roles/) | Os papéis dos Ecobeasts na luta (Guardião, Suporte, Controlador, Atacante e Lutador) e os subpapéis, que toda linha nova segue |
+| [nectoad-line](nectoad-line/) | O sapo do néctar, Nectoad e Toxbloom (Toxina, com a Flora na final), o primeiro Guardião Muralha física, do Campo florido |
 
 As próximas iniciativas estão no [roadmap.md](roadmap.md).
 

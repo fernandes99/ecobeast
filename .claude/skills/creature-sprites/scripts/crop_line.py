@@ -3,7 +3,7 @@
 Uso, da raiz: python -I .claude/skills/creature-sprites/scripts/crop_line.py <imagem> <slug> [<slug> ...]
 
 Os slugs vão da esquerda para a direita; um "-" descarta a forma daquela coluna. Cada forma é a peça maior da coluna dela, e as
-peças menores (folhas soltas, raios) vão para a forma de centro mais perto.
+peças menores (folhas soltas, raios) vão para a forma cuja caixa fica mais perto.
 
 Uma imagem sem transparência, com o fundo de uma cor lisa (o verde #00FF00 do prompt da
 skill creature-front-prompt), perde o fundo antes: a cor dos cantos e as próximas dela.
@@ -88,7 +88,7 @@ def main(source, slugs):
     groups = [list(b) for b in bodies]
     for loose in found[count:]:
         cx = sum(p[0] for p in loose) / len(loose)
-        groups[min(range(count), key=lambda i: abs((box(bodies[i])[0] + box(bodies[i])[2]) / 2 - cx))].extend(loose)
+        groups[min(range(count), key=lambda i: max(box(bodies[i])[0] - cx, cx - box(bodies[i])[2], 0))].extend(loose)
     for slug, pts in zip(slugs, groups):
         if slug == "-":
             continue

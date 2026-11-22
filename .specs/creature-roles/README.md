@@ -104,7 +104,7 @@ Exemplo: "Atacante Canhão especial, lento, com Arquiteto de secundário".
 
 ## Os papéis de hoje
 
-As 17 formas finais em 2026-11-22, pelos atributos e pelas Técnicas do banco. Quando a spec da linha diz outra coisa, vale ela, e a diferença fica anotada.
+As formas finais em 2026-11-22, pelos atributos e pelas Técnicas do banco. Quando a spec da linha diz outra coisa, vale ela, e a diferença fica anotada.
 
 | Forma final | Papel principal | Secundário | Segundo eixo |
 | --- | --- | --- | --- |
@@ -124,9 +124,10 @@ As 17 formas finais em 2026-11-22, pelos atributos e pelas Técnicas do banco. Q
 | Dunestrike | Lutador Brigão (a spec diz tanque) | Controlador Perturbador (Preso de certeza, Areia Movediça) | físico, lento |
 | Prismback | Guardião Muralha | Suporte Protetor (Halo Protetor) | especial, lento |
 | Pouchmend | Suporte Curandeiro | Suporte Protetor (Atadura Firme) | médio |
+| Toxbloom | Guardião Muralha ([nectoad-line](../nectoad-line/README.md#papel)) | Controlador Arquiteto (Poça Tóxica, Abraço da Flor) | físico, lento |
 | Blizzvolt | Controlador Perturbador (pelos atributos, seria Lutador misto) | — | misto, médio |
 
-Contagem: Atacante 11 (65%), Lutador 3, Guardião 1, Suporte 1, Controlador 1. Nenhuma Muralha física ou mista, nenhum Inspirador, Enfraquecedor ou Atirador como papel principal.
+Contagem, com o Toxbloom: Atacante 11 de 18 (61%), Lutador 3, Guardião 2, Suporte 1, Controlador 1. Nenhuma Muralha mista, nenhum Inspirador, Enfraquecedor ou Atirador como papel principal.
 
 ## Decisões
 
