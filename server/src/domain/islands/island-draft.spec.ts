@@ -2,10 +2,12 @@ import {
   canonicalDraft,
   draftError,
   draftHash,
+  type DraftItem,
   type DraftNpc,
   type IslandDraft,
   type KnownIds,
   MAX_BRIDGES,
+  MAX_GROUND_ITEMS,
   MAX_ISLAND_TILES,
   MAX_NPC_TILES,
   MAX_NPCS,
@@ -15,6 +17,7 @@ import {
   publishError,
 } from './island-draft.js';
 import { typeBlockKey } from './blocked-hexes.js';
+import { flatCenter } from './hex-pixels.js';
 
 const REFUGE = 1;
 const RUVO = 1;
@@ -30,6 +33,7 @@ const known: KnownIds = {
     [BENCH, 2],
   ]),
   npcIds: new Set([1, 2]),
+  itemIds: new Set([1, 4]),
   interiorIds: new Set([1]),
   wallSlugs: new Set(['wood_fence', 'invisible_wall']),
   bridgeSlugs: new Set(['wood_bridge', 'rope_bridge']),
@@ -952,6 +956,109 @@ describe('os NPCs da ilha (island-npcs/01)', () => {
     expect(draftHash(shuffled)).toBe(draftHash(withNpcs(npc())));
     expect(draftHash(withNpcs({ ...npc(), still: true }))).not.toBe(
       draftHash(withNpcs(npc())),
+    );
+  });
+});
+
+describe('os itens no chão (auralis/09)', () => {
+  const item = (): DraftItem => ({
+    key: 77,
+    itemId: 1,
+    q: 1,
+    r: 0,
+    quantity: 2,
+    once: true,
+    hidden: false,
+  });
+  const withItems = (...items: DraftItem[]): IslandDraft => ({
+    ...island(),
+    items,
+  });
+
+  it('aceita itens visíveis e escondidos, que voltam ou não', () => {
+    expect(
+      draftError(
+        withItems(item(), {
+          ...item(),
+          key: 3,
+          itemId: 4,
+          q: 0,
+          r: 0,
+          once: false,
+          hidden: true,
+        }),
+        known,
+      ),
+    ).toBeNull();
+  });
+
+  it.each<[string, Partial<DraftItem>, string]>([
+    ['com a key 0', { key: 0 }, 'O item no chão 2 tem a key inválida.'],
+    [
+      'com a key repetida',
+      { key: 77, q: 0 },
+      'Dois itens no chão têm a key 77.',
+    ],
+    [
+      'fora do catálogo',
+      { itemId: 9, q: 0 },
+      'O item no chão 2 não existe no catálogo.',
+    ],
+    [
+      'fora da ilha',
+      { q: 5, r: 5 },
+      'O item no chão 2 fica em (5, 5), que não é da ilha.',
+    ],
+    [
+      'na água',
+      { q: 0, r: 1 },
+      'O item no chão não pode ficar na água nem na lava.',
+    ],
+    ['no hexágono de outro', {}, 'Dois itens ficam no hexágono (1, 0).'],
+    [
+      'com a quantidade 100',
+      { q: 0, quantity: 100 },
+      'O item no chão 2 precisa ter a quantidade de 1 a 99.',
+    ],
+  ])('recusa um item %s', (_label, change, message) => {
+    expect(
+      draftError(withItems(item(), { ...item(), key: 5, ...change }), known),
+    ).toBe(message);
+  });
+
+  it(`recusa mais de ${MAX_GROUND_ITEMS} itens`, () => {
+    const items = Array.from({ length: MAX_GROUND_ITEMS + 1 }, (_, index) => ({
+      ...item(),
+      key: index + 1,
+    }));
+    expect(draftError(withItems(...items), known)).toBe(
+      'A ilha pode ter até 500 itens no chão.',
+    );
+  });
+
+  it('não publica um item num hexágono bloqueado', () => {
+    const draft = withItems(item());
+    expect(publishError(draft, known)).toBeNull();
+    const origin = flatCenter({ q: 0, r: 0 });
+    const center = flatCenter({ q: 1, r: 0 });
+    const x = center.x - origin.x;
+    const y = center.y - origin.y;
+    draft.walls = [{ type: 'invisible_wall', points: [x - 5, y, x + 5, y] }];
+    expect(publishError(draft, known)).toBe(
+      'O item no chão em (1, 0) fica num hexágono bloqueado.',
+    );
+  });
+
+  it('uma ilha sem item tem o hash de antes, e a ordem da lista não muda o hash', () => {
+    const plain = draftHash(island());
+    expect(draftHash(withItems())).toBe(plain);
+    const other = { ...item(), key: 3, q: 0, r: 0 };
+    expect(draftHash(withItems(item(), other))).not.toBe(plain);
+    expect(draftHash(withItems(other, item()))).toBe(
+      draftHash(withItems(item(), other)),
+    );
+    expect(draftHash(withItems({ ...item(), hidden: true }))).not.toBe(
+      draftHash(withItems(item())),
     );
   });
 });

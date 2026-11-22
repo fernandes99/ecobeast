@@ -7,6 +7,7 @@ import {
 } from '../domain/progression/tamer-level.js';
 import type { Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { itemQuestWrite } from '../quests/item-quests.js';
 import type { TamerProgressDto } from './tamer-level.dto.js';
 
 export interface TamerLevelCatalog {
@@ -74,6 +75,9 @@ export class TamerLevelService {
           create: { playerId: userId, itemId, quantity },
           update: { quantity: { increment: quantity } },
         }),
+      ),
+      ...items.map(({ itemId, quantity }) =>
+        itemQuestWrite(this.prisma, userId, itemId, quantity),
       ),
     ];
     const bounds = levelBounds(result.level, levels);

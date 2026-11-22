@@ -15,6 +15,9 @@ const OVERVIEW_BELOW := 1.0
 const OVERVIEW_STEP := 1.25
 const MIN_ZOOM := 0.01
 const OPEN_ZOOM := 2.0
+## O ícone de um item no chão, em pixels da arte, e o escondido meio apagado (auralis/09).
+const ITEM_ICON_SIZE := 16.0
+const HIDDEN_ITEM_ALPHA := 0.45
 const FIT_MARGIN := 24.0
 const FLAG_HEIGHT := 22.0
 const FLAG_WIDTH := 12.0
@@ -66,6 +69,8 @@ var action_colors: Dictionary[int, Color] = {}
 var action_names: Dictionary[int, String] = {}
 var selected_action := -1
 var selected_npc := -1
+## O item no chão escolhido na ferramenta Itens (auralis/09).
+var selected_item := -1
 ## As marcas da cena aberta na ferramenta Cenas (story/04), de `ScenePanel.marks`.
 var scene_marks: Callable = Callable()
 var _npc_sprites: Array[NpcSprite] = []
@@ -717,6 +722,7 @@ func draw_overlay(node: Node2D) -> void:
 			for coord: Vector2i in _draft.npc_tiles(selected_npc):
 				_outline(node, coord, UiPalette.WARNING)
 		_outline(node, _draft.npc_coord(selected_npc), UiPalette.ACCENT)
+	_draw_ground_items(node)
 	if scene_marks.is_valid():
 		_draw_scene_marks(node, scene_marks.call())
 	if selected_trail >= 0 and selected_trail < _draft.trails.size():
@@ -1000,6 +1006,23 @@ func _draw_actions(node: Node2D) -> void:
 
 ## A área do gatilho, os atores com hexágono e o destino do passo escolhido, com a
 ## seta de onde o ator está até lá (story/04).
+## Os itens no chão com o ícone, o escondido meio apagado (auralis/09).
+func _draw_ground_items(node: Node2D) -> void:
+	for index: int in _draft.items.size():
+		var item: Dictionary = _draft.items[index]
+		var coord := _draft.item_coord(index)
+		if not _draft.tiles.has(coord):
+			continue
+		var texture := GroundItemPanel.icon_of(int(item.get("item_id", 0)))
+		var center := _screen_origin(coord) + HexMapView.SURFACE_CENTER * _zoom
+		if texture != null:
+			var drawn := Vector2(ITEM_ICON_SIZE, ITEM_ICON_SIZE) * _zoom
+			var tint := Color(1.0, 1.0, 1.0, HIDDEN_ITEM_ALPHA if bool(item.get("hidden", false)) else 1.0)
+			node.draw_texture_rect(texture, Rect2(center - drawn / 2.0, drawn), false, tint)
+		if index == selected_item:
+			_outline(node, coord, UiPalette.ACCENT)
+
+
 func _draw_scene_marks(node: Node2D, marks: Dictionary) -> void:
 	for coord: Vector2i in marks.get("area", []):
 		_outline(node, coord, UiPalette.ACCENT)

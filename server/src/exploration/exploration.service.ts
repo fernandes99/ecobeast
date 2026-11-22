@@ -60,6 +60,8 @@ import { IslandTamersService } from '../islands/island-tamers.service.js';
 import { DiscoveriesService } from '../islands/discoveries.service.js';
 import { toQuestPlaceDto } from '../quests/quests.dto.js';
 import { QuestsService } from '../quests/quests.service.js';
+import { toGroundItemDto } from '../ground-items/ground-items.dto.js';
+import { GroundItemsService } from '../ground-items/ground-items.service.js';
 import { ExplorationStore } from './exploration.store.js';
 import {
   loadSpawnSpecies,
@@ -99,6 +101,7 @@ export class ExplorationService {
     private readonly archipelago: ArchipelagoService,
     private readonly islandTamers: IslandTamersService,
     private readonly quests: QuestsService,
+    private readonly groundItems: GroundItemsService,
   ) {}
 
   async start(
@@ -193,6 +196,7 @@ export class ExplorationService {
       locked_interior_ids: [],
       tamer_npc_ids: [],
       quest_places: [],
+      ground_items: [],
     };
   }
 
@@ -227,6 +231,7 @@ export class ExplorationService {
       tamerNpcIds,
       lockedInteriorIds,
       questPlaces,
+      groundItems,
     ] = await Promise.all([
       this.islands.readTypeBlocks(),
       speciesBornAt(this.prisma, minute),
@@ -234,6 +239,7 @@ export class ExplorationService {
       this.islandTamers.npcIds(island.id),
       this.islandTamers.lockedInteriorIds(userId, island.id),
       this.quests.places(userId, island.id),
+      this.groundItems.available(userId, island.id, draft.items ?? []),
     ]);
     const spawns = rollAreaSpawns(
       areasBornIn(spawnAreas(draft, typeBlocks), born),
@@ -289,6 +295,7 @@ export class ExplorationService {
       locked_interior_ids: lockedInteriorIds,
       tamer_npc_ids: [...tamerNpcIds],
       quest_places: questPlaces.map(toQuestPlaceDto),
+      ground_items: groundItems.map(toGroundItemDto),
     };
   }
 

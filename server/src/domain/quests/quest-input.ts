@@ -16,6 +16,7 @@ export const QUEST_INPUT_ERRORS = {
   tiles: `Escolha de 1 a ${MAX_QUEST_TILES} hexágonos no mapa.`,
   targetNpc: 'Escolha o NPC alvo.',
   species: 'Escolha a espécie.',
+  targetItem: 'Escolha o item que o jogador precisa encontrar.',
   title: `O título vai até ${MAX_QUEST_TITLE} letras.`,
   coins: 'As moedas vão de 0 a 1.000.000.',
   itemQuantity: `A quantidade do item vai de 1 a ${MAX_ITEM_QUANTITY}.`,
@@ -27,6 +28,7 @@ export interface QuestDraft {
   amount: number | null;
   speciesId: number | null;
   targetNpcId: number | null;
+  targetItemId: number | null;
   placeName: string | null;
   title: string | null;
   coins: number | null;
@@ -42,6 +44,7 @@ export interface QuestInput {
   amount: number | null;
   speciesId: number | null;
   targetNpcId: number | null;
+  targetItemId: number | null;
   placeName: string | null;
   title: string | null;
   coins: number;
@@ -80,6 +83,7 @@ export function checkQuestDraft(
     amount: null,
     speciesId: null,
     targetNpcId: null,
+    targetItemId: null,
     placeName: null,
     title: text(draft.title),
     coins: draft.coins ?? 0,
@@ -143,6 +147,19 @@ export function checkQuestDraft(
         return { error: QUEST_INPUT_ERRORS.amount };
       }
       quest.speciesId = draft.speciesId;
+      quest.amount = draft.amount;
+      break;
+    case 'find_item':
+      if (draft.targetItemId === null) {
+        return { error: QUEST_INPUT_ERRORS.targetItem };
+      }
+      if (
+        draft.amount !== null &&
+        !inRange(draft.amount, 1, MAX_QUEST_AMOUNT)
+      ) {
+        return { error: QUEST_INPUT_ERRORS.amount };
+      }
+      quest.targetItemId = draft.targetItemId;
       quest.amount = draft.amount;
       break;
   }

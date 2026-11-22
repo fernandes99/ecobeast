@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { GroundItemDto } from '../ground-items/ground-items.dto.js';
 import { QuestPlaceDto } from '../quests/quests.dto.js';
 import {
   IsInt,
@@ -459,6 +460,15 @@ export class ExplorationResponseDto {
       'No mapa sorteado, sempre vazia.',
   })
   quest_places: QuestPlaceDto[];
+
+  @ApiProperty({
+    type: () => [GroundItemDto],
+    description:
+      'Numa ilha, os itens no chão que o Domador ainda pode pegar (auralis/09); ' +
+      'pisar no hexágono de um chama `POST /v1/me/ground-items/pick`. No mapa ' +
+      'sorteado, sempre vazia.',
+  })
+  ground_items: GroundItemDto[];
 }
 
 export class DebugSpawnBodyDto {

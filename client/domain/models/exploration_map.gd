@@ -23,6 +23,8 @@ var locked_interior_ids: Array[int] = []
 var tamer_npc_ids: Array[int] = []
 ## Numa ilha, os hexágonos dos lugares das missões "Vá até" aceitas, com o nome (auralis/06).
 var quest_places: Dictionary[Vector2i, String] = {}
+## Os itens no chão que o Domador ainda pode pegar (auralis/09); vazio no mapa sorteado.
+var ground_items: Array[MapGroundItem] = []
 var island_name: String = ""
 var actions: Array[MapAction] = []
 var props: Array[MapProp] = []

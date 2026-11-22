@@ -16,10 +16,12 @@ const PICK_TEXT := "Clique nos hexágonos do lugar. Botão direito ou Esc termin
 const OUTSIDE_TEXT := "Esse hexágono não é da ilha."
 const CONFIRM_DELETE_TEXT := "Confirmar: apagar"
 const NO_ITEM := 0
-const AMOUNT_TYPES: Array[int] = [1, 2, 3, 6, 7, 8]
+const AMOUNT_TYPES: Array[int] = [1, 2, 3, 6, 7, 8, 10]
 const SPECIES_TYPES: Array[int] = [7, 8]
 const TARGET_TYPES: Array[int] = [5, 9]
 const PLACE_TYPE := 4
+## "Encontre X item" (auralis/09).
+const FIND_ITEM_TYPE := 10
 const PERCENT_TYPE := 3
 const MINUTES_TYPE := 6
 const MAX_AMOUNT := 9999
@@ -54,6 +56,8 @@ var _species_row: HBoxContainer
 var _species: OptionButton
 var _target_row: HBoxContainer
 var _target: OptionButton
+var _target_item_row: HBoxContainer
+var _target_item: OptionButton
 var _place_box: VBoxContainer
 var _place_name: LineEdit
 var _pick_button: Button
@@ -116,6 +120,11 @@ func _init() -> void:
 		_target.add_item(str(row.get("name", "")), int(row.get("id", 0)))
 	_target_row = _row("NPC alvo", _target)
 	_form.add_child(_target_row)
+	_target_item = OptionButton.new()
+	for row: Dictionary in GameData.get_rows("items"):
+		_target_item.add_item(str(row.get("name", "")), int(row.get("id", 0)))
+	_target_item_row = _row("Item a encontrar", _target_item)
+	_form.add_child(_target_item_row)
 
 	_place_box = VBoxContainer.new()
 	_place_box.add_theme_constant_override(&"separation", 6)
@@ -143,7 +152,7 @@ func _init() -> void:
 	for row: Dictionary in GameData.get_rows("items"):
 		_item.add_item(str(row.get("name", "")), int(row.get("id", 0)))
 	_item.item_selected.connect(func(_index: int) -> void: _refresh_fields())
-	_form.add_child(_row("Item", _item))
+	_form.add_child(_row("Item de recompensa", _item))
 	_item_quantity = EditorNumberField.new(1, MAX_ITEM_QUANTITY, true, false)
 	_item_quantity_row = _row("Quantidade do item", _item_quantity)
 	_form.add_child(_item_quantity_row)
@@ -342,6 +351,7 @@ func _open(id: int, giver := 0) -> void:
 	_amount.set_value(int(amount) if amount != null else 1)
 	_select(_species, quest.get("species_id"))
 	_select(_target, quest.get("target_npc_id"))
+	_select(_target_item, quest.get("target_item_id"))
 	_place_name.text = str(quest.get("place_name", "")) if quest.get("place_name") != null else ""
 	_tiles.clear()
 	for tile: Variant in DictFields.get_array(quest, "tiles"):
@@ -376,6 +386,7 @@ func _refresh_fields() -> void:
 	_amount_label.text = "Porcentagem (%)" if type_id == PERCENT_TYPE else ("Minutos" if type_id == MINUTES_TYPE else "Quantidade")
 	_species_row.visible = SPECIES_TYPES.has(type_id)
 	_target_row.visible = TARGET_TYPES.has(type_id)
+	_target_item_row.visible = type_id == FIND_ITEM_TYPE
 	_place_box.visible = type_id == PLACE_TYPE
 	_pick_button.text = "Pronto" if picking else "Escolher no mapa"
 	_tiles_label.text = "%d hexágono%s" % [_tiles.size(), "" if _tiles.size() == 1 else "s"]
@@ -400,6 +411,7 @@ func _body_of_form() -> Dictionary:
 		"amount": _id_or_null(not is_nan(amount), 0 if is_nan(amount) else int(amount)),
 		"species_id": _id_or_null(SPECIES_TYPES.has(type_id), _species.get_selected_id()),
 		"target_npc_id": _id_or_null(TARGET_TYPES.has(type_id), _target.get_selected_id()),
+		"target_item_id": _id_or_null(type_id == FIND_ITEM_TYPE, _target_item.get_selected_id()),
 		"place_name": _place_name.text,
 		"title": _title.text,
 		"coins": -1 if is_nan(coins) else int(coins),

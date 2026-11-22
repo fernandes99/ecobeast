@@ -20,6 +20,7 @@ import { PlayerModule } from './player/player.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { ProgressionModule } from './progression/progression.module.js';
 import { QuestsModule } from './quests/quests.module.js';
+import { GroundItemsModule } from './ground-items/ground-items.module.js';
 import { StoryModule } from './story/story.module.js';
 import { TeamModule } from './team/team.module.js';
 import { WorldClockModule } from './world-clock/world-clock.module.js';
@@ -55,6 +56,7 @@ import { WorldClockModule } from './world-clock/world-clock.module.js';
     WorldClockModule,
     StoryModule,
     QuestsModule,
+    GroundItemsModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

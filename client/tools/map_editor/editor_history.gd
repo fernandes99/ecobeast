@@ -23,6 +23,8 @@ class Step:
 	var areas_before: Variant = null
 	var npcs_before: Variant = null
 	var npcs_after: Variant = null
+	var items_before: Variant = null
+	var items_after: Variant = null
 	var areas_after: Variant = null
 	var start_before: Variant = null
 	var start_after: Variant = null
@@ -30,7 +32,7 @@ class Step:
 	var name_after: Variant = null
 
 	func is_empty() -> bool:
-		return after.is_empty() and actions_after == null and props_after == null and trails_after == null and walls_after == null and bridges_after == null and areas_after == null and npcs_after == null and start_after == null and name_after == null
+		return after.is_empty() and actions_after == null and props_after == null and trails_after == null and walls_after == null and bridges_after == null and areas_after == null and npcs_after == null and items_after == null and start_after == null and name_after == null
 
 
 var _undo_redo := UndoRedo.new()
@@ -115,6 +117,9 @@ func _apply(step: Step, forward: bool) -> void:
 	var npcs: Variant = step.npcs_after if forward else step.npcs_before
 	if npcs != null:
 		_draft.npcs = (npcs as Array).duplicate(true)
+	var items: Variant = step.items_after if forward else step.items_before
+	if items != null:
+		_draft.items = (items as Array).duplicate(true)
 	var start: Variant = step.start_after if forward else step.start_before
 	if start != null:
 		coords.append(_draft.start)

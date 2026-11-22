@@ -9,6 +9,7 @@ const empty: QuestDraft = {
   amount: null,
   speciesId: null,
   targetNpcId: null,
+  targetItemId: null,
   placeName: null,
   title: null,
   coins: null,
@@ -25,6 +26,7 @@ describe('a missão do editor (auralis/07)', () => {
         ...empty,
         amount: 3,
         speciesId: 15,
+        targetItemId: 2,
         placeName: 'o Farol',
         tiles: [{ q: 1, r: 0 }],
         title: '  ',
@@ -35,6 +37,7 @@ describe('a missão do editor (auralis/07)', () => {
         amount: 3,
         speciesId: null,
         targetNpcId: null,
+        targetItemId: null,
         placeName: null,
         title: null,
         coins: 0,
@@ -51,7 +54,7 @@ describe('a missão do editor (auralis/07)', () => {
       const result = checkQuestDraft({ ...empty, ...draft });
       return 'error' in result ? result.error : null;
     };
-    expect(errorOf({ questTypeId: 10 })).toBe(QUEST_INPUT_ERRORS.type);
+    expect(errorOf({ questTypeId: 11 })).toBe(QUEST_INPUT_ERRORS.type);
     expect(errorOf({ questTypeId: 2 })).toBe(QUEST_INPUT_ERRORS.amount);
     expect(errorOf({ questTypeId: 3, amount: 101 })).toBe(
       QUEST_INPUT_ERRORS.percent,
@@ -71,6 +74,10 @@ describe('a missão do editor (auralis/07)', () => {
       QUEST_INPUT_ERRORS.amount,
     );
     expect(errorOf({ questTypeId: 9 })).toBe(QUEST_INPUT_ERRORS.targetNpc);
+    expect(errorOf({ questTypeId: 10 })).toBe(QUEST_INPUT_ERRORS.targetItem);
+    expect(errorOf({ questTypeId: 10, targetItemId: 1, amount: 0 })).toBe(
+      QUEST_INPUT_ERRORS.amount,
+    );
     expect(errorOf({ amount: 1, title: 'x'.repeat(61) })).toBe(
       QUEST_INPUT_ERRORS.title,
     );

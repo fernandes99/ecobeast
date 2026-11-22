@@ -37,6 +37,7 @@ const DISCOVERIES_PATH := "/v1/me/islands/%d/discoveries"
 const ARCHIPELAGO_PATH := "/v1/me/archipelago"
 const QUEST_TALK_PATH := "/v1/me/quests/talk"
 const QUEST_REACH_PATH := "/v1/me/quests/reach"
+const GROUND_ITEM_PICK_PATH := "/v1/me/ground-items/pick"
 const UNLOCK_ISLAND_PATH := "/v1/me/archipelago/%d/unlock"
 const EVOLUTION_PATH := "/v1/me/creatures/%s/evolution"
 const LEARN_SKILL_PATH := "/v1/me/creatures/%s/skills"
@@ -136,6 +137,7 @@ func start_exploration(island_id: int = 0) -> Result:
 	exploration.locked_interior_ids = _ints(DictFields.get_array(response.data, "locked_interior_ids"))
 	exploration.tamer_npc_ids = _ints(DictFields.get_array(response.data, "tamer_npc_ids"))
 	exploration.quest_places = QuestTalk.places_from(DictFields.get_array(response.data, "quest_places"))
+	exploration.ground_items = MapGroundItem.list_from(DictFields.get_array(response.data, "ground_items"))
 	return Result.success(exploration)
 
 
@@ -146,6 +148,15 @@ func talk_quest(npc_id: int) -> Result:
 	if not response.data is Dictionary:
 		return Result.failure(ApiResponse.SERVER_ERROR)
 	return Result.success(QuestTalk.from_dict(response.data))
+
+
+func pick_ground_item(key: int) -> Result:
+	var response: ApiResponse = await Api.request(HTTPClient.METHOD_POST, GROUND_ITEM_PICK_PATH, {"key": key}, true)
+	if not response.ok:
+		return Result.failure(response.error)
+	if not response.data is Dictionary:
+		return Result.failure(ApiResponse.SERVER_ERROR)
+	return Result.success(DictFields.get_string(response.data, "line"))
 
 
 func reach_quest_place(coord: Vector2i) -> Result:

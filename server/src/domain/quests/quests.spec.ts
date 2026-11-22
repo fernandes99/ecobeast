@@ -52,6 +52,18 @@ describe('os títulos das missões (auralis/06)', () => {
     expect(questTitle(quest('defeat_tamer'), names)).toBe('Derrote Mira');
   });
 
+  it('o "Encontre X item" usa o nome do item (auralis/09)', () => {
+    const withItem = { ...names, targetItem: 'Tônico Leve' };
+    expect(questTitle(quest('find_item'), withItem)).toBe(
+      'Encontre Tônico Leve',
+    );
+    expect(questTitle(quest('find_item', { amount: 3 }), withItem)).toBe(
+      'Encontre 3 Tônico Leve',
+    );
+    expect(questTarget(quest('find_item'))).toBe(1);
+    expect(questTarget(quest('find_item', { amount: 3 }))).toBe(3);
+  });
+
   it('o título próprio vale no lugar', () => {
     expect(
       questTitle(

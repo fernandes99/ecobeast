@@ -36,6 +36,7 @@ const QUEST_INCLUDE = {
   },
   species: { select: { name: true } },
   targetNpc: { select: { name: true } },
+  targetItem: { select: { name: true } },
 } satisfies Prisma.QuestInclude;
 
 /** As missões das ilhas pelo F2 (auralis/07): salvas na hora, fora do rascunho. */
@@ -80,6 +81,7 @@ export class QuestsEditorService {
         amount: quest.amount,
         species_id: quest.speciesId,
         target_npc_id: quest.targetNpcId,
+        target_item_id: quest.targetItemId,
         place_name: quest.placeName,
         title: quest.title,
         coins: quest.coins,
@@ -91,6 +93,7 @@ export class QuestsEditorService {
           island: name,
           species: quest.species?.name ?? null,
           targetNpc: quest.targetNpc?.name ?? null,
+          targetItem: quest.targetItem?.name ?? null,
         }),
       })),
     };
@@ -202,6 +205,7 @@ export class QuestsEditorService {
       amount: quest.amount,
       speciesId: quest.speciesId,
       targetNpcId: quest.targetNpcId,
+      targetItemId: quest.targetItemId,
       placeName: quest.placeName,
       title: quest.title,
       coins: quest.coins,
@@ -221,6 +225,7 @@ export class QuestsEditorService {
       amount: body.amount ?? null,
       speciesId: body.species_id ?? null,
       targetNpcId: body.target_npc_id ?? null,
+      targetItemId: body.target_item_id ?? null,
       placeName: body.place_name ?? null,
       title: body.title ?? null,
       coins: body.coins ?? null,
@@ -231,38 +236,46 @@ export class QuestsEditorService {
     });
     if ('error' in result) throw new BadRequestException(result.error);
     const quest = result.quest;
-    const [giver, target, species, item, tiles] = await Promise.all([
-      this.prisma.npc.findUnique({
-        where: { id: body.npc_id },
-        select: { id: true },
-      }),
-      quest.targetNpcId === null
-        ? null
-        : this.prisma.npc.findUnique({
-            where: { id: quest.targetNpcId },
-            select: { tamer: { select: { islandId: true } } },
-          }),
-      quest.speciesId === null
-        ? null
-        : this.prisma.species.findUnique({
-            where: { id: quest.speciesId },
-            select: { id: true },
-          }),
-      quest.itemId === null
-        ? null
-        : this.prisma.item.findUnique({
-            where: { id: quest.itemId },
-            select: { id: true },
-          }),
-      quest.tiles.length === 0
-        ? 0
-        : this.prisma.islandTile.count({
-            where: {
-              islandMap: { islandId, kind: DRAFT },
-              OR: quest.tiles.map(({ q, r }) => ({ q, r })),
-            },
-          }),
-    ]);
+    const [giver, target, species, item, targetItem, tiles] = await Promise.all(
+      [
+        this.prisma.npc.findUnique({
+          where: { id: body.npc_id },
+          select: { id: true },
+        }),
+        quest.targetNpcId === null
+          ? null
+          : this.prisma.npc.findUnique({
+              where: { id: quest.targetNpcId },
+              select: { tamer: { select: { islandId: true } } },
+            }),
+        quest.speciesId === null
+          ? null
+          : this.prisma.species.findUnique({
+              where: { id: quest.speciesId },
+              select: { id: true },
+            }),
+        quest.itemId === null
+          ? null
+          : this.prisma.item.findUnique({
+              where: { id: quest.itemId },
+              select: { id: true },
+            }),
+        quest.targetItemId === null
+          ? null
+          : this.prisma.item.findUnique({
+              where: { id: quest.targetItemId },
+              select: { id: true },
+            }),
+        quest.tiles.length === 0
+          ? 0
+          : this.prisma.islandTile.count({
+              where: {
+                islandMap: { islandId, kind: DRAFT },
+                OR: quest.tiles.map(({ q, r }) => ({ q, r })),
+              },
+            }),
+      ],
+    );
     if (!giver) throw new BadRequestException(NPC_MISSING);
     if (quest.targetNpcId !== null && !target) {
       throw new BadRequestException(TARGET_MISSING);
@@ -277,6 +290,9 @@ export class QuestsEditorService {
       throw new BadRequestException(SPECIES_MISSING);
     }
     if (quest.itemId !== null && !item) {
+      throw new BadRequestException(ITEM_MISSING);
+    }
+    if (quest.targetItemId !== null && !targetItem) {
       throw new BadRequestException(ITEM_MISSING);
     }
     if (tiles !== quest.tiles.length)

@@ -88,6 +88,10 @@ extends RefCounted
 @abstract func talk_quest(npc_id: int) -> Result
 
 
+## O Domador pisou num item no chão (auralis/09); `data` é a fala ("Você encontrou ...").
+@abstract func pick_ground_item(key: int) -> Result
+
+
 ## O Domador pisou num lugar de missão; `data` é `{"reached": Array[String], "places": Dictionary[Vector2i, String]}`.
 @abstract func reach_quest_place(coord: Vector2i) -> Result
 

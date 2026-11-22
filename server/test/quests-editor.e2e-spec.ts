@@ -116,6 +116,7 @@ describe('O editor de missões (e2e)', () => {
       'find_species',
       'defeat_species',
       'defeat_tamer',
+      'find_item',
     ]);
     expect(empty.quests).toEqual([]);
 
@@ -236,6 +237,9 @@ describe('O editor de missões (e2e)', () => {
     ).toBe('Essa espécie não existe.');
     expect(
       await messageOf({ quest_type_id: 1, amount: 1, item_id: 2_000_000_000 }),
+    ).toBe('Esse item não existe.');
+    expect(
+      await messageOf({ quest_type_id: 10, target_item_id: 2_000_000_000 }),
     ).toBe('Esse item não existe.');
     expect(
       (

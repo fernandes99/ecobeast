@@ -9,6 +9,7 @@ export const QUEST_TYPES = {
   find_species: 7,
   defeat_species: 8,
   defeat_tamer: 9,
+  find_item: 10,
 } as const;
 
 export type QuestTypeSlug = keyof typeof QUEST_TYPES;
@@ -38,6 +39,8 @@ export interface QuestNames {
   island: string;
   species: string | null;
   targetNpc: string | null;
+  /** O item do "Encontre X item" (auralis/09). */
+  targetItem?: string | null;
 }
 
 /** O alvo do progresso: no "Fique", em segundos; no "Explore", em %. */
@@ -51,6 +54,7 @@ export function questTarget({ questTypeId, amount }: QuestParams): number {
       return amount! * 60;
     case 'find_species':
     case 'defeat_species':
+    case 'find_item':
       return amount ?? 1;
     case 'reach_place':
     case 'talk_npc':
@@ -90,6 +94,10 @@ export function questTitle(quest: QuestParams, names: QuestNames): string {
         : `Derrote ${amount} ${species}`;
     case 'defeat_tamer':
       return `Derrote ${names.targetNpc ?? '?'}`;
+    case 'find_item': {
+      const item = names.targetItem ?? '?';
+      return amount === 1 ? `Encontre ${item}` : `Encontre ${amount} ${item}`;
+    }
   }
 }
 

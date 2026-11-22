@@ -340,6 +340,39 @@ export class DraftNpcDto extends EditorHexDto {
   action_type_id?: number | null;
 }
 
+export class DraftGroundItemDto extends EditorHexDto {
+  @ApiProperty({
+    description:
+      'Sorteada pelo F2, de 1 a 2.147.483.647, única na ilha. Não muda ao publicar: o progresso do jogador guarda a ilha e a key.',
+    example: 81234567,
+  })
+  @IsInt(integer('key'))
+  key: number;
+
+  @ApiProperty({ description: 'Id em `items`.', example: 1 })
+  @IsInt(integer('item_id'))
+  item_id: number;
+
+  @ApiProperty({ description: 'De 1 a 99.', example: 1 })
+  @IsInt(integer('quantity'))
+  quantity: number;
+
+  @ApiProperty({
+    description:
+      '`true`: só uma vez por jogador; `false`: volta a cada entrada na ilha.',
+    example: true,
+  })
+  @IsBoolean({ message: 'once precisa ser verdadeiro ou falso.' })
+  once: boolean;
+
+  @ApiProperty({
+    description: 'Escondido: no jogo, só um brilho fraco de perto.',
+    example: false,
+  })
+  @IsBoolean({ message: 'hidden precisa ser verdadeiro ou falso.' })
+  hidden: boolean;
+}
+
 export class DraftAreaSpeciesDto {
   @ApiProperty({ example: 4 })
   @IsInt(integer('species_id'))
@@ -476,6 +509,17 @@ export class IslandDraftDto {
   @ValidateNested({ each: true })
   @Type(() => DraftNpcDto)
   npcs?: DraftNpcDto[];
+
+  @ApiPropertyOptional({
+    type: [DraftGroundItemDto],
+    description:
+      'Os itens no chão, até 500, um por hexágono (auralis/09). Sem o campo, a ilha fica sem itens. Ao ler, sempre vem.',
+  })
+  @IsOptional()
+  @IsArray(list('items'))
+  @ValidateNested({ each: true })
+  @Type(() => DraftGroundItemDto)
+  items?: DraftGroundItemDto[];
 
   @ApiProperty({ type: [DraftAreaDto] })
   @IsArray(list('areas'))

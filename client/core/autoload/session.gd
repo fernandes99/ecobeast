@@ -236,6 +236,15 @@ func talk_quest(npc_id: int) -> Result:
 	return result
 
 
+## Pega um item no chão (auralis/09) e relê o Domador, para a Mochila.
+func pick_ground_item(key: int) -> Result:
+	@warning_ignore("redundant_await")
+	var result: Result = await _service.pick_ground_item(key)
+	if result.ok:
+		await load_player()
+	return result
+
+
 ## Devolve os nomes dos lugares alcançados (vazio se nenhum ou se o servidor recusou).
 func reach_quest_place(coord: Vector2i) -> Array[String]:
 	@warning_ignore("redundant_await")

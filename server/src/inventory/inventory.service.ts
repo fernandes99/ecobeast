@@ -13,6 +13,7 @@ import { CREATURE_NOT_FOUND, PlayerService } from '../player/player.service.js';
 import { CountersService } from '../counters/counters.service.js';
 import { counterTotal } from '../domain/counters/counters.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { itemQuestWrite } from '../quests/item-quests.js';
 import { INVALID_ITEM } from './inventory.dto.js';
 
 export const NO_PLAYER = 'Crie seu Domador primeiro.';
@@ -43,6 +44,7 @@ export class InventoryService {
         create: { playerId: userId, itemId, quantity: 1 },
         update: { quantity: { increment: 1 } },
       });
+      await itemQuestWrite(tx, userId, itemId, 1);
       await Promise.all(
         this.counters.increments(
           userId,

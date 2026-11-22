@@ -24,6 +24,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service.js';
 import type { TamerProgressDto } from '../tamer-level/tamer-level.dto.js';
 import { TamerLevelService } from '../tamer-level/tamer-level.service.js';
+import { itemQuestWrite } from './item-quests.js';
 
 export const NOT_ON_ISLAND = 'Missões só numa ilha.';
 export const NPC_NOT_HERE = 'Esse NPC não está nesta ilha.';
@@ -70,6 +71,7 @@ const QUEST_SELECT = {
   itemQuantity: true,
   species: { select: { name: true } },
   targetNpc: { select: { name: true } },
+  targetItem: { select: { name: true } },
 } as const;
 
 type QuestRow = Prisma.QuestGetPayload<{ select: typeof QUEST_SELECT }>;
@@ -370,6 +372,7 @@ export class QuestsService {
               create: { playerId: userId, itemId, quantity: itemQuantity },
               update: { quantity: { increment: itemQuantity } },
             }),
+            itemQuestWrite(this.prisma, userId, itemId, itemQuantity),
           ]
         : []),
       ...award.writes,
@@ -427,5 +430,6 @@ function namesOf(quest: QuestRow, island: string) {
     island,
     species: quest.species?.name ?? null,
     targetNpc: quest.targetNpc?.name ?? null,
+    targetItem: quest.targetItem?.name ?? null,
   };
 }

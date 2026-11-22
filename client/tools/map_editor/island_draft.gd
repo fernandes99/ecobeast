@@ -5,6 +5,7 @@ const MAX_TILES := 20000
 const BLANK_BIOME := "temperate"
 const BLANK_HEIGHT := 1
 const FEW_VARIANT_BIOMES: Array[String] = ["hill", "mountain"]
+const MAX_ITEM_KEY := 2147483647
 
 var id := 0
 var name := ""
@@ -19,6 +20,9 @@ var areas: Array = []
 ## Os NPCs (island-npcs/02), como o servidor manda: `npc_id`, `q`, `r`, `still`, `tiles`,
 ## `dialogue` e `action_type_id`.
 var npcs: Array = []
+## Os itens no chão (auralis/09), como o servidor manda: `key`, `item_id`, `q`, `r`,
+## `quantity`, `once` e `hidden`.
+var items: Array = []
 ## Os traços de caminho, na ordem de desenho (free-trails/04).
 var trails: Array[MapTrail] = []
 ## As paredes, na ordem (free-fences/01).
@@ -83,6 +87,7 @@ static func from_dict(data: Dictionary) -> IslandDraft:
 			draft.bridges.append(bridge)
 	draft.areas = DictFields.get_array(data, "areas").duplicate(true)
 	draft.npcs = DictFields.get_array(data, "npcs").duplicate(true)
+	draft.items = DictFields.get_array(data, "items").duplicate(true)
 	return draft
 
 
@@ -110,6 +115,7 @@ func to_dict() -> Dictionary:
 		"bridges": bridges.map(func(bridge: MapBridge) -> Dictionary: return bridge.to_dict()),
 		"areas": areas,
 		"npcs": npcs,
+		"items": items,
 	}
 
 
@@ -185,7 +191,34 @@ func remove_tile(coord: Vector2i) -> bool:
 			if int(walk[spot].get("q", 0)) == coord.x and int(walk[spot].get("r", 0)) == coord.y:
 				walk.remove_at(spot)
 				changed = true
+	var item := item_at(coord)
+	if item >= 0:
+		items.remove_at(item)
+		changed = true
 	return changed
+
+
+func item_coord(index: int) -> Vector2i:
+	var item: Dictionary = items[index]
+	return Vector2i(int(item.get("q", 0)), int(item.get("r", 0)))
+
+
+func item_at(coord: Vector2i) -> int:
+	for index: int in items.size():
+		if item_coord(index) == coord:
+			return index
+	return -1
+
+
+## Uma key nova para um item no chão: sorteada, para nunca voltar a de um apagado.
+func new_item_key(rng: RandomNumberGenerator) -> int:
+	var used: Dictionary[int, bool] = {}
+	for item: Variant in items:
+		used[int((item as Dictionary).get("key", 0))] = true
+	var key := rng.randi_range(1, MAX_ITEM_KEY)
+	while used.has(key):
+		key = rng.randi_range(1, MAX_ITEM_KEY)
+	return key
 
 
 func npc_coord(index: int) -> Vector2i:

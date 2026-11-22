@@ -43,7 +43,7 @@ Um cuidado do modelo de hoje: as linhas das ilhas (`island_npcs`, `island_props`
 
 - A Liga e o número total de Arenas. A Liga volta à conversa quando o dono decidir se ela vale a pena.
 - A história: as cenas e os Marcos continuam guardados, sem tocar.
-- "Encontre X item": pede um item no chão do mapa para pegar, que o jogo ainda não tem. Entra numa fase depois (ver [Fases](#fases)).
+- "Encontre X item" e o item no chão entraram na fase [09](09-ground-items.md), depois das outras.
 - Mudar a luta, a captura, a Loja, o Refúgio ou a Mochila.
 - O PVP, o PVE e ver os outros jogadores nas ilhas.
 - O XP do Domador e a subida de nível dele.
@@ -141,7 +141,7 @@ Antes de gerar, o servidor junta os biomas e as espécies das ilhas abertas do j
 ## Fora do escopo
 
 - A Liga e as recompensas finais do Arquipélago.
-- O item no chão para pegar e as missões "Encontre X item" (vêm na fase 8).
+- O item no chão para pegar e as missões "Encontre X item" (vêm na fase 9).
 - Destravar itens da Loja por ilha (o dono citou; entra depois da fase 3, quando a Loja ganhar uma lista por ilha).
 - As missões diárias e as conquistas (podem usar os mesmos contadores depois).
 - O teleporte entre as ilhas pelo altar do Veilmoth.
@@ -152,6 +152,8 @@ Cada fase é jogável sozinha. Uma ilha só abre a próxima quando tem pelo meno
 
 A fase 2 está adiada. Em 2026-11-22, o dono pediu: "vamos pular a parte do Explorar Randomico, ainda quero manter do jeito que está para eu testar o algoritmo procedural, até eu decidir que não vai ter novos biomas ou zonas." Até lá, o mapa aleatório sorteia todos os biomas e Ecobeasts, como hoje. As listas de `island_unlock_biomes` e `island_unlock_species` continuam no banco, sem ninguém ler, e as outras fases não dependem da 2.
 
+A fase 8 também está adiada. No mesmo dia, o dono pediu: "vamos pular a fase 8 deixa para depois quando eu disser ou mencionar, igual a fase 2." Ela só volta quando ele pedir, e a 9 não depende dela.
+
 | # | Fase | Entrega | Status |
 | --- | --- | --- | --- |
 | 1 | [01-unlock-config](01-unlock-config.md) | A ordem das ilhas, o que cada uma destrava, as ilhas abertas do jogador (Liora para todos) e a entrada numa ilha trancada recusada | concluída |
@@ -161,8 +163,8 @@ A fase 2 está adiada. Em 2026-11-22, o dono pediu: "vamos pular a parte do Expl
 | 5 | [05-arenas](05-arenas.md) | As Arenas de cada ilha, com a sala, os Domadores de treino, o Mestre e o emblema, uma abrindo a seguinte | concluída (falta o dono conferir no jogo) |
 | 6 | [06-island-quests](06-island-quests.md) | Os 9 tipos de missão base, as missões presas a um NPC da ilha, o progresso, a entrega e a recompensa | concluída (falta o dono conferir no jogo) |
 | 7 | [07-quest-editor](07-quest-editor.md) | A ferramenta Missões do F2: criar, editar, ordenar e apagar as missões de cada NPC, com o lugar do "Vá até" escolhido no mapa | concluída (falta o dono conferir no F2) |
-| 8 | 08-extra-quests | Os modelos de missão e o quadro de missões extras do Arquipélago | rascunho |
-| 9 | 09-ground-items | O item no chão da ilha para pegar e as missões "Encontre X item" | rascunho |
+| 8 | 08-extra-quests | Os modelos de missão e o quadro de missões extras do Arquipélago | adiada |
+| 9 | [09-ground-items](09-ground-items.md) | O item no chão da ilha para pegar e as missões "Encontre X item" | concluída (falta o dono conferir no F2 e no jogo) |
 
 As specs das fases são escritas quando cada uma for planejada.
 

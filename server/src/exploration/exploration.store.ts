@@ -19,6 +19,8 @@ export interface StoredExploration {
   /** Os biomas do mapa e o último crédito de hexágonos andados (player-stats/02). */
   biomeIds: Set<number>;
   hexesCreditedAt: number;
+  /** Os itens do chão que voltam, já pegos nesta entrada (auralis/09). */
+  pickedItemKeys?: Set<number>;
 }
 
 interface Entry {

@@ -56,6 +56,15 @@ export class QuestEditorBodyDto {
   @IsInt({ message: INVALID_QUEST })
   target_npc_id?: number | null;
 
+  @ApiPropertyOptional({
+    description: 'O item do "Encontre X item" (tipo 10, auralis/09).',
+    type: 'integer',
+    nullable: true,
+  })
+  @IsOptional()
+  @IsInt({ message: INVALID_QUEST })
+  target_item_id?: number | null;
+
   @ApiPropertyOptional({ type: String, nullable: true, example: 'o Farol' })
   @IsOptional()
   @IsString({ message: INVALID_QUEST })
@@ -153,6 +162,9 @@ export class QuestEditorDto {
 
   @ApiProperty({ type: 'integer', nullable: true })
   target_npc_id: number | null;
+
+  @ApiProperty({ type: 'integer', nullable: true })
+  target_item_id: number | null;
 
   @ApiProperty({ type: String, nullable: true })
   place_name: string | null;

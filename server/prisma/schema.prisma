@@ -936,10 +936,12 @@ model Item {
   healAmount     Int?    @map("heal_amount")
   curesStatus    Boolean @default(false) @map("cures_status")
 
-  itemCategory ItemCategory    @relation(fields: [itemCategoryId], references: [id], onDelete: Restrict)
+  itemCategory ItemCategory       @relation(fields: [itemCategoryId], references: [id], onDelete: Restrict)
   inventory    InventoryItem[]
   tamerLevels  TamerLevel[]
-  quests       Quest[]
+  quests       Quest[]            @relation("QuestRewardItem")
+  targetQuests Quest[]            @relation("QuestTargetItem")
+  groundItems  IslandGroundItem[]
 
   @@index([itemCategoryId])
   @@map("items")
@@ -1027,6 +1029,7 @@ model Player {
   tamerWins       PlayerTamerWin[]
   arenas          PlayerArena[]
   quests          PlayerQuest[]
+  groundItems     PlayerGroundItem[]
 
   @@index([bodyTypeId])
   @@index([skinPaletteId])
@@ -1227,6 +1230,7 @@ model Island {
   tamers        Tamer[]
   arenas        Arena[]
   quests        Quest[]
+  groundPicks   PlayerGroundItem[]
 
   @@map("islands")
   @@schema("ecobeasts")
@@ -1317,6 +1321,7 @@ model IslandMap {
   walls       IslandWall[]
   bridges     IslandBridge[]
   npcs        IslandNpc[]
+  groundItems IslandGroundItem[]
 
   @@unique([islandId, kind])
   @@map("island_maps")
@@ -1890,15 +1895,18 @@ model Quest {
   itemQuantity    Int?    @map("item_quantity")
   /// Conta para abrir a ilha seguinte.
   countsForUnlock Boolean @default(true) @map("counts_for_unlock")
+  /// O item do "Encontre X item" (auralis/09).
+  targetItemId    Int?    @map("target_item_id")
 
-  island    Island        @relation(fields: [islandId], references: [id], onDelete: Cascade)
-  npc       Npc           @relation("QuestGiver", fields: [npcId], references: [id], onDelete: Restrict)
-  questType QuestType     @relation(fields: [questTypeId], references: [id], onDelete: Restrict)
-  species   Species?      @relation(fields: [speciesId], references: [id], onDelete: Restrict)
-  targetNpc Npc?          @relation("QuestTarget", fields: [targetNpcId], references: [id], onDelete: Restrict)
-  item      Item?         @relation(fields: [itemId], references: [id], onDelete: Restrict)
-  tiles     QuestTile[]
-  players   PlayerQuest[]
+  island     Island        @relation(fields: [islandId], references: [id], onDelete: Cascade)
+  npc        Npc           @relation("QuestGiver", fields: [npcId], references: [id], onDelete: Restrict)
+  questType  QuestType     @relation(fields: [questTypeId], references: [id], onDelete: Restrict)
+  species    Species?      @relation(fields: [speciesId], references: [id], onDelete: Restrict)
+  targetNpc  Npc?          @relation("QuestTarget", fields: [targetNpcId], references: [id], onDelete: Restrict)
+  item       Item?         @relation("QuestRewardItem", fields: [itemId], references: [id], onDelete: Restrict)
+  targetItem Item?         @relation("QuestTargetItem", fields: [targetItemId], references: [id], onDelete: Restrict)
+  tiles      QuestTile[]
+  players    PlayerQuest[]
 
   @@unique([islandId, npcId, position])
   @@index([npcId])
@@ -1906,6 +1914,7 @@ model Quest {
   @@index([speciesId])
   @@index([targetNpcId])
   @@index([itemId])
+  @@index([targetItemId])
   @@map("quests")
   @@schema("ecobeasts")
 }
@@ -1939,5 +1948,47 @@ model PlayerQuest {
   @@id([playerId, questId])
   @@index([questId])
   @@map("player_quests")
+  @@schema("ecobeasts")
+}
+
+/// Um item no chão de uma versão de ilha, pego ao pisar no hexágono (auralis/09).
+model IslandGroundItem {
+  id          Int     @id @default(autoincrement())
+  islandMapId Int     @map("island_map_id")
+  /// Sorteada pelo F2; não muda ao publicar. CHECK > 0 (migration ground_items)
+  key         Int
+  itemId      Int     @map("item_id")
+  q           Int
+  r           Int
+  /// CHECK 1–99 (migration ground_items)
+  quantity    Int
+  /// Só uma vez por jogador; com false, volta a cada entrada na ilha.
+  once        Boolean
+  /// Escondido: só um brilho fraco de perto.
+  hidden      Boolean
+
+  islandMap IslandMap @relation(fields: [islandMapId], references: [id], onDelete: Cascade)
+  item      Item      @relation(fields: [itemId], references: [id], onDelete: Restrict)
+
+  @@unique([islandMapId, key])
+  @@unique([islandMapId, q, r])
+  @@index([itemId])
+  @@map("island_ground_items")
+  @@schema("ecobeasts")
+}
+
+/// Os itens "só uma vez" do chão que o jogador já pegou, pela ilha e pela key (auralis/09).
+model PlayerGroundItem {
+  playerId String   @map("player_id") @db.Uuid
+  islandId Int      @map("island_id")
+  itemKey  Int      @map("item_key")
+  pickedAt DateTime @default(now()) @map("picked_at") @db.Timestamptz(3)
+
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  island Island @relation(fields: [islandId], references: [id], onDelete: Cascade)
+
+  @@id([playerId, islandId, itemKey])
+  @@index([islandId])
+  @@map("player_ground_items")
   @@schema("ecobeasts")
 }

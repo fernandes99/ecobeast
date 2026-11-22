@@ -131,6 +131,17 @@ export function toDraft(dto: IslandDraftDto): IslandDraft {
       dialogue: npc.dialogue ?? '',
       actionTypeId: npc.action_type_id ?? null,
     })),
+    items: (dto.items ?? []).map(
+      ({ key, item_id, q, r, quantity, once, hidden }) => ({
+        key,
+        itemId: item_id,
+        q,
+        r,
+        quantity,
+        once,
+        hidden,
+      }),
+    ),
     areas: dto.areas.map(({ key, name, color_hex, spawn_count, species }) => ({
       key,
       name,
@@ -160,6 +171,17 @@ function toDto(draft: IslandDraft): IslandDraftDto {
     walls: (draft.walls ?? []).map(toWallDto),
     bridges: (draft.bridges ?? []).map(toBridgeDto),
     npcs: (draft.npcs ?? []).map(toNpcDto),
+    items: (draft.items ?? []).map(
+      ({ key, itemId, q, r, quantity, once, hidden }) => ({
+        key,
+        item_id: itemId,
+        q,
+        r,
+        quantity,
+        once,
+        hidden,
+      }),
+    ),
     areas: draft.areas.map(({ key, name, colorHex, spawnCount, species }) => ({
       key,
       name,
@@ -337,6 +359,7 @@ export class IslandsEditorService {
       blocks,
       interiors,
       zones,
+      items,
     ] = await Promise.all([
       this.prisma.actionType.findMany({ select: { id: true } }),
       this.prisma.groundType.findMany({ select: { slug: true } }),
@@ -350,6 +373,7 @@ export class IslandsEditorService {
       this.prisma.biomeZone.findMany({
         select: { slug: true, biome: { select: { slug: true } } },
       }),
+      this.prisma.item.findMany({ select: { id: true } }),
     ]);
     return {
       actionTypeIds: new Set(actions.map(({ id }) => id)),
@@ -357,6 +381,7 @@ export class IslandsEditorService {
       speciesIds: new Set(species.map(({ id }) => id)),
       propVariants: new Map(props.map(({ id, variants }) => [id, variants])),
       npcIds: new Set(npcs.map(({ id }) => id)),
+      itemIds: new Set(items.map(({ id }) => id)),
       interiorIds: new Set(interiors.map(({ id }) => id)),
       wallSlugs: new Set(walls.map(({ slug }) => slug)),
       bridgeSlugs: new Set(bridges.map(({ slug }) => slug)),
@@ -618,6 +643,22 @@ export class IslandsEditorService {
           data: npcTiles.slice(first, first + TILE_CHUNK),
         });
       }
+    }
+
+    const items = draft.items ?? [];
+    if (items.length > 0) {
+      await tx.islandGroundItem.createMany({
+        data: items.map(({ key, itemId, q, r, quantity, once, hidden }) => ({
+          islandMapId: map.id,
+          key,
+          itemId,
+          q,
+          r,
+          quantity,
+          once,
+          hidden,
+        })),
+      });
     }
     return map;
   }

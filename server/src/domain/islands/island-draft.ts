@@ -43,6 +43,9 @@ const MAX_BRIDGE_WIDTH = 64;
 export const MAX_NPCS = 200;
 export const MAX_NPC_TILES = 40;
 export const MAX_DIALOGUE_LENGTH = 2_000;
+export const MAX_GROUND_ITEMS = 500;
+export const MAX_GROUND_ITEM_QUANTITY = 99;
+export const MAX_GROUND_ITEM_KEY = 2_147_483_647;
 
 export interface DraftTile extends HexCoord {
   biome: Biome;
@@ -120,6 +123,19 @@ export interface DraftNpc extends HexCoord {
   actionTypeId: number | null;
 }
 
+/**
+ * Um item no chão (auralis/09). A `key` é sorteada pelo F2 e não muda ao
+ * publicar: o progresso do jogador guarda a ilha e a `key`.
+ */
+export interface DraftItem extends HexCoord {
+  key: number;
+  itemId: number;
+  quantity: number;
+  /** Só uma vez por jogador; com false, volta a cada entrada na ilha. */
+  once: boolean;
+  hidden: boolean;
+}
+
 export interface DraftAreaSpecies {
   speciesId: number;
   weight: number;
@@ -145,6 +161,7 @@ export interface IslandDraft {
   walls?: DraftWall[];
   bridges?: DraftBridge[];
   npcs?: DraftNpc[];
+  items?: DraftItem[];
   areas: DraftArea[];
 }
 
@@ -155,6 +172,7 @@ export interface KnownIds {
   /** O máximo de variantes de cada tipo de peça solta. */
   propVariants: ReadonlyMap<number, number>;
   npcIds: ReadonlySet<number>;
+  itemIds: ReadonlySet<number>;
   interiorIds: ReadonlySet<number>;
   wallSlugs: ReadonlySet<string>;
   bridgeSlugs: ReadonlySet<string>;
@@ -486,6 +504,51 @@ function npcsError(
   return null;
 }
 
+function itemsError(
+  items: DraftItem[],
+  biomes: ReadonlyMap<string, Biome>,
+  known: KnownIds,
+): string | null {
+  if (items.length > MAX_GROUND_ITEMS) {
+    return 'A ilha pode ter até 500 itens no chão.';
+  }
+  const keys = new Set<number>();
+  const taken = new Set<string>();
+  for (const [index, item] of items.entries()) {
+    const number = index + 1;
+    if (
+      !Number.isInteger(item.key) ||
+      item.key < 1 ||
+      item.key > MAX_GROUND_ITEM_KEY
+    ) {
+      return `O item no chão ${number} tem a key inválida.`;
+    }
+    if (keys.has(item.key)) return `Dois itens no chão têm a key ${item.key}.`;
+    keys.add(item.key);
+    if (!known.itemIds.has(item.itemId)) {
+      return `O item no chão ${number} não existe no catálogo.`;
+    }
+    const key = hexKey(item);
+    const biome = biomes.get(key);
+    if (biome === undefined) {
+      return `O item no chão ${number} fica em ${at(item)}, que não é da ilha.`;
+    }
+    if (blocksWalking(biome)) {
+      return 'O item no chão não pode ficar na água nem na lava.';
+    }
+    if (taken.has(key)) return `Dois itens ficam no hexágono ${at(item)}.`;
+    taken.add(key);
+    if (
+      !Number.isInteger(item.quantity) ||
+      item.quantity < 1 ||
+      item.quantity > MAX_GROUND_ITEM_QUANTITY
+    ) {
+      return `O item no chão ${number} precisa ter a quantidade de 1 a ${MAX_GROUND_ITEM_QUANTITY}.`;
+    }
+  }
+  return null;
+}
+
 /** Os hexágonos que alguma linha de bloqueio, de peça ou de parede, toca (free-objects). */
 export function blockedKeys(
   draft: Pick<IslandDraft, 'props' | 'walls'>,
@@ -568,6 +631,8 @@ export function draftError(draft: IslandDraft, known: KnownIds): string | null {
   if (bridges) return bridges;
   const npcs = npcsError(draft.npcs ?? [], biomes, known);
   if (npcs) return npcs;
+  const items = itemsError(draft.items ?? [], biomes, known);
+  if (items) return items;
 
   const keys = new Set<number>();
   for (const { key } of draft.areas) {
@@ -600,8 +665,13 @@ export function publishError(
     action.tiles.some((coord) => hexKey(coord) === startKey),
   );
   if (inAction) return 'A chegada não pode ficar numa ação.';
-  if (blockedKeys(draft, known.propBlocks).has(startKey)) {
+  const blocked = blockedKeys(draft, known.propBlocks);
+  if (blocked.has(startKey)) {
     return 'A chegada não pode ficar num hexágono bloqueado.';
+  }
+  const stuck = (draft.items ?? []).find((item) => blocked.has(hexKey(item)));
+  if (stuck) {
+    return `O item no chão em ${at(stuck)} fica num hexágono bloqueado.`;
   }
   const empty = draft.areas.find((area) => area.species.length === 0);
   if (empty) return `A área "${empty.name}" não tem nenhuma espécie.`;
@@ -618,7 +688,8 @@ const byRowThenColumn = (a: HexCoord, b: HexCoord): number =>
  * da lista (só quando há algum), paredes na ordem da lista (só quando há alguma),
  * pontes na ordem da lista (só quando há alguma),
  * NPCs em ordem de (r, q, npc_id), cada um com o
- * passeio em (r, q) (só quando há algum),
+ * passeio em (r, q) (só quando há algum), itens no chão na ordem da `key`
+ * (só quando há algum),
  * áreas na ordem da `key`, numeradas de novo de 1 em diante, e espécies em
  * ordem de id. É o que o `content_hash` resume.
  */
@@ -716,6 +787,22 @@ export function canonicalDraft(draft: IslandDraft): string {
       : {}),
     // Só com NPCs: uma ilha sem NPC tem o hash de antes.
     ...(draft.npcs?.length ? { npcs: canonicalNpcs(draft.npcs) } : {}),
+    // Só com itens: uma ilha sem item no chão tem o hash de antes.
+    ...(draft.items?.length
+      ? {
+          items: [...draft.items]
+            .sort((a, b) => a.key - b.key)
+            .map(({ key, itemId, q, r, quantity, once, hidden }) => ({
+              key,
+              itemId,
+              q,
+              r,
+              quantity,
+              once,
+              hidden,
+            })),
+        }
+      : {}),
     areas: areas.map(({ key, name, colorHex, spawnCount, species }) => ({
       key: renumber.get(key),
       name,

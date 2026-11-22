@@ -82,54 +82,68 @@ export class IslandsService {
     client: Tx | PrismaService,
     islandMapId: number,
   ): Promise<IslandDraft> {
-    const [map, tiles, actions, props, trails, walls, bridges, npcs, areas] =
-      await Promise.all([
-        client.islandMap.findUniqueOrThrow({ where: { id: islandMapId } }),
-        client.islandTile.findMany({
-          where: { islandMapId },
-          orderBy: [{ r: 'asc' }, { q: 'asc' }],
-          include: {
-            biome: { select: { slug: true } },
-            groundType: { select: { slug: true } },
-            biomeZone: { select: { slug: true } },
-          },
-        }),
-        client.islandAction.findMany({
-          where: { islandMapId },
-          orderBy: { id: 'asc' },
-          include: { tiles: { orderBy: [{ r: 'asc' }, { q: 'asc' }] } },
-        }),
-        client.islandProp.findMany({
-          where: { islandMapId },
-          orderBy: { id: 'asc' },
-          include: { blocks: { orderBy: { position: 'asc' } } },
-        }),
-        client.islandTrail.findMany({
-          where: { islandMapId },
-          orderBy: { position: 'asc' },
-          include: { groundType: { select: { slug: true } } },
-        }),
-        client.islandWall.findMany({
-          where: { islandMapId },
-          orderBy: { position: 'asc' },
-          include: { wallType: { select: { slug: true } } },
-        }),
-        client.islandBridge.findMany({
-          where: { islandMapId },
-          orderBy: { position: 'asc' },
-          include: { bridgeType: { select: { slug: true } } },
-        }),
-        client.islandNpc.findMany({
-          where: { islandMapId },
-          orderBy: { id: 'asc' },
-          include: { tiles: { orderBy: [{ r: 'asc' }, { q: 'asc' }] } },
-        }),
-        client.islandArea.findMany({
-          where: { islandMapId },
-          orderBy: { id: 'asc' },
-          include: { species: { orderBy: { speciesId: 'asc' } } },
-        }),
-      ]);
+    const [
+      map,
+      tiles,
+      actions,
+      props,
+      trails,
+      walls,
+      bridges,
+      npcs,
+      areas,
+      items,
+    ] = await Promise.all([
+      client.islandMap.findUniqueOrThrow({ where: { id: islandMapId } }),
+      client.islandTile.findMany({
+        where: { islandMapId },
+        orderBy: [{ r: 'asc' }, { q: 'asc' }],
+        include: {
+          biome: { select: { slug: true } },
+          groundType: { select: { slug: true } },
+          biomeZone: { select: { slug: true } },
+        },
+      }),
+      client.islandAction.findMany({
+        where: { islandMapId },
+        orderBy: { id: 'asc' },
+        include: { tiles: { orderBy: [{ r: 'asc' }, { q: 'asc' }] } },
+      }),
+      client.islandProp.findMany({
+        where: { islandMapId },
+        orderBy: { id: 'asc' },
+        include: { blocks: { orderBy: { position: 'asc' } } },
+      }),
+      client.islandTrail.findMany({
+        where: { islandMapId },
+        orderBy: { position: 'asc' },
+        include: { groundType: { select: { slug: true } } },
+      }),
+      client.islandWall.findMany({
+        where: { islandMapId },
+        orderBy: { position: 'asc' },
+        include: { wallType: { select: { slug: true } } },
+      }),
+      client.islandBridge.findMany({
+        where: { islandMapId },
+        orderBy: { position: 'asc' },
+        include: { bridgeType: { select: { slug: true } } },
+      }),
+      client.islandNpc.findMany({
+        where: { islandMapId },
+        orderBy: { id: 'asc' },
+        include: { tiles: { orderBy: [{ r: 'asc' }, { q: 'asc' }] } },
+      }),
+      client.islandArea.findMany({
+        where: { islandMapId },
+        orderBy: { id: 'asc' },
+        include: { species: { orderBy: { speciesId: 'asc' } } },
+      }),
+      client.islandGroundItem.findMany({
+        where: { islandMapId },
+        orderBy: { key: 'asc' },
+      }),
+    ]);
     const keys = new Map(areas.map((area, index) => [area.id, index + 1]));
     return {
       name: map.name,
@@ -217,6 +231,15 @@ export class IslandsService {
         tiles: npc.tiles.map(({ q, r }) => ({ q, r })),
         dialogue: npc.dialogue,
         actionTypeId: npc.actionTypeId,
+      })),
+      items: items.map(({ key, itemId, q, r, quantity, once, hidden }) => ({
+        key,
+        itemId,
+        q,
+        r,
+        quantity,
+        once,
+        hidden,
       })),
       areas: areas.map(({ id, name, colorHex, spawnCount, species }) => ({
         key: keys.get(id)!,

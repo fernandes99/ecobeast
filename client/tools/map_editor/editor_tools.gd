@@ -7,10 +7,10 @@ signal npcs_redrawn
 signal brush_changed
 signal edited(step: EditorHistory.Step, merge: bool)
 
-enum Tool { BIOME, HEIGHT, GROUND, ADD, REMOVE, START, OBJECT, ACTION, AREA, STAMP, ERASER, PATH, VEGETATION, NPC, FENCE, BLOCKS, BRIDGE, SCENES, ZONE, QUESTS }
+enum Tool { BIOME, HEIGHT, GROUND, ADD, REMOVE, START, OBJECT, ACTION, AREA, STAMP, ERASER, PATH, VEGETATION, NPC, FENCE, BLOCKS, BRIDGE, SCENES, ZONE, QUESTS, ITEMS }
 
-const TOOL_NAMES: Array[String] = ["Bioma", "Altura", "Chão", "Pôr hexágono", "Tirar hexágono", "Chegada", "Peças", "Ação", "Área", "Carimbo", "Borracha", "Caminho", "Vegetação", "NPC", "Cerca", "Bloqueios", "Ponte", "Cenas", "Zona", "Missões"]
-const TOOL_ICONS: Array[String] = ["biome", "height", "ground", "hex_add", "hex_remove", "flag", "object", "action", "area", "stamp", "eraser", "path", "vegetation", "npc", "fence", "blocks", "bridge", "scene", "zone", "quest"]
+const TOOL_NAMES: Array[String] = ["Bioma", "Altura", "Chão", "Pôr hexágono", "Tirar hexágono", "Chegada", "Peças", "Ação", "Área", "Carimbo", "Borracha", "Caminho", "Vegetação", "NPC", "Cerca", "Bloqueios", "Ponte", "Cenas", "Zona", "Missões", "Itens"]
+const TOOL_ICONS: Array[String] = ["biome", "height", "ground", "hex_add", "hex_remove", "flag", "object", "action", "area", "stamp", "eraser", "path", "vegetation", "npc", "fence", "blocks", "bridge", "scene", "zone", "quest", "item"]
 const TOOL_HINTS: Array[String] = [
 	"Troca o bioma dos hexágonos que já existem. A altura só muda se você escolher uma abaixo.",
 	"Troca só a altura dos hexágonos que já existem.",
@@ -32,13 +32,14 @@ const TOOL_HINTS: Array[String] = [
 	"Escolha uma cena no painel. Os botões \"Escolher no mapa\" pegam hexágonos da ilha.",
 	"Pinta a zona escolhida, só nos hexágonos do bioma dela. Botão direito volta para a Comum.",
 	"As missões dos NPCs desta ilha, salvas na hora, fora do rascunho. No \"Vá até\", \"Escolher no mapa\" põe ou tira hexágonos do lugar.",
+	"Põe o item da lista no chão do hexágono, ou escolhe o que está nele. Botão direito tira.",
 ]
 ## Os grupos da coluna (map-editor/06): as ferramentas parecidas viram abas do grupo.
 const GROUPS: Array[Dictionary] = [
 	{"name": "Terreno", "icon": "biome", "tools": [Tool.BIOME, Tool.HEIGHT, Tool.ZONE, Tool.ADD, Tool.REMOVE]},
 	{"name": "Chão", "icon": "ground", "tools": [Tool.GROUND, Tool.PATH]},
 	{"name": "Peças", "icon": "object", "tools": [Tool.OBJECT, Tool.VEGETATION, Tool.BLOCKS, Tool.STAMP, Tool.ERASER, Tool.FENCE, Tool.BRIDGE]},
-	{"name": "Jogo", "icon": "flag", "tools": [Tool.START, Tool.ACTION, Tool.AREA, Tool.NPC, Tool.QUESTS, Tool.SCENES]},
+	{"name": "Jogo", "icon": "flag", "tools": [Tool.START, Tool.ACTION, Tool.AREA, Tool.NPC, Tool.QUESTS, Tool.ITEMS, Tool.SCENES]},
 ]
 const TAB_ICON_WIDTH := 18
 const NO_AREA_MESSAGE := "Crie ou escolha uma área no painel antes de pintar."
@@ -136,6 +137,8 @@ var path_panel: PathPanel
 var _path_section: Control
 var vegetation_panel: VegetationPanel
 var npc_panel: NpcPanel
+var item_panel: GroundItemPanel
+var _item_section: Control
 var quest_panel: QuestPanel
 var _quest_section: Control
 var scene_panel: ScenePanel
@@ -345,6 +348,12 @@ func _init() -> void:
 	quest_panel = QuestPanel.new()
 	quests_box.add_child(quest_panel)
 	npc_panel.set_quests(quest_panel)
+
+	var items_box := _section("Itens no chão")
+	_item_section = items_box.get_parent()
+	item_panel = GroundItemPanel.new()
+	item_panel.edited.connect(func(step: EditorHistory.Step, merge: bool) -> void: edited.emit(step, merge))
+	items_box.add_child(item_panel)
 	npc_panel.quests_requested.connect(_open_quest)
 
 	var scenes_box := _section("Cenas")
@@ -431,7 +440,7 @@ func set_radius(value: int) -> void:
 
 ## O raio do contorno: a chegada pega um hexágono só, qualquer que seja o tamanho.
 func brush_radius() -> int:
-	return 0 if tool == Tool.START or tool == Tool.PATH or tool == Tool.QUESTS else radius
+	return 0 if tool == Tool.START or tool == Tool.PATH or tool == Tool.QUESTS or tool == Tool.ITEMS else radius
 
 
 func brush_coords(center: Vector2i) -> Array[Vector2i]:
@@ -467,6 +476,7 @@ func set_draft(draft: IslandDraft) -> void:
 	_bridge_start = Vector2.INF
 	quest_panel.set_draft(draft)
 	npc_panel.set_draft(draft)
+	item_panel.set_draft(draft)
 	scene_panel.set_draft(draft)
 
 
@@ -482,6 +492,7 @@ func refresh_panels() -> void:
 	blocks_panel.refresh()
 	area_panel.refresh()
 	npc_panel.refresh()
+	item_panel.refresh()
 
 
 func paints_marks() -> bool:
@@ -505,6 +516,8 @@ func begin_stroke(draft: IslandDraft, secondary: bool = false) -> void:
 		_step.actions_before = draft.actions.duplicate(true)
 	if draft.npcs.size() > 0 or tool == Tool.NPC:
 		_step.npcs_before = draft.npcs.duplicate(true)
+	if draft.items.size() > 0 or tool == Tool.ITEMS:
+		_step.items_before = draft.items.duplicate(true)
 	if tool == Tool.PATH:
 		_step.trails_before = IslandDraft.copy_trails(draft.trails)
 		_path = null
@@ -523,6 +536,8 @@ func paint(draft: IslandDraft, center: Vector2i) -> Array[Vector2i]:
 		return _paint_scene(center)
 	if tool == Tool.QUESTS:
 		return _paint_quest(center)
+	if tool == Tool.ITEMS:
+		return _paint_item(draft, center)
 	if tool == Tool.OBJECT:
 		return _paint_object(draft)
 	if tool == Tool.BLOCKS:
@@ -592,6 +607,12 @@ func end_stroke(draft: IslandDraft) -> EditorHistory.Step:
 		step.npcs_after = draft.npcs.duplicate(true)
 	else:
 		step.npcs_before = null
+	if step.items_before != null and step.items_before != draft.items:
+		step.items_after = draft.items.duplicate(true)
+	else:
+		step.items_before = null
+	if tool == Tool.REMOVE:
+		item_panel.refresh()
 	if tool == Tool.REMOVE:
 		npc_panel.refresh()
 	_moving = -1
@@ -768,6 +789,29 @@ func _paint_quest(center: Vector2i) -> Array[Vector2i]:
 		quest_panel.cancel_pick()
 	else:
 		quest_panel.pick(center)
+	return changed
+
+
+## Uma coisa por clique: escolher o item do hexágono, pôr o da lista ou, com o botão
+## direito, tirar.
+func _paint_item(draft: IslandDraft, center: Vector2i) -> Array[Vector2i]:
+	var changed: Array[Vector2i] = []
+	if _object_done or not draft.tiles.has(center):
+		return changed
+	_object_done = true
+	if _secondary:
+		if item_panel.remove_at(center) != null:
+			changed.append(center)
+		return changed
+	var holder := draft.item_at(center)
+	if holder >= 0:
+		item_panel.select(holder)
+		changed.append(center)
+		return changed
+	if item_panel.place(center) != null:
+		changed.append(center)
+	else:
+		message.emit("O item não pode ficar na água nem na lava.")
 	return changed
 
 
@@ -1317,7 +1361,8 @@ func _refresh() -> void:
 	_npc_section.visible = tool == Tool.NPC
 	_scene_section.visible = tool == Tool.SCENES
 	_quest_section.visible = tool == Tool.QUESTS
-	_brush_section.visible = tool != Tool.START and tool != Tool.OBJECT and tool != Tool.BLOCKS and tool != Tool.PATH and tool != Tool.NPC and tool != Tool.SCENES and tool != Tool.QUESTS and tool != Tool.FENCE and tool != Tool.BRIDGE and not (tool == Tool.STAMP and stamp_panel.mode == StampPanel.Mode.PLACE)
+	_item_section.visible = tool == Tool.ITEMS
+	_brush_section.visible = tool != Tool.START and tool != Tool.OBJECT and tool != Tool.BLOCKS and tool != Tool.PATH and tool != Tool.NPC and tool != Tool.SCENES and tool != Tool.QUESTS and tool != Tool.ITEMS and tool != Tool.FENCE and tool != Tool.BRIDGE and not (tool == Tool.STAMP and stamp_panel.mode == StampPanel.Mode.PLACE)
 	for slug: String in _biome_buttons:
 		_biome_buttons[slug].set_pressed_no_signal(slug == biome)
 		_biome_buttons[slug].queue_redraw()

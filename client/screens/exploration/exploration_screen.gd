@@ -83,6 +83,11 @@ var _talk_index := 0
 var _quest_npc: MapNpc = null
 var _quest_lines: Array[String] = []
 var _reaching_place := false
+## Os itens no chão ainda no mapa, pela key (auralis/09), e os que estão indo ao servidor.
+var _ground_items: Dictionary[int, GroundItemSprite] = {}
+var _picking_items: Dictionary[int, bool] = {}
+## A caixa de fala mostra "Você encontrou ..."; tocar nela fecha.
+var _found_item := false
 var _debug_spawn_ids: Array[int] = []
 var _debug_tamer_ids: Array[int] = []
 var _pinch := PinchZoom.new()
@@ -270,6 +275,7 @@ func _begin() -> void:
 	_reveal_player()
 	_show_island()
 	_add_npcs()
+	_add_ground_items()
 	_markers = _build_markers()
 	_rebuild_minimap()
 	_minimap.show()
@@ -454,6 +460,7 @@ func _walk(route: PackedVector2Array) -> void:
 			_map_view.set_current(coord)
 			_discover()
 			_check_quest_place(coord)
+			_check_ground_item(coord)
 			_refresh_wild_sprites()
 			_lead_followers(origin)
 			if not _story_busy():
@@ -810,6 +817,46 @@ func _challenge(tamer: MapTamer) -> void:
 	_greeting.say("%s: %s" % [GameData.get_npc_tamer_name(tamer.name_id), GameData.get_npc_tamer_greeting(tamer.greeting_id)], GameData.voice_by_slug(NPC_TAMER_VOICE))
 
 
+func _add_ground_items() -> void:
+	for item: MapGroundItem in _map.ground_items:
+		var sprite := GroundItemSprite.make(item)
+		sprite.place_on(_map_view)
+		_ground_items[item.key] = sprite
+	_check_ground_item(_player_coord)
+
+
+## Pisar no hexágono de um item o pega; o escondido só brilha de perto.
+func _check_ground_item(coord: Vector2i) -> void:
+	for key: int in _ground_items:
+		var sprite := _ground_items[key]
+		sprite.show_near(coord)
+		if sprite.item.coord != coord or _picking_items.has(key):
+			continue
+		_pick_ground_item(key)
+
+
+func _pick_ground_item(key: int) -> void:
+	_picking_items[key] = true
+	var result: Result = await Session.pick_ground_item(key)
+	_picking_items.erase(key)
+	if not is_inside_tree():
+		return
+	if not result.ok:
+		_show_message(result.error, &"DangerLabel")
+		return
+	var sprite: GroundItemSprite = _ground_items.get(key)
+	_ground_items.erase(key)
+	if sprite != null:
+		sprite.queue_free()
+	if _in_talk() or _story_busy():
+		_show_message(str(result.data), &"SecondaryLabel")
+		return
+	_stop_walk = true
+	_found_item = true
+	_set_controls_enabled(false)
+	_greeting.say(str(result.data), GameData.voice_by_slug(StoryPlayer.NARRATION_VOICE))
+
+
 func _add_npcs() -> void:
 	for npc: MapNpc in _map.npcs:
 		var sprite := NpcSprite.make(npc)
@@ -954,6 +1001,11 @@ func _say_line() -> void:
 
 
 func _on_greeting_tapped() -> void:
+	if _found_item:
+		_found_item = false
+		_greeting.close()
+		_set_controls_enabled(true)
+		return
 	if not _in_talk():
 		_fight_challenger()
 		return
@@ -1034,7 +1086,7 @@ func _finish_talk(npc: MapNpc) -> void:
 
 
 func _in_talk() -> bool:
-	return _talking != null or _talking_prop >= 0 or _quest_npc != null
+	return _talking != null or _talking_prop >= 0 or _quest_npc != null or _found_item
 
 
 func _fight_challenger() -> void:

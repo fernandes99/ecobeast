@@ -414,6 +414,8 @@ func _paint(coord: Vector2i) -> void:
 		_canvas.refresh_props_at(changed)
 	elif _tools.tool == EditorTools.Tool.NPC:
 		_canvas.refresh_npcs()
+	elif _tools.tool == EditorTools.Tool.ITEMS:
+		_canvas.refresh_brush()
 	elif _tools.tool == EditorTools.Tool.STAMP:
 		if _tools.stamp_panel.mode == StampPanel.Mode.SELECT:
 			_canvas.refresh_brush()
@@ -679,6 +681,13 @@ func _tool_key(key: InputEventKey) -> bool:
 	if _tools.tool == EditorTools.Tool.QUESTS and key.keycode == KEY_ESCAPE and _tools.quest_panel.picking:
 		_tools.quest_panel.cancel_pick()
 		return true
+	if _tools.tool == EditorTools.Tool.ITEMS and _tools.item_panel.selected >= 0:
+		if key.keycode == KEY_DELETE or key.keycode == KEY_BACKSPACE:
+			_tools.item_panel.delete_selected()
+			return true
+		if key.keycode == KEY_ESCAPE:
+			_tools.item_panel.select(-1)
+			return true
 	if _tools.tool == EditorTools.Tool.NPC and _tools.npc_panel.selected >= 0:
 		if key.keycode == KEY_DELETE or key.keycode == KEY_BACKSPACE:
 			_tools.npc_panel.delete_selected()
@@ -888,6 +897,9 @@ func _build() -> void:
 	_tools.object_panel.type_block_save_requested.connect(_on_type_block_save)
 	_tools.npc_panel.selection_changed.connect(func(index: int) -> void:
 		_canvas.selected_npc = index
+		_canvas.refresh_brush())
+	_tools.item_panel.selection_changed.connect(func(index: int) -> void:
+		_canvas.selected_item = index
 		_canvas.refresh_brush())
 	_tools.scene_panel.changed.connect(func() -> void: _canvas.refresh_brush())
 	_tools.scene_panel.message.connect(func(text: String, error: bool) -> void: _set_message(text, error))
