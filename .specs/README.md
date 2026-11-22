@@ -118,6 +118,7 @@ O Ecobeast é um jogo mobile (Android/iOS, retrato): o cliente em **Godot 4.7 co
 | [rolling-hills](rolling-hills/) | A Colina e a Montanha sorteadas separadas no mapa sorteado: morros soltos de 1 ou 2 níveis e montanhas em maciços, com ou sem sopé |
 | [creature-faces](creature-faces/) | O rosto de cada Ecobeast, recortado do front por um script, num círculo com a cor do Elemento e o anel de HP em volta, nos lugares pequenos: a equipe da Home, a luta, as listas e as grades |
 | [glacier](glacier/) | A Geleira, um bioma raro de gelo dentro da Neve de alguns mapas frios, às vezes com um lago, com pedras grandes de gelo, onde o Hushling e o Echofrost também nascem |
+| [volcano](volcano/) | O Vulcão, um bioma épico e raro: um cone íngreme com escadarias, a borda de picos de basalto e a cratera com lava rasa e funda, num mapa comum ou como uma ilha vulcânica no meio do oceano |
 
 As próximas iniciativas estão no [roadmap.md](roadmap.md).
 
