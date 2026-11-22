@@ -23,6 +23,8 @@ const SEEDS = Array.from({ length: 200 }, (_, index) => index * 7919 + 1);
 const MAX_LONELY_LAND = 0.05;
 /** A grama é a base da região; nenhum bioma deve ir além disto. */
 const MAX_BIOME_SHARE = 0.6;
+/** A Geleira é rara de propósito e ainda não nasce no mapa sorteado (glacier/04). */
+const RARE_BIOMES: readonly ShapedBiome[] = ['glacier'];
 const CONFIG: MapConfig = {
   tileCount: 300,
   edgeRoughness: 7,
@@ -143,12 +145,13 @@ describe('generateShapedMap', () => {
     maps = SEEDS.map((seed) => generateShapedMap(seed, CONFIG));
   });
 
-  it('só existem as oito regiões', () => {
+  it('só existem as nove regiões', () => {
     expect([...SHAPED_BIOMES].sort()).toEqual(
       [
         'beach',
         'boreal',
         'desert',
+        'glacier',
         'snow',
         'stone',
         'temperate',
@@ -486,11 +489,15 @@ describe('generateShapedMap', () => {
     const seen = new Set<ShapedBiome>(
       maps.flatMap(({ tiles }) => tiles.map((tile) => tile.biome)),
     );
-    expect([...seen].sort()).toEqual([...SHAPED_BIOMES].sort());
+    expect([...seen].sort()).toEqual(
+      SHAPED_BIOMES.filter((slug) => !RARE_BIOMES.includes(slug)).sort(),
+    );
   });
 
   it('nenhum bioma de terra some ao longo das seeds', () => {
-    for (const biome of SHAPED_BIOMES.filter((slug) => !isWater(slug))) {
+    for (const biome of SHAPED_BIOMES.filter(
+      (slug) => !isWater(slug) && !RARE_BIOMES.includes(slug),
+    )) {
       const containing = maps.filter(({ tiles }) =>
         tiles.some((tile) => tile.biome === biome),
       );
@@ -1052,6 +1059,9 @@ describe('terrainOf', () => {
     ['beach', 'flat', 'beach'],
     ['beach', 'hill', 'beach'],
     ['beach', 'mont', 'mountain'],
+    ['glacier', 'flat', 'glacier'],
+    ['glacier', 'hill', 'glacier'],
+    ['glacier', 'mont', 'mountain'],
   ] as const)('%s com %s vira %s', (biome, shape, to) => {
     expect(terrainOf(biome, shape)).toBe(to);
   });
@@ -1064,12 +1074,13 @@ describe('generateMap', () => {
     maps = SEEDS.slice(0, 40).map((seed) => generateMap(seed, CONFIG));
   });
 
-  it('são os 10 biomas do catálogo', () => {
+  it('são os 11 biomas do catálogo', () => {
     expect([...BIOMES].sort()).toEqual(
       [
         'beach',
         'boreal',
         'desert',
+        'glacier',
         'snow',
         'hill',
         'mountain',

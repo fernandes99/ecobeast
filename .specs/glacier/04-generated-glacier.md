@@ -52,6 +52,7 @@ As zonas são dadas por bioma no `assignZones` (`map-zones.ts`). A água doce pa
 - [ ] Nas mesmas seeds, de 30% a 70% das Geleiras têm lago. Se der bem menos, a fase avisa o dono e anota o número aqui.
 - [ ] O lago é redondo, fica todo dentro da mancha, está na zona Lago gelado e tem a água funda só no de raio 2.
 - [ ] Toda terra do mapa se alcança da chegada.
+- [ ] Nos testes do `map-generator.spec.ts`, a Geleira continua em `RARE_BIOMES` (rara de propósito), e um teste próprio confere que ela aparece ao longo das seeds frias.
 - [ ] Com `glacierChance` em 0, o hash do mapa de 5 seeds é igual ao de antes.
 - [ ] As pedras de gelo só caem na Geleira, e nenhum Ecobeast nem Domador NPC nasce nelas.
 - [ ] O dono confere no jogo uma Geleira de mapa sorteado, pelo `climate` fixado no F2.

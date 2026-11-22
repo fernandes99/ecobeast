@@ -105,5 +105,5 @@ O dono escolheu a B.
 | --- | --- | --- | --- |
 | 1 | [01-glacier-art](01-glacier-art.md) | O `make_glacier.py`: o chão, os arremates, o escorrido, as decorações da Comum e as placas de gelo do Lago gelado, aprovados pelo dono numa prévia, e os tipos de peça delas no grupo Geleira | concluída (falta o dono conferir no F2) |
 | 2 | [02-ice-rocks](02-ice-rocks.md) | As pedras grandes de gelo, aprovadas pelo dono numa prévia, como tipos de peça solta com o bloqueio no pé, na categoria Pedras e no grupo Pedras de gelo | concluída (falta o dono conferir no F2) |
-| 3 | [03-glacier-records](03-glacier-records.md) | A Geleira (12) no catálogo, com a zona Comum (35), as zonas Lago gelado (36 e 37), as taxas do Hushling e do Echofrost, o slug aceito pelas rotas e a amostra no F2 | proposta |
+| 3 | [03-glacier-records](03-glacier-records.md) | A Geleira (12) no catálogo, com a zona Comum (35), as zonas Lago gelado (36 e 37), as taxas do Hushling e do Echofrost, o slug aceito pelas rotas e a amostra no F2 | concluída (falta o dono conferir no F2) |
 | 4 | [04-generated-glacier](04-generated-glacier.md) | A mancha no mapa sorteado e na ilha nova pelo F2, com o lago às vezes e as pedras de gelo | proposta |

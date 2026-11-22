@@ -29,6 +29,7 @@ export const BIOMES = [
   'desert',
   'snow',
   'beach',
+  'glacier',
 ] as const;
 export type Biome = (typeof BIOMES)[number];
 
@@ -41,6 +42,7 @@ export const SHAPED_BIOMES = [
   'desert',
   'snow',
   'beach',
+  'glacier',
 ] as const;
 export type ShapedBiome = (typeof SHAPED_BIOMES)[number];
 
@@ -201,7 +203,10 @@ export function terrainOf(biome: ShapedBiome, shape: TerrainShape): Biome {
   if (shape === 'mont') return 'mountain';
   if (biome === 'stone') return shape === 'hill' ? 'hill' : 'stone';
   if (shape === 'hill') {
-    return biome === 'desert' || biome === 'snow' || biome === 'beach'
+    return biome === 'desert' ||
+      biome === 'snow' ||
+      biome === 'beach' ||
+      biome === 'glacier'
       ? biome
       : 'hill';
   }

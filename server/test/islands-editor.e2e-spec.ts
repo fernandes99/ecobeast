@@ -529,6 +529,37 @@ describe('Editor de ilhas (e2e)', () => {
       expect('zone' in at(body.tiles[1]!)).toBe(false);
     });
 
+    it('salva e lê de volta a Geleira e o Lago gelado (glacier/03)', async () => {
+      const body = draft();
+      const tile = (q: number, r: number) =>
+        body.tiles.find((one) => one.q === q && one.r === r)!;
+      tile(-1, 0).biome = 'glacier';
+      Object.assign(tile(0, -1), {
+        biome: 'wshallow',
+        height: 0,
+        zone: 'wshallow_ice_lake',
+      });
+      Object.assign(tile(1, -1), {
+        biome: 'wdeep',
+        height: 0,
+        zone: 'wdeep_ice_lake',
+      });
+      const id = await create(body);
+      const read = (await call('get', `/islands/${id}`).expect(200))
+        .body as Draft;
+      const at = (q: number, r: number) =>
+        read.tiles.find((one) => one.q === q && one.r === r)!;
+      expect(at(-1, 0).biome).toBe('glacier');
+      expect(at(0, -1)).toMatchObject({
+        biome: 'wshallow',
+        zone: 'wshallow_ice_lake',
+      });
+      expect(at(1, -1)).toMatchObject({
+        biome: 'wdeep',
+        zone: 'wdeep_ice_lake',
+      });
+    });
+
     it.each([
       ['hill_scree', 'tem a zona hill_scree, que não é do bioma temperate.'],
       ['zz_nenhuma', 'tem uma zona que não existe.'],
