@@ -89,7 +89,7 @@ As folhas do tabuleiro da luta ficam em `<criatura>/battle/` e seguem o formato 
 
 O jogo tira tudo da imagem, então não há arquivo de dados ao lado. Elas aparecem sem ampliar.
 
-**Tamanho (board-battle/41).** O que vale é a altura do desenho, do pixel mais alto ao pé, no quadro mais alto: `arredondar(30 + 22 × height_m)`, entre 32 e 80 px (Ruvo 41, Ruvak 52, Ruvaroth 66). O canvas é a caixa: 48 até 0,6 m, 64 até 1,3 m e 96 acima. A largura fica em até 90 px, mais compacta, nunca cortada. O PixelLab não ocupa o canvas sempre igual (o idle novo do Ruvak saiu com 43 px num canvas de 64), então confira toda folha com `python -I S/check_battle.py <slug>`, com o servidor no ar: ele falha com a altura fora de ±3 px da regra ou a largura acima de 90.
+**Tamanho (board-battle/41).** O canvas do personagem no PixelLab sai da altura do catálogo: 48 até 0,6 m, 64 até 1,0 m, 80 até 2,0 m e 96 acima de 2 m (Ruvo 48, Ruvak 64, Ruvaroth 80). O desenho fica do tamanho que o PixelLab entregar nesse canvas, sem ampliar nem reduzir, decisão do dono. Uma folha à mão fica entre 60% do canvas e o canvas (29 a 48, 38 a 64, 48 a 80 ou 58 a 96 px de altura). A largura fica em até 90 px, mais compacta, nunca cortada. Confira com `python -I S/check_battle.py <slug>`, com o servidor no ar, e um zip novo antes de trazê-lo com `python -I S/check_battle.py <slug> <zip>`.
 
 Há dois jeitos de fazer essas folhas:
 

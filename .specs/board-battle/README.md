@@ -94,7 +94,7 @@ A luta nova substitui a de hoje em Explorar zona. A luta atual deixa de ser usad
 | 37 | [37-trail-pincer-skills-art](37-trail-pincer-skills-art.md) | Ícone, efeito e som do Cometa de Pólen, da Bola de Lama, da Estaca de Gelo, do Dardo Gotejante, da Pena Riscante e da Pinça Firme, com o projétil das 5 de rastro | concluída (falta o dono ver e ouvir no jogo) |
 | 38 | [38-dune-support-skills-art](38-dune-support-skills-art.md) | Ícone, efeito e som da Ferroada Paralisante, do Enterrar, do Bote da Duna, da Erva da Bolsa, da Atadura Firme e do Cochilo | concluída (falta o dono ver e ouvir no jogo) |
 | 39 | [39-glimshell-moth-skills-art](39-glimshell-moth-skills-art.md) | Ícone, efeito e som do Ninho de Ervas, do Lampejo, do Casco Prismático, do Halo Protetor, do Raio Prismático e do Pó Arcano, com o projétil das 3 de longe | concluída (falta o dono ver e ouvir no jogo) |
-| 41 | [41-battle-sprite-size](41-battle-sprite-size.md) | O tamanho dos Ecobeasts na luta: a altura do desenho pela altura do catálogo (30 + 22 × m, de 32 a 80 px), o canvas de 48, 64 ou 96 e a conferência `check_battle.py` | concluída (o Ruvak está fora da regra e espera folhas novas) |
+| 41 | [41-battle-sprite-size](41-battle-sprite-size.md) | O tamanho dos Ecobeasts na luta: o canvas do PixelLab pela altura do catálogo (48 até 0,6 m, 64 até 1,0 m, 80 até 2,0 m e 96 acima), com o desenho do tamanho que vier, a faixa das folhas à mão e a conferência `check_battle.py` | concluída |
 
 O desenho compartilhado está no [architecture.md](architecture.md).
 

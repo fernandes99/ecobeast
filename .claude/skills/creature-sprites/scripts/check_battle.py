@@ -1,16 +1,17 @@
 """Confere o tamanho das folhas da luta de um Ecobeast (board-battle/41). Sai com código 1 se falhar.
 
-Uso: python check_battle.py <slug>
+Uso: python check_battle.py <slug> [zip do PixelLab]
 
-Lê client/assets/creatures/<slug>/battle/idle.png e walk.png. A altura vem do catálogo do
-servidor, em ECOBEAST_API_URL (padrão http://localhost:3100), que precisa estar no ar.
+Confere o canvas dos zips do PixelLab em art-source/<slug>/ (ou só o zip passado, antes de
+trazê-lo para o jogo) e as folhas de client/assets/creatures/<slug>/battle/. A altura vem do
+catálogo do servidor, em ECOBEAST_API_URL (padrão http://localhost:3100), que precisa estar no ar.
 """
 import json
-import math
 import os
 import sys
 import urllib.error
 import urllib.request
+import zipfile
 from pathlib import Path
 
 # Com `python -I`, a pasta do script não entra na busca de módulos.
@@ -19,22 +20,20 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from spritekit import read_png  # noqa: E402
 
 API_URL = os.environ.get("ECOBEAST_API_URL", "http://localhost:3100")
-CREATURES = Path(__file__).resolve().parents[4] / "client" / "assets" / "creatures"
-# O balanço do idle e a chama mudam a altura de um quadro para outro.
-HEIGHT_MARGIN = 3
+ROOT = Path(__file__).resolve().parents[4]
 MAX_WIDTH = 90
+HAND_MIN = 0.6
 IDLE_ROWS = (2, 5)
 WALK_ROWS = (3, 5)
-
-
-def battle_height_in_pixels(height_m):
-    return max(32, min(80, math.floor(30 + 22 * height_m + 0.5)))
+ZIP_SHEETS = {"pixellab.zip": ("idle", "walk"), "pixellab_idle.zip": ("idle",), "pixellab_walk.zip": ("walk",)}
 
 
 def battle_canvas(height_m):
     if height_m <= 0.6:
         return 48
-    return 64 if height_m <= 1.3 else 96
+    if height_m <= 1.0:
+        return 64
+    return 80 if height_m <= 2.0 else 96
 
 
 def catalog_height(slug):
@@ -49,6 +48,22 @@ def catalog_height(slug):
             return float(row["height_m"])
     print("FALHA: %s não está no catálogo" % slug)
     sys.exit(1)
+
+
+def zip_canvases(path):
+    """Os canvas dos personagens do zip: a exportação em pastas tem o metadata.json, e a folha só, o <nome>.json."""
+    sizes = set()
+    with zipfile.ZipFile(path) as archive:
+        for name in archive.namelist():
+            if not name.endswith(".json"):
+                continue
+            data = json.loads(archive.read(name))
+            states = data.get("states") or [data]
+            for state in states:
+                character = state.get("character") if isinstance(state, dict) else None
+                if character and "size" in character:
+                    sizes.add(int(character["size"]["height"]))
+    return sizes
 
 
 def find_cell(idle_height, walk_height):
@@ -80,32 +95,52 @@ def measure(path, cell):
     return tallest, widest
 
 
-def main():
-    slug = sys.argv[1]
-    folder = CREATURES / slug / "battle"
+def check_zip(path, canvas, errors):
+    sizes = zip_canvases(path)
+    print("%s: canvas %s" % (path.name, ", ".join(str(size) for size in sorted(sizes)) or "não achado"))
+    if sizes != {canvas}:
+        errors.append("%s: canvas %s, e a regra pede %d" % (path.name, sorted(sizes), canvas))
+
+
+def check_sheets(slug, canvas, errors):
+    folder = ROOT / "client" / "assets" / "creatures" / slug / "battle"
     paths = {name: folder / (name + ".png") for name in ("idle", "walk")}
-    missing = [path.name for path in paths.values() if not path.exists()]
-    if missing:
-        print("FALHA: falta %s em %s" % (", ".join(missing), folder))
-        sys.exit(1)
-    height_m = catalog_height(slug)
-    target = battle_height_in_pixels(height_m)
-    canvas = battle_canvas(height_m)
-    print("%s: %.2f m, desenho de %d px, canvas %d" % (slug, height_m, target, canvas))
+    if not all(path.exists() for path in paths.values()):
+        print("sem as duas folhas em %s" % folder)
+        return
     cell = find_cell(read_png(paths["idle"])[1], read_png(paths["walk"])[1])
     if cell is None:
-        print("FALHA: as linhas das folhas não fecham numa célula só (idle com 2 ou 5, walk com 3 ou 5)")
-        sys.exit(1)
-    if cell != canvas:
-        print("AVISO: célula de %d, e a regra pede %d" % (cell, canvas))
-    errors = []
+        errors.append("as linhas das folhas não fecham numa célula só (idle com 2 ou 5, walk com 3 ou 5)")
+        return
+    from_zip = set()
+    for name, sheets in ZIP_SHEETS.items():
+        if (ROOT / "art-source" / slug / name).exists():
+            from_zip.update(sheets)
+    low = round(canvas * HAND_MIN)
     for name, path in paths.items():
         tallest, widest = measure(path, cell)
-        print("%s: %d px de altura, %d px de largura" % (name, tallest, widest))
-        if abs(tallest - target) > HEIGHT_MARGIN:
-            errors.append("%s: %d px de altura, e a regra pede %d (±%d)" % (name, tallest, target, HEIGHT_MARGIN))
+        origin = "do PixelLab" if name in from_zip else "à mão, faixa de %d a %d" % (low, canvas)
+        print("%s: %d px de altura, %d px de largura, célula %d (%s)" % (name, tallest, widest, cell, origin))
+        if name not in from_zip and not low <= tallest <= canvas:
+            errors.append("%s: %d px de altura, fora da faixa de %d a %d do canvas %d" % (name, tallest, low, canvas, canvas))
         if widest > MAX_WIDTH:
             errors.append("%s: %d px de largura, o limite é %d" % (name, widest, MAX_WIDTH))
+
+
+def main():
+    slug = sys.argv[1]
+    height_m = catalog_height(slug)
+    canvas = battle_canvas(height_m)
+    print("%s: %.2f m, canvas %d no PixelLab" % (slug, height_m, canvas))
+    errors = []
+    if len(sys.argv) > 2:
+        check_zip(Path(sys.argv[2]), canvas, errors)
+    else:
+        for name in ZIP_SHEETS:
+            path = ROOT / "art-source" / slug / name
+            if path.exists():
+                check_zip(path, canvas, errors)
+        check_sheets(slug, canvas, errors)
     for error in errors:
         print("FALHA:", error)
     print("RESULTADO:", "FALHOU" if errors else "PASSOU")
