@@ -87,7 +87,11 @@ As folhas do tabuleiro da luta ficam em `<criatura>/battle/` e seguem o formato 
 - `walk.png` tem 3 linhas: a diagonal descendo (south-east), o lado (east) e a diagonal subindo (north-east), ou 5, com mais south e north, que o tabuleiro não usa;
 - as células são quadradas, todas as vistas olham para a direita, e uma linha pode ter menos quadros que outra.
 
-O jogo tira tudo da imagem, então não há arquivo de dados ao lado. Elas aparecem sem ampliar. Há dois jeitos de fazer essas folhas:
+O jogo tira tudo da imagem, então não há arquivo de dados ao lado. Elas aparecem sem ampliar.
+
+**Tamanho (board-battle/41).** O que vale é a altura do desenho, do pixel mais alto ao pé, no quadro mais alto: `arredondar(30 + 22 × height_m)`, entre 32 e 80 px (Ruvo 41, Ruvak 52, Ruvaroth 66). O canvas é a caixa: 48 até 0,6 m, 64 até 1,3 m e 96 acima. A largura fica em até 90 px, mais compacta, nunca cortada. O PixelLab não ocupa o canvas sempre igual (o idle novo do Ruvak saiu com 43 px num canvas de 64), então confira toda folha com `python -I S/check_battle.py <slug>`, com o servidor no ar: ele falha com a altura fora de ±3 px da regra ou a largura acima de 90.
+
+Há dois jeitos de fazer essas folhas:
 
 **1. Do PixelLab.** O dono gera o personagem no site, com a vista "low top-down", a animação de idle (south e north, e de preferência também east, south-east e north-east) e o walk (east, south-east e north-east, e de preferência também south e north). A ferramenta põe as vistas a mais de uma folha quando o zip tem todas elas. O zip vai para `art-source/<slug>/pixellab.zip`; para baixar pela API, a chave fica em `PIXELLAB_API_KEY` no `server/.env`. Depois, rode `python -I S/battle_sheets.py <slug>`. Um `art-source/<slug>/battle.json` troca a fonte de uma vista, por exemplo `{"idle": {"north": "rotation"}}` para usar a imagem parada. Gerar no PixelLab gasta os créditos do dono: só gere com o ok dele.
 

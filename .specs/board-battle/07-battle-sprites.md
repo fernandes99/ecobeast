@@ -48,7 +48,7 @@ O mapa de Explorar continua com as folhas desenhadas à mão pela skill `creatur
   - Todas olham para a direita. A esquerda é a mesma arte espelhada.
 - **RF-05:** O número de quadros pode mudar de linha para linha. O resto de uma linha mais curta fica vazio, e nenhum quadro pode ser vazio. Cada quadro dura 0,2 s no idle (o tempo dos GIFs do PixelLab) e 0,15 s no walk. O zip não traz o tempo, então esses valores são _a revisar_.
 - **RF-06:** O jogo tira da própria imagem tudo o que precisa saber. A célula é a altura da folha dividida pelas linhas. Cada linha tem os quadros até a primeira célula vazia. Os pés ficam na última linha de pixels de todas as células. Não há arquivo de dados ao lado das folhas: não temos configuração de export no repositório que garanta que um `.json` solto vá para o Android.
-- **RF-07:** O pixel da arte tem o mesmo tamanho para todos: uma evolução parece maior por ter mais pixels, não pixels maiores. Canvas (_a revisar_): Ruvo 48, Ruvak 64, Ruvaroth 96.
+- **RF-07:** O pixel da arte tem o mesmo tamanho para todos: uma evolução parece maior por ter mais pixels, não pixels maiores. A altura do desenho e o canvas saem da altura do catálogo pela regra da [41](41-battle-sprite-size.md): Ruvo 41 px num canvas de 48, Ruvak 52 px em 64 e Ruvaroth 66 px em 96.
 - **RF-08:** A ferramenta lê `art-source/<slug>/pixellab.zip`. Ela usa a animação com "idle" no nome para o idle e a com "walk" para o walk. Um `art-source/<slug>/battle.json` opcional troca a fonte de uma vista: o nome de outra animação, ou `"rotation"` para a imagem parada daquela direção. Uma vista que falta, ou um quadro vazio, fazem a ferramenta parar com uma mensagem que diz o que falta.
 
 **No tabuleiro**
