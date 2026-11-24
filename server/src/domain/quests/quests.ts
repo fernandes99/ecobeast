@@ -118,6 +118,17 @@ export function progressLine(
   return `${title}: ${progress} de ${target}.`;
 }
 
+/** O progresso curto do quadro de missões (explore-hud/01): "2/3", "40%/60%" ou "3/5 min". */
+export function progressShort(quest: QuestParams, progress: number): string {
+  const target = questTarget(quest);
+  const slug = questSlug(quest.questTypeId);
+  if (slug === 'explore_percent') return `${progress}%/${target}%`;
+  if (slug === 'stay_minutes') {
+    return `${Math.floor(progress / 60)}/${target / 60} min`;
+  }
+  return `${progress}/${target}`;
+}
+
 export const acceptedLine = (title: string): string => `Nova missão: ${title}.`;
 export const claimedLine = (title: string): string =>
   `Missão cumprida: ${title}!`;

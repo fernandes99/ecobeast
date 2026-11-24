@@ -162,6 +162,10 @@ describe('As missões das ilhas (e2e)', () => {
             .send(islandId === undefined ? {} : { island_id: islandId })
             .expect(201)
         ).body as { quest_places: Place[] },
+      list: async () =>
+        (await http().get('/v1/me/quests').set(auth).expect(200)).body as {
+          quests: Record<string, unknown>[];
+        },
       talk: (npcId: number) =>
         http().post('/v1/me/quests/talk').set(auth).send({ npc_id: npcId }),
       said: async (npcId: number) =>
@@ -470,6 +474,57 @@ describe('As missões das ilhas (e2e)', () => {
     ]);
     expect(explore.next?.quest_id).toBe(quests[6]!.id);
   }, 120_000);
+
+  it('lista as missões aceitas e não entregues, com o progresso curto (explore-hud/01)', async () => {
+    await request(app.getHttpServer()).get('/v1/me/quests').expect(401);
+    const giver = await npc('Lia');
+    const home = await island('Missões lista', BASE_ORDER + 20, [giver]);
+    const capture = await prisma.quest.create({
+      data: {
+        islandId: home,
+        npcId: giver,
+        position: 1,
+        questTypeId: 1,
+        amount: 3,
+        title: 'Capture 3 Ecobeasts',
+      },
+    });
+    const me = await player();
+    await me.unlock(home);
+    expect((await me.list()).quests).toEqual([]);
+
+    await me.explore(home);
+    await me.said(giver);
+    await me.accept(capture.id).expect(200);
+    expect((await me.list()).quests).toEqual([
+      {
+        id: capture.id,
+        island_id: home,
+        island_name: 'Missões lista',
+        npc_id: giver,
+        npc_name: 'Lia',
+        title: 'Capture 3 Ecobeasts',
+        type: 'capture_any',
+        progress: 0,
+        target: 3,
+        progress_text: '0/3',
+        done: false,
+      },
+    ]);
+
+    await prisma.playerQuest.update({
+      where: { playerId_questId: { playerId: me.id, questId: capture.id } },
+      data: { progress: 3 },
+    });
+    const [ready] = (await me.list()).quests;
+    expect(ready).toMatchObject({ progress_text: '3/3', done: true });
+
+    await prisma.island.update({
+      where: { id: home },
+      data: { publishedAt: null },
+    });
+    expect((await me.list()).quests).toEqual([]);
+  });
 
   it('no mapa sorteado, os lugares vêm vazios e a conversa é recusada', async () => {
     const me = await player();

@@ -9,6 +9,10 @@ extends Node
 
 signal player_changed
 signal logged_in
+## A lista das missões aceitas mudou (explore-hud/01).
+signal quests_changed
+## Uma missão aceita ficou pronta entre duas leituras da lista.
+signal quest_ready(quest: ActiveQuest)
 
 const DISCOVERY_BATCH := 1000
 const PING_INTERVAL := 60.0
@@ -21,6 +25,9 @@ var opened_arena_rooms: Array[int] = []
 ## Os lugares das missões "Vá até" da ilha explorada, que as conversas e os passos atualizam (auralis/06).
 var quest_places: Dictionary[Vector2i, String] = {}
 var storage: Array[CreatureInstance] = []
+## As missões aceitas e não entregues, de todas as ilhas (explore-hud/01).
+var quests: Array[ActiveQuest] = []
+var _quests_loaded := false
 
 var _service: GameService = ApiGameService.new()
 var _auth := AuthService.new()
@@ -76,6 +83,7 @@ func cancel_login() -> void:
 
 func logout() -> Result:
 	var result: Result = await _auth.logout()
+	_forget_quests()
 	_set_player(null)
 	return result
 
@@ -209,6 +217,7 @@ func reset_progress() -> Result:
 	@warning_ignore("redundant_await")
 	var result: Result = await _service.reset_progress()
 	if result.ok:
+		_forget_quests()
 		_set_player(null)
 	return result
 
@@ -223,6 +232,30 @@ func start_exploration(island_id: int = 0) -> Result:
 	return result
 
 
+## Relê as missões aceitas; a primeira leitura não avisa as que já estavam prontas.
+func load_quests() -> Result:
+	@warning_ignore("redundant_await")
+	var result: Result = await _service.load_quests()
+	if not result.ok:
+		return result
+	var fresh: Array[ActiveQuest] = result.data
+	var ready: Array[ActiveQuest] = []
+	if _quests_loaded:
+		var waiting := {}
+		for quest in quests:
+			if not quest.done:
+				waiting[quest.id] = true
+		for quest in fresh:
+			if quest.done and waiting.has(quest.id):
+				ready.append(quest)
+	quests = fresh
+	_quests_loaded = true
+	quests_changed.emit()
+	for quest in ready:
+		quest_ready.emit(quest)
+	return result
+
+
 ## A conversa da missão; com recompensa, relê o Domador (moedas, Mochila e nível).
 func talk_quest(npc_id: int) -> Result:
 	@warning_ignore("redundant_await")
@@ -231,6 +264,7 @@ func talk_quest(npc_id: int) -> Result:
 		return result
 	var talk: QuestTalk = result.data
 	quest_places = talk.places
+	load_quests()
 	if talk.has_reward:
 		await load_player()
 	return result
@@ -242,6 +276,7 @@ func accept_quest(quest_id: int) -> Result:
 	var result: Result = await _service.accept_quest(quest_id)
 	if result.ok:
 		quest_places = (result.data as QuestTalk).places
+		load_quests()
 	return result
 
 
@@ -262,6 +297,8 @@ func reach_quest_place(coord: Vector2i) -> Array[String]:
 	if result.ok:
 		quest_places = result.data["places"]
 		reached = result.data["reached"]
+		if not reached.is_empty():
+			load_quests()
 	return reached
 
 
@@ -477,3 +514,9 @@ func _set_player(value: Player) -> void:
 		_ping_timer.start()
 		send_counters_ping.call_deferred()
 	player_changed.emit()
+
+
+func _forget_quests() -> void:
+	quests = []
+	_quests_loaded = false
+	quests_changed.emit()

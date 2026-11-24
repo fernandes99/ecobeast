@@ -2,7 +2,12 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsInt } from 'class-validator';
 import { TamerProgressDto } from '../tamer-level/tamer-level.dto.js';
 import type { DialogueStep } from '../domain/quests/quest-dialogue.js';
-import type { QuestOffer, QuestPlace, TalkStage } from './quests.service.js';
+import type {
+  ActiveQuest,
+  QuestOffer,
+  QuestPlace,
+  TalkStage,
+} from './quests.service.js';
 
 export const INVALID_TALK = 'Informe o NPC da conversa.';
 export const INVALID_REACH = 'Informe o hexágono do Domador.';
@@ -208,4 +213,72 @@ export class QuestReachResponseDto {
 
   @ApiProperty({ type: () => [QuestPlaceDto] })
   quest_places: QuestPlaceDto[];
+}
+
+export class ActiveQuestDto {
+  @ApiProperty({ example: 3 })
+  id: number;
+
+  @ApiProperty({ example: 2 })
+  island_id: number;
+
+  @ApiProperty({ example: 'Brisa' })
+  island_name: string;
+
+  @ApiProperty({ description: 'O NPC que entrega a missão.', example: 6 })
+  npc_id: number;
+
+  @ApiProperty({ example: 'Mira' })
+  npc_name: string;
+
+  @ApiProperty({ example: 'Capture 3 Ecobeasts' })
+  title: string;
+
+  @ApiProperty({
+    description: 'O `slug` do tipo (`quest_types`).',
+    example: 'capture_any',
+  })
+  type: string;
+
+  @ApiProperty({
+    description: 'O progresso: no "Fique", em segundos; no "Explore", em %.',
+    example: 2,
+  })
+  progress: number;
+
+  @ApiProperty({ description: 'O alvo, na unidade do progresso.', example: 3 })
+  target: number;
+
+  @ApiProperty({
+    description: 'O progresso curto: "2/3", "40%/60%" ou "3/5 min".',
+    example: '2/3',
+  })
+  progress_text: string;
+
+  @ApiProperty({
+    description: 'Cumprida, falta falar com o NPC para entregar.',
+    example: false,
+  })
+  done: boolean;
+}
+
+export function toActiveQuestDto(quest: ActiveQuest): ActiveQuestDto {
+  return {
+    id: quest.id,
+    island_id: quest.islandId,
+    island_name: quest.islandName,
+    npc_id: quest.npcId,
+    npc_name: quest.npcName,
+    title: quest.title,
+    type: quest.type,
+    progress: quest.progress,
+    target: quest.target,
+    progress_text: quest.progressText,
+    done: quest.done,
+  };
+}
+
+export class ActiveQuestsResponseDto {
+  @ApiProperty({ type: () => [ActiveQuestDto] })
+  quests: ActiveQuestDto[];
 }

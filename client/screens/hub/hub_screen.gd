@@ -39,12 +39,6 @@ const LEVEL_BADGE_SIZE := 40
 const PARTY_LEVEL_FONT := 18
 
 const EXPLORE_RADIUS := 24
-const EXPLORE_EDGE := 3
-const EXPLORE_LIP := 10
-const EXPLORE_PRESSED_LIP := 4
-const EXPLORE_LIGHTEN := 0.3
-const EXPLORE_LIP_DARKEN := 0.4
-const EXPLORE_TEXT_DARKEN := 0.65
 const BOUNCE_SCALE := 1.04
 const BOUNCE_SECONDS := 0.18
 const BOUNCE_EVERY := 3.0
@@ -364,48 +358,12 @@ static func _visible_height(sprite: CreatureSprite) -> float:
 
 func _build_explore() -> void:
 	_explore_button.icon = load(ICON_PATH % "explore") as Texture2D
-	var fill: Color = UiPalette.ACTION_COLORS[&"explore"][0]
-	var edge := fill.lightened(EXPLORE_LIGHTEN)
-	var lip := fill.darkened(EXPLORE_LIP_DARKEN)
-	var normal := _explore_style(fill, edge, lip, EXPLORE_LIP)
-	_explore_button.add_theme_stylebox_override(&"normal", normal)
-	_explore_button.add_theme_stylebox_override(&"hover", normal)
-	_explore_button.add_theme_stylebox_override(&"focus", StyleBoxEmpty.new())
-	var pressed := _explore_style(fill.darkened(0.08), edge, lip, EXPLORE_PRESSED_LIP)
-	_explore_button.add_theme_stylebox_override(&"pressed", pressed)
-	_explore_button.add_theme_stylebox_override(&"hover_pressed", pressed)
-	var off := UiPalette.SURFACE_RAISED
-	_explore_button.add_theme_stylebox_override(&"disabled", _explore_style(off, off.lightened(EXPLORE_LIGHTEN), off.darkened(EXPLORE_LIP_DARKEN), EXPLORE_LIP))
-	for state: StringName in [&"font_color", &"font_hover_color", &"font_pressed_color", &"font_focus_color", &"font_hover_pressed_color"]:
-		_explore_button.add_theme_color_override(state, UiPalette.TEXT)
-	_explore_button.add_theme_color_override(&"font_disabled_color", UiPalette.TEXT_SECONDARY)
-	_explore_button.add_theme_constant_override(&"outline_size", BIG_OUTLINE)
-	_explore_button.add_theme_color_override(&"font_outline_color", fill.darkened(EXPLORE_TEXT_DARKEN))
+	GameButtonStyle.apply(_explore_button, UiPalette.ACTION_COLORS[&"explore"][0], EXPLORE_RADIUS, BIG_OUTLINE)
 	_explore_button.pressed.connect(_explore)
 	_explore_button.button_down.connect(_stop_bounce)
 	_explore_button.button_up.connect(_start_bounce)
 	_explore_button.resized.connect(func() -> void: _explore_button.pivot_offset = _explore_button.size / 2.0)
 	_start_bounce()
-
-
-## A lateral do botão é uma sombra sólida logo abaixo da face: apertado, a face desce
-## sobre ela e o texto vai junto.
-func _explore_style(fill: Color, edge: Color, lip: Color, lip_size: int) -> StyleBoxFlat:
-	var sink := EXPLORE_LIP - lip_size
-	var style := StyleBoxFlat.new()
-	style.bg_color = fill
-	style.border_color = edge
-	style.set_border_width_all(EXPLORE_EDGE)
-	style.set_corner_radius_all(EXPLORE_RADIUS)
-	style.expand_margin_top = -sink
-	style.expand_margin_bottom = -lip_size
-	style.shadow_color = lip
-	style.shadow_size = 1
-	style.shadow_offset = Vector2(0.0, lip_size)
-	style.set_content_margin_all(12)
-	style.content_margin_top = 12 + sink
-	style.content_margin_bottom = 12 + lip_size
-	return style
 
 
 func _start_bounce() -> void:

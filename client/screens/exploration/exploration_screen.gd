@@ -14,6 +14,18 @@ const NPC_TAMER_VOICE := "medium"
 const ACTION_TINT_ALPHA := 0.45
 const MAP_MARKER_ACTIONS: Array[String] = ["refuge", "shop", "travel"]
 const MENU_ICON := "res://ui/icons/person.svg"
+const BACK_ICON := "res://ui/icons/back.svg"
+const BAG_ICON := "res://ui/icons/bag.svg"
+const SEARCH_ICON := "res://ui/icons/explore.svg"
+## Os botões redondos de jogo dos cantos (explore-hud/02).
+const ROUND_OUTLINE := 8
+const SEARCH_LIP := 8
+const SMALL_LIP := 6
+const SEARCH_FONT := 22
+const QUEST_READY_TEXT := "Missão pronta: %s. Fale com %s."
+## De quanto em quanto tempo o quadro relê as missões "Fique" e "Explore" da ilha (explore-hud/03).
+const QUEST_POLL_SECONDS := 30.0
+const LIVE_QUEST_TYPES: Array[StringName] = [&"stay_minutes", &"explore_percent"]
 ## Na criação, o Domador fica no meio da parte de cima, acima do painel.
 const CREATOR_CENTER := 0.24
 ## Na casa, o campo e a vila em volta do início já vêm descobertos (liora-intro/04). A revisar.
@@ -119,25 +131,28 @@ var _followers: Array[NpcSprite] = []
 var _trail: Array[Vector2i] = []
 var _teleporting := false
 var _debug_panel := ExplorationDebugPanel.new()
+var _quest_tracker := QuestTracker.new()
+var _quest_list := QuestListPanel.new()
+var _quest_timer := Timer.new()
+## As missões prontas avisadas com a tela escondida, para a volta.
+var _ready_quests: Array[ActiveQuest] = []
 
 @onready var _map_area: Control = %MapArea
 @onready var _map_view: HexMapView = %MapView
 @onready var _marker: TamerSprite = %PlayerMarker
-@onready var _controls_panel: Control = %ControlsPanel
-@onready var _message: Label = %Message
+@onready var _message: MapToast = %Message
+@onready var _bottom_bar: Control = %BottomBar
+@onready var _party: PartyStrip = %Party
 @onready var _encounter_button: Button = %EncounterButton
 @onready var _bag_button: Button = %BagButton
 @onready var _back_button: Button = %BackButton
-@onready var _debug_button: Button = %DebugButton
 @onready var _greeting: TamerGreetingPanel = %TamerGreeting
-@onready var _island_plate: Control = %IslandPlate
-@onready var _island_name: Label = %IslandName
+@onready var _plates: ExplorePlates = %Plates
 @onready var _building_names: BuildingNamesLayer = %BuildingNames
 @onready var _day_light: DayLightLayer = %DayLight
 @onready var _fog: FogLayer = %Fog
 @onready var _minimap: Minimap = %Minimap
 @onready var _top_row: HBoxContainer = %TopRow
-@onready var _day_phase_badge: Control = %DayPhaseBadge
 @onready var _minimap_space: Control = %MinimapSpace
 @onready var _island_map: IslandMapPanel = %IslandMap
 
@@ -158,8 +173,10 @@ func _ready() -> void:
 	_map_area.gui_input.connect(_on_map_input)
 	_encounter_button.pressed.connect(_search)
 	_bag_button.pressed.connect(Router.push.bind(&"bag"))
+	_style_hud()
+	_party.tapped.connect(_open_team)
+	_greeting.visibility_changed.connect(_refresh_bottom_bar)
 	if _at_home():
-		_back_button.text = "Menu"
 		_back_button.icon = load(MENU_ICON) as Texture2D
 		_back_button.pressed.connect(_open_menu)
 	else:
@@ -168,10 +185,10 @@ func _ready() -> void:
 	_sync_timer.timeout.connect(Session.send_island_discoveries)
 	add_child(_sync_timer)
 	_build_debug_panel()
+	_build_quests()
 	_greeting.tapped.connect(_on_greeting_tapped)
 	_build_story()
 	resized.connect(_fit_view.call_deferred)
-	_top_row.resized.connect(_fit_island_name)
 	_minimap.tapped.connect(_open_island_map)
 	_island_map.hex_tapped.connect(_teleport)
 	visibility_changed.connect(_on_visibility_changed)
@@ -203,6 +220,9 @@ func _show_debug_time() -> void:
 func handle_back() -> bool:
 	if _island_map.visible:
 		_island_map.close_panel()
+		return true
+	if _quest_list.visible:
+		_quest_list.close_panel()
 		return true
 	if _loading or _challenger != null or _in_talk() or _story_busy():
 		return true
@@ -242,12 +262,12 @@ func _exit_tree() -> void:
 
 
 func _begin() -> void:
-	_show_message(ISLAND_LOADING_TEXT if _island_id > 0 else LOADING_TEXT, &"SecondaryLabel")
+	_show_message(ISLAND_LOADING_TEXT if _island_id > 0 else LOADING_TEXT, &"SecondaryLabel", true)
 	var result: Result = await Session.start_exploration(_island_id)
 	_loading = false
 	_back_button.disabled = false
 	if not result.ok:
-		_show_message(result.error, &"DangerLabel")
+		_show_message(result.error, &"DangerLabel", true)
 		return
 	_map = result.data
 	_map.set_prop_lines(GameData.prop_blocks_by_key())
@@ -283,15 +303,16 @@ func _begin() -> void:
 	_refresh_wild_sprites()
 	_map_view.show()
 	_marker.show()
-	_message.hide()
+	_message.hide_now()
 	Music.play_explore()
 	_encounter_button.disabled = false
 	_bag_button.disabled = false
 	if OS.is_debug_build():
-		_debug_button.show()
 		_debug_panel.fill_species()
-	# O botão de debug muda a altura do painel.
 	_fit_view.call_deferred()
+	_refresh_quests()
+	Session.load_quests()
+	_quest_timer.start()
 	Story.begin_entry()
 	_refresh_team_controls()
 	_start_story.call_deferred()
@@ -312,10 +333,9 @@ func _input(event: InputEvent) -> void:
 
 ## O mapa acima do painel de botões, quando o toque nele valeria; senão, nenhuma.
 func _zoom_area() -> Rect2:
-	if _map == null or _showing_whole_map or _challenger != null or _in_talk() or _island_map.visible or _story_busy():
+	if _map == null or _showing_whole_map or _challenger != null or _in_talk() or _overlay_open() or _story_busy():
 		return Rect2()
-	var top := _map_area.get_global_rect().position
-	return Rect2(top, Vector2(_map_area.size.x, _controls_panel.get_global_rect().position.y - top.y))
+	return _map_area.get_global_rect()
 
 
 func _on_pinch_started(_center: Vector2) -> void:
@@ -376,7 +396,7 @@ func _on_map_input(event: InputEvent) -> void:
 
 
 func _tap(point: Vector2) -> void:
-	if _map == null or _showing_whole_map or _challenger != null or _in_talk() or _island_map.visible or _story_busy():
+	if _map == null or _showing_whole_map or _challenger != null or _in_talk() or _overlay_open() or _story_busy():
 		return
 	var art_point := (point - _map_view.position) / _map_view.pixel_scale()
 	if _walking:
@@ -438,7 +458,7 @@ func _go_to(art_point: Vector2) -> void:
 func _walk(route: PackedVector2Array) -> void:
 	_walking = true
 	_stop_walk = false
-	_message.hide()
+	_message.hide_now()
 	_show_route(route)
 	_marker.play_run()
 	var total := WalkRoute.length(route)
@@ -612,12 +632,13 @@ func _on_visibility_changed() -> void:
 		_refresh_debug_clear()
 		_release_challenge()
 		_refresh_wild_sprites()
+		_refresh_team_controls()
+		Session.load_quests()
+		_show_ready_quests()
 
 
 func _show_island() -> void:
-	_island_plate.visible = _map.island_id > 0
-	_island_name.text = _map.island_name
-	_fit_island_name.call_deferred()
+	_show_biome()
 	_building_labels.clear()
 	# Uma camada por linha, para a linha seguinte e os atores ficarem por cima.
 	var rows: Dictionary[int, Array] = {}
@@ -642,15 +663,10 @@ func _show_island() -> void:
 	_refresh_building_names()
 
 
-## O nome da ilha corta com reticências antes de chegar no minimapa (minimap/01).
-func _fit_island_name() -> void:
-	var font := _island_name.get_theme_font(&"font")
-	var font_size := _island_name.get_theme_font_size(&"font_size")
-	var wanted := font.get_string_size(_island_name.text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
-	var separation := _top_row.get_theme_constant(&"separation")
-	var plate := _island_plate.get_theme_stylebox(&"panel").get_minimum_size().x
-	var room := _top_row.size.x - _minimap_space.custom_minimum_size.x - _day_phase_badge.get_combined_minimum_size().x - separation * 2 - plate
-	_island_name.custom_minimum_size.x = clampf(wanted, 0.0, maxf(room, 0.0))
+## A placa de cima mostra o bioma do hexágono do Domador (explore-hud/04).
+func _show_biome() -> void:
+	var tile := _map.tile_at(_player_coord) if _map != null else null
+	_plates.set_biome(tile.biome if tile != null else "")
 
 
 func _open_island_map() -> void:
@@ -748,6 +764,7 @@ func _refresh_building_names() -> void:
 
 ## Descobre os hexágonos em volta do Domador e tira a névoa deles (fog-of-war/02).
 func _discover() -> void:
+	_show_biome()
 	var found := _discovery.reveal_around(_map, _player_coord)
 	if found.is_empty():
 		return
@@ -791,7 +808,7 @@ func _open_prop(index: int) -> void:
 		_marker.face_toward(_map.props[index].foot() - _player_point)
 		_marker.play_idle()
 		_debug_panel.hide()
-		_message.hide()
+		_message.hide_now()
 		_set_controls_enabled(false)
 		_say_line()
 		return
@@ -813,7 +830,7 @@ func _finish_prop(index: int) -> void:
 func _challenge(tamer: MapTamer) -> void:
 	_challenger = tamer
 	_debug_panel.hide()
-	_message.hide()
+	_message.hide_now()
 	_set_controls_enabled(false)
 	_greeting.say("%s: %s" % [GameData.get_npc_tamer_name(tamer.name_id), GameData.get_npc_tamer_greeting(tamer.greeting_id)], GameData.voice_by_slug(NPC_TAMER_VOICE))
 
@@ -991,7 +1008,7 @@ func _talk(npc: NpcSprite) -> void:
 	_marker.face_toward(npc.position - _player_art_point())
 	_marker.play_idle()
 	_debug_panel.hide()
-	_message.hide()
+	_message.hide_now()
 	_set_controls_enabled(false)
 	_say_line()
 
@@ -1004,7 +1021,7 @@ func _converse(npc: NpcSprite) -> void:
 	_marker.face_toward(npc.position - _player_art_point())
 	_marker.play_idle()
 	_debug_panel.hide()
-	_message.hide()
+	_message.hide_now()
 	_set_controls_enabled(false)
 	await _conversation.run(map_npc, _quest_scene.bind(npc))
 	if not is_inside_tree():
@@ -1104,7 +1121,6 @@ func _set_controls_enabled(enabled: bool) -> void:
 	_encounter_button.disabled = not enabled
 	_bag_button.disabled = not enabled
 	_back_button.disabled = not enabled
-	_debug_button.disabled = not enabled
 
 
 func _forget_island() -> void:
@@ -1143,7 +1159,6 @@ func _build_debug_panel() -> void:
 	var column := _top_row.get_parent()
 	column.add_child(_debug_panel)
 	column.move_child(_debug_panel, _top_row.get_index() + 1)
-	_debug_button.pressed.connect(_toggle_debug_menu)
 	_debug_panel.whole_map_toggled.connect(_toggle_whole_map)
 	_debug_panel.god_toggled.connect(_toggle_god)
 	_debug_panel.forget_pressed.connect(_forget_island)
@@ -1331,8 +1346,7 @@ func _fit_view() -> void:
 	if _map == null:
 		return
 	if _showing_whole_map:
-		var panel_top := _controls_panel.get_global_rect().position.y
-		_map_view.show_whole_map(Rect2(0.0, 0.0, size.x, panel_top))
+		_map_view.show_whole_map(Rect2(Vector2.ZERO, size))
 		_marker.position = _player_art_point()
 	else:
 		_map_view.show_pixel_art()
@@ -1412,10 +1426,8 @@ func _move_map(value: Vector2) -> void:
 	_sync_view_layers()
 
 
-func _show_message(text: String, variation: StringName) -> void:
-	_message.text = text
-	_message.theme_type_variation = variation
-	_message.show()
+func _show_message(text: String, variation: StringName, sticky := false) -> void:
+	_message.show_text(text, variation, sticky)
 
 
 # A história (story/02 e 03).
@@ -1493,8 +1505,120 @@ func _has_team() -> bool:
 func _refresh_team_controls() -> void:
 	var team := _has_team()
 	_encounter_button.visible = team
-	if _at_home():
-		_back_button.visible = team
+	_party.visible = team
+	var creatures: Array[CreatureInstance] = []
+	if Session.player != null:
+		creatures = Session.player.party
+	_party.set_team(creatures)
+	_back_button.visible = (team or not _at_home()) and not _story_busy()
+	_refresh_bottom_bar()
+
+
+## A caixa de fala fica no lugar dos controles de baixo; numa cena, tudo some (explore-hud/02).
+func _refresh_bottom_bar() -> void:
+	_bottom_bar.visible = not _greeting.visible and not _story_busy()
+
+
+func _open_team() -> void:
+	if _encounter_button.disabled or _loading or _in_talk() or _story_busy():
+		return
+	Router.push(&"team")
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	var key := event as InputEventKey
+	if key == null or not key.pressed or key.echo or key.keycode != KEY_F4 or not OS.is_debug_build():
+		return
+	get_viewport().set_input_as_handled()
+	if _map == null or _story_busy() or _in_talk() or _overlay_open() or _challenger != null:
+		return
+	_toggle_debug_menu()
+
+
+# O quadro de missões (explore-hud/03).
+
+
+func _build_quests() -> void:
+	var column := _top_row.get_parent()
+	column.add_child(_quest_tracker)
+	column.move_child(_quest_tracker, _top_row.get_index() + 1)
+	_quest_tracker.pressed.connect(_open_quest_list)
+	add_child(_quest_list)
+	_quest_list.closed.connect(_refresh_quests)
+	_quest_timer.wait_time = QUEST_POLL_SECONDS
+	_quest_timer.timeout.connect(_poll_quests)
+	add_child(_quest_timer)
+	Session.quests_changed.connect(_refresh_quests)
+	Session.quest_ready.connect(_on_quest_ready)
+	resized.connect(_fit_quest_tracker)
+	_fit_quest_tracker.call_deferred()
+	_refresh_quests()
+
+
+func _fit_quest_tracker() -> void:
+	var minimap_room := _minimap_space.custom_minimum_size.x + _top_row.get_theme_constant(&"separation")
+	_quest_tracker.set_room(QuestTracker.width_for(_top_row.size.x, minimap_room))
+
+
+## O mapa grande ou a lista de missões abertos travam o mapa.
+func _overlay_open() -> bool:
+	return _island_map.visible or _quest_list.visible
+
+
+func _current_island() -> int:
+	return _map.island_id if _map != null else _island_id
+
+
+func _refresh_quests() -> void:
+	_quest_tracker.set_quests(Session.quests, _current_island())
+	_quest_tracker.visible = _map != null and _quest_tracker.has_quests() and not _story_busy()
+
+
+func _open_quest_list() -> void:
+	if _map == null or _story_busy() or _challenger != null or _island_map.visible:
+		return
+	if _walking:
+		_stop_walk = true
+		_next_point = null
+	_debug_panel.hide()
+	_quest_list.open(Session.quests, _current_island())
+
+
+## Só relê com uma missão "Fique" ou "Explore" da ilha aberta por cumprir.
+func _poll_quests() -> void:
+	if not is_visible_in_tree() or _map == null or _map.island_id <= 0:
+		return
+	for quest in Session.quests:
+		if quest.island_id == _map.island_id and not quest.done and LIVE_QUEST_TYPES.has(quest.type):
+			Session.load_quests()
+			return
+
+
+func _on_quest_ready(quest: ActiveQuest) -> void:
+	_ready_quests.append(quest)
+	_show_ready_quests()
+
+
+func _show_ready_quests() -> void:
+	if not is_visible_in_tree() or _ready_quests.is_empty() or _story_busy():
+		return
+	var quest: ActiveQuest = _ready_quests.pop_back()
+	_ready_quests.clear()
+	_show_message(QUEST_READY_TEXT % [quest.title, quest.npc_name], &"SecondaryLabel")
+
+
+func _style_hud() -> void:
+	var raised := UiPalette.SURFACE_RAISED
+	_round_button(_back_button, raised, BACK_ICON, SMALL_LIP)
+	_round_button(_bag_button, raised, BAG_ICON, SMALL_LIP)
+	_round_button(_encounter_button, UiPalette.ACTION_COLORS[&"explore"][0], SEARCH_ICON, SEARCH_LIP)
+	_encounter_button.add_theme_font_size_override(&"font_size", SEARCH_FONT)
+
+
+func _round_button(button: Button, fill: Color, icon_path: String, lip: int) -> void:
+	var side := roundi(button.custom_minimum_size.x)
+	GameButtonStyle.apply(button, fill, side / 2, ROUND_OUTLINE, lip, side / 8)
+	button.icon = load(icon_path) as Texture2D
 
 
 ## Na casa sem nome e sem cena para dar o nome, a criação abre sozinha.
@@ -1524,15 +1648,18 @@ func story_began() -> void:
 	_npc_target = null
 	_prop_target = -1
 	_debug_panel.hide()
-	_message.hide()
-	_controls_panel.hide()
+	_message.hide_now()
+	_back_button.hide()
+	_bottom_bar.hide()
+	_quest_tracker.hide()
 	_minimap.hide()
 	# A câmera da cena mostra o mapa inteiro; a névoa volta, como estava, quando ela termina.
 	_fog.visible = false
 
 
 func story_ended() -> void:
-	_controls_panel.show()
+	_refresh_team_controls()
+	_refresh_quests()
 	_minimap.show()
 	_fog.visible = not _showing_whole_map
 	_fit_view.call_deferred()

@@ -39,6 +39,13 @@ const HUB_CLOUD_TINT: Dictionary[String, Color] = {
 const HUB_VIGNETTE := Color("#06111F99")
 ## O contorno escuro dos textos grandes do Hub.
 const TEXT_OUTLINE := Color("#06111F")
+## O nome da parte do dia na placa de Explorar (explore-hud/04).
+const HUD_PHASE_COLORS: Dictionary[String, Color] = {
+	"morning": Color("#FFE08A"),
+	"afternoon": Color("#FFC94A"),
+	"dusk": Color("#FF9A5A"),
+	"night": Color("#A9B4FF"),
+}
 const MAP_ROUTE := Color("#FFFFFFD9")
 const MAP_ROUTE_SHADOW := Color("#0000004D")
 const MAP_AREA_COLORS: Array[Color] = [

@@ -84,6 +84,10 @@ extends RefCounted
 @abstract func start_board_island_tamer(npc_id: int, god: bool = false) -> Result
 
 
+## As missões aceitas e não entregues (explore-hud/01); `data` é `Array[ActiveQuest]`.
+@abstract func load_quests() -> Result
+
+
 ## A conversa da missão ao tocar no NPC (auralis/06 e 10); `data` é um `QuestTalk`.
 @abstract func talk_quest(npc_id: int) -> Result
 

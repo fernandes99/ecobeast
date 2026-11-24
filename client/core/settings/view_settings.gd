@@ -26,6 +26,16 @@ static func set_editor_motion(on: bool) -> void:
 	_write("editor_motion", on)
 
 
+## Se o quadro de missões de Explorar fica recolhido (explore-hud/03).
+static func quests_collapsed() -> bool:
+	var on: Variant = _read().get("quests_collapsed")
+	return bool(on) if on is bool else false
+
+
+static func set_quests_collapsed(on: bool) -> void:
+	_write("quests_collapsed", on)
+
+
 static func _write(key: String, value: Variant) -> void:
 	var data := _read()
 	data[key] = value

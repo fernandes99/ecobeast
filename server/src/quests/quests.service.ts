@@ -16,7 +16,10 @@ import {
   claimedLine,
   explorePercent,
   progressLine,
+  progressShort,
   QUEST_TYPES,
+  questSlug,
+  type QuestTypeSlug,
   questTarget,
   questTitle,
 } from '../domain/quests/quests.js';
@@ -88,6 +91,21 @@ export interface ReachResult {
   questPlaces: QuestPlace[];
 }
 
+/** Uma missão aceita e não entregue, para o quadro de Explorar (explore-hud/01). */
+export interface ActiveQuest {
+  id: number;
+  islandId: number;
+  islandName: string;
+  npcId: number;
+  npcName: string;
+  title: string;
+  type: QuestTypeSlug;
+  progress: number;
+  target: number;
+  progressText: string;
+  done: boolean;
+}
+
 const QUEST_SELECT = {
   id: true,
   islandId: true,
@@ -124,6 +142,54 @@ export class QuestsService {
     private readonly tamerLevel: TamerLevelService,
     private readonly completion: IslandCompletionService,
   ) {}
+
+  /** As missões aceitas e não entregues das ilhas publicadas, da mais antiga à mais nova. */
+  async active(userId: string): Promise<ActiveQuest[]> {
+    const rows = await this.prisma.playerQuest.findMany({
+      where: {
+        playerId: userId,
+        claimedAt: null,
+        quest: { island: { publishedAt: { not: null } } },
+      },
+      orderBy: [{ acceptedAt: 'asc' }, { questId: 'asc' }],
+      select: {
+        progress: true,
+        quest: {
+          select: {
+            ...QUEST_SELECT,
+            npcId: true,
+            npc: { select: { name: true } },
+          },
+        },
+      },
+    });
+    const islandIds = [...new Set(rows.map(({ quest }) => quest.islandId))];
+    const maps = await this.prisma.islandMap.findMany({
+      where: { islandId: { in: islandIds }, kind: PUBLISHED },
+      select: { islandId: true, name: true },
+    });
+    const names = new Map(maps.map(({ islandId, name }) => [islandId, name]));
+    const quests: ActiveQuest[] = [];
+    for (const { quest, progress: stored } of rows) {
+      const islandName = names.get(quest.islandId) ?? '';
+      const progress = await this.progressOf(userId, quest, stored);
+      const target = questTarget(quest);
+      quests.push({
+        id: quest.id,
+        islandId: quest.islandId,
+        islandName,
+        npcId: quest.npcId,
+        npcName: quest.npc.name,
+        title: questTitle(quest, namesOf(quest, islandName)),
+        type: questSlug(quest.questTypeId),
+        progress,
+        target,
+        progressText: progressShort(quest, progress),
+        done: progress >= target,
+      });
+    }
+    return quests;
+  }
 
   /** Os lugares das missões "Vá até" aceitas e não alcançadas da ilha. */
   async places(userId: string, islandId: number): Promise<QuestPlace[]> {

@@ -1,4 +1,11 @@
-import { Body, Controller, HttpCode, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
@@ -13,6 +20,7 @@ import {
 import { AuthGuard } from '../auth/auth.guard.js';
 import { CurrentUser } from '../auth/current-user.decorator.js';
 import {
+  ActiveQuestsResponseDto,
   INVALID_ACCEPT,
   INVALID_REACH,
   INVALID_TALK,
@@ -22,6 +30,7 @@ import {
   QuestReachResponseDto,
   QuestTalkBodyDto,
   QuestTalkResponseDto,
+  toActiveQuestDto,
   toQuestOfferDto,
   toQuestPlaceDto,
 } from './quests.dto.js';
@@ -47,6 +56,21 @@ import {
 @Controller('me/quests')
 export class QuestsController {
   constructor(private readonly quests: QuestsService) {}
+
+  @Get()
+  @ApiOperation({
+    summary: 'As missões aceitas',
+    description:
+      'As missões aceitas e ainda não entregues do Domador, das ilhas ' +
+      'publicadas, da mais antiga à mais nova, com o progresso de agora (no ' +
+      '"Explore", contado pelo descoberto da ilha) e o texto curto dele, para ' +
+      'o quadro de missões de Explorar (explore-hud/01).',
+  })
+  @ApiOkResponse({ type: ActiveQuestsResponseDto })
+  async list(@CurrentUser() userId: string): Promise<ActiveQuestsResponseDto> {
+    const quests = await this.quests.active(userId);
+    return { quests: quests.map(toActiveQuestDto) };
+  }
 
   @Post('talk')
   @HttpCode(200)

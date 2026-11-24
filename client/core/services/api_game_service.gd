@@ -35,6 +35,7 @@ const COUNTERS_PING_PATH := "/v1/me/counters/ping"
 const ISLANDS_PATH := "/v1/me/islands"
 const DISCOVERIES_PATH := "/v1/me/islands/%d/discoveries"
 const ARCHIPELAGO_PATH := "/v1/me/archipelago"
+const QUESTS_PATH := "/v1/me/quests"
 const QUEST_TALK_PATH := "/v1/me/quests/talk"
 const QUEST_REACH_PATH := "/v1/me/quests/reach"
 const QUEST_ACCEPT_PATH := "/v1/me/quests/accept"
@@ -140,6 +141,15 @@ func start_exploration(island_id: int = 0) -> Result:
 	exploration.quest_places = QuestTalk.places_from(DictFields.get_array(response.data, "quest_places"))
 	exploration.ground_items = MapGroundItem.list_from(DictFields.get_array(response.data, "ground_items"))
 	return Result.success(exploration)
+
+
+func load_quests() -> Result:
+	var response: ApiResponse = await Api.request(HTTPClient.METHOD_GET, QUESTS_PATH, null, true)
+	if not response.ok:
+		return Result.failure(response.error)
+	if not response.data is Dictionary:
+		return Result.failure(ApiResponse.SERVER_ERROR)
+	return Result.success(ActiveQuest.list_from(DictFields.get_array(response.data, "quests")))
 
 
 func talk_quest(npc_id: int) -> Result:

@@ -133,6 +133,7 @@ O Ecobeast é um jogo mobile (Android/iOS, retrato): o cliente em **Godot 4.7 co
 | [budflit-line](budflit-line/) | A borboleta torcedora, Budflit, Cheerwing e Galafly (Inseto, com o Psíquico a partir da Cheerwing), o primeiro Suporte Inspirador, do Campo florido |
 | [bumbit-line](bumbit-line/) | A abelha operária, Bumbit, Buzzwork e Bloomarch (Inseto, com a Flora na final), o primeiro Controlador Arquiteto, do Campo florido, com a marca Melado |
 | [arena-buildings](arena-buildings/) | Os prédios da Arena com os tiles do Fantasy Dreamland Reborn: a fortaleza do Castle e o coliseu do Dungeon, aberto ou fechado, com os braseiros animados |
+| [explore-hud](explore-hud/) | A tela Explorar com o mapa na tela inteira, os controles nos cantos com a cara de jogo da Home, o aviso em balão, o Debug no F4 e o quadro das missões aceitas, com a rota `GET /v1/me/quests` |
 
 As próximas iniciativas estão no [roadmap.md](roadmap.md).
 

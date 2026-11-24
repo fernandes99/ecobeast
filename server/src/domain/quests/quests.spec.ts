@@ -5,6 +5,7 @@ import {
   claimedLine,
   explorePercent,
   progressLine,
+  progressShort,
   QUEST_TYPES,
   type QuestParams,
   questTarget,
@@ -95,6 +96,17 @@ describe('o alvo e as falas (auralis/06)', () => {
     expect(acceptedLine('Vá até o Farol')).toBe('Nova missão: Vá até o Farol.');
     expect(claimedLine('Vá até o Farol')).toBe(
       'Missão cumprida: Vá até o Farol!',
+    );
+  });
+
+  it('o progresso curto do quadro cabe numa linha', () => {
+    expect(progressShort(quest('capture_any', { amount: 3 }), 2)).toBe('2/3');
+    expect(progressShort(quest('reach_place'), 0)).toBe('0/1');
+    expect(progressShort(quest('explore_percent', { amount: 60 }), 40)).toBe(
+      '40%/60%',
+    );
+    expect(progressShort(quest('stay_minutes', { amount: 5 }), 199)).toBe(
+      '3/5 min',
     );
   });
 

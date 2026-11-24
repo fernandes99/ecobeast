@@ -7,10 +7,12 @@
 [ext_resource type="Script" path="res://screens/exploration/tamer_greeting_panel.gd" id="5_greeting"]
 [ext_resource type="Script" path="res://ui/components/building_names_layer.gd" id="6_names"]
 [ext_resource type="Script" path="res://ui/components/day_light_layer.gd" id="7_day_light"]
-[ext_resource type="PackedScene" path="res://ui/components/day_phase_badge.tscn" id="8_day_phase"]
 [ext_resource type="Script" path="res://ui/components/fog_layer.gd" id="9_fog"]
 [ext_resource type="Script" path="res://ui/components/minimap.gd" id="10_minimap"]
 [ext_resource type="Script" path="res://screens/exploration/island_map_panel.gd" id="11_island_map"]
+[ext_resource type="Script" path="res://screens/exploration/map_toast.gd" id="12_toast"]
+[ext_resource type="Script" path="res://screens/exploration/party_strip.gd" id="13_party"]
+[ext_resource type="Script" path="res://screens/exploration/explore_plates.gd" id="15_plates"]
 
 [node name="ExplorationScreen" type="Control"]
 layout_mode = 3
@@ -105,26 +107,21 @@ theme_override_constants/separation = 12
 unique_name_in_owner = true
 layout_mode = 2
 mouse_filter = 2
-theme_override_constants/separation = 12
+theme_override_constants/separation = 10
 
-[node name="IslandPlate" type="PanelContainer" parent="SafeArea/Column/TopRow"]
+[node name="BackButton" type="Button" parent="SafeArea/Column/TopRow"]
 unique_name_in_owner = true
-visible = false
+custom_minimum_size = Vector2(64, 64)
 layout_mode = 2
-size_flags_horizontal = 4
-mouse_filter = 2
-theme_type_variation = &"NamePlatePanel"
+size_flags_vertical = 0
+disabled = true
+icon_alignment = 1
+expand_icon = true
 
-[node name="IslandName" type="Label" parent="SafeArea/Column/TopRow/IslandPlate"]
+[node name="Plates" type="VBoxContainer" parent="SafeArea/Column/TopRow"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_type_variation = &"TitleLabel"
-horizontal_alignment = 1
-text_overrun_behavior = 3
-
-[node name="DayPhaseBadge" parent="SafeArea/Column/TopRow" instance=ExtResource("8_day_phase")]
-layout_mode = 2
-unique_name_in_owner = true
+script = ExtResource("15_plates")
 
 [node name="MinimapSpace" type="Control" parent="SafeArea/Column/TopRow"]
 unique_name_in_owner = true
@@ -138,64 +135,56 @@ layout_mode = 2
 size_flags_vertical = 3
 mouse_filter = 2
 
+[node name="Message" type="PanelContainer" parent="SafeArea/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+script = ExtResource("12_toast")
+
 [node name="TamerGreeting" type="PanelContainer" parent="SafeArea/Column"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 script = ExtResource("5_greeting")
 
-[node name="ControlsPanel" type="PanelContainer" parent="SafeArea/Column"]
+[node name="BottomBar" type="HBoxContainer" parent="SafeArea/Column"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_type_variation = &"SectionPanel"
-
-[node name="Controls" type="VBoxContainer" parent="SafeArea/Column/ControlsPanel"]
-layout_mode = 2
+mouse_filter = 2
 theme_override_constants/separation = 12
 
-[node name="Message" type="Label" parent="SafeArea/Column/ControlsPanel/Controls"]
+[node name="Party" type="HBoxContainer" parent="SafeArea/Column/BottomBar"]
 unique_name_in_owner = true
-visible = false
-layout_mode = 2
-horizontal_alignment = 1
-autowrap_mode = 3
-
-[node name="DebugButton" type="Button" parent="SafeArea/Column/ControlsPanel/Controls"]
-unique_name_in_owner = true
-visible = false
-custom_minimum_size = Vector2(0, 56)
-layout_mode = 2
-theme_type_variation = &"OutlineButton"
-text = "Debug"
-
-[node name="EncounterButton" type="Button" parent="SafeArea/Column/ControlsPanel/Controls"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 80)
-layout_mode = 2
-disabled = true
-text = "Procurar Ecobeast"
-
-[node name="BottomRow" type="HBoxContainer" parent="SafeArea/Column/ControlsPanel/Controls"]
-layout_mode = 2
-theme_override_constants/separation = 12
-
-[node name="BagButton" type="Button" parent="SafeArea/Column/ControlsPanel/Controls/BottomRow"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_type_variation = &"OutlineButton"
-disabled = true
-text = "Mochila"
+size_flags_vertical = 8
+mouse_filter = 2
+script = ExtResource("13_party")
 
-[node name="BackButton" type="Button" parent="SafeArea/Column/ControlsPanel/Controls/BottomRow"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 64)
+[node name="Actions" type="VBoxContainer" parent="SafeArea/Column/BottomBar"]
 layout_mode = 2
-size_flags_horizontal = 3
-theme_type_variation = &"OutlineButton"
+size_flags_vertical = 8
+mouse_filter = 2
+theme_override_constants/separation = 14
+
+[node name="BagButton" type="Button" parent="SafeArea/Column/BottomBar/Actions"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(72, 72)
+layout_mode = 2
+size_flags_horizontal = 8
 disabled = true
-text = "Voltar"
+icon_alignment = 1
+expand_icon = true
+
+[node name="EncounterButton" type="Button" parent="SafeArea/Column/BottomBar/Actions"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(128, 128)
+layout_mode = 2
+size_flags_horizontal = 8
+disabled = true
+text = "Procurar"
+icon_alignment = 1
+vertical_icon_alignment = 0
+expand_icon = true
 
 [node name="BottomSpace" type="Control" parent="SafeArea/Column"]
 custom_minimum_size = Vector2(0, 8)
