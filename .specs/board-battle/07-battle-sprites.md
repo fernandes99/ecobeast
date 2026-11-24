@@ -120,7 +120,7 @@ O que a implementação fez diferente do primeiro rascunho desta spec, e por qu�
 - **Sem o `sheets.json`.** O rascunho guardava a célula, os quadros e o tempo num arquivo ao lado das folhas. Agora o jogo tira tudo da imagem (RF-06), e o tempo de cada quadro fica no código.
 - **Sem o `BattleCreatureSprite`.** O `Token` já tinha um `Sprite2D`, e as folhas tocam nele com `hframes` e `vframes`. O `SheetSprite` do mapa não mudou.
 - **A entrada da ferramenta é o zip, e não os GIFs.** Com a chave da API do dono, o zip do personagem traz cada quadro em PNG, separado por animação e direção.
-- **O Ruvak é desenhado à mão**, por decisão do dono, sem o PixelLab. Desenhar texto pixel a pixel nesse tamanho deixaria cada vista de um jeito. Por isso, ele é um boneco de elipsoides (`.claude/skills/creature-sprites/scripts/puppet.py`), virado para cada vista e pintado em 3 tons, com o contorno e os olhos em carimbos. O desenho está em `client/assets/creatures/ruvak/battle/sprites.py`, que escreve as folhas na mesma pasta.
+- **O Ruvak é desenhado à mão**, por decisão do dono, sem o PixelLab. Desenhar texto pixel a pixel nesse tamanho deixaria cada vista de um jeito. Por isso, ele é um boneco de elipsoides (`.claude/skills/creature-sprites/scripts/puppet.py`), virado para cada vista e pintado em 3 tons, com o contorno e os olhos em carimbos. O desenho está em `client/assets/creatures/ruvak/battle/sprites.py`, que escreve as folhas na mesma pasta. Depois, na [42](42-ruvo-line-pixellab.md), o Ruvak e o Ruvaroth também passaram a vir do PixelLab, e o boneco ficou só como exemplo.
 
 ## Resultado da verificação
 

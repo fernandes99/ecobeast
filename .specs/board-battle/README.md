@@ -95,6 +95,7 @@ A luta nova substitui a de hoje em Explorar zona. A luta atual deixa de ser usad
 | 38 | [38-dune-support-skills-art](38-dune-support-skills-art.md) | Ícone, efeito e som da Ferroada Paralisante, do Enterrar, do Bote da Duna, da Erva da Bolsa, da Atadura Firme e do Cochilo | concluída (falta o dono ver e ouvir no jogo) |
 | 39 | [39-glimshell-moth-skills-art](39-glimshell-moth-skills-art.md) | Ícone, efeito e som do Ninho de Ervas, do Lampejo, do Casco Prismático, do Halo Protetor, do Raio Prismático e do Pó Arcano, com o projétil das 3 de longe | concluída (falta o dono ver e ouvir no jogo) |
 | 41 | [41-battle-sprite-size](41-battle-sprite-size.md) | O tamanho dos Ecobeasts na luta: o canvas do PixelLab pela altura do catálogo (48 até 0,6 m, 64 até 1,0 m, 80 até 2,0 m e 96 acima), com o desenho do tamanho que vier, a faixa das folhas à mão e a conferência `check_battle.py` | concluída |
+| 42 | [42-ruvo-line-pixellab](42-ruvo-line-pixellab.md) | A linha do Ruvo inteira do PixelLab: o idle e o walk do Ruvo, do Ruvak e do Ruvaroth nas 5 vistas, no modelo `dog`, com o boneco do Ruvak só como exemplo | concluída (falta o dono ver no jogo) |
 
 O desenho compartilhado está no [architecture.md](architecture.md).
 

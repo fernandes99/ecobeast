@@ -1,6 +1,9 @@
-"""Ruvak: as folhas da luta, idle.png e walk.png (board-battle/07).
+"""Ruvak: o exemplo do boneco de peças das folhas da luta (board-battle/07).
 
 Uso: python -I sprites.py <pasta das prévias>
+
+As folhas do jogo vêm do PixelLab (board-battle/42): o boneco escreve as dele só na
+pasta das prévias.
 
 Desenhado à mão, sem o PixelLab, por decisão do dono: um boneco de peças (puppet.py,
 na skill creature-sprites) que o renderizador vira para cada vista. O Ruvak é um lobo
@@ -171,8 +174,9 @@ def walk(view, frame):
 
 
 def main():
-    here = Path(__file__).parent
-    previews = Path(sys.argv[1]) if len(sys.argv) > 1 else None
+    if len(sys.argv) != 2:
+        sys.exit(__doc__)
+    previews = Path(sys.argv[1])
     renderer = Renderer(PALETTE, RAMPS, cell=CELL, ground_row=58)
     sheets = {
         "idle": (("south", "north"), IDLE_FRAMES, idle),
@@ -182,13 +186,10 @@ def main():
         lines = []
         for view in views:
             lines.append([renderer.render(view, *build(view, frame)) for frame in range(count)])
-        # O idle da luta veio do PixelLab (board-battle/24): o boneco só escreve o walk.
-        if name == "walk":
-            write_sheet(here / (name + ".png"), lines, CELL)
-        if previews is not None:
-            previews.mkdir(parents=True, exist_ok=True)
-            write_preview(previews / (name + "_quadros.png"), lines, CELL)
-    print("folhas em", here)
+        previews.mkdir(parents=True, exist_ok=True)
+        write_sheet(previews / (name + ".png"), lines, CELL)
+        write_preview(previews / (name + "_quadros.png"), lines, CELL)
+    print("folhas em", previews)
 
 
 if __name__ == "__main__":
