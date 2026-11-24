@@ -35,3 +35,4 @@ Escolhas de Claude (corrigíveis; ao mudar uma, atualize aqui e na fase):
 | --- | --- | --- | --- |
 | 1 | [01-villagers](01-villagers.md) | Os 10 moradores, a fala padrão no catálogo e no F2 | concluída (falta o dono conferir) |
 | 2 | [02-children](02-children.md) | Os corpos de criança Menino e Menina, só de NPC, e as crianças Juca, Nina e Bia | concluída (falta o dono conferir no F2) |
+| 3 | [03-child-template](03-child-template.md) | A criança desenhada pelo template 16x16 do pacote, com 16 pixels de altura | concluída (falta o dono conferir no F2) |

@@ -1,6 +1,6 @@
 # Créditos
 
-`template/idle.png` e `template/run.png` são folhas do pacote de template de personagem, 16x32.
+`template/idle.png` e `template/run.png` são folhas do pacote de template de personagem, 16x32, e `template/child/idle.png` e `run.png` as 16x16 do mesmo pacote, para a criança.
 
 Original character template created by Eris Esra: https://erisesra.itch.io/character-templates-pack
 

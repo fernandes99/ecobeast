@@ -17,7 +17,7 @@ res://assets/tamer/
   parts/<slug da peça>/idle.png, run.png            obrigatórias
   parts/<slug da peça>/idle_back.png, run_back.png  opcionais: o que fica atrás do corpo
   parts/<slug da peça>/idle_short.png, run_short.png  opcionais, só cabelo: a versão achatada para chapéu
-  parts/<slug da peça>/child/...                     as mesmas folhas no tamanho da criança
+  parts/<slug da peça>/child/...                     as mesmas folhas no tamanho da criança (template/child/, o 16x16)
 ```
 
 `idle.png` e `run.png` da raiz (o template da Eris Esra) passam para `template/`, e o `make_wardrobe.gd` gera deles os corpos e as peças provisórias ([fase 4](04-starter-wardrobe.md)).
