@@ -32,7 +32,7 @@ O efeito conhecido: com modelos diferentes, uma evolução pode sair quase da al
 - **RF-01:** O canvas do personagem no PixelLab sai da altura do catálogo (`height_m`), em 4 degraus: 48 até 0,6 m, 64 até 1,0 m, 80 até 2,0 m e 96 acima de 2,0 m. Em 2026-11-23, o catálogo tem 20 espécies no 48, 11 no 64, 19 no 80 e nenhuma no 96: o dono quis o maior canvas só para quem passa de 2 m ("quero aumentar na verdade o tamanho do 96, talvez acima de 2m"). O 96 fica para os gigantes que vierem; o desenho dele, de uns 62 a 82 px, ainda cabe nos 87 px de altura do hexágono.
 - **RF-02:** A folha de uma vista do PixelLab mantém o desenho como veio, sem ampliar nem reduzir. A célula da folha pode ser maior que o canvas, quando a ferramenta centra o canvas numa célula maior ([07](07-battle-sprites.md)).
 - **RF-03:** Uma folha desenhada à mão, como o walk do Ruvak pelo boneco, fica na faixa do canvas do RF-01: a altura do desenho entre 60% do canvas e o canvas (29 a 48, 38 a 64, 48 a 80 ou 58 a 96 px).
-- **RF-04:** A largura do desenho fica em até 90 px, abaixo dos 96 px do hexágono.
+- **RF-04:** A largura do desenho fica em até 96 px, a largura do hexágono. Era 90, com 6 px de folga; o dono subiu para 96 na [43](43-custom-pixellab.md), quando as asas abertas do Arbornix chegaram a 94 px ("Aceitar até 96 px").
 - **RF-05:** O `check_battle.py <slug>` confere:
   - o canvas de cada zip do PixelLab em `art-source/<slug>/` (o `size` do `metadata.json` ou do `.json` da folha) contra o RF-01;
   - as folhas que não vêm de um zip pela faixa do RF-03: o `pixellab.zip` cobre as duas folhas, e o `pixellab_idle.zip` ou o `pixellab_walk.zip` cobrem uma só;

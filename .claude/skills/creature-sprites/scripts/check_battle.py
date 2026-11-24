@@ -21,7 +21,7 @@ from spritekit import read_png  # noqa: E402
 
 API_URL = os.environ.get("ECOBEAST_API_URL", "http://localhost:3100")
 ROOT = Path(__file__).resolve().parents[4]
-MAX_WIDTH = 90
+MAX_WIDTH = 96
 HAND_MIN = 0.6
 IDLE_ROWS = (2, 5)
 WALK_ROWS = (3, 5)
