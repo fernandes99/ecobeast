@@ -97,6 +97,7 @@ A luta nova substitui a de hoje em Explorar zona. A luta atual deixa de ser usad
 | 41 | [41-battle-sprite-size](41-battle-sprite-size.md) | O tamanho dos Ecobeasts na luta: o canvas do PixelLab pela altura do catálogo (48 até 0,6 m, 64 até 1,0 m, 80 até 2,0 m e 96 acima), com o desenho do tamanho que vier, a faixa das folhas à mão e a conferência `check_battle.py` | concluída |
 | 42 | [42-ruvo-line-pixellab](42-ruvo-line-pixellab.md) | A linha do Ruvo inteira do PixelLab: o idle e o walk do Ruvo, do Ruvak e do Ruvaroth nas 5 vistas, no modelo `dog`, com o boneco do Ruvak só como exemplo | concluída (falta o dono ver no jogo) |
 | 43 | [43-custom-pixellab](43-custom-pixellab.md) | A linha do Seedlet do PixelLab (Seedlet, Grovequill e Arbornix), no modelo Custom, com o `battle.json` escolhendo as animações descritas em texto e o walk do Arbornix igual ao voo do idle, e a largura máxima na luta subindo para 96 px | concluída (falta o dono ver no jogo) |
+| 44 | [44-galecrest-flying](44-galecrest-flying.md) | O Galecrest voando, do PixelLab: o lado da animação `flying`, as outras vistas pairando e o walk igual ao idle | concluída (falta o dono ver no jogo) |
 
 O desenho compartilhado está no [architecture.md](architecture.md).
 
