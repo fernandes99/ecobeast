@@ -77,8 +77,9 @@ func _play(steps: Array) -> Outcome:
 			continue
 		var step: Dictionary = steps[i]
 		if step.get("type") == "say":
-			_greeting.say(_line(step), _voice(step))
-			await _greeting.tapped
+			for line: String in _lines(step):
+				_greeting.say(line, _voice(step))
+				await _greeting.tapped
 			if not StoryPlayer._is_choice(steps[i + 1] if i + 1 < steps.size() else null):
 				_greeting.close()
 			continue
@@ -103,10 +104,13 @@ func _play(steps: Array) -> Outcome:
 	return Outcome.CONTINUE
 
 
-func _line(step: Dictionary) -> String:
-	var text := StoryText.render(DictFields.get_string(step, "text"), Session.player)
+func _lines(step: Dictionary) -> Array[String]:
 	var speaker := _speaker_name(DictFields.get_string(step, "speaker"))
-	return "%s: %s" % [speaker, text] if not speaker.is_empty() else text
+	var shown: Array[String] = []
+	for paragraph: String in MapNpc.paragraphs(DictFields.get_string(step, "text")):
+		var text := StoryText.render(paragraph, Session.player)
+		shown.append("%s: %s" % [speaker, text] if not speaker.is_empty() else text)
+	return shown
 
 
 func _speaker_name(speaker: String) -> String:
