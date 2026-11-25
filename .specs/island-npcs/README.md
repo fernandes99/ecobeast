@@ -4,7 +4,7 @@ NPCs nas ilhas: personagens que o dono cadastra no catálogo e põe no mapa pelo
 
 ## Objetivos
 
-- Um catálogo de NPCs (`npcs`), editado pelo painel do Supabase, com nome, descrição e sprite.
+- Um catálogo de NPCs (`npcs`), editado pelo painel do Supabase, com nome, descrição e sprite. Com a [04](04-npc-catalog-editor.md), também criado, editado e apagado pelo F2.
 - No editor, a ferramenta NPC: escolher um NPC, pô-lo num hexágono, deixá-lo parado ou marcar os hexágonos do passeio, e escrever o diálogo e escolher a ação, os dois opcionais.
 - No jogo, o NPC parado ou passeando com as animações de parado e de andar. Tocar nele por perto abre a conversa e, depois dela, roda a ação.
 
@@ -43,5 +43,6 @@ NPCs nas ilhas: personagens que o dono cadastra no catálogo e põe no mapa pelo
 | 1 | [01-npc-records](01-npc-records.md) | Servidor: o catálogo `npcs` e os NPCs da ilha no rascunho, na publicação e no mapa de Explorar | concluída |
 | 2 | [02-npc-tool](02-npc-tool.md) | Editor: a ferramenta NPC | concluída |
 | 3 | [03-npc-talk](03-npc-talk.md) | Jogo: os NPCs passeando, a conversa e a ação | concluída |
+| 4 | [04-npc-catalog-editor](04-npc-catalog-editor.md) | Servidor e editor: criar, editar e apagar NPCs do catálogo pelo F2, com a recusa de apagar um NPC em uso | concluída (falta o dono conferir) |
 
 O desenho compartilhado está no [architecture.md](architecture.md).

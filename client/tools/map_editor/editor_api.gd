@@ -45,6 +45,18 @@ static func set_npc_voice(id: int, voice_id: int) -> ApiResponse:
 	return await _call(HTTPClient.METHOD_PUT, "%s/%d/voice" % [NPCS_PATH, id], {"voice_id": voice_id})
 
 
+static func create_npc(body: Dictionary) -> ApiResponse:
+	return await _call(HTTPClient.METHOD_POST, NPCS_PATH, body)
+
+
+static func update_npc(id: int, body: Dictionary) -> ApiResponse:
+	return await _call(HTTPClient.METHOD_PUT, "%s/%d" % [NPCS_PATH, id], body)
+
+
+static func delete_npc(id: int) -> ApiResponse:
+	return await _call(HTTPClient.METHOD_DELETE, "%s/%d" % [NPCS_PATH, id])
+
+
 static func delete_island(id: int) -> ApiResponse:
 	return await _call(HTTPClient.METHOD_DELETE, "%s/%d" % [ISLANDS_PATH, id])
 

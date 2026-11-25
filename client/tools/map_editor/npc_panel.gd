@@ -46,6 +46,7 @@ var _appearance_button: Button
 var _voice_option: OptionButton
 var _preview: TamerGreetingPanel
 var _group := ButtonGroup.new()
+var _catalog: NpcCatalogForm
 
 
 func _init() -> void:
@@ -113,13 +114,20 @@ func _init() -> void:
 	action_row.add_child(_action_option)
 
 	var delete := Button.new()
-	delete.text = "Apagar NPC  (Delete)"
+	delete.text = "Tirar do mapa  (Delete)"
+	delete.tooltip_text = "Tira este NPC do mapa da ilha; ele continua no catálogo."
 	delete.theme_type_variation = &"DangerButton"
 	delete.focus_mode = Control.FOCUS_NONE
 	delete.pressed.connect(delete_selected)
 	_selected_box.add_child(delete)
 	_selected_box.add_child(HSeparator.new())
 
+	_catalog = NpcCatalogForm.new()
+	_catalog.placed_in_draft = func(id: int) -> bool: return _placed_counts().has(id)
+	_catalog.message.connect(func(text: String, error: bool) -> void: message.emit(text, error))
+	_catalog.saved.connect(_on_catalog_saved)
+	_catalog.removed.connect(_on_catalog_removed)
+	add_child(_catalog)
 	_search = LineEdit.new()
 	_search.placeholder_text = "Buscar NPC pelo nome ou descrição"
 	_search.clear_button_enabled = true
@@ -272,6 +280,7 @@ func _refresh_list() -> void:
 	var placed := _placed_counts()
 	var loaded := _quests != null and _quests.is_loaded()
 	var query := _search.text.strip_edges()
+	_catalog.set_target(npc_id)
 	var here: Array[int] = []
 	for id: int in _rows:
 		var row := _rows[id]
@@ -414,6 +423,20 @@ func delete_selected() -> void:
 	step.npcs_after = _draft.npcs.duplicate(true)
 	select(-1)
 	edited.emit(step, false)
+
+
+## O NPC criado ou editado no catálogo fica escolhido na lista, pronto para pôr.
+func _on_catalog_saved(id: int) -> void:
+	_build_list()
+	npc_id = id
+	select(_first_index_of(id))
+	looks_changed.emit()
+
+
+func _on_catalog_removed(_id: int) -> void:
+	npc_id = 0
+	_build_list()
+	refresh()
 
 
 ## Escolhe o NPC para pôr; se ele já está na ilha, escolhe também o primeiro dele no mapa.
