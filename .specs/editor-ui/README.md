@@ -63,4 +63,4 @@ Escolhas de Claude (corrigíveis; ao mudar uma, atualize aqui e na fase):
 | --- | --- | --- | --- |
 | 1 | [01-prop-categories](01-prop-categories.md) | As categorias no catálogo e a ferramenta Peças com busca, categorias e grade de miniaturas | concluída (falta o dono conferir) |
 | 2 | [02-window-header](02-window-header.md) | O topo que cabe na janela e a barra de baixo com a mensagem e a situação da ilha | concluída (falta o dono conferir) |
-| 3 | [03-quest-panel](03-quest-panel.md) | A ferramenta Missões com a lista em cartões, o formulário em cartões com o Salvar no topo, o aviso de mudança não salva e as conversas mais leves, com os contadores | concluída (falta o dono conferir) |
+| 3 | [03-quest-panel](03-quest-panel.md) | A ferramenta Missões com a lista em cartões, o formulário em cartões com o Salvar no topo, o aviso de mudança não salva e as conversas mais leves, com os contadores | concluída |

@@ -1,6 +1,6 @@
 # 04. Criar, editar e apagar NPCs no F2
 
-- **Status:** concluída (falta o dono conferir no F2)
+- **Status:** concluída
 - **Depende de:** [02-npc-tool](02-npc-tool.md), [liora-intro/02](../liora-intro/) (os NPCs pessoas e o botão Aparência) e [dialogue-voices/03](../dialogue-voices/) (a voz do NPC no F2)
 
 ## Contexto
@@ -52,7 +52,7 @@ Nas perguntas da fase, o dono escolheu:
 
 ## Critérios de aceite
 
-- [ ] Criar um NPC Ecobeast e um pessoa pelo F2 e pô-los no mapa (falta o dono conferir).
-- [ ] Editar o nome de um NPC muda o nome na lista e na caixa de fala (falta o dono conferir).
-- [x] Apagar um NPC em uso diz onde ele está e não apaga; sem uso, ele some (no e2e; a lista do F2 falta o dono conferir).
+- [x] Criar um NPC Ecobeast e um pessoa pelo F2 e pô-los no mapa (o dono conferiu no F2 em 2026-11-24: "Testei no F2 e funcionou").
+- [x] Editar o nome de um NPC muda o nome na lista e na caixa de fala.
+- [x] Apagar um NPC em uso diz onde ele está e não apaga; sem uso, ele some.
 - [x] Os e2e de `npc-catalog-editor.e2e-spec.ts` e os testes de `npc-catalog.spec.ts` passam.

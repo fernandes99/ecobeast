@@ -1,6 +1,6 @@
 # 03. A ferramenta Missões
 
-- **Status:** concluída (falta o dono conferir no F2)
+- **Status:** concluída
 - **Depende de:** [auralis/07](../auralis/07-quest-editor.md) e [auralis/10](../auralis/10-quest-dialogues.md)
 
 ## Contexto
@@ -67,7 +67,7 @@ Os problemas da ferramenta Missões (o `QuestPanel` e o `QuestDialogueEditor`), 
 - [x] Numa missão com conversa longa, o Salvar está na primeira linha do formulário.
 - [x] Cancelar com mudança pede o segundo clique; sem mudança, fecha direto.
 - [x] O contador da fala e o de passos batem com os limites do servidor.
-- [ ] Salvar, apagar, mover e abrir pelo painel NPC continuam funcionando (as chamadas não mudaram; falta o dono conferir no F2).
+- [x] Salvar, apagar, mover e abrir pelo painel NPC continuam funcionando (o dono conferiu no F2 em 2026-11-24: "Testei no F2 e funcionou").
 - [x] O jogo abre sem erro de script.
 
 Conferido numa cena temporária, com fotos do painel com uma missão de exemplo (a lista, o formulário e o "Descartar mudanças?"), sem o catálogo carregado; o F2 de verdade não foi aberto.

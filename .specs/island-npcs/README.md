@@ -43,6 +43,6 @@ NPCs nas ilhas: personagens que o dono cadastra no catálogo e põe no mapa pelo
 | 1 | [01-npc-records](01-npc-records.md) | Servidor: o catálogo `npcs` e os NPCs da ilha no rascunho, na publicação e no mapa de Explorar | concluída |
 | 2 | [02-npc-tool](02-npc-tool.md) | Editor: a ferramenta NPC | concluída |
 | 3 | [03-npc-talk](03-npc-talk.md) | Jogo: os NPCs passeando, a conversa e a ação | concluída |
-| 4 | [04-npc-catalog-editor](04-npc-catalog-editor.md) | Servidor e editor: criar, editar e apagar NPCs do catálogo pelo F2, com a recusa de apagar um NPC em uso | concluída (falta o dono conferir) |
+| 4 | [04-npc-catalog-editor](04-npc-catalog-editor.md) | Servidor e editor: criar, editar e apagar NPCs do catálogo pelo F2, com a recusa de apagar um NPC em uso | concluída |
 
 O desenho compartilhado está no [architecture.md](architecture.md).
