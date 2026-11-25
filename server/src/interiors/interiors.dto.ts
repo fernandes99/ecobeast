@@ -76,6 +76,17 @@ export class InteriorObjectDto extends InteriorCellDto {
   @ApiProperty({ description: 'A altura em tiles, de 1 a 8.', example: 3 })
   @IsInt(integer('height'))
   height: number;
+
+  @ApiPropertyOptional({
+    description:
+      'O id em `action_types`, que acontece quando o Domador encosta no objeto (o `refuge` é a máquina de cura), ou nulo.',
+    example: 1,
+    nullable: true,
+    type: Number,
+  })
+  @IsOptional()
+  @IsInt(integer('action_type_id'))
+  action_type_id?: number | null;
 }
 
 export class InteriorNpcDto extends InteriorCellDto {

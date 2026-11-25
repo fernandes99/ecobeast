@@ -59,7 +59,7 @@ describe('interiorError', () => {
     expect(interiorError(tiles, known)).toBe('A sala pode ter até 16.384 tiles.');
     const objects = room((b) => {
       b.objects = Array.from({ length: 1_001 }, () => ({
-        x: 0, y: 0, sheet: 'interior', col: 0, row: 0, width: 1, height: 1,
+        x: 0, y: 0, sheet: 'interior', col: 0, row: 0, width: 1, height: 1, action_type_id: null,
       }));
     });
     expect(interiorError(objects, known)).toBe('A sala pode ter até 1.000 objetos.');
@@ -90,17 +90,25 @@ describe('interiorError', () => {
   });
 
   it('recusa um objeto inválido', () => {
-    const object = { x: 0, y: 0, sheet: 'interior', col: 0, row: 0, width: 9, height: 1 };
+    const object = { x: 0, y: 0, sheet: 'interior', col: 0, row: 0, width: 9, height: 1, action_type_id: null };
     expect(interiorError(room((b) => b.objects.push(object)), known)).toBe(
       'Há um objeto inválido.',
     );
   });
 
   it('recusa um objeto que passa da borda', () => {
-    const object = { x: 5, y: 0, sheet: 'interior', col: 0, row: 0, width: 2, height: 1 };
+    const object = { x: 5, y: 0, sheet: 'interior', col: 0, row: 0, width: 2, height: 1, action_type_id: null };
     expect(interiorError(room((b) => b.objects.push(object)), known)).toBe(
       'Há um objeto que passa da borda da sala.',
     );
+  });
+
+  it('aceita o objeto com uma ação e recusa a ação que não existe', () => {
+    const object = { x: 0, y: 0, sheet: 'refuge', col: 0, row: 8, width: 2, height: 1, action_type_id: 1 };
+    expect(interiorError(room((b) => b.objects.push(object)), known)).toBeNull();
+    expect(
+      interiorError(room((b) => b.objects.push({ ...object, action_type_id: 99 })), known),
+    ).toBe('O objeto tem uma ação que não existe.');
   });
 
   it('recusa um bloqueio fora da sala ou repetido', () => {

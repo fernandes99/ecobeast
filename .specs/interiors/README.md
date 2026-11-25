@@ -58,7 +58,7 @@ Tomadas no planejamento (corrigíveis; ao mudar uma, atualize aqui e nas specs a
 | As salas moram no banco (`interiors` e as tabelas dela), sem rascunho: salvar no F2 já vale no jogo | Dados de design moram no banco ([game-data](../game-data/architecture.md)); o rascunho das ilhas existe porque uma ilha é grande, e uma sala se monta em minutos |
 | O jogo baixa a sala ao entrar (`GET /v1/interiors/:id`), e não no catálogo | O catálogo é baixado inteiro no boot, e uma sala tem centenas de tiles que só servem quando o Domador entra |
 | A peça solta ganha a sala (`island_props.interior_id`), e a ação dela continua dizendo o que o prédio é | O ícone do Refúgio no minimapa e o nome do prédio continuam vindo da ação; uma peça com sala abre a sala em vez da tela da ação |
-| No Refúgio, a cura vem do NPC do balcão, com a ação `refuge` dele | Reaproveita a tela `heal_station` e a regra sem equipe de hoje, sem mudar nada no servidor |
+| No Refúgio, a cura vem do NPC do balcão, com a ação `refuge` dele | Reaproveita a tela `heal_station` e a regra sem equipe de hoje, sem mudar nada no servidor. Trocada na [04](04-refuge-hospital.md): o dono pediu uma máquina de cura no lugar do NPC |
 | A sala tem 4 camadas de tiles (chão, detalhe do chão, parede, detalhe da parede) e os objetos, cada um um retângulo de tiles da folha | O tile da parede se ordena pela linha dele, e o objeto pelo pé, para o Domador passar atrás de uma estante alta sem ficar por cima dela |
 | O bloqueio é por quadrado: sem chão bloqueia sozinho; a parede sólida e a linha de baixo de cada objeto viram bloqueios ao serem postos, e o resto se pinta à mão | No pacote, a camada de parede também cobre o chão livre com o contorno fino; a transparência do tile separa a parede de verdade sem uma tabela dos 750 tiles, e o servidor não precisa ler as folhas |
 | A porta é um quadrado de chão: o Domador nasce nele, e chegar nele vindo de outro quadrado sai | Como a ação de um hexágono, que só dispara para quem entra nele vindo de fora |
@@ -84,5 +84,6 @@ Tomadas no planejamento (corrigíveis; ao mudar uma, atualize aqui e nas specs a
 | [01](01-interior-data.md) | As salas no banco: as tabelas, a sala na peça, as rotas do jogo e do editor, e o Refúgio convertido do `Interior1.tmx` | concluída |
 | [02](02-interior-screen.md) | A tela do interior: entrar pela peça, desenhar a sala, andar, falar com os NPCs, curar no balcão e sair pela porta | concluída (falta o dono conferir no F5) |
 | [03](03-interior-editor.md) | O modo Interiores do F2: criar, pintar, pôr objetos, bloqueios, NPCs e a porta, salvar e ligar a sala à peça | concluída (falta o dono conferir no F2 e no F5) |
+| [04](04-refuge-hospital.md) | O hospital do Refúgio: a folha `refuge` do Fantasy Dreamland Reborn, a sala 1 refeita como hospital e a máquina de cura, um objeto com a ação `refuge` que cura na hora | concluída (falta o dono conferir no F5 e no F2) |
 
 O desenho que as fases compartilham está em [architecture.md](architecture.md).

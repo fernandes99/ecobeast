@@ -92,6 +92,10 @@ func move_object(index: int, cell: Vector2i) -> bool:
 	return true
 
 
+func set_object_action(index: int, type_id: int) -> void:
+	interior.objects[index].action_type_id = maxi(0, type_id)
+
+
 func remove_object(index: int) -> void:
 	_unblock_foot(index)
 	interior.objects.remove_at(index)

@@ -1,12 +1,18 @@
 class_name InteriorTiles
 extends RefCounted
 
-## As folhas do pacote Main Characters Home para as salas (interiors/02): o `TileSet`
+## As folhas das salas (interiors/02): as 3 do pacote Main Characters Home e a do
+## Refúgio, montada com as peças do Fantasy Dreamland Reborn (interiors/04); o `TileSet`
 ## montado por código, uma fonte de atlas por folha (o id é o índice em SHEETS), e a regra
 ## do bloqueio (.specs/interiors/architecture.md).
 
-const SHEETS: Array[String] = ["walls_floor", "interior", "doors_windows"]
-const SHEET_PATH := "res://assets/interiors/main_home/%s.png"
+const SHEETS: Array[String] = ["walls_floor", "interior", "doors_windows", "refuge"]
+const SHEET_PATHS: Dictionary[String, String] = {
+	"walls_floor": "res://assets/interiors/main_home/walls_floor.png",
+	"interior": "res://assets/interiors/main_home/interior.png",
+	"doors_windows": "res://assets/interiors/main_home/doors_windows.png",
+	"refuge": "res://assets/interiors/fdr/refuge.png",
+}
 const CELL := 16
 const SOLID_PIXELS := 128
 ## O `TileMapLayer` ordena pelo meio do quadrado; +8 ordena pela borda de baixo.
@@ -42,7 +48,7 @@ static func source_id(sheet: String) -> int:
 static func sheet_texture(sheet: String) -> Texture2D:
 	if not SHEETS.has(sheet):
 		return null
-	return load(SHEET_PATH % sheet) as Texture2D
+	return load(SHEET_PATHS[sheet]) as Texture2D
 
 
 ## O tamanho da folha em tiles.

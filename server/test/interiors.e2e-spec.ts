@@ -62,7 +62,9 @@ describe('Interiores (e2e)', () => {
       height: 6,
       door: { x: 4, y: 5 },
       tiles: floorOf(8, 6),
-      objects: [{ x: 1, y: 1, sheet: 'interior', col: 0, row: 0, width: 2, height: 2 }],
+      objects: [
+        { x: 1, y: 1, sheet: 'interior', col: 0, row: 0, width: 2, height: 2, action_type_id: refugeAction },
+      ],
       blocks: [{ x: 1, y: 2 }],
       npcs: [
         { npc_id: GRANDPA, x: 5, y: 2, dialogue: 'Olá!', action_type_id: refugeAction },
@@ -93,7 +95,7 @@ describe('Interiores (e2e)', () => {
   });
 
   describe('o jogo', () => {
-    it('traz o Refúgio convertido, com a porta num chão livre', async () => {
+    it('traz o Refúgio, o hospital, com a porta num chão livre e a máquina de cura', async () => {
       const response = await request(server()).get('/v1/interiors/1').set(auth()).expect(200);
       const room = response.body;
       expect(room.id).toBe(1);
@@ -102,6 +104,9 @@ describe('Interiores (e2e)', () => {
       expect([...layers].sort()).toEqual(['floor', 'floor_detail', 'wall', 'wall_detail']);
       expect(room.objects.length).toBeGreaterThan(0);
       expect(room.blocks.length).toBeGreaterThan(0);
+      expect(room.objects).toContainEqual(
+        expect.objectContaining({ sheet: 'refuge', width: 5, height: 2, action_type_id: refugeAction }),
+      );
       const door = room.door as { x: number; y: number };
       expect(
         (room.tiles as Tile[]).some(
@@ -189,6 +194,21 @@ describe('Interiores (e2e)', () => {
         dialogue: 'Olá!',
         action_type_id: refugeAction,
       });
+      expect(read.body.objects[0]).toMatchObject({ x: 1, y: 1, action_type_id: refugeAction });
+    });
+
+    it('recusa o objeto com uma ação que não existe', async () => {
+      const id = await newRoom();
+      const response = await request(server())
+        .put(`/v1/editor/interiors/${id}`)
+        .set(auth())
+        .send(
+          body((room) => {
+            (room.objects as Record<string, unknown>[])[0]!.action_type_id = 9_999;
+          }),
+        )
+        .expect(400);
+      expect(response.body.message).toBe('O objeto tem uma ação que não existe.');
     });
 
     it('recusa a porta bloqueada e o tile fora da sala', async () => {

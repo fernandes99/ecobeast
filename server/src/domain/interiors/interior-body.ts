@@ -16,6 +16,7 @@ export const MAX_OBJECT_SIZE = 8;
 export const MAX_SHEET_CELL = 63;
 
 export const NPC_NEEDS_FREE = 'O NPC precisa de um quadrado livre.';
+export const OBJECT_ACTION_UNKNOWN = 'O objeto tem uma ação que não existe.';
 export const DOOR_NEEDS_FLOOR =
   'A porta precisa estar num quadrado de chão, sem bloqueio.';
 
@@ -37,6 +38,7 @@ export interface InteriorObjectBody extends Cell {
   row: number;
   width: number;
   height: number;
+  action_type_id: number | null;
 }
 
 export interface InteriorNpcBody extends Cell {
@@ -128,6 +130,11 @@ export function interiorError(
   for (const object of body.objects) {
     const last = { x: object.x + object.width - 1, y: object.y + object.height - 1 };
     if (!inside(object) || !inside(last)) return 'Há um objeto que passa da borda da sala.';
+  }
+  for (const object of body.objects) {
+    if (object.action_type_id !== null && !known.actionTypeIds.has(object.action_type_id)) {
+      return OBJECT_ACTION_UNKNOWN;
+    }
   }
 
   const blocked = new Set<string>();

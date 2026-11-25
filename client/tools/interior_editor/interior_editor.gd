@@ -57,6 +57,10 @@ var _canvas := InteriorCanvas.new()
 var _palette := InteriorPalette.new()
 var _npc_panel := InteriorNpcPanel.new()
 var _hint: Label
+## A ação do objeto escolhido (interiors/04): a máquina de cura é um objeto com `refuge`.
+var _object_action_box: VBoxContainer
+var _object_action: OptionButton
+var _object_action_ids: Array[int] = []
 var _new_dialog: ConfirmationDialog
 var _new_name: LineEdit
 var _new_width: SpinBox
@@ -280,6 +284,7 @@ func _refresh_selection() -> void:
 	elif _draft != null and _selected_npc >= 0 and _selected_npc < _draft.interior.npcs.size():
 		rect = Rect2i(_draft.interior.npcs[_selected_npc].cell, Vector2i.ONE)
 	_canvas.selected_rect = rect
+	_show_object_action()
 	_npc_panel.show_npc(_draft.interior.npcs[_selected_npc] if _draft != null and _selected_npc >= 0 and _selected_npc < _draft.interior.npcs.size() else null)
 	_canvas.refresh_marks()
 
@@ -361,6 +366,32 @@ func _start_object(cell: Vector2i) -> void:
 	_selected_object = index
 	_drag_offset = cell - _draft.interior.objects[index].cell
 	_refresh_selection()
+
+
+func _show_object_action() -> void:
+	var item: InteriorObject = null
+	if _draft != null and _tool == &"object" and _selected_object >= 0 and _selected_object < _draft.interior.objects.size():
+		item = _draft.interior.objects[_selected_object]
+	_object_action_box.visible = item != null
+	if item == null:
+		return
+	if _object_action_ids.is_empty():
+		_object_action.add_item("Nenhuma")
+		_object_action_ids.append(0)
+		for row: Dictionary in GameData.get_rows("action_types"):
+			_object_action.add_item(str(row.get("name", "")))
+			_object_action_ids.append(int(row.get("id", 0)))
+	_object_action.select(maxi(0, _object_action_ids.find(item.action_type_id)))
+
+
+func _on_object_action(item: int) -> void:
+	if _draft == null or _selected_object < 0 or _selected_object >= _draft.interior.objects.size():
+		return
+	var before := _draft.snapshot()
+	_draft.set_object_action(_selected_object, _object_action_ids[item])
+	var keep := _selected_object
+	_commit(before, "Ação do objeto")
+	_selected_object = keep
 
 
 func _start_npc(cell: Vector2i) -> void:
@@ -588,6 +619,15 @@ func _build() -> void:
 	_hint.theme_type_variation = &"SecondaryLabel"
 	_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	side.add_child(_hint)
+	_object_action_box = VBoxContainer.new()
+	_object_action_box.visible = false
+	_object_action_box.add_child(_label("Ação ao tocar no objeto"))
+	_object_action = OptionButton.new()
+	_object_action.focus_mode = Control.FOCUS_NONE
+	_object_action.tooltip_text = "Refúgio faz do objeto uma máquina de cura."
+	_object_action.item_selected.connect(_on_object_action)
+	_object_action_box.add_child(_object_action)
+	side.add_child(_object_action_box)
 	_palette.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_palette.picked.connect(func(_sheet: String, _atlas: Vector2i, _size: Vector2i) -> void: _refresh_preview())
 	side.add_child(_palette)

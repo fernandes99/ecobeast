@@ -193,10 +193,11 @@ model ActionType {
   /// O que a ação faz. CHECK open_screen (migration island_villages)
   kind     String
 
-  actions      IslandAction[]
-  npcs         IslandNpc[]
-  props        IslandProp[]
-  interiorNpcs InteriorNpc[]
+  actions         IslandAction[]
+  npcs            IslandNpc[]
+  props           IslandProp[]
+  interiorNpcs    InteriorNpc[]
+  interiorObjects InteriorObject[]
 
   @@map("action_types")
   @@schema("ecobeasts")
@@ -1711,23 +1712,27 @@ model InteriorTile {
 
 /// Um retângulo de tiles de uma folha, posto inteiro, ordenado pelo pé.
 model InteriorObject {
-  id         Int    @id @default(autoincrement())
-  interiorId Int    @map("interior_id")
+  id           Int    @id @default(autoincrement())
+  interiorId   Int    @map("interior_id")
   /// O quadrado do canto de cima à esquerda. CHECK >= 0 (migration interiors)
-  x          Int    @db.SmallInt
-  y          Int    @db.SmallInt
+  x            Int    @db.SmallInt
+  y            Int    @db.SmallInt
   /// CHECK ^[a-z0-9_]+$ (migration interiors)
-  sheet      String
+  sheet        String
   /// O tile do canto de cima à esquerda na folha. CHECK de 0 a 63 (migration interiors)
-  col        Int    @db.SmallInt
-  row        Int    @db.SmallInt
+  col          Int    @db.SmallInt
+  row          Int    @db.SmallInt
   /// CHECK de 1 a 8 tiles (migration interiors)
-  width      Int    @db.SmallInt
-  height     Int    @db.SmallInt
+  width        Int    @db.SmallInt
+  height       Int    @db.SmallInt
+  /// O que o toque no objeto faz; nulo é sem ação (migration refuge_hospital).
+  actionTypeId Int?   @map("action_type_id")
 
-  interior Interior @relation(fields: [interiorId], references: [id], onDelete: Cascade)
+  interior   Interior    @relation(fields: [interiorId], references: [id], onDelete: Cascade)
+  actionType ActionType? @relation(fields: [actionTypeId], references: [id], onDelete: Restrict)
 
   @@index([interiorId])
+  @@index([actionTypeId])
   @@map("interior_objects")
   @@schema("ecobeasts")
 }

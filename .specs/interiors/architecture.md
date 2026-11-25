@@ -22,6 +22,8 @@ As três folhas do pacote Main Characters Home vão, sem mudar os pixels, para `
 | `interior` | `interior.png` | 14×27 tiles | móveis, tapetes, plantas, poções, barris |
 | `doors_windows` | `doors_windows.png` | 17×12 tiles | portas e janelas (só o primeiro quadro de cada animação é usado) |
 
+A [04](04-refuge-hospital.md) acrescenta a folha `refuge` (`refuge.png`, em `client/assets/interiors/fdr/`, 16×10 tiles), montada pelo `make_refuge_sheet.py` com peças das folhas Interior e Laboratory do Fantasy Dreamland Reborn, realinhadas aos 16 px: o piso, a parede rosa, o teto com a moldura creme e os cantos de dentro, o estrado, o tapete, o capacho, as placas da cruz, as cápsulas, as macas, os armários, as plantas, os sofás e a máquina de cura (colunas 0 a 4, linhas 8 e 9). O caminho de cada folha mora em `InteriorTiles.SHEET_PATHS`.
+
 O jogo monta o `TileSet` do Godot (o recurso que diz ao `TileMapLayer` de onde vem cada tile) por código, uma vez, com uma fonte de atlas por folha, na ordem da tabela: o id da fonte é o índice da folha em `InteriorTiles.SHEETS`. Um tile de uma folha que não existe, ou fora dela, não é desenhado, e o jogo segue.
 
 ## As tabelas
@@ -48,7 +50,7 @@ Schema `ecobeasts`. Os interiores não entram no catálogo (`GET /v1/catalog`): 
 | `sheet` | text | `^[a-z0-9_]+$` |
 | `col`, `row` | smallint | 0 a 63 |
 
-**`interior_objects`**: `id` serial, `interior_id` (FK, cascade), `x`, `y` (o quadrado do canto de cima à esquerda), `sheet`, `col`, `row` (o tile do canto de cima à esquerda na folha) e `width`, `height` (1 a 8 tiles), com a mesma regra de `sheet`, `col` e `row` acima.
+**`interior_objects`**: `id` serial, `interior_id` (FK, cascade), `x`, `y` (o quadrado do canto de cima à esquerda), `sheet`, `col`, `row` (o tile do canto de cima à esquerda na folha), `width`, `height` (1 a 8 tiles), com a mesma regra de `sheet`, `col` e `row` acima, e `action_type_id` (FK `action_types`, `on delete restrict`, nulo sem ação; [04](04-refuge-hospital.md)): o toque no objeto leva o Domador até o lado dele e roda a ação, e a `refuge` faz do objeto a máquina de cura.
 
 **`interior_blocks`**: `interior_id` (FK, cascade), `x`, `y`; a chave é os três. São os quadrados bloqueados: os marcados ao pôr uma parede sólida ou um objeto (pelo script da [01](01-interior-data.md) e pelo editor da [03](03-interior-editor.md)) e os pintados à mão.
 
@@ -80,7 +82,7 @@ Respostas e corpos em `snake_case`, como o resto da API. O corpo da sala é o me
   "height": 22,
   "door": { "x": 13, "y": 21 },
   "tiles": [{ "layer": "floor", "x": 3, "y": 5, "sheet": "walls_floor", "col": 4, "row": 9 }],
-  "objects": [{ "id": 7, "x": 10, "y": 6, "sheet": "interior", "col": 0, "row": 0, "width": 2, "height": 3 }],
+  "objects": [{ "id": 7, "x": 10, "y": 6, "sheet": "interior", "col": 0, "row": 0, "width": 2, "height": 3, "action_type_id": null }],
   "blocks": [{ "x": 10, "y": 8 }],
   "npcs": [{ "id": 2, "npc_id": 12, "x": 14, "y": 4, "dialogue": "Bem-vindo!", "action_type_id": 1 }]
 }
@@ -97,7 +99,7 @@ Respostas e corpos em `snake_case`, como o resto da API. O corpo da sala é o me
 
 As rotas `/v1/editor` usam o `EditorGuard` (404 com `MAP_EDITOR_USER_IDS` vazia, 403 a quem não está nela), como as outras.
 
-O `PUT` dá 400 com a mensagem do primeiro erro: um quadrado fora da sala ("Há um tile fora da sala."), dois tiles no mesmo quadrado e camada, um objeto que passa da borda, um bloqueio repetido, um NPC que não existe ("Esse NPC não existe."), um NPC num quadrado sem chão, bloqueado, na porta ou junto de outro NPC ("O NPC precisa de um quadrado livre."), um tipo de ação que não existe, ou a porta sem chão ou num bloqueio ("A porta precisa estar num quadrado de chão, sem bloqueio."). O limite é de 16.384 tiles, 1.000 objetos e 50 NPCs por sala.
+O `PUT` dá 400 com a mensagem do primeiro erro: um quadrado fora da sala ("Há um tile fora da sala."), dois tiles no mesmo quadrado e camada, um objeto que passa da borda, um bloqueio repetido, um objeto com uma ação que não existe ("O objeto tem uma ação que não existe."), um NPC que não existe ("Esse NPC não existe."), um NPC num quadrado sem chão, bloqueado, na porta ou junto de outro NPC ("O NPC precisa de um quadrado livre."), um tipo de ação que não existe, ou a porta sem chão ou num bloqueio ("A porta precisa estar num quadrado de chão, sem bloqueio."). O limite é de 16.384 tiles, 1.000 objetos e 50 NPCs por sala.
 
 O salvar da ilha no editor aceita o `interior_id` em cada peça (400 "Esse interior não existe." se não existir), e o mapa de Explorar (`ExplorationMap`) traz o `interior_id` de cada peça.
 

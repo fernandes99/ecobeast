@@ -6,6 +6,13 @@ extends Control
 
 const LOADING_TEXT := "Entrando…"
 const MAX_TAP_TRAVEL := 24.0
+## A máquina de cura: o objeto com a ação `refuge` (interiors/04).
+const MACHINE_ACTION := "refuge"
+const HEALED_TEXT := "Sua equipe está curada!"
+const HEAL_PULSES := 3
+const HEAL_SECONDS := 1.2
+const HEAL_GLOW := Color(1.8, 1.8, 2.1)
+const HEAL_SOUND := preload("res://assets/sounds/refuge/heal.wav")
 
 var _interior: Interior = null
 var _interior_id := 0
@@ -21,6 +28,9 @@ var _leaving := false
 var _press_position := Vector2.ZERO
 var _npc_sprites: Array[NpcSprite] = []
 var _npc_target: NpcSprite = null
+## O objeto com ação para onde o Domador anda, ou -1.
+var _object_target := -1
+var _heal_sound := AudioStreamPlayer.new()
 ## A conversa com o NPC, com a missão dele (auralis/10).
 var _choices := StoryChoicePanel.new()
 var _conversation: QuestConversation = null
@@ -51,6 +61,9 @@ func setup(params: Dictionary) -> void:
 
 func _ready() -> void:
 	_background.color = UiPalette.BACKGROUND
+	_heal_sound.stream = HEAL_SOUND
+	_heal_sound.bus = AudioSettings.SFX_BUS
+	add_child(_heal_sound)
 	_room_area.add_child(_view)
 	_view.visible = false
 	_room_area.gui_input.connect(_on_room_input)
@@ -89,11 +102,16 @@ func tap_art(point: Vector2) -> void:
 	if _route == null or _leaving or _conversing:
 		return
 	_npc_target = null
+	_object_target = -1
 	_show_message("")
 	for sprite: NpcSprite in _npc_sprites:
 		if sprite.hits(point):
 			_go_to_npc(sprite)
 			return
+	var touched := _object_with_action_at(point)
+	if touched >= 0:
+		_go_to_object(touched)
+		return
 	_walk(_route.route(_point, point))
 
 
@@ -156,6 +174,10 @@ func _process(delta: float) -> void:
 			var npc := _npc_target
 			_npc_target = null
 			_talk(npc)
+		elif _object_target >= 0:
+			var index := _object_target
+			_object_target = -1
+			_use_object(index)
 
 
 func _add_npcs(interior: Interior) -> void:
@@ -214,6 +236,96 @@ func _finish_talk(npc: MapNpc) -> void:
 		return
 	if await BattleIntro.cover(_tamer.get_global_transform_with_canvas().origin, &"tamer"):
 		Router.push(&"board_battle", {"island_tamer": npc.npc_id})
+
+
+## O objeto com ação de pé mais baixo cuja arte cobre o ponto, ou -1.
+func _object_with_action_at(point: Vector2) -> int:
+	var best := -1
+	for index: int in _interior.objects.size():
+		var item := _interior.objects[index]
+		if item.action_type_id <= 0:
+			continue
+		var art := Rect2(Vector2(item.cell * InteriorTiles.CELL), Vector2(item.size * InteriorTiles.CELL))
+		if art.has_point(point) and (best < 0 or item.foot_y() > _interior.objects[best].foot_y()):
+			best = index
+	return best
+
+
+## Encostado (um quadrado de lado de um quadrado do objeto), a ação acontece; senão, o
+## Domador anda até o quadrado livre ao lado de caminho mais curto.
+func _go_to_object(index: int) -> void:
+	var rect := _interior.objects[index].rect()
+	var mine := InteriorTiles.cell_of(_point)
+	var best := InteriorRoute.NONE
+	var best_path := PackedVector2Array()
+	var best_length := INF
+	for y: int in range(rect.position.y - 1, rect.end.y + 1):
+		for x: int in range(rect.position.x - 1, rect.end.x + 1):
+			var cell := Vector2i(x, y)
+			var beside := (x >= rect.position.x and x < rect.end.x) != (y >= rect.position.y and y < rect.end.y)
+			if not beside or _route.is_blocked(cell):
+				continue
+			if cell == mine:
+				_path.clear()
+				_use_object(index)
+				return
+			var path := _route.route_to_cell(_point, cell)
+			if path.is_empty():
+				continue
+			var length := _point.distance_to(path[0])
+			for step: int in range(1, path.size()):
+				length += path[step - 1].distance_to(path[step])
+			if length < best_length:
+				best = cell
+				best_path = path
+				best_length = length
+	if best == InteriorRoute.NONE:
+		return
+	_object_target = index
+	_walk(best_path)
+
+
+func _use_object(index: int) -> void:
+	var item := _interior.objects[index]
+	var center := Vector2(item.cell * InteriorTiles.CELL) + Vector2(item.size * InteriorTiles.CELL) / 2.0
+	_tamer.face_toward(center - _point)
+	_tamer.play_idle()
+	var slug := str(GameData.get_row("action_types", item.action_type_id).get("slug", ""))
+	if slug == MACHINE_ACTION:
+		_heal_machine(index)
+	else:
+		_run_action(item.action_type_id)
+
+
+## A máquina pisca e toca o som enquanto o servidor cura; com a equipe curada, a caixa
+## de fala avisa com a voz da narração.
+func _heal_machine(index: int) -> void:
+	if Session.player == null or not Session.player.has_starter():
+		_show_message(ActionScreens.NO_TEAM_HEAL_TEXT)
+		return
+	_conversing = true
+	var sprite := _view.object_nodes[index]
+	var tween := create_tween()
+	var half := HEAL_SECONDS / HEAL_PULSES / 2.0
+	for _pulse: int in HEAL_PULSES:
+		tween.tween_property(sprite, "modulate", HEAL_GLOW, half)
+		tween.tween_property(sprite, "modulate", Color.WHITE, half)
+	_heal_sound.play()
+	var result: Result = await Session.heal_team()
+	if tween.is_running():
+		await tween.finished
+	if not is_inside_tree():
+		return
+	if not result.ok:
+		_conversing = false
+		_show_message(result.error)
+		return
+	_greeting.say(HEALED_TEXT, GameData.voice_by_slug(StoryPlayer.NARRATION_VOICE))
+	await _greeting.tapped
+	if not is_inside_tree():
+		return
+	_greeting.close()
+	_conversing = false
 
 
 func _run_action(type_id: int) -> void:

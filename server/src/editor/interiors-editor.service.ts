@@ -81,7 +81,10 @@ export class InteriorsEditorService {
       height: dto.height,
       door: { x: dto.door.x, y: dto.door.y },
       tiles: dto.tiles,
-      objects: dto.objects,
+      objects: dto.objects.map((object) => ({
+        ...object,
+        action_type_id: object.action_type_id ?? null,
+      })),
       blocks: dto.blocks,
       npcs: dto.npcs.map((npc) => ({
         ...npc,
@@ -132,7 +135,7 @@ export class InteriorsEditorService {
       }
       // Numa inserção só, o serial cresce na ordem do corpo, que é a ordem de desenho.
       await tx.interiorObject.createMany({
-        data: body.objects.map(({ x, y, sheet, col, row, width, height }) => ({
+        data: body.objects.map(({ x, y, sheet, col, row, width, height, action_type_id }) => ({
           interiorId: id,
           x,
           y,
@@ -141,6 +144,7 @@ export class InteriorsEditorService {
           row,
           width,
           height,
+          actionTypeId: action_type_id,
         })),
       });
       await tx.interiorBlock.createMany({
