@@ -42,13 +42,22 @@ const SHADE := Color8(0xb9, 0xb3, 0xa1)
 const EAR := Color8(0xe7, 0xd5, 0xc6)
 const BLUSH := Color8(0xd1, 0x9d, 0xa7)
 const UNDERWEAR := Color8(0x3f, 0x4a, 0x6b)
+const FRECKLE := Color8(0x9a, 0x52, 0x3a)
 const KEYS: Array[Color] = [Color8(230, 230, 230), Color8(180, 180, 180), Color8(130, 130, 130), Color8(80, 80, 80)]
 const SIDES: Array[Vector2i] = [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN]
+
+## As peças sem a folha da criança (tamer-looks/02): o dono pediu as novas só no adulto.
+const ADULT_ONLY: Array[String] = ["long_skirt", "capri_pants", "flared_pants"]
 
 ## slug da peça: os sufixos que ela tem ("" é a folha da frente).
 const PARTS := {
 	"face_1": [""],
 	"face_2": [""],
+	"face_3": [""],
+	"face_4": [""],
+	"face_5": [""],
+	"face_6": [""],
+	"face_7": [""],
 	"hair_short": [""],
 	"hair_spiky": ["", "_short"],
 	"hair_ponytail": ["", "_back"],
@@ -62,6 +71,9 @@ const PARTS := {
 	"pants": [""],
 	"shorts": [""],
 	"skirt": [""],
+	"long_skirt": [""],
+	"capri_pants": [""],
+	"flared_pants": [""],
 	"sneakers": [""],
 	"boots": [""],
 }
@@ -123,7 +135,8 @@ func _init() -> void:
 			for suffix: String in PARTS[slug]:
 				var draw := Callable(self, "_" + slug + suffix)
 				_save(PART_OUT % [slug, sheet, suffix], columns, frames, draw)
-				_save(CHILD_PART_OUT % [slug, sheet, suffix], columns, children, draw)
+				if not ADULT_ONLY.has(slug):
+					_save(CHILD_PART_OUT % [slug, sheet, suffix], columns, children, draw)
 	print("guarda-roupa gerado")
 	quit()
 
@@ -345,6 +358,111 @@ func _face_2(f: Frame) -> Dictionary:
 	return layer
 
 
+## Os olhos do template: cada coluna de contorno de dentro da cabeça, de cima para baixo.
+static func _eyes(f: Frame) -> Dictionary:
+	var eyes := {}
+	for p: Vector2i in f.pixels:
+		if _face_pixel(f, p) and _same(f.pixels[p], OUTLINE):
+			if not eyes.has(p.x):
+				eyes[p.x] = []
+			eyes[p.x].append(p.y)
+	for x: int in eyes:
+		eyes[x].sort()
+	return eyes
+
+
+static func _blush(f: Frame) -> Array[Vector2i]:
+	var cheeks: Array[Vector2i] = []
+	for p: Vector2i in f.pixels:
+		if _face_pixel(f, p) and _same(f.pixels[p], BLUSH):
+			cheeks.append(p)
+	return cheeks
+
+
+## Um pixel de pele livre dentro da cabeça, onde o rosto pode desenhar.
+static func _skin(f: Frame, p: Vector2i) -> bool:
+	return f.pixels.has(p) and _rel(f, p) <= f.head_end and not _boundary(f, p) and not _face_pixel(f, p)
+
+
+## Olhos de 2 colunas, com o brilho no alto da de dentro.
+func _face_3(f: Frame) -> Dictionary:
+	var layer := {}
+	var eyes := _eyes(f)
+	for x: int in eyes:
+		var side := Vector2i.RIGHT if _skin(f, Vector2i(x + 1, eyes[x][0])) else Vector2i.LEFT
+		for y: int in eyes[x]:
+			layer[Vector2i(x, y)] = OUTLINE
+			var twin := Vector2i(x, y) + side
+			if _skin(f, twin):
+				layer[twin] = LIGHT if y == eyes[x][0] else OUTLINE
+	for p: Vector2i in _blush(f):
+		layer[p] = BLUSH
+	return layer
+
+
+## Os olhos do rosto 1, e sardas no lugar da bochecha.
+func _face_4(f: Frame) -> Dictionary:
+	var layer := {}
+	var eyes := _eyes(f)
+	for x: int in eyes:
+		for y: int in eyes[x]:
+			layer[Vector2i(x, y)] = OUTLINE
+	var cheeks := _blush(f)
+	var center := (f.head_min + f.head_max) / 2.0
+	for p: Vector2i in cheeks:
+		var outward := Vector2i.LEFT if p.x < center else Vector2i.RIGHT
+		var dot := p if cheeks.has(p + outward) else p + outward + Vector2i.UP
+		if dot == p or _skin(f, dot):
+			layer[dot] = FRECKLE
+	return layer
+
+
+## Olhos semicerrados: um traço de 2 pixels no pé de cada olho.
+func _face_5(f: Frame) -> Dictionary:
+	var layer := {}
+	var eyes := _eyes(f)
+	for x: int in eyes:
+		var low := Vector2i(x, eyes[x][-1])
+		layer[low] = OUTLINE
+		var inner := low + (Vector2i.LEFT if _skin(f, low + Vector2i.LEFT) else Vector2i.RIGHT)
+		if _skin(f, inner):
+			layer[inner] = OUTLINE
+	for p: Vector2i in _blush(f):
+		layer[p] = BLUSH
+	return layer
+
+
+## Olhos fechados de alegria, um arco de 3 pixels de largura em cada olho.
+func _face_6(f: Frame) -> Dictionary:
+	return _closed_eyes(f, [Vector2i(-1, 0), Vector2i(0, 0), Vector2i(1, 0), Vector2i(-1, 1), Vector2i(1, 1)])
+
+
+## Olhos de risada, um ^ de 3 pixels de largura em cada olho.
+func _face_7(f: Frame) -> Dictionary:
+	return _closed_eyes(f, [Vector2i(0, 0), Vector2i(-1, 1), Vector2i(1, 1)])
+
+
+## Cada olho vira o desenho dado, centrado no olho do template (na criança, 1 pixel para
+## fora, porque os olhos dela ficam a 2 pixels um do outro), nas 2 últimas linhas dele.
+static func _closed_eyes(f: Frame, shape: Array[Vector2i]) -> Dictionary:
+	var layer := {}
+	var center := (f.head_min + f.head_max) / 2.0
+	var eyes := _eyes(f)
+	for x: int in eyes:
+		var rows: Array = eyes[x]
+		var outward := 0
+		if f.child and eyes.size() > 1:
+			outward = -1 if x < center else 1
+		var anchor := Vector2i(x + outward, rows[maxi(rows.size() - 2, 0)])
+		for offset: Vector2i in shape:
+			var p := anchor + offset
+			if _skin(f, p) or _face_pixel(f, p):
+				layer[p] = OUTLINE
+	for p: Vector2i in _blush(f):
+		layer[p] = BLUSH
+	return layer
+
+
 # --- cabelos -----------------------------------------------------------------
 
 func _hair_short(f: Frame) -> Dictionary:
@@ -548,6 +666,31 @@ func _pants(f: Frame) -> Dictionary:
 	return _dress(f, _pants_keeps.bind(f), 1, 2)
 
 
+## A calça até o meio da canela, com a barra escura.
+static func _capri_keeps(p: Vector2i, f: Frame) -> bool:
+	return _pants_keeps(p, f) and _rel(f, p) <= f.legs + 2
+
+
+func _capri_pants(f: Frame) -> Dictionary:
+	return _dress(f, _capri_keeps.bind(f), 1, 2, f.legs + 2)
+
+
+## A calça que abre 1 pixel para fora de cada perna nas 2 linhas de cima dos pés.
+func _flared_pants(f: Frame) -> Dictionary:
+	var layer := _pants(f)
+	var flare := {}
+	for p: Vector2i in layer:
+		if _rel(f, p) < f.legs + 2 or not _same(layer[p], OUTLINE):
+			continue
+		for side: Vector2i in [Vector2i.LEFT, Vector2i.RIGHT]:
+			var q: Vector2i = p + side
+			if not f.pixels.has(q) and not layer.has(q):
+				flare[q] = OUTLINE
+				flare[p] = KEYS[2]
+	layer.merge(flare, true)
+	return layer
+
+
 static func _shorts_keeps(p: Vector2i, f: Frame) -> bool:
 	if f.child and _foot(f, p):
 		return false
@@ -560,12 +703,20 @@ func _shorts(f: Frame) -> Dictionary:
 
 
 func _skirt(f: Frame) -> Dictionary:
+	return _skirt_layer(f, _skirt_waist(f), _skirt_rows(f))
+
+
+## Até o tornozelo: 5 linhas, abrindo até 2 pixels de cada lado.
+func _long_skirt(f: Frame) -> Dictionary:
+	return _skirt_layer(f, f.hips, 5)
+
+
+static func _skirt_layer(f: Frame, waist: int, rows: int) -> Dictionary:
 	var mask := {}
-	var waist := _skirt_waist(f)
-	for step: int in _skirt_rows(f):
+	for step: int in rows:
 		var grow := (step + 1) / 2
 		_rect(mask, f.hip_min - grow, f.hip_max + grow, f.top + waist + step, f.top + waist + step)
-	return _paint(f, mask, _skirt_shade.bind(f), f.child)
+	return _paint(f, mask, _skirt_shade.bind(f, waist, rows), f.child)
 
 
 ## Na criança, a saia sobe 1 linha e tem 2, para não cobrir os pés.
@@ -577,10 +728,9 @@ static func _skirt_rows(f: Frame) -> int:
 	return 2 if f.child else 4
 
 
-static func _skirt_shade(p: Vector2i, f: Frame) -> Color:
+static func _skirt_shade(p: Vector2i, f: Frame, waist: int, rows: int) -> Color:
 	var rel := _rel(f, p)
-	var waist := _skirt_waist(f)
-	if rel == waist + _skirt_rows(f) - 1:
+	if rel == waist + rows - 1:
 		return KEYS[2]
 	return KEYS[1] if rel > waist else KEYS[0]
 

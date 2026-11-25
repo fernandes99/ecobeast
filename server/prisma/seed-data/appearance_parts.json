@@ -134,5 +134,69 @@
 		"appearance_slot_id": 3,
 		"body_type_id": null,
 		"hair_cut": "none"
+	},
+	{
+		"id": 18,
+		"slug": "face_3",
+		"name": "Rosto 3",
+		"appearance_slot_id": 1,
+		"body_type_id": null,
+		"hair_cut": "none"
+	},
+	{
+		"id": 19,
+		"slug": "face_4",
+		"name": "Rosto 4",
+		"appearance_slot_id": 1,
+		"body_type_id": null,
+		"hair_cut": "none"
+	},
+	{
+		"id": 20,
+		"slug": "face_5",
+		"name": "Rosto 5",
+		"appearance_slot_id": 1,
+		"body_type_id": null,
+		"hair_cut": "none"
+	},
+	{
+		"id": 21,
+		"slug": "face_6",
+		"name": "Rosto 6",
+		"appearance_slot_id": 1,
+		"body_type_id": null,
+		"hair_cut": "none"
+	},
+	{
+		"id": 22,
+		"slug": "face_7",
+		"name": "Rosto 7",
+		"appearance_slot_id": 1,
+		"body_type_id": null,
+		"hair_cut": "none"
+	},
+	{
+		"id": 23,
+		"slug": "long_skirt",
+		"name": "Saia longa",
+		"appearance_slot_id": 2,
+		"body_type_id": 2,
+		"hair_cut": "none"
+	},
+	{
+		"id": 24,
+		"slug": "capri_pants",
+		"name": "Calça capri",
+		"appearance_slot_id": 2,
+		"body_type_id": null,
+		"hair_cut": "none"
+	},
+	{
+		"id": 25,
+		"slug": "flared_pants",
+		"name": "Calça boca de sino",
+		"appearance_slot_id": 2,
+		"body_type_id": null,
+		"hair_cut": "none"
 	}
 ]

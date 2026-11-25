@@ -744,14 +744,31 @@ describe('carga inicial do guarda-roupa (tamer-appearance/04)', () => {
   >('appearance_parts.json');
   const palettes = read<{ kind: string }[]>('palettes.json');
 
-  it('tem as 17 peças, só a saia presa a um corpo e só os chapéus escondendo cabelo', () => {
-    expect(parts).toHaveLength(17);
+  it('tem as 25 peças, só as saias presas a um corpo e só os chapéus escondendo cabelo', () => {
+    expect(parts).toHaveLength(25);
     expect(parts.filter(({ body_type_id }) => body_type_id !== null)).toEqual([
       expect.objectContaining({ slug: 'skirt', body_type_id: 2 }),
+      expect.objectContaining({ slug: 'long_skirt', body_type_id: 2 }),
     ]);
     for (const { appearance_slot_id, hair_cut } of parts) {
       if (appearance_slot_id !== 6) expect(hair_cut).toBe('none');
     }
+  });
+
+  it('tem os 7 rostos, os 5 últimos nos ids 18 a 22 (tamer-looks/01)', () => {
+    expect(
+      parts
+        .filter(({ appearance_slot_id }) => appearance_slot_id === 1)
+        .map(({ slug }) => slug),
+    ).toEqual([
+      'face_1',
+      'face_2',
+      'face_3',
+      'face_4',
+      'face_5',
+      'face_6',
+      'face_7',
+    ]);
   });
 
   it('tem 6 peles, 8 cores de cabelo e 10 de roupa', () => {

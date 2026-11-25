@@ -260,8 +260,12 @@ func _parts_of(slot_id: int) -> Array[Dictionary]:
 	return parts
 
 
+## As peças novas só têm a folha de adulto (tamer-looks/02): a criança não as mostra.
 func _fits(part: Dictionary) -> bool:
-	return TamerSprite.part_fits(part, draft.body_type_id)
+	if not TamerSprite.part_fits(part, draft.body_type_id):
+		return false
+	var body := GameData.get_row("body_types", draft.body_type_id)
+	return not TamerSprite.is_child_body(body) or TamerSprite.frames_for(TamerSprite.CHILD_PART_FOLDER % part["slug"]) != null
 
 
 func _palettes_of(kind: String) -> Array[Dictionary]:
