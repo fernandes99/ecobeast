@@ -13,11 +13,14 @@ Claude abriu o F2 numa cena temporária, tirou fotos e achou dois problemas:
 
 Claude propôs as categorias por tabela do catálogo, a busca, a grade de miniaturas, os botões do topo só com ícone e a barra de baixo com a mensagem. O dono respondeu: "Pode seguir".
 
+Em 2026-11-24, o dono pediu também a ferramenta Missões mais fácil de usar ("a usabilidade ta ruim lá"), sem nada específico, e respondeu "Pode seguir direto" à lista de problemas de Claude ([03](03-quest-panel.md)).
+
 ## Objetivos
 
 1. Achar uma peça em poucos cliques: escolher a categoria ou digitar parte do nome.
 2. Ver a arte da peça antes de escolher, numa miniatura grande.
 3. Ter o Salvar, o Publicar e a "Casa do jogador" sempre visíveis, a partir do tamanho mínimo da janela (1280 px).
+4. Escrever uma missão e a conversa dela sem rolar até o fim para salvar e sem perder o que foi editado.
 
 ## Anti-objetivos
 
@@ -60,3 +63,4 @@ Escolhas de Claude (corrigíveis; ao mudar uma, atualize aqui e na fase):
 | --- | --- | --- | --- |
 | 1 | [01-prop-categories](01-prop-categories.md) | As categorias no catálogo e a ferramenta Peças com busca, categorias e grade de miniaturas | concluída (falta o dono conferir) |
 | 2 | [02-window-header](02-window-header.md) | O topo que cabe na janela e a barra de baixo com a mensagem e a situação da ilha | concluída (falta o dono conferir) |
+| 3 | [03-quest-panel](03-quest-panel.md) | A ferramenta Missões com a lista em cartões, o formulário em cartões com o Salvar no topo, o aviso de mudança não salva e as conversas mais leves, com os contadores | concluída (falta o dono conferir) |
