@@ -933,8 +933,8 @@ model Item {
   name           String
   description    String
   itemCategoryId Int     @map("item_category_id")
-  /// CHECK ≥ 1 (migration items)
-  price          Int
+  /// Vazio: o item não está à venda na Loja (auralis/11). CHECK ≥ 1 (migration items)
+  price          Int?
   sortOrder      Int     @unique @map("sort_order")
   /// CHECK > 0 (migration items)
   captureBonus   Float?  @map("capture_bonus")

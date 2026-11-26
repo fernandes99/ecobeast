@@ -18,6 +18,7 @@ import { INVALID_ITEM } from './inventory.dto.js';
 
 export const NO_PLAYER = 'Crie seu Domador primeiro.';
 export const NOT_ENOUGH_COINS = 'Moedas insuficientes.';
+export const NOT_FOR_SALE = 'Esse item não está à venda.';
 const MAX_ITEM_ID = 2_147_483_647;
 
 @Injectable()
@@ -32,6 +33,7 @@ export class InventoryService {
   async buy(userId: string, itemId: number): Promise<PlayerDto> {
     await this.requireTeam(userId);
     const { price } = await this.findItem(itemId);
+    if (price === null) throw new ConflictException(NOT_FOR_SALE);
 
     await this.prisma.$transaction(async (tx) => {
       const { count } = await tx.player.updateMany({

@@ -15,19 +15,29 @@ const BUY_PATH = '/v1/me/shop/buy';
 const NO_PLAYER = 'Crie seu Domador primeiro.';
 const NOT_ENOUGH_COINS = 'Moedas insuficientes.';
 const INVALID_ITEM = 'Esse item não existe.';
+const NOT_FOR_SALE = 'Esse item não está à venda.';
 
 describe('Rota de compra (e2e)', () => {
   let app: INestApplication<App>;
   let prisma: PrismaClient;
   let tokens: TestTokens;
-  let item: Item;
+  let item: Item & { price: number };
+  let questItem: Item;
   const users: string[] = [];
 
   beforeAll(async () => {
     prisma = createTestPrisma();
     tokens = await createTestTokens();
     app = await createTestApp({ tokenVerifier: tokens.verifier });
-    item = await prisma.item.findFirstOrThrow({ orderBy: { id: 'asc' } });
+    const forSale = await prisma.item.findFirstOrThrow({
+      where: { price: { not: null } },
+      orderBy: { id: 'asc' },
+    });
+    if (forSale.price === null) throw new Error('item sem preço');
+    item = { ...forSale, price: forSale.price };
+    questItem = await prisma.item.findFirstOrThrow({
+      where: { price: null },
+    });
   });
 
   afterAll(async () => {
@@ -122,6 +132,13 @@ describe('Rota de compra (e2e)', () => {
       coins: item.price - 1,
       quantities: [],
     });
+  });
+
+  it('um item sem preço, como os de missão, dá 409 e nada muda', async () => {
+    const user = await userWithCoins(item.price);
+    const res = await user.buy({ item_id: questItem.id }).expect(409);
+    expect(res.body.message).toBe(NOT_FOR_SALE);
+    expect(await stateOf(user)).toEqual({ coins: item.price, quantities: [] });
   });
 
   it.each([

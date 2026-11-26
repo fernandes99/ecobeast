@@ -24,6 +24,7 @@ import {
   InventoryService,
   NO_PLAYER,
   NOT_ENOUGH_COINS,
+  NOT_FOR_SALE,
 } from './inventory.service.js';
 
 @ApiTags('Mochila e Loja')
@@ -45,12 +46,13 @@ export class InventoryController {
     summary: 'Comprar um item',
     description:
       'Compra 1 unidade. O preço vem do banco, e o jogador recebe o item na ' +
-      'Mochila. Moedas e Mochila mudam juntas: ou as duas, ou nenhuma.',
+      'Mochila. Moedas e Mochila mudam juntas: ou as duas, ou nenhuma. ' +
+      'Um item sem preço, como os de missão, não está à venda.',
   })
   @ApiOkResponse({ type: PlayerResponseDto })
   @ApiBadRequestResponse({ description: `Item inválido: "${INVALID_ITEM}"` })
   @ApiConflictResponse({
-    description: `Sem Domador ou sem equipe: "${NO_PLAYER}" Sem saldo: "${NOT_ENOUGH_COINS}"`,
+    description: `Sem Domador ou sem equipe: "${NO_PLAYER}" Sem saldo: "${NOT_ENOUGH_COINS}" Item sem preço, como os de missão: "${NOT_FOR_SALE}"`,
   })
   async buy(
     @CurrentUser() userId: string,

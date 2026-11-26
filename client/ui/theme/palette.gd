@@ -83,6 +83,7 @@ const GENE_RANK_COLORS: Dictionary[String, Color] = {
 const ITEM_CATEGORY_COLORS: Dictionary[String, Color] = {
 	"capture": ACCENT,
 	"heal": HP_HIGH,
+	"quest": WARNING,
 }
 
 const BATTLE_PANEL := Color("#0E1C33E6")

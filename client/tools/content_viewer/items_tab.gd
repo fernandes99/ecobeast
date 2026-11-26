@@ -42,7 +42,8 @@ func _build_detail(id: int, box: VBoxContainer) -> void:
 	info.add_theme_constant_override(&"separation", 6)
 	header.add_child(info)
 	info.add_child(ContentViewer.text(item["name"], ContentViewer.TITLE_SIZE))
-	info.add_child(ContentViewer.text("%s · %s moedas" % [ContentViewer.row_name("item_categories", item.get("item_category_id")), ContentViewer.value_or_dash(item.get("price"))], 0, UiPalette.TEXT_SECONDARY))
+	var price: String = "fora da Loja" if item.get("price") == null else "%s moedas" % item["price"]
+	info.add_child(ContentViewer.text("%s · %s" % [ContentViewer.row_name("item_categories", item.get("item_category_id")), price], 0, UiPalette.TEXT_SECONDARY))
 	info.add_child(ContentViewer.paragraph(str(item.get("description", ""))))
 
 	var does := ContentViewer.block(box, "O que faz")

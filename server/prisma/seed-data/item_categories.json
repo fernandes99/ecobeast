@@ -1,4 +1,5 @@
 [
 	{ "id": 1, "slug": "capture", "name": "Esferas", "sort_order": 1 },
-	{ "id": 2, "slug": "heal", "name": "Cura", "sort_order": 2 }
+	{ "id": 2, "slug": "heal", "name": "Cura", "sort_order": 2 },
+	{ "id": 3, "slug": "quest", "name": "Missão", "sort_order": 3 }
 ]

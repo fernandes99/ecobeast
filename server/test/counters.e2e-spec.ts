@@ -244,9 +244,10 @@ describe('Contadores do Domador (e2e)', () => {
       where: { price: { gt: 0 } },
       orderBy: { price: 'asc' },
     });
+    const price = item.price ?? 0;
     await prisma.player.update({
       where: { id: user.id },
-      data: { coins: item.price * 2 },
+      data: { coins: price * 2 },
     });
     await user.buy(item.id).expect(200);
     await user.buy(item.id).expect(200);
@@ -254,7 +255,7 @@ describe('Contadores do Domador (e2e)', () => {
     await user.explore().expect(201);
 
     const body = await counters(user);
-    expect(value(body, COUNTER_IDS.coins_spent)).toBe(item.price * 2);
+    expect(value(body, COUNTER_IDS.coins_spent)).toBe(price * 2);
     expect(value(body, COUNTER_IDS.heals)).toBe(1);
     expect(value(body, COUNTER_IDS.maps_explored)).toBe(1);
   });

@@ -50,7 +50,7 @@ func _make_tab(category: ItemCategory, index: int) -> Button:
 func _items_of(category: ItemCategory) -> Array[Item]:
 	var items: Array[Item] = []
 	for item: Item in GameData.get_items():
-		if item.item_category_id == category.id:
+		if item.item_category_id == category.id and item.for_sale():
 			items.append(item)
 	return items
 
