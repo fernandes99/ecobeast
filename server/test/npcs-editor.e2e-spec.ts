@@ -84,7 +84,7 @@ describe('Editor de NPCs (e2e)', () => {
       skin_palette_id: 5,
       parts: [
         { part_id: 2, palette_id: null },
-        { part_id: 6, palette_id: 11 },
+        { part_id: 5, palette_id: 11 },
       ],
     };
     const response = await put(MIRA, body).expect(200);
@@ -103,7 +103,7 @@ describe('Editor de NPCs (e2e)', () => {
       .filter(({ npc_id }) => npc_id === MIRA)
       .map(({ appearance_part_id }) => appearance_part_id)
       .sort();
-    expect(parts).toEqual([2, 6]);
+    expect(parts).toEqual([2, 5]);
   });
 
   it('veste a Mira de Menina, com a Saia do corpo Feminino (village-crowd/02)', async () => {

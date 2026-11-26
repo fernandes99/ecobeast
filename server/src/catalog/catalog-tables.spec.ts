@@ -744,11 +744,10 @@ describe('carga inicial do guarda-roupa (tamer-appearance/04)', () => {
   >('appearance_parts.json');
   const palettes = read<{ kind: string }[]>('palettes.json');
 
-  it('tem as 25 peças, só as saias presas a um corpo e só os chapéus escondendo cabelo', () => {
-    expect(parts).toHaveLength(25);
+  it('tem as 21 peças, só a saia presa a um corpo e só os chapéus escondendo cabelo', () => {
+    expect(parts).toHaveLength(21);
     expect(parts.filter(({ body_type_id }) => body_type_id !== null)).toEqual([
       expect.objectContaining({ slug: 'skirt', body_type_id: 2 }),
-      expect.objectContaining({ slug: 'long_skirt', body_type_id: 2 }),
     ]);
     for (const { appearance_slot_id, hair_cut } of parts) {
       if (appearance_slot_id !== 6) expect(hair_cut).toBe('none');

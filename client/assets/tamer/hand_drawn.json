@@ -1,0 +1,13 @@
+{
+	"bodies": [
+		"male",
+		"female"
+	],
+	"parts": [
+		"pants",
+		"shorts",
+		"skirt",
+		"sneakers",
+		"boots"
+	]
+}

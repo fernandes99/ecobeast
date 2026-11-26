@@ -1,6 +1,6 @@
 # 02. Mais 3 partes de baixo
 
-- **Status:** concluída (falta o dono conferir na tela Aparência)
+- **Status:** concluída; as 3 peças saíram do jogo na [fase 06](06-fewer-parts.md), a pedido do dono
 - **Depende de:** [01](01-faces.md)
 
 ## Contexto

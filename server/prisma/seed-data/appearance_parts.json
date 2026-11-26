@@ -40,14 +40,6 @@
 		"hair_cut": "none"
 	},
 	{
-		"id": 6,
-		"slug": "hair_long",
-		"name": "Comprido",
-		"appearance_slot_id": 5,
-		"body_type_id": null,
-		"hair_cut": "none"
-	},
-	{
 		"id": 7,
 		"slug": "cap",
 		"name": "Boné",
@@ -75,22 +67,6 @@
 		"id": 10,
 		"slug": "tshirt",
 		"name": "Camiseta",
-		"appearance_slot_id": 4,
-		"body_type_id": null,
-		"hair_cut": "none"
-	},
-	{
-		"id": 11,
-		"slug": "jacket",
-		"name": "Jaqueta",
-		"appearance_slot_id": 4,
-		"body_type_id": null,
-		"hair_cut": "none"
-	},
-	{
-		"id": 12,
-		"slug": "tank_top",
-		"name": "Regata",
 		"appearance_slot_id": 4,
 		"body_type_id": null,
 		"hair_cut": "none"
@@ -176,26 +152,18 @@
 		"hair_cut": "none"
 	},
 	{
-		"id": 23,
-		"slug": "long_skirt",
-		"name": "Saia longa",
-		"appearance_slot_id": 2,
-		"body_type_id": 2,
-		"hair_cut": "none"
-	},
-	{
-		"id": 24,
-		"slug": "capri_pants",
-		"name": "Calça capri",
-		"appearance_slot_id": 2,
+		"id": 26,
+		"slug": "rain_boots",
+		"name": "Galocha",
+		"appearance_slot_id": 3,
 		"body_type_id": null,
 		"hair_cut": "none"
 	},
 	{
-		"id": 25,
-		"slug": "flared_pants",
-		"name": "Calça boca de sino",
-		"appearance_slot_id": 2,
+		"id": 27,
+		"slug": "dress_shoes",
+		"name": "Sapato",
+		"appearance_slot_id": 3,
 		"body_type_id": null,
 		"hair_cut": "none"
 	}

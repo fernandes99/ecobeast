@@ -6,6 +6,7 @@ const OLD_SAVE_FILES: Array[String] = ["user://save.json", "user://save.tmp.json
 var _catalog_loaded := false
 var _content_viewer: ContentViewer = null
 var _map_editor: MapEditor = null
+var _wardrobe_editor: WardrobeEditor = null
 
 
 func _ready() -> void:
@@ -50,6 +51,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 		_toggle_map_editor()
 		return
+	if _is_dev_key(event, KEY_F6):
+		get_viewport().set_input_as_handled()
+		_toggle_wardrobe_editor()
+		return
 	# Esc no editor faz o papel do voltar do Android.
 	if event.is_action_pressed(&"ui_cancel"):
 		get_viewport().set_input_as_handled()
@@ -86,6 +91,17 @@ func _toggle_map_editor() -> void:
 		_map_editor.close()
 	else:
 		_map_editor.show()
+
+
+func _toggle_wardrobe_editor() -> void:
+	if _wardrobe_editor == null:
+		_wardrobe_editor = WardrobeEditor.new()
+		add_child(_wardrobe_editor)
+		_wardrobe_editor.show()
+	elif _wardrobe_editor.visible:
+		_wardrobe_editor.close()
+	else:
+		_wardrobe_editor.show()
 
 
 func _boot() -> void:

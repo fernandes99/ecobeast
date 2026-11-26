@@ -47,7 +47,11 @@ const KEYS: Array[Color] = [Color8(230, 230, 230), Color8(180, 180, 180), Color8
 const SIDES: Array[Vector2i] = [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN]
 
 ## As peças sem a folha da criança (tamer-looks/02): o dono pediu as novas só no adulto.
-const ADULT_ONLY: Array[String] = ["long_skirt", "capri_pants", "flared_pants"]
+const ADULT_ONLY: Array[String] = ["rain_boots", "dress_shoes"]
+
+## Os corpos e as peças que o dono editou à mão no F6 (tamer-looks/05): o script não os
+## grava, para não apagar a edição. Tire o slug do arquivo para gerar de novo por código.
+const HAND_DRAWN := "res://assets/tamer/hand_drawn.json"
 
 ## slug da peça: os sufixos que ela tem ("" é a folha da frente).
 const PARTS := {
@@ -61,21 +65,17 @@ const PARTS := {
 	"hair_short": [""],
 	"hair_spiky": ["", "_short"],
 	"hair_ponytail": ["", "_back"],
-	"hair_long": ["", "_back", "_short"],
 	"cap": [""],
 	"straw_hat": [""],
 	"helmet": [""],
 	"tshirt": [""],
-	"jacket": [""],
-	"tank_top": [""],
 	"pants": [""],
 	"shorts": [""],
 	"skirt": [""],
-	"long_skirt": [""],
-	"capri_pants": [""],
-	"flared_pants": [""],
 	"sneakers": [""],
 	"boots": [""],
+	"rain_boots": [""],
+	"dress_shoes": [""],
 }
 
 
@@ -99,6 +99,8 @@ class Frame:
 	var hair_end := HAIR_END
 	var hip_row := LEGS + 1
 	var child := false
+	## As medidas calculadas uma vez por quadro (mão, pés, largura das pernas).
+	var cache := {}
 
 	## Uma altura contada no adulto, encolhida na proporção da cabeça da criança.
 	func h(rows: int) -> int:
@@ -117,6 +119,9 @@ class Frame:
 
 
 func _init() -> void:
+	var hand := hand_drawn()
+	var bodies: Array[String] = hand["bodies"]
+	var parts: Array[String] = hand["parts"]
 	for sheet: String in SHEETS:
 		var template := _load(TEMPLATE % sheet)
 		var small := _load(CHILD_TEMPLATE % sheet)
@@ -127,11 +132,15 @@ func _init() -> void:
 			for column: int in columns:
 				frames.append(_read(template, column, row, CELL, Vector2i.ZERO, false))
 				children.append(_read(small, column, row, CHILD_CELL, CHILD_OFFSET, true))
-		_save(BODY_OUT % ["male", sheet], columns, frames, _body.bind(false))
-		_save(BODY_OUT % ["female", sheet], columns, frames, _body.bind(true))
-		_save(BODY_OUT % ["boy", sheet], columns, children, _body.bind(false))
-		_save(BODY_OUT % ["girl", sheet], columns, children, _body.bind(true))
+		if not bodies.has("male"):
+			_save(BODY_OUT % ["male", sheet], columns, frames, _body.bind(false))
+			_save(BODY_OUT % ["boy", sheet], columns, children, _body.bind(false))
+		if not bodies.has("female"):
+			_save(BODY_OUT % ["female", sheet], columns, frames, _body.bind(true))
+			_save(BODY_OUT % ["girl", sheet], columns, children, _body.bind(true))
 		for slug: String in PARTS:
+			if parts.has(slug):
+				continue
 			for suffix: String in PARTS[slug]:
 				var draw := Callable(self, "_" + slug + suffix)
 				_save(PART_OUT % [slug, sheet, suffix], columns, frames, draw)
@@ -139,6 +148,26 @@ func _init() -> void:
 					_save(CHILD_PART_OUT % [slug, sheet, suffix], columns, children, draw)
 	print("guarda-roupa gerado")
 	quit()
+
+
+## {"bodies": [slug], "parts": [slug]} do hand_drawn.json; listas vazias se faltar ou não for JSON.
+static func hand_drawn() -> Dictionary:
+	var result := {"bodies": [] as Array[String], "parts": [] as Array[String]}
+	var file := FileAccess.open(HAND_DRAWN, FileAccess.READ)
+	if file == null:
+		push_warning("sem %s: gerando tudo" % HAND_DRAWN)
+		return result
+	var data: Variant = JSON.parse_string(file.get_as_text())
+	if not data is Dictionary:
+		push_warning("%s não é um JSON válido: gerando tudo" % HAND_DRAWN)
+		return result
+	for key: String in result:
+		var list: Variant = (data as Dictionary).get(key, [])
+		if list is Array:
+			for slug: Variant in list:
+				if slug is String:
+					(result[key] as Array[String]).append(slug)
+	return result
 
 
 func _load(path: String) -> Image:
@@ -219,6 +248,92 @@ static func _hips(f: Frame, x: int) -> bool:
 
 static func _foot(f: Frame, p: Vector2i) -> bool:
 	return f.pixels.has(p) and _rel(f, p) >= f.legs and _same(f.pixels[p], LIGHT)
+
+
+## A mão que desce até a altura das pernas: pixels claros ligados ao braço (sobem acima
+## das pernas por pixels claros) e com no máximo 4 pixels na altura delas. A perna clara
+## da corrida também sobe ligada ao tronco, mas tem muito mais pixels embaixo.
+static func _hand(f: Frame) -> Dictionary:
+	if f.cache.has("hand"):
+		return f.cache["hand"]
+	var hand := {}
+	var seen := {}
+	for p: Vector2i in f.pixels:
+		if seen.has(p) or _rel(f, p) < f.legs or not _same(f.pixels[p], LIGHT):
+			continue
+		var part: Array[Vector2i] = [p]
+		seen[p] = true
+		var index := 0
+		var arm := false
+		while index < part.size():
+			var q := part[index]
+			index += 1
+			arm = arm or _rel(f, q) < f.legs
+			for side: Vector2i in SIDES:
+				var n := q + side
+				if not seen.has(n) and f.pixels.has(n) and _same(f.pixels[n], LIGHT):
+					seen[n] = true
+					part.append(n)
+		var low := part.filter(func(q: Vector2i) -> bool: return _rel(f, q) >= f.legs)
+		if arm and low.size() <= 4:
+			for q: Vector2i in low:
+				hand[q] = true
+	f.cache["hand"] = hand
+	return hand
+
+
+## O pé descalço: o pixel claro na altura das pernas sem nada da perna embaixo (a sola),
+## e o claro logo acima dele. Os outros claros das pernas são a luz da coxa e do joelho,
+## que a corrida desenha, e a calça os cobre.
+static func _feet(f: Frame) -> Dictionary:
+	if f.cache.has("feet"):
+		return f.cache["feet"]
+	var feet := {}
+	var hand := _hand(f)
+	for p: Vector2i in f.pixels:
+		if hand.has(p) or _rel(f, p) < f.legs or not _same(f.pixels[p], LIGHT):
+			continue
+		var below := p + Vector2i.DOWN
+		if f.pixels.has(below) and not _same(f.pixels[below], OUTLINE):
+			continue
+		feet[p] = true
+		var above := p + Vector2i.UP
+		if f.pixels.has(above) and _same(f.pixels[above], LIGHT) and _rel(f, above) >= f.legs:
+			feet[above] = true
+	f.cache["feet"] = feet
+	return feet
+
+
+## A largura do quadril para as partes de baixo, com o contorno dos lados. Na linha do
+## quadril, a mão e o braço que descem até ali são trechos separados por contorno; só
+## contam os trechos que continuam para baixo, nas pernas.
+static func _leg_span(f: Frame) -> Vector2i:
+	if f.cache.has("leg_span"):
+		return f.cache["leg_span"]
+	var y := f.top + f.hips
+	var low := CELL
+	var high := -1
+	var run: Array[int] = []
+	for x: int in range(-1, CELL + 1):
+		var p := Vector2i(x, y)
+		if f.pixels.has(p) and not _same(f.pixels[p], OUTLINE):
+			run.append(x)
+			continue
+		var legged := run.any(func(rx: int) -> bool:
+			var below := Vector2i(rx, y + 1)
+			return f.pixels.has(below) and not _same(f.pixels[below], OUTLINE))
+		if legged:
+			low = mini(low, run[0])
+			high = maxi(high, run[-1])
+		run.clear()
+	var span := Vector2i(low - 1, high + 1) if high >= 0 else Vector2i(f.hip_min, f.hip_max)
+	f.cache["leg_span"] = span
+	return span
+
+
+static func _in_legs(f: Frame, x: int) -> bool:
+	var span := _leg_span(f)
+	return x >= span.x and x <= span.y
 
 
 ## Os olhos e a bochecha: o contorno e o rosado de dentro da cabeça.
@@ -321,7 +436,7 @@ func _body(f: Frame, female: bool) -> Dictionary:
 			layer[p] = KEYS[0]
 		elif _same(color, OUTLINE):
 			layer[p] = OUTLINE
-		elif (rel == f.hips or rel == f.legs) and _hips(f, p.x):
+		elif (rel == f.hips or rel == f.legs) and _in_legs(f, p.x) and not _hand(f).has(p):
 			layer[p] = UNDERWEAR
 		elif _same(color, SHADE) or _same(color, EAR):
 			layer[p] = KEYS[1]
@@ -506,39 +621,6 @@ func _hair_ponytail_back(f: Frame) -> Dictionary:
 	return _paint(f, mask, _flat.bind(2), false)
 
 
-func _long_mask(f: Frame, volume: bool) -> Dictionary:
-	var mask := _hair_mask(f, volume)
-	match f.row:
-		FRONT:
-			_rect(mask, f.head_min, f.head_min + 1, f.top + f.h(7), f.top + f.hair_end - 1)
-			_rect(mask, f.head_max - 1, f.head_max, f.top + f.h(7), f.top + f.hair_end - 1)
-		LOWER:
-			_rect(mask, f.head_min, f.head_min + 2, f.top + f.h(9), f.top + f.hair_end - 1)
-		SIDE:
-			_rect(mask, f.head_min, f.head_min + 3, f.top + f.h(10), f.top + f.hair_end - 1)
-		UPPER, BACK:
-			var nape := f.head_end if f.child else f.neck
-			_rect(mask, f.head_min + 1, f.head_max - 1, f.top + nape, f.top + f.hair_end)
-	return mask
-
-
-func _hair_long(f: Frame) -> Dictionary:
-	var mask := _long_mask(f, true)
-	return _paint(f, mask, _hair_shade.bind(f, mask))
-
-
-func _hair_long_short(f: Frame) -> Dictionary:
-	var mask := _long_mask(f, false)
-	return _paint(f, mask, _hair_shade.bind(f, mask))
-
-
-func _hair_long_back(f: Frame) -> Dictionary:
-	var mask := {}
-	if f.row != UPPER and f.row != BACK:
-		_rect(mask, f.head_min, f.head_max, f.top + f.h(4), f.top + f.hair_end)
-	return _paint(f, mask, _flat.bind(2), false)
-
-
 static func _flat(_p: Vector2i, key: int) -> Color:
 	return KEYS[key]
 
@@ -629,73 +711,64 @@ func _tshirt(f: Frame) -> Dictionary:
 	return _dress(f, _tshirt_keeps.bind(f), 0, 1, f.hips - 1)
 
 
-static func _jacket_keeps(p: Vector2i, f: Frame) -> bool:
-	var rel := _rel(f, p)
-	return rel >= f.shoulders and rel < f.hips
-
-
-func _jacket(f: Frame) -> Dictionary:
-	var layer := _dress(f, _jacket_keeps.bind(f), 1, 2, f.hips - 1)
-	var center := (f.hip_min + f.hip_max) / 2
-	if f.row == FRONT or f.row == LOWER:
-		var zipper := center if f.row == FRONT else center + 1
-		for y: int in range(f.top + f.shoulders + 1, f.top + f.hips):
-			var p := Vector2i(zipper, y)
-			if layer.has(p) and layer[p] != OUTLINE:
-				layer[p] = KEYS[3]
-	return layer
-
-
-static func _tank_top_keeps(p: Vector2i, f: Frame) -> bool:
-	var rel := _rel(f, p)
-	return rel > f.shoulders and rel < f.hips and _hips(f, p.x)
-
-
-func _tank_top(f: Frame) -> Dictionary:
-	return _dress(f, _tank_top_keeps.bind(f), 0, 1, f.hips - 1)
-
-
+## A calça: a linha do quadril, na largura das pernas, e tudo das pernas para baixo,
+## menos os pés descalços e a mão que desce até ali.
 static func _pants_keeps(p: Vector2i, f: Frame) -> bool:
-	if _foot(f, p):
+	if _feet(f).has(p) or _hand(f).has(p):
 		return false
 	var rel := _rel(f, p)
-	return ((rel == f.hips or rel == f.legs) and _hips(f, p.x)) or rel > f.legs
+	if rel == f.hips and rel < f.legs:
+		return _in_legs(f, p.x)
+	return rel >= f.legs
 
 
 func _pants(f: Frame) -> Dictionary:
-	return _dress(f, _pants_keeps.bind(f), 1, 2)
-
-
-## A calça até o meio da canela, com a barra escura.
-static func _capri_keeps(p: Vector2i, f: Frame) -> bool:
-	return _pants_keeps(p, f) and _rel(f, p) <= f.legs + 2
-
-
-func _capri_pants(f: Frame) -> Dictionary:
-	return _dress(f, _capri_keeps.bind(f), 1, 2, f.legs + 2)
-
-
-## A calça que abre 1 pixel para fora de cada perna nas 2 linhas de cima dos pés.
-func _flared_pants(f: Frame) -> Dictionary:
-	var layer := _pants(f)
-	var flare := {}
-	for p: Vector2i in layer:
-		if _rel(f, p) < f.legs + 2 or not _same(layer[p], OUTLINE):
-			continue
-		for side: Vector2i in [Vector2i.LEFT, Vector2i.RIGHT]:
-			var q: Vector2i = p + side
-			if not f.pixels.has(q) and not layer.has(q):
-				flare[q] = OUTLINE
-				flare[p] = KEYS[2]
-	layer.merge(flare, true)
+	var layer := _dress(f, _pants_keeps.bind(f), 1, 2)
+	for p: Vector2i in _far_leg(f):
+		layer[p] = KEYS[3]
 	return layer
+
+
+## A perna de trás que a corrida desenha cheia na cor do contorno: os pixels de contorno
+## de dentro da figura, num bloco que tem 3 ou mais seguidos numa linha. O vão de 2 pixels
+## entre as pernas, de frente, fica contorno.
+static func _far_leg(f: Frame) -> Dictionary:
+	var inner := {}
+	for p: Vector2i in f.pixels:
+		if _rel(f, p) < f.legs or not _same(f.pixels[p], OUTLINE) or _boundary(f, p):
+			continue
+		inner[p] = true
+	var far := {}
+	var seen := {}
+	for p: Vector2i in inner:
+		if seen.has(p):
+			continue
+		var part: Array[Vector2i] = [p]
+		seen[p] = true
+		var index := 0
+		var wide := false
+		while index < part.size():
+			var q := part[index]
+			index += 1
+			wide = wide or (inner.has(q + Vector2i.LEFT) and inner.has(q + Vector2i.RIGHT))
+			for side: Vector2i in SIDES:
+				var n := q + side
+				if inner.has(n) and not seen.has(n):
+					seen[n] = true
+					part.append(n)
+		if wide:
+			for q: Vector2i in part:
+				far[q] = true
+	return far
 
 
 static func _shorts_keeps(p: Vector2i, f: Frame) -> bool:
 	if f.child and _foot(f, p):
 		return false
 	var rel := _rel(f, p)
-	return ((rel == f.hips or rel == f.legs) and _hips(f, p.x)) or rel == f.legs + 1
+	if _hand(f).has(p):
+		return false
+	return ((rel == f.hips or rel == f.legs) and _in_legs(f, p.x)) or rel == f.legs + 1
 
 
 func _shorts(f: Frame) -> Dictionary:
@@ -706,16 +779,12 @@ func _skirt(f: Frame) -> Dictionary:
 	return _skirt_layer(f, _skirt_waist(f), _skirt_rows(f))
 
 
-## Até o tornozelo: 5 linhas, abrindo até 2 pixels de cada lado.
-func _long_skirt(f: Frame) -> Dictionary:
-	return _skirt_layer(f, f.hips, 5)
-
-
 static func _skirt_layer(f: Frame, waist: int, rows: int) -> Dictionary:
 	var mask := {}
 	for step: int in rows:
 		var grow := (step + 1) / 2
-		_rect(mask, f.hip_min - grow, f.hip_max + grow, f.top + waist + step, f.top + waist + step)
+		var span := _leg_span(f)
+		_rect(mask, span.x - grow, span.y + grow, f.top + waist + step, f.top + waist + step)
 	return _paint(f, mask, _skirt_shade.bind(f, waist, rows), f.child)
 
 
@@ -735,20 +804,115 @@ static func _skirt_shade(p: Vector2i, f: Frame, waist: int, rows: int) -> Color:
 	return KEYS[1] if rel > waist else KEYS[0]
 
 
-func _sneakers(f: Frame) -> Dictionary:
-	var layer := {}
+# --- calçados ----------------------------------------------------------------
+
+## Os pixels do pé calçado: os claros da altura das pernas que não sobem ligados à
+## mão (a mão encostada na perna também é clara), mais a sombra do calcanhar ao lado
+## deles na mesma linha, que o Tênis e a Bota de antes deixavam com a cor da pele.
+static func _shoe(f: Frame) -> Dictionary:
+	var shoe := {}
+	var seen := {}
 	for p: Vector2i in f.pixels:
-		if _foot(f, p):
-			layer[p] = KEYS[0] if _foot(f, p + Vector2i.DOWN) else KEYS[2]
+		if seen.has(p) or _rel(f, p) < f.legs or not _same(f.pixels[p], LIGHT):
+			continue
+		var part: Array[Vector2i] = [p]
+		var hand := false
+		seen[p] = true
+		var index := 0
+		while index < part.size():
+			var q := part[index]
+			index += 1
+			hand = hand or _rel(f, q) < f.legs
+			for side: Vector2i in SIDES:
+				var n := q + side
+				if not seen.has(n) and f.pixels.has(n) and _same(f.pixels[n], LIGHT):
+					seen[n] = true
+					part.append(n)
+		if hand:
+			continue
+		for q: Vector2i in part:
+			if _rel(f, q) >= f.legs:
+				shoe[q] = true
+	for p: Vector2i in shoe.keys():
+		for side: Vector2i in [Vector2i.LEFT, Vector2i.RIGHT]:
+			var q: Vector2i = p + side
+			while f.pixels.has(q) and _same(f.pixels[q], SHADE) and not shoe.has(q):
+				shoe[q] = true
+				q += side
+	# A perna de trás, de lado e nas diagonais, acaba em sombra, sem pixel claro de pé:
+	# o pé dela é o pixel mais baixo de cada coluna, abaixo de onde a mão chega.
+	var lowest := {}
+	for p: Vector2i in f.pixels:
+		if not _same(f.pixels[p], OUTLINE) and p.y > lowest.get(p.x, -1):
+			lowest[p.x] = p.y
+	for x: int in lowest:
+		var p := Vector2i(x, lowest[x])
+		if not shoe.has(p) and _same(f.pixels[p], SHADE) and _rel(f, p) >= f.legs + (1 if f.child else 2):
+			shoe[p] = true
+	return shoe
+
+
+## O cano: os pixels da perna logo acima do pé, até `rows` linhas, parando no contorno.
+## Devolve quantas linhas acima do pé cada um está.
+static func _shaft(f: Frame, shoe: Dictionary, rows: int) -> Dictionary:
+	var shaft := {}
+	for p: Vector2i in shoe:
+		for step: int in range(1, rows + 1):
+			var q: Vector2i = p + Vector2i.UP * step
+			if shoe.has(q):
+				continue
+			if not f.pixels.has(q) or _same(f.pixels[q], OUTLINE):
+				break
+			shaft[q] = mini(shaft.get(q, step), step)
+	return shaft
+
+
+## O Tênis: o pé claro, a sombra do calcanhar mais escura e 1 linha da gola por cima.
+func _sneakers(f: Frame) -> Dictionary:
+	var shoe := _shoe(f)
+	var layer := {}
+	for p: Vector2i in _shaft(f, shoe, 1):
+		layer[p] = KEYS[1]
+	for p: Vector2i in shoe:
+		layer[p] = KEYS[2] if _same(f.pixels[p], SHADE) else KEYS[0]
 	return layer
 
 
+## A Bota: o pé escuro e o cano de 2 linhas, com a boca mais clara.
 func _boots(f: Frame) -> Dictionary:
+	var shoe := _shoe(f)
 	var layer := {}
-	for p: Vector2i in f.pixels:
-		if _foot(f, p):
-			layer[p] = KEYS[2] if _foot(f, p + Vector2i.DOWN) else KEYS[3]
-		elif _rel(f, p) >= f.legs and _same(f.pixels[p], SHADE):
-			if _foot(f, p + Vector2i.DOWN) or _foot(f, p + Vector2i.DOWN * 2):
-				layer[p] = KEYS[1]
+	var shaft := _shaft(f, shoe, 2)
+	for p: Vector2i in shaft:
+		layer[p] = KEYS[0] if shaft[p] == 2 else KEYS[1]
+	for p: Vector2i in shoe:
+		layer[p] = KEYS[3] if _same(f.pixels[p], SHADE) else KEYS[2]
+	return layer
+
+
+## A Galocha: de borracha até o joelho, com o cano de 3 linhas, o brilho branco no
+## primeiro pixel de cada linha do cano e a sola mais escura.
+func _rain_boots(f: Frame) -> Dictionary:
+	var shoe := _shoe(f)
+	var layer := {}
+	var shaft := _shaft(f, shoe, 3)
+	for p: Vector2i in shaft:
+		var shine: bool = shaft[p] < 3 and not shaft.has(p + Vector2i.LEFT)
+		layer[p] = LIGHT if shine else (KEYS[1] if shaft[p] == 3 else KEYS[0])
+	for p: Vector2i in shoe:
+		layer[p] = KEYS[2] if _same(f.pixels[p], SHADE) else KEYS[1]
+	return layer
+
+
+## O Sapato: baixo, escuro, com o brilho na ponta (o primeiro pixel claro de cada pé).
+func _dress_shoes(f: Frame) -> Dictionary:
+	var shoe := _shoe(f)
+	var layer := {}
+	for p: Vector2i in shoe:
+		if _same(f.pixels[p], SHADE):
+			layer[p] = KEYS[3]
+		elif shoe.has(p + Vector2i.LEFT) and _same(f.pixels[p + Vector2i.LEFT], LIGHT):
+			layer[p] = KEYS[2]
+		else:
+			layer[p] = KEYS[1]
 	return layer

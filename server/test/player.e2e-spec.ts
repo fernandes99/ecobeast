@@ -530,10 +530,10 @@ describe('Rotas do jogador (e2e)', () => {
         body_type_id: 2,
         skin_palette_id: 6,
         parts: [
-          { part_id: 6, palette_id: 11 },
+          { part_id: 5, palette_id: 11 },
           { part_id: 15, palette_id: 20 },
           { part_id: 2, palette_id: null },
-          { part_id: 12, palette_id: 24 },
+          { part_id: 10, palette_id: 24 },
           { part_id: 17, palette_id: 22 },
           { part_id: 8, palette_id: 18 },
         ],
@@ -543,7 +543,7 @@ describe('Rotas do jogador (e2e)', () => {
         res.body.player.appearance.parts.map(
           (p: { part_id: number }) => p.part_id,
         ),
-      ).toEqual([2, 15, 17, 12, 6, 8]);
+      ).toEqual([2, 15, 17, 10, 5, 8]);
     });
 
     it('sem Domador dá 409', async () => {
