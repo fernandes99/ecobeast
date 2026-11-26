@@ -29,3 +29,4 @@ O jogo não tinha nenhum som de Ecobeast: só os de dano (`res://assets/sounds/h
 | --- | --- | --- |
 | [01-call-files](01-call-files.md) | O lugar do `call.wav` e a linha "call" no visualizador de conteúdo | concluída (falta o dono ver) |
 | [02-ruvo-call](02-ruvo-call.md) | O som do Ruvo, um "ru-vo" rápido de chip, gerado por `art-source/ruvo/call.py` | concluída (falta o dono ouvir) |
+| [03-all-calls](03-all-calls.md) | O som dos outros 49 Ecobeasts, no mesmo chip, gerados por `art-source/calls/make_calls.py`: sílabas do nome, o efeito do Elemento e o jeito de cada um | concluída (falta o dono ouvir) |
