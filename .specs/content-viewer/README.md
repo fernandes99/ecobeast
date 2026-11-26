@@ -70,5 +70,6 @@ Tomadas no planejamento e apresentadas ao dono (corrigíveis; ao mudar uma, atua
 | [04-balance-and-general](04-balance-and-general.md) | Progressão e captura no Ecobeast, iniciais e curvas de XP no Resumo, e a aba Geral com o Domador e os sons de dano | concluída (falta o dono ver) |
 | [05-skill-projectile](05-skill-projectile.md) | O projétil das Técnicas que cruzam o campo, como arquivo opcional: no detalhe, na linha do Ecobeast e no Resumo | concluída (falta o dono ver) |
 | [06-species-list](06-species-list.md) | O rosto e os Elementos na lista de Ecobeasts, e as setas ↑ ↓ trocando o item em toda lista | concluída (falta o dono ver) |
+| [07-no-board-sprite](07-no-board-sprite.md) | O `board.png` sai do jogo: da luta, do visualizador, dos arquivos e do gerador | concluída (falta o dono ver) |
 
 O desenho que as fases compartilham está no [architecture.md](architecture.md).

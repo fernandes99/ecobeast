@@ -181,6 +181,6 @@ Em `client/`:
 - **Ecobeasts na tela:** as folhas da luta de cada espécie, em `res://assets/creatures/<slug>/battle/` ([07](07-battle-sprites.md)). O `idle.png` tem 2 vistas, de frente e de costas, ou 5, com os 3 lados na ordem do walk ([17](17-idle-facing.md)), e o `walk.png` tem 3, a diagonal descendo, o lado e a diagonal subindo, ou 5, com a frente e as costas, que o tabuleiro não usa. A esquerda é espelhada. Quem tem o idle de lado fica parado olhando para o último passo. As folhas aparecem sem ampliar, sem filtro e com uma sombra.
   - **Parado:** o Ecobeast toca o idle olhando para o adversário: os do jogador de costas, os selvagens de frente.
   - **Andando:** toca o walk na vista do passo.
-  - **Quem não tem as folhas:** usa o `board.png`, a pixel art gerada do `front.png` por `res://tools/board_sprites.gd` e mostrada 2× maior. Parado, ele respira; andando, dá um pulinho por hexágono. Sem o `board.png`, usa o `front.png` reduzido.
+  - **Quem não tem as folhas:** usa o `front.png` reduzido. Parado, ele respira; andando, dá um pulinho por hexágono. O `board.png`, a pixel art gerada do `front.png` e mostrada 2× maior, saiu do jogo na [content-viewer/07](../content-viewer/07-no-board-sprite.md).
 
   As folhas do mapa ficam em `explore/`. Os tamanhos são _a revisar_.

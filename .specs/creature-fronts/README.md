@@ -1,6 +1,6 @@
 # creature-fronts
 
-Os Ecobeasts ganham a arte nova do dono no `front.png`, em pixel art com contorno escuro, num acabamento mais próximo do resto do jogo, e o `board.png` refeito dela.
+Os Ecobeasts ganham a arte nova do dono no `front.png`, em pixel art com contorno escuro, num acabamento mais próximo do resto do jogo, e o `board.png` refeito dela (que saiu depois, na `content-viewer/07`).
 
 ## Contexto
 

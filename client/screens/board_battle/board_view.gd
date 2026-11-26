@@ -33,9 +33,7 @@ const GLOW_WIDTH := 12.0
 const GLOW_ALPHA := 0.35
 
 const BATTLE_SPRITE_SCALE := 1.0
-const BOARD_SPRITE_PATH := "res://assets/creatures/%s/board.png"
 const FRONT_PATH := "res://assets/creatures/%s/front.png"
-const SPRITE_SCALE := 2.0
 const FALLBACK_HEIGHT := 80.0
 const FEET_Y := HEX_HEIGHT * 0.2
 const SHADOW_COLOR := Color(0, 0, 0, 0.35)
@@ -713,12 +711,7 @@ func _dress(token: Token, slug: String) -> void:
 		token.shadow_radius = sheets.rest_width * BATTLE_SPRITE_SCALE * 0.5
 		return
 	sprite.centered = true
-	var board_path := BOARD_SPRITE_PATH % slug
-	if ResourceLoader.exists(board_path):
-		sprite.texture = load(board_path)
-		sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		sprite.scale = Vector2.ONE * SPRITE_SCALE
-	elif ResourceLoader.exists(FRONT_PATH % slug):
+	if ResourceLoader.exists(FRONT_PATH % slug):
 		sprite.texture = load(FRONT_PATH % slug)
 		sprite.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 		sprite.scale = Vector2.ONE * (FALLBACK_HEIGHT / sprite.texture.get_size().y)

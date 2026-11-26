@@ -134,7 +134,6 @@ static func creature_files(slug: String) -> Array[Entry]:
 	var walk := CreatureSprite.WALK
 	var files: Array[Entry] = [
 		Entry.new("front", CreaturePortrait.SPRITE_PATH % slug, Kind.IMAGE),
-		Entry.new("board", BoardView.BOARD_SPRITE_PATH % slug, Kind.IMAGE),
 		Entry.new("explore idle", CreatureSprite.SHEET_PATH % [slug, idle], Kind.EXPLORE_SHEET, slug, idle),
 		Entry.new("explore walk", CreatureSprite.SHEET_PATH % [slug, walk], Kind.EXPLORE_SHEET, slug, walk),
 		Entry.new("battle idle", BattleSheets.PATH % [slug, BattleSheets.IDLE], Kind.BATTLE_SHEET, slug, BattleSheets.IDLE),

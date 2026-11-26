@@ -47,7 +47,6 @@ As telas são montadas no código, sem `.tscn`, como o `BoardCreatureCard`. São
 | Item | Arquivo | Caminho | Constante de onde vem |
 | --- | --- | --- | --- |
 | Ecobeast | front | `res://assets/creatures/<slug>/front.png` | `CreaturePortrait.SPRITE_PATH` |
-| Ecobeast | tabuleiro | `res://assets/creatures/<slug>/board.png` | `BoardView.BOARD_SPRITE_PATH` |
 | Ecobeast | explorar, parado e andando | `res://assets/creatures/<slug>/explore/idle.png` e `walk.png` | `CreatureSprite.SHEET_PATH` |
 | Ecobeast | luta, parado e andando | `res://assets/creatures/<slug>/battle/idle.png` e `walk.png` | `BattleSheets.PATH` |
 | Ecobeast | som característico (`call`) | `res://assets/creatures/<slug>/call.wav` | `CREATURE_CALL_PATH`, nova em `ContentFiles` ([creature-sounds/01](../creature-sounds/01-call-files.md)) |

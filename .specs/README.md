@@ -99,7 +99,7 @@ O Ecobeast é um jogo mobile (Android/iOS, retrato): o cliente em **Godot 4.7 co
 | [item-icons](item-icons/) | O padrão dos ícones dos itens (pixel art de 32×32, mostrada em múltiplos inteiros) os Tônicos e o Bálsamo Puro com a arte de um pacote da craftpix.net e as Esferas em pixel art |
 | [lume-line](lume-line/) | A coruja da noite, a primeira linha de Sombra pura: Lume, Owlume e Noclume (Sombra/Psíquico), que só nascem à Noite, com 4 Técnicas de Sombra especiais |
 | [creature-scale](creature-scale/) | Os Ecobeasts maiores em Explorar: a altura de hoje mais 4 pixels, de 6 a 32, com a pixel art no acabamento do pacote Fantasy Dreamland Reborn |
-| [creature-fronts](creature-fronts/) | A arte nova do dono no `front.png` das linhas do Ruvo, da Nilu, do Clod e do Hushling, e o `board.png` refeito dela |
+| [creature-fronts](creature-fronts/) | A arte nova do dono no `front.png` das linhas do Ruvo, da Nilu, do Clod e do Hushling, e o `board.png` refeito dela (que saiu depois, na `content-viewer/07`) |
 | [snekit-line](snekit-line/) | A serpente Snekit e Venomaw, a primeira linha com Toxina, que evolui por Vínculo mais o nível 32 |
 | [prayling-line](prayling-line/) | O louva-a-deus, a primeira linha de Inseto: Prayling e Mantorn, que evolui no Solantis (Inseto/Luz) de dia ou no Umbrantis (Inseto/Sombra) à noite, com a evolução por horário no servidor e as primeiras Técnicas de Inseto e de Luz |
 | [bond](bond/) | O Vínculo do Domador com cada Ecobeast, e a evolução por Vínculo |

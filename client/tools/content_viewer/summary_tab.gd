@@ -34,7 +34,6 @@ func _build() -> void:
 	var species := GameData.get_all_species()
 	var total := species.size()
 	var with_front := 0
-	var with_board := 0
 	var with_explore := 0
 	var with_battle := 0
 	var with_call := 0
@@ -45,10 +44,9 @@ func _build() -> void:
 		for entry: ContentFiles.Entry in files:
 			found.append(entry.complete())
 		with_front += int(found[0])
-		with_board += int(found[1])
-		with_explore += int(found[2] and found[3])
-		with_battle += int(found[4] and found[5])
-		with_call += int(found[6])
+		with_explore += int(found[1] and found[2])
+		with_battle += int(found[3] and found[4])
+		with_call += int(found[5])
 		var missing := ContentFiles.missing_labels(files)
 		if not missing.is_empty():
 			incomplete.append({"species": one, "missing": missing})
@@ -57,7 +55,6 @@ func _build() -> void:
 	_box.add_child(cards)
 	_card(cards, "Ecobeasts no catálogo", str(total), UiPalette.TEXT)
 	_count_card(cards, "Com front", with_front, total)
-	_count_card(cards, "Com board", with_board, total)
 	_count_card(cards, "Com as folhas de explorar", with_explore, total)
 	_count_card(cards, "Com as folhas da luta", with_battle, total)
 	_count_card(cards, "Com call", with_call, total)
